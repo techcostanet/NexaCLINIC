@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper to get user document data
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Helper to check if authenticated user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+        (resource != null && resource.data.role == 'admin' || 
+         getUserData().role == 'admin');
+    }
+
+    // Users Collection Rules
+    match /users/{userId} {
+      // Authenticated users can read user records
+      allow read: if isAuthenticated();
+      
+      // Only admins can create or update users, and define their roles/sectors
+      allow write: if isAdmin();
+    }
+
+    // Sectors Collection Rules
+    match /sectors/{sectorId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Indicators Configuration Rules
+    match /indicators/{indicatorId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Patients Collection Rules
+    match /patients/{patientId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Indicator Values / Data Collection Rules
+    match /indicator_data/{dataId} {
+      // Admins have access to everything.
+      // Professionals can only read metrics if the metric's sectorId is in their allowedSectors list.
+      allow read: if isAdmin() || (
+        isAuthenticated() && 
+        resource != null && 
+        resource.data.sectorId in getUserData().allowedSectors
+      );
+
+      // Admins can write anything.
+      // Professionals can write if the new metric is for a sector in their allowedSectors list.
+      allow write: if isAdmin() || (
+        isAuthenticated() && 
+        request.resource != null && 
+        request.resource.data.sectorId in getUserData().allowedSectors
+      );
+    }
+
+    // Upload History Audit collection rules
+    match /uploads_history/{uploadId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.uploadedBy == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+  }
+}
