@@ -121,6 +121,20 @@ export default function ModuleSelector({ user, onSelectModule }) {
     // Admin always sees everything
     if (userRole === 'admin') return true;
 
+    // Check specific sector restrictions on user object if present (e.g. allowedSectors: ['rh'])
+    if (user?.allowedSectors && Array.isArray(user.allowedSectors)) {
+      // Map module IDs to sector names
+      const modSector = mod.id === 'hr' ? 'rh' : mod.id === 'quality' ? 'qualidade' : mod.id;
+      // If user has restricted sectors, verify sector inclusion
+      if (user.allowedSectors.length > 0 && !user.allowedSectors.includes('all') && !user.allowedSectors.includes('admin')) {
+        // Special mapping for RH role: RH and Quality (BI)
+        if (userRole === 'rh') {
+          return mod.id === 'hr' || mod.id === 'quality';
+        }
+        return user.allowedSectors.includes(modSector);
+      }
+    }
+
     // Map module IDs to RBAC permission keys
     const permKey = mod.id === 'quality' ? 'index' : mod.id;
 

@@ -1,5 +1,12 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v1.2.40] - 30 de Julho, 2026
+### Limpeza de Usuários Duplicados e Restrição Estrita de Acesso RH/BI
+- **Desduplicação de Cadastros no Firestore Cloud:** Implementada limpeza automática na função `getUsers()` que identifica registros duplicados por e-mail (ex: `anacg@nexa.com` e `contato@techcosta.net`), retém automaticamente o cadastro com nome mais completo/extenso e exclui os registros duplicados antigos.
+- **Trava de Segurança de Portais RH:** Aplicado filtro estrito no `ModuleSelector.jsx` considerando `user.allowedSectors` e `user.role`, garantindo que perfis de Recursos Humanos só visualizem os portais de **Recursos Humanos (NexaHR)** e **Gestão da Qualidade (NexaINDEX - BI)**.
+
+---
+
 ## [v1.2.38] - 30 de Julho, 2026
 ### Persistência Fulltime de RBAC e SaaS no Firebase Cloud (Nuvem)
 - **Persistência Cloud Firestore:** Leitura e gravação das tabelas de permissões (`user_profiles`) e configurações SaaS (`tenant_settings`) integradas diretamente ao banco de dados do Google Cloud Firestore.

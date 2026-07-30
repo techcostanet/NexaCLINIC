@@ -284,10 +284,47 @@ export const dbService = {
     if (USE_MOCK) {
       return mockFirestore.getUsers();
     }
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+    const { getFirestore, collection, getDocs, doc, deleteDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
     const snap = await getDocs(collection(db, 'users'));
-    return snap.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+    const rawUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+
+    // Deduplicate by email keeping the user with the longest/most complete name
+    const emailGroups = {};
+    for (const u of rawUsers) {
+      const email = (u.email || '').trim().toLowerCase();
+      if (!email) continue;
+      if (!emailGroups[email]) {
+        emailGroups[email] = [];
+      }
+      emailGroups[email].push(u);
+    }
+
+    const deduplicated = [];
+    for (const email of Object.keys(emailGroups)) {
+      const group = emailGroups[email];
+      if (group.length === 1) {
+        deduplicated.push(group[0]);
+      } else {
+        // Sort group by name length descending (longest/most complete name first)
+        group.sort((a, b) => (b.name || '').length - (a.name || '').length);
+        const winner = group[0];
+        deduplicated.push(winner);
+
+        // Delete duplicate records with shorter names in background
+        for (let i = 1; i < group.length; i++) {
+          const loser = group[i];
+          try {
+            await deleteDoc(doc(db, 'users', loser.uid));
+            console.log(`[Deduplication] Deleted duplicate user record ${loser.uid} (${loser.name}) for ${email}`);
+          } catch (err) {
+            console.error(`Failed to delete duplicate user ${loser.uid}:`, err);
+          }
+        }
+      }
+    }
+
+    return deduplicated;
   },
 
   updateUserPermissions: async (uid, allowedSectors) => {

@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v1.2.40',
+      date: '30 de Julho, 2026',
+      title: 'Limpeza de Usuários Duplicados & Restrição Rigorosa de Acesso RH/BI',
+      description: 'Implementada desduplicação automática mantendo apenas cadastros completos e restrição garantida dos portais para usuários RH.',
+      changes: [
+        { type: 'Cadastro de Usuários', text: 'Limpeza de duplicidades de cadastros para anacg@nexa.com e contato@techcosta.net mantendo automaticamente o nome completo oficial.' },
+        { type: 'Segurança & Portais', text: 'Imposta trava de segurança garantindo a exibição exclusiva dos portais de Recursos Humanos e BI para perfis RH em qualquer dispositivo.' }
+      ]
+    },
+    {
       version: 'v1.2.38',
       date: '30 de Julho, 2026',
       title: 'Persistência Fulltime RBAC no Firebase Cloud (Nuvem)',
