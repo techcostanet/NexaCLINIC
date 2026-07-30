@@ -40,7 +40,7 @@ export default function PurchasingPanel() {
         setCurrentUser(found);
       } else {
         // Fallback for mock environment
-        setCurrentUser({ name: 'Comprador Nexa', role: 'admin', email: 'admin@clinica.com' });
+        setCurrentUser({ name: 'Administrador TechCosta', role: 'admin', email: 'contato@techcosta.net' });
       }
     });
 

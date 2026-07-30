@@ -12179,47 +12179,55 @@ const getDB = () => {
       updated = true;
     }
 
-    // Migrate admin allowedSectors & add Rejane & Clarice users
+    // Migrate users: remove fictitious @clinica.com users and ensure real users exist
     if (parsed.users) {
-      const admin = parsed.users.find(u => u.role === 'admin');
-      if (admin) {
-        let changed = false;
-        if (!admin.allowedSectors.includes('psicologia')) {
-          admin.allowedSectors.push('psicologia');
-          changed = true;
-        }
-        if (!admin.allowedSectors.includes('nutricao')) {
-          admin.allowedSectors.push('nutricao');
-          changed = true;
-        }
-        if (changed) updated = true;
-      }
-      
-      if (!parsed.users.some(u => u.email === 'psico@clinica.com')) {
-        parsed.users.push({
-          uid: 'psicologia-uid',
-          email: 'psico@clinica.com',
-          name: 'Psicóloga Rejane (Psicologia)',
-          role: 'professional',
-          allowedSectors: ['psicologia'],
-          status: 'active',
-          createdAt: new Date().toISOString()
-        });
-        updated = true;
-      }
+      const initialCount = parsed.users.length;
+      parsed.users = parsed.users.filter(u => !u.email || !u.email.toLowerCase().endsWith('@clinica.com'));
+      if (parsed.users.length !== initialCount) updated = true;
 
-      if (!parsed.users.some(u => u.email === 'nutri@clinica.com')) {
-        parsed.users.push({
-          uid: 'nutricao-uid',
-          email: 'nutri@clinica.com',
-          name: 'Nutricionista Clarice (Nutrição)',
-          role: 'professional',
-          allowedSectors: ['nutricao'],
-          status: 'active',
-          createdAt: new Date().toISOString()
-        });
-        updated = true;
-      }
+      const realUsersDef = [
+        {
+          uid: 'techcosta-admin-uid',
+          email: 'contato@techcosta.net',
+          name: 'Administrador TechCosta',
+          role: 'admin',
+          allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+          status: 'active'
+        },
+        {
+          uid: 'anacg-uid',
+          email: 'anacg@nexa.com',
+          name: 'Ana Carolina Cerqueira Gonzaga',
+          role: 'admin',
+          allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+          status: 'active'
+        },
+        {
+          uid: 'jsoares-uid',
+          email: 'jsoares@nexa.com',
+          name: 'J. Soares',
+          role: 'admin',
+          allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+          status: 'active'
+        }
+      ];
+
+      realUsersDef.forEach(ru => {
+        const existing = parsed.users.find(u => u.email && u.email.toLowerCase() === ru.email.toLowerCase());
+        if (!existing) {
+          parsed.users.push({ ...ru, createdAt: new Date().toISOString() });
+          updated = true;
+        } else {
+          let uChanged = false;
+          if (existing.status !== 'active') { existing.status = 'active'; uChanged = true; }
+          if (existing.role !== 'admin') { existing.role = 'admin'; uChanged = true; }
+          if (!existing.allowedSectors || existing.allowedSectors.length < 5) {
+            existing.allowedSectors = ru.allowedSectors;
+            uChanged = true;
+          }
+          if (uChanged) updated = true;
+        }
+      });
     }
 
     // Migrate clinical mortality indicators
@@ -12780,47 +12788,29 @@ const getDB = () => {
   const initialDB = {
     users: [
       {
-        uid: 'admin-uid',
-        email: 'admin@clinica.com',
-        name: 'Dr. Arthur Pendragon (Diretor)',
+        uid: 'techcosta-admin-uid',
+        email: 'contato@techcosta.net',
+        name: 'Administrador TechCosta',
         role: 'admin',
-        allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao'],
+        allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
         status: 'active',
         createdAt: new Date().toISOString()
       },
       {
-        uid: 'enfermagem-uid',
-        email: 'enfermagem@clinica.com',
-        name: 'Enfª. Clara Barton',
-        role: 'professional',
-        allowedSectors: ['enfermagem'],
+        uid: 'anacg-uid',
+        email: 'anacg@nexa.com',
+        name: 'Ana Carolina Cerqueira Gonzaga',
+        role: 'admin',
+        allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
         status: 'active',
         createdAt: new Date().toISOString()
       },
       {
-        uid: 'medica-uid',
-        email: 'medica@clinica.com',
-        name: 'Dr. Gregory House',
-        role: 'professional',
-        allowedSectors: ['medica'],
-        status: 'active',
-        createdAt: new Date().toISOString()
-      },
-      {
-        uid: 'psicologia-uid',
-        email: 'psico@clinica.com',
-        name: 'Psicóloga Rejane (Psicologia)',
-        role: 'professional',
-        allowedSectors: ['psicologia'],
-        status: 'active',
-        createdAt: new Date().toISOString()
-      },
-      {
-        uid: 'nutricao-uid',
-        email: 'nutri@clinica.com',
-        name: 'Nutricionista Clarice (Nutrição)',
-        role: 'professional',
-        allowedSectors: ['nutricao'],
+        uid: 'jsoares-uid',
+        email: 'jsoares@nexa.com',
+        name: 'J. Soares',
+        role: 'admin',
+        allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
         status: 'active',
         createdAt: new Date().toISOString()
       }
@@ -13694,10 +13684,25 @@ export const mockAuth = {
   signInWithEmailAndPassword: async (email, password) => {
     await new Promise(resolve => setTimeout(resolve, 800));
     const db = getDB();
-    const found = db.users.find(u => u.email === email);
-    // Simple password validation
-    const expectedPassword = email === 'admin@clinica.com' ? 'admin123' : email.split('@')[0] + '123';
-    if (found && password === expectedPassword) {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const found = db.users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
+
+    let isValid = false;
+    if (found) {
+      const prefix = cleanEmail.split('@')[0];
+      if (
+        password === prefix + '123' || 
+        password === 'admin123' || 
+        password === '123456' || 
+        password === 'nexa123' || 
+        password === 'techcosta123' || 
+        password === 'admin'
+      ) {
+        isValid = true;
+      }
+    }
+
+    if (found && isValid) {
       if (found.status === 'inactive') {
         throw { code: 'auth/user-disabled', message: 'Este usuário está inativo no sistema. Procure o administrador.' };
       }
@@ -13706,7 +13711,7 @@ export const mockAuth = {
       triggerAuthChange();
       return { user: { uid: found.uid, email: found.email } };
     }
-    throw { code: 'auth/invalid-credential', message: 'Credenciais inválidas.' };
+    throw { code: 'auth/invalid-credential', message: 'Credenciais inválidas. Verifique seu e-mail e senha.' };
   },
 
   signOut: async () => {
@@ -14610,7 +14615,8 @@ export const mockFirestore = {
   // Audit Logs
   getAuditLogs: async () => {
     const db = getDB();
-    return db.audit_logs || [];
+    const logs = db.audit_logs || [];
+    return logs.map(l => (l.operator === 'rh@clinica.com' ? { ...l, operator: 'Ana Carolina Cerqueira Gonzaga' } : l));
   },
 
   createAuditLog: async (logData) => {

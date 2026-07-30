@@ -42,40 +42,29 @@ export const authService = {
       const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found';
       
       if (isInvalidCred) {
-        if (email === 'admin@clinica.com' && password === 'admin123') {
+        const cleanEmail = (email || '').trim().toLowerCase();
+        const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'];
+        if (allowedEmails.includes(cleanEmail)) {
           try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const { getFirestore, doc, setDoc } = await import('firebase/firestore');
             const db = getFirestore(app);
+            const userName = cleanEmail === 'contato@techcosta.net' 
+              ? 'Administrador TechCosta' 
+              : cleanEmail === 'anacg@nexa.com' 
+              ? 'Ana Carolina Cerqueira Gonzaga' 
+              : 'J. Soares';
             await setDoc(doc(db, 'users', userCredential.user.uid), {
-              name: 'Administrador Geral',
+              name: userName,
               email: email,
               role: 'admin',
-              allowedSectors: ['enfermagem', 'equipe_medica', 'qualidade', 'faturamento'],
+              allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+              status: 'active',
               createdAt: new Date().toISOString()
             });
             return userCredential;
           } catch (createErr) {
-            console.error("Auto-creation of admin failed:", createErr);
-            throw err;
-          }
-        }
-        
-        if (email === 'enf.clara@clinica.com' && password === 'clara123') {
-          try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const { getFirestore, doc, setDoc } = await import('firebase/firestore');
-            const db = getFirestore(app);
-            await setDoc(doc(db, 'users', userCredential.user.uid), {
-              name: 'Enf. Clara (Enfermagem)',
-              email: email,
-              role: 'professional',
-              allowedSectors: ['enfermagem'],
-              createdAt: new Date().toISOString()
-            });
-            return userCredential;
-          } catch (createErr) {
-            console.error("Auto-creation of professional failed:", createErr);
+            console.error("Auto-creation of user failed:", createErr);
             throw err;
           }
         }
@@ -120,8 +109,22 @@ export const authService = {
               callback({ uid: firebaseUser.uid, email: firebaseUser.email, ...userData });
             } else {
               // If user is authenticated but not in database yet (e.g., first admin login)
-              // We check if it is the creator or fallback
-              callback({ uid: firebaseUser.uid, email: firebaseUser.email, role: 'admin', allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento'] });
+              const cleanEmail = (firebaseUser.email || '').trim().toLowerCase();
+              const userName = cleanEmail === 'contato@techcosta.net' 
+                ? 'Administrador TechCosta' 
+                : cleanEmail === 'anacg@nexa.com' 
+                ? 'Ana Carolina Cerqueira Gonzaga' 
+                : cleanEmail === 'jsoares@nexa.com' 
+                ? 'J. Soares' 
+                : 'Usuário Nexa';
+              callback({
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                name: firebaseUser.displayName || userName,
+                role: 'admin',
+                allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+                status: 'active'
+              });
             }
           } catch (e) {
             console.error('Erro ao ler perfil do Firestore:', e);

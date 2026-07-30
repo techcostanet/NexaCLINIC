@@ -115,7 +115,7 @@ export default function App() {
         ) : currentModule === 'stock' ? (
           <StockPanel />
         ) : currentModule === 'hr' ? (
-          <HRPanel />
+          <HRPanel currentUser={user} />
         ) : currentModule === 'finance' ? (
           <FinancePanel />
         ) : currentModule === 'purchasing' ? (

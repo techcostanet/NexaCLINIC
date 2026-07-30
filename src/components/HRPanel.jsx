@@ -7,7 +7,7 @@ import {
   Gift, Bus
 } from 'lucide-react';
 
-export default function HRPanel() {
+export default function HRPanel({ currentUser }) {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'employees' | 'users' | 'reports' | 'audit'
   
   // Data States
@@ -20,8 +20,8 @@ export default function HRPanel() {
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   
-  // Logged operator email (default for logs)
-  const [operatorEmail, setOperatorEmail] = useState('rh@clinica.com');
+  // Logged operator (default for logs)
+  const [operatorEmail, setOperatorEmail] = useState(currentUser?.name || currentUser?.email || 'Ana Carolina Cerqueira Gonzaga');
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
@@ -105,15 +105,21 @@ export default function HRPanel() {
 
   useEffect(() => {
     fetchData();
-    // Resolve operator email from session
-    const sess = sessionStorage.getItem('sistema_indicadores_session');
-    if (sess) {
-      dbService.getUsers().then(list => {
-        const found = list.find(u => u.uid === sess);
-        if (found) setOperatorEmail(found.email);
-      });
+    // Resolve operator name from currentUser or session
+    if (currentUser?.name) {
+      setOperatorEmail(currentUser.name);
+    } else if (currentUser?.email) {
+      setOperatorEmail(currentUser.email);
+    } else {
+      const sess = sessionStorage.getItem('sistema_indicadores_session');
+      if (sess) {
+        dbService.getUsers().then(list => {
+          const found = list.find(u => u.uid === sess);
+          if (found) setOperatorEmail(found.name || found.email);
+        });
+      }
     }
-  }, []);
+  }, [currentUser]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -154,8 +160,9 @@ export default function HRPanel() {
   // Helper Audit Logger
   const logAuditAction = async (action, details) => {
     try {
+      const op = currentUser?.name || currentUser?.email || (operatorEmail === 'rh@clinica.com' ? 'Ana Carolina Cerqueira Gonzaga' : operatorEmail);
       await dbService.createAuditLog({
-        operator: operatorEmail,
+        operator: op,
         action,
         details
       });
@@ -1468,7 +1475,9 @@ export default function HRPanel() {
                       .map(log => (
                         <tr key={log.id}>
                           <td>{new Date(log.date).toLocaleString('pt-BR')}</td>
-                          <td style={{ fontWeight: '600' }}>{log.operator}</td>
+                          <td style={{ fontWeight: '600' }}>
+                            {log.operator === 'rh@clinica.com' ? 'Ana Carolina Cerqueira Gonzaga' : log.operator}
+                          </td>
                           <td><span style={styles.categoryBadge}>{log.action}</span></td>
                           <td style={{ fontSize: '0.8rem', fontFamily: 'monospace', maxWidth: '350px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
                             {log.details}

@@ -32,7 +32,7 @@ export default function Login({ onLoginSuccess }) {
             <img src="/logo.png" alt="Costa Systems Logo" style={styles.logoImg} />
           </div>
           <h1 style={styles.title}>NexaCLINIC</h1>
-          <p style={styles.subtitle}>Plataforma de Gestão e Indicadores</p>
+          <p style={styles.subtitle}>Sistema de Gestão de Clínicas e Hospitais</p>
           <span style={styles.versionLabel}>v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0'}</span>
         </div>
 
@@ -52,7 +52,7 @@ export default function Login({ onLoginSuccess }) {
                 id="email"
                 type="email"
                 className="form-control"
-                placeholder="nome@clinica.com"
+                placeholder="usuario@nexa.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -89,22 +89,6 @@ export default function Login({ onLoginSuccess }) {
             {loading ? 'Autenticando...' : 'Entrar no Sistema'}
           </button>
         </form>
-
-        <div style={styles.demoBox}>
-          <p style={styles.demoTitle}>💡 Credenciais de Teste (Local Mock):</p>
-          <div style={styles.demoUser}>
-            <strong>Administrador:</strong> 
-            <code>admin@clinica.com</code> / <code>admin123</code>
-          </div>
-          <div style={styles.demoUser}>
-            <strong>Enfermagem:</strong> 
-            <code>enfermagem@clinica.com</code> / <code>enfermagem123</code>
-          </div>
-          <div style={styles.demoUser}>
-            <strong>Médico:</strong> 
-            <code>medica@clinica.com</code> / <code>medica123</code>
-          </div>
-        </div>
       </div>
     </div>
   );
