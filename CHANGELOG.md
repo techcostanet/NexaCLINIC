@@ -1,5 +1,13 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v2.0.1] - 30 de Julho, 2026
+### Lançamento da Versão Major 2.0.1 & Painel Operacional Financeiro Personalizável
+- **Painel Financeiro Focado na Operação:** Reformulado o Dashboard do Módulo Financeiro com quadros focados no operador do dia a dia (Contas a Pagar Hoje / Vencidas, Contas a Receber Hoje, Saldo de Caixa Realizado, Títulos em Atraso).
+- **Personalização Total por Operador:** Adicionada a funcionalidade `⚙️ Personalizar Painel` no Financeiro, permitindo reordenar (posição), alterar tamanhos (1 col, 2 col, 4 col) e ocultar/exibir quadros. As preferências são salvas por usuário.
+- **Marco de Lançamento Versão 2.0:** Mudança da versão principal para v2.0.1 consolidando a integração entre os módulos de NexaHR, Financeiro, Compras e Estoque.
+
+---
+
 ## [v1.2.47] - 30 de Julho, 2026
 ### Integração Tripla: Financeiro ⚡ Compras ⚡ Estoque
 - **Estoque ➔ Compras (Reposição Automática):** Botão de ação rápida `🛒 Pedir Compra` nos insumos com estoque abaixo do mínimo, gerando solicitações automáticas no Portal de Compras.

@@ -11,7 +11,14 @@ import {
   Calendar, 
   Briefcase, 
   Plus, 
-  RefreshCw 
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  Settings,
+  Eye,
+  EyeOff,
+  Save,
+  Clock
 } from 'lucide-react';
 import { dbService } from '../firebase';
 
@@ -21,6 +28,62 @@ export default function FinancePanel() {
   const [receivableList, setReceivableList] = useState([]);
   const [xmlImports, setXmlImports] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Custom Dashboard Layout for Financial Operator
+  const DEFAULT_FINANCE_LAYOUT = [
+    { id: 'payables_today', name: '🔴 Contas a Pagar Hoje & Vencidas', size: 'small', visible: true },
+    { id: 'receivables_today', name: '🟢 Contas a Receber Hoje', size: 'small', visible: true },
+    { id: 'cash_flow_summary', name: '💵 Saldo em Caixa (Realizado)', size: 'small', visible: true },
+    { id: 'overdue_alerts', name: '⚠️ Títulos em Atraso', size: 'small', visible: true },
+    { id: 'cash_flow_bar', name: '📊 Fluxo de Caixa (Entradas vs Saídas)', size: 'medium', visible: true },
+    { id: 'cost_distribution', name: '🍰 Distribuição de Despesas por Categoria', size: 'medium', visible: true },
+    { id: 'ebitda', name: '📈 EBITDA Realizado (Visão Executiva)', size: 'small', visible: false },
+    { id: 'apac_glosa', name: '📋 Glosa de Convênios & APACs', size: 'small', visible: true }
+  ];
+
+  const [dashboardLayout, setDashboardLayout] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sistema_indicadores_finance_dashboard_layout');
+      return saved ? JSON.parse(saved) : DEFAULT_FINANCE_LAYOUT;
+    } catch {
+      return DEFAULT_FINANCE_LAYOUT;
+    }
+  });
+
+  const [isCustomizingDashboard, setIsCustomizingDashboard] = useState(false);
+
+  const handleSaveDashboardLayout = (newLayout) => {
+    setDashboardLayout(newLayout);
+    try {
+      localStorage.setItem('sistema_indicadores_finance_dashboard_layout', JSON.stringify(newLayout));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleMoveCard = (index, direction) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= dashboardLayout.length) return;
+    const updated = [...dashboardLayout];
+    const temp = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = temp;
+    handleSaveDashboardLayout(updated);
+  };
+
+  const handleChangeCardSize = (id, newSize) => {
+    const updated = dashboardLayout.map(card => card.id === id ? { ...card, size: newSize } : card);
+    handleSaveDashboardLayout(updated);
+  };
+
+  const handleToggleCardVisibility = (id) => {
+    const updated = dashboardLayout.map(card => card.id === id ? { ...card, visible: !card.visible } : card);
+    handleSaveDashboardLayout(updated);
+  };
+
+  const handleResetDashboardLayout = () => {
+    handleSaveDashboardLayout(DEFAULT_FINANCE_LAYOUT);
+  };
 
   // Form states for manual additions
   const [showAddPayable, setShowAddPayable] = useState(false);
@@ -294,103 +357,274 @@ export default function FinancePanel() {
       {/* Portal Dashboard view */}
       {activeTab === 'dashboard' && (
         <div>
-          {/* Top KPI Cards Row */}
-          <div style={styles.kpiGrid}>
-            <div style={styles.kpiCard}>
-              <div style={styles.kpiHeader}>
-                <span style={styles.kpiLabel}>EBITDA Realizado (Mensal)</span>
-                <TrendingUp size={18} color="#10b981" />
-              </div>
-              <span style={{ ...styles.kpiValue, color: ebitda >= 0 ? '#10b981' : '#ef4444' }}>
-                R$ {ebitda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </span>
-              <div style={styles.kpiFooter}>
-                Projetado Total: R$ {ebitdaProjected.toLocaleString('pt-BR')}
-              </div>
+          {/* Customization Toolbar Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0.5rem 0.75rem', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            <div>
+              <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>Painel de Operações Financeiras</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>Visão customizável para operadores</span>
             </div>
-
-            <div style={styles.kpiCard}>
-              <div style={styles.kpiHeader}>
-                <span style={styles.kpiLabel}>Custo por Sessão HD (Médio)</span>
-                <TrendingDown size={18} color="#f59e0b" />
-              </div>
-              <span style={styles.kpiValue}>R$ 218,40</span>
-              <div style={styles.kpiFooter}>
-                Meta de Eficiência: R$ 210,00
-              </div>
-            </div>
-
-            <div style={styles.kpiCard}>
-              <div style={styles.kpiHeader}>
-                <span style={styles.kpiLabel}>Break-Even da Clínica</span>
-                <Briefcase size={18} color="#8b5cf6" />
-              </div>
-              <span style={styles.kpiValue}>1.450 sessões</span>
-              <div style={styles.kpiFooter}>
-                Realizado: 2.148 sessões no mês
-              </div>
-            </div>
-
-            <div style={styles.kpiCard}>
-              <div style={styles.kpiHeader}>
-                <span style={styles.kpiLabel}>Glosa de Convênio (Acumulado)</span>
-                <AlertCircle size={18} color="#ef4444" />
-              </div>
-              <span style={{ ...styles.kpiValue, color: '#ef4444' }}>1,84%</span>
-              <div style={styles.kpiFooter}>
-                Meta Aceitável: &lt; 2.0%
-              </div>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <button 
+                onClick={() => setIsCustomizingDashboard(!isCustomizingDashboard)}
+                style={{
+                  padding: '0.35rem 0.75rem',
+                  fontSize: '0.8rem',
+                  fontWeight: '600',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: isCustomizingDashboard ? '#10b981' : 'var(--bg-secondary)',
+                  color: isCustomizingDashboard ? '#ffffff' : 'var(--text-primary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}
+              >
+                <Settings size={14} />
+                <span>{isCustomizingDashboard ? 'Concluir Ajustes' : 'Personalizar Painel'}</span>
+              </button>
+              {isCustomizingDashboard && (
+                <button 
+                  onClick={handleResetDashboardLayout}
+                  style={{
+                    padding: '0.35rem 0.6rem',
+                    fontSize: '0.75rem',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Restaurar Padrão
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Graphical Representation Row */}
-          <div style={styles.dashboardSplit}>
-            <div style={styles.dashboardSection}>
-              <h3 style={styles.sectionTitle}>Fluxo de Caixa (Entradas vs. Saídas)</h3>
-              
-              <div style={styles.chartBarWrapper}>
-                <div style={styles.chartBarLabel}>
-                  <span>Entradas (Receitas Previstas)</span>
-                  <strong>R$ {totalReceivables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
-                </div>
-                <div style={styles.progressBarBg}>
-                  <div style={{ ...styles.progressBarFill, width: '100%', backgroundColor: '#10b981' }} />
-                </div>
-                <span style={styles.barPercentage}>Recebido: R$ {receivedAmount.toLocaleString('pt-BR')} ({((receivedAmount / totalReceivables) * 100).toFixed(1)}%)</span>
-              </div>
-
-              <div style={styles.chartBarWrapper}>
-                <div style={styles.chartBarLabel}>
-                  <span>Saídas (Despesas Previstas)</span>
-                  <strong>R$ {totalPayables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
-                </div>
-                <div style={styles.progressBarBg}>
-                  <div style={{ ...styles.progressBarFill, width: `${(totalPayables / totalReceivables) * 100}%`, backgroundColor: '#ef4444' }} />
-                </div>
-                <span style={styles.barPercentage}>Pago: R$ {paidAmount.toLocaleString('pt-BR')} ({((paidAmount / totalPayables) * 100).toFixed(1)}%)</span>
-              </div>
-            </div>
-
-            <div style={styles.dashboardSection}>
-              <h3 style={styles.sectionTitle}>Distribuição de Custos / Despesas</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {Object.entries(categories).map(([cat, val]) => {
-                  const perc = ((val / totalPayables) * 100).toFixed(1);
-                  return (
-                    <div key={cat} style={styles.costItem}>
-                      <div style={styles.costInfo}>
-                        <span style={styles.costCatName}>{cat}</span>
-                        <span style={styles.costPerc}>{perc}%</span>
-                      </div>
-                      <div style={styles.costBarBg}>
-                        <div style={{ ...styles.costBarFill, width: `${perc}%`, backgroundColor: '#3b82f6' }} />
-                      </div>
-                      <span style={styles.costValue}>R$ {val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  );
-                })}
+          {/* Customization Drawer when editing */}
+          {isCustomizingDashboard && (
+            <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#166534', display: 'block', marginBottom: '0.5rem' }}>Exibir / Ocultar Quadros Operacionais:</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {dashboardLayout.map(card => (
+                  <button
+                    key={card.id}
+                    onClick={() => handleToggleCardVisibility(card.id)}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '0.75rem',
+                      borderRadius: '4px',
+                      border: '1px solid #86efac',
+                      backgroundColor: card.visible ? '#dcfce7' : '#f1f5f9',
+                      color: card.visible ? '#15803d' : '#64748b',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem'
+                    }}
+                  >
+                    {card.visible ? <Eye size={12} /> : <EyeOff size={12} />}
+                    <span>{card.name}</span>
+                  </button>
+                ))}
               </div>
             </div>
+          )}
+
+          {/* Grid Layout Container */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '1rem',
+            alignItems: 'stretch'
+          }}>
+            {dashboardLayout
+              .filter(card => card.visible || isCustomizingDashboard)
+              .map((card, index) => {
+                const getGridSpan = (size) => {
+                  switch (size) {
+                    case 'large': return 'span 4';
+                    case 'medium': return 'span 2';
+                    default: return 'span 1';
+                  }
+                };
+
+                return (
+                  <div
+                    key={card.id}
+                    style={{
+                      gridColumn: getGridSpan(card.size),
+                      backgroundColor: 'var(--bg-card)',
+                      borderRadius: '10px',
+                      border: isCustomizingDashboard ? '2px dashed #10b981' : '1px solid var(--border-color)',
+                      padding: '1rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      opacity: !card.visible && isCustomizingDashboard ? 0.5 : 1,
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {/* Controls overlay in customizing mode */}
+                    {isCustomizingDashboard && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(16,185,129,0.08)', padding: '0.35rem 0.5rem', borderRadius: '6px', marginBottom: '0.75rem', fontSize: '0.75rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                          <button disabled={index === 0} onClick={() => handleMoveCard(index, -1)} style={{ border: 'none', background: 'none', cursor: 'pointer', opacity: index === 0 ? 0.3 : 1 }} title="Mover para esquerda/cima"><ChevronLeft size={16} /></button>
+                          <button disabled={index === dashboardLayout.length - 1} onClick={() => handleMoveCard(index, 1)} style={{ border: 'none', background: 'none', cursor: 'pointer', opacity: index === dashboardLayout.length - 1 ? 0.3 : 1 }} title="Mover para direita/baixo"><ChevronRight size={16} /></button>
+                          <span style={{ fontWeight: '700', color: '#10b981' }}>Pos. {index + 1}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <span style={{ fontWeight: '600' }}>Tamanho:</span>
+                          <select value={card.size || 'small'} onChange={e => handleChangeCardSize(card.id, e.target.value)} style={{ fontSize: '0.75rem', padding: '0.15rem 0.3rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                            <option value="small">Pequeno (1 Col)</option>
+                            <option value="medium">Médio (2 Col)</option>
+                            <option value="large">Grande (4 Col)</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Operational Card Content Renderers */}
+                    {card.id === 'payables_today' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                        <div style={styles.kpiHeader}>
+                          <span style={styles.kpiLabel}>Contas a Pagar Hoje / Vencidas</span>
+                          <AlertCircle size={18} color="#ef4444" />
+                        </div>
+                        <span style={{ ...styles.kpiValue, color: payablesTodayOrOverdue.length > 0 ? '#ef4444' : '#10b981' }}>
+                          R$ {totalPayablesTodayOrOverdue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <div style={styles.kpiFooter}>
+                          {payablesTodayOrOverdue.length} conta(s) pendente(s) de quitação
+                        </div>
+                      </div>
+                    )}
+
+                    {card.id === 'receivables_today' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                        <div style={styles.kpiHeader}>
+                          <span style={styles.kpiLabel}>Contas a Receber Hoje</span>
+                          <TrendingUp size={18} color="#10b981" />
+                        </div>
+                        <span style={{ ...styles.kpiValue, color: '#10b981' }}>
+                          R$ {totalReceivablesToday.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <div style={styles.kpiFooter}>
+                          Recebido hoje: R$ {receivedToday.toLocaleString('pt-BR')} ({receivablesToday.length} títulos)
+                        </div>
+                      </div>
+                    )}
+
+                    {card.id === 'cash_flow_summary' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                        <div style={styles.kpiHeader}>
+                          <span style={styles.kpiLabel}>Saldo em Caixa (Realizado)</span>
+                          <DollarSign size={18} color="#3b82f6" />
+                        </div>
+                        <span style={{ ...styles.kpiValue, color: realizedBalance >= 0 ? '#3b82f6' : '#ef4444' }}>
+                          R$ {realizedBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <div style={styles.kpiFooter}>
+                          Entradas: R$ {totalReceivedRealized.toLocaleString('pt-BR')} | Saídas: R$ {totalPaidRealized.toLocaleString('pt-BR')}
+                        </div>
+                      </div>
+                    )}
+
+                    {card.id === 'overdue_alerts' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                        <div style={styles.kpiHeader}>
+                          <span style={styles.kpiLabel}>Títulos em Atraso (Cobrança & Juros)</span>
+                          <Clock size={18} color="#f59e0b" />
+                        </div>
+                        <span style={{ ...styles.kpiValue, color: '#f59e0b' }}>
+                          {overduePayables.length + overdueReceivables.length} pendência(s)
+                        </span>
+                        <div style={styles.kpiFooter}>
+                          Total acumulado: R$ {totalOverdueAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    )}
+
+                    {card.id === 'cash_flow_bar' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        <h3 style={styles.sectionTitle}>Fluxo de Caixa (Entradas vs. Saídas)</h3>
+                        <div style={styles.chartBarWrapper}>
+                          <div style={styles.chartBarLabel}>
+                            <span>Entradas (Receitas Previstas)</span>
+                            <strong>R$ {totalReceivables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                          </div>
+                          <div style={styles.progressBarBg}>
+                            <div style={{ ...styles.progressBarFill, width: '100%', backgroundColor: '#10b981' }} />
+                          </div>
+                          <span style={styles.barPercentage}>Recebido: R$ {receivedAmount.toLocaleString('pt-BR')} ({((receivedAmount / (totalReceivables || 1)) * 100).toFixed(1)}%)</span>
+                        </div>
+                        <div style={styles.chartBarWrapper}>
+                          <div style={styles.chartBarLabel}>
+                            <span>Saídas (Despesas Previstas)</span>
+                            <strong>R$ {totalPayables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                          </div>
+                          <div style={styles.progressBarBg}>
+                            <div style={{ ...styles.progressBarFill, width: `${((totalPayables / (totalReceivables || 1)) * 100).toFixed(1)}%`, backgroundColor: '#ef4444' }} />
+                          </div>
+                          <span style={styles.barPercentage}>Pago: R$ {paidAmount.toLocaleString('pt-BR')} ({((paidAmount / (totalPayables || 1)) * 100).toFixed(1)}%)</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {card.id === 'cost_distribution' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        <h3 style={styles.sectionTitle}>Distribuição de Custos / Despesas</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          {Object.entries(categories).map(([cat, val]) => {
+                            const perc = ((val / (totalPayables || 1)) * 100).toFixed(1);
+                            return (
+                              <div key={cat} style={styles.costItem}>
+                                <div style={styles.costInfo}>
+                                  <span style={styles.costCatName}>{cat}</span>
+                                  <span style={styles.costPerc}>{perc}%</span>
+                                </div>
+                                <div style={styles.costBarBg}>
+                                  <div style={{ ...styles.costBarFill, width: `${perc}%`, backgroundColor: '#3b82f6' }} />
+                                </div>
+                                <span style={styles.costValue}>R$ {val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {card.id === 'ebitda' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                        <div style={styles.kpiHeader}>
+                          <span style={styles.kpiLabel}>EBITDA Realizado (Visão Executiva)</span>
+                          <TrendingUp size={18} color="#10b981" />
+                        </div>
+                        <span style={{ ...styles.kpiValue, color: ebitda >= 0 ? '#10b981' : '#ef4444' }}>
+                          R$ {ebitda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <div style={styles.kpiFooter}>
+                          Projetado Total: R$ {ebitdaProjected.toLocaleString('pt-BR')}
+                        </div>
+                      </div>
+                    )}
+
+                    {card.id === 'apac_glosa' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                        <div style={styles.kpiHeader}>
+                          <span style={styles.kpiLabel}>Glosa de Convênios & APACs</span>
+                          <AlertCircle size={18} color="#ef4444" />
+                        </div>
+                        <span style={{ ...styles.kpiValue, color: '#ef4444' }}>1,84%</span>
+                        <div style={styles.kpiFooter}>
+                          {mockApacs.filter(a => a.status === 'Urgente').length} APAC(s) exigindo renovação urgente
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
           </div>
         </div>
       )}

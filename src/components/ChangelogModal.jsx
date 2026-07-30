@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.0.1',
+      date: '30 de Julho, 2026',
+      title: 'Lançamento da Versão 2.0.1 - Painel Financeiro Operacional Personalizável',
+      description: 'Grandes transformações no sistema! Painel de Controle do Financeiro focado em operações diárias com customização de quadros por usuário.',
+      changes: [
+        { type: 'Painel Operacional', text: 'Quadros direcionados ao operador financeiro (Contas a Pagar/Receber Hoje, Saldo de Caixa Realizado e Títulos em Atraso).' },
+        { type: 'Personalização do Painel', text: 'Botão "Personalizar Painel" para reordenar, redimensionar e escolher os quadros visíveis.' },
+        { type: 'Versão 2.0.1 Major', text: 'Marco histórico de integração total dos módulos Financeiro, Compras, Estoque e NexaHR.' }
+      ]
+    },
+    {
       version: 'v1.2.47',
       date: '30 de Julho, 2026',
       title: 'Integração Tripla: Financeiro, Compras e Estoque',
