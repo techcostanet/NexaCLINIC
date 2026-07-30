@@ -221,12 +221,16 @@ export default function PurchasingPanel() {
     ];
 
     try {
+      const payableRefId = 'PAY-' + Math.random().toString(36).substr(2, 7).toUpperCase();
+
       // 1. Update purchase state to Completed
       await dbService.updatePurchase(req.id, {
         status: 'Finalizado',
         quotes: { supplierA, supplierB, supplierC },
         selectedSupplier: selectedSupplierId,
-        history: updatedHistory
+        history: updatedHistory,
+        payableId: payableRefId,
+        paymentStatus: 'Pendente'
       });
 
       // 2. Automate Entry inside stock system
@@ -243,7 +247,26 @@ export default function PurchasingPanel() {
         });
       }
 
-      showAlert('Compra finalizada e estoque atualizado com sucesso!', 'success');
+      // 3. Automate Payable Entry inside Financial system
+      if (dbService.saveAccountsPayable) {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 30);
+        await dbService.saveAccountsPayable({
+          id: payableRefId,
+          supplier: selectedSupplier.name,
+          cnpj: selectedSupplier.cnpj || '12.345.678/0001-90',
+          description: `Compra: ${req.productName} (Ref: Pedido #${req.id})`,
+          amount: parseFloat(selectedSupplier.price) || 0,
+          dueDate: dueDate.toISOString().substring(0, 10),
+          category: 'Insumo Clínico',
+          invoiceNumber: `NF-${Math.floor(100000 + Math.random() * 900000)}`,
+          status: 'Pendente',
+          purchaseId: req.id,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      showAlert('Compra finalizada, estoque abastecido e conta a pagar lançada no Financeiro!', 'success');
       setActiveQuoteId(null);
       setQuoteForm({
         supplierA: { name: '', price: '', deliveryDays: '' },

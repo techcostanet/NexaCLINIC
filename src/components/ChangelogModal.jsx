@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v1.2.47',
+      date: '30 de Julho, 2026',
+      title: 'Integração Tripla: Financeiro, Compras e Estoque',
+      description: 'Conexão fluida entre os 3 módulos: reposição automática a partir do estoque crítico, lançamento automático de Contas a Pagar na aprovação de compras e importação unificada de NFe.',
+      changes: [
+        { type: 'Reposição Automática', text: 'Botão "Pedir Compra" no Estoque Crítico gera solicitação direta para o Portal de Compras.' },
+        { type: 'Automação Financeira', text: 'Finalização de compras e notas fiscais geram automaticamente os títulos a pagar no Módulo Financeiro.' },
+        { type: 'Retroalimentação de Status', text: 'Quitação no Financeiro reflete com badges visuais nos módulos de Compras e Estoque.' }
+      ]
+    },
+    {
       version: 'v1.2.46',
       date: '30 de Julho, 2026',
       title: 'Aprimoramento do Monitoramento de Contratos em Experiência',

@@ -157,6 +157,14 @@ export default function FinancePanel() {
         status: nextStatus,
         paymentDate
       });
+
+      // Synchronize back to Purchasing Order if applicable
+      if (item.purchaseId && dbService.updatePurchase) {
+        await dbService.updatePurchase(item.purchaseId, {
+          paymentStatus: nextStatus === 'Pago' ? 'Quitado' : 'Pendente'
+        });
+      }
+
       loadData();
     } catch (err) {
       console.error(err);
@@ -512,7 +520,18 @@ export default function FinancePanel() {
                   .map(p => (
                     <tr key={p.id} style={styles.tr}>
                       <td style={styles.td}>
-                        <strong>{p.supplier}</strong>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <strong>{p.supplier}</strong>
+                          {p.purchaseId ? (
+                            <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: '700' }}>
+                              🛒 Compras
+                            </span>
+                          ) : p.description?.includes('NF-e') ? (
+                            <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#f1f5f9', color: '#475569', fontWeight: '700' }}>
+                              📦 Estoque NFe
+                            </span>
+                          ) : null}
+                        </div>
                         {p.description && <div style={styles.subtext}>{p.description}</div>}
                       </td>
                       <td style={styles.td}>{p.category}</td>

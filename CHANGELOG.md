@@ -1,5 +1,14 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v1.2.47] - 30 de Julho, 2026
+### Integração Tripla: Financeiro ⚡ Compras ⚡ Estoque
+- **Estoque ➔ Compras (Reposição Automática):** Botão de ação rápida `🛒 Pedir Compra` nos insumos com estoque abaixo do mínimo, gerando solicitações automáticas no Portal de Compras.
+- **Compras ➔ Financeiro & Estoque (Contas a Pagar Automáticas):** A finalização de compras e cotações cria instantaneamente o lançamento de Contas a Pagar no Financeiro e alimenta o saldo do almoxarifado.
+- **Importação NFe Integrada:** A importação de XML no Estoque dispara automaticamente a criação do título de Contas a Pagar no Financeiro com vencimento, fornecedor e CNPJ.
+- **Retroalimentação de Quitação:** Ao quitar um título no Financeiro (`Status: Pago`), o pedido de compra e o lançamento correspondente recebem o badge de quitação e acompanhamento em tempo real.
+
+---
+
 ## [v1.2.46] - 30 de Julho, 2026
 ### Aprimoramento da Identificação de Contratos em Experiência
 - **Filtro Inteligente de Período Probatório:** Reformulada a lógica de detecção de contratos em experiência para capturar automaticamente colaboradores com vínculo explícito `"Experiência"` ou admitidos nos últimos 90 dias.

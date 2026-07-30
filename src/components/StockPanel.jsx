@@ -191,6 +191,34 @@ export default function StockPanel() {
     }
   };
 
+  const handleQuickPurchaseRequest = async (item) => {
+    setActionLoading(true);
+    try {
+      const neededQty = Math.max(10, (parseFloat(item.minStock) * 2) - parseFloat(item.currentStock));
+      await dbService.createPurchase({
+        type: 'Reposição',
+        selectedStockId: item.id,
+        productId: item.id,
+        productName: item.name,
+        quantity: neededQty,
+        justification: `Reposição automática gerada por Estoque Crítico (Saldo: ${item.currentStock}, Mínimo: ${item.minStock}).`,
+        sector: item.category || 'Almoxarifado',
+        status: 'Aguardando Gestor',
+        requesterName: 'Almoxarifado (Estoque)',
+        requesterEmail: 'estoque@clinica.com',
+        history: [
+          { status: 'Aguardando Gestor', date: new Date().toISOString(), message: `Solicitação gerada automaticamente pelo alerta de estoque baixo no almoxarifado.` }
+        ]
+      });
+      showAlert(`Solicitação de compra para "${item.name}" enviada para o Portal de Compras com sucesso!`, 'success');
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao enviar solicitação de compra.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // ----------------------------------------------------
   // Supplier Methods
   // ----------------------------------------------------
@@ -535,7 +563,23 @@ export default function StockPanel() {
         items: finalItemsList
       });
 
-      showAlert(`Nota Fiscal Nº ${xmlData.number} processada e estoque abastecido!`, 'success');
+      // Step 3: Automate Payable Account creation in Finance
+      if (dbService.saveAccountsPayable) {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 30);
+        await dbService.saveAccountsPayable({
+          supplier: supplierMapping.name,
+          cnpj: supplierMapping.cnpj || '00.000.000/0001-00',
+          description: `Entrada NF-e Nº ${xmlData.number} (Importação de Estoque)`,
+          amount: parseFloat(xmlData.totalValue) || 0,
+          dueDate: dueDate.toISOString().substring(0, 10),
+          category: 'Insumo Clínico',
+          invoiceNumber: xmlData.number,
+          status: 'Pendente'
+        });
+      }
+
+      showAlert(`Nota Fiscal Nº ${xmlData.number} processada, estoque abastecido e conta a pagar lançada no Financeiro!`, 'success');
       setShowXmlWizard(false);
       fetchData();
     } catch (err) {
@@ -759,9 +803,16 @@ export default function StockPanel() {
                           </td>
                           <td>R$ {item.price ? item.price.toFixed(2) : '0.00'}</td>
                           <td>
-                            <button onClick={() => handleOpenEditModal(item)} style={styles.actionEditBtn}>
-                              Editar
-                            </button>
+                            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                              <button onClick={() => handleOpenEditModal(item)} style={styles.actionEditBtn}>
+                                Editar
+                              </button>
+                              {isLow && (
+                                <button onClick={() => handleQuickPurchaseRequest(item)} style={{ ...styles.actionEditBtn, backgroundColor: '#ec4899', color: '#ffffff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '2px' }} title="Gerar solicitação automática no Portal de Compras">
+                                  <Plus size={12} /> Pedir Compra
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
