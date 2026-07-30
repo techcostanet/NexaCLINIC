@@ -14804,5 +14804,138 @@ export const mockFirestore = {
     } catch (err) {
       throw new Error('Falha ao restaurar backup: ' + err.message);
     }
+  },
+
+  // Debts and Installments API
+  getDebts: async () => {
+    const db = getDB();
+    if (!db.debts || db.debts.length === 0) {
+      db.debts = [
+        {
+          id: 'debt-1',
+          creditor: 'Fresenius Medical Care (Financiamento)',
+          totalAmount: 180000.00,
+          installmentCount: 36,
+          installmentAmount: 5000.00,
+          firstDueDate: '2026-01-10',
+          category: 'Equipamento',
+          status: 'Ativo',
+          notes: 'Financiamento de 6 Máquinas de Hemodiálise 4008S'
+        },
+        {
+          id: 'debt-2',
+          creditor: 'Banco Itaú BBA (Empréstimo Expansão)',
+          totalAmount: 120000.00,
+          installmentCount: 24,
+          installmentAmount: 5000.00,
+          firstDueDate: '2026-03-15',
+          category: 'Serviço/Utilidades',
+          status: 'Ativo',
+          notes: 'Financiamento da obra de ampliação do setor de hemodiálise'
+        }
+      ];
+      setDB(db);
+    }
+    return db.debts;
+  },
+
+  saveDebt: async (debtData) => {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const db = getDB();
+    if (!db.debts) db.debts = [];
+    if (!db.accounts_payable) db.accounts_payable = [];
+
+    const isEdit = !!debtData.id;
+    const debtId = debtData.id || 'debt-' + Math.random().toString(36).substr(2, 9);
+    
+    const count = parseInt(debtData.installmentCount) || 1;
+    const totalVal = parseFloat(debtData.totalAmount) || 0;
+    const instVal = parseFloat(debtData.installmentAmount) || (totalVal / count);
+
+    const updatedDebt = {
+      ...debtData,
+      id: debtId,
+      totalAmount: totalVal,
+      installmentCount: count,
+      installmentAmount: instVal,
+      status: debtData.status || 'Ativo',
+      updatedAt: new Date().toISOString()
+    };
+
+    if (isEdit) {
+      const idx = db.debts.findIndex(d => d.id === debtId);
+      if (idx > -1) db.debts[idx] = updatedDebt;
+    } else {
+      db.debts.push(updatedDebt);
+
+      // AUTOMATICALLY GENERATE N MONTHLY INSTALLMENTS IN ACCOUNTS PAYABLE
+      const firstDate = new Date(debtData.firstDueDate || Date.now());
+      for (let i = 0; i < count; i++) {
+        const dueDate = new Date(firstDate);
+        dueDate.setMonth(dueDate.getMonth() + i);
+        const padInst = String(i + 1).padStart(2, '0');
+        const padCount = String(count).padStart(2, '0');
+
+        db.accounts_payable.push({
+          id: `pay-${debtId}-inst-${i + 1}`,
+          debtId: debtId,
+          supplier: debtData.creditor,
+          cnpj: debtData.cnpj || '00.000.000/0001-00',
+          description: `Dívida: ${debtData.creditor} (Parc. ${padInst}/${padCount})`,
+          amount: instVal,
+          dueDate: dueDate.toISOString().substring(0, 10),
+          category: debtData.category || 'Equipamento',
+          invoiceNumber: `DIV-${debtId.substring(0, 6)}-${padInst}`,
+          status: 'Pendente',
+          paymentDate: ''
+        });
+      }
+    }
+
+    setDB(db);
+    return updatedDebt;
+  },
+
+  deleteDebt: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.debts) {
+      db.debts = db.debts.filter(d => d.id !== id);
+    }
+    if (db.accounts_payable) {
+      db.accounts_payable = db.accounts_payable.filter(p => p.debtId !== id);
+    }
+    setDB(db);
+    return { success: true };
+  },
+
+  // Bank Statement Reconciliation API
+  getBankStatements: async () => {
+    const db = getDB();
+    if (!db.bank_statements || db.bank_statements.length === 0) {
+      db.bank_statements = [
+        { id: 'bank-1', date: '2026-07-28', description: 'PIX PAGAMENTO FRESENIUS MED CARE', amount: -5000.00, type: 'Débito', bankName: 'Itaú Unibanco', status: 'Conciliado' },
+        { id: 'bank-2', date: '2026-07-25', description: 'TED BRADESCO SAUDE REPASSE CONVENIO', amount: 45000.00, type: 'Crédito', bankName: 'Itaú Unibanco', status: 'Conciliado' },
+        { id: 'bank-3', date: '2026-07-29', description: 'TARIFA MANUTENCAO CONTA PJ ITAU', amount: -185.90, type: 'Débito', bankName: 'Itaú Unibanco', status: 'Divergente', note: 'Tarifa bancária não registrada no Financeiro' },
+        { id: 'bank-4', date: '2026-07-30', description: 'DEBITO AUTOMATICO CEMIG ENERGIA', amount: -14250.00, type: 'Débito', bankName: 'Itaú Unibanco', status: 'Conciliado' },
+        { id: 'bank-5', date: '2026-07-30', description: 'PIX REPASSE UNIMED BH SESSÕES HD', amount: 38200.00, type: 'Crédito', bankName: 'Itaú Unibanco', status: 'Divergente', note: 'Divergência de R$ 300,00 referente a retenção de imposto' }
+      ];
+      setDB(db);
+    }
+    return db.bank_statements;
+  },
+
+  saveBankStatement: async (statementData) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (!db.bank_statements) db.bank_statements = [];
+    const newTx = {
+      id: 'bank-' + Math.random().toString(36).substr(2, 9),
+      ...statementData,
+      status: statementData.status || 'Pendente'
+    };
+    db.bank_statements.push(newTx);
+    setDB(db);
+    return newTx;
   }
 };

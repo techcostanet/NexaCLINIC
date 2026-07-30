@@ -112,6 +112,24 @@ export default function FinancePanel() {
   const [payableFilter, setPayableFilter] = useState('Todos'); // 'Todos' | 'Pendente' | 'Pago'
   const [receivableFilter, setReceivableFilter] = useState('Todos'); // 'Todos' | 'Pendente' | 'Pago'
 
+  // Debts & Installments States
+  const [debtsList, setDebtsList] = useState([]);
+  const [bankStatements, setBankStatements] = useState([]);
+
+  const [showAddDebt, setShowAddDebt] = useState(false);
+  const [editingDebt, setEditingDebt] = useState(null);
+  const [newDebt, setNewDebt] = useState({
+    creditor: '',
+    cnpj: '',
+    totalAmount: '',
+    installmentCount: '12',
+    installmentAmount: '',
+    firstDueDate: new Date().toISOString().substring(0, 10),
+    category: 'Equipamento',
+    notes: ''
+  });
+  const [selectedDebtDetail, setSelectedDebtDetail] = useState(null);
+
   // Load database tables
   const loadData = async () => {
     setLoading(true);
@@ -119,10 +137,14 @@ export default function FinancePanel() {
       const pay = await dbService.getAccountsPayable();
       const rec = await dbService.getAccountsReceivable();
       const xmls = await dbService.getXmlImports();
+      const debts = dbService.getDebts ? await dbService.getDebts() : [];
+      const stmts = dbService.getBankStatements ? await dbService.getBankStatements() : [];
 
       setPayableList(pay);
       setReceivableList(rec);
       setXmlImports(xmls);
+      setDebtsList(debts);
+      setBankStatements(stmts);
     } catch (err) {
       console.error('Erro ao buscar dados financeiros:', err);
     } finally {
@@ -133,6 +155,87 @@ export default function FinancePanel() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Handlers for Debts & Installments
+  const handleSaveDebt = async (e) => {
+    e.preventDefault();
+    if (!newDebt.creditor || !newDebt.totalAmount) {
+      alert('Preencha o credor e o valor total da dívida.');
+      return;
+    }
+    try {
+      await dbService.saveDebt(newDebt);
+      setShowAddDebt(false);
+      setEditingDebt(null);
+      setNewDebt({
+        creditor: '',
+        cnpj: '',
+        totalAmount: '',
+        installmentCount: '12',
+        installmentAmount: '',
+        firstDueDate: new Date().toISOString().substring(0, 10),
+        category: 'Equipamento',
+        notes: ''
+      });
+      loadData();
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao salvar parcelamento.');
+    }
+  };
+
+  const handleDeleteDebt = async (id) => {
+    if (confirm('Deseja realmente excluir esta dívida e todas as suas parcelas pendentes em Contas a Pagar?')) {
+      try {
+        await dbService.deleteDebt(id);
+        if (selectedDebtDetail?.id === id) setSelectedDebtDetail(null);
+        loadData();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleQuickReconcile = async (stmt) => {
+    try {
+      if (stmt.type === 'Débito' && dbService.saveAccountsPayable) {
+        await dbService.saveAccountsPayable({
+          supplier: stmt.description,
+          cnpj: '00.000.000/0001-00',
+          description: `Conciliação Automática: ${stmt.description}`,
+          amount: Math.abs(stmt.amount),
+          dueDate: stmt.date,
+          category: 'Serviço/Utilidades',
+          invoiceNumber: `EXT-${stmt.id}`,
+          status: 'Pago',
+          paymentDate: stmt.date
+        });
+      } else if (stmt.type === 'Crédito' && dbService.saveAccountsReceivable) {
+        await dbService.saveAccountsReceivable({
+          client: stmt.description,
+          category: 'Convênio',
+          description: `Conciliação Automática: ${stmt.description}`,
+          amount: Math.abs(stmt.amount),
+          dueDate: stmt.date,
+          invoiceNumber: `EXT-${stmt.id}`,
+          status: 'Pago',
+          receivedDate: stmt.date
+        });
+      }
+
+      if (dbService.saveBankStatement) {
+        await dbService.saveBankStatement({
+          ...stmt,
+          status: 'Conciliado',
+          note: 'Conciliado manualmente via painel de conciliação'
+        });
+      }
+
+      loadData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // XML drag and drop simulation
   const handleXmlSimulatedImport = async () => {
@@ -358,6 +461,18 @@ export default function FinancePanel() {
             style={{ ...styles.tabBtn, ...(activeTab === 'receivable' ? styles.tabBtnActive : {}) }}
           >
             Contas a Receber ({receivableList.filter(r => r.status === 'Pendente').length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('installments')} 
+            style={{ ...styles.tabBtn, ...(activeTab === 'installments' ? styles.tabBtnActive : {}) }}
+          >
+            Parcelamentos & Dívidas ({debtsList.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('reconciliation')} 
+            style={{ ...styles.tabBtn, ...(activeTab === 'reconciliation' ? styles.tabBtnActive : {}) }}
+          >
+            Conciliação Bancária
           </button>
           <button 
             onClick={() => setActiveTab('apac')} 
@@ -976,6 +1091,372 @@ export default function FinancePanel() {
                       </td>
                     </tr>
                   ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Installments & Debts View (Parcelamentos & Dívidas) */}
+      {activeTab === 'installments' && (
+        <div style={styles.tabContent}>
+          <div style={styles.actionsBar}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Contratos de Dívidas & Financiamentos</h3>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Ao cadastrar um parcelamento, o sistema gera automaticamente os lançamentos mês a mês no Contas a Pagar.
+              </span>
+            </div>
+
+            <button onClick={() => setShowAddDebt(!showAddDebt)} style={styles.btnPrimary}>
+              <Plus size={14} />
+              <span>Novo Parcelamento / Dívida</span>
+            </button>
+          </div>
+
+          {/* Add New Debt / Installment Form */}
+          {showAddDebt && (
+            <form onSubmit={handleSaveDebt} style={styles.formContainer}>
+              <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-primary)' }}>Novo Parcelamento de Dívida / Contrato</h4>
+              <div style={styles.formGrid}>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Credor / Banco / Fornecedor</label>
+                  <input 
+                    type="text" 
+                    value={newDebt.creditor} 
+                    onChange={e => setNewDebt({...newDebt, creditor: e.target.value})} 
+                    placeholder="Ex: Fresenius Medical Care / Banco Itaú"
+                    style={styles.input} 
+                    required 
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>CNPJ do Credor (Opcional)</label>
+                  <input 
+                    type="text" 
+                    value={newDebt.cnpj} 
+                    onChange={e => setNewDebt({...newDebt, cnpj: e.target.value})} 
+                    placeholder="00.000.000/0001-00"
+                    style={styles.input} 
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Valor Total da Dívida (R$)</label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    value={newDebt.totalAmount} 
+                    onChange={e => {
+                      const total = parseFloat(e.target.value) || 0;
+                      const count = parseInt(newDebt.installmentCount) || 1;
+                      setNewDebt({
+                        ...newDebt, 
+                        totalAmount: e.target.value,
+                        installmentAmount: (total / count).toFixed(2)
+                      });
+                    }} 
+                    style={styles.input} 
+                    required 
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Nº de Parcelas</label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    max="120"
+                    value={newDebt.installmentCount} 
+                    onChange={e => {
+                      const count = parseInt(e.target.value) || 1;
+                      const total = parseFloat(newDebt.totalAmount) || 0;
+                      setNewDebt({
+                        ...newDebt, 
+                        installmentCount: e.target.value,
+                        installmentAmount: count > 0 ? (total / count).toFixed(2) : '0.00'
+                      });
+                    }} 
+                    style={styles.input} 
+                    required 
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Valor Parcela Mensal (R$)</label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    value={newDebt.installmentAmount} 
+                    onChange={e => setNewDebt({...newDebt, installmentAmount: e.target.value})} 
+                    style={styles.input} 
+                    required 
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Vencimento 1ª Parcela</label>
+                  <input 
+                    type="date" 
+                    value={newDebt.firstDueDate} 
+                    onChange={e => setNewDebt({...newDebt, firstDueDate: e.target.value})} 
+                    style={styles.input} 
+                    required 
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Categoria</label>
+                  <select 
+                    value={newDebt.category} 
+                    onChange={e => setNewDebt({...newDebt, category: e.target.value})} 
+                    style={styles.input}
+                  >
+                    <option value="Equipamento">Equipamento / Máquinas</option>
+                    <option value="Serviço/Utilidades">Empréstimo / Financiamento</option>
+                    <option value="Insumo Clínico">Insumo Clínico Parcelado</option>
+                    <option value="Outros">Outras Dívidas</option>
+                  </select>
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Observações / Contrato</label>
+                  <input 
+                    type="text" 
+                    value={newDebt.notes} 
+                    onChange={e => setNewDebt({...newDebt, notes: e.target.value})} 
+                    placeholder="Ex: Contrato de Financiamento #40291"
+                    style={styles.input} 
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setShowAddDebt(false)} style={styles.btnSecondary}>Cancelar</button>
+                <button type="submit" style={styles.btnSave}>Gerar Dívida & Parcelas</button>
+              </div>
+            </form>
+          )}
+
+          {/* Table of Debts */}
+          <div style={styles.tableWrapper}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>Credor / Instituição</th>
+                  <th style={styles.th}>Categoria</th>
+                  <th style={styles.th}>Valor Total</th>
+                  <th style={styles.th}>Parcelas</th>
+                  <th style={styles.th}>Valor Mensal</th>
+                  <th style={styles.th}>1ª Parcela</th>
+                  <th style={styles.th}>Status</th>
+                  <th style={styles.th}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {debtsList.length === 0 ? (
+                  <tr style={styles.tr}>
+                    <td colSpan="8" style={{ ...styles.td, textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                      Nenhum contrato de dívida ou parcelamento cadastrado. Clique no botão acima para adicionar.
+                    </td>
+                  </tr>
+                ) : (
+                  debtsList.map(debt => (
+                    <tr key={debt.id} style={styles.tr}>
+                      <td style={styles.td}>
+                        <strong>{debt.creditor}</strong>
+                        {debt.notes && <div style={styles.subtext}>{debt.notes}</div>}
+                      </td>
+                      <td style={styles.td}>{debt.category}</td>
+                      <td style={{ ...styles.td, fontWeight: '700' }}>
+                        R$ {(parseFloat(debt.totalAmount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={styles.td}>
+                        <span style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: '700', fontSize: '0.8rem' }}>
+                          {debt.installmentCount}x
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        R$ {(parseFloat(debt.installmentAmount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={styles.td}>{debt.firstDueDate ? debt.firstDueDate.split('-').reverse().join('/') : '-'}</td>
+                      <td style={styles.td}>
+                        <span style={{ backgroundColor: '#d1fae5', color: '#065f46', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: '600', fontSize: '0.8rem' }}>
+                          {debt.status || 'Ativo'}
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                          <button 
+                            onClick={() => setSelectedDebtDetail(selectedDebtDetail?.id === debt.id ? null : debt)} 
+                            style={{ ...styles.actionBtnCheck, backgroundColor: '#f1f5f9', color: '#334155' }} 
+                            title="Ver parcelas geradas em Contas a Pagar"
+                          >
+                            <FileText size={14} />
+                          </button>
+                          <button onClick={() => handleDeleteDebt(debt.id)} style={styles.actionBtnDelete} title="Excluir Dívida">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Expandable Installment Detail Drawer */}
+          {selectedDebtDetail && (
+            <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: 'var(--bg-card)', borderRadius: '10px', border: '1px solid #3b82f6' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>
+                  📋 Parcelas no Contas a Pagar - {selectedDebtDetail.creditor} ({selectedDebtDetail.installmentCount}x de R$ {selectedDebtDetail.installmentAmount?.toLocaleString?.('pt-BR') || selectedDebtDetail.installmentAmount})
+                </h4>
+                <button onClick={() => setSelectedDebtDetail(null)} style={styles.btnSecondary}>Fechar</button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.5rem' }}>
+                {payableList
+                  .filter(p => p.debtId === selectedDebtDetail.id || p.description?.includes(selectedDebtDetail.creditor))
+                  .map((p, idx) => (
+                    <div key={p.id || idx} style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: p.status === 'Pago' ? '#f0fdf4' : '#fffbbd', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: '700' }}>
+                        <span>{p.description}</span>
+                        <span style={{ color: p.status === 'Pago' ? '#166534' : '#b45309' }}>{p.status}</span>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Vencimento: {p.dueDate?.split('-').reverse().join('/')}</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                        R$ {(parseFloat(p.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bank Reconciliation View (Conciliação Bancária) */}
+      {activeTab === 'reconciliation' && (
+        <div style={styles.tabContent}>
+          {/* Summary Cards Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>🟢 Conciliados (Match)</span>
+              <h3 style={{ margin: '0.35rem 0 0 0', color: '#10b981', fontSize: '1.2rem' }}>
+                {bankStatements.filter(s => s.status === 'Conciliado').length} lançamentos
+              </h3>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Batimento com extrato</span>
+            </div>
+
+            <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>🟡 Divergências de Valor</span>
+              <h3 style={{ margin: '0.35rem 0 0 0', color: '#f59e0b', fontSize: '1.2rem' }}>
+                {bankStatements.filter(s => s.status === 'Divergente').length} divergência(s)
+              </h3>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Requer ajuste de tarifas/juros</span>
+            </div>
+
+            <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>🔴 Não Lançado no Financeiro</span>
+              <h3 style={{ margin: '0.35rem 0 0 0', color: '#ef4444', fontSize: '1.2rem' }}>
+                {bankStatements.filter(s => s.status === 'Divergente' && s.note?.includes('não registrada')).length} débito(s)
+              </h3>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Tarifas/PIX pendentes de lançamento</span>
+            </div>
+
+            <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>🔵 Banco Integrado</span>
+              <h3 style={{ margin: '0.35rem 0 0 0', color: '#3b82f6', fontSize: '1.2rem' }}>
+                Itaú Unibanco (PJ)
+              </h3>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Extrato atualizado hoje</span>
+            </div>
+          </div>
+
+          {/* Action Bar */}
+          <div style={styles.actionsBar}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Extrato Bancário vs. Sistema Financeiro</h3>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Comparativo em tempo real entre o extrato da conta bancária e as contas lançadas na clínica.
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button onClick={() => alert('Simulação de Leitura de Extrato OFX/CSV concluída com sucesso!')} style={styles.btnSecondary}>
+                <Upload size={14} /> Importar OFX / CSV
+              </button>
+            </div>
+          </div>
+
+          {/* Bank Statements Reconciliation Table */}
+          <div style={styles.tableWrapper}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>Data Extrato</th>
+                  <th style={styles.th}>Banco</th>
+                  <th style={styles.th}>Descrição no Banco</th>
+                  <th style={styles.th}>Tipo</th>
+                  <th style={styles.th}>Valor Extrato</th>
+                  <th style={styles.th}>Status Conciliação</th>
+                  <th style={styles.th}>Observação / Diagnóstico</th>
+                  <th style={styles.th}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bankStatements.map(stmt => {
+                  const isConciled = stmt.status === 'Conciliado';
+                  return (
+                    <tr key={stmt.id} style={styles.tr}>
+                      <td style={styles.td}>{stmt.date.split('-').reverse().join('/')}</td>
+                      <td style={styles.td}><strong>{stmt.bankName}</strong></td>
+                      <td style={styles.td}>
+                        <strong>{stmt.description}</strong>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={{
+                          backgroundColor: stmt.type === 'Crédito' ? '#d1fae5' : '#fee2e2',
+                          color: stmt.type === 'Crédito' ? '#065f46' : '#991b1b',
+                          padding: '0.15rem 0.4rem',
+                          borderRadius: '4px',
+                          fontWeight: '700',
+                          fontSize: '0.75rem'
+                        }}>
+                          {stmt.type}
+                        </span>
+                      </td>
+                      <td style={{ ...styles.td, fontWeight: '700', color: stmt.type === 'Crédito' ? '#10b981' : '#ef4444' }}>
+                        {stmt.type === 'Crédito' ? '+' : '-'} R$ {Math.abs(stmt.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={styles.td}>
+                        <span style={{
+                          backgroundColor: isConciled ? '#d1fae5' : '#fef3c7',
+                          color: isConciled ? '#065f46' : '#b45309',
+                          padding: '0.2rem 0.5rem',
+                          borderRadius: '4px',
+                          fontWeight: '600',
+                          fontSize: '0.8rem'
+                        }}>
+                          {isConciled ? '🟢 Conciliado' : '🟡 Divergência'}
+                        </span>
+                      </td>
+                      <td style={{ ...styles.td, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        {stmt.note || 'Lançamento conferido e aprovado pelo operador.'}
+                      </td>
+                      <td style={styles.td}>
+                        {!isConciled ? (
+                          <div style={{ display: 'flex', gap: '0.35rem' }}>
+                            <button 
+                              onClick={() => handleQuickReconcile(stmt)} 
+                              style={{ ...styles.actionBtnCheck, backgroundColor: '#10b981', color: '#ffffff', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                              title="Criar lançamento automático no Financeiro e Conciliar"
+                            >
+                              <Check size={12} /> Conciliar 1-Clique
+                            </button>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: '700' }}>✓ Concluído</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

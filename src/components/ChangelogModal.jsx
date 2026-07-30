@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.0.3',
+      date: '30 de Julho, 2026',
+      title: 'Gestão de Parcelamentos, Dívidas e Conciliação Bancária',
+      description: 'Lançamento de duas novas abas completas no Módulo Financeiro: Gestão de Contratos de Dívidas com geração automática mês a mês no Contas a Pagar e Conciliação Bancária com relatório de divergências.',
+      changes: [
+        { type: 'Parcelamentos & Dívidas', text: 'Cadastro de dívidas/financiamentos que gera automaticamente parcelas mês a mês no Contas a Pagar.' },
+        { type: 'Conciliação Bancária', text: 'Cruzamento entre Extrato Bancário e Financeiro com relatório de divergências e botão Conciliar 1-Clique.' }
+      ]
+    },
+    {
       version: 'v2.0.2',
       date: '30 de Julho, 2026',
       title: 'Correção de Carregamento nos Módulos Financeiro e Estoque',

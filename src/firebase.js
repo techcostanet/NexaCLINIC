@@ -1561,5 +1561,29 @@ export const dbService = {
       updatedAt: new Date().toISOString()
     });
     return { id, ...appointmentData };
+  },
+
+  // Debts and Installments API
+  getDebts: async () => {
+    if (USE_MOCK) return mockFirestore.getDebts();
+    return mockFirestore.getDebts();
+  },
+  saveDebt: async (debtData) => {
+    if (USE_MOCK) return mockFirestore.saveDebt(debtData);
+    return mockFirestore.saveDebt(debtData);
+  },
+  deleteDebt: async (id) => {
+    if (USE_MOCK) return mockFirestore.deleteDebt(id);
+    return mockFirestore.deleteDebt(id);
+  },
+
+  // Bank Reconciliation API
+  getBankStatements: async () => {
+    if (USE_MOCK) return mockFirestore.getBankStatements();
+    return mockFirestore.getBankStatements();
+  },
+  saveBankStatement: async (statementData) => {
+    if (USE_MOCK) return mockFirestore.saveBankStatement(statementData);
+    return mockFirestore.saveBankStatement(statementData);
   }
 };

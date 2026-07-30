@@ -1,5 +1,15 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v2.0.3] - 30 de Julho, 2026
+### Lançamento de Parcelamentos / Dívidas e Conciliação Bancária no Módulo Financeiro
+- **Aba Parcelamentos & Dívidas:** Nova aba para gestão completa de contratos de financiamentos, dívidas e empréstimos de longo prazo.
+- **Geração Automática Mês a Mês:** Ao cadastrar uma dívida parcelada (ex: 12x, 24x, 36x), o sistema gera automaticamente os $N$ lançamentos mensais sequenciais no **Contas a Pagar** (`Dívida: Credor (Parc. 01/12)`).
+- **Gaveta de Ficha da Dívida:** Botão para visualizar todas as parcelas geradas em Contas a Pagar com seus respectivos status de quitação.
+- **Aba Conciliação Bancária:** Extrato bancário em tempo real x Lançamentos do Financeiro, identificando batimentos perfeitos (🟢 Conciliado) e divergências de valor ou tarifas pendentes (🟡 Divergência).
+- **Ação Rápida "Conciliar 1-Clique":** Permite criar o lançamento automático no Financeiro e conciliar no extrato bancário com apenas 1 clique.
+
+---
+
 ## [v2.0.2] - 30 de Julho, 2026
 ### Correção de Tela Branca nos Módulos Financeiro e Estoque
 - **Declaração de Métricas Operacionais:** Adicionadas as variáveis de cálculo de métricas operacionais (`payablesTodayOrOverdue`, `totalPayablesTodayOrOverdue`, `receivablesToday`, `totalReceivablesToday`, `realizedBalance`, `overduePayables`, etc.) no escopo do [FinancePanel.jsx](file:///c:/Nexa/NexAi-CLINIC/src/components/FinancePanel.jsx), eliminando a exceção de `ReferenceError`.
