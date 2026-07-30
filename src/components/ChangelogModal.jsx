@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v1.2.41',
+      date: '30 de Julho, 2026',
+      title: 'Correção Definitiva de Fallback e Permissões no Firestore',
+      description: 'Ajuste estrutural no carregamento, garantindo que usuários comuns consigam ler seus perfis corretamente mesmo que ocorram falhas de gravação, mantendo o acesso aos módulos.',
+      changes: [
+        { type: 'Correção', text: 'Separação de leitura e escrita do perfil para evitar que erros de permissão de gravação bloqueiem o carregamento das permissões (RBAC).' }
+      ]
+    },
+    {
       version: 'v1.2.40',
       date: '30 de Julho, 2026',
       title: 'Limpeza de Usuários Duplicados & Restrição Rigorosa de Acesso RH/BI',

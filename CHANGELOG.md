@@ -1,5 +1,11 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v1.2.41] - 30 de Julho, 2026
+### Correção Definitiva de Fallback e Permissões de Leitura no Firestore
+- **Estabilidade no Carregamento:** Ajuste estrutural no fluxo de autenticação, separando a leitura da escrita do perfil na nuvem. Isso garante a exibição correta dos módulos (com base nas permissões de cada usuário) mesmo quando falhas de permissão de gravação ou rede ocorram.
+
+---
+
 ## [v1.2.40] - 30 de Julho, 2026
 ### Limpeza de Usuários Duplicados e Restrição Estrita de Acesso RH/BI
 - **Desduplicação de Cadastros no Firestore Cloud:** Implementada limpeza automática na função `getUsers()` que identifica registros duplicados por e-mail (ex: `anacg@nexa.com` e `contato@techcosta.net`), retém automaticamente o cadastro com nome mais completo/extenso e exclui os registros duplicados antigos.

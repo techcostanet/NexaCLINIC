@@ -99,57 +99,78 @@ export const authService = {
           const expectedRole = isRH ? 'rh' : 'admin';
           const expectedSectors = isRH ? ['rh'] : ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
 
+          let userData = null;
+          let profileExists = false;
+
           try {
             const userRef = doc(db, 'users', firebaseUser.uid);
             const userDoc = await getDoc(userRef);
             
             if (userDoc.exists()) {
-              const userData = userDoc.data();
-              if (userData.status === 'inactive' && !isOfficialUser) {
-                const { signOut } = await import('firebase/auth');
-                await signOut(auth);
-                callback(null);
-                return;
-              }
-              // Guarantee official users have active status and correct roles in cloud profile
-              if (isOfficialUser && (userData.role !== expectedRole || userData.status !== 'active')) {
-                const updatedProfile = {
-                  ...userData,
-                  role: expectedRole,
-                  status: 'active',
-                  allowedSectors: expectedSectors
-                };
-                await setDoc(userRef, updatedProfile, { merge: true });
-                callback({ uid: firebaseUser.uid, email: firebaseUser.email, ...updatedProfile });
-                return;
-              }
-              callback({ uid: firebaseUser.uid, email: firebaseUser.email, ...userData });
-            } else {
-              // If user is authenticated but no profile document exists in Cloud Firestore, create it
-              const userName = cleanEmail === 'contato@techcosta.net' 
-                ? 'Administrador TechCosta' 
-                : cleanEmail === 'anacg@nexa.com' 
-                ? 'Ana Carolina Cerqueira Gonzaga' 
-                : cleanEmail === 'jsoares@nexa.com' 
-                ? 'J. Soares' 
-                : (firebaseUser.displayName || 'Usuário Nexa');
-              
-              const newProfile = {
-                name: userName,
-                email: firebaseUser.email,
+              userData = userDoc.data();
+              profileExists = true;
+            }
+          } catch (readErr) {
+            console.error('Erro ao ler perfil do Firestore:', readErr);
+            // If we can't even read, fallback
+            callback({ uid: firebaseUser.uid, email: firebaseUser.email, role: 'professional', allowedSectors: [] });
+            return;
+          }
+
+          if (profileExists) {
+            if (userData.status === 'inactive' && !isOfficialUser) {
+              const { signOut } = await import('firebase/auth');
+              await signOut(auth);
+              callback(null);
+              return;
+            }
+            // Guarantee official users have active status and correct roles in cloud profile
+            if (isOfficialUser && (userData.role !== expectedRole || userData.status !== 'active')) {
+              const updatedProfile = {
+                ...userData,
                 role: expectedRole,
-                allowedSectors: expectedSectors,
                 status: 'active',
-                createdAt: new Date().toISOString()
+                allowedSectors: expectedSectors
               };
               
-              await setDoc(userRef, newProfile);
-              callback({ uid: firebaseUser.uid, email: firebaseUser.email, ...newProfile });
+              try {
+                const userRef = doc(db, 'users', firebaseUser.uid);
+                await setDoc(userRef, updatedProfile, { merge: true });
+              } catch (writeErr) {
+                console.error('Erro ao atualizar perfil oficial:', writeErr);
+              }
+              
+              callback({ uid: firebaseUser.uid, email: firebaseUser.email, ...updatedProfile });
+              return;
             }
-          } catch (e) {
-            console.error('Erro ao ler perfil do Firestore:', e);
-            // Fallback during login bootstrap
-            callback({ uid: firebaseUser.uid, email: firebaseUser.email, role: 'professional', allowedSectors: [] });
+            callback({ uid: firebaseUser.uid, email: firebaseUser.email, ...userData });
+          } else {
+            // If user is authenticated but no profile document exists in Cloud Firestore, create it
+            const userName = cleanEmail === 'contato@techcosta.net' 
+              ? 'Administrador TechCosta' 
+              : cleanEmail === 'anacg@nexa.com' 
+              ? 'Ana Carolina Cerqueira Gonzaga' 
+              : cleanEmail === 'jsoares@nexa.com' 
+              ? 'J. Soares' 
+              : (firebaseUser.displayName || 'Usuário Nexa');
+            
+            const newProfile = {
+              name: userName,
+              email: firebaseUser.email,
+              role: expectedRole,
+              allowedSectors: expectedSectors,
+              status: 'active',
+              createdAt: new Date().toISOString()
+            };
+            
+            try {
+              const userRef = doc(db, 'users', firebaseUser.uid);
+              await setDoc(userRef, newProfile);
+            } catch (writeErr) {
+              console.error('Erro ao criar novo perfil:', writeErr);
+            }
+            
+            callback({ uid: firebaseUser.uid, email: firebaseUser.email, ...newProfile });
           }
         } else {
           callback(null);

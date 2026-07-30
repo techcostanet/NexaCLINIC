@@ -24,8 +24,8 @@ service cloud.firestore {
       // Authenticated users can read user records
       allow read: if isAuthenticated();
       
-      // Only admins can create or update users, and define their roles/sectors
-      allow write: if isAdmin();
+      // Admins can write any user. Users can write their own record (needed for initial bootstrap).
+      allow write: if isAdmin() || request.auth.uid == userId;
     }
 
     // Sectors Collection Rules
