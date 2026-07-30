@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v1.2.30',
+      date: '30 de Julho, 2026',
+      title: 'Adequação LGPD, Posicionamento Hospitalar & Usuários Oficiais',
+      description: 'Atualização do posicionamento do sistema como Gestão de Clínicas e Hospitais, remoção de dados expostos na tela de login e liberação de acessos dos administradores oficiais.',
+      changes: [
+        { type: 'Segurança', text: 'Remoção de e-mails e credenciais expostas na tela inicial de login em estrita conformidade com a LGPD.' },
+        { type: 'Institucional', text: 'Atualização do subtítulo oficial para "Sistema de Gestão de Clínicas e Hospitais".' },
+        { type: 'Acessos', text: 'Liberado e provisionado perfil Administrador Ativo para contato@techcosta.net, anacg@nexa.com e jsoares@nexa.com.' },
+        { type: 'Limpeza', text: 'Remoção automática de usuários fictícios de demonstração (@clinica.com) do banco de dados.' }
+      ]
+    },
+    {
       version: 'v1.2.24',
       date: '17 de Julho, 2026',
       title: 'Módulo NexaCAL (Agenda & Consultas)',
