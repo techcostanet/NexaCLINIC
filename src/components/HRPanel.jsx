@@ -4,8 +4,23 @@ import {
   Users, UserPlus, Shield, Lock, Unlock, Edit2, Trash2, Plus, X, 
   Search, FileText, UploadCloud, Download, Calendar, ShieldAlert,
   CheckCircle2, AlertTriangle, Eye, Award, Check, UserCheck, HelpCircle,
-  Gift, Bus
+  Gift, Bus, ArrowUp, ArrowDown, ArrowUpDown, Move, Settings, Save, 
+  RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2
 } from 'lucide-react';
+
+const DEFAULT_DASHBOARD_LAYOUT = [
+  { id: 'total_employees', title: 'Total de Funcionários', size: 'small' },
+  { id: 'turnover', title: 'Turnover (Mensal)', size: 'small' },
+  { id: 'absenteeism', title: 'Absenteísmo (Mensal)', size: 'small' },
+  { id: 'warnings_kpi', title: 'Advertências Registradas', size: 'small' },
+  { id: 'experience_kpi', title: 'Em Experiência', size: 'small' },
+  { id: 'birthdays', title: 'Aniversariantes do Mês', size: 'small' },
+  { id: 'warnings_list', title: 'Últimas Advertências', size: 'small' },
+  { id: 'vaccines_list', title: 'Próximas Vacinações Vencendo', size: 'small' },
+  { id: 'absences_list', title: 'Últimas Ausências / Faltas', size: 'small' },
+  { id: 'expiring_contracts', title: 'Contratos em Experiência', size: 'small' },
+  { id: 'presenca_premiada', title: 'Presença Premiada', size: 'small' },
+];
 
 export default function HRPanel({ currentUser }) {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'employees' | 'users' | 'reports' | 'audit'
@@ -26,6 +41,11 @@ export default function HRPanel({ currentUser }) {
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSector, setFilterSector] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+
+  // Dashboard Customization State (Cards reordering & sizes, default all small)
+  const [dashboardLayout, setDashboardLayout] = useState(DEFAULT_DASHBOARD_LAYOUT);
+  const [isCustomizingDashboard, setIsCustomizingDashboard] = useState(false);
 
   // Modals
   const [showEmpModal, setShowEmpModal] = useState(false);
@@ -117,6 +137,24 @@ export default function HRPanel({ currentUser }) {
           const found = list.find(u => u.uid === sess);
           if (found) setOperatorEmail(found.name || found.email);
         });
+      }
+    }
+
+    // Load saved dashboard layout preferences for the user
+    const userKey = currentUser?.uid || currentUser?.email || 'default';
+    if (currentUser?.hrDashboardLayout && Array.isArray(currentUser.hrDashboardLayout)) {
+      setDashboardLayout(currentUser.hrDashboardLayout);
+    } else {
+      const saved = localStorage.getItem(`hr_dashboard_layout_${userKey}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setDashboardLayout(parsed);
+          }
+        } catch (err) {
+          console.error('Error loading dashboard layout preference:', err);
+        }
       }
     }
   }, [currentUser]);
@@ -722,15 +760,110 @@ export default function HRPanel({ currentUser }) {
   };
 
   // ----------------------------------------------------
-  // Filtering & Dashboard calculations
+  // Dashboard Layout & Customization Handlers
   // ----------------------------------------------------
+  const handleSaveDashboardLayout = async (newLayout) => {
+    const layoutToSave = newLayout || dashboardLayout;
+    setDashboardLayout(layoutToSave);
+    const userKey = currentUser?.uid || currentUser?.email || 'default';
+    localStorage.setItem(`hr_dashboard_layout_${userKey}`, JSON.stringify(layoutToSave));
+    
+    if (currentUser?.uid) {
+      try {
+        await dbService.updateUser(currentUser.uid, { hrDashboardLayout: layoutToSave });
+      } catch (err) {
+        console.error('Erro ao salvar layout na nuvem:', err);
+      }
+    }
+    showAlert('Layout do Painel de Controle salvo com sucesso!', 'success');
+    logAuditAction('Personalização de Dashboard', 'Layout das caixas do painel de controle do RH foi atualizado.');
+  };
+
+  const handleResetDashboardLayout = () => {
+    setDashboardLayout(DEFAULT_DASHBOARD_LAYOUT);
+    const userKey = currentUser?.uid || currentUser?.email || 'default';
+    localStorage.removeItem(`hr_dashboard_layout_${userKey}`);
+    showAlert('Layout restaurado para o padrão pequeno!', 'success');
+  };
+
+  const handleMoveCard = (index, direction) => {
+    const newLayout = [...dashboardLayout];
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= newLayout.length) return;
+    const temp = newLayout[index];
+    newLayout[index] = newLayout[targetIndex];
+    newLayout[targetIndex] = temp;
+    setDashboardLayout(newLayout);
+  };
+
+  const handleChangeCardSize = (id, newSize) => {
+    const newLayout = dashboardLayout.map(card => 
+      card.id === id ? { ...card, size: newSize } : card
+    );
+    setDashboardLayout(newLayout);
+  };
+
+  const handleOpenEmpByName = (nameOrId) => {
+    const found = employees.find(e => e.id === nameOrId || e.name?.toLowerCase() === (nameOrId || '').toLowerCase());
+    if (found) {
+      handleOpenEmpEdit(found);
+    } else {
+      showAlert(`Ficha de "${nameOrId}" não encontrada.`, 'warning');
+    }
+  };
+
+  // ----------------------------------------------------
+  // Sorting & Filtering
+  // ----------------------------------------------------
+  const handleSort = (key) => {
+    setSortConfig(prev => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
+  const renderSortIcon = (key) => {
+    if (sortConfig.key !== key) return <ArrowUpDown size={14} style={{ opacity: 0.4 }} />;
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp size={14} style={{ color: '#ec4899' }} /> 
+      : <ArrowDown size={14} style={{ color: '#ec4899' }} />;
+  };
+
   const getFilteredEmployees = () => {
-    return employees.filter(emp => {
+    const filtered = employees.filter(emp => {
       const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             emp.cpf.includes(searchTerm) ||
                             (emp.role && emp.role.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesSector = filterSector ? emp.sectorId === filterSector : true;
       return matchesSearch && matchesSector;
+    });
+
+    if (!sortConfig.key) return filtered;
+
+    return [...filtered].sort((a, b) => {
+      let aVal = a[sortConfig.key] || '';
+      let bVal = b[sortConfig.key] || '';
+
+      if (sortConfig.key === 'sectorId') {
+        aVal = sectors.find(s => s.id === a.sectorId)?.name || a.sectorId || '';
+        bVal = sectors.find(s => s.id === b.sectorId)?.name || b.sectorId || '';
+      } else if (sortConfig.key === 'warnings') {
+        aVal = (a.warnings?.length || 0) + (a.documents?.length || 0);
+        bVal = (b.warnings?.length || 0) + (b.documents?.length || 0);
+      }
+
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+
+      const strA = String(aVal).toLowerCase();
+      const strB = String(bVal).toLowerCase();
+
+      if (strA < strB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (strA > strB) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
     });
   };
 
@@ -956,220 +1089,303 @@ export default function HRPanel({ currentUser }) {
         <>
           {/* TAB 1: Dashboard / KPIs */}
           {activeTab === 'dashboard' && (
-            <div style={styles.dashboardContainer}>
-              <div style={styles.kpiGrid}>
-                <div style={styles.kpiCard}>
-                  <span style={styles.kpiLabel}>Total de Funcionários</span>
-                  <span style={styles.kpiVal}>{employees.filter(e => e.status !== 'Inativo').length}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Header Bar with Layout Customization Controls */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '8px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    📊 Painel de Controle Operacional
+                  </h2>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>
+                    Reorganize e altere o tamanho das caixas conforme sua necessidade de gestão. Padrão inicial em tamanho pequeno.
+                  </p>
                 </div>
-                <div style={{ ...styles.kpiCard, borderLeftColor: '#10b981' }}>
-                  <span style={styles.kpiLabel}>Turnover (Mensal)</span>
-                  <span style={styles.kpiVal}>{turnover.toFixed(2)}%</span>
-                </div>
-                <div style={{ ...styles.kpiCard, borderLeftColor: '#3b82f6' }}>
-                  <span style={styles.kpiLabel}>Absenteísmo (Mensal)</span>
-                  <span style={styles.kpiVal}>{absenteeism.toFixed(2)}%</span>
-                </div>
-                <div style={{ ...styles.kpiCard, borderLeftColor: '#ef4444' }}>
-                  <span style={styles.kpiLabel}>Advertências</span>
-                  <span style={styles.kpiVal}>{recentWarnings.length}</span>
-                </div>
-                <div style={{ ...styles.kpiCard, borderLeftColor: '#f59e0b' }}>
-                  <span style={styles.kpiLabel}>Em Experiência</span>
-                  <span style={styles.kpiVal}>{employees.filter(e => e.contractType === 'Experiência').length}</span>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button 
+                    onClick={() => setIsCustomizingDashboard(!isCustomizingDashboard)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '0.45rem 0.85rem',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      fontWeight: '600',
+                      backgroundColor: isCustomizingDashboard ? '#ec4899' : 'var(--bg-body)',
+                      color: isCustomizingDashboard ? '#fff' : 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <Settings size={15} /> {isCustomizingDashboard ? 'Concluir Organização' : '⚙️ Organizar Caixas'}
+                  </button>
+                  {isCustomizingDashboard && (
+                    <>
+                      <button 
+                        onClick={() => handleSaveDashboardLayout(dashboardLayout)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.45rem 0.85rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '600', backgroundColor: '#10b981', color: '#fff', border: 'none', cursor: 'pointer' }}
+                      >
+                        <Save size={15} /> Salvar Layout
+                      </button>
+                      <button 
+                        onClick={handleResetDashboardLayout}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.45rem 0.85rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '600', backgroundColor: 'var(--bg-body)', color: 'var(--danger-color)', border: '1px solid var(--border-color)', cursor: 'pointer' }}
+                      >
+                        <RotateCcw size={15} /> Restaurar Padrão
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
-              <div style={styles.dashboardSplitGrid}>
-                {/* Birthday Panel */}
-                <div style={{ ...styles.kpiSection, gridColumn: 'span 2', background: 'linear-gradient(135deg, rgba(236,72,153,0.05) 0%, rgba(139,92,246,0.05) 100%)', border: '1px solid rgba(236,72,153,0.15)' }}>
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ec4899' }}>
-                    <Gift size={20} /> 🎂 Aniversariantes do Mês de {new Date().toLocaleString('pt-BR', { month: 'long' })}
-                  </h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
-                    {birthdaysThisMonth.length === 0 ? (
-                      <p style={{ ...styles.noDataMini, gridColumn: 'span 2' }}>Nenhum aniversariante neste mês.</p>
-                    ) : (
-                      birthdaysThisMonth.map((b, idx) => (
-                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#fdf2f8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#db2777', overflow: 'hidden' }}>
-                            {b.photo ? <img src={b.photo} alt={b.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : b.name.substring(0, 2).toUpperCase()}
+              {/* Dynamic Grid Container */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                gap: '1rem',
+                alignItems: 'stretch'
+              }}>
+                {dashboardLayout.map((card, index) => {
+                  const getSpanStyle = (sz) => {
+                    if (sz === 'medium') return { gridColumn: 'span 2' };
+                    if (sz === 'large') return { gridColumn: 'span 3' };
+                    return { gridColumn: 'span 1' }; // default small
+                  };
+
+                  return (
+                    <div 
+                      key={card.id} 
+                      style={{
+                        ...getSpanStyle(card.size),
+                        position: 'relative',
+                        borderRadius: '10px',
+                        backgroundColor: 'var(--bg-card)',
+                        border: isCustomizingDashboard ? '2px dashed #ec4899' : '1px solid var(--border-color)',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
+                        padding: '1rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justify: 'space-between',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {/* Controls overlay in customizing mode */}
+                      {isCustomizingDashboard && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(236,72,153,0.08)', padding: '0.35rem 0.5rem', borderRadius: '6px', marginBottom: '0.75rem', fontSize: '0.75rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                            <button disabled={index === 0} onClick={() => handleMoveCard(index, -1)} style={{ border: 'none', background: 'none', cursor: 'pointer', opacity: index === 0 ? 0.3 : 1 }} title="Mover para esquerda/cima"><ChevronLeft size={16} /></button>
+                            <button disabled={index === dashboardLayout.length - 1} onClick={() => handleMoveCard(index, 1)} style={{ border: 'none', background: 'none', cursor: 'pointer', opacity: index === dashboardLayout.length - 1 ? 0.3 : 1 }} title="Mover para direita/baixo"><ChevronRight size={16} /></button>
+                            <span style={{ fontWeight: '700', color: '#ec4899' }}>Pos. {index + 1}</span>
                           </div>
-                          <div>
-                            <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>{b.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Dia {b.day} ({b.role})</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span style={{ fontWeight: '600' }}>Tamanho:</span>
+                            <select value={card.size || 'small'} onChange={e => handleChangeCardSize(card.id, e.target.value)} style={{ fontSize: '0.75rem', padding: '0.15rem 0.3rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                              <option value="small">Pequeno (1 Col)</option>
+                              <option value="medium">Médio (2 Col)</option>
+                              <option value="large">Grande (3 Col)</option>
+                            </select>
                           </div>
                         </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+                      )}
 
-                {/* Warnings list */}
-                <div style={styles.kpiSection}>
-                  <h3>⚠️ Últimas Advertências Registradas</h3>
-                  <div style={styles.listWrapper}>
-                    {recentWarnings.length === 0 ? (
-                      <p style={styles.noDataMini}>Nenhuma advertência recente.</p>
-                    ) : (
-                      recentWarnings.map((w, idx) => (
-                        <div key={idx} style={styles.listItem}>
-                          <div>
-                            <strong>{w.empName}</strong> - {w.motive}
-                            <span style={styles.listSubText}>{w.text}</span>
-                          </div>
-                          <span style={styles.listBadge}>{new Date(w.date).toLocaleDateString('pt-BR')}</span>
+                      {/* Card Content Renderers */}
+                      {card.id === 'total_employees' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                          <span style={styles.kpiLabel}>Total de Funcionários</span>
+                          <span style={{ ...styles.kpiVal, color: '#ec4899' }}>{employees.filter(e => e.status !== 'Inativo').length}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Colaboradores ativos cadastrados</span>
                         </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+                      )}
 
-                {/* Expiry alerts list */}
-                <div style={styles.kpiSection}>
-                  <h3>💉 Próximas Vacinações Vencendo</h3>
-                  <div style={styles.listWrapper}>
-                    {upcomingVaccines.length === 0 ? (
-                      <p style={styles.noDataMini}>Sem vacinas com validade próxima.</p>
-                    ) : (
-                      upcomingVaccines.map((v, idx) => (
-                        <div key={idx} style={styles.listItem}>
-                          <div>
-                            <strong>{v.empName}</strong> - Vacina: {v.name} ({v.dose})
-                            <span style={styles.listSubText}>Lote: {v.lot || '-'}</span>
-                          </div>
-                          <span style={{ ...styles.listBadge, backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444' }}>
-                            Vence: {new Date(v.expiryDate).toLocaleDateString('pt-BR')}
-                          </span>
+                      {card.id === 'turnover' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                          <span style={styles.kpiLabel}>Turnover (Mensal)</span>
+                          <span style={{ ...styles.kpiVal, color: '#10b981' }}>{turnover.toFixed(2)}%</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Índice de rotatividade</span>
                         </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+                      )}
 
-                {/* Recent Absences list */}
-                <div style={{ ...styles.kpiSection, gridColumn: 'span 2' }}>
-                  <h3>📅 Últimas Ausências / Faltas Registradas</h3>
-                  <div style={styles.listWrapper}>
-                    {recentAbsences.length === 0 ? (
-                      <p style={styles.noDataMini}>Nenhuma ausência registrada recentemente.</p>
-                    ) : (
-                      recentAbsences.map((abs, idx) => (
-                        <div key={idx} style={styles.listItem}>
-                          <div>
-                            <strong>{abs.empName}</strong> - {abs.type} ({abs.hours}h)
-                            <span style={styles.listSubText}>{abs.motive || 'Sem observação'}</span>
-                          </div>
-                          <span style={{ 
-                            ...styles.listBadge, 
-                            backgroundColor: abs.type === 'Falta Injustificada' ? '#fee2e2' : '#f1f5f9',
-                            color: abs.type === 'Falta Injustificada' ? '#991b1b' : '#475569' 
-                          }}>
-                            {new Date(abs.date).toLocaleDateString('pt-BR')}
-                          </span>
+                      {card.id === 'absenteeism' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                          <span style={styles.kpiLabel}>Absenteísmo (Mensal)</span>
+                          <span style={{ ...styles.kpiVal, color: '#3b82f6' }}>{absenteeism.toFixed(2)}%</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Faltas não justificadas</span>
                         </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+                      )}
 
-                {/* Experiencing contracts warning */}
-                <div style={{ ...styles.kpiSection, gridColumn: 'span 2' }}>
-                  <h3>⏳ Contratos de Experiência Vencendo nos Próximos 30 Dias</h3>
-                  <div style={styles.listWrapper}>
-                    {expiringContracts.length === 0 ? (
-                      <p style={styles.noDataMini}>Nenhum contrato de experiência vencendo nos próximos 30 dias.</p>
-                    ) : (
-                      expiringContracts.map((e, idx) => {
-                        const limit = new Date(new Date(e.admissionDate).getTime() + 90 * 24 * 60 * 60 * 1000);
-                        return (
-                          <div key={idx} style={styles.listItem}>
-                            <div>
-                              <strong>{e.name}</strong> - Cargo: {e.role} | Setor: {sectors.find(s => s.id === e.sectorId)?.name || e.sectorId}
+                      {card.id === 'warnings_kpi' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                          <span style={styles.kpiLabel}>Advertências Registradas</span>
+                          <span style={{ ...styles.kpiVal, color: '#ef4444' }}>{recentWarnings.length}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Total de advertências</span>
+                        </div>
+                      )}
+
+                      {card.id === 'experience_kpi' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                          <span style={styles.kpiLabel}>Em Experiência</span>
+                          <span style={{ ...styles.kpiVal, color: '#f59e0b' }}>{employees.filter(e => e.contractType === 'Experiência').length}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Contratos probatórios</span>
+                        </div>
+                      )}
+
+                      {card.id === 'birthdays' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ec4899', fontSize: '0.9rem', margin: '0 0 0.5rem 0' }}>
+                            <Gift size={16} /> 🎂 Aniversariantes do Mês ({birthdaysThisMonth.length})
+                          </h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
+                            {birthdaysThisMonth.length === 0 ? (
+                              <p style={styles.noDataMini}>Sem aniversariantes este mês.</p>
+                            ) : (
+                              birthdaysThisMonth.slice(0, 5).map((b, idx) => (
+                                <div key={idx} onClick={() => handleOpenEmpByName(b.id || b.name)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.5rem', borderRadius: '6px', backgroundColor: 'var(--bg-body)', cursor: 'pointer', border: '1px solid var(--border-color)' }} title={`Clique para abrir a ficha de ${b.name}`}>
+                                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#fdf2f8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#db2777', overflow: 'hidden', fontSize: '0.7rem' }}>
+                                    {b.photo ? <img src={b.photo} alt={b.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : b.name.substring(0, 2).toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <div style={{ fontWeight: '700', fontSize: '0.8rem', color: '#ec4899', textDecoration: 'underline' }}>{b.name}</div>
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Dia {b.day} ({b.role})</div>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {card.id === 'warnings_list' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                          <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>⚠️ Últimas Advertências</h3>
+                          <div style={styles.listWrapper}>
+                            {recentWarnings.length === 0 ? (
+                              <p style={styles.noDataMini}>Nenhuma advertência recente.</p>
+                            ) : (
+                              recentWarnings.slice(0, 4).map((w, idx) => (
+                                <div key={idx} style={styles.listItem}>
+                                  <div>
+                                    <strong onClick={() => handleOpenEmpByName(w.empName)} style={{ color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }} title={`Abrir ficha de ${w.empName}`}>{w.empName}</strong> - {w.motive}
+                                    <span style={styles.listSubText}>{w.text}</span>
+                                  </div>
+                                  <span style={styles.listBadge}>{new Date(w.date).toLocaleDateString('pt-BR')}</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {card.id === 'vaccines_list' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                          <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>💉 Próximas Vacinações</h3>
+                          <div style={styles.listWrapper}>
+                            {upcomingVaccines.length === 0 ? (
+                              <p style={styles.noDataMini}>Sem vacinas com validade próxima.</p>
+                            ) : (
+                              upcomingVaccines.slice(0, 4).map((v, idx) => (
+                                <div key={idx} style={styles.listItem}>
+                                  <div>
+                                    <strong onClick={() => handleOpenEmpByName(v.empName)} style={{ color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }} title={`Abrir ficha de ${v.empName}`}>{v.empName}</strong> - {v.name}
+                                    <span style={styles.listSubText}>Lote: {v.lot || '-'}</span>
+                                  </div>
+                                  <span style={{ ...styles.listBadge, backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444' }}>
+                                    Vence: {new Date(v.expiryDate).toLocaleDateString('pt-BR')}
+                                  </span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {card.id === 'absences_list' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                          <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>📅 Últimas Ausências</h3>
+                          <div style={styles.listWrapper}>
+                            {recentAbsences.length === 0 ? (
+                              <p style={styles.noDataMini}>Nenhuma ausência registrada.</p>
+                            ) : (
+                              recentAbsences.slice(0, 4).map((abs, idx) => (
+                                <div key={idx} style={styles.listItem}>
+                                  <div>
+                                    <strong onClick={() => handleOpenEmpByName(abs.empName)} style={{ color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }} title={`Abrir ficha de ${abs.empName}`}>{abs.empName}</strong> - {abs.type} ({abs.hours}h)
+                                    <span style={styles.listSubText}>{abs.motive || 'Sem observação'}</span>
+                                  </div>
+                                  <span style={{ 
+                                    ...styles.listBadge, 
+                                    backgroundColor: abs.type === 'Falta Injustificada' ? '#fee2e2' : '#f1f5f9',
+                                    color: abs.type === 'Falta Injustificada' ? '#991b1b' : '#475569' 
+                                  }}>
+                                    {new Date(abs.date).toLocaleDateString('pt-BR')}
+                                  </span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {card.id === 'expiring_contracts' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                          <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>⏳ Contratos em Experiência</h3>
+                          <div style={styles.listWrapper}>
+                            {expiringContracts.length === 0 ? (
+                              <p style={styles.noDataMini}>Sem contratos vencendo em 30 dias.</p>
+                            ) : (
+                              expiringContracts.slice(0, 4).map((e, idx) => {
+                                const limit = new Date(new Date(e.admissionDate).getTime() + 90 * 24 * 60 * 60 * 1000);
+                                return (
+                                  <div key={idx} style={styles.listItem}>
+                                    <div>
+                                      <strong onClick={() => handleOpenEmpEdit(e)} style={{ color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }} title={`Abrir ficha de ${e.name}`}>{e.name}</strong>
+                                      <span style={styles.listSubText}>{e.role}</span>
+                                    </div>
+                                    <span style={{ ...styles.listBadge, backgroundColor: '#fef3c7', color: '#d97706' }}>
+                                      Fim: {limit.toLocaleDateString('pt-BR')}
+                                    </span>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {card.id === 'presenca_premiada' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
+                            <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              🏆 Presença Premiada
+                            </h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                              <span style={{ fontSize: '0.7rem', fontWeight: '600' }}>Prêmio: R$</span>
+                              <input 
+                                type="number" 
+                                value={awardValue} 
+                                onChange={e => setAwardValue(Math.max(0, parseFloat(e.target.value) || 0))}
+                                style={{ width: '55px', padding: '0.1rem 0.2rem', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                              />
                             </div>
-                            <span style={{ ...styles.listBadge, backgroundColor: '#fef3c7', color: '#d97706' }}>
-                              Fim da Experiência: {limit.toLocaleDateString('pt-BR')}
-                            </span>
                           </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-
-                {/* Módulo Presença Premiada */}
-                <div style={{ ...styles.kpiSection, gridColumn: 'span 2', borderLeft: '4px solid #10b981' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      🏆 Presença Premiada - Julho de 2026
-                    </h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>Valor do Prêmio:</span>
-                      <input 
-                        type="number" 
-                        value={awardValue} 
-                        onChange={e => setAwardValue(Math.max(0, parseFloat(e.target.value) || 0))}
-                        style={{ width: '80px', padding: '0.2rem 0.4rem', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}
-                      />
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>R$ por colaborador</span>
-                    </div>
-                  </div>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                    Critério de elegibilidade: colaboradores sem nenhuma falta (injustificada/justificada), licença médica ou advertência no mês.
-                  </p>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                    {/* Elegíveis */}
-                    <div>
-                      <h4 style={{ fontSize: '0.85rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                        ✅ Elegíveis ({presencaPremiada.eligible.length})
-                      </h4>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', paddingRight: '5px' }}>
-                        {presencaPremiada.eligible.length === 0 ? (
-                          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Nenhum colaborador elegível.</p>
-                        ) : (
-                          presencaPremiada.eligible.map(emp => (
-                            <div key={emp.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', borderRadius: '6px', backgroundColor: 'rgba(16,185,129,0.03)', border: '1px solid rgba(16,185,129,0.1)' }}>
-                              <div>
-                                <span style={{ fontWeight: '700', fontSize: '0.8rem', color: 'var(--text-primary)' }}>{emp.name}</span>
-                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>{emp.role}</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                            <span style={{ color: '#10b981', fontWeight: '700' }}>Elegíveis: {presencaPremiada.eligible.length}</span>
+                            <span style={{ color: '#ef4444', fontWeight: '700' }}>Excluídos: {presencaPremiada.disqualified.length}</span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', maxHeight: '120px', overflowY: 'auto' }}>
+                            {presencaPremiada.eligible.slice(0, 4).map(emp => (
+                              <div key={emp.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', padding: '0.2rem 0.4rem', borderRadius: '4px', backgroundColor: 'rgba(16,185,129,0.05)' }}>
+                                <span onClick={() => handleOpenEmpEdit(emp)} style={{ fontWeight: '600', color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }}>{emp.name}</span>
+                                <span style={{ fontWeight: '700', color: '#10b981' }}>+R$ {awardValue.toFixed(2)}</span>
                               </div>
-                              <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#10b981' }}>+R$ {awardValue.toFixed(2)}</span>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                    {/* Não-Elegíveis */}
-                    <div>
-                      <h4 style={{ fontSize: '0.85rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                        ❌ Não-Elegíveis ({presencaPremiada.disqualified.length})
-                      </h4>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', paddingRight: '5px' }}>
-                        {presencaPremiada.disqualified.length === 0 ? (
-                          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Nenhum colaborador desqualificado.</p>
-                        ) : (
-                          presencaPremiada.disqualified.map(item => (
-                            <div key={item.employee.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', borderRadius: '6px', backgroundColor: 'rgba(239,68,68,0.03)', border: '1px solid rgba(239,68,68,0.1)' }}>
-                              <div style={{ flex: 1 }}>
-                                <span style={{ fontWeight: '700', fontSize: '0.8rem', color: 'var(--text-primary)' }}>{item.employee.name}</span>
-                                <span style={{ fontSize: '0.7rem', color: '#ef4444', display: 'block', wordBreak: 'break-all' }}>{item.reason}</span>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
                     </div>
-                  </div>
-
-                  <div style={{ marginTop: '1.25rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Custo Mensal Adicional Projetado:</span>
-                    <strong style={{ fontSize: '1.1rem', color: '#10b981', fontWeight: '800' }}>
-                      R$ {(presencaPremiada.eligible.length * awardValue).toFixed(2)}
-                    </strong>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1327,12 +1543,36 @@ export default function HRPanel({ currentUser }) {
                 <table style={styles.table}>
                   <thead>
                     <tr>
-                      <th>Funcionário</th>
-                      <th>CPF</th>
-                      <th>Setor / Cargo</th>
-                      <th>Tipo Contrato</th>
-                      <th>Admissão</th>
-                      <th>Pendências</th>
+                      <th onClick={() => handleSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Nome">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          Funcionário {renderSortIcon('name')}
+                        </div>
+                      </th>
+                      <th onClick={() => handleSort('cpf')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por CPF">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          CPF {renderSortIcon('cpf')}
+                        </div>
+                      </th>
+                      <th onClick={() => handleSort('role')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Cargo">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          Setor / Cargo {renderSortIcon('role')}
+                        </div>
+                      </th>
+                      <th onClick={() => handleSort('contractType')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Contrato">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          Tipo Contrato {renderSortIcon('contractType')}
+                        </div>
+                      </th>
+                      <th onClick={() => handleSort('admissionDate')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Admissão">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          Admissão {renderSortIcon('admissionDate')}
+                        </div>
+                      </th>
+                      <th onClick={() => handleSort('warnings')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Pendências">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          Pendências {renderSortIcon('warnings')}
+                        </div>
+                      </th>
                       <th>Ações</th>
                     </tr>
                   </thead>
@@ -1347,7 +1587,7 @@ export default function HRPanel({ currentUser }) {
                         const docCount = emp.documents?.length || 0;
                         return (
                           <tr key={emp.id}>
-                            <td>
+                            <td onClick={() => handleOpenEmpEdit(emp)} style={{ cursor: 'pointer' }} title={`Clique para abrir a ficha de ${emp.name}`}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0' }}>
                                 {emp.photo ? (
                                   <img src={emp.photo} alt={emp.name} style={styles.tablePhoto} />
@@ -1355,7 +1595,7 @@ export default function HRPanel({ currentUser }) {
                                   <div style={styles.tablePhotoPlaceholder}>{emp.name.charAt(0)}</div>
                                 )}
                                 <div>
-                                  <div style={{ fontWeight: '600' }}>{emp.name}</div>
+                                  <div style={{ fontWeight: '700', color: '#ec4899', textDecoration: 'underline' }}>{emp.name}</div>
                                   <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{emp.email}</div>
                                 </div>
                               </div>
@@ -1374,7 +1614,7 @@ export default function HRPanel({ currentUser }) {
                             </td>
                             <td>
                               <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                <button onClick={() => handleOpenEmpEdit(emp)} style={styles.actionEditBtn}>Ficha</button>
+                                <button onClick={() => handleOpenEmpEdit(emp)} style={styles.actionEditBtn} title="Abrir Ficha do Funcionário">Ficha</button>
                                 <button onClick={() => handleDeleteEmployee(emp)} style={{ ...styles.actionEditBtn, color: 'var(--danger-color)', borderColor: 'rgba(239,68,68,0.2)' }}>Excluir</button>
                               </div>
                             </td>
@@ -2064,6 +2304,7 @@ export default function HRPanel({ currentUser }) {
                 <div className="form-group">
                   <label>Tipo do Cartão</label>
                   <select className="form-control" value={voucherForm.cardType} onChange={e => setVoucherForm({ ...voucherForm, cardType: e.target.value })}>
+                    <option value="BetimCARD">BetimCARD</option>
                     <option value="BHBus">BHBus</option>
                     <option value="Ótimo">Ótimo</option>
                     <option value="Transcon">Transcon</option>

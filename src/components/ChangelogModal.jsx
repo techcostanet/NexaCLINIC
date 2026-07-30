@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v1.2.43',
+      date: '30 de Julho, 2026',
+      title: 'Melhorias de UX no Módulo NexaHR, Ordenação e Painel Personalizável',
+      description: 'Ficha dos funcionários clicável, ordenação de tabelas por coluna, opção BetimCARD no vale-transporte e caixas do painel reorganizáveis por usuário com tamanho pequeno por padrão.',
+      changes: [
+        { type: 'Usabilidade & UX', text: 'Nome e foto de funcionários clicáveis em todas as seções e tabelas do RH para abertura direta da ficha cadastral.' },
+        { type: 'Ordenação Dinâmica', text: 'Colunas da lista de funcionários com ordenação crescente/decrescente com suporte visual.' },
+        { type: 'Vale-Transporte', text: 'Inclusão da opção de cartão "BetimCARD" no formulário do benefício de VT.' },
+        { type: 'Painel Customizável', text: 'Modo de organização de caixas no Painel de Controle com reposicionamento, ajuste de tamanho (pequeno por padrão) e salvamento por usuário no Cloud Firestore e localStorage.' }
+      ]
+    },
+    {
       version: 'v1.2.41',
       date: '30 de Julho, 2026',
       title: 'Correção Definitiva de Fallback e Permissões no Firestore',
