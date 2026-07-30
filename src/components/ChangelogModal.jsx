@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v1.2.44',
+      date: '30 de Julho, 2026',
+      title: 'Correção de UX & Fundo Opaco no Modal de Usuários',
+      description: 'Eliminada a sobreposição visual no modal de cadastro/edição de usuários, aplicando fundo sólido 100% opaco, desfoque de fundo e novo visual premium.',
+      changes: [
+        { type: 'Correção Visual', text: 'Resolução do vazamento de texto da tabela por trás do modal de gestão de usuários (Configurações / T.I.).' },
+        { type: 'Estatuto de UX', text: 'Container refinado com desfoque backdrop-filter, sombras de elevacão, bordas nítidas e ícones indicativos nos formulários.' }
+      ]
+    },
+    {
       version: 'v1.2.43',
       date: '30 de Julho, 2026',
       title: 'Melhorias de UX no Módulo NexaHR, Ordenação e Painel Personalizável',

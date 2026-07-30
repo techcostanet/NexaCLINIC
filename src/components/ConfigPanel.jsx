@@ -597,56 +597,83 @@ export default function ConfigPanel() {
         <div style={styles.modalOverlay}>
           <div style={styles.modalCard}>
             <div style={styles.modalHeader}>
-              <h2>{editingUser ? 'Editar Acesso do Usuário' : 'Criar Novo Usuário'}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                  color: tenantSettings.themeColor || '#ec4899',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Shield size={20} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>
+                    {editingUser ? 'Editar Acesso do Usuário' : 'Criar Novo Usuário'}
+                  </h2>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
+                    {editingUser ? 'Atualize os dados e privilégios de acesso ao sistema' : 'Cadastre uma nova credencial de operador'}
+                  </p>
+                </div>
+              </div>
               <button onClick={() => setShowUserModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
+            
             <form onSubmit={handleSaveUser} style={styles.modalForm}>
               {tempPasswordMessage ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem 0' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem 0' }}>
                   <div style={{ ...styles.alert, backgroundColor: 'var(--success-light)', color: 'var(--success-color)', border: '1px solid var(--success-color)' }}>
                     <CheckCircle2 size={18} />
                     <span>{tempPasswordMessage}</span>
                   </div>
-                  <button type="button" onClick={() => setShowUserModal(false)} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899' }}>Fechar</button>
+                  <button type="button" onClick={() => setShowUserModal(false)} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', color: '#ffffff', width: '100%', padding: '0.6rem', borderRadius: '6px', fontWeight: '600' }}>Fechar</button>
                 </div>
               ) : (
                 <>
-                  <div className="form-group">
-                    <label>Nome Completo *</label>
-                    <input type="text" className="form-control" required value={userForm.name} onChange={e => setUserForm({ ...userForm, name: e.target.value })} />
+                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Nome Completo *</label>
+                    <input type="text" className="form-control" required placeholder="Nome e Sobrenome" value={userForm.name} onChange={e => setUserForm({ ...userForm, name: e.target.value })} style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} />
                   </div>
-                  <div className="form-group">
-                    <label>Email de Login *</label>
-                    <input type="email" className="form-control" required disabled={editingUser !== null} value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })} />
+                  
+                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Email de Login *</label>
+                    <input type="email" className="form-control" required disabled={editingUser !== null} placeholder="usuario@clinica.com" value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })} style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: editingUser !== null ? '#f1f5f9' : '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} />
                   </div>
-                  <div className="form-group">
-                    <label>Vincular a Funcionário Físico</label>
-                    <select className="form-control" value={userForm.employeeId} onChange={e => setUserForm({ ...userForm, employeeId: e.target.value })}>
+                  
+                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Vincular a Funcionário Físico</label>
+                    <select className="form-control" value={userForm.employeeId} onChange={e => setUserForm({ ...userForm, employeeId: e.target.value })} style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
                       <option value="">Não vincular a funcionário</option>
                       {employees.map(emp => (
                         <option key={emp.id} value={emp.id}>{emp.name}</option>
                       ))}
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label>Perfil de Permissão *</label>
-                    <select className="form-control" required value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value })}>
+                  
+                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Perfil de Permissão *</label>
+                    <select className="form-control" required value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value })} style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
                       {profiles.map(p => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label>Status de Login</label>
-                    <select className="form-control" value={userForm.status} onChange={e => setUserForm({ ...userForm, status: e.target.value })}>
+                  
+                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Status de Login</label>
+                    <select className="form-control" value={userForm.status} onChange={e => setUserForm({ ...userForm, status: e.target.value })} style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
                       <option value="active">Ativo (Permitir Login)</option>
                       <option value="inactive">Inativo (Bloquear Login)</option>
                     </select>
                   </div>
 
                   <div style={styles.modalFooter}>
-                    <button type="button" onClick={() => setShowUserModal(false)} className="btn btn-secondary">Cancelar</button>
-                    <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899' }}>
+                    <button type="button" onClick={() => setShowUserModal(false)} className="btn btn-secondary" style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer' }}>Cancelar</button>
+                    <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', color: '#ffffff', padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}>
                       {actionLoading ? 'Salvando...' : 'Gravar Acesso'}
                     </button>
                   </div>
@@ -835,23 +862,29 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 9999,
+    zIndex: 99999,
+    padding: '1rem',
   },
   modalCard: {
-    backgroundColor: 'var(--bg-card)',
-    borderRadius: '12px',
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
     width: '100%',
-    maxWidth: '500px',
+    maxWidth: '520px',
     overflow: 'hidden',
-    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+    border: '1px solid var(--border-color)',
+    display: 'flex',
+    flexDirection: 'column',
   },
   modalHeader: {
     padding: '1.25rem 1.5rem',
     borderBottom: '1px solid var(--border-color)',
+    backgroundColor: '#ffffff',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -861,17 +894,25 @@ const styles = {
     border: 'none',
     cursor: 'pointer',
     color: 'var(--text-muted)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '4px',
+    borderRadius: '50%',
   },
   modalForm: {
     padding: '1.5rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
+    gap: '0.5rem',
+    backgroundColor: '#ffffff',
   },
   modalFooter: {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '0.75rem',
     marginTop: '1rem',
+    paddingTop: '1rem',
+    borderTop: '1px solid var(--border-color)',
   }
 };

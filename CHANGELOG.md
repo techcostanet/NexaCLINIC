@@ -1,5 +1,13 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v1.2.44] - 30 de Julho, 2026
+### Correção Visual e Melhorias de UX no Modal de Gestão de Usuários
+- **Correção da Transparência de Fundo:** Corrigido problema de transparência no container do modal de cadastro/edição de usuários, onde textos da tabela de fundo ficavam sobrepostos aos campos.
+- **Opacidade e Z-Index:** Atualizada a sobreposição (`modalOverlay`) com desfoque de fundo (`backdropFilter: blur(4px)`) e z-index prioritário (99999).
+- **Design System UX:** Aplicado fundo branco sólido (`#ffffff`) 100% opaco, cantos arredondados (`16px`), sombras suaves, bordas de separação e ícones nos cabeçalhos de formulário.
+
+---
+
 ## [v1.2.43] - 30 de Julho, 2026
 ### Melhorias de UX no Módulo NexaHR, Ordenação e Personalização do Painel
 - **Ficha do Funcionário Clicável:** Nome e foto dos funcionários tornados clicáveis em todas as tabelas e painéis do RH para acesso instantâneo à ficha cadastral.
