@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v1.2.46',
+      date: '30 de Julho, 2026',
+      title: 'Aprimoramento do Monitoramento de Contratos em Experiência',
+      description: 'Lógica inteligente para identificar colaboradores em experiência (vínculo ou admissão até 90 dias) e monitorar prazos de 45 e 90 dias no Painel.',
+      changes: [
+        { type: 'Monitoramento de Experiência', text: 'Captura automática de vínculos de experiência e contratos recentes nos últimos 90 dias.' },
+        { type: 'Prazos de Avaliação', text: 'Exibição dos marcos de 1ª avaliação (45d) e término de experiência (90d) diretamente na caixa do Painel.' }
+      ]
+    },
+    {
       version: 'v1.2.45',
       date: '30 de Julho, 2026',
       title: 'Sincronização de Contagem de Colaboradores Ativos no NexaHR',

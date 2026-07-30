@@ -1,5 +1,13 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v1.2.46] - 30 de Julho, 2026
+### Aprimoramento da Identificação de Contratos em Experiência
+- **Filtro Inteligente de Período Probatório:** Reformulada a lógica de detecção de contratos em experiência para capturar automaticamente colaboradores com vínculo explícito `"Experiência"` ou admitidos nos últimos 90 dias.
+- **Detecção de Avaliações em 45 e 90 Dias:** O painel agora calcula as datas de 1ª avaliação (45 dias) e término probatório (90 dias), exibindo o status atual e a data do próximo vencimento.
+- **KPI "Em Experiência" Sincronizado:** O indicador KPI do Painel de Controle e a caixa de prazos agora contam rigorosamente todos os colaboradores em período de experiência ativos.
+
+---
+
 ## [v1.2.45] - 30 de Julho, 2026
 ### Padronização e Sincronização de Contagem de Funcionários Ativos
 - **Sincronização de Contadores:** Unificada a contagem de colaboradores ativos no badge da aba superior (`Funcionários (136)`), alinhando rigorosamente com o KPI do Painel de Controle (`Total de Funcionários: 136`).

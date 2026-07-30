@@ -895,17 +895,62 @@ export default function HRPanel({ currentUser }) {
     return list.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate)).slice(0, 5);
   };
 
-  const getExpiringContracts = () => {
-    return employees.filter(e => {
-      if (e.status !== 'Inativo' && e.contractType === 'Experiência' && e.admissionDate) {
-        const adm = new Date(e.admissionDate);
-        const limit = new Date(adm.getTime() + 90 * 24 * 60 * 60 * 1000);
+  const isEmployeeInProbation = (e) => {
+    if (!e || e.status === 'Inativo') return false;
+    const typeStr = (e.contractType || '').toLowerCase();
+    if (typeStr.includes('experi')) return true;
+    if (e.admissionDate) {
+      const admDate = new Date(e.admissionDate);
+      if (!isNaN(admDate.getTime())) {
         const today = new Date();
-        const diff = (limit - today) / (1000 * 60 * 60 * 24);
-        return diff >= 0 && diff <= 30; // expiring in next 30 days
+        const daysDiff = (today - admDate) / (1000 * 60 * 60 * 24);
+        if (daysDiff >= 0 && daysDiff <= 90) return true;
       }
-      return false;
-    });
+    }
+    return false;
+  };
+
+  const getExpiringContracts = () => {
+    const today = new Date();
+    return employees.filter(e => {
+      if (!e || e.status === 'Inativo' || !e.admissionDate) return false;
+      const admDate = new Date(e.admissionDate);
+      if (isNaN(admDate.getTime())) return false;
+
+      const typeStr = (e.contractType || '').toLowerCase();
+      const isExplicitExp = typeStr.includes('experi');
+
+      const limit45 = new Date(admDate.getTime() + 45 * 24 * 60 * 60 * 1000);
+      const limit90 = new Date(admDate.getTime() + 90 * 24 * 60 * 60 * 1000);
+      
+      const diff45 = (limit45 - today) / (1000 * 60 * 60 * 24);
+      const diff90 = (limit90 - today) / (1000 * 60 * 60 * 24);
+
+      if (isExplicitExp) return true;
+      return (diff45 >= -30 && diff45 <= 90) || (diff90 >= -30 && diff90 <= 90);
+    }).map(e => {
+      const admDate = new Date(e.admissionDate);
+      const limit45 = new Date(admDate.getTime() + 45 * 24 * 60 * 60 * 1000);
+      const limit90 = new Date(admDate.getTime() + 90 * 24 * 60 * 60 * 1000);
+      const today = new Date();
+      
+      const diff45 = (limit45 - today) / (1000 * 60 * 60 * 24);
+      const diff90 = (limit90 - today) / (1000 * 60 * 60 * 24);
+
+      let stageLabel = '1ª Avaliação (45d)';
+      let targetDate = limit45;
+
+      if (diff45 < -5 || Math.abs(diff90) < Math.abs(diff45)) {
+        stageLabel = 'Término (90d)';
+        targetDate = limit90;
+      }
+
+      return {
+        ...e,
+        expStageLabel: stageLabel,
+        expTargetDate: targetDate
+      };
+    }).sort((a, b) => a.expTargetDate - b.expTargetDate);
   };
 
   const getPresencaPremiadaData = () => {
@@ -1231,7 +1276,9 @@ export default function HRPanel({ currentUser }) {
                       {card.id === 'experience_kpi' && (
                         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
                           <span style={styles.kpiLabel}>Em Experiência</span>
-                          <span style={{ ...styles.kpiVal, color: '#f59e0b' }}>{employees.filter(e => e.contractType === 'Experiência').length}</span>
+                          <span style={{ ...styles.kpiVal, color: '#f59e0b' }}>
+                            {employees.filter(e => isEmployeeInProbation(e)).length}
+                          </span>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Contratos probatórios</span>
                         </div>
                       )}
@@ -1337,18 +1384,18 @@ export default function HRPanel({ currentUser }) {
                           <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>⏳ Contratos em Experiência</h3>
                           <div style={styles.listWrapper}>
                             {expiringContracts.length === 0 ? (
-                              <p style={styles.noDataMini}>Sem contratos vencendo em 30 dias.</p>
+                              <p style={styles.noDataMini}>Nenhum contrato em experiência no período.</p>
                             ) : (
                               expiringContracts.slice(0, 4).map((e, idx) => {
-                                const limit = new Date(new Date(e.admissionDate).getTime() + 90 * 24 * 60 * 60 * 1000);
+                                const target = e.expTargetDate ? e.expTargetDate : new Date(new Date(e.admissionDate).getTime() + 90 * 24 * 60 * 60 * 1000);
                                 return (
                                   <div key={idx} style={styles.listItem}>
                                     <div>
                                       <strong onClick={() => handleOpenEmpEdit(e)} style={{ color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }} title={`Abrir ficha de ${e.name}`}>{e.name}</strong>
-                                      <span style={styles.listSubText}>{e.role}</span>
+                                      <span style={styles.listSubText}>{e.role} {e.expStageLabel ? `• ${e.expStageLabel}` : ''}</span>
                                     </div>
                                     <span style={{ ...styles.listBadge, backgroundColor: '#fef3c7', color: '#d97706' }}>
-                                      Fim: {limit.toLocaleDateString('pt-BR')}
+                                      Vence: {target.toLocaleDateString('pt-BR')}
                                     </span>
                                   </div>
                                 );
