@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v1.2.38',
+      date: '30 de Julho, 2026',
+      title: 'Persistência Fulltime RBAC no Firebase Cloud (Nuvem)',
+      description: 'Conexão direta dos perfis RBAC e configurações SaaS ao Google Cloud Firestore para sincronização multi-dispositivo permanente.',
+      changes: [
+        { type: 'Nuvem Realtime', text: 'Conectada a leitura e gravação da coleção `user_profiles` e `tenant_settings` ao Cloud Firestore real.' },
+        { type: 'Segurança Firebase', text: 'Atualizadas regras `firestore.rules` permitindo sincronização em tempo real das permissões de T.I. para todos os computadores.' },
+        { type: 'Recursos Humanos', text: 'Garantida a exibição exclusiva do portal NexaHR e do portal NexaINDEX (BI) para o perfil RH.' }
+      ]
+    },
+    {
       version: 'v1.2.36',
       date: '30 de Julho, 2026',
       title: 'Integração de Permissões RBAC com Matriz do Módulo T.I.',

@@ -129,7 +129,11 @@ export default function ModuleSelector({ user, onSelectModule }) {
       return userProfileConfig.permissions[permKey] !== 'none';
     }
 
-    // Fallback to static allowedRoles if profiles not loaded yet
+    // Default fallback if profile permissions matrix hasn't loaded or isn't set
+    if (userRole === 'rh') {
+      return mod.id === 'hr' || mod.id === 'quality';
+    }
+
     return mod.allowedRoles.includes(userRole);
   });
 

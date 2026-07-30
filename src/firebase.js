@@ -1313,21 +1313,66 @@ export const dbService = {
   // Tenant Settings (SaaS Configurations)
   getTenantSettings: async () => {
     if (USE_MOCK) return mockFirestore.getTenantSettings();
-    return mockFirestore.getTenantSettings();
+    try {
+      const { getFirestore, doc, getDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDoc(doc(db, 'tenant_settings', 'main'));
+      if (snap.exists()) {
+        return snap.data();
+      }
+      return mockFirestore.getTenantSettings();
+    } catch (e) {
+      console.error('Erro ao ler tenant_settings do Firestore:', e);
+      return mockFirestore.getTenantSettings();
+    }
   },
   saveTenantSettings: async (settings) => {
     if (USE_MOCK) return mockFirestore.saveTenantSettings(settings);
-    return mockFirestore.saveTenantSettings(settings);
+    try {
+      const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      await setDoc(doc(db, 'tenant_settings', 'main'), settings, { merge: true });
+      return settings;
+    } catch (e) {
+      console.error('Erro ao salvar tenant_settings no Firestore:', e);
+      return mockFirestore.saveTenantSettings(settings);
+    }
   },
 
   // User Profiles (RBAC Roles)
   getUserProfiles: async () => {
     if (USE_MOCK) return mockFirestore.getUserProfiles();
-    return mockFirestore.getUserProfiles();
+    try {
+      const { getFirestore, collection, getDocs, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'user_profiles'));
+      if (!snap.empty) {
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+      // Seed default profiles to Cloud Firestore if empty
+      const defaultProfiles = await mockFirestore.getUserProfiles();
+      for (const prof of defaultProfiles) {
+        const { id, ...data } = prof;
+        await setDoc(doc(db, 'user_profiles', id), data);
+      }
+      return defaultProfiles;
+    } catch (e) {
+      console.error('Erro ao ler user_profiles do Firestore:', e);
+      return mockFirestore.getUserProfiles();
+    }
   },
   saveUserProfile: async (profile) => {
     if (USE_MOCK) return mockFirestore.saveUserProfile(profile);
-    return mockFirestore.saveUserProfile(profile);
+    try {
+      const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const { id, ...data } = profile;
+      await setDoc(doc(db, 'user_profiles', id), data, { merge: true });
+      return profile;
+    } catch (e) {
+      console.error('Erro ao salvar user_profile no Firestore:', e);
+      return mockFirestore.saveUserProfile(profile);
+    }
   },
 
   // Backup and Restore

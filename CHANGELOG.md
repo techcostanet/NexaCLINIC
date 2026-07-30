@@ -1,5 +1,13 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v1.2.38] - 30 de Julho, 2026
+### Persistência Fulltime de RBAC e SaaS no Firebase Cloud (Nuvem)
+- **Persistência Cloud Firestore:** Leitura e gravação das tabelas de permissões (`user_profiles`) e configurações SaaS (`tenant_settings`) integradas diretamente ao banco de dados do Google Cloud Firestore.
+- **Regras do Firestore (`firestore.rules`):** Adicionada regra de segurança para a coleção `user_profiles` na nuvem.
+- **Validação de Perfil RH:** Garantido o fallback correto para o perfil de Recursos Humanos visualizando estritamente o portal **NexaHR** e o portal **NexaINDEX (BI)**.
+
+---
+
 ## [v1.2.36] - 30 de Julho, 2026
 ### Integração Dinâmica da Matriz de Permissões RBAC (Módulo T.I.)
 - **Validação RBAC em Tempo Real:** Conectada a matriz de permissões de perfis (`user_profiles`) salva pelo painel de T.I. (`NexaCONFIG`) diretamente ao filtro de módulos visíveis no `ModuleSelector.jsx`.
