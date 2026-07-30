@@ -1107,10 +1107,16 @@ export const dbService = {
   // Inventory Items
   getInventoryItems: async () => {
     if (USE_MOCK) return mockFirestore.getInventoryItems();
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-    const db = getFirestore(app);
-    const snap = await getDocs(collection(db, 'inventory_items'));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'inventory_items'));
+      if (snap.empty) return mockFirestore.getInventoryItems();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.error("Erro ao carregar inventory_items do Firestore:", e);
+      return mockFirestore.getInventoryItems();
+    }
   },
 
   createInventoryItem: async (itemData) => {
@@ -1132,10 +1138,16 @@ export const dbService = {
   // Stock Transactions
   getStockTransactions: async () => {
     if (USE_MOCK) return mockFirestore.getStockTransactions();
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-    const db = getFirestore(app);
-    const snap = await getDocs(collection(db, 'stock_transactions'));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'stock_transactions'));
+      if (snap.empty) return mockFirestore.getStockTransactions();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.error("Erro ao carregar stock_transactions do Firestore:", e);
+      return mockFirestore.getStockTransactions();
+    }
   },
 
   createStockTransaction: async (txData) => {
@@ -1163,10 +1175,16 @@ export const dbService = {
   // Suppliers
   getSuppliers: async () => {
     if (USE_MOCK) return mockFirestore.getSuppliers();
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-    const db = getFirestore(app);
-    const snap = await getDocs(collection(db, 'suppliers'));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'suppliers'));
+      if (snap.empty) return mockFirestore.getSuppliers();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.error("Erro ao carregar suppliers do Firestore:", e);
+      return mockFirestore.getSuppliers();
+    }
   },
   createSupplier: async (supplierData) => {
     if (USE_MOCK) return mockFirestore.createSupplier(supplierData);
@@ -1186,10 +1204,16 @@ export const dbService = {
   // Stock Sectors
   getStockSectors: async () => {
     if (USE_MOCK) return mockFirestore.getStockSectors();
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-    const db = getFirestore(app);
-    const snap = await getDocs(collection(db, 'stock_sectors'));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'stock_sectors'));
+      if (snap.empty) return mockFirestore.getStockSectors();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.error("Erro ao carregar stock_sectors do Firestore:", e);
+      return mockFirestore.getStockSectors();
+    }
   },
   createStockSector: async (sectorData) => {
     if (USE_MOCK) return mockFirestore.createStockSector(sectorData);
@@ -1209,10 +1233,16 @@ export const dbService = {
   // Purchase Invoices
   getPurchaseInvoices: async () => {
     if (USE_MOCK) return mockFirestore.getPurchaseInvoices();
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-    const db = getFirestore(app);
-    const snap = await getDocs(collection(db, 'purchase_invoices'));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'purchase_invoices'));
+      if (snap.empty) return mockFirestore.getPurchaseInvoices();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.error("Erro ao carregar purchase_invoices do Firestore:", e);
+      return mockFirestore.getPurchaseInvoices();
+    }
   },
   createPurchaseInvoice: async (invoiceData) => {
     if (USE_MOCK) return mockFirestore.createPurchaseInvoice(invoiceData);

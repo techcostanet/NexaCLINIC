@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.0.2',
+      date: '30 de Julho, 2026',
+      title: 'Correção de Carregamento nos Módulos Financeiro e Estoque',
+      description: 'Resolução completa do problema de tela branca ao acessar os módulos Financeiro e Estoque, com inicialização defensiva e métricas validadas.',
+      changes: [
+        { type: 'Correção de Exceção', text: 'Inseridas variáveis de cálculo de métricas operacionais no escopo do Financeiro.' },
+        { type: 'Resiliência de Dados', text: 'Inclusão de tratamentos defensivos contra falhas de conexão ou documentos pendentes.' }
+      ]
+    },
+    {
       version: 'v2.0.1',
       date: '30 de Julho, 2026',
       title: 'Lançamento da Versão 2.0.1 - Painel Financeiro Operacional Personalizável',

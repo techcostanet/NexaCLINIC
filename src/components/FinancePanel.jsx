@@ -292,6 +292,24 @@ export default function FinancePanel() {
     categories[p.category] = (categories[p.category] || 0) + p.amount;
   });
 
+  // Operational Dashboard Calculations (Today & Overdue)
+  const todayStr = new Date().toISOString().substring(0, 10);
+
+  const payablesTodayOrOverdue = payableList.filter(p => p.status !== 'Pago' && (p.dueDate || '') <= todayStr);
+  const totalPayablesTodayOrOverdue = payablesTodayOrOverdue.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+  const receivablesToday = receivableList.filter(r => (r.dueDate || '') === todayStr);
+  const totalReceivablesToday = receivablesToday.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const receivedToday = receivablesToday.filter(r => r.status === 'Pago').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+  const totalReceivedRealized = receivableList.filter(r => r.status === 'Pago').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const totalPaidRealized = payableList.filter(p => p.status === 'Pago').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const realizedBalance = totalReceivedRealized - totalPaidRealized;
+
+  const overduePayables = payableList.filter(p => p.status !== 'Pago' && (p.dueDate || '') < todayStr);
+  const overdueReceivables = receivableList.filter(r => r.status !== 'Pago' && (r.dueDate || '') < todayStr);
+  const totalOverdueAmount = overduePayables.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0) + overdueReceivables.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
+
   // Simulated APAC alert list
   const mockApacs = [
     { id: '1', patientName: 'ADAIR PRAXEDES MORENO', code: '0303020059', expires: '2026-07-28', status: 'Atenção' },

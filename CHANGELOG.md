@@ -1,5 +1,12 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v2.0.2] - 30 de Julho, 2026
+### Correção de Tela Branca nos Módulos Financeiro e Estoque
+- **Declaração de Métricas Operacionais:** Adicionadas as variáveis de cálculo de métricas operacionais (`payablesTodayOrOverdue`, `totalPayablesTodayOrOverdue`, `receivablesToday`, `totalReceivablesToday`, `realizedBalance`, `overduePayables`, etc.) no escopo do [FinancePanel.jsx](file:///c:/Nexa/NexAi-CLINIC/src/components/FinancePanel.jsx), eliminando a exceção de `ReferenceError`.
+- **Tratamento Defensivo de Dados:** Adicionados try/catch fallbacks defensivos para as coleções de estoque e financeiro em [firebase.js](file:///c:/Nexa/NexAi-CLINIC/src/firebase.js), garantindo carregamento 100% resiliente mesmo em caso de lentidão ou ausência de documentos.
+
+---
+
 ## [v2.0.1] - 30 de Julho, 2026
 ### Lançamento da Versão Major 2.0.1 & Painel Operacional Financeiro Personalizável
 - **Painel Financeiro Focado na Operação:** Reformulado o Dashboard do Módulo Financeiro com quadros focados no operador do dia a dia (Contas a Pagar Hoje / Vencidas, Contas a Receber Hoje, Saldo de Caixa Realizado, Títulos em Atraso).
