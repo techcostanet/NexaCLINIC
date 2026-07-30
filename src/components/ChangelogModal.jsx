@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.0.4',
+      date: '30 de Julho, 2026',
+      title: 'Auditoria de Segurança e Persistência Cloud Firestore',
+      description: 'Garantida a integração total com o Google Cloud Firestore para gravação em nuvem nos módulos RH, T.I, Financeiro, Compras e Estoque, com tratamentos de segurança e resiliência.',
+      changes: [
+        { type: 'Persistência Nuvem', text: 'Persistência no Cloud Firestore configurada para todas as tabelas financeiras, dívidas e conciliação bancária.' },
+        { type: 'Segurança & Resiliência', text: 'Tratamento de exceções defensivas (try/catch) para evitar tela branca em falhas de rede.' }
+      ]
+    },
+    {
       version: 'v2.0.3',
       date: '30 de Julho, 2026',
       title: 'Gestão de Parcelamentos, Dívidas e Conciliação Bancária',

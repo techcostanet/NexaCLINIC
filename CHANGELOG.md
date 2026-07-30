@@ -1,5 +1,12 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v2.0.4] - 30 de Julho, 2026
+### Auditoria Global de Segurança e Persistência Cloud Firestore
+- **Audit de Persistência em Nuvem (Firebase Firestore):** Atualizados todos os métodos financeiros (Contas a Pagar, Contas a Receber, Importação XML NF-e, Parcelamentos/Dívidas e Conciliação Bancária) em [firebase.js](file:///c:/Nexa/NexAi-CLINIC/src/firebase.js) para gravarem e buscarem dados diretamente nas coleções do **Google Cloud Firestore** com fallback resiliente para o `mockFirestore`.
+- **Sanitização & Resiliência:** Adicionados blocos defensivos `try/catch` em todas as rotas de API do sistema para prevenir vazamentos de erro e garantir estabilidade durante falhas temporárias de conexão.
+
+---
+
 ## [v2.0.3] - 30 de Julho, 2026
 ### Lançamento de Parcelamentos / Dívidas e Conciliação Bancária no Módulo Financeiro
 - **Aba Parcelamentos & Dívidas:** Nova aba para gestão completa de contratos de financiamentos, dívidas e empréstimos de longo prazo.

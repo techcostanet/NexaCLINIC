@@ -1349,35 +1349,108 @@ export const dbService = {
   // Financial management
   getAccountsPayable: async () => {
     if (USE_MOCK) return mockFirestore.getAccountsPayable();
-    return mockFirestore.getAccountsPayable();
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'accounts_payable'));
+      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return mockFirestore.getAccountsPayable();
+    } catch (e) {
+      console.error('Erro Firestore getAccountsPayable:', e);
+      return mockFirestore.getAccountsPayable();
+    }
   },
   saveAccountsPayable: async (item) => {
     if (USE_MOCK) return mockFirestore.saveAccountsPayable(item);
-    return mockFirestore.saveAccountsPayable(item);
+    try {
+      const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      if (item.id) {
+        await setDoc(doc(db, 'accounts_payable', item.id), item, { merge: true });
+        return item;
+      }
+      const ref = await addDoc(collection(db, 'accounts_payable'), { ...item, createdAt: new Date().toISOString() });
+      return { id: ref.id, ...item };
+    } catch (e) {
+      console.error('Erro Firestore saveAccountsPayable:', e);
+      return mockFirestore.saveAccountsPayable(item);
+    }
   },
   deleteAccountsPayable: async (id) => {
     if (USE_MOCK) return mockFirestore.deleteAccountsPayable(id);
-    return mockFirestore.deleteAccountsPayable(id);
+    try {
+      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      await deleteDoc(doc(db, 'accounts_payable', id));
+      return { success: true };
+    } catch (e) {
+      console.error('Erro Firestore deleteAccountsPayable:', e);
+      return mockFirestore.deleteAccountsPayable(id);
+    }
   },
   getAccountsReceivable: async () => {
     if (USE_MOCK) return mockFirestore.getAccountsReceivable();
-    return mockFirestore.getAccountsReceivable();
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'accounts_receivable'));
+      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return mockFirestore.getAccountsReceivable();
+    } catch (e) {
+      console.error('Erro Firestore getAccountsReceivable:', e);
+      return mockFirestore.getAccountsReceivable();
+    }
   },
   saveAccountsReceivable: async (item) => {
     if (USE_MOCK) return mockFirestore.saveAccountsReceivable(item);
-    return mockFirestore.saveAccountsReceivable(item);
+    try {
+      const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      if (item.id) {
+        await setDoc(doc(db, 'accounts_receivable', item.id), item, { merge: true });
+        return item;
+      }
+      const ref = await addDoc(collection(db, 'accounts_receivable'), { ...item, createdAt: new Date().toISOString() });
+      return { id: ref.id, ...item };
+    } catch (e) {
+      console.error('Erro Firestore saveAccountsReceivable:', e);
+      return mockFirestore.saveAccountsReceivable(item);
+    }
   },
   deleteAccountsReceivable: async (id) => {
     if (USE_MOCK) return mockFirestore.deleteAccountsReceivable(id);
-    return mockFirestore.deleteAccountsReceivable(id);
+    try {
+      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      await deleteDoc(doc(db, 'accounts_receivable', id));
+      return { success: true };
+    } catch (e) {
+      console.error('Erro Firestore deleteAccountsReceivable:', e);
+      return mockFirestore.deleteAccountsReceivable(id);
+    }
   },
   getXmlImports: async () => {
     if (USE_MOCK) return mockFirestore.getXmlImports();
-    return mockFirestore.getXmlImports();
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'xml_imports'));
+      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return mockFirestore.getXmlImports();
+    } catch (e) {
+      return mockFirestore.getXmlImports();
+    }
   },
   saveXmlImport: async (xmlData) => {
     if (USE_MOCK) return mockFirestore.saveXmlImport(xmlData);
-    return mockFirestore.saveXmlImport(xmlData);
+    try {
+      const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const ref = await addDoc(collection(db, 'xml_imports'), { ...xmlData, importDate: new Date().toISOString() });
+      return { id: ref.id, ...xmlData };
+    } catch (e) {
+      return mockFirestore.saveXmlImport(xmlData);
+    }
   },
   
   // Transport Vouchers
@@ -1566,24 +1639,74 @@ export const dbService = {
   // Debts and Installments API
   getDebts: async () => {
     if (USE_MOCK) return mockFirestore.getDebts();
-    return mockFirestore.getDebts();
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'debts'));
+      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return mockFirestore.getDebts();
+    } catch (e) {
+      console.error('Erro Firestore getDebts:', e);
+      return mockFirestore.getDebts();
+    }
   },
   saveDebt: async (debtData) => {
     if (USE_MOCK) return mockFirestore.saveDebt(debtData);
-    return mockFirestore.saveDebt(debtData);
+    try {
+      const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      if (debtData.id) {
+        await setDoc(doc(db, 'debts', debtData.id), debtData, { merge: true });
+        return debtData;
+      }
+      const ref = await addDoc(collection(db, 'debts'), { ...debtData, createdAt: new Date().toISOString() });
+      return { id: ref.id, ...debtData };
+    } catch (e) {
+      console.error('Erro Firestore saveDebt:', e);
+      return mockFirestore.saveDebt(debtData);
+    }
   },
   deleteDebt: async (id) => {
     if (USE_MOCK) return mockFirestore.deleteDebt(id);
-    return mockFirestore.deleteDebt(id);
+    try {
+      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      await deleteDoc(doc(db, 'debts', id));
+      return { success: true };
+    } catch (e) {
+      console.error('Erro Firestore deleteDebt:', e);
+      return mockFirestore.deleteDebt(id);
+    }
   },
 
   // Bank Reconciliation API
   getBankStatements: async () => {
     if (USE_MOCK) return mockFirestore.getBankStatements();
-    return mockFirestore.getBankStatements();
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'bank_statements'));
+      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return mockFirestore.getBankStatements();
+    } catch (e) {
+      console.error('Erro Firestore getBankStatements:', e);
+      return mockFirestore.getBankStatements();
+    }
   },
   saveBankStatement: async (statementData) => {
     if (USE_MOCK) return mockFirestore.saveBankStatement(statementData);
-    return mockFirestore.saveBankStatement(statementData);
+    try {
+      const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      if (statementData.id) {
+        await setDoc(doc(db, 'bank_statements', statementData.id), statementData, { merge: true });
+        return statementData;
+      }
+      const ref = await addDoc(collection(db, 'bank_statements'), { ...statementData, createdAt: new Date().toISOString() });
+      return { id: ref.id, ...statementData };
+    } catch (e) {
+      console.error('Erro Firestore saveBankStatement:', e);
+      return mockFirestore.saveBankStatement(statementData);
+    }
   }
 };
