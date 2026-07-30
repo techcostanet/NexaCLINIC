@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v1.2.34',
+      date: '30 de Julho, 2026',
+      title: 'Ajuste de Perfil RH & Ocultação de Módulos Restritos',
+      description: 'Ocultação automática dos portais sem acesso na tela inicial e perfil dedicado de Recursos Humanos para a usuária anacg@nexa.com.',
+      changes: [
+        { type: 'Privacidade & RBAC', text: 'Módulos sem acesso agora ficam completamente ocultos na tela inicial.' },
+        { type: 'Recursos Humanos', text: 'Usuária anacg@nexa.com configurada com perfil RH (acesso ao portal NexaHR e indicadores de BI do RH).' }
+      ]
+    },
+    {
       version: 'v1.2.32',
       date: '30 de Julho, 2026',
       title: 'Sincronização Realtime no Firebase Cloud & Recuperação de Acessos',

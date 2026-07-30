@@ -48,6 +48,7 @@ export const authService = {
           const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
           const { getFirestore, doc, setDoc } = await import('firebase/firestore');
           const db = getFirestore(app);
+          const isRH = cleanEmail === 'anacg@nexa.com';
           const userName = cleanEmail === 'contato@techcosta.net' 
             ? 'Administrador TechCosta' 
             : cleanEmail === 'anacg@nexa.com' 
@@ -56,8 +57,8 @@ export const authService = {
           await setDoc(doc(db, 'users', userCredential.user.uid), {
             name: userName,
             email: cleanEmail,
-            role: 'admin',
-            allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+            role: isRH ? 'rh' : 'admin',
+            allowedSectors: isRH ? ['rh'] : ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
             status: 'active',
             createdAt: new Date().toISOString()
           });
@@ -93,7 +94,10 @@ export const authService = {
           const { getFirestore, doc, getDoc, setDoc } = await import('firebase/firestore');
           const db = getFirestore(app);
           const cleanEmail = (firebaseUser.email || '').trim().toLowerCase();
-          const isOfficialAdmin = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'].includes(cleanEmail);
+          const isOfficialUser = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'].includes(cleanEmail);
+          const isRH = cleanEmail === 'anacg@nexa.com';
+          const expectedRole = isRH ? 'rh' : 'admin';
+          const expectedSectors = isRH ? ['rh'] : ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
 
           try {
             const userRef = doc(db, 'users', firebaseUser.uid);
@@ -101,19 +105,19 @@ export const authService = {
             
             if (userDoc.exists()) {
               const userData = userDoc.data();
-              if (userData.status === 'inactive' && !isOfficialAdmin) {
+              if (userData.status === 'inactive' && !isOfficialUser) {
                 const { signOut } = await import('firebase/auth');
                 await signOut(auth);
                 callback(null);
                 return;
               }
-              // Guarantee official admins are active in cloud profile
-              if (isOfficialAdmin && (userData.role !== 'admin' || userData.status !== 'active')) {
+              // Guarantee official users have active status and correct roles in cloud profile
+              if (isOfficialUser && (userData.role !== expectedRole || userData.status !== 'active')) {
                 const updatedProfile = {
                   ...userData,
-                  role: 'admin',
+                  role: expectedRole,
                   status: 'active',
-                  allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras']
+                  allowedSectors: expectedSectors
                 };
                 await setDoc(userRef, updatedProfile, { merge: true });
                 callback({ uid: firebaseUser.uid, email: firebaseUser.email, ...updatedProfile });
@@ -133,8 +137,8 @@ export const authService = {
               const newProfile = {
                 name: userName,
                 email: firebaseUser.email,
-                role: 'admin',
-                allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+                role: expectedRole,
+                allowedSectors: expectedSectors,
                 status: 'active',
                 createdAt: new Date().toISOString()
               };

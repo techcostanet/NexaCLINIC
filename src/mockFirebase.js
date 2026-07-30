@@ -12198,8 +12198,8 @@ const getDB = () => {
           uid: 'anacg-uid',
           email: 'anacg@nexa.com',
           name: 'Ana Carolina Cerqueira Gonzaga',
-          role: 'admin',
-          allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+          role: 'rh',
+          allowedSectors: ['rh'],
           status: 'active'
         },
         {
@@ -12220,8 +12220,8 @@ const getDB = () => {
         } else {
           let uChanged = false;
           if (existing.status !== 'active') { existing.status = 'active'; uChanged = true; }
-          if (existing.role !== 'admin') { existing.role = 'admin'; uChanged = true; }
-          if (!existing.allowedSectors || existing.allowedSectors.length < 5) {
+          if (existing.role !== ru.role) { existing.role = ru.role; uChanged = true; }
+          if (!existing.allowedSectors || existing.allowedSectors.length === 0) {
             existing.allowedSectors = ru.allowedSectors;
             uChanged = true;
           }
@@ -12800,8 +12800,8 @@ const getDB = () => {
         uid: 'anacg-uid',
         email: 'anacg@nexa.com',
         name: 'Ana Carolina Cerqueira Gonzaga',
-        role: 'admin',
-        allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+        role: 'rh',
+        allowedSectors: ['rh'],
         status: 'active',
         createdAt: new Date().toISOString()
       },

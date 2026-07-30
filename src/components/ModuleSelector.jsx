@@ -46,7 +46,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
       description: 'Métricas assistenciais, metas de indicadores hospitalares e auditoria de faturamento.',
       icon: BarChart3,
       color: 'var(--primary-color)',
-      allowedRoles: ['admin', 'professional']
+      allowedRoles: ['admin', 'professional', 'rh', 'financial']
     },
     {
       id: 'hr',
@@ -96,6 +96,16 @@ export default function ModuleSelector({ user, onSelectModule }) {
   ];
 
   const userRole = user?.role || 'professional';
+  const visibleModules = modules.filter((mod) => mod.allowedRoles.includes(userRole));
+  const roleLabel = userRole === 'admin' 
+    ? 'Administrador Geral' 
+    : userRole === 'rh' 
+    ? 'Recursos Humanos' 
+    : userRole === 'financial' 
+    ? 'Gestão Financeira' 
+    : userRole === 'receptionist' 
+    ? 'Recepção' 
+    : 'Profissional Clínico';
 
   return (
     <div style={styles.container}>
@@ -107,23 +117,19 @@ export default function ModuleSelector({ user, onSelectModule }) {
           <h1 style={styles.welcome}>Olá, {user?.name || 'Profissional'}</h1>
           <p style={styles.instructions}>Selecione abaixo o portal que deseja acessar para continuar o trabalho:</p>
           <div style={styles.roleContainer}>
-            Perfil atual: <span style={styles.roleBadge}>{userRole === 'admin' ? 'Administrador Geral' : 'Profissional Clínico'}</span>
+            Perfil atual: <span style={styles.roleBadge}>{roleLabel}</span>
           </div>
         </div>
 
         <div style={styles.grid}>
-          {modules.map((mod) => {
+          {visibleModules.map((mod) => {
             const Icon = mod.icon;
-            const hasAccess = mod.allowedRoles.includes(userRole);
             
             return (
               <div 
                 key={mod.id} 
-                style={{
-                  ...styles.card,
-                  ...(!hasAccess ? styles.cardDisabled : {})
-                }}
-                onClick={() => hasAccess && onSelectModule(mod.id)}
+                style={styles.card}
+                onClick={() => onSelectModule(mod.id)}
               >
                 <div style={{ ...styles.iconBox, backgroundColor: mod.color }}>
                   <Icon size={22} color="#fff" />
@@ -132,15 +138,9 @@ export default function ModuleSelector({ user, onSelectModule }) {
                 <span style={{ ...styles.cardSubtitle, color: mod.color }}>{mod.subtitle}</span>
                 <p style={styles.cardDesc}>{mod.description}</p>
                 
-                {hasAccess ? (
-                  <button style={{ ...styles.btn, backgroundColor: mod.color }}>
-                    Entrar no Portal
-                  </button>
-                ) : (
-                  <div style={styles.noAccessMsg}>
-                    Acesso restrito para o seu perfil
-                  </div>
-                )}
+                <button style={{ ...styles.btn, backgroundColor: mod.color }}>
+                  Entrar no Portal
+                </button>
               </div>
             );
           })}

@@ -1,5 +1,12 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v1.2.34] - 30 de Julho, 2026
+### Ajuste de Perfil RH & Ocultação Automática de Módulos Restritos
+- **Ocultação de Módulos:** Os portais para os quais o perfil logado não possui acesso agora ficam **completamente ocultos**, exibindo na tela inicial apenas os módulos permitidos.
+- **Perfil Recursos Humanos (`anacg@nexa.com`):** Restabelecido o perfil dedicado `rh` para a usuária, permitindo acesso direto ao portal de **Recursos Humanos & Benefícios** e ao portal **Gestão da Qualidade & BI** (indicadores de Turnover e Absenteísmo do RH).
+
+---
+
 ## [v1.2.32] - 30 de Julho, 2026
 ### Sincronização Realtime no Firebase Cloud & Recuperação de Acessos
 - **Sincronização em Tempo Real (Multi-dispositivo):** Ativada conexão direta com o Google Cloud Firebase (Firestore), desativando o modo mock isolado local para garantir que dados de funcionários do RH e cadastros sejam sincronizados simultaneamente entre todos os computadores.
