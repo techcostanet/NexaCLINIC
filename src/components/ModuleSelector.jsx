@@ -95,17 +95,55 @@ export default function ModuleSelector({ user, onSelectModule }) {
     }
   ];
 
+  const [profiles, setProfiles] = React.useState([]);
+
+  React.useEffect(() => {
+    const fetchProfiles = async () => {
+      try {
+        const { dbService } = await import('../firebase');
+        const list = await dbService.getUserProfiles();
+        if (list && list.length > 0) {
+          setProfiles(list);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar perfis RBAC:', err);
+      }
+    };
+    fetchProfiles();
+  }, []);
+
   const userRole = user?.role || 'professional';
-  const visibleModules = modules.filter((mod) => mod.allowedRoles.includes(userRole));
-  const roleLabel = userRole === 'admin' 
-    ? 'Administrador Geral' 
-    : userRole === 'rh' 
-    ? 'Recursos Humanos' 
-    : userRole === 'financial' 
-    ? 'Gestão Financeira' 
-    : userRole === 'receptionist' 
-    ? 'Recepção' 
-    : 'Profissional Clínico';
+  
+  // Find current user profile configuration from stored RBAC profiles
+  const userProfileConfig = profiles.find((p) => p.id === userRole);
+
+  const visibleModules = modules.filter((mod) => {
+    // Admin always sees everything
+    if (userRole === 'admin') return true;
+
+    // Map module IDs to RBAC permission keys
+    const permKey = mod.id === 'quality' ? 'index' : mod.id;
+
+    // Check dynamic RBAC matrix if available
+    if (userProfileConfig && userProfileConfig.permissions && userProfileConfig.permissions[permKey] !== undefined) {
+      return userProfileConfig.permissions[permKey] !== 'none';
+    }
+
+    // Fallback to static allowedRoles if profiles not loaded yet
+    return mod.allowedRoles.includes(userRole);
+  });
+
+  const roleLabel = userProfileConfig?.name || (
+    userRole === 'admin' 
+      ? 'Administrador Geral' 
+      : userRole === 'rh' 
+      ? 'Recursos Humanos' 
+      : userRole === 'financial' 
+      ? 'Gestão Financeira' 
+      : userRole === 'receptionist' 
+      ? 'Recepção' 
+      : 'Profissional Clínico'
+  );
 
   return (
     <div style={styles.container}>

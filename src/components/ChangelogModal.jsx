@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v1.2.36',
+      date: '30 de Julho, 2026',
+      title: 'Integração de Permissões RBAC com Matriz do Módulo T.I.',
+      description: 'Conectou a matriz de permissões RBAC configurada no painel de T.I. (NexaCONFIG) diretamente ao seletor de portais da tela inicial.',
+      changes: [
+        { type: 'Segurança & RBAC', text: 'Os módulos da tela inicial agora respeitam dinamicamente as permissões (Escrita, Leitura ou Sem Acesso) salvas no painel de T.I. para cada perfil.' },
+        { type: 'Recursos Humanos', text: 'Ajustada a regra para que perfis configurados para BI e RH (como Recursos Humanos) visualizem rigorosamente os módulos autorizados na matriz de permissões.' }
+      ]
+    },
+    {
       version: 'v1.2.34',
       date: '30 de Julho, 2026',
       title: 'Ajuste de Perfil RH & Ocultação de Módulos Restritos',

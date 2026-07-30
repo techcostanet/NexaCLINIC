@@ -1,5 +1,12 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v1.2.36] - 30 de Julho, 2026
+### Integração Dinâmica da Matriz de Permissões RBAC (Módulo T.I.)
+- **Validação RBAC em Tempo Real:** Conectada a matriz de permissões de perfis (`user_profiles`) salva pelo painel de T.I. (`NexaCONFIG`) diretamente ao filtro de módulos visíveis no `ModuleSelector.jsx`.
+- **Filtro Personalizado por Perfil:** As permissões do perfil (por exemplo, Recursos Humanos configurado para BI e RH com valor `'read'`/`'write'` e demais como `'none'`) agora determinam em tempo real quais portais são exibidos na tela inicial, ocultando com precisão todos os portais marcados como sem acesso (`none`).
+
+---
+
 ## [v1.2.34] - 30 de Julho, 2026
 ### Ajuste de Perfil RH & Ocultação Automática de Módulos Restritos
 - **Ocultação de Módulos:** Os portais para os quais o perfil logado não possui acesso agora ficam **completamente ocultos**, exibindo na tela inicial apenas os módulos permitidos.
