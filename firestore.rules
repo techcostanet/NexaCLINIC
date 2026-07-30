@@ -70,5 +70,34 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.resource.data.uploadedBy == request.auth.uid;
       allow update, delete: if isAdmin();
     }
+
+    // Employees Collection Rules
+    match /employees/{employeeId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Purchases & Invoices Collection Rules
+    match /purchases/{purchaseId} {
+      allow read, write: if isAuthenticated();
+    }
+    match /purchase_invoices/{invoiceId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Stock Items Collection Rules
+    match /stock_items/{itemId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Operational Parameters Rules
+    match /shifts/{shiftId} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    match /rooms/{roomId} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    match /access_types/{accessId} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    match /dialysis_frequencies/{freqId} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+
+    // Calendar Events, Audit Logs, Settings Rules
+    match /calendar_events/{eventId} { allow read, write: if isAuthenticated(); }
+    match /audit_logs/{logId} { allow read, write: if isAuthenticated(); }
+    match /tenant_settings/{settingId} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
   }
 }

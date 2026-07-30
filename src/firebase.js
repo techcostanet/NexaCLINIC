@@ -5,7 +5,7 @@
 import { mockAuth, mockFirestore } from './mockFirebase';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 // Real Firebase credentials supplied by the user
 const firebaseConfig = {
@@ -36,37 +36,35 @@ export const authService = {
     }
     const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } = await import('firebase/auth');
     const auth = getAuth(app);
+    const cleanEmail = (email || '').trim().toLowerCase();
     try {
-      return await signInWithEmailAndPassword(auth, email, password);
+      return await signInWithEmailAndPassword(auth, cleanEmail, password);
     } catch (err) {
       const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found';
+      const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'];
       
-      if (isInvalidCred) {
-        const cleanEmail = (email || '').trim().toLowerCase();
-        const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'];
-        if (allowedEmails.includes(cleanEmail)) {
-          try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const { getFirestore, doc, setDoc } = await import('firebase/firestore');
-            const db = getFirestore(app);
-            const userName = cleanEmail === 'contato@techcosta.net' 
-              ? 'Administrador TechCosta' 
-              : cleanEmail === 'anacg@nexa.com' 
-              ? 'Ana Carolina Cerqueira Gonzaga' 
-              : 'J. Soares';
-            await setDoc(doc(db, 'users', userCredential.user.uid), {
-              name: userName,
-              email: email,
-              role: 'admin',
-              allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
-              status: 'active',
-              createdAt: new Date().toISOString()
-            });
-            return userCredential;
-          } catch (createErr) {
-            console.error("Auto-creation of user failed:", createErr);
-            throw err;
-          }
+      if (isInvalidCred && allowedEmails.includes(cleanEmail)) {
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+          const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+          const db = getFirestore(app);
+          const userName = cleanEmail === 'contato@techcosta.net' 
+            ? 'Administrador TechCosta' 
+            : cleanEmail === 'anacg@nexa.com' 
+            ? 'Ana Carolina Cerqueira Gonzaga' 
+            : 'J. Soares';
+          await setDoc(doc(db, 'users', userCredential.user.uid), {
+            name: userName,
+            email: cleanEmail,
+            role: 'admin',
+            allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+            status: 'active',
+            createdAt: new Date().toISOString()
+          });
+          return userCredential;
+        } catch (createErr) {
+          console.error("Auto-creation of user failed:", createErr);
+          throw err;
         }
       }
       throw err;
@@ -92,39 +90,57 @@ export const authService = {
       const auth = getAuth(app);
       unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
-          // Fetch additional user metadata (role, allowedSectors) from Firestore
-          const { getFirestore, doc, getDoc } = await import('firebase/firestore');
+          const { getFirestore, doc, getDoc, setDoc } = await import('firebase/firestore');
           const db = getFirestore(app);
-          
+          const cleanEmail = (firebaseUser.email || '').trim().toLowerCase();
+          const isOfficialAdmin = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'].includes(cleanEmail);
+
           try {
-            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+            const userRef = doc(db, 'users', firebaseUser.uid);
+            const userDoc = await getDoc(userRef);
+            
             if (userDoc.exists()) {
               const userData = userDoc.data();
-              if (userData.status === 'inactive') {
+              if (userData.status === 'inactive' && !isOfficialAdmin) {
                 const { signOut } = await import('firebase/auth');
                 await signOut(auth);
                 callback(null);
                 return;
               }
+              // Guarantee official admins are active in cloud profile
+              if (isOfficialAdmin && (userData.role !== 'admin' || userData.status !== 'active')) {
+                const updatedProfile = {
+                  ...userData,
+                  role: 'admin',
+                  status: 'active',
+                  allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras']
+                };
+                await setDoc(userRef, updatedProfile, { merge: true });
+                callback({ uid: firebaseUser.uid, email: firebaseUser.email, ...updatedProfile });
+                return;
+              }
               callback({ uid: firebaseUser.uid, email: firebaseUser.email, ...userData });
             } else {
-              // If user is authenticated but not in database yet (e.g., first admin login)
-              const cleanEmail = (firebaseUser.email || '').trim().toLowerCase();
+              // If user is authenticated but no profile document exists in Cloud Firestore, create it
               const userName = cleanEmail === 'contato@techcosta.net' 
                 ? 'Administrador TechCosta' 
                 : cleanEmail === 'anacg@nexa.com' 
                 ? 'Ana Carolina Cerqueira Gonzaga' 
                 : cleanEmail === 'jsoares@nexa.com' 
                 ? 'J. Soares' 
-                : 'Usuário Nexa';
-              callback({
-                uid: firebaseUser.uid,
+                : (firebaseUser.displayName || 'Usuário Nexa');
+              
+              const newProfile = {
+                name: userName,
                 email: firebaseUser.email,
-                name: firebaseUser.displayName || userName,
                 role: 'admin',
                 allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
-                status: 'active'
-              });
+                status: 'active',
+                createdAt: new Date().toISOString()
+              };
+              
+              await setDoc(userRef, newProfile);
+              callback({ uid: firebaseUser.uid, email: firebaseUser.email, ...newProfile });
             }
           } catch (e) {
             console.error('Erro ao ler perfil do Firestore:', e);
@@ -1174,10 +1190,26 @@ export const dbService = {
   // Employees
   getEmployees: async () => {
     if (USE_MOCK) return mockFirestore.getEmployees();
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+    const { getFirestore, collection, getDocs, addDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
-    const snap = await getDocs(collection(db, 'employees'));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    try {
+      const snap = await getDocs(collection(db, 'employees'));
+      if (snap.empty) {
+        // Seed initial employees into Cloud Firestore
+        const mockEmps = await mockFirestore.getEmployees();
+        const seeded = [];
+        for (const emp of mockEmps) {
+          const { id, ...data } = emp;
+          const ref = await addDoc(collection(db, 'employees'), data);
+          seeded.push({ id: ref.id, ...data });
+        }
+        return seeded;
+      }
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (err) {
+      console.error("Erro ao buscar funcionários do Firestore, executando fallback:", err);
+      return mockFirestore.getEmployees();
+    }
   },
   createEmployee: async (employeeData) => {
     if (USE_MOCK) return mockFirestore.createEmployee(employeeData);

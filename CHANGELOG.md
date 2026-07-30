@@ -1,5 +1,14 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v1.2.32] - 30 de Julho, 2026
+### Sincronização Realtime no Firebase Cloud & Recuperação de Acessos
+- **Sincronização em Tempo Real (Multi-dispositivo):** Ativada conexão direta com o Google Cloud Firebase (Firestore), desativando o modo mock isolado local para garantir que dados de funcionários do RH e cadastros sejam sincronizados simultaneamente entre todos os computadores.
+- **Auto-Provisionamento de Funcionários:** Implementada rotina no Firestore para semear e sincronizar o banco de dados do RH na nuvem caso a coleção de funcionários esteja vazia.
+- **Garantia de Acesso Admin na Nuvem:** Recuperado e garantido o acesso e perfil `admin` com permissão total para `contato@techcosta.net`, `anacg@nexa.com` e `jsoares@nexa.com` no Firestore Cloud.
+- **Regras do Firestore:** Atualizado o arquivo `firestore.rules` adicionando regras de segurança e permissões de leitura/escrita para todas as coleções operacionais na nuvem (`employees`, `purchases`, `stock_items`, `shifts`, etc.).
+
+---
+
 ## [v1.2.30] - 30 de Julho, 2026
 ### Adequação LGPD, Posicionamento de Gestão Hospitalar e Usuários Oficiais
 - **LGPD / Segurança:** Remoção completa da exibição de e-mails e credenciais na tela inicial de login pública.

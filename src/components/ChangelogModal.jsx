@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v1.2.32',
+      date: '30 de Julho, 2026',
+      title: 'Sincronização Realtime no Firebase Cloud & Recuperação de Acessos',
+      description: 'Ativação da conexão direta em tempo real com o Google Cloud Firebase (Firestore) para sincronização multi-dispositivo de funcionários e usuários.',
+      changes: [
+        { type: 'Sincronização', text: 'Ativada conexão em nuvem com o Firestore (USE_MOCK = false), permitindo que todos os computadores visualizem os mesmos dados em tempo real.' },
+        { type: 'RH & Funcionários', text: 'Auto-provisionamento e semeadura automática da coleção de funcionários na nuvem.' },
+        { type: 'Acessos', text: 'Garantido o perfil Administrador Ativo no Firestore Cloud para contato@techcosta.net, anacg@nexa.com e jsoares@nexa.com.' },
+        { type: 'Segurança', text: 'Atualização de firestore.rules liberando coleções de funcionários, estoque, compras e parâmetros operacionais na nuvem.' }
+      ]
+    },
+    {
       version: 'v1.2.30',
       date: '30 de Julho, 2026',
       title: 'Adequação LGPD, Posicionamento Hospitalar & Usuários Oficiais',
