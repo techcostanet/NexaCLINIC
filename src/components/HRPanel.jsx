@@ -41,6 +41,7 @@ export default function HRPanel({ currentUser }) {
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSector, setFilterSector] = useState('');
+  const [filterStatus, setFilterStatus] = useState('active'); // 'active' | 'inactive' | 'all'
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
 
   // Dashboard Customization State (Cards reordering & sizes, default all small)
@@ -837,7 +838,12 @@ export default function HRPanel({ currentUser }) {
                             emp.cpf.includes(searchTerm) ||
                             (emp.role && emp.role.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesSector = filterSector ? emp.sectorId === filterSector : true;
-      return matchesSearch && matchesSector;
+      const matchesStatus = filterStatus === 'all' 
+        ? true 
+        : filterStatus === 'inactive' 
+          ? emp.status === 'Inativo' 
+          : emp.status !== 'Inativo';
+      return matchesSearch && matchesSector && matchesStatus;
     });
 
     if (!sortConfig.key) return filtered;
@@ -869,7 +875,7 @@ export default function HRPanel({ currentUser }) {
 
   const getRecentWarnings = () => {
     const list = [];
-    employees.forEach(e => {
+    employees.filter(e => e.status !== 'Inativo').forEach(e => {
       if (e.warnings) {
         e.warnings.forEach(w => list.push({ empName: e.name, ...w }));
       }
@@ -879,7 +885,7 @@ export default function HRPanel({ currentUser }) {
 
   const getUpcomingVaccines = () => {
     const list = [];
-    employees.forEach(e => {
+    employees.filter(e => e.status !== 'Inativo').forEach(e => {
       if (e.vaccinations) {
         e.vaccinations.forEach(v => {
           if (v.expiryDate) list.push({ empName: e.name, ...v });
@@ -891,7 +897,7 @@ export default function HRPanel({ currentUser }) {
 
   const getExpiringContracts = () => {
     return employees.filter(e => {
-      if (e.contractType === 'Experiência' && e.admissionDate) {
+      if (e.status !== 'Inativo' && e.contractType === 'Experiência' && e.admissionDate) {
         const adm = new Date(e.admissionDate);
         const limit = new Date(adm.getTime() + 90 * 24 * 60 * 60 * 1000);
         const today = new Date();
@@ -1062,7 +1068,7 @@ export default function HRPanel({ currentUser }) {
           Painel de Controle
         </button>
         <button onClick={() => setActiveTab('employees')} style={{ ...styles.tabBtn, ...(activeTab === 'employees' ? styles.tabBtnActive : {}) }}>
-          <Users size={16} /> Funcionários ({employees.length})
+          <Users size={16} /> Funcionários ({employees.filter(e => e.status !== 'Inativo').length})
         </button>
         <button onClick={() => setActiveTab('transport')} style={{ ...styles.tabBtn, ...(activeTab === 'transport' ? styles.tabBtnActive : {}) }}>
           <Bus size={16} /> Vale-Transporte
@@ -1194,7 +1200,7 @@ export default function HRPanel({ currentUser }) {
                         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
                           <span style={styles.kpiLabel}>Total de Funcionários</span>
                           <span style={{ ...styles.kpiVal, color: '#ec4899' }}>{employees.filter(e => e.status !== 'Inativo').length}</span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Colaboradores ativos cadastrados</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Colaboradores ativos ({employees.length} total no banco)</span>
                         </div>
                       )}
 
@@ -1528,7 +1534,12 @@ export default function HRPanel({ currentUser }) {
                     style={styles.searchInput}
                   />
                 </div>
-                <div style={styles.selectsWrapper}>
+                <div style={{ ...styles.selectsWrapper, display: 'flex', gap: '0.5rem' }}>
+                  <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={styles.filterSelect}>
+                    <option value="active">Apenas Ativos ({employees.filter(e => e.status !== 'Inativo').length})</option>
+                    <option value="inactive">Inativos / Demitidos ({employees.filter(e => e.status === 'Inativo').length})</option>
+                    <option value="all">Todos os Registros ({employees.length})</option>
+                  </select>
                   <select value={filterSector} onChange={e => setFilterSector(e.target.value)} style={styles.filterSelect}>
                     <option value="">Todos os Setores</option>
                     {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -1595,7 +1606,12 @@ export default function HRPanel({ currentUser }) {
                                   <div style={styles.tablePhotoPlaceholder}>{emp.name.charAt(0)}</div>
                                 )}
                                 <div>
-                                  <div style={{ fontWeight: '700', color: '#ec4899', textDecoration: 'underline' }}>{emp.name}</div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                    <div style={{ fontWeight: '700', color: emp.status === 'Inativo' ? 'var(--text-muted)' : '#ec4899', textDecoration: 'underline' }}>{emp.name}</div>
+                                    {emp.status === 'Inativo' && (
+                                      <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', borderRadius: '4px', backgroundColor: '#fee2e2', color: '#dc2626', fontWeight: '700' }}>Inativo</span>
+                                    )}
+                                  </div>
                                   <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{emp.email}</div>
                                 </div>
                               </div>

@@ -1,5 +1,13 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v1.2.45] - 30 de Julho, 2026
+### Padronização e Sincronização de Contagem de Funcionários Ativos
+- **Sincronização de Contadores:** Unificada a contagem de colaboradores ativos no badge da aba superior (`Funcionários (136)`), alinhando rigorosamente com o KPI do Painel de Controle (`Total de Funcionários: 136`).
+- **Filtro de Status no Diretório:** Adicionado seletor de filtro no diretório de funcionários permitindo alternar entre **Apenas Ativos (136)**, **Inativos/Demitidos (19)** e **Todos os Registros (155)**.
+- **Filtro de Inativos em Caixas do Painel:** Atualizados os cálculos e listagens de advertências, vacinas e vencimento de contratos no Painel de Controle para considerar estritamente os colaboradores ativos.
+
+---
+
 ## [v1.2.44] - 30 de Julho, 2026
 ### Correção Visual e Melhorias de UX no Modal de Gestão de Usuários
 - **Correção da Transparência de Fundo:** Corrigido problema de transparência no container do modal de cadastro/edição de usuários, onde textos da tabela de fundo ficavam sobrepostos aos campos.

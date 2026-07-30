@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v1.2.45',
+      date: '30 de Julho, 2026',
+      title: 'Sincronização de Contagem de Colaboradores Ativos no NexaHR',
+      description: 'Unificação dos contadores das abas e KPIs para exibir estritamente colaboradores ativos (136), com filtro dedicado para inativos/demitidos.',
+      changes: [
+        { type: 'Sincronização de Dados', text: 'Aba de Funcionários e KPI do Painel alinhados para exibir 136 colaboradores ativos por padrão.' },
+        { type: 'Filtro no Diretório', text: 'Adicionada opção no diretório para filtrar entre Ativos (136), Inativos (19) ou Todos os Registros (155).' }
+      ]
+    },
+    {
       version: 'v1.2.44',
       date: '30 de Julho, 2026',
       title: 'Correção de UX & Fundo Opaco no Modal de Usuários',
