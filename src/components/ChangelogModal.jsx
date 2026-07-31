@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.0.5',
+      date: '30 de Julho, 2026',
+      title: 'Melhorias de Operação e UX no Módulo Financeiro',
+      description: 'Inclusão de ordenação por clique de colunas, novos quadros de previsão de Contas a Pagar (7 e 15 dias), edição e baixa completa de lançamentos e transferência exclusiva da importação XML para o Estoque.',
+      changes: [
+        { type: 'Ordenação de Colunas', text: 'Permite ordenar por clique todas as colunas de Contas a Pagar, Receber e Dívidas.' },
+        { type: 'Previsão de Caixa', text: 'Quadros de Contas a Pagar nos Próximos 7 Dias e 15 Dias no Dashboard.' },
+        { type: 'Ações Financeiras', text: 'Inclusão de Edição, Criação Manual, Exclusão e Baixa/Quitação para todos os títulos.' },
+        { type: 'Arquitetura', text: 'Removida importação de XML do Financeiro, mantendo atribuição exclusiva no Módulo de Estoque.' }
+      ]
+    },
+    {
       version: 'v2.0.4',
       date: '30 de Julho, 2026',
       title: 'Auditoria de Segurança e Persistência Cloud Firestore',

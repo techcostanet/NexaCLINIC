@@ -1,5 +1,14 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v2.0.5] - 30 de Julho, 2026
+### Aprimoramentos Operacionais do Módulo Financeiro
+- **Ordenação Interativa de Colunas:** Adicionada ordenação interativa por clique em todas as colunas de tabela das abas **Contas a Pagar**, **Contas a Receber** e **Parcelamentos & Dívidas** (indicadores com setas ordenando por Fornecedor/Cliente, Categoria, Vencimento, Valor e Status).
+- **Cards de Previsão 7 e 15 Dias:** Adicionados quadros personalizáveis no Dashboard Operacional para previsão de **Contas a Pagar nos Próximos 7 Dias** e **Próximos 15 Dias**.
+- **Ações Financeiras Completas (CRUD & Baixa):** Adicionada funcionalidade de **Edição completa**, **Criar Manual**, **Excluir** e **Baixa/Quitação rápida** para Contas a Pagar, Contas a Receber e Parcelamentos de Dívidas.
+- **Arquitetura Desacoplada (Remoção do XML do Financeiro):** Removida a simulação/botão de importação de XML do Módulo Financeiro. A importação de NF-e é de atribuição exclusiva do **Módulo de Estoque**, que atualiza o inventário de insumos e provisiona o Contas a Pagar automaticamente.
+
+---
+
 ## [v2.0.4] - 30 de Julho, 2026
 ### Auditoria Global de Segurança e Persistência Cloud Firestore
 - **Audit de Persistência em Nuvem (Firebase Firestore):** Atualizados todos os métodos financeiros (Contas a Pagar, Contas a Receber, Importação XML NF-e, Parcelamentos/Dívidas e Conciliação Bancária) em [firebase.js](file:///c:/Nexa/NexAi-CLINIC/src/firebase.js) para gravarem e buscarem dados diretamente nas coleções do **Google Cloud Firestore** com fallback resiliente para o `mockFirestore`.

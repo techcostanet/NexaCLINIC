@@ -18,20 +18,26 @@ import {
   Eye,
   EyeOff,
   Save,
-  Clock
+  Clock,
+  Edit,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  X
 } from 'lucide-react';
 import { dbService } from '../firebase';
 
 export default function FinancePanel() {
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'payable' | 'receivable' | 'apac'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'payable' | 'receivable' | 'installments' | 'reconciliation' | 'apac'
   const [payableList, setPayableList] = useState([]);
   const [receivableList, setReceivableList] = useState([]);
-  const [xmlImports, setXmlImports] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Custom Dashboard Layout for Financial Operator
   const DEFAULT_FINANCE_LAYOUT = [
     { id: 'payables_today', name: '🔴 Contas a Pagar Hoje & Vencidas', size: 'small', visible: true },
+    { id: 'payables_7days', name: '🗓️ Contas a Pagar (Próximos 7 Dias)', size: 'small', visible: true },
+    { id: 'payables_15days', name: '🗓️ Contas a Pagar (Próximos 15 Dias)', size: 'small', visible: true },
     { id: 'receivables_today', name: '🟢 Contas a Receber Hoje', size: 'small', visible: true },
     { id: 'cash_flow_summary', name: '💵 Saldo em Caixa (Realizado)', size: 'small', visible: true },
     { id: 'overdue_alerts', name: '⚠️ Títulos em Atraso', size: 'small', visible: true },
@@ -85,9 +91,11 @@ export default function FinancePanel() {
     handleSaveDashboardLayout(DEFAULT_FINANCE_LAYOUT);
   };
 
-  // Form states for manual additions
+  // Form & Editing states for manual additions / edits
   const [showAddPayable, setShowAddPayable] = useState(false);
   const [showAddReceivable, setShowAddReceivable] = useState(false);
+  const [editingPayable, setEditingPayable] = useState(null);
+  const [editingReceivable, setEditingReceivable] = useState(null);
 
   const [newPayable, setNewPayable] = useState({
     supplier: '',
@@ -108,9 +116,13 @@ export default function FinancePanel() {
     invoiceNumber: ''
   });
 
-  // Filter states
+  // Filter & Sort states
   const [payableFilter, setPayableFilter] = useState('Todos'); // 'Todos' | 'Pendente' | 'Pago'
   const [receivableFilter, setReceivableFilter] = useState('Todos'); // 'Todos' | 'Pendente' | 'Pago'
+
+  const [payableSort, setPayableSort] = useState({ key: 'dueDate', direction: 'asc' });
+  const [receivableSort, setReceivableSort] = useState({ key: 'dueDate', direction: 'asc' });
+  const [debtSort, setDebtSort] = useState({ key: 'firstDueDate', direction: 'asc' });
 
   // Debts & Installments States
   const [debtsList, setDebtsList] = useState([]);
@@ -130,19 +142,63 @@ export default function FinancePanel() {
   });
   const [selectedDebtDetail, setSelectedDebtDetail] = useState(null);
 
+  // Sorting Helper Function
+  const sortList = (list, sortConfig) => {
+    if (!sortConfig || !sortConfig.key) return list;
+    return [...list].sort((a, b) => {
+      let valA = a[sortConfig.key] ?? '';
+      let valB = b[sortConfig.key] ?? '';
+
+      if (['amount', 'totalAmount', 'installmentAmount', 'installmentCount'].includes(sortConfig.key)) {
+        valA = parseFloat(valA) || 0;
+        valB = parseFloat(valB) || 0;
+      } else {
+        valA = String(valA).toLowerCase();
+        valB = String(valB).toLowerCase();
+      }
+
+      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const renderSortableHeader = (label, key, currentSort, setSort) => {
+    const isActive = currentSort.key === key;
+    return (
+      <th 
+        style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} 
+        onClick={() => {
+          setSort({
+            key,
+            direction: isActive && currentSort.direction === 'asc' ? 'desc' : 'asc'
+          });
+        }}
+        title={`Clique para ordenar por ${label}`}
+      >
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <span>{label}</span>
+          {isActive ? (
+            currentSort.direction === 'asc' ? <ArrowUp size={13} color="#10b981" /> : <ArrowDown size={13} color="#10b981" />
+          ) : (
+            <ArrowUpDown size={12} color="#94a3b8" />
+          )}
+        </div>
+      </th>
+    );
+  };
+
   // Load database tables
   const loadData = async () => {
     setLoading(true);
     try {
       const pay = await dbService.getAccountsPayable();
       const rec = await dbService.getAccountsReceivable();
-      const xmls = await dbService.getXmlImports();
       const debts = dbService.getDebts ? await dbService.getDebts() : [];
       const stmts = dbService.getBankStatements ? await dbService.getBankStatements() : [];
 
       setPayableList(pay);
       setReceivableList(rec);
-      setXmlImports(xmls);
       setDebtsList(debts);
       setBankStatements(stmts);
     } catch (err) {
@@ -182,6 +238,21 @@ export default function FinancePanel() {
       console.error(err);
       alert('Erro ao salvar parcelamento.');
     }
+  };
+
+  const handleEditDebtClick = (debt) => {
+    setNewDebt({
+      id: debt.id,
+      creditor: debt.creditor || '',
+      cnpj: debt.cnpj || '',
+      totalAmount: debt.totalAmount ? String(debt.totalAmount) : '',
+      installmentCount: debt.installmentCount ? String(debt.installmentCount) : '12',
+      installmentAmount: debt.installmentAmount ? String(debt.installmentAmount) : '',
+      firstDueDate: debt.firstDueDate || new Date().toISOString().substring(0, 10),
+      category: debt.category || 'Equipamento',
+      notes: debt.notes || ''
+    });
+    setShowAddDebt(true);
   };
 
   const handleDeleteDebt = async (id) => {
@@ -237,40 +308,21 @@ export default function FinancePanel() {
     }
   };
 
-  // XML drag and drop simulation
-  const handleXmlSimulatedImport = async () => {
-    // Generate mock XML data representing a medical supply invoice
-    const mockXmlData = {
-      filename: `NFe-312607${Math.floor(Math.random() * 100000000000000)}.xml`,
-      supplier: Math.random() > 0.5 ? 'Fresenius Medical Care' : 'Baxter Hospitalar Ltda',
-      cnpj: Math.random() > 0.5 ? '98.765.432/0001-21' : '12.345.678/0001-90',
-      invoiceNumber: Math.floor(1000 + Math.random() * 9000).toString(),
-      amount: (15000 + Math.random() * 20000).toFixed(2),
-      dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10)
-    };
-
-    try {
-      await dbService.saveXmlImport(mockXmlData);
-      alert(`XML importado com sucesso!\nFornecedor: ${mockXmlData.supplier}\nNF-e nº: ${mockXmlData.invoiceNumber}\nValor: R$ ${parseFloat(mockXmlData.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
-      loadData();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Add Manual Payable
-  const handleAddPayable = async (e) => {
+  // Save Payable (Create or Edit)
+  const handleSavePayable = async (e) => {
     e.preventDefault();
-    if (!newPayable.supplier || !newPayable.amount || !newPayable.dueDate) return;
+    const itemToSave = editingPayable || newPayable;
+    if (!itemToSave.supplier || !itemToSave.amount || !itemToSave.dueDate) return;
 
     try {
       await dbService.saveAccountsPayable({
-        ...newPayable,
-        amount: parseFloat(newPayable.amount),
-        status: 'Pendente',
-        paymentDate: ''
+        ...itemToSave,
+        amount: parseFloat(itemToSave.amount),
+        status: itemToSave.status || 'Pendente',
+        paymentDate: itemToSave.paymentDate || ''
       });
       setShowAddPayable(false);
+      setEditingPayable(null);
       setNewPayable({
         supplier: '',
         cnpj: '',
@@ -286,19 +338,21 @@ export default function FinancePanel() {
     }
   };
 
-  // Add Manual Receivable
-  const handleAddReceivable = async (e) => {
+  // Save Receivable (Create or Edit)
+  const handleSaveReceivable = async (e) => {
     e.preventDefault();
-    if (!newReceivable.client || !newReceivable.amount || !newReceivable.dueDate) return;
+    const itemToSave = editingReceivable || newReceivable;
+    if (!itemToSave.client || !itemToSave.amount || !itemToSave.dueDate) return;
 
     try {
       await dbService.saveAccountsReceivable({
-        ...newReceivable,
-        amount: parseFloat(newReceivable.amount),
-        status: 'Pendente',
-        receivedDate: ''
+        ...itemToSave,
+        amount: parseFloat(itemToSave.amount),
+        status: itemToSave.status || 'Pendente',
+        receivedDate: itemToSave.receivedDate || ''
       });
       setShowAddReceivable(false);
+      setEditingReceivable(null);
       setNewReceivable({
         client: '',
         category: 'Convênio',
@@ -412,6 +466,24 @@ export default function FinancePanel() {
   const overduePayables = payableList.filter(p => p.status !== 'Pago' && (p.dueDate || '') < todayStr);
   const overdueReceivables = receivableList.filter(r => r.status !== 'Pago' && (r.dueDate || '') < todayStr);
   const totalOverdueAmount = overduePayables.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0) + overdueReceivables.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
+
+  // 7 Days & 15 Days Payables Calculations
+  const todayObj = new Date();
+  todayObj.setHours(0, 0, 0, 0);
+
+  const date7Days = new Date(todayObj);
+  date7Days.setDate(date7Days.getDate() + 7);
+  const date7DaysStr = date7Days.toISOString().substring(0, 10);
+
+  const date15Days = new Date(todayObj);
+  date15Days.setDate(date15Days.getDate() + 15);
+  const date15DaysStr = date15Days.toISOString().substring(0, 10);
+
+  const payables7DaysList = payableList.filter(p => p.status !== 'Pago' && (p.dueDate || '') >= todayStr && (p.dueDate || '') <= date7DaysStr);
+  const totalPayables7Days = payables7DaysList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+  const payables15DaysList = payableList.filter(p => p.status !== 'Pago' && (p.dueDate || '') >= todayStr && (p.dueDate || '') <= date15DaysStr);
+  const totalPayables15Days = payables15DaysList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   // Simulated APAC alert list
   const mockApacs = [
@@ -634,6 +706,36 @@ export default function FinancePanel() {
                       </div>
                     )}
 
+                    {card.id === 'payables_7days' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                        <div style={styles.kpiHeader}>
+                          <span style={styles.kpiLabel}>A Pagar (Próximos 7 Dias)</span>
+                          <Calendar size={18} color="#f59e0b" />
+                        </div>
+                        <span style={{ ...styles.kpiValue, color: '#f59e0b' }}>
+                          R$ {totalPayables7Days.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <div style={styles.kpiFooter}>
+                          {payables7DaysList.length} conta(s) a vencer nos próximos 7 dias
+                        </div>
+                      </div>
+                    )}
+
+                    {card.id === 'payables_15days' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                        <div style={styles.kpiHeader}>
+                          <span style={styles.kpiLabel}>A Pagar (Próximos 15 Dias)</span>
+                          <Calendar size={18} color="#3b82f6" />
+                        </div>
+                        <span style={{ ...styles.kpiValue, color: '#3b82f6' }}>
+                          R$ {totalPayables15Days.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <div style={styles.kpiFooter}>
+                          {payables15DaysList.length} conta(s) a vencer nos próximos 15 dias
+                        </div>
+                      </div>
+                    )}
+
                     {card.id === 'receivables_today' && (
                       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
                         <div style={styles.kpiHeader}>
@@ -789,28 +891,48 @@ export default function FinancePanel() {
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button onClick={handleXmlSimulatedImport} style={styles.xmlBtn}>
-                <Upload size={14} />
-                <span>Importar XML NF-e</span>
-              </button>
-              <button onClick={() => setShowAddPayable(!showAddPayable)} style={styles.btnPrimary}>
+              <button 
+                onClick={() => {
+                  setEditingPayable(null);
+                  setShowAddPayable(!showAddPayable);
+                }} 
+                style={styles.btnPrimary}
+              >
                 <Plus size={14} />
                 <span>Nova Despesa</span>
               </button>
             </div>
           </div>
 
-          {/* Add Manual Payable Form */}
-          {showAddPayable && (
-            <form onSubmit={handleAddPayable} style={styles.formContainer}>
-              <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-primary)' }}>Novo Lançamento - Contas a Pagar</h4>
+          {/* Add / Edit Payable Form */}
+          {(showAddPayable || editingPayable) && (
+            <form onSubmit={handleSavePayable} style={styles.formContainer}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>
+                  {editingPayable ? '✏️ Editar Lançamento - Contas a Pagar' : '➕ Novo Lançamento - Contas a Pagar'}
+                </h4>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setShowAddPayable(false);
+                    setEditingPayable(null);
+                  }} 
+                  style={{ border: 'none', background: 'none', cursor: 'pointer' }}
+                >
+                  <X size={18} color="var(--text-secondary)" />
+                </button>
+              </div>
+
               <div style={styles.formGrid}>
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Fornecedor</label>
                   <input 
                     type="text" 
-                    value={newPayable.supplier} 
-                    onChange={e => setNewPayable({...newPayable, supplier: e.target.value})} 
+                    value={editingPayable ? editingPayable.supplier : newPayable.supplier} 
+                    onChange={e => {
+                      if (editingPayable) setEditingPayable({ ...editingPayable, supplier: e.target.value });
+                      else setNewPayable({ ...newPayable, supplier: e.target.value });
+                    }} 
                     style={styles.input} 
                     required 
                   />
@@ -820,8 +942,11 @@ export default function FinancePanel() {
                   <input 
                     type="number" 
                     step="0.01" 
-                    value={newPayable.amount} 
-                    onChange={e => setNewPayable({...newPayable, amount: e.target.value})} 
+                    value={editingPayable ? editingPayable.amount : newPayable.amount} 
+                    onChange={e => {
+                      if (editingPayable) setEditingPayable({ ...editingPayable, amount: e.target.value });
+                      else setNewPayable({ ...newPayable, amount: e.target.value });
+                    }} 
                     style={styles.input} 
                     required 
                   />
@@ -830,8 +955,11 @@ export default function FinancePanel() {
                   <label style={styles.label}>Vencimento</label>
                   <input 
                     type="date" 
-                    value={newPayable.dueDate} 
-                    onChange={e => setNewPayable({...newPayable, dueDate: e.target.value})} 
+                    value={editingPayable ? editingPayable.dueDate : newPayable.dueDate} 
+                    onChange={e => {
+                      if (editingPayable) setEditingPayable({ ...editingPayable, dueDate: e.target.value });
+                      else setNewPayable({ ...newPayable, dueDate: e.target.value });
+                    }} 
                     style={styles.input} 
                     required 
                   />
@@ -839,8 +967,11 @@ export default function FinancePanel() {
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Categoria</label>
                   <select 
-                    value={newPayable.category} 
-                    onChange={e => setNewPayable({...newPayable, category: e.target.value})} 
+                    value={editingPayable ? editingPayable.category : newPayable.category} 
+                    onChange={e => {
+                      if (editingPayable) setEditingPayable({ ...editingPayable, category: e.target.value });
+                      else setNewPayable({ ...newPayable, category: e.target.value });
+                    }} 
                     style={styles.input}
                   >
                     <option value="Insumo Clínico">Insumo Clínico</option>
@@ -848,21 +979,37 @@ export default function FinancePanel() {
                     <option value="Medicamento">Medicamento</option>
                     <option value="Serviço/Utilidades">Serviço/Utilidades</option>
                     <option value="Equipamento">Equipamento</option>
+                    <option value="Outros">Outros</option>
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Nº Nota Fiscal</label>
+                  <label style={styles.label}>Nº Nota Fiscal / Documento</label>
                   <input 
                     type="text" 
-                    value={newPayable.invoiceNumber} 
-                    onChange={e => setNewPayable({...newPayable, invoiceNumber: e.target.value})} 
+                    value={editingPayable ? (editingPayable.invoiceNumber || '') : newPayable.invoiceNumber} 
+                    onChange={e => {
+                      if (editingPayable) setEditingPayable({ ...editingPayable, invoiceNumber: e.target.value });
+                      else setNewPayable({ ...newPayable, invoiceNumber: e.target.value });
+                    }} 
                     style={styles.input} 
                   />
                 </div>
               </div>
+
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
-                <button type="button" onClick={() => setShowAddPayable(false)} style={styles.btnSecondary}>Cancelar</button>
-                <button type="submit" style={styles.btnSave}>Adicionar</button>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setShowAddPayable(false);
+                    setEditingPayable(null);
+                  }} 
+                  style={styles.btnSecondary}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" style={styles.btnSave}>
+                  {editingPayable ? 'Salvar Alterações' : 'Adicionar Despesa'}
+                </button>
               </div>
             </form>
           )}
@@ -872,67 +1019,86 @@ export default function FinancePanel() {
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={styles.th}>Fornecedor</th>
-                  <th style={styles.th}>Categoria</th>
-                  <th style={styles.th}>NF-e</th>
-                  <th style={styles.th}>Vencimento</th>
-                  <th style={styles.th}>Valor</th>
-                  <th style={styles.th}>Status</th>
+                  {renderSortableHeader('Fornecedor', 'supplier', payableSort, setPayableSort)}
+                  {renderSortableHeader('Categoria', 'category', payableSort, setPayableSort)}
+                  {renderSortableHeader('NF-e', 'invoiceNumber', payableSort, setPayableSort)}
+                  {renderSortableHeader('Vencimento', 'dueDate', payableSort, setPayableSort)}
+                  {renderSortableHeader('Valor (R$)', 'amount', payableSort, setPayableSort)}
+                  {renderSortableHeader('Status', 'status', payableSort, setPayableSort)}
                   <th style={styles.th}>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {payableList
-                  .filter(p => payableFilter === 'Todos' || p.status === payableFilter)
-                  .map(p => (
-                    <tr key={p.id} style={styles.tr}>
-                      <td style={styles.td}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <strong>{p.supplier}</strong>
-                          {p.purchaseId ? (
-                            <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: '700' }}>
-                              🛒 Compras
-                            </span>
-                          ) : p.description?.includes('NF-e') ? (
-                            <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#f1f5f9', color: '#475569', fontWeight: '700' }}>
-                              📦 Estoque NFe
-                            </span>
-                          ) : null}
-                        </div>
-                        {p.description && <div style={styles.subtext}>{p.description}</div>}
-                      </td>
-                      <td style={styles.td}>{p.category}</td>
-                      <td style={styles.td}>{p.invoiceNumber || '-'}</td>
-                      <td style={styles.td}>{p.dueDate.split('-').reverse().join('/')}</td>
-                      <td style={styles.td}>R$ {p.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                      <td style={styles.td}>
-                        <span 
+                {sortList(
+                  payableList.filter(p => payableFilter === 'Todos' || p.status === payableFilter),
+                  payableSort
+                ).map(p => (
+                  <tr key={p.id} style={styles.tr}>
+                    <td style={styles.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <strong>{p.supplier}</strong>
+                        {p.purchaseId ? (
+                          <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: '700' }}>
+                            🛒 Compras
+                          </span>
+                        ) : p.description?.includes('NF-e') ? (
+                          <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#f1f5f9', color: '#475569', fontWeight: '700' }}>
+                            📦 Estoque NFe
+                          </span>
+                        ) : null}
+                      </div>
+                      {p.description && <div style={styles.subtext}>{p.description}</div>}
+                    </td>
+                    <td style={styles.td}>{p.category}</td>
+                    <td style={styles.td}>{p.invoiceNumber || '-'}</td>
+                    <td style={styles.td}>{p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}</td>
+                    <td style={{ ...styles.td, fontWeight: '700' }}>
+                      R$ {(parseFloat(p.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={styles.td}>
+                      <span 
+                        onClick={() => handleTogglePayableStatus(p)}
+                        style={{
+                          ...styles.statusBadge,
+                          backgroundColor: p.status === 'Pago' ? '#d1fae5' : '#fee2e2',
+                          color: p.status === 'Pago' ? '#065f46' : '#991b1b',
+                          cursor: 'pointer'
+                        }}
+                        title="Clique para alternar entre Pago / Pendente"
+                      >
+                        {p.status === 'Pago' ? '✓ Pago' : '⏳ Pendente'}
+                      </span>
+                    </td>
+                    <td style={styles.td}>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button 
+                          onClick={() => {
+                            setEditingPayable({ ...p, amount: String(p.amount) });
+                            setShowAddPayable(false);
+                          }}
+                          style={{ ...styles.actionBtnCheck, backgroundColor: '#f1f5f9', color: '#334155' }} 
+                          title="Editar Lançamento"
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <button 
                           onClick={() => handleTogglePayableStatus(p)}
                           style={{
-                            ...styles.statusBadge,
-                            backgroundColor: p.status === 'Pago' ? '#d1fae5' : '#fee2e2',
-                            color: p.status === 'Pago' ? '#065f46' : '#991b1b',
-                          }}
+                            ...styles.actionBtnCheck,
+                            backgroundColor: p.status === 'Pago' ? '#fef3c7' : '#d1fae5',
+                            color: p.status === 'Pago' ? '#b45309' : '#065f46'
+                          }} 
+                          title={p.status === 'Pago' ? 'Estornar para Pendente' : 'Marcar como Quitado / Pago'}
                         >
-                          {p.status}
-                        </span>
-                      </td>
-                      <td style={styles.td}>
-                        <div style={{ display: 'flex', gap: '0.25rem' }}>
-                          <button 
-                            onClick={() => handleTogglePayableStatus(p)}
-                            style={styles.actionBtnCheck} 
-                            title={p.status === 'Pago' ? 'Marcar como pendente' : 'Marcar como pago'}
-                          >
-                            <Check size={14} />
-                          </button>
-                          <button onClick={() => handleDeletePayable(p.id)} style={styles.actionBtnDelete} title="Excluir">
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                          <Check size={14} />
+                        </button>
+                        <button onClick={() => handleDeletePayable(p.id)} style={styles.actionBtnDelete} title="Excluir">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -965,23 +1131,47 @@ export default function FinancePanel() {
               </button>
             </div>
 
-            <button onClick={() => setShowAddReceivable(!showAddReceivable)} style={styles.btnPrimary}>
+            <button 
+              onClick={() => {
+                setEditingReceivable(null);
+                setShowAddReceivable(!showAddReceivable);
+              }} 
+              style={styles.btnPrimary}
+            >
               <Plus size={14} />
               <span>Nova Receita</span>
             </button>
           </div>
 
-          {/* Add Manual Receivable Form */}
-          {showAddReceivable && (
-            <form onSubmit={handleAddReceivable} style={styles.formContainer}>
-              <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-primary)' }}>Novo Recebimento - Contas a Receber</h4>
+          {/* Add / Edit Receivable Form */}
+          {(showAddReceivable || editingReceivable) && (
+            <form onSubmit={handleSaveReceivable} style={styles.formContainer}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>
+                  {editingReceivable ? '✏️ Editar Recebimento - Contas a Receber' : '➕ Novo Recebimento - Contas a Receber'}
+                </h4>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setShowAddReceivable(false);
+                    setEditingReceivable(null);
+                  }} 
+                  style={{ border: 'none', background: 'none', cursor: 'pointer' }}
+                >
+                  <X size={18} color="var(--text-secondary)" />
+                </button>
+              </div>
+
               <div style={styles.formGrid}>
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Cliente / Fonte Pagadora</label>
                   <input 
                     type="text" 
-                    value={newReceivable.client} 
-                    onChange={e => setNewReceivable({...newReceivable, client: e.target.value})} 
+                    value={editingReceivable ? editingReceivable.client : newReceivable.client} 
+                    onChange={e => {
+                      if (editingReceivable) setEditingReceivable({ ...editingReceivable, client: e.target.value });
+                      else setNewReceivable({ ...newReceivable, client: e.target.value });
+                    }} 
                     style={styles.input} 
                     required 
                   />
@@ -991,8 +1181,11 @@ export default function FinancePanel() {
                   <input 
                     type="number" 
                     step="0.01" 
-                    value={newReceivable.amount} 
-                    onChange={e => setNewReceivable({...newReceivable, amount: e.target.value})} 
+                    value={editingReceivable ? editingReceivable.amount : newReceivable.amount} 
+                    onChange={e => {
+                      if (editingReceivable) setEditingReceivable({ ...editingReceivable, amount: e.target.value });
+                      else setNewReceivable({ ...newReceivable, amount: e.target.value });
+                    }} 
                     style={styles.input} 
                     required 
                   />
@@ -1001,8 +1194,11 @@ export default function FinancePanel() {
                   <label style={styles.label}>Data de Vencimento</label>
                   <input 
                     type="date" 
-                    value={newReceivable.dueDate} 
-                    onChange={e => setNewReceivable({...newReceivable, dueDate: e.target.value})} 
+                    value={editingReceivable ? editingReceivable.dueDate : newReceivable.dueDate} 
+                    onChange={e => {
+                      if (editingReceivable) setEditingReceivable({ ...editingReceivable, dueDate: e.target.value });
+                      else setNewReceivable({ ...newReceivable, dueDate: e.target.value });
+                    }} 
                     style={styles.input} 
                     required 
                   />
@@ -1010,28 +1206,47 @@ export default function FinancePanel() {
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Categoria</label>
                   <select 
-                    value={newReceivable.category} 
-                    onChange={e => setNewReceivable({...newReceivable, category: e.target.value})} 
+                    value={editingReceivable ? editingReceivable.category : newReceivable.category} 
+                    onChange={e => {
+                      if (editingReceivable) setEditingReceivable({ ...editingReceivable, category: e.target.value });
+                      else setNewReceivable({ ...newReceivable, category: e.target.value });
+                    }} 
                     style={styles.input}
                   >
                     <option value="SUS">Repasse SUS (APAC)</option>
                     <option value="Convênio">Convênio Privado</option>
                     <option value="Particular">Faturamento Particular</option>
+                    <option value="Outros">Outras Receitas</option>
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Nº Guia/Lote</label>
+                  <label style={styles.label}>Nº Guia / Lote / Documento</label>
                   <input 
                     type="text" 
-                    value={newReceivable.invoiceNumber} 
-                    onChange={e => setNewReceivable({...newReceivable, invoiceNumber: e.target.value})} 
+                    value={editingReceivable ? (editingReceivable.invoiceNumber || '') : newReceivable.invoiceNumber} 
+                    onChange={e => {
+                      if (editingReceivable) setEditingReceivable({ ...editingReceivable, invoiceNumber: e.target.value });
+                      else setNewReceivable({ ...newReceivable, invoiceNumber: e.target.value });
+                    }} 
                     style={styles.input} 
                   />
                 </div>
               </div>
+
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
-                <button type="button" onClick={() => setShowAddReceivable(false)} style={styles.btnSecondary}>Cancelar</button>
-                <button type="submit" style={styles.btnSave}>Adicionar</button>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setShowAddReceivable(false);
+                    setEditingReceivable(null);
+                  }} 
+                  style={styles.btnSecondary}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" style={styles.btnSave}>
+                  {editingReceivable ? 'Salvar Alterações' : 'Adicionar Receita'}
+                </button>
               </div>
             </form>
           )}
@@ -1041,56 +1256,75 @@ export default function FinancePanel() {
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={styles.th}>Cliente / Fonte Pagadora</th>
-                  <th style={styles.th}>Categoria</th>
-                  <th style={styles.th}>Nº Guia / Lote</th>
-                  <th style={styles.th}>Vencimento</th>
-                  <th style={styles.th}>Valor</th>
-                  <th style={styles.th}>Status</th>
+                  {renderSortableHeader('Cliente / Fonte Pagadora', 'client', receivableSort, setReceivableSort)}
+                  {renderSortableHeader('Categoria', 'category', receivableSort, setReceivableSort)}
+                  {renderSortableHeader('Nº Guia / Lote', 'invoiceNumber', receivableSort, setReceivableSort)}
+                  {renderSortableHeader('Vencimento', 'dueDate', receivableSort, setReceivableSort)}
+                  {renderSortableHeader('Valor (R$)', 'amount', receivableSort, setReceivableSort)}
+                  {renderSortableHeader('Status', 'status', receivableSort, setReceivableSort)}
                   <th style={styles.th}>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {receivableList
-                  .filter(r => receivableFilter === 'Todos' || r.status === receivableFilter)
-                  .map(r => (
-                    <tr key={r.id} style={styles.tr}>
-                      <td style={styles.td}>
-                        <strong>{r.client}</strong>
-                        {r.description && <div style={styles.subtext}>{r.description}</div>}
-                      </td>
-                      <td style={styles.td}>{r.category}</td>
-                      <td style={styles.td}>{r.invoiceNumber || '-'}</td>
-                      <td style={styles.td}>{r.dueDate.split('-').reverse().join('/')}</td>
-                      <td style={styles.td}>R$ {r.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                      <td style={styles.td}>
-                        <span 
+                {sortList(
+                  receivableList.filter(r => receivableFilter === 'Todos' || r.status === receivableFilter),
+                  receivableSort
+                ).map(r => (
+                  <tr key={r.id} style={styles.tr}>
+                    <td style={styles.td}>
+                      <strong>{r.client}</strong>
+                      {r.description && <div style={styles.subtext}>{r.description}</div>}
+                    </td>
+                    <td style={styles.td}>{r.category}</td>
+                    <td style={styles.td}>{r.invoiceNumber || '-'}</td>
+                    <td style={styles.td}>{r.dueDate ? r.dueDate.split('-').reverse().join('/') : '-'}</td>
+                    <td style={{ ...styles.td, fontWeight: '700' }}>
+                      R$ {(parseFloat(r.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={styles.td}>
+                      <span 
+                        onClick={() => handleToggleReceivableStatus(r)}
+                        style={{
+                          ...styles.statusBadge,
+                          backgroundColor: r.status === 'Pago' ? '#d1fae5' : '#fee2e2',
+                          color: r.status === 'Pago' ? '#065f46' : '#991b1b',
+                          cursor: 'pointer'
+                        }}
+                        title="Clique para alternar entre Recebido / Pendente"
+                      >
+                        {r.status === 'Pago' ? '✓ Recebido' : '⏳ Pendente'}
+                      </span>
+                    </td>
+                    <td style={styles.td}>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button 
+                          onClick={() => {
+                            setEditingReceivable({ ...r, amount: String(r.amount) });
+                            setShowAddReceivable(false);
+                          }}
+                          style={{ ...styles.actionBtnCheck, backgroundColor: '#f1f5f9', color: '#334155' }} 
+                          title="Editar Recebimento"
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <button 
                           onClick={() => handleToggleReceivableStatus(r)}
                           style={{
-                            ...styles.statusBadge,
-                            backgroundColor: r.status === 'Pago' ? '#d1fae5' : '#fee2e2',
-                            color: r.status === 'Pago' ? '#065f46' : '#991b1b',
-                          }}
+                            ...styles.actionBtnCheck,
+                            backgroundColor: r.status === 'Pago' ? '#fef3c7' : '#d1fae5',
+                            color: r.status === 'Pago' ? '#b45309' : '#065f46'
+                          }} 
+                          title={r.status === 'Pago' ? 'Estornar para Pendente' : 'Marcar como Recebido'}
                         >
-                          {r.status === 'Pago' ? 'Recebido' : 'Pendente'}
-                        </span>
-                      </td>
-                      <td style={styles.td}>
-                        <div style={{ display: 'flex', gap: '0.25rem' }}>
-                          <button 
-                            onClick={() => handleToggleReceivableStatus(r)}
-                            style={styles.actionBtnCheck} 
-                            title={r.status === 'Pago' ? 'Marcar como pendente' : 'Marcar como recebido'}
-                          >
-                            <Check size={14} />
-                          </button>
-                          <button onClick={() => handleDeleteReceivable(r.id)} style={styles.actionBtnDelete} title="Excluir">
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                          <Check size={14} />
+                        </button>
+                        <button onClick={() => handleDeleteReceivable(r.id)} style={styles.actionBtnDelete} title="Excluir">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -1236,13 +1470,13 @@ export default function FinancePanel() {
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={styles.th}>Credor / Instituição</th>
-                  <th style={styles.th}>Categoria</th>
-                  <th style={styles.th}>Valor Total</th>
-                  <th style={styles.th}>Parcelas</th>
-                  <th style={styles.th}>Valor Mensal</th>
-                  <th style={styles.th}>1ª Parcela</th>
-                  <th style={styles.th}>Status</th>
+                  {renderSortableHeader('Credor / Instituição', 'creditor', debtSort, setDebtSort)}
+                  {renderSortableHeader('Categoria', 'category', debtSort, setDebtSort)}
+                  {renderSortableHeader('Valor Total', 'totalAmount', debtSort, setDebtSort)}
+                  {renderSortableHeader('Parcelas', 'installmentCount', debtSort, setDebtSort)}
+                  {renderSortableHeader('Valor Mensal', 'installmentAmount', debtSort, setDebtSort)}
+                  {renderSortableHeader('1ª Parcela', 'firstDueDate', debtSort, setDebtSort)}
+                  {renderSortableHeader('Status', 'status', debtSort, setDebtSort)}
                   <th style={styles.th}>Ações</th>
                 </tr>
               </thead>
@@ -1254,7 +1488,7 @@ export default function FinancePanel() {
                     </td>
                   </tr>
                 ) : (
-                  debtsList.map(debt => (
+                  sortList(debtsList, debtSort).map(debt => (
                     <tr key={debt.id} style={styles.tr}>
                       <td style={styles.td}>
                         <strong>{debt.creditor}</strong>
@@ -1281,8 +1515,15 @@ export default function FinancePanel() {
                       <td style={styles.td}>
                         <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
                           <button 
-                            onClick={() => setSelectedDebtDetail(selectedDebtDetail?.id === debt.id ? null : debt)} 
+                            onClick={() => handleEditDebtClick(debt)} 
                             style={{ ...styles.actionBtnCheck, backgroundColor: '#f1f5f9', color: '#334155' }} 
+                            title="Editar Contrato de Dívida"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button 
+                            onClick={() => setSelectedDebtDetail(selectedDebtDetail?.id === debt.id ? null : debt)} 
+                            style={{ ...styles.actionBtnCheck, backgroundColor: '#e0f2fe', color: '#0369a1' }} 
                             title="Ver parcelas geradas em Contas a Pagar"
                           >
                             <FileText size={14} />
