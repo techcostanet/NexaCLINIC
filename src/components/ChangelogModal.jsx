@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.0.6',
+      date: '30 de Julho, 2026',
+      title: 'Melhorias de Estoque/Farmácia & Categorias Centralizadas no T.I',
+      description: 'Ordenação de colunas em todas as abas do estoque, CRUD completo para itens, fornecedores e setores, nova aba de Empréstimos de Produtos e cadastro de Categorias centralizado no Módulo de T.I.',
+      changes: [
+        { type: 'Ordenação no Estoque', text: 'Ordenação por clique em todas as tabelas e colunas do módulo de Estoque/Farmácia.' },
+        { type: 'CRUD Completo', text: 'Adicionada edição e exclusão de itens, fornecedores e setores de estoque.' },
+        { type: 'Empréstimos de Produtos', text: 'Controle completo de empréstimos concedidos e recebidos entre clínicas parceiras com botão de devolução rápida.' },
+        { type: 'Centralização T.I', text: 'Gerenciamento de categorias de produtos transferido para as configurações do Módulo de T.I.' }
+      ]
+    },
+    {
       version: 'v2.0.5',
       date: '30 de Julho, 2026',
       title: 'Melhorias de Operação e UX no Módulo Financeiro',

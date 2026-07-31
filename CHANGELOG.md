@@ -1,5 +1,14 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v2.0.6] - 30 de Julho, 2026
+### Aprimoramentos do Módulo Estoque/Farmácia & Centralização no T.I
+- **Ordenação Interativa de Colunas no Estoque:** Adicionada ordenação por clique em todas as colunas de tabelas do Estoque (*Catálogo de Produtos*, *Notas Fiscais/XML*, *Fornecedores*, *Setores Físicos*, *Histórico de Movimentações*, *Controle de Validade* e *Empréstimos*).
+- **Gerenciamento Completo (CRUD):** Adicionado suporte para Criar, Editar e Excluir **Itens de Inventário**, **Fornecedores** e **Setores Clínicos** com modais e formulários dedicados.
+- **Módulo de Empréstimos de Produtos & Medicamentos:** Nova aba no Estoque/Farmácia para controle de empréstimos inter-hospitalares e entre clínicas parceiras (Concedidos e Recebidos). Inclui botão de ação rápida **`🔄 Dar Baixa / Devolução`** com reposição/baixa de saldo.
+- **Centralização de Categorias no Módulo T.I:** Transferido o cadastro e gerenciamento de **Categorias de Produtos e Módulos** para o [ConfigPanel.jsx](file:///c:/Nexa/NexAi-CLINIC/src/components/ConfigPanel.jsx), permitindo que o setor de T.I defina as categorias que alimentam automaticamente os seletores do sistema.
+
+---
+
 ## [v2.0.5] - 30 de Julho, 2026
 ### Aprimoramentos Operacionais do Módulo Financeiro
 - **Ordenação Interativa de Colunas:** Adicionada ordenação interativa por clique em todas as colunas de tabela das abas **Contas a Pagar**, **Contas a Receber** e **Parcelamentos & Dívidas** (indicadores com setas ordenando por Fornecedor/Cliente, Categoria, Vencimento, Valor e Status).

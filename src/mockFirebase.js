@@ -14437,16 +14437,166 @@ export const mockFirestore = {
     return newSector;
   },
 
-  updateStockSector: async (id, sectorData) => {
+  deleteInventoryItem: async (id) => {
     await new Promise(resolve => setTimeout(resolve, 300));
     const db = getDB();
-    const index = db.stock_sectors.findIndex(s => s.id === id);
-    if (index > -1) {
-      db.stock_sectors[index] = { ...db.stock_sectors[index], ...sectorData };
+    if (db.inventory_items) db.inventory_items = db.inventory_items.filter(i => i.id !== id);
+    setDB(db);
+    return { success: true };
+  },
+
+  deleteSupplier: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.suppliers) db.suppliers = db.suppliers.filter(s => s.id !== id);
+    setDB(db);
+    return { success: true };
+  },
+
+  deleteStockSector: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.stock_sectors) db.stock_sectors = db.stock_sectors.filter(s => s.id !== id);
+    setDB(db);
+    return { success: true };
+  },
+
+  // Stock Loans API (Empréstimos de Produtos / Medicamentos)
+  getStockLoans: async () => {
+    const db = getDB();
+    if (!db.stock_loans || db.stock_loans.length === 0) {
+      db.stock_loans = [
+        {
+          id: 'loan-1',
+          type: 'Concedido', // Concedido para Terceiros
+          productName: 'Erythropoietin (Epoetina) 4000UI',
+          quantity: 10,
+          unit: 'Caixa(s)',
+          partnerName: 'Hospital São Lucas - BH',
+          loanDate: '2026-07-20',
+          expectedReturnDate: '2026-08-05',
+          status: 'Ativo',
+          notes: 'Empréstimo emergencial concedido para UTI do hospital.'
+        },
+        {
+          id: 'loan-2',
+          type: 'Recebido', // Recebido de Terceiros
+          productName: 'Dialisador Capilar High-Flux 1.8m2',
+          quantity: 5,
+          unit: 'Unidade(s)',
+          partnerName: 'Clínica NefroVida Contagem',
+          loanDate: '2026-07-22',
+          expectedReturnDate: '2026-08-10',
+          status: 'Ativo',
+          notes: 'Empréstimo recebido para suprir atraso do fornecedor.'
+        }
+      ];
       setDB(db);
-      return db.stock_sectors[index];
     }
-    throw new Error('Setor de estoque não encontrado');
+    return db.stock_loans;
+  },
+
+  saveStockLoan: async (loanData) => {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const db = getDB();
+    if (!db.stock_loans) db.stock_loans = [];
+
+    const isEdit = !!loanData.id;
+    const loanId = loanData.id || 'loan-' + Math.random().toString(36).substr(2, 9);
+
+    const updatedLoan = {
+      ...loanData,
+      id: loanId,
+      quantity: parseFloat(loanData.quantity) || 0,
+      status: loanData.status || 'Ativo',
+      updatedAt: new Date().toISOString()
+    };
+
+    if (isEdit) {
+      const idx = db.stock_loans.findIndex(l => l.id === loanId);
+      if (idx > -1) db.stock_loans[idx] = updatedLoan;
+    } else {
+      db.stock_loans.push(updatedLoan);
+    }
+
+    setDB(db);
+    return updatedLoan;
+  },
+
+  returnStockLoan: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.stock_loans) {
+      const idx = db.stock_loans.findIndex(l => l.id === id);
+      if (idx > -1) {
+        db.stock_loans[idx].status = 'Devolvido';
+        db.stock_loans[idx].returnDate = new Date().toISOString().substring(0, 10);
+      }
+    }
+    setDB(db);
+    return { success: true };
+  },
+
+  deleteStockLoan: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.stock_loans) {
+      db.stock_loans = db.stock_loans.filter(l => l.id !== id);
+    }
+    setDB(db);
+    return { success: true };
+  },
+
+  // Product Categories API (Gerenciamento Centralizado no Módulo T.I)
+  getProductCategories: async () => {
+    const db = getDB();
+    if (!db.product_categories || db.product_categories.length === 0) {
+      db.product_categories = [
+        { id: 'cat-1', name: 'Insumo Clínico', module: 'Estoque', description: 'Linhas de sangue, dialisadores, agulhas de fístula' },
+        { id: 'cat-2', name: 'Concentrado', module: 'Estoque', description: 'Solução ácida, bicarbonato de sódio para diálise' },
+        { id: 'cat-3', name: 'Medicamento', module: 'Estoque', description: 'Epoetina, ferro injetável, calcitriol, heparina' },
+        { id: 'cat-4', name: 'Material Médico', module: 'Estoque', description: 'Gaze, luvas estéreis, seringas, esparadrapos' },
+        { id: 'cat-5', name: 'Equipamento', module: 'Estoque/Financeiro', description: 'Peças de reposição e bombas de hemodiálise' },
+        { id: 'cat-6', name: 'Serviço/Utilidades', module: 'Financeiro', description: 'Energia elétrica, água, manutenção preventiva' }
+      ];
+      setDB(db);
+    }
+    return db.product_categories;
+  },
+
+  saveProductCategory: async (catData) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (!db.product_categories) db.product_categories = [];
+
+    const isEdit = !!catData.id;
+    const catId = catData.id || 'cat-' + Math.random().toString(36).substr(2, 9);
+
+    const updatedCat = {
+      ...catData,
+      id: catId,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (isEdit) {
+      const idx = db.product_categories.findIndex(c => c.id === catId);
+      if (idx > -1) db.product_categories[idx] = updatedCat;
+    } else {
+      db.product_categories.push(updatedCat);
+    }
+
+    setDB(db);
+    return updatedCat;
+  },
+
+  deleteProductCategory: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.product_categories) {
+      db.product_categories = db.product_categories.filter(c => c.id !== id);
+    }
+    setDB(db);
+    return { success: true };
   },
 
   // Purchase Invoices CRUD

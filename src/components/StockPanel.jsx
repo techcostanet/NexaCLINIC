@@ -3,11 +3,12 @@ import { dbService } from '../firebase';
 import { 
   Package, Boxes, Clock, Calendar, Plus, Search, 
   X, FileText, UploadCloud, Briefcase, Warehouse,
-  CheckCircle2, AlertTriangle, ArrowUpRight, ArrowDownLeft, Trash2, Edit2
+  CheckCircle2, AlertTriangle, AlertCircle, ArrowUpRight, ArrowDownLeft, Trash2, Edit,
+  ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Send
 } from 'lucide-react';
 
 export default function StockPanel() {
-  const [activeTab, setActiveTab] = useState('inventory'); // 'inventory' | 'invoices' | 'suppliers' | 'sectors' | 'transactions' | 'expiry'
+  const [activeTab, setActiveTab] = useState('inventory'); // 'inventory' | 'invoices' | 'suppliers' | 'sectors' | 'transactions' | 'expiry' | 'loans'
   
   // Data States
   const [items, setItems] = useState([]);
@@ -15,6 +16,8 @@ export default function StockPanel() {
   const [suppliers, setSuppliers] = useState([]);
   const [sectors, setSectors] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [loans, setLoans] = useState([]);
+  const [categoriesList, setCategoriesList] = useState([]);
   
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -23,6 +26,14 @@ export default function StockPanel() {
   // Filters State
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
+
+  // Column Sorting States for each tab
+  const [inventorySort, setInventorySort] = useState({ key: 'name', direction: 'asc' });
+  const [transactionSort, setTransactionSort] = useState({ key: 'date', direction: 'desc' });
+  const [supplierSort, setSupplierSort] = useState({ key: 'name', direction: 'asc' });
+  const [sectorSort, setSectorSort] = useState({ key: 'name', direction: 'asc' });
+  const [invoiceSort, setInvoiceSort] = useState({ key: 'entryDate', direction: 'desc' });
+  const [loanSort, setLoanSort] = useState({ key: 'loanDate', direction: 'desc' });
 
   // Modals States
   const [showItemModal, setShowItemModal] = useState(false);
@@ -54,6 +65,20 @@ export default function StockPanel() {
     description: ''
   });
 
+  // Loans Modal State (Empréstimos de Produtos / Medicamentos)
+  const [showLoanModal, setShowLoanModal] = useState(false);
+  const [editingLoan, setEditingLoan] = useState(null);
+  const [loanForm, setLoanForm] = useState({
+    type: 'Concedido',
+    productName: '',
+    quantity: '1',
+    unit: 'Caixa(s)',
+    partnerName: '',
+    loanDate: new Date().toISOString().substring(0, 10),
+    expectedReturnDate: '',
+    notes: ''
+  });
+
   // Manual Transaction Modal State
   const [showTxForm, setShowTxForm] = useState(false);
   const [txForm, setTxForm] = useState({
@@ -69,7 +94,7 @@ export default function StockPanel() {
 
   // XML Import Wizard States
   const [showXmlWizard, setShowXmlWizard] = useState(false);
-  const [xmlWizardStep, setXmlWizardStep] = useState(1); // 1: Upload, 2: Supplier, 3: Mapping, 4: Review
+  const [xmlWizardStep, setXmlWizardStep] = useState(1);
   const [xmlData, setXmlData] = useState(null);
   const [xmlError, setXmlError] = useState('');
   const [supplierMapping, setSupplierMapping] = useState({
@@ -81,7 +106,7 @@ export default function StockPanel() {
     phone: '',
     email: ''
   });
-  const [itemMappings, setItemMappings] = useState([]); // Array of { xmlCode, xmlName, mappedItemId, quantity, price, batch, expiryDate }
+  const [itemMappings, setItemMappings] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -90,12 +115,14 @@ export default function StockPanel() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [itemList, txList, supList, secList, invList] = await Promise.all([
+      const [itemList, txList, supList, secList, invList, loanList, catList] = await Promise.all([
         dbService.getInventoryItems(),
         dbService.getStockTransactions(),
         dbService.getSuppliers(),
         dbService.getStockSectors(),
-        dbService.getPurchaseInvoices()
+        dbService.getPurchaseInvoices(),
+        dbService.getStockLoans ? dbService.getStockLoans() : [],
+        dbService.getProductCategories ? dbService.getProductCategories() : []
       ]);
       
       setItems(itemList);
@@ -103,6 +130,14 @@ export default function StockPanel() {
       setSuppliers(supList);
       setSectors(secList);
       setInvoices(invList);
+      setLoans(loanList);
+      setCategoriesList(catList.length > 0 ? catList : [
+        { id: 'c1', name: 'Insumo Clínico' },
+        { id: 'c2', name: 'Medicamento' },
+        { id: 'c3', name: 'Concentrado' },
+        { id: 'c4', name: 'Material Médico' },
+        { id: 'c5', name: 'Equipamento' }
+      ]);
 
       if (itemList.length > 0) {
         setTxForm(f => ({ 
@@ -126,6 +161,52 @@ export default function StockPanel() {
   const showAlert = (text, type) => {
     setMessage({ text, type });
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+  };
+
+  // Sorting Helper Functions
+  const sortData = (list, sortConfig) => {
+    if (!sortConfig || !sortConfig.key) return list;
+    return [...list].sort((a, b) => {
+      let valA = a[sortConfig.key] ?? '';
+      let valB = b[sortConfig.key] ?? '';
+
+      if (['currentStock', 'minStock', 'price', 'quantity', 'totalValue'].includes(sortConfig.key)) {
+        valA = parseFloat(valA) || 0;
+        valB = parseFloat(valB) || 0;
+      } else {
+        valA = String(valA).toLowerCase();
+        valB = String(valB).toLowerCase();
+      }
+
+      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const renderSortHeader = (label, key, currentSort, setSort) => {
+    const isActive = currentSort.key === key;
+    return (
+      <th 
+        style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} 
+        onClick={() => {
+          setSort({
+            key,
+            direction: isActive && currentSort.direction === 'asc' ? 'desc' : 'asc'
+          });
+        }}
+        title={`Clique para ordenar por ${label}`}
+      >
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <span>{label}</span>
+          {isActive ? (
+            currentSort.direction === 'asc' ? <ArrowUp size={13} color="#10b981" /> : <ArrowDown size={13} color="#10b981" />
+          ) : (
+            <ArrowUpDown size={12} color="#94a3b8" />
+          )}
+        </div>
+      </th>
+    );
   };
 
   // ----------------------------------------------------
@@ -297,6 +378,131 @@ export default function StockPanel() {
       fetchData();
     } catch (err) {
       showAlert('Erro ao salvar setor de estoque.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+  const handleDeleteItem = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir este item do catálogo de estoque?')) return;
+    setActionLoading(true);
+    try {
+      if (dbService.deleteInventoryItem) await dbService.deleteInventoryItem(id);
+      showAlert('Item excluído do catálogo.', 'success');
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao excluir item.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteSupplier = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir este fornecedor?')) return;
+    setActionLoading(true);
+    try {
+      if (dbService.deleteSupplier) await dbService.deleteSupplier(id);
+      showAlert('Fornecedor excluído.', 'success');
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao excluir fornecedor.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteSector = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir este setor físico?')) return;
+    setActionLoading(true);
+    try {
+      if (dbService.deleteStockSector) await dbService.deleteStockSector(id);
+      showAlert('Setor de estoque excluído.', 'success');
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao excluir setor.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ----------------------------------------------------
+  // Stock Loans Methods (Empréstimos)
+  // ----------------------------------------------------
+  const handleOpenLoanAdd = () => {
+    setEditingLoan(null);
+    setLoanForm({
+      type: 'Concedido',
+      productName: items[0]?.name || '',
+      quantity: '1',
+      unit: 'Caixa(s)',
+      partnerName: '',
+      loanDate: new Date().toISOString().substring(0, 10),
+      expectedReturnDate: '',
+      notes: ''
+    });
+    setShowLoanModal(true);
+  };
+
+  const handleOpenLoanEdit = (loan) => {
+    setEditingLoan(loan);
+    setLoanForm({
+      type: loan.type,
+      productName: loan.productName,
+      quantity: String(loan.quantity),
+      unit: loan.unit || 'Caixa(s)',
+      partnerName: loan.partnerName,
+      loanDate: loan.loanDate || new Date().toISOString().substring(0, 10),
+      expectedReturnDate: loan.expectedReturnDate || '',
+      notes: loan.notes || ''
+    });
+    setShowLoanModal(true);
+  };
+
+  const handleSaveLoan = async (e) => {
+    e.preventDefault();
+    if (!loanForm.productName || !loanForm.partnerName) {
+      return showAlert('Informe o produto e a instituição parceira.', 'warning');
+    }
+
+    setActionLoading(true);
+    try {
+      const payload = {
+        ...loanForm,
+        ...(editingLoan ? { id: editingLoan.id, status: editingLoan.status } : { status: 'Ativo' })
+      };
+      await dbService.saveStockLoan(payload);
+      showAlert(editingLoan ? 'Empréstimo atualizado com sucesso!' : 'Empréstimo de produto cadastrado com sucesso!', 'success');
+      setShowLoanModal(false);
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao salvar empréstimo.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReturnLoan = async (loan) => {
+    if (!window.confirm(`Confirmar a devolução/baixa do empréstimo de "${loan.productName}" com ${loan.partnerName}?`)) return;
+    setActionLoading(true);
+    try {
+      await dbService.returnStockLoan(loan.id);
+      showAlert(`Empréstimo de "${loan.productName}" marcado como Devolvido!`, 'success');
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao dar baixa no empréstimo.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteLoan = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir o registro deste empréstimo?')) return;
+    setActionLoading(true);
+    try {
+      await dbService.deleteStockLoan(id);
+      showAlert('Empréstimo excluído com sucesso.', 'success');
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao excluir empréstimo.', 'danger');
     } finally {
       setActionLoading(false);
     }
@@ -686,6 +892,12 @@ export default function StockPanel() {
         >
           <Calendar size={16} /> Controle de Validade
         </button>
+        <button 
+          onClick={() => setActiveTab('loans')} 
+          style={{ ...styles.tabBtn, ...(activeTab === 'loans' ? styles.tabBtnActive : {}) }}
+        >
+          <RefreshCw size={16} /> Empréstimos de Produtos ({loans.length})
+        </button>
       </div>
 
       {/* Message feedback */}
@@ -720,10 +932,9 @@ export default function StockPanel() {
           {activeTab === 'inventory' && (
             <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={styles.filterSelect}>
               <option value="">Todas as Categorias</option>
-              <option value="Insumo Clínico">Insumo Clínico</option>
-              <option value="Medicamento">Medicamento</option>
-              <option value="Concentrado">Concentrado</option>
-              <option value="Outros">Outros</option>
+              {categoriesList.map(c => (
+                <option key={c.id} value={c.name}>{c.name}</option>
+              ))}
             </select>
           )}
         </div>
@@ -750,6 +961,11 @@ export default function StockPanel() {
               <Warehouse size={16} /> Novo Setor Físico
             </button>
           )}
+          {activeTab === 'loans' && (
+            <button onClick={handleOpenLoanAdd} style={styles.addBtn}>
+              <Plus size={16} /> Novo Empréstimo
+            </button>
+          )}
           <button onClick={handleOpenTxForm} style={styles.txBtn}>
             Lançar Movimentação Manual
           </button>
@@ -766,14 +982,14 @@ export default function StockPanel() {
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th>Item de Insumo</th>
-                    <th>Categoria</th>
-                    <th>Estoque Atual</th>
-                    <th>Setor Padrão</th>
-                    <th>Mínimo</th>
-                    <th>Status</th>
-                    <th>Preço Unitário</th>
-                    <th>Ações</th>
+                    {renderSortHeader('Item de Insumo', 'name', inventorySort, setInventorySort)}
+                    {renderSortHeader('Categoria', 'category', inventorySort, setInventorySort)}
+                    {renderSortHeader('Estoque Atual', 'currentStock', inventorySort, setInventorySort)}
+                    {renderSortHeader('Setor Padrão', 'defaultSectorId', inventorySort, setInventorySort)}
+                    {renderSortHeader('Mínimo', 'minStock', inventorySort, setInventorySort)}
+                    <th style={styles.th}>Status</th>
+                    {renderSortHeader('Preço Unitário', 'price', inventorySort, setInventorySort)}
+                    <th style={styles.th}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -782,7 +998,7 @@ export default function StockPanel() {
                       <td colSpan="8" style={styles.noDataCell}>Nenhum insumo no catálogo.</td>
                     </tr>
                   ) : (
-                    filteredItems.map(item => {
+                    sortData(filteredItems, inventorySort).map(item => {
                       const isLow = item.currentStock <= item.minStock;
                       const sectorName = sectors.find(s => s.id === item.defaultSectorId)?.name || 'Almoxarifado Central';
                       return (
@@ -804,8 +1020,11 @@ export default function StockPanel() {
                           <td>R$ {item.price ? item.price.toFixed(2) : '0.00'}</td>
                           <td>
                             <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                              <button onClick={() => handleOpenEditModal(item)} style={styles.actionEditBtn}>
-                                Editar
+                              <button onClick={() => handleOpenEditModal(item)} style={styles.actionEditBtn} title="Editar Item">
+                                <Edit size={13} /> Editar
+                              </button>
+                              <button onClick={() => handleDeleteItem(item.id)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} title="Excluir Item">
+                                <Trash2 size={13} />
                               </button>
                               {isLow && (
                                 <button onClick={() => handleQuickPurchaseRequest(item)} style={{ ...styles.actionEditBtn, backgroundColor: '#ec4899', color: '#ffffff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '2px' }} title="Gerar solicitação automática no Portal de Compras">
@@ -829,14 +1048,14 @@ export default function StockPanel() {
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th>NF-e Nº</th>
-                    <th>Chave de Acesso</th>
-                    <th>Fornecedor</th>
-                    <th>Emissão</th>
-                    <th>Data de Entrada</th>
-                    <th>Valor Total</th>
-                    <th>Itens Recebidos</th>
-                    <th>Status</th>
+                    {renderSortHeader('NF-e Nº', 'number', invoiceSort, setInvoiceSort)}
+                    {renderSortHeader('Chave de Acesso', 'accessKey', invoiceSort, setInvoiceSort)}
+                    {renderSortHeader('Fornecedor', 'supplierName', invoiceSort, setInvoiceSort)}
+                    {renderSortHeader('Emissão', 'issueDate', invoiceSort, setInvoiceSort)}
+                    {renderSortHeader('Data de Entrada', 'entryDate', invoiceSort, setInvoiceSort)}
+                    {renderSortHeader('Valor Total', 'totalValue', invoiceSort, setInvoiceSort)}
+                    <th style={styles.th}>Itens Recebidos</th>
+                    <th style={styles.th}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -845,13 +1064,13 @@ export default function StockPanel() {
                       <td colSpan="8" style={styles.noDataCell}>Nenhuma Nota Fiscal importada ou registrada.</td>
                     </tr>
                   ) : (
-                    invoices.map(inv => (
+                    sortData(invoices, invoiceSort).map(inv => (
                       <tr key={inv.id}>
                         <td style={{ fontWeight: '600' }}>{inv.number}</td>
                         <td style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{inv.accessKey || 'N/A'}</td>
                         <td style={{ fontWeight: '600' }}>{inv.supplierName}</td>
-                        <td>{new Date(inv.issueDate).toLocaleDateString('pt-BR')}</td>
-                        <td>{new Date(inv.entryDate).toLocaleDateString('pt-BR')}</td>
+                        <td>{inv.issueDate ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}</td>
+                        <td>{inv.entryDate ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}</td>
                         <td style={{ fontWeight: '700' }}>R$ {inv.totalValue ? inv.totalValue.toFixed(2) : '0.00'}</td>
                         <td>{inv.items?.length || 0} produtos</td>
                         <td><span style={styles.badgeNormal}>Processada</span></td>
@@ -869,12 +1088,12 @@ export default function StockPanel() {
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th>Fornecedor</th>
-                    <th>CNPJ</th>
-                    <th>Contato</th>
-                    <th>Telefone</th>
-                    <th>Email</th>
-                    <th>Ações</th>
+                    {renderSortHeader('Fornecedor', 'name', supplierSort, setSupplierSort)}
+                    {renderSortHeader('CNPJ', 'cnpj', supplierSort, setSupplierSort)}
+                    {renderSortHeader('Contato', 'contact', supplierSort, setSupplierSort)}
+                    {renderSortHeader('Telefone', 'phone', supplierSort, setSupplierSort)}
+                    {renderSortHeader('Email', 'email', supplierSort, setSupplierSort)}
+                    <th style={styles.th}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -883,7 +1102,7 @@ export default function StockPanel() {
                       <td colSpan="6" style={styles.noDataCell}>Nenhum fornecedor cadastrado.</td>
                     </tr>
                   ) : (
-                    suppliers.map(sup => (
+                    sortData(suppliers, supplierSort).map(sup => (
                       <tr key={sup.id}>
                         <td style={{ fontWeight: '600' }}>{sup.name}</td>
                         <td>{sup.cnpj || '-'}</td>
@@ -891,9 +1110,14 @@ export default function StockPanel() {
                         <td>{sup.phone || '-'}</td>
                         <td>{sup.email || '-'}</td>
                         <td>
-                          <button onClick={() => handleOpenSupplierEdit(sup)} style={styles.actionEditBtn}>
-                            Editar
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.35rem' }}>
+                            <button onClick={() => handleOpenSupplierEdit(sup)} style={styles.actionEditBtn} title="Editar Fornecedor">
+                              <Edit size={13} /> Editar
+                            </button>
+                            <button onClick={() => handleDeleteSupplier(sup.id)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} title="Excluir Fornecedor">
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -909,9 +1133,9 @@ export default function StockPanel() {
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th>Nome do Setor</th>
-                    <th>Descrição / Finalidade</th>
-                    <th>Ações</th>
+                    {renderSortHeader('Nome do Setor', 'name', sectorSort, setSectorSort)}
+                    {renderSortHeader('Descrição / Finalidade', 'description', sectorSort, setSectorSort)}
+                    <th style={styles.th}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -920,14 +1144,19 @@ export default function StockPanel() {
                       <td colSpan="3" style={styles.noDataCell}>Nenhum setor físico cadastrado.</td>
                     </tr>
                   ) : (
-                    sectors.map(sec => (
+                    sortData(sectors, sectorSort).map(sec => (
                       <tr key={sec.id}>
                         <td style={{ fontWeight: '600' }}>{sec.name}</td>
                         <td>{sec.description || 'Sem descrição'}</td>
                         <td>
-                          <button onClick={() => handleOpenSectorEdit(sec)} style={styles.actionEditBtn}>
-                            Editar
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.35rem' }}>
+                            <button onClick={() => handleOpenSectorEdit(sec)} style={styles.actionEditBtn} title="Editar Setor">
+                              <Edit size={13} /> Editar
+                            </button>
+                            <button onClick={() => handleDeleteSector(sec.id)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} title="Excluir Setor">
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -943,14 +1172,14 @@ export default function StockPanel() {
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th>Data/Hora</th>
-                    <th>Item</th>
-                    <th>Tipo</th>
-                    <th>Quantidade</th>
-                    <th>Setor Destino</th>
-                    <th>Lote</th>
-                    <th>Operador</th>
-                    <th>Observações</th>
+                    {renderSortHeader('Data/Hora', 'date', transactionSort, setTransactionSort)}
+                    {renderSortHeader('Item', 'itemName', transactionSort, setTransactionSort)}
+                    {renderSortHeader('Tipo', 'type', transactionSort, setTransactionSort)}
+                    {renderSortHeader('Quantidade', 'quantity', transactionSort, setTransactionSort)}
+                    <th style={styles.th}>Setor Destino</th>
+                    <th style={styles.th}>Lote</th>
+                    {renderSortHeader('Operador', 'operator', transactionSort, setTransactionSort)}
+                    <th style={styles.th}>Observações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -959,34 +1188,32 @@ export default function StockPanel() {
                       <td colSpan="8" style={styles.noDataCell}>Nenhuma movimentação registrada.</td>
                     </tr>
                   ) : (
-                    transactions
-                      .sort((a, b) => new Date(b.date) - new Date(a.date))
-                      .map(tx => {
-                        const isEntry = tx.type === 'Entrada';
-                        const secName = sectors.find(s => s.id === tx.sectorId)?.name || 'Almoxarifado Central';
-                        return (
-                          <tr key={tx.id}>
-                            <td>{new Date(tx.date).toLocaleString('pt-BR')}</td>
-                            <td style={{ fontWeight: '600' }}>{tx.itemName}</td>
-                            <td>
-                              <span style={{ 
-                                ...styles.txTypeBadge, 
-                                backgroundColor: isEntry ? 'var(--success-light)' : 'var(--danger-light)',
-                                color: isEntry ? 'var(--success-color)' : 'var(--danger-color)',
-                                borderColor: isEntry ? 'rgba(5, 150, 105, 0.1)' : 'rgba(225, 29, 72, 0.1)'
-                              }}>
-                                {isEntry ? <ArrowUpRight size={12} /> : <ArrowDownLeft size={12} />}
-                                {tx.type}
-                              </span>
-                            </td>
-                            <td style={{ fontWeight: '700' }}>{tx.quantity}</td>
-                            <td>{secName}</td>
-                            <td>{tx.batch || '-'}</td>
-                            <td>{tx.operator}</td>
-                            <td style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>{tx.notes || '-'}</td>
-                          </tr>
-                        );
-                      })
+                    sortData(transactions, transactionSort).map(tx => {
+                      const isEntry = tx.type === 'Entrada';
+                      const secName = sectors.find(s => s.id === tx.sectorId)?.name || 'Almoxarifado Central';
+                      return (
+                        <tr key={tx.id}>
+                          <td>{new Date(tx.date).toLocaleString('pt-BR')}</td>
+                          <td style={{ fontWeight: '600' }}>{tx.itemName}</td>
+                          <td>
+                            <span style={{ 
+                              ...styles.txTypeBadge, 
+                              backgroundColor: isEntry ? 'var(--success-light)' : 'var(--danger-light)',
+                              color: isEntry ? 'var(--success-color)' : 'var(--danger-color)',
+                              borderColor: isEntry ? 'rgba(5, 150, 105, 0.1)' : 'rgba(225, 29, 72, 0.1)'
+                            }}>
+                              {isEntry ? <ArrowUpRight size={12} /> : <ArrowDownLeft size={12} />}
+                              {tx.type}
+                            </span>
+                          </td>
+                          <td style={{ fontWeight: '700' }}>{tx.quantity}</td>
+                          <td>{secName}</td>
+                          <td>{tx.batch || '-'}</td>
+                          <td>{tx.operator}</td>
+                          <td style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>{tx.notes || '-'}</td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -1029,6 +1256,93 @@ export default function StockPanel() {
                             </span>
                           </td>
                           <td>{tx.operator}</td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* TAB 7: Stock Loans (Empréstimos de Produtos / Medicamentos) */}
+          {activeTab === 'loans' && (
+            <div style={styles.tableWrapper}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    {renderSortHeader('Tipo', 'type', loanSort, setLoanSort)}
+                    {renderSortHeader('Produto / Medicamento', 'productName', loanSort, setLoanSort)}
+                    {renderSortHeader('Quantidade', 'quantity', loanSort, setLoanSort)}
+                    {renderSortHeader('Instituição / Clínica Parceira', 'partnerName', loanSort, setLoanSort)}
+                    {renderSortHeader('Data Empréstimo', 'loanDate', loanSort, setLoanSort)}
+                    {renderSortHeader('Previsão Devolução', 'expectedReturnDate', loanSort, setLoanSort)}
+                    {renderSortHeader('Status', 'status', loanSort, setLoanSort)}
+                    <th style={styles.th}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loans.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" style={styles.noDataCell}>Nenhum empréstimo registrado. Clique em "Novo Empréstimo" para cadastrar.</td>
+                    </tr>
+                  ) : (
+                    sortData(loans, loanSort).map(loan => {
+                      const isGiven = loan.type === 'Concedido';
+                      const isReturned = loan.status === 'Devolvido';
+                      return (
+                        <tr key={loan.id}>
+                          <td>
+                            <span style={{
+                              padding: '0.2rem 0.5rem',
+                              borderRadius: '4px',
+                              fontWeight: '700',
+                              fontSize: '0.75rem',
+                              backgroundColor: isGiven ? '#e0f2fe' : '#fef3c7',
+                              color: isGiven ? '#0369a1' : '#b45309'
+                            }}>
+                              {isGiven ? '📤 Concedido' : '📥 Recebido'}
+                            </span>
+                          </td>
+                          <td style={{ fontWeight: '600' }}>
+                            {loan.productName}
+                            {loan.notes && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{loan.notes}</div>}
+                          </td>
+                          <td style={{ fontWeight: '700' }}>{loan.quantity} {loan.unit || ''}</td>
+                          <td><strong>{loan.partnerName}</strong></td>
+                          <td>{loan.loanDate ? loan.loanDate.split('-').reverse().join('/') : '-'}</td>
+                          <td>{loan.expectedReturnDate ? loan.expectedReturnDate.split('-').reverse().join('/') : 'Indefinido'}</td>
+                          <td>
+                            <span style={{
+                              padding: '0.2rem 0.5rem',
+                              borderRadius: '4px',
+                              fontWeight: '600',
+                              fontSize: '0.75rem',
+                              backgroundColor: isReturned ? '#d1fae5' : '#fee2e2',
+                              color: isReturned ? '#065f46' : '#991b1b'
+                            }}>
+                              {isReturned ? `✓ Devolvido em ${loan.returnDate || ''}` : '⏳ Pendente (Ativo)'}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                              {!isReturned && (
+                                <button 
+                                  onClick={() => handleReturnLoan(loan)} 
+                                  style={{ ...styles.actionEditBtn, backgroundColor: '#d1fae5', color: '#065f46' }} 
+                                  title="Registrar Devolução / Dar Baixa"
+                                >
+                                  <RefreshCw size={12} /> Dar Baixa
+                                </button>
+                              )}
+                              <button onClick={() => handleOpenLoanEdit(loan)} style={styles.actionEditBtn} title="Editar Empréstimo">
+                                <Edit size={13} />
+                              </button>
+                              <button onClick={() => handleDeleteLoan(loan.id)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} title="Excluir">
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       );
                     })
@@ -1506,6 +1820,126 @@ export default function StockPanel() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+      {/* Loan Modal (Empréstimos de Produtos / Medicamentos) */}
+      {showLoanModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <div style={styles.modalHeader}>
+              <h2>{editingLoan ? 'Editar Empréstimo' : 'Cadastrar Empréstimo de Produto / Medicamento'}</h2>
+              <button onClick={() => setShowLoanModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
+            </div>
+            <form onSubmit={handleSaveLoan} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+              <div className="form-group">
+                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Tipo de Empréstimo *</label>
+                <select 
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                  value={loanForm.type}
+                  onChange={e => setLoanForm({ ...loanForm, type: e.target.value })}
+                >
+                  <option value="Concedido">📤 Concedido (Estoque Próprio Emprestado para Terceiros)</option>
+                  <option value="Recebido">📥 Recebido (Empréstimo Recebido de Outra Clínica / Hospital)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Produto / Medicamento Emprestado *</label>
+                <input 
+                  type="text"
+                  list="product-suggestions"
+                  placeholder="Ex: Erythropoietin 4000UI / Dialisador Capilar"
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                  value={loanForm.productName}
+                  onChange={e => setLoanForm({ ...loanForm, productName: e.target.value })}
+                  required
+                />
+                <datalist id="product-suggestions">
+                  {items.map(i => <option key={i.id} value={i.name} />)}
+                </datalist>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Quantidade *</label>
+                  <input 
+                    type="number"
+                    min="1"
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={loanForm.quantity}
+                    onChange={e => setLoanForm({ ...loanForm, quantity: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Unidade de Medida</label>
+                  <select 
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={loanForm.unit}
+                    onChange={e => setLoanForm({ ...loanForm, unit: e.target.value })}
+                  >
+                    <option value="Caixa(s)">Caixa(s)</option>
+                    <option value="Unidade(s)">Unidade(s)</option>
+                    <option value="Ampola(s)">Ampola(s)</option>
+                    <option value="Frasco(s)">Frasco(s)</option>
+                    <option value="Kit(s)">Kit(s)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Instituição / Clínica Parceira *</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: Hospital São Lucas / Clínica NefroVida"
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                  value={loanForm.partnerName}
+                  onChange={e => setLoanForm({ ...loanForm, partnerName: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Data do Empréstimo</label>
+                  <input 
+                    type="date"
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={loanForm.loanDate}
+                    onChange={e => setLoanForm({ ...loanForm, loanDate: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Previsão de Devolução</label>
+                  <input 
+                    type="date"
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={loanForm.expectedReturnDate}
+                    onChange={e => setLoanForm({ ...loanForm, expectedReturnDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Observações / Termo de Acordo</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: Empréstimo emergencial autorizado pelo almoxarifado central"
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                  value={loanForm.notes}
+                  onChange={e => setLoanForm({ ...loanForm, notes: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setShowLoanModal(false)} className="btn btn-secondary">Cancelar</button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: 'var(--primary-color)' }}>
+                  {actionLoading ? 'Salvando...' : (editingLoan ? 'Salvar Alterações' : 'Cadastrar Empréstimo')}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

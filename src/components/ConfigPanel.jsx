@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../firebase';
 import { 
   Settings, Users, Shield, Globe, Database, Key, Check, Plus, X, 
-  Trash2, ShieldAlert, CheckCircle2, Copy, Download, Upload, Palette
+  Trash2, ShieldAlert, CheckCircle2, Copy, Download, Upload, Palette,
+  ListFilter, Edit
 } from 'lucide-react';
 
 export default function ConfigPanel() {
-  const [activeTab, setActiveTab] = useState('branding'); // 'branding' | 'profiles' | 'users' | 'logs' | 'integrations'
+  const [activeTab, setActiveTab] = useState('branding'); // 'branding' | 'profiles' | 'users' | 'categories' | 'integrations' | 'logs'
   
   // Data States
   const [tenantSettings, setTenantSettings] = useState({ name: '', cnpj: '', logo: '', themeColor: '#ec4899' });
@@ -14,11 +15,21 @@ export default function ConfigPanel() {
   const [usersList, setUsersList] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [categoriesList, setCategoriesList] = useState([]);
   
   // Actions loading
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+
+  // Categories Form State (Módulo T.I)
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [categoryForm, setCategoryForm] = useState({
+    name: '',
+    module: 'Estoque',
+    description: ''
+  });
   
   // User Form
   const [showUserModal, setShowUserModal] = useState(false);
@@ -49,18 +60,20 @@ export default function ConfigPanel() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [settings, profileList, users, empList, logs] = await Promise.all([
+      const [settings, profileList, users, empList, logs, catList] = await Promise.all([
         dbService.getTenantSettings(),
         dbService.getUserProfiles(),
         dbService.getUsers(),
         dbService.getEmployees(),
-        dbService.getAuditLogs()
+        dbService.getAuditLogs(),
+        dbService.getProductCategories ? dbService.getProductCategories() : []
       ]);
       setTenantSettings(settings);
       setProfiles(profileList);
       setUsersList(users);
       setEmployees(empList);
       setAuditLogs(logs);
+      setCategoriesList(catList);
 
       // Apply theme color immediately
       if (settings.themeColor) {
@@ -219,6 +232,62 @@ export default function ConfigPanel() {
   };
 
   // ----------------------------------------------------
+  // Categories Management Methods (T.I)
+  // ----------------------------------------------------
+  const handleOpenCategoryAdd = () => {
+    setEditingCategory(null);
+    setCategoryForm({ name: '', module: 'Estoque', description: '' });
+    setShowCategoryModal(true);
+  };
+
+  const handleOpenCategoryEdit = (cat) => {
+    setEditingCategory(cat);
+    setCategoryForm({
+      name: cat.name,
+      module: cat.module || 'Estoque',
+      description: cat.description || ''
+    });
+    setShowCategoryModal(true);
+  };
+
+  const handleSaveCategory = async (e) => {
+    e.preventDefault();
+    if (!categoryForm.name) return showAlert('Nome da categoria é obrigatório.', 'warning');
+
+    setActionLoading(true);
+    try {
+      const payload = {
+        ...categoryForm,
+        ...(editingCategory ? { id: editingCategory.id } : {})
+      };
+      await dbService.saveProductCategory(payload);
+      showAlert(editingCategory ? 'Categoria atualizada!' : 'Categoria cadastrada com sucesso!', 'success');
+      logAudit('Cadastro/Edição de Categoria', `Categoria "${categoryForm.name}" salva para o módulo ${categoryForm.module}.`);
+      setShowCategoryModal(false);
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao salvar categoria.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir esta categoria do sistema?')) return;
+    setActionLoading(true);
+    try {
+      await dbService.deleteProductCategory(id);
+      showAlert('Categoria excluída com sucesso.', 'success');
+      logAudit('Exclusão de Categoria', `Categoria ID ${id} excluída do sistema.`);
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao excluir categoria.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ----------------------------------------------------
   // Integrations & Backups
   // ----------------------------------------------------
   const handleGenerateApiKey = () => {
@@ -289,6 +358,9 @@ export default function ConfigPanel() {
         </button>
         <button onClick={() => setActiveTab('users')} style={{ ...styles.tabBtn, ...(activeTab === 'users' ? styles.tabBtnActive : {}) }}>
           <Users size={16} /> Usuários do Sistema ({usersList.length})
+        </button>
+        <button onClick={() => setActiveTab('categories')} style={{ ...styles.tabBtn, ...(activeTab === 'categories' ? styles.tabBtnActive : {}) }}>
+          <ListFilter size={16} /> Categorias do Sistema ({categoriesList.length})
         </button>
         <button onClick={() => setActiveTab('integrations')} style={{ ...styles.tabBtn, ...(activeTab === 'integrations' ? styles.tabBtnActive : {}) }}>
           <Key size={16} /> Integrações & Backups
@@ -506,6 +578,82 @@ export default function ConfigPanel() {
             </div>
           )}
 
+          {/* TAB: Categories Management (Módulo T.I Centralizado) */}
+          {activeTab === 'categories' && (
+            <div style={styles.tableCard}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div>
+                  <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>🏷️ Categorias de Produtos & Módulos</h3>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    Gerencie centralidamente as categorias dos produtos de Estoque, Financeiro e RH.
+                  </span>
+                </div>
+                <button onClick={handleOpenCategoryAdd} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Plus size={16} /> Nova Categoria
+                </button>
+              </div>
+
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Nome da Categoria</th>
+                    <th>Módulo Destino</th>
+                    <th>Descrição</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categoriesList.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        Nenhuma categoria cadastrada. Clique em "Nova Categoria" para adicionar.
+                      </td>
+                    </tr>
+                  ) : (
+                    categoriesList.map(cat => (
+                      <tr key={cat.id}>
+                        <td style={{ fontWeight: '600' }}>{cat.name}</td>
+                        <td>
+                          <span style={{
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '4px',
+                            fontWeight: '700',
+                            fontSize: '0.75rem',
+                            backgroundColor: '#e0f2fe',
+                            color: '#0369a1'
+                          }}>
+                            {cat.module || 'Estoque'}
+                          </span>
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{cat.description || 'Sem descrição'}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '0.35rem' }}>
+                            <button 
+                              onClick={() => handleOpenCategoryEdit(cat)} 
+                              className="btn btn-secondary" 
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                              title="Editar Categoria"
+                            >
+                              <Edit size={13} /> Editar
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteCategory(cat.id)} 
+                              className="btn btn-secondary" 
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none' }}
+                              title="Excluir Categoria"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {/* TAB 4: Integrations & Backup */}
           {activeTab === 'integrations' && (
             <div style={styles.panelGrid}>
@@ -679,6 +827,71 @@ export default function ConfigPanel() {
                   </div>
                 </>
               )}
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Category Modal (Módulo T.I) */}
+      {showCategoryModal && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalCard, maxWidth: '500px' }}>
+            <div style={styles.modalHeader}>
+              <div>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{editingCategory ? 'Editar Categoria' : 'Cadastrar Nova Categoria'}</h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Defina o nome e o módulo de aplicação da categoria.</span>
+              </div>
+              <button onClick={() => setShowCategoryModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleSaveCategory} style={styles.modalForm}>
+              <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Nome da Categoria *</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  required 
+                  placeholder="Ex: Dialisadores, Medicamentos, Informática" 
+                  value={categoryForm.name} 
+                  onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })} 
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Módulo de Aplicação *</label>
+                <select 
+                  className="form-control" 
+                  required 
+                  value={categoryForm.module} 
+                  onChange={e => setCategoryForm({ ...categoryForm, module: e.target.value })} 
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}
+                >
+                  <option value="Estoque">Estoque / Farmácia</option>
+                  <option value="Financeiro">Financeiro / Contas</option>
+                  <option value="RH">Recursos Humanos (RH)</option>
+                  <option value="T.I">T.I / Geral</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Descrição / Finalidade</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="Ex: Produtos consumíveis da sala de hemodiálise" 
+                  value={categoryForm.description} 
+                  onChange={e => setCategoryForm({ ...categoryForm, description: e.target.value })} 
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                />
+              </div>
+
+              <div style={styles.modalFooter}>
+                <button type="button" onClick={() => setShowCategoryModal(false)} className="btn btn-secondary" style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer' }}>Cancelar</button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', color: '#ffffff', padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}>
+                  {actionLoading ? 'Salvando...' : (editingCategory ? 'Salvar Categoria' : 'Cadastrar Categoria')}
+                </button>
+              </div>
             </form>
           </div>
         </div>

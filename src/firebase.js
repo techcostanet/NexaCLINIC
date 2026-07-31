@@ -1708,5 +1708,134 @@ export const dbService = {
       console.error('Erro Firestore saveBankStatement:', e);
       return mockFirestore.saveBankStatement(statementData);
     }
+  },
+
+  // Stock Deletes
+  deleteInventoryItem: async (id) => {
+    if (USE_MOCK) return mockFirestore.deleteInventoryItem(id);
+    try {
+      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      await deleteDoc(doc(db, 'inventory_items', id));
+      return { success: true };
+    } catch (e) {
+      return mockFirestore.deleteInventoryItem(id);
+    }
+  },
+  deleteSupplier: async (id) => {
+    if (USE_MOCK) return mockFirestore.deleteSupplier(id);
+    try {
+      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      await deleteDoc(doc(db, 'suppliers', id));
+      return { success: true };
+    } catch (e) {
+      return mockFirestore.deleteSupplier(id);
+    }
+  },
+  deleteStockSector: async (id) => {
+    if (USE_MOCK) return mockFirestore.deleteStockSector(id);
+    try {
+      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      await deleteDoc(doc(db, 'stock_sectors', id));
+      return { success: true };
+    } catch (e) {
+      return mockFirestore.deleteStockSector(id);
+    }
+  },
+
+  // Stock Loans API (Empréstimos de Produtos)
+  getStockLoans: async () => {
+    if (USE_MOCK) return mockFirestore.getStockLoans();
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'stock_loans'));
+      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return mockFirestore.getStockLoans();
+    } catch (e) {
+      return mockFirestore.getStockLoans();
+    }
+  },
+  saveStockLoan: async (loanData) => {
+    if (USE_MOCK) return mockFirestore.saveStockLoan(loanData);
+    try {
+      const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      if (loanData.id) {
+        await setDoc(doc(db, 'stock_loans', loanData.id), loanData, { merge: true });
+        return loanData;
+      }
+      const ref = await addDoc(collection(db, 'stock_loans'), { ...loanData, createdAt: new Date().toISOString() });
+      return { id: ref.id, ...loanData };
+    } catch (e) {
+      return mockFirestore.saveStockLoan(loanData);
+    }
+  },
+  returnStockLoan: async (id) => {
+    if (USE_MOCK) return mockFirestore.returnStockLoan(id);
+    try {
+      const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      await updateDoc(doc(db, 'stock_loans', id), {
+        status: 'Devolvido',
+        returnDate: new Date().toISOString().substring(0, 10)
+      });
+      return { success: true };
+    } catch (e) {
+      return mockFirestore.returnStockLoan(id);
+    }
+  },
+  deleteStockLoan: async (id) => {
+    if (USE_MOCK) return mockFirestore.deleteStockLoan(id);
+    try {
+      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      await deleteDoc(doc(db, 'stock_loans', id));
+      return { success: true };
+    } catch (e) {
+      return mockFirestore.deleteStockLoan(id);
+    }
+  },
+
+  // Product Categories API (Centralizado T.I)
+  getProductCategories: async () => {
+    if (USE_MOCK) return mockFirestore.getProductCategories();
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'product_categories'));
+      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return mockFirestore.getProductCategories();
+    } catch (e) {
+      return mockFirestore.getProductCategories();
+    }
+  },
+  saveProductCategory: async (catData) => {
+    if (USE_MOCK) return mockFirestore.saveProductCategory(catData);
+    try {
+      const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      if (catData.id) {
+        await setDoc(doc(db, 'product_categories', catData.id), catData, { merge: true });
+        return catData;
+      }
+      const ref = await addDoc(collection(db, 'product_categories'), { ...catData, createdAt: new Date().toISOString() });
+      return { id: ref.id, ...catData };
+    } catch (e) {
+      return mockFirestore.saveProductCategory(catData);
+    }
+  },
+  deleteProductCategory: async (id) => {
+    if (USE_MOCK) return mockFirestore.deleteProductCategory(id);
+    try {
+      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      await deleteDoc(doc(db, 'product_categories', id));
+      return { success: true };
+    } catch (e) {
+      return mockFirestore.deleteProductCategory(id);
+    }
   }
 };
