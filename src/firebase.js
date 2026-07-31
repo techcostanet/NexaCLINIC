@@ -1111,11 +1111,10 @@ export const dbService = {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'inventory_items'));
-      if (snap.empty) return mockFirestore.getInventoryItems();
       return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.error("Erro ao carregar inventory_items do Firestore:", e);
-      return mockFirestore.getInventoryItems();
+      return [];
     }
   },
 
@@ -1142,11 +1141,10 @@ export const dbService = {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'stock_transactions'));
-      if (snap.empty) return mockFirestore.getStockTransactions();
       return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.error("Erro ao carregar stock_transactions do Firestore:", e);
-      return mockFirestore.getStockTransactions();
+      return [];
     }
   },
 
@@ -1179,11 +1177,10 @@ export const dbService = {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'suppliers'));
-      if (snap.empty) return mockFirestore.getSuppliers();
       return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.error("Erro ao carregar suppliers do Firestore:", e);
-      return mockFirestore.getSuppliers();
+      return [];
     }
   },
   createSupplier: async (supplierData) => {
@@ -1208,11 +1205,10 @@ export const dbService = {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'stock_sectors'));
-      if (snap.empty) return mockFirestore.getStockSectors();
       return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.error("Erro ao carregar stock_sectors do Firestore:", e);
-      return mockFirestore.getStockSectors();
+      return [];
     }
   },
   createStockSector: async (sectorData) => {
@@ -1237,11 +1233,10 @@ export const dbService = {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'purchase_invoices'));
-      if (snap.empty) return mockFirestore.getPurchaseInvoices();
       return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.error("Erro ao carregar purchase_invoices do Firestore:", e);
-      return mockFirestore.getPurchaseInvoices();
+      return [];
     }
   },
   createPurchaseInvoice: async (invoiceData) => {
@@ -1299,8 +1294,8 @@ export const dbService = {
       }
       return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (err) {
-      console.error("Erro ao buscar funcionários do Firestore, executando fallback:", err);
-      return mockFirestore.getEmployees();
+      console.error("Erro ao buscar funcionários do Firestore:", err);
+      return [];
     }
   },
   createEmployee: async (employeeData) => {
@@ -1353,40 +1348,29 @@ export const dbService = {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'accounts_payable'));
-      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      return mockFirestore.getAccountsPayable();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.error('Erro Firestore getAccountsPayable:', e);
-      return mockFirestore.getAccountsPayable();
+      return [];
     }
   },
   saveAccountsPayable: async (item) => {
     if (USE_MOCK) return mockFirestore.saveAccountsPayable(item);
-    try {
-      const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      if (item.id) {
-        await setDoc(doc(db, 'accounts_payable', item.id), item, { merge: true });
-        return item;
-      }
-      const ref = await addDoc(collection(db, 'accounts_payable'), { ...item, createdAt: new Date().toISOString() });
-      return { id: ref.id, ...item };
-    } catch (e) {
-      console.error('Erro Firestore saveAccountsPayable:', e);
-      return mockFirestore.saveAccountsPayable(item);
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (item.id) {
+      await setDoc(doc(db, 'accounts_payable', item.id), item, { merge: true });
+      return item;
     }
+    const ref = await addDoc(collection(db, 'accounts_payable'), { ...item, createdAt: new Date().toISOString() });
+    return { id: ref.id, ...item };
   },
   deleteAccountsPayable: async (id) => {
     if (USE_MOCK) return mockFirestore.deleteAccountsPayable(id);
-    try {
-      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      await deleteDoc(doc(db, 'accounts_payable', id));
-      return { success: true };
-    } catch (e) {
-      console.error('Erro Firestore deleteAccountsPayable:', e);
-      return mockFirestore.deleteAccountsPayable(id);
-    }
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'accounts_payable', id));
+    return { success: true };
   },
   getAccountsReceivable: async () => {
     if (USE_MOCK) return mockFirestore.getAccountsReceivable();
@@ -1394,40 +1378,29 @@ export const dbService = {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'accounts_receivable'));
-      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      return mockFirestore.getAccountsReceivable();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.error('Erro Firestore getAccountsReceivable:', e);
-      return mockFirestore.getAccountsReceivable();
+      return [];
     }
   },
   saveAccountsReceivable: async (item) => {
     if (USE_MOCK) return mockFirestore.saveAccountsReceivable(item);
-    try {
-      const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      if (item.id) {
-        await setDoc(doc(db, 'accounts_receivable', item.id), item, { merge: true });
-        return item;
-      }
-      const ref = await addDoc(collection(db, 'accounts_receivable'), { ...item, createdAt: new Date().toISOString() });
-      return { id: ref.id, ...item };
-    } catch (e) {
-      console.error('Erro Firestore saveAccountsReceivable:', e);
-      return mockFirestore.saveAccountsReceivable(item);
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (item.id) {
+      await setDoc(doc(db, 'accounts_receivable', item.id), item, { merge: true });
+      return item;
     }
+    const ref = await addDoc(collection(db, 'accounts_receivable'), { ...item, createdAt: new Date().toISOString() });
+    return { id: ref.id, ...item };
   },
   deleteAccountsReceivable: async (id) => {
     if (USE_MOCK) return mockFirestore.deleteAccountsReceivable(id);
-    try {
-      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      await deleteDoc(doc(db, 'accounts_receivable', id));
-      return { success: true };
-    } catch (e) {
-      console.error('Erro Firestore deleteAccountsReceivable:', e);
-      return mockFirestore.deleteAccountsReceivable(id);
-    }
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'accounts_receivable', id));
+    return { success: true };
   },
   getXmlImports: async () => {
     if (USE_MOCK) return mockFirestore.getXmlImports();
@@ -1435,40 +1408,59 @@ export const dbService = {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'xml_imports'));
-      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      return mockFirestore.getXmlImports();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
-      return mockFirestore.getXmlImports();
+      console.error('Erro Firestore getXmlImports:', e);
+      return [];
     }
   },
   saveXmlImport: async (xmlData) => {
     if (USE_MOCK) return mockFirestore.saveXmlImport(xmlData);
-    try {
-      const { getFirestore, collection, addDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      const ref = await addDoc(collection(db, 'xml_imports'), { ...xmlData, importDate: new Date().toISOString() });
-      return { id: ref.id, ...xmlData };
-    } catch (e) {
-      return mockFirestore.saveXmlImport(xmlData);
-    }
+    const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const ref = await addDoc(collection(db, 'xml_imports'), { ...xmlData, importDate: new Date().toISOString() });
+    return { id: ref.id, ...xmlData };
   },
   
   // Transport Vouchers
   getTransportVouchers: async () => {
     if (USE_MOCK) return mockFirestore.getTransportVouchers();
-    return mockFirestore.getTransportVouchers();
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'transport_vouchers'));
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.error('Erro Firestore getTransportVouchers:', e);
+      return [];
+    }
   },
   createTransportVoucher: async (voucherData) => {
     if (USE_MOCK) return mockFirestore.createTransportVoucher(voucherData);
-    return mockFirestore.createTransportVoucher(voucherData);
+    const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const docRef = await addDoc(collection(db, 'transport_vouchers'), {
+      ...voucherData,
+      createdAt: new Date().toISOString()
+    });
+    return { id: docRef.id, ...voucherData };
   },
   updateTransportVoucher: async (id, voucherData) => {
     if (USE_MOCK) return mockFirestore.updateTransportVoucher(id, voucherData);
-    return mockFirestore.updateTransportVoucher(id, voucherData);
+    const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await updateDoc(doc(db, 'transport_vouchers', id), {
+      ...voucherData,
+      updatedAt: new Date().toISOString()
+    });
+    return { id, ...voucherData };
   },
   deleteTransportVoucher: async (id) => {
     if (USE_MOCK) return mockFirestore.deleteTransportVoucher(id);
-    return mockFirestore.deleteTransportVoucher(id);
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'transport_vouchers', id));
+    return { success: true };
   },
   
   // Tenant Settings (SaaS Configurations)
@@ -1481,23 +1473,21 @@ export const dbService = {
       if (snap.exists()) {
         return snap.data();
       }
-      return mockFirestore.getTenantSettings();
+      const defaultSettings = await mockFirestore.getTenantSettings();
+      const { setDoc } = await import('firebase/firestore');
+      await setDoc(doc(db, 'tenant_settings', 'main'), defaultSettings);
+      return defaultSettings;
     } catch (e) {
       console.error('Erro ao ler tenant_settings do Firestore:', e);
-      return mockFirestore.getTenantSettings();
+      return {};
     }
   },
   saveTenantSettings: async (settings) => {
     if (USE_MOCK) return mockFirestore.saveTenantSettings(settings);
-    try {
-      const { getFirestore, doc, setDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      await setDoc(doc(db, 'tenant_settings', 'main'), settings, { merge: true });
-      return settings;
-    } catch (e) {
-      console.error('Erro ao salvar tenant_settings no Firestore:', e);
-      return mockFirestore.saveTenantSettings(settings);
-    }
+    const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await setDoc(doc(db, 'tenant_settings', 'main'), settings, { merge: true });
+    return settings;
   },
 
   // User Profiles (RBAC Roles)
@@ -1519,31 +1509,58 @@ export const dbService = {
       return defaultProfiles;
     } catch (e) {
       console.error('Erro ao ler user_profiles do Firestore:', e);
-      return mockFirestore.getUserProfiles();
+      return [];
     }
   },
   saveUserProfile: async (profile) => {
     if (USE_MOCK) return mockFirestore.saveUserProfile(profile);
-    try {
-      const { getFirestore, doc, setDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      const { id, ...data } = profile;
-      await setDoc(doc(db, 'user_profiles', id), data, { merge: true });
-      return profile;
-    } catch (e) {
-      console.error('Erro ao salvar user_profile no Firestore:', e);
-      return mockFirestore.saveUserProfile(profile);
-    }
+    const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const { id, ...data } = profile;
+    await setDoc(doc(db, 'user_profiles', id), data, { merge: true });
+    return profile;
   },
 
   // Backup and Restore
   exportBackup: async () => {
     if (USE_MOCK) return mockFirestore.exportBackup();
-    return mockFirestore.exportBackup();
+    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const collectionsToBackup = [
+      'users', 'patients', 'sectors', 'indicators', 'indicator_data',
+      'inventory_items', 'stock_transactions', 'suppliers', 'stock_sectors',
+      'purchase_invoices', 'employees', 'prescriptions', 'sessions_logs',
+      'clinical_notes', 'shifts', 'rooms', 'access_types', 'dialysis_frequencies',
+      'checkins', 'audit_logs', 'accounts_payable', 'accounts_receivable',
+      'xml_imports', 'transport_vouchers', 'purchases', 'appointments',
+      'debts', 'bank_statements', 'stock_loans', 'product_categories', 'material_requisitions'
+    ];
+    const backupData = { exportedAt: new Date().toISOString() };
+    for (const colName of collectionsToBackup) {
+      try {
+        const snap = await getDocs(collection(db, colName));
+        backupData[colName] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (err) {
+        console.error(`Erro exportando coleção ${colName}:`, err);
+        backupData[colName] = [];
+      }
+    }
+    return JSON.stringify(backupData, null, 2);
   },
   importBackup: async (backupJson) => {
     if (USE_MOCK) return mockFirestore.importBackup(backupJson);
-    return mockFirestore.importBackup(backupJson);
+    const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const data = typeof backupJson === 'string' ? JSON.parse(backupJson) : backupJson;
+    for (const [colName, records] of Object.entries(data)) {
+      if (colName === 'exportedAt' || !Array.isArray(records)) continue;
+      for (const record of records) {
+        const docId = record.id || `${Math.random().toString(36).substr(2, 9)}`;
+        const { id, ...cleanData } = record;
+        await setDoc(doc(db, colName, docId), cleanData, { merge: true });
+      }
+    }
+    return { success: true };
   },
 
   // Purchases Module
@@ -1643,40 +1660,29 @@ export const dbService = {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'debts'));
-      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      return mockFirestore.getDebts();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.error('Erro Firestore getDebts:', e);
-      return mockFirestore.getDebts();
+      return [];
     }
   },
   saveDebt: async (debtData) => {
     if (USE_MOCK) return mockFirestore.saveDebt(debtData);
-    try {
-      const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      if (debtData.id) {
-        await setDoc(doc(db, 'debts', debtData.id), debtData, { merge: true });
-        return debtData;
-      }
-      const ref = await addDoc(collection(db, 'debts'), { ...debtData, createdAt: new Date().toISOString() });
-      return { id: ref.id, ...debtData };
-    } catch (e) {
-      console.error('Erro Firestore saveDebt:', e);
-      return mockFirestore.saveDebt(debtData);
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (debtData.id) {
+      await setDoc(doc(db, 'debts', debtData.id), debtData, { merge: true });
+      return debtData;
     }
+    const ref = await addDoc(collection(db, 'debts'), { ...debtData, createdAt: new Date().toISOString() });
+    return { id: ref.id, ...debtData };
   },
   deleteDebt: async (id) => {
     if (USE_MOCK) return mockFirestore.deleteDebt(id);
-    try {
-      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      await deleteDoc(doc(db, 'debts', id));
-      return { success: true };
-    } catch (e) {
-      console.error('Erro Firestore deleteDebt:', e);
-      return mockFirestore.deleteDebt(id);
-    }
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'debts', id));
+    return { success: true };
   },
 
   // Bank Reconciliation API
@@ -1686,63 +1692,45 @@ export const dbService = {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'bank_statements'));
-      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      return mockFirestore.getBankStatements();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
       console.error('Erro Firestore getBankStatements:', e);
-      return mockFirestore.getBankStatements();
+      return [];
     }
   },
   saveBankStatement: async (statementData) => {
     if (USE_MOCK) return mockFirestore.saveBankStatement(statementData);
-    try {
-      const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      if (statementData.id) {
-        await setDoc(doc(db, 'bank_statements', statementData.id), statementData, { merge: true });
-        return statementData;
-      }
-      const ref = await addDoc(collection(db, 'bank_statements'), { ...statementData, createdAt: new Date().toISOString() });
-      return { id: ref.id, ...statementData };
-    } catch (e) {
-      console.error('Erro Firestore saveBankStatement:', e);
-      return mockFirestore.saveBankStatement(statementData);
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (statementData.id) {
+      await setDoc(doc(db, 'bank_statements', statementData.id), statementData, { merge: true });
+      return statementData;
     }
+    const ref = await addDoc(collection(db, 'bank_statements'), { ...statementData, createdAt: new Date().toISOString() });
+    return { id: ref.id, ...statementData };
   },
 
   // Stock Deletes
   deleteInventoryItem: async (id) => {
     if (USE_MOCK) return mockFirestore.deleteInventoryItem(id);
-    try {
-      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      await deleteDoc(doc(db, 'inventory_items', id));
-      return { success: true };
-    } catch (e) {
-      return mockFirestore.deleteInventoryItem(id);
-    }
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'inventory_items', id));
+    return { success: true };
   },
   deleteSupplier: async (id) => {
     if (USE_MOCK) return mockFirestore.deleteSupplier(id);
-    try {
-      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      await deleteDoc(doc(db, 'suppliers', id));
-      return { success: true };
-    } catch (e) {
-      return mockFirestore.deleteSupplier(id);
-    }
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'suppliers', id));
+    return { success: true };
   },
   deleteStockSector: async (id) => {
     if (USE_MOCK) return mockFirestore.deleteStockSector(id);
-    try {
-      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      await deleteDoc(doc(db, 'stock_sectors', id));
-      return { success: true };
-    } catch (e) {
-      return mockFirestore.deleteStockSector(id);
-    }
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'stock_sectors', id));
+    return { success: true };
   },
 
   // Stock Loans API (Empréstimos de Produtos)
@@ -1752,51 +1740,39 @@ export const dbService = {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'stock_loans'));
-      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      return mockFirestore.getStockLoans();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
-      return mockFirestore.getStockLoans();
+      console.error('Erro Firestore getStockLoans:', e);
+      return [];
     }
   },
   saveStockLoan: async (loanData) => {
     if (USE_MOCK) return mockFirestore.saveStockLoan(loanData);
-    try {
-      const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      if (loanData.id) {
-        await setDoc(doc(db, 'stock_loans', loanData.id), loanData, { merge: true });
-        return loanData;
-      }
-      const ref = await addDoc(collection(db, 'stock_loans'), { ...loanData, createdAt: new Date().toISOString() });
-      return { id: ref.id, ...loanData };
-    } catch (e) {
-      return mockFirestore.saveStockLoan(loanData);
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (loanData.id) {
+      await setDoc(doc(db, 'stock_loans', loanData.id), loanData, { merge: true });
+      return loanData;
     }
+    const ref = await addDoc(collection(db, 'stock_loans'), { ...loanData, createdAt: new Date().toISOString() });
+    return { id: ref.id, ...loanData };
   },
   returnStockLoan: async (id) => {
     if (USE_MOCK) return mockFirestore.returnStockLoan(id);
-    try {
-      const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      await updateDoc(doc(db, 'stock_loans', id), {
-        status: 'Devolvido',
-        returnDate: new Date().toISOString().substring(0, 10)
-      });
-      return { success: true };
-    } catch (e) {
-      return mockFirestore.returnStockLoan(id);
-    }
+    const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await updateDoc(doc(db, 'stock_loans', id), {
+      status: 'Devolvido',
+      returnDate: new Date().toISOString().substring(0, 10)
+    });
+    return { success: true };
   },
   deleteStockLoan: async (id) => {
     if (USE_MOCK) return mockFirestore.deleteStockLoan(id);
-    try {
-      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      await deleteDoc(doc(db, 'stock_loans', id));
-      return { success: true };
-    } catch (e) {
-      return mockFirestore.deleteStockLoan(id);
-    }
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'stock_loans', id));
+    return { success: true };
   },
 
   // Product Categories API (Centralizado T.I)
@@ -1806,36 +1782,235 @@ export const dbService = {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'product_categories'));
-      if (!snap.empty) return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      return mockFirestore.getProductCategories();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
-      return mockFirestore.getProductCategories();
+      console.error('Erro Firestore getProductCategories:', e);
+      return [];
     }
   },
   saveProductCategory: async (catData) => {
     if (USE_MOCK) return mockFirestore.saveProductCategory(catData);
-    try {
-      const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
-      const db = getFirestore(app);
-      if (catData.id) {
-        await setDoc(doc(db, 'product_categories', catData.id), catData, { merge: true });
-        return catData;
-      }
-      const ref = await addDoc(collection(db, 'product_categories'), { ...catData, createdAt: new Date().toISOString() });
-      return { id: ref.id, ...catData };
-    } catch (e) {
-      return mockFirestore.saveProductCategory(catData);
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (catData.id) {
+      await setDoc(doc(db, 'product_categories', catData.id), catData, { merge: true });
+      return catData;
     }
+    const ref = await addDoc(collection(db, 'product_categories'), { ...catData, createdAt: new Date().toISOString() });
+    return { id: ref.id, ...catData };
   },
   deleteProductCategory: async (id) => {
     if (USE_MOCK) return mockFirestore.deleteProductCategory(id);
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'product_categories', id));
+    return { success: true };
+  },
+
+  // Material Requisitions API (Salão de Hemodiálise & Estoque)
+  getMaterialRequisitions: async () => {
+    if (USE_MOCK) return mockFirestore.getMaterialRequisitions();
     try {
-      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
-      await deleteDoc(doc(db, 'product_categories', id));
-      return { success: true };
+      const snap = await getDocs(collection(db, 'material_requisitions'));
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
-      return mockFirestore.deleteProductCategory(id);
+      console.error('Erro Firestore getMaterialRequisitions:', e);
+      return [];
     }
+  },
+  saveMaterialRequisition: async (reqData) => {
+    if (USE_MOCK) return mockFirestore.saveMaterialRequisition(reqData);
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (reqData.id) {
+      await setDoc(doc(db, 'material_requisitions', reqData.id), { ...reqData, updatedAt: new Date().toISOString() }, { merge: true });
+      return reqData;
+    }
+    const ref = await addDoc(collection(db, 'material_requisitions'), { ...reqData, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    return { id: ref.id, ...reqData };
+  },
+  deleteMaterialRequisition: async (id) => {
+    if (USE_MOCK) return mockFirestore.deleteMaterialRequisition(id);
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'material_requisitions', id));
+    return { success: true };
+  },
+
+  // Stock Locations (Locais de Estoque - Módulo T.I)
+  getStockLocations: async () => {
+    if (USE_MOCK) return mockFirestore.getStockLocations ? mockFirestore.getStockLocations() : [];
+    try {
+      const { getFirestore, collection, getDocs, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'stock_locations'));
+      if (snap.empty) {
+        const defaults = [
+          { id: 'loc_central', name: 'Almoxarifado Central', description: 'Estoque principal da clínica', responsible: 'João Almoxarife', status: 'Ativo' },
+          { id: 'loc_dialise', name: 'Farmácia da Diálise', description: 'Salão principal de hemodiálise', responsible: 'Enf. Ana Paula', status: 'Ativo' },
+          { id: 'loc_enfermagem', name: 'Posto de Enfermagem', description: 'Atendimento ambulatorial e emergência', responsible: 'Supervisão Enfermagem', status: 'Ativo' },
+          { id: 'loc_ti', name: 'Almoxarifado T.I / Manutenção', description: 'Peças, suprimentos de TI e manutenção', responsible: 'Equipe T.I', status: 'Ativo' }
+        ];
+        for (const loc of defaults) {
+          const { id, ...data } = loc;
+          await setDoc(doc(db, 'stock_locations', id), data);
+        }
+        return defaults;
+      }
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.error('Erro Firestore getStockLocations:', e);
+      return [];
+    }
+  },
+  saveStockLocation: async (locationData) => {
+    if (USE_MOCK) return mockFirestore.saveStockLocation ? mockFirestore.saveStockLocation(locationData) : locationData;
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (locationData.id) {
+      const { id, ...data } = locationData;
+      await setDoc(doc(db, 'stock_locations', id), { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+      return locationData;
+    }
+    const ref = await addDoc(collection(db, 'stock_locations'), { ...locationData, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    return { id: ref.id, ...locationData };
+  },
+  deleteStockLocation: async (id) => {
+    if (USE_MOCK) return mockFirestore.deleteStockLocation ? mockFirestore.deleteStockLocation(id) : { success: true };
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'stock_locations', id));
+    return { success: true };
+  },
+
+  // Physical Inventories (Inventários Físicos com Relatório de Divergências)
+  getInventories: async () => {
+    if (USE_MOCK) return mockFirestore.getInventories ? mockFirestore.getInventories() : [];
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'inventories'));
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.error('Erro Firestore getInventories:', e);
+      return [];
+    }
+  },
+  saveInventory: async (invData) => {
+    if (USE_MOCK) return mockFirestore.saveInventory ? mockFirestore.saveInventory(invData) : invData;
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (invData.id) {
+      const { id, ...data } = invData;
+      await setDoc(doc(db, 'inventories', id), { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+      return invData;
+    }
+    const ref = await addDoc(collection(db, 'inventories'), {
+      ...invData,
+      status: invData.status || 'Em Andamento',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+    return { id: ref.id, ...invData };
+  },
+  finalizeInventory: async (inventoryId, itemsList, operatorName) => {
+    if (USE_MOCK) return mockFirestore.finalizeInventory ? mockFirestore.finalizeInventory(inventoryId, itemsList, operatorName) : { success: true };
+    const { getFirestore, doc, setDoc, updateDoc, collection, addDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    
+    // 1. Update each item's currentStock and create an audit stock transaction
+    for (const item of itemsList) {
+      if (item.itemId && item.physicalCount !== undefined && item.physicalCount !== null && item.physicalCount !== '') {
+        const physicalVal = parseFloat(item.physicalCount) || 0;
+        const systemVal = parseFloat(item.systemCount) || 0;
+        const diff = physicalVal - systemVal;
+
+        // Update product stock level in Firestore
+        await setDoc(doc(db, 'inventory_items', item.itemId), { currentStock: physicalVal, updatedAt: new Date().toISOString() }, { merge: true });
+
+        // Log transaction for audit log if there is a divergence
+        if (diff !== 0) {
+          await addDoc(collection(db, 'stock_transactions'), {
+            itemId: item.itemId,
+            itemName: item.itemName || 'Produto',
+            quantity: Math.abs(diff),
+            type: diff > 0 ? 'Entrada' : 'Saída',
+            batch: item.batch || 'AJUSTE-INVENTARIO',
+            operator: operatorName || 'Auditor de Estoque',
+            date: new Date().toISOString(),
+            notes: `Ajuste Automático por Inventário Físico (Divergência: ${diff > 0 ? '+' : ''}${diff})`
+          });
+        }
+      }
+    }
+
+    // 2. Mark inventory as Finalized
+    await updateDoc(doc(db, 'inventories', inventoryId), {
+      status: 'Concluído',
+      items: itemsList,
+      finalizedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+
+    return { success: true };
+  },
+  deleteInventory: async (id) => {
+    if (USE_MOCK) return mockFirestore.deleteInventory ? mockFirestore.deleteInventory(id) : { success: true };
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'inventories', id));
+    return { success: true };
+  },
+
+  // Stock Transfers between Locations (Transferências entre Locais de Estoque)
+  getStockTransfers: async () => {
+    if (USE_MOCK) return mockFirestore.getStockTransfers ? mockFirestore.getStockTransfers() : [];
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'stock_transfers'));
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.error('Erro Firestore getStockTransfers:', e);
+      return [];
+    }
+  },
+  saveStockTransfer: async (transferData) => {
+    if (USE_MOCK) return mockFirestore.saveStockTransfer ? mockFirestore.saveStockTransfer(transferData) : transferData;
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    
+    // Save transfer document
+    const ref = await addDoc(collection(db, 'stock_transfers'), {
+      ...transferData,
+      status: 'Concluída',
+      createdAt: new Date().toISOString()
+    });
+
+    // Register transaction log in stock_transactions
+    await addDoc(collection(db, 'stock_transactions'), {
+      itemId: transferData.itemId,
+      itemName: transferData.itemName,
+      quantity: parseFloat(transferData.quantity) || 0,
+      type: 'Saída',
+      batch: transferData.batch || 'TRANSFERENCIA',
+      expiryDate: transferData.expiryDate || '',
+      operator: transferData.operator || 'Almoxarife',
+      date: new Date().toISOString(),
+      notes: `Transferência de ${transferData.originLocationName} para ${transferData.destinationLocationName}`
+    });
+
+    return { id: ref.id, ...transferData };
+  },
+  deleteStockTransfer: async (id) => {
+    if (USE_MOCK) return mockFirestore.deleteStockTransfer ? mockFirestore.deleteStockTransfer(id) : { success: true };
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'stock_transfers', id));
+    return { success: true };
   }
 };
+
+

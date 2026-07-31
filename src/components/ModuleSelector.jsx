@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, Settings, ShoppingCart, Calendar } from 'lucide-react';
+import { BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, Settings, ShoppingCart, Calendar, ClipboardList } from 'lucide-react';
 import { authService } from '../firebase';
 
 export default function ModuleSelector({ user, onSelectModule }) {
@@ -83,6 +83,15 @@ export default function ModuleSelector({ user, onSelectModule }) {
       icon: ShoppingCart,
       color: '#f59e0b', // amber-500
       allowedRoles: ['admin', 'professional', 'rh', 'receptionist']
+    },
+    {
+      id: 'requisitions',
+      title: 'Requisições de Insumos (Salão)',
+      subtitle: 'NexaREQ - Enfermagem',
+      description: 'Solicitação ágil de materiais e medicamentos para salões de hemodiálise e vinculação a pacientes.',
+      icon: ClipboardList,
+      color: '#14b8a6', // teal-500
+      allowedRoles: ['admin', 'professional', 'technician']
     },
     {
       id: 'config',

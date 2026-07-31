@@ -6,6 +6,31 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.3',
+      date: '31 de Julho, 2026',
+      title: 'Módulo Estoque & Farmácia: Inventários Físicos, Múltiplos Locais, Transferências & FEFO',
+      description: 'Lançamento da aba de Inventários Físicos com relatório de divergências e ajuste automático de saldos, cadastro de Múltiplos Locais de Estoque em T.I, Transferências entre locais e controle FEFO.',
+      changes: [
+        { type: 'Inventários Físicos', text: 'Abertura, digitação e salvamento de contagens físicas por local de armazenamento.' },
+        { type: 'Ajuste Automático de Saldo', text: 'Cálculo de sobra/falta com impacto financeiro R$ e ajuste instantâneo dos saldos em nuvem (Firestore).' },
+        { type: 'Múltiplos Locais (T.I)', text: 'Cadastro e gestão de locais de estoque (Almoxarifado Central, Farmácia Diálise, Enfermagem) nas configurações de T.I.' },
+        { type: 'Transferências Internas', text: 'Movimentação de produtos entre locais com débito no local de origem e crédito no destino.' },
+        { type: 'Lote & FEFO', text: 'Destaque visual dos lotes com vencimento mais próximo para priorização de consumo.' }
+      ]
+    },
+    {
+      version: 'v2.1.1',
+      date: '31 de Julho, 2026',
+      title: 'Portal de Requisições de Salão (Enfermagem), Atendimento na Farmácia & Trava de Estoque em T.I',
+      description: 'Lançamento do mini-módulo de requisições para técnicas de enfermagem no salão de hemodiálise, nova aba de atendimento na farmácia com baixa em tempo real e trava de estoque configurável em T.I.',
+      changes: [
+        { type: 'Mini-Módulo Técnicas', text: 'Novo portal dedicado no Menu Principal para requisição ágil de materiais e medicamentos do salão com vínculo a pacientes da Recepção.' },
+        { type: 'Aba Atendimento Farmácia', text: 'Nova aba no Estoque/Farmácia para separar pedidos e efetuar a baixa instantânea e online no estoque físico.' },
+        { type: 'Trava de Estoque T.I', text: 'Parâmetro configurável em T.I. (ON/OFF) para bloquear requisições de produtos sem estoque disponível.' },
+        { type: 'Auditoria Completa', text: 'Registro detalhado de criação, edição, exclusão e atendimento de requisições no Log de T.I.' }
+      ]
+    },
+    {
       version: 'v2.0.6',
       date: '30 de Julho, 2026',
       title: 'Melhorias de Estoque/Farmácia & Categorias Centralizadas no T.I',

@@ -1,5 +1,27 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v2.1.3] - 31 de Julho, 2026
+### Módulo Estoque & Farmácia: Inventários Físicos, Múltiplos Locais, Transferências, FEFO & Alertas
+- **Cadastro e Gestão de Múltiplos Locais de Estoque (Módulo T.I):** Adicionada nova aba `Locais de Estoque` no painel de configurações do Módulo T.I (`ConfigPanel.jsx`), permitindo cadastrar, editar e inativar locais como Almoxarifado Central, Farmácia da Diálise, Posto de Enfermagem e TI.
+- **Aba de Inventários Físicos com Contagem & Auditoria:** Adicionada aba `Inventários Físicos` no `StockPanel.jsx` para abertura, digitação e salvamento de contagens físicas por local de armazenamento.
+- **Relatório de Divergências & Ajuste Automático de Saldos:** Sistema calcula discrepâncias entre saldo do sistema e contagem física (sobras/faltas) com impacto financeiro em R$. Ao concluir o inventário, os saldos dos produtos no Firestore são **atualizados automaticamente** com registro em histórico de transações de auditoria.
+- **Transferências Entre Locais de Estoque:** Adicionada aba `Transferências de Estoque` para movimentação de insumos entre locais cadastrados (ex: Almoxarifado Central ➡️ Farmácia da Diálise), com débito automático no local de origem e crédito no destino.
+- **Destaque Lote & FEFO (First Expired, First Out):** Destaque inteligente visual nos lotes mais próximos de vencer para evitar perdas de medicamentos e insumos médicos por validade.
+- **Alertas de Estoque Mínimo e Ponto de Pedido:** Indicadores visuais de nível crítico de estoque no catálogo de produtos com acionamento de compra rápida.
+
+---
+
+## [v2.1.1] - 31 de Julho, 2026
+### Portal de Requisições de Salão (Enfermagem), Atendimento na Farmácia & Trava de Estoque em T.I
+- **Mini-Módulo de Requisições para Técnicas:** Lançamento do novo portal dedicado no menu principal (`TechnicianPanel.jsx`) que permite às técnicas de enfermagem no salão de hemodiálise solicitarem materiais e medicamentos do estoque em tempo real.
+- **Vínculo com Pacientes da Recepção:** As requisições podem ser vinculadas diretamente ao paciente em tratamento na diálise (buscado da Recepção) ou registradas como uso geral do salão/bancada.
+- **Aba de Atendimento na Farmácia/Estoque:** Nova aba "Atendimento de Requisições" no `StockPanel.jsx` para a farmácia visualizar solicitações pendentes, informar a quantidade entregue e realizar a **baixa física instantânea no estoque**.
+- **Trava de Estoque Zerado (Configurável em T.I.):** Adicionada chave ON/OFF no `ConfigPanel.jsx` que permite à equipe de T.I. bloquear a solicitação de materiais cujo saldo em estoque esteja zerado ou insuficiente.
+- **Regra de Edição e Exclusão:** As técnicas possuem permissão de editar e excluir requisições **exclusivamente enquanto o status estiver "Pendente"**. Após o atendimento iniciado pela farmácia, a requisição é congelada para segurança do processo.
+- **Logs de Auditoria Completo:** Todas as ações (criação, edição, exclusão e confirmação de atendimento/entrega parcial ou total) são registradas automaticamente na central de auditoria e logs do Módulo de T.I.
+
+---
+
 ## [v2.0.6] - 30 de Julho, 2026
 ### Aprimoramentos do Módulo Estoque/Farmácia & Centralização no T.I
 - **Ordenação Interativa de Colunas no Estoque:** Adicionada ordenação por clique em todas as colunas de tabelas do Estoque (*Catálogo de Produtos*, *Notas Fiscais/XML*, *Fornecedores*, *Setores Físicos*, *Histórico de Movimentações*, *Controle de Validade* e *Empréstimos*).

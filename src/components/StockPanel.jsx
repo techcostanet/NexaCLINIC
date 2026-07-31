@@ -4,11 +4,11 @@ import {
   Package, Boxes, Clock, Calendar, Plus, Search, 
   X, FileText, UploadCloud, Briefcase, Warehouse,
   CheckCircle2, AlertTriangle, AlertCircle, ArrowUpRight, ArrowDownLeft, Trash2, Edit,
-  ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Send
+  ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Send, ClipboardList, Repeat
 } from 'lucide-react';
 
 export default function StockPanel() {
-  const [activeTab, setActiveTab] = useState('inventory'); // 'inventory' | 'invoices' | 'suppliers' | 'sectors' | 'transactions' | 'expiry' | 'loans'
+  const [activeTab, setActiveTab] = useState('inventory'); // 'inventory' | 'physical_inventory' | 'transfers' | 'invoices' | 'suppliers' | 'sectors' | 'transactions' | 'expiry' | 'loans'
   
   // Data States
   const [items, setItems] = useState([]);
@@ -18,7 +18,42 @@ export default function StockPanel() {
   const [invoices, setInvoices] = useState([]);
   const [loans, setLoans] = useState([]);
   const [categoriesList, setCategoriesList] = useState([]);
+  const [requisitions, setRequisitions] = useState([]);
+  const [stockLocations, setStockLocations] = useState([]);
+  const [inventories, setInventories] = useState([]);
+  const [transfers, setTransfers] = useState([]);
   
+  // Requisition Fulfillment Modal State
+  const [showFulfillModal, setShowFulfillModal] = useState(false);
+  const [fulfillingReq, setFulfillingReq] = useState(null);
+  const [fulfillItems, setFulfillItems] = useState([]);
+  const [fulfillmentNotes, setFulfillmentNotes] = useState('');
+  
+  // Physical Inventories Modal & Counting State
+  const [showInventoryModal, setShowInventoryModal] = useState(false);
+  const [editingInventory, setEditingInventory] = useState(null);
+  const [inventoryForm, setInventoryForm] = useState({
+    title: '',
+    locationId: '',
+    notes: ''
+  });
+  const [showCountModal, setShowCountModal] = useState(false);
+  const [countingInventory, setCountingInventory] = useState(null);
+  const [countItems, setCountItems] = useState([]);
+
+  // Stock Transfers Modal State
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferForm, setTransferForm] = useState({
+    originLocationId: '',
+    destinationLocationId: '',
+    itemId: '',
+    quantity: '',
+    batch: '',
+    expiryDate: '',
+    operator: 'Almoxarife João',
+    notes: ''
+  });
+
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -115,14 +150,17 @@ export default function StockPanel() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [itemList, txList, supList, secList, invList, loanList, catList] = await Promise.all([
+      const [itemList, txList, supList, secList, invList, loanList, catList, locList, invsList, transList] = await Promise.all([
         dbService.getInventoryItems(),
         dbService.getStockTransactions(),
         dbService.getSuppliers(),
         dbService.getStockSectors(),
         dbService.getPurchaseInvoices(),
         dbService.getStockLoans ? dbService.getStockLoans() : [],
-        dbService.getProductCategories ? dbService.getProductCategories() : []
+        dbService.getProductCategories ? dbService.getProductCategories() : [],
+        dbService.getStockLocations ? dbService.getStockLocations() : [],
+        dbService.getInventories ? dbService.getInventories() : [],
+        dbService.getStockTransfers ? dbService.getStockTransfers() : []
       ]);
       
       setItems(itemList);
@@ -131,6 +169,9 @@ export default function StockPanel() {
       setSectors(secList);
       setInvoices(invList);
       setLoans(loanList);
+      setStockLocations(locList);
+      setInventories(invsList);
+      setTransfers(transList);
       setCategoriesList(catList.length > 0 ? catList : [
         { id: 'c1', name: 'Insumo Clínico' },
         { id: 'c2', name: 'Medicamento' },
@@ -148,6 +189,16 @@ export default function StockPanel() {
         setItemForm(f => ({
           ...f,
           defaultSectorId: secList[0]?.id || ''
+        }));
+      }
+
+      if (locList.length > 0) {
+        setInventoryForm(f => ({ ...f, locationId: locList[0].id }));
+        setTransferForm(f => ({
+          ...f,
+          originLocationId: locList[0].id,
+          destinationLocationId: locList[1]?.id || locList[0].id,
+          itemId: itemList[0]?.id || ''
         }));
       }
     } catch (err) {
@@ -509,6 +560,212 @@ export default function StockPanel() {
   };
 
   // ----------------------------------------------------
+  // Physical Inventories Handlers
+  // ----------------------------------------------------
+  const handleOpenInventoryAdd = () => {
+    setEditingInventory(null);
+    setInventoryForm({
+      title: `Inventário Físico - ${new Date().toLocaleDateString('pt-BR')}`,
+      locationId: stockLocations[0]?.id || '',
+      notes: ''
+    });
+    setShowInventoryModal(true);
+  };
+
+  const handleSaveInventory = async (e) => {
+    e.preventDefault();
+    if (!inventoryForm.title || !inventoryForm.locationId) {
+      return showAlert('Título e Local de Estoque são obrigatórios.', 'warning');
+    }
+    setActionLoading(true);
+    try {
+      const loc = stockLocations.find(l => l.id === inventoryForm.locationId);
+      const payload = {
+        title: inventoryForm.title,
+        locationId: inventoryForm.locationId,
+        locationName: loc ? loc.name : 'Estoque Geral',
+        notes: inventoryForm.notes,
+        status: 'Em Andamento',
+        items: items.map(i => ({
+          itemId: i.id,
+          itemName: i.name,
+          category: i.category,
+          unit: i.unit,
+          price: i.price,
+          systemCount: i.currentStock,
+          physicalCount: i.currentStock
+        }))
+      };
+      await dbService.saveInventory(payload);
+      showAlert('Inventário físico aberto com sucesso! Digite as contagens.', 'success');
+      setShowInventoryModal(false);
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao abrir inventário.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleOpenCountModal = (inv) => {
+    setCountingInventory(inv);
+    if (inv.items && inv.items.length > 0) {
+      setCountItems(inv.items);
+    } else {
+      setCountItems(items.map(i => ({
+        itemId: i.id,
+        itemName: i.name,
+        category: i.category,
+        unit: i.unit,
+        price: i.price,
+        systemCount: i.currentStock,
+        physicalCount: i.currentStock
+      })));
+    }
+    setShowCountModal(true);
+  };
+
+  const handleUpdatePhysicalCount = (itemId, val) => {
+    setCountItems(list => list.map(item => {
+      if (item.itemId === itemId) {
+        return { ...item, physicalCount: val };
+      }
+      return item;
+    }));
+  };
+
+  const handleSaveCountDraft = async () => {
+    if (!countingInventory) return;
+    setActionLoading(true);
+    try {
+      await dbService.saveInventory({
+        ...countingInventory,
+        items: countItems
+      });
+      showAlert('Contagem física salva como rascunho.', 'success');
+      setShowCountModal(false);
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao salvar contagem.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleFinalizeInventorySubmit = async () => {
+    if (!countingInventory) return;
+    if (!window.confirm('Atenção: Ao concluir o inventário, os saldos de estoque do sistema serão ATUALIZADOS AUTOMATICAMENTE conforme a contagem física! Deseja continuar?')) return;
+    
+    setActionLoading(true);
+    try {
+      await dbService.finalizeInventory(countingInventory.id, countItems, 'Auditor de Estoque');
+      showAlert('Inventário finalizado e saldos de estoque ajustados com sucesso!', 'success');
+      setShowCountModal(false);
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao finalizar inventário.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteInventory = async (id, title) => {
+    if (!window.confirm(`Deseja cancelar/excluir o inventário "${title}"?`)) return;
+    setActionLoading(true);
+    try {
+      await dbService.deleteInventory(id);
+      showAlert('Inventário excluído.', 'success');
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao excluir inventário.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ----------------------------------------------------
+  // Stock Transfers Handlers
+  // ----------------------------------------------------
+  const handleOpenTransferModal = () => {
+    if (stockLocations.length < 2) {
+      return showAlert('Você precisa ter pelo menos 2 locais de estoque cadastrados para efetuar transferências. Cadastre em Módulo T.I > Locais de Estoque.', 'warning');
+    }
+    if (items.length === 0) {
+      return showAlert('Cadastre produtos no catálogo antes de efetuar transferências.', 'warning');
+    }
+    setTransferForm({
+      originLocationId: stockLocations[0].id,
+      destinationLocationId: stockLocations[1]?.id || stockLocations[0].id,
+      itemId: items[0].id,
+      quantity: '1',
+      batch: '',
+      expiryDate: '',
+      operator: 'Almoxarife João',
+      notes: ''
+    });
+    setShowTransferModal(true);
+  };
+
+  const handleSaveTransfer = async (e) => {
+    e.preventDefault();
+    if (transferForm.originLocationId === transferForm.destinationLocationId) {
+      return showAlert('O local de origem e destino devem ser diferentes!', 'warning');
+    }
+    const qty = parseFloat(transferForm.quantity);
+    if (isNaN(qty) || qty <= 0) return showAlert('Insira uma quantidade válida.', 'warning');
+
+    const selectedItem = items.find(i => i.id === transferForm.itemId);
+    if (!selectedItem) return showAlert('Produto não encontrado.', 'warning');
+
+    if (selectedItem.currentStock < qty) {
+      return showAlert(`Estoque insuficiente no local de origem! Saldo disponível: ${selectedItem.currentStock} ${selectedItem.unit}`, 'danger');
+    }
+
+    const originLoc = stockLocations.find(l => l.id === transferForm.originLocationId);
+    const destLoc = stockLocations.find(l => l.id === transferForm.destinationLocationId);
+
+    setActionLoading(true);
+    try {
+      await dbService.saveStockTransfer({
+        originLocationId: transferForm.originLocationId,
+        originLocationName: originLoc ? originLoc.name : 'Origem',
+        destinationLocationId: transferForm.destinationLocationId,
+        destinationLocationName: destLoc ? destLoc.name : 'Destino',
+        itemId: transferForm.itemId,
+        itemName: selectedItem.name,
+        quantity: qty,
+        unit: selectedItem.unit || 'unidades',
+        batch: transferForm.batch || 'TRANSF',
+        expiryDate: transferForm.expiryDate || '',
+        operator: transferForm.operator,
+        notes: transferForm.notes
+      });
+
+      showAlert(`Transferência de ${qty} ${selectedItem.unit} de "${selectedItem.name}" realizada com sucesso!`, 'success');
+      setShowTransferModal(false);
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao registrar transferência.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteTransfer = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir este registro de transferência?')) return;
+    setActionLoading(true);
+    try {
+      await dbService.deleteStockTransfer(id);
+      showAlert('Registro de transferência excluído.', 'success');
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao excluir transferência.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ----------------------------------------------------
   // Manual Transaction Methods
   // ----------------------------------------------------
   const handleOpenTxForm = () => {
@@ -559,6 +816,112 @@ export default function StockPanel() {
       fetchData();
     } catch (err) {
       showAlert('Erro ao registrar movimentação.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ----------------------------------------------------
+  // Requisition Fulfillment Methods (Atendimento de Requisições)
+  // ----------------------------------------------------
+  const handleOpenFulfillModal = (req) => {
+    setFulfillingReq(req);
+    const initialItems = req.items ? req.items.map(i => ({
+      ...i,
+      deliveredQuantity: i.deliveredQuantity > 0 ? i.deliveredQuantity : i.requestedQuantity
+    })) : [];
+    setFulfillItems(initialItems);
+    setFulfillmentNotes(req.fulfillment?.notes || '');
+    setShowFulfillModal(true);
+  };
+
+  const handleFulfillQuantityChange = (index, val) => {
+    const qty = parseInt(val, 10);
+    const updated = [...fulfillItems];
+    updated[index].deliveredQuantity = isNaN(qty) || qty < 0 ? 0 : qty;
+    setFulfillItems(updated);
+  };
+
+  const handleFillAllRequestedQuantity = () => {
+    const updated = fulfillItems.map(i => ({
+      ...i,
+      deliveredQuantity: i.requestedQuantity
+    }));
+    setFulfillItems(updated);
+  };
+
+  const handleProcessFulfillment = async (targetStatus) => {
+    if (!fulfillingReq) return;
+
+    setActionLoading(true);
+    try {
+      let finalStatus = targetStatus;
+      
+      if (targetStatus === 'AUTO') {
+        const totalRequested = fulfillItems.reduce((acc, i) => acc + (i.requestedQuantity || 0), 0);
+        const totalDelivered = fulfillItems.reduce((acc, i) => acc + (i.deliveredQuantity || 0), 0);
+        
+        if (totalDelivered <= 0) {
+          finalStatus = 'Cancelado';
+        } else if (totalDelivered < totalRequested) {
+          finalStatus = 'Parcial';
+        } else {
+          finalStatus = 'Entregue';
+        }
+      }
+
+      if (finalStatus === 'Entregue' || finalStatus === 'Parcial') {
+        for (const fItem of fulfillItems) {
+          const delQty = parseFloat(fItem.deliveredQuantity) || 0;
+          if (delQty > 0) {
+            const targetStockItem = items.find(i => i.id === fItem.itemId || i.name.toLowerCase() === fItem.itemName.toLowerCase());
+            if (targetStockItem) {
+              const newStock = Math.max(0, (parseFloat(targetStockItem.currentStock) || 0) - delQty);
+              await dbService.updateInventoryItem(targetStockItem.id, {
+                ...targetStockItem,
+                currentStock: newStock
+              });
+
+              await dbService.createStockTransaction({
+                itemId: targetStockItem.id,
+                itemName: targetStockItem.name,
+                quantity: delQty,
+                type: 'Saída',
+                operator: 'Farmácia Central',
+                notes: `Atendimento Requisição ${fulfillingReq.requisitionCode} (Destino: ${fulfillingReq.patientName || 'Salão'})`
+              });
+            }
+          }
+        }
+      }
+
+      const updatedReqPayload = {
+        ...fulfillingReq,
+        status: finalStatus,
+        items: fulfillItems,
+        fulfillment: {
+          fulfilledBy: 'Farmácia Central',
+          fulfilledAt: new Date().toISOString(),
+          notes: fulfillmentNotes
+        }
+      };
+
+      await dbService.saveMaterialRequisition(updatedReqPayload);
+
+      if (dbService.createAuditLog) {
+        await dbService.createAuditLog({
+          operator: 'Farmácia Central',
+          action: `Atendimento de Requisição (${finalStatus})`,
+          details: `Requisição ${fulfillingReq.requisitionCode} finalizada com status "${finalStatus}". Solicitada por: ${fulfillingReq.requestedBy}. Paciente: ${fulfillingReq.patientName || 'Uso Geral'}.`
+        });
+      }
+
+      showAlert(`Requisição ${fulfillingReq.requisitionCode} processada como "${finalStatus}" e baixa efetuada no estoque!`, 'success');
+      setShowFulfillModal(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao processar atendimento de requisição.', 'danger');
     } finally {
       setActionLoading(false);
     }
@@ -863,6 +1226,18 @@ export default function StockPanel() {
           <Boxes size={16} /> Catálogo de Produtos ({items.length})
         </button>
         <button 
+          onClick={() => setActiveTab('physical_inventory')} 
+          style={{ ...styles.tabBtn, ...(activeTab === 'physical_inventory' ? styles.tabBtnActive : {}) }}
+        >
+          <ClipboardList size={16} /> Inventários Físicos ({inventories.length})
+        </button>
+        <button 
+          onClick={() => setActiveTab('transfers')} 
+          style={{ ...styles.tabBtn, ...(activeTab === 'transfers' ? styles.tabBtnActive : {}) }}
+        >
+          <Repeat size={16} /> Transferências de Estoque ({transfers.length})
+        </button>
+        <button 
           onClick={() => setActiveTab('invoices')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'invoices' ? styles.tabBtnActive : {}) }}
         >
@@ -897,6 +1272,12 @@ export default function StockPanel() {
           style={{ ...styles.tabBtn, ...(activeTab === 'loans' ? styles.tabBtnActive : {}) }}
         >
           <RefreshCw size={16} /> Empréstimos de Produtos ({loans.length})
+        </button>
+        <button 
+          onClick={() => setActiveTab('requisitions')} 
+          style={{ ...styles.tabBtn, ...(activeTab === 'requisitions' ? styles.tabBtnActive : {}) }}
+        >
+          <Send size={16} /> Atendimento de Requisições ({requisitions.filter(r => r.status === 'Pendente' || r.status === 'Parcial').length > 0 ? `${requisitions.filter(r => r.status === 'Pendente' || r.status === 'Parcial').length} Pendente(s)` : requisitions.length})
         </button>
       </div>
 
@@ -944,6 +1325,16 @@ export default function StockPanel() {
           {activeTab === 'inventory' && (
             <button onClick={handleOpenAddModal} style={styles.addBtn}>
               <Plus size={16} /> Novo Insumo
+            </button>
+          )}
+          {activeTab === 'physical_inventory' && (
+            <button onClick={handleOpenInventoryAdd} style={styles.addBtn}>
+              <Plus size={16} /> Abrir Novo Inventário Físico
+            </button>
+          )}
+          {activeTab === 'transfers' && (
+            <button onClick={handleOpenTransferModal} style={styles.addBtn}>
+              <Repeat size={16} /> Nova Transferência de Estoque
             </button>
           )}
           {activeTab === 'invoices' && (
@@ -1036,6 +1427,142 @@ export default function StockPanel() {
                         </tr>
                       );
                     })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* TAB: Physical Inventories (Inventários Físicos) */}
+          {activeTab === 'physical_inventory' && (
+            <div style={styles.tableWrapper}>
+              <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)' }}>📋 Gestão de Inventários Físicos & Auditoria de Saldo</h3>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Crie e execute contagens de estoque por local. Ao concluir, o saldo do sistema é ajustado automaticamente com relatório de divergência.
+                  </span>
+                </div>
+              </div>
+
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Título do Inventário</th>
+                    <th>Local de Estoque</th>
+                    <th>Data de Criação</th>
+                    <th>Itens Auditados</th>
+                    <th>Status</th>
+                    <th>Ações & Relatórios</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inventories.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" style={styles.noDataCell}>Nenhum inventário físico registrado. Clique em "Abrir Novo Inventário Físico" para iniciar.</td>
+                    </tr>
+                  ) : (
+                    inventories.map(inv => (
+                      <tr key={inv.id}>
+                        <td style={{ fontWeight: '600' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <ClipboardList size={16} color="var(--primary-color)" />
+                            {inv.title}
+                          </div>
+                        </td>
+                        <td>
+                          <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
+                            <Warehouse size={13} style={{ marginRight: '4px' }} />
+                            {inv.locationName || 'Estoque Geral'}
+                          </span>
+                        </td>
+                        <td>{inv.createdAt ? new Date(inv.createdAt).toLocaleDateString('pt-BR') : '-'}</td>
+                        <td>{inv.items?.length || items.length} produtos</td>
+                        <td>
+                          <span style={{
+                            padding: '0.25rem 0.6rem',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            backgroundColor: inv.status === 'Concluído' ? '#dcfce7' : '#fef3c7',
+                            color: inv.status === 'Concluído' ? '#166534' : '#92400e'
+                          }}>
+                            {inv.status || 'Em Andamento'}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '0.35rem' }}>
+                            <button onClick={() => handleOpenCountModal(inv)} style={{ ...styles.actionEditBtn, backgroundColor: 'var(--primary-light)', color: 'var(--primary-color)' }}>
+                              <Edit size={13} /> {inv.status === 'Concluído' ? 'Ver Divergências' : 'Digitar Contagem'}
+                            </button>
+                            <button onClick={() => handleDeleteInventory(inv.id, inv.title)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }}>
+                              <Trash2 size={13} /> Excluir
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* TAB: Stock Transfers (Transferências entre Locais) */}
+          {activeTab === 'transfers' && (
+            <div style={styles.tableWrapper}>
+              <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)' }}>🔄 Histórico de Transferências Entre Locais de Estoque</h3>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Rastreamento de movimentações internas (ex: Almoxarifado Central ➡️ Farmácia da Diálise).
+                  </span>
+                </div>
+              </div>
+
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Data / Hora</th>
+                    <th>Origem (Local)</th>
+                    <th>Destino (Local)</th>
+                    <th>Produto Transferido</th>
+                    <th>Quantidade</th>
+                    <th>Lote / Validade</th>
+                    <th>Operador</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transfers.length === 0 ? (
+                    <tr>
+                      <td colSpan="9" style={styles.noDataCell}>Nenhuma transferência entre locais registrada. Clique em "Nova Transferência de Estoque".</td>
+                    </tr>
+                  ) : (
+                    transfers.map(tr => (
+                      <tr key={tr.id}>
+                        <td>{tr.createdAt ? new Date(tr.createdAt).toLocaleString('pt-BR') : '-'}</td>
+                        <td style={{ fontWeight: '600', color: '#991b1b' }}>
+                          <ArrowDownLeft size={14} style={{ marginRight: '4px' }} />
+                          {tr.originLocationName || 'Origem'}
+                        </td>
+                        <td style={{ fontWeight: '600', color: '#166534' }}>
+                          <ArrowUpRight size={14} style={{ marginRight: '4px' }} />
+                          {tr.destinationLocationName || 'Destino'}
+                        </td>
+                        <td style={{ fontWeight: '600' }}>{tr.itemName}</td>
+                        <td style={{ fontWeight: '700' }}>{tr.quantity} {tr.unit || 'unidades'}</td>
+                        <td>{tr.batch || 'S/L'} {tr.expiryDate ? `(${new Date(tr.expiryDate).toLocaleDateString('pt-BR')})` : ''}</td>
+                        <td>{tr.operator || 'Almoxarife'}</td>
+                        <td><span style={styles.badgeNormal}>Concluída</span></td>
+                        <td>
+                          <button onClick={() => handleDeleteTransfer(tr.id)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }}>
+                            <Trash2 size={13} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
@@ -1352,6 +1879,208 @@ export default function StockPanel() {
             </div>
           )}
         </>
+      )}
+
+      {/* Requisitions Fulfillment Tab Content */}
+      {activeTab === 'requisitions' && (
+        <div style={{ marginTop: '1rem' }}>
+          <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '10px', border: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-color)', fontWeight: '700' }}>
+                  Atendimento de Requisições do Salão
+                </h3>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Recebimento de pedidos de insumos em tempo real vindos da hemodiálise com abate automático no estoque.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.35rem 0.65rem', borderRadius: '9999px', fontWeight: '600', border: '1px solid #fde68a' }}>
+                  {requisitions.filter(r => r.status === 'Pendente').length} Pendente(s)
+                </span>
+                <span style={{ fontSize: '0.8rem', backgroundColor: '#ffedd5', color: '#c2410c', padding: '0.35rem 0.65rem', borderRadius: '9999px', fontWeight: '600', border: '1px solid #fed7aa' }}>
+                  {requisitions.filter(r => r.status === 'Parcial').length} Parcial(is)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+            {requisitions.length === 0 ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <Send size={40} color="#9ca3af" />
+                <p style={{ fontWeight: '600', color: 'var(--text-color)', marginTop: '0.75rem' }}>Nenhuma requisição recebida no momento</p>
+                <p style={{ fontSize: '0.85rem' }}>As solicitações enviadas pelas técnicas no salão de hemodiálise aparecerão aqui.</p>
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+                  <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid var(--border-color)' }}>
+                    <tr>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Código</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Data / Hora</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Solicitante</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Paciente / Destino</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Itens Requisitados</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Status</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', textAlign: 'right' }}>Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {requisitions.map((req) => (
+                      <tr key={req.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: 'var(--primary-color)' }}>
+                          {req.requisitionCode}
+                        </td>
+                        <td style={{ padding: '0.875rem 1rem' }}>
+                          <div>{new Date(req.createdAt).toLocaleDateString('pt-BR')}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+                        </td>
+                        <td style={{ padding: '0.875rem 1rem' }}>{req.requestedBy}</td>
+                        <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>{req.patientName || 'Uso Geral'}</td>
+                        <td style={{ padding: '0.875rem 1rem' }}>
+                          {req.items && req.items.length > 0 ? (
+                            <div>
+                              <div><strong>{req.items[0].itemName}</strong> ({req.items[0].requestedQuantity} {req.items[0].unit})</div>
+                              {req.items.length > 1 && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>+ {req.items.length - 1} outro(s) item(ns)</div>}
+                            </div>
+                          ) : 'Sem itens'}
+                        </td>
+                        <td style={{ padding: '0.875rem 1rem' }}>
+                          <span style={{ 
+                            padding: '0.25rem 0.5rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '600',
+                            backgroundColor: req.status === 'Pendente' ? '#fef3c7' : req.status === 'Parcial' ? '#ffedd5' : req.status === 'Entregue' ? '#d1fae5' : '#fee2e2',
+                            color: req.status === 'Pendente' ? '#b45309' : req.status === 'Parcial' ? '#c2410c' : req.status === 'Entregue' ? '#047857' : '#b91c1c'
+                          }}>
+                            {req.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.875rem 1rem', textAlign: 'right' }}>
+                          <button 
+                            onClick={() => handleOpenFulfillModal(req)}
+                            style={{ 
+                              padding: '0.4rem 0.8rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer',
+                              backgroundColor: req.status === 'Entregue' ? '#f3f4f6' : 'var(--primary-color)',
+                              color: req.status === 'Entregue' ? '#374151' : '#ffffff'
+                            }}
+                          >
+                            {req.status === 'Entregue' ? 'Ver Atendimento' : 'Atender Requisição'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Requisition Fulfillment Modal */}
+      {showFulfillModal && fulfillingReq && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalCard, maxWidth: '650px' }}>
+            <div style={styles.modalHeader}>
+              <h2>Atender Requisição: {fulfillingReq.requisitionCode}</h2>
+              <button onClick={() => setShowFulfillModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
+            </div>
+
+            <div style={{ padding: '1rem 0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', backgroundColor: '#f9fafb', padding: '0.85rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem' }}>
+                <div><strong>Solicitante:</strong> {fulfillingReq.requestedBy}</div>
+                <div><strong>Destino:</strong> {fulfillingReq.patientName || 'Uso Geral'}</div>
+                <div><strong>Data:</strong> {new Date(fulfillingReq.createdAt).toLocaleString('pt-BR')}</div>
+                <div><strong>Status Atual:</strong> {fulfillingReq.status}</div>
+              </div>
+
+              {fulfillingReq.notes && (
+                <div style={{ fontSize: '0.85rem', fontStyle: 'italic', marginBottom: '1rem', color: '#4b5563' }}>
+                  Obs. Técnica: "{fulfillingReq.notes}"
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700' }}>Itens Solicitados & Quantidade Entregue:</h4>
+                <button 
+                  type="button" 
+                  onClick={handleFillAllRequestedQuantity}
+                  style={{ background: 'none', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '0.2rem 0.5rem', fontSize: '0.75rem', cursor: 'pointer', color: 'var(--primary-color)' }}
+                >
+                  Preencher com Total Solicitado
+                </button>
+              </div>
+
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden', marginBottom: '1rem' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead style={{ backgroundColor: '#f3f4f6', textAlign: 'left' }}>
+                    <tr>
+                      <th style={{ padding: '0.5rem 0.75rem' }}>Item / Material</th>
+                      <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', width: '100px' }}>Qtd Pedida</th>
+                      <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', width: '120px' }}>Qtd Entregue *</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fulfillItems.map((item, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                        <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600' }}>{item.itemName}</td>
+                        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>{item.requestedQuantity} {item.unit}</td>
+                        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
+                          <input 
+                            type="number" 
+                            min="0" 
+                            value={item.deliveredQuantity !== undefined ? item.deliveredQuantity : item.requestedQuantity}
+                            onChange={(e) => handleFulfillQuantityChange(idx, e.target.value)}
+                            style={{ width: '80px', padding: '0.35rem', textAlign: 'center', borderRadius: '4px', border: '1px solid var(--border-color)', fontWeight: '700' }}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '600', display: 'block', marginBottom: '0.25rem' }}>Observações da Farmácia:</label>
+                <textarea 
+                  value={fulfillmentNotes} 
+                  onChange={(e) => setFulfillmentNotes(e.target.value)} 
+                  placeholder="Ex: Entregue lote X com validade 2027..."
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.85rem', height: '50px' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                <button 
+                  type="button" 
+                  onClick={() => handleProcessFulfillment('Cancelado')}
+                  style={{ padding: '0.5rem 0.85rem', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fef2f2', color: '#991b1b', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
+                  disabled={actionLoading}
+                >
+                  Recusar / Cancelar Pedido
+                </button>
+
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowFulfillModal(false)}
+                    style={{ padding: '0.5rem 0.85rem', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#f3f4f6', fontSize: '0.85rem', fontWeight: '600', color: '#374151', cursor: 'pointer' }}
+                  >
+                    Fechar
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => handleProcessFulfillment('AUTO')}
+                    style={{ padding: '0.5rem 1.2rem', borderRadius: '6px', border: 'none', backgroundColor: '#10b981', color: '#ffffff', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' }}
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? 'Processando...' : 'Confirmar Atendimento & Baixar Estoque'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Item Modal */}
@@ -1937,6 +2666,268 @@ export default function StockPanel() {
                 <button type="button" onClick={() => setShowLoanModal(false)} className="btn btn-secondary">Cancelar</button>
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: 'var(--primary-color)' }}>
                   {actionLoading ? 'Salvando...' : (editingLoan ? 'Salvar Alterações' : 'Cadastrar Empréstimo')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Physical Inventory Opening Modal */}
+      {showInventoryModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <div style={styles.modalHeader}>
+              <h2>Abrir Novo Inventário Físico</h2>
+              <button onClick={() => setShowInventoryModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
+            </div>
+            <form onSubmit={handleSaveInventory} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+              <div className="form-group">
+                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Título do Inventário *</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="Ex: Inventário Mensal - Farmácia da Diálise - Julho/2026"
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                  value={inventoryForm.title}
+                  onChange={e => setInventoryForm({ ...inventoryForm, title: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Local de Estoque Auditado *</label>
+                <select
+                  required
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                  value={inventoryForm.locationId}
+                  onChange={e => setInventoryForm({ ...inventoryForm, locationId: e.target.value })}
+                >
+                  {stockLocations.map(loc => (
+                    <option key={loc.id} value={loc.id}>{loc.name} ({loc.responsible || 'Sem responsável'})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Observações do Auditor</label>
+                <textarea 
+                  rows="2"
+                  placeholder="Observações ou instruções da auditoria física..."
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                  value={inventoryForm.notes}
+                  onChange={e => setInventoryForm({ ...inventoryForm, notes: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setShowInventoryModal(false)} className="btn btn-secondary">Cancelar</button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: 'var(--primary-color)' }}>
+                  {actionLoading ? 'Criando...' : 'Iniciar Contagem'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Physical Count & Divergence Modal */}
+      {showCountModal && countingInventory && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalCard, maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={styles.modalHeader}>
+              <div>
+                <h2 style={{ margin: 0 }}>📋 {countingInventory.title}</h2>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Local: <strong>{countingInventory.locationName}</strong> | Status: <strong style={{ color: countingInventory.status === 'Concluído' ? '#166534' : '#92400e' }}>{countingInventory.status}</strong>
+                </span>
+              </div>
+              <button onClick={() => setShowCountModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
+            </div>
+
+            <div style={{ padding: '1.25rem' }}>
+              <div style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)' }}>📊 Relatório de Divergências & Contagem Física</h4>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Digite a quantidade física contada na prateleira. O sistema exibirá o cálculo automático da sobra/falta.
+                  </span>
+                </div>
+                {countingInventory.status !== 'Concluído' && (
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button type="button" onClick={handleSaveCountDraft} disabled={actionLoading} className="btn btn-secondary">
+                      Salvar Rascunho
+                    </button>
+                    <button type="button" onClick={handleFinalizeInventorySubmit} disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: '#10b981' }}>
+                      <CheckCircle2 size={16} /> Concluir & Ajustar Saldos
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ overflowX: 'auto' }}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Produto / Insumo</th>
+                      <th>Saldo no Sistema</th>
+                      <th>Contagem Física (Digitada)</th>
+                      <th>Divergência (Falta / Sobra)</th>
+                      <th>Preço Un.</th>
+                      <th>Impacto Financeiro R$</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {countItems.map((item) => {
+                      const sysVal = parseFloat(item.systemCount) || 0;
+                      const physVal = parseFloat(item.physicalCount) || 0;
+                      const diff = physVal - sysVal;
+                      const unitPrice = parseFloat(item.price) || 0;
+                      const financialDiff = diff * unitPrice;
+
+                      return (
+                        <tr key={item.itemId}>
+                          <td style={{ fontWeight: '600' }}>
+                            {item.itemName}
+                            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{item.category || 'Insumo'}</span>
+                          </td>
+                          <td style={{ fontWeight: '600' }}>{sysVal} {item.unit || 'un'}</td>
+                          <td>
+                            {countingInventory.status === 'Concluído' ? (
+                              <span style={{ fontWeight: '700' }}>{physVal} {item.unit || 'un'}</span>
+                            ) : (
+                              <input 
+                                type="number" 
+                                className="form-control"
+                                style={{ width: '100px', fontWeight: '700', padding: '0.35rem 0.5rem' }}
+                                value={item.physicalCount} 
+                                onChange={e => handleUpdatePhysicalCount(item.itemId, e.target.value)}
+                              />
+                            )}
+                          </td>
+                          <td>
+                            {diff === 0 ? (
+                              <span style={{ color: '#166534', fontWeight: '600' }}>✓ Sem divergência (0)</span>
+                            ) : diff > 0 ? (
+                              <span style={{ color: '#2563eb', fontWeight: '700' }}>⬆ Sobra de +{diff} {item.unit || 'un'}</span>
+                            ) : (
+                              <span style={{ color: '#dc2626', fontWeight: '700' }}>⬇ Falta de {diff} {item.unit || 'un'}</span>
+                            )}
+                          </td>
+                          <td>R$ {unitPrice.toFixed(2)}</td>
+                          <td style={{ fontWeight: '700', color: financialDiff < 0 ? '#dc2626' : financialDiff > 0 ? '#2563eb' : 'var(--text-primary)' }}>
+                            {financialDiff === 0 ? 'R$ 0,00' : `${financialDiff > 0 ? '+' : ''}R$ ${financialDiff.toFixed(2)}`}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stock Transfer Modal */}
+      {showTransferModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <div style={styles.modalHeader}>
+              <h2>🔄 Nova Transferência Entre Locais de Estoque</h2>
+              <button onClick={() => setShowTransferModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
+            </div>
+            <form onSubmit={handleSaveTransfer} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Local de Origem (Saída) *</label>
+                  <select 
+                    required
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={transferForm.originLocationId}
+                    onChange={e => setTransferForm({ ...transferForm, originLocationId: e.target.value })}
+                  >
+                    {stockLocations.map(loc => (
+                      <option key={loc.id} value={loc.id}>{loc.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Local de Destino (Entrada) *</label>
+                  <select 
+                    required
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={transferForm.destinationLocationId}
+                    onChange={e => setTransferForm({ ...transferForm, destinationLocationId: e.target.value })}
+                  >
+                    {stockLocations.map(loc => (
+                      <option key={loc.id} value={loc.id}>{loc.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Produto / Insumo *</label>
+                <select 
+                  required
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                  value={transferForm.itemId}
+                  onChange={e => setTransferForm({ ...transferForm, itemId: e.target.value })}
+                >
+                  {items.map(i => (
+                    <option key={i.id} value={i.id}>{i.name} (Saldo Atual: {i.currentStock} {i.unit})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Quantidade *</label>
+                  <input 
+                    type="number"
+                    min="1"
+                    required
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={transferForm.quantity}
+                    onChange={e => setTransferForm({ ...transferForm, quantity: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Lote</label>
+                  <input 
+                    type="text"
+                    placeholder="Lote do produto"
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={transferForm.batch}
+                    onChange={e => setTransferForm({ ...transferForm, batch: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Validade</label>
+                  <input 
+                    type="date"
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={transferForm.expiryDate}
+                    onChange={e => setTransferForm({ ...transferForm, expiryDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Observações da Transferência</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: Abastecimento de materiais da Farmácia da Diálise para o turno da manhã"
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                  value={transferForm.notes}
+                  onChange={e => setTransferForm({ ...transferForm, notes: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setShowTransferModal(false)} className="btn btn-secondary">Cancelar</button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: 'var(--primary-color)' }}>
+                  {actionLoading ? 'Transferindo...' : 'Efetuar Transferência'}
                 </button>
               </div>
             </form>

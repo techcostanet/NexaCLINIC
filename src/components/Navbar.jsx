@@ -69,6 +69,8 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
     ? 'NexaCAL'
     : currentModule === 'config'
     ? 'NexaCONFIG'
+    : currentModule === 'requisitions'
+    ? 'NexaREQ - Salão'
     : 'NexaINDEX';
 
   return (

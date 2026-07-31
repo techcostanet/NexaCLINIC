@@ -3,11 +3,11 @@ import { dbService } from '../firebase';
 import { 
   Settings, Users, Shield, Globe, Database, Key, Check, Plus, X, 
   Trash2, ShieldAlert, CheckCircle2, Copy, Download, Upload, Palette,
-  ListFilter, Edit
+  ListFilter, Edit, Warehouse
 } from 'lucide-react';
 
 export default function ConfigPanel() {
-  const [activeTab, setActiveTab] = useState('branding'); // 'branding' | 'profiles' | 'users' | 'categories' | 'integrations' | 'logs'
+  const [activeTab, setActiveTab] = useState('branding'); // 'branding' | 'profiles' | 'users' | 'locations' | 'categories' | 'integrations' | 'logs'
   
   // Data States
   const [tenantSettings, setTenantSettings] = useState({ name: '', cnpj: '', logo: '', themeColor: '#ec4899' });
@@ -16,11 +16,22 @@ export default function ConfigPanel() {
   const [employees, setEmployees] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [categoriesList, setCategoriesList] = useState([]);
+  const [stockLocations, setStockLocations] = useState([]);
   
   // Actions loading
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+
+  // Stock Locations Form State (Módulo T.I)
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [editingLocation, setEditingLocation] = useState(null);
+  const [locationForm, setLocationForm] = useState({
+    name: '',
+    description: '',
+    responsible: '',
+    status: 'Ativo'
+  });
 
   // Categories Form State (Módulo T.I)
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -60,13 +71,14 @@ export default function ConfigPanel() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [settings, profileList, users, empList, logs, catList] = await Promise.all([
+      const [settings, profileList, users, empList, logs, catList, locList] = await Promise.all([
         dbService.getTenantSettings(),
         dbService.getUserProfiles(),
         dbService.getUsers(),
         dbService.getEmployees(),
         dbService.getAuditLogs(),
-        dbService.getProductCategories ? dbService.getProductCategories() : []
+        dbService.getProductCategories ? dbService.getProductCategories() : [],
+        dbService.getStockLocations ? dbService.getStockLocations() : []
       ]);
       setTenantSettings(settings);
       setProfiles(profileList);
@@ -74,6 +86,7 @@ export default function ConfigPanel() {
       setEmployees(empList);
       setAuditLogs(logs);
       setCategoriesList(catList);
+      setStockLocations(locList);
 
       // Apply theme color immediately
       if (settings.themeColor) {
@@ -339,6 +352,64 @@ export default function ConfigPanel() {
     }
   };
 
+  // ----------------------------------------------------
+  // Stock Locations (Locais de Estoque - Módulo T.I)
+  // ----------------------------------------------------
+  const handleOpenLocationAdd = () => {
+    setEditingLocation(null);
+    setLocationForm({ name: '', description: '', responsible: '', status: 'Ativo' });
+    setShowLocationModal(true);
+  };
+
+  const handleOpenLocationEdit = (loc) => {
+    setEditingLocation(loc);
+    setLocationForm({
+      name: loc.name || '',
+      description: loc.description || '',
+      responsible: loc.responsible || '',
+      status: loc.status || 'Ativo'
+    });
+    setShowLocationModal(true);
+  };
+
+  const handleSaveLocation = async (e) => {
+    e.preventDefault();
+    setActionLoading(true);
+    try {
+      if (editingLocation) {
+        await dbService.saveStockLocation({ id: editingLocation.id, ...locationForm });
+        showAlert(`Local de estoque "${locationForm.name}" atualizado!`, 'success');
+      } else {
+        await dbService.saveStockLocation(locationForm);
+        showAlert(`Local de estoque "${locationForm.name}" criado!`, 'success');
+      }
+      setShowLocationModal(false);
+      const updated = await dbService.getStockLocations();
+      setStockLocations(updated);
+      logAudit('Gestão de Locais de Estoque', `Local "${locationForm.name}" ${editingLocation ? 'editado' : 'criado'}.`);
+    } catch (err) {
+      showAlert('Erro ao salvar local de estoque.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteLocation = async (id, name) => {
+    if (!window.confirm(`Deseja realmente remover o local de estoque "${name}"?`)) return;
+    setActionLoading(true);
+    try {
+      await dbService.deleteStockLocation(id);
+      showAlert(`Local "${name}" removido!`, 'success');
+      const updated = await dbService.getStockLocations();
+      setStockLocations(updated);
+      logAudit('Exclusão de Local de Estoque', `Local "${name}" removido.`);
+    } catch (err) {
+      showAlert('Erro ao remover local de estoque.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.cardHeader}>
@@ -358,6 +429,9 @@ export default function ConfigPanel() {
         </button>
         <button onClick={() => setActiveTab('users')} style={{ ...styles.tabBtn, ...(activeTab === 'users' ? styles.tabBtnActive : {}) }}>
           <Users size={16} /> Usuários do Sistema ({usersList.length})
+        </button>
+        <button onClick={() => setActiveTab('locations')} style={{ ...styles.tabBtn, ...(activeTab === 'locations' ? styles.tabBtnActive : {}) }}>
+          <Warehouse size={16} /> Locais de Estoque ({stockLocations.length})
         </button>
         <button onClick={() => setActiveTab('categories')} style={{ ...styles.tabBtn, ...(activeTab === 'categories' ? styles.tabBtnActive : {}) }}>
           <ListFilter size={16} /> Categorias do Sistema ({categoriesList.length})
@@ -426,6 +500,27 @@ export default function ConfigPanel() {
                   </div>
                 </div>
 
+                <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: '700', marginBottom: '0.75rem', color: 'var(--text-color)' }}>
+                    ⚙️ Regras de Negócio & Estoque (Parâmetros de T.I.)
+                  </h4>
+                  <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input 
+                      type="checkbox" 
+                      id="blockReqZeroStock"
+                      checked={!!tenantSettings.blockRequisitionZeroStock}
+                      onChange={e => setTenantSettings({ ...tenantSettings, blockRequisitionZeroStock: e.target.checked })}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                    />
+                    <label htmlFor="blockReqZeroStock" style={{ margin: 0, fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}>
+                      Bloquear requisição de materiais/medicamentos sem estoque disponível (Estoque Zerado)
+                    </label>
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '1.75rem', marginTop: '0.2rem' }}>
+                    Quando ativado, as técnicas no salão de hemodiálise serão impedidas de solicitar produtos cujo saldo seja zero ou insuficiente.
+                  </p>
+                </div>
+
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', alignSelf: 'flex-start', marginTop: '1rem' }}>
                   {actionLoading ? 'Salvando...' : 'Aplicar Configurações & Cor de Marca'}
                 </button>
@@ -466,6 +561,7 @@ export default function ConfigPanel() {
                       <th>Atendimento (Recepção)</th>
                       <th>Prontuário (Clínico)</th>
                       <th>Estoque & Farmácia</th>
+                      <th>Requisições (Salão)</th>
                       <th>Financeiro (Faturamento)</th>
                       <th>Recursos Humanos (RH)</th>
                       <th>Configurações T.I.</th>
@@ -475,7 +571,7 @@ export default function ConfigPanel() {
                     {profiles.map(p => (
                       <tr key={p.id}>
                         <td style={{ fontWeight: '700' }}>{p.name}</td>
-                        {['index', 'reception', 'clinical', 'stock', 'finance', 'hr', 'config'].map(modKey => (
+                        {['index', 'reception', 'clinical', 'stock', 'requisitions', 'finance', 'hr', 'config'].map(modKey => (
                           <td key={modKey}>
                             <select 
                               className="form-control"
@@ -575,6 +671,79 @@ export default function ConfigPanel() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* TAB: Stock Locations (Locais de Estoque) */}
+          {activeTab === 'locations' && (
+            <div style={styles.tableCard}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div>
+                  <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>🏭 Locais de Estoque da Clínica</h3>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    Cadastre os depósitos, almoxarifados e pontos de consumo de insumos (Almoxarifado Central, Farmácia da Diálise, Posto de Enfermagem, etc.).
+                  </span>
+                </div>
+                <button onClick={handleOpenLocationAdd} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Plus size={16} /> Novo Local de Estoque
+                </button>
+              </div>
+
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Nome do Local</th>
+                    <th>Descrição / Aplicação</th>
+                    <th>Responsável</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stockLocations.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        Nenhum local de estoque cadastrado. Clique em "Novo Local de Estoque" para adicionar.
+                      </td>
+                    </tr>
+                  ) : (
+                    stockLocations.map(loc => (
+                      <tr key={loc.id}>
+                        <td style={{ fontWeight: '600' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Warehouse size={16} color="var(--primary-color)" />
+                            {loc.name}
+                          </div>
+                        </td>
+                        <td>{loc.description || '-'}</td>
+                        <td>{loc.responsible || '-'}</td>
+                        <td>
+                          <span style={{
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            backgroundColor: loc.status === 'Ativo' ? '#dcfce7' : '#fee2e2',
+                            color: loc.status === 'Ativo' ? '#166534' : '#991b1b'
+                          }}>
+                            {loc.status || 'Ativo'}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button onClick={() => handleOpenLocationEdit(loc)} style={styles.actionEditBtn}>
+                              <Edit size={14} /> Editar
+                            </button>
+                            <button onClick={() => handleDeleteLocation(loc.id, loc.name)} style={{ ...styles.actionEditBtn, color: 'var(--danger-color)' }}>
+                              <Trash2 size={14} /> Excluir
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
 

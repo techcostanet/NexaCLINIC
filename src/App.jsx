@@ -14,6 +14,7 @@ import FinancePanel from './components/FinancePanel';
 import ConfigPanel from './components/ConfigPanel';
 import PurchasingPanel from './components/PurchasingPanel';
 import CalendarPanel from './components/CalendarPanel';
+import TechnicianPanel from './components/TechnicianPanel';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -124,6 +125,8 @@ export default function App() {
           <CalendarPanel />
         ) : currentModule === 'config' ? (
           <ConfigPanel />
+        ) : currentModule === 'requisitions' ? (
+          <TechnicianPanel currentUser={user} />
         ) : (
           renderQualityPage()
         )}

@@ -15087,5 +15087,75 @@ export const mockFirestore = {
     db.bank_statements.push(newTx);
     setDB(db);
     return newTx;
+  },
+
+  // Material Requisitions API (Salão de Hemodiálise & Estoque)
+  getMaterialRequisitions: async () => {
+    const db = getDB();
+    if (!db.material_requisitions) {
+      db.material_requisitions = [
+        {
+          id: 'req-1',
+          requisitionCode: 'REQ-2026-0001',
+          requestedBy: 'Ana Clara (Técnica)',
+          userId: 'user-tech-1',
+          patientId: 'pat-1',
+          patientName: 'ADAIR PRAXEDES MORENO',
+          status: 'Pendente',
+          createdAt: new Date(Date.now() - 3600000).toISOString(),
+          updatedAt: new Date(Date.now() - 3600000).toISOString(),
+          items: [
+            { itemId: 'item-1', itemName: 'Capilar Dialisador FX 80', requestedQuantity: 2, deliveredQuantity: 0, unit: 'unidades' },
+            { itemId: 'item-3', itemName: 'Agulha para Fístula 16G', requestedQuantity: 4, deliveredQuantity: 0, unit: 'unidades' }
+          ],
+          fulfillment: null
+        }
+      ];
+      setDB(db);
+    }
+    return db.material_requisitions;
+  },
+
+  saveMaterialRequisition: async (reqData) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (!db.material_requisitions) db.material_requisitions = [];
+    const isEdit = !!reqData.id;
+    const reqId = reqData.id || 'req-' + Date.now();
+    const count = db.material_requisitions.length + 1;
+    const code = reqData.requisitionCode || `REQ-2026-${String(count).padStart(4, '0')}`;
+
+    const updatedReq = {
+      ...reqData,
+      id: reqId,
+      requisitionCode: code,
+      status: reqData.status || 'Pendente',
+      updatedAt: new Date().toISOString()
+    };
+
+    if (isEdit) {
+      const idx = db.material_requisitions.findIndex(r => r.id === reqId);
+      if (idx > -1) {
+        db.material_requisitions[idx] = { ...db.material_requisitions[idx], ...updatedReq };
+      } else {
+        db.material_requisitions.unshift(updatedReq);
+      }
+    } else {
+      updatedReq.createdAt = new Date().toISOString();
+      db.material_requisitions.unshift(updatedReq);
+    }
+
+    setDB(db);
+    return updatedReq;
+  },
+
+  deleteMaterialRequisition: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.material_requisitions) {
+      db.material_requisitions = db.material_requisitions.filter(r => r.id !== id);
+    }
+    setDB(db);
+    return { success: true };
   }
 };
