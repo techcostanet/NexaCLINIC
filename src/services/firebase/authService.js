@@ -166,24 +166,49 @@ export const createUser = async (email, name, role, allowedSectors) => {
   };
 
 export const getUsers = async () => {
-    if (USE_MOCK) {
-      return mockFirestore.getUsers();
-    }
-    const { getFirestore, collection, getDocs, doc, deleteDoc } = await import('firebase/firestore');
-    const db = getFirestore(app);
-    const snap = await getDocs(collection(db, 'users'));
-    const rawUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    const allSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
+    const defaultUsers = [
+      { uid: 'techcosta-admin-uid', email: 'contato@techcosta.net', name: 'Administrador TechCosta', role: 'admin', allowedSectors: allSectors, status: 'active' },
+      { uid: 'anacg-uid', email: 'anacg@nexa.com', name: 'Ana Carolina Cerqueira Gonzaga', role: 'admin', allowedSectors: allSectors, status: 'active' },
+      { uid: 'jsoares-uid', email: 'jsoares@nexa.com', name: 'J. Soares', role: 'admin', allowedSectors: allSectors, status: 'active' }
+    ];
 
-    // Deduplicate by email keeping the user with the longest/most complete name
-    const emailGroups = {};
-    for (const u of rawUsers) {
-      const email = (u.email || '').trim().toLowerCase();
-      if (!email) continue;
-      if (!emailGroups[email]) {
-        emailGroups[email] = [];
-      }
-      emailGroups[email].push(u);
+    if (USE_MOCK) {
+      const mockList = await mockFirestore.getUsers();
+      if (!mockList || mockList.length === 0) return defaultUsers;
+      return mockList;
     }
+    try {
+      const { getFirestore, collection, getDocs, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'users'));
+      let rawUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+
+      // Ensure default admin users exist in the list
+      defaultUsers.forEach(defU => {
+        const found = rawUsers.find(u => (u.email || '').toLowerCase() === defU.email.toLowerCase());
+        if (!found) {
+          rawUsers.push(defU);
+          // Seed back to Firestore asynchronously
+          setDoc(doc(db, 'users', defU.uid), defU, { merge: true }).catch(e => console.error(e));
+        } else {
+          // Force admin role and full sectors for default accounts
+          found.role = 'admin';
+          found.allowedSectors = allSectors;
+          found.status = 'active';
+        }
+      });
+
+      // Deduplicate by email keeping the user with the longest/most complete name
+      const emailGroups = {};
+      for (const u of rawUsers) {
+        const email = (u.email || '').trim().toLowerCase();
+        if (!email) continue;
+        if (!emailGroups[email]) {
+          emailGroups[email] = [];
+        }
+        emailGroups[email].push(u);
+      }
 
     const deduplicated = [];
     for (const email of Object.keys(emailGroups)) {
@@ -210,6 +235,10 @@ export const getUsers = async () => {
     }
 
     return deduplicated;
+    } catch (err) {
+      console.error("Erro ao carregar usuários do Firestore:", err);
+      return defaultUsers;
+    }
   };
 
 export const updateUserPermissions = async (uid, allowedSectors) => {

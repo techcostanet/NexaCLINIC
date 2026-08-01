@@ -40,9 +40,12 @@ export interface MedicalRecord {
 export interface Employee {
   id: string;
   name: string;
+  email?: string;
   cpf: string;
   role: string;
-  departmentId: string;
+  departmentId?: string;
+  sector?: string;
+  phone?: string;
   status: 'active' | 'inactive' | 'on_leave';
   admissionDate: string;
 }

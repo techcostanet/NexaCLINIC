@@ -110,21 +110,21 @@ export default function App() {
       {/* Main body content area */}
       <main className="main-content">
         {currentModule === 'reception' ? (
-          <ReceptionPanel />
+          <ReceptionPanel currentUser={user} />
         ) : currentModule === 'clinical' ? (
-          <ClinicalPanel />
+          <ClinicalPanel currentUser={user} />
         ) : currentModule === 'stock' ? (
-          <StockPanel />
+          <StockPanel currentUser={user} />
         ) : currentModule === 'hr' ? (
           <HRPanel currentUser={user} />
         ) : currentModule === 'finance' ? (
-          <FinancePanel />
+          <FinancePanel currentUser={user} />
         ) : currentModule === 'purchasing' ? (
-          <PurchasingPanel />
+          <PurchasingPanel currentUser={user} />
         ) : currentModule === 'calendar' ? (
-          <CalendarPanel />
+          <CalendarPanel currentUser={user} />
         ) : currentModule === 'config' ? (
-          <ConfigPanel />
+          <ConfigPanel currentUser={user} />
         ) : currentModule === 'requisitions' ? (
           <TechnicianPanel currentUser={user} />
         ) : (

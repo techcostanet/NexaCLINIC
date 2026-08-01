@@ -2,27 +2,82 @@ import { app } from '../../firebase';
 import { USE_MOCK, mockFirestore } from './mockDb';
 import type { Employee } from '../../types/index';
 
+const DEFAULT_EMPLOYEES: Employee[] = [
+  {
+    id: 'emp-1',
+    name: 'Ana Carolina Cerqueira Gonzaga',
+    email: 'anacg@nexa.com',
+    role: 'Supervisora de Enfermagem',
+    sector: 'rh',
+    status: 'active',
+    admissionDate: '2023-01-15',
+    phone: '(31) 98765-4321',
+    cpf: '123.456.789-00'
+  },
+  {
+    id: 'emp-2',
+    name: 'Dr. J. Soares',
+    email: 'jsoares@nexa.com',
+    role: 'Médico Nefrologista / RT',
+    sector: 'medica',
+    status: 'active',
+    admissionDate: '2022-05-10',
+    phone: '(31) 99876-5432',
+    cpf: '987.654.321-11'
+  },
+  {
+    id: 'emp-3',
+    name: 'Administrador TechCosta',
+    email: 'contato@techcosta.net',
+    role: 'Gestor de TI & Sistemas',
+    sector: 'rh',
+    status: 'active',
+    admissionDate: '2022-01-01',
+    phone: '(31) 99999-8888',
+    cpf: '000.111.222-33'
+  },
+  {
+    id: 'emp-4',
+    name: 'Maria Clara Santos',
+    email: 'mclara@nexa.com',
+    role: 'Técnica de Enfermagem',
+    sector: 'enfermagem',
+    status: 'active',
+    admissionDate: '2023-06-20',
+    phone: '(31) 97777-6666',
+    cpf: '444.555.666-77'
+  },
+  {
+    id: 'emp-5',
+    name: 'João Almoxarife',
+    email: 'joao.estoque@nexa.com',
+    role: 'Gestor de Estoque',
+    sector: 'estoque',
+    status: 'active',
+    admissionDate: '2023-03-01',
+    phone: '(31) 96666-5555',
+    cpf: '888.999.000-11'
+  }
+];
+
 export const getEmployees = async (): Promise<Employee[]> => {
-    if (USE_MOCK) return mockFirestore.getEmployees();
-    const { getFirestore, collection, getDocs, addDoc } = await import('firebase/firestore');
-    const db = getFirestore(app);
+    if (USE_MOCK) return DEFAULT_EMPLOYEES;
     try {
+      const { getFirestore, collection, getDocs, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'employees'));
       if (snap.empty) {
         // Seed initial employees into Cloud Firestore
-        const mockEmps = await mockFirestore.getEmployees();
-        const seeded: Employee[] = [];
-        for (const emp of mockEmps) {
+        for (const emp of DEFAULT_EMPLOYEES) {
           const { id, ...data } = emp;
-          const ref = await addDoc(collection(db, 'employees'), data);
-          seeded.push({ id: ref.id, ...(data as Omit<Employee, 'id'>) } as Employee);
+          await setDoc(doc(db, 'employees', id), data);
         }
-        return seeded;
+        return DEFAULT_EMPLOYEES;
       }
-      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() } as Employee));
     } catch (err) {
       console.error("Erro ao buscar funcionários do Firestore:", err);
-      return [];
+      return DEFAULT_EMPLOYEES;
     }
   };
 

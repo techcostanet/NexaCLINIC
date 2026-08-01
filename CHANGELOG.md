@@ -1,3 +1,11 @@
+## [v2.1.20] - 01 de Agosto, 2026
+### Restauração do Cadastro de Funcionários/Usuários & Estabilização de Módulos
+- **Recuperação de Funcionários:** Implementada semeadura padrão em `getEmployees()` (`hrService.ts`) garantindo a presença dos funcionários (Ana Carolina Cerqueira Gonzaga, Dr. J. Soares, Administrador TechCosta, Maria Clara Santos, João Almoxarife).
+- **Garantia de Usuários & Permissões:** Atualizado `getUsers()` (`authService.js`) para sincronizar e semear os usuários cadastrados e manter o perfil de Administrador Geral sem perda de acessos.
+- **Resolução Definitiva de Tela Branca:** Repassado o objeto de estado `currentUser={user}` globalmente em `App.jsx` para todos os módulos (Estoque, Compras, RH, Financeiro, Agenda, TI/Configurações e Recepção).
+
+---
+
 ## [v2.1.16] - 01 de Agosto, 2026
 ### Correção de Tela Branca nos Módulos Compras, Estoque e RH
 - **Correção de Escopo & Props:** Corrigido o erro de compilação/escopo em `PurchasingPanel.jsx` e garantido o repasse da prop `currentUser` aos componentes `StockPanel`, `HRPanel`, `useStockLogic` e `useHRLogic`.

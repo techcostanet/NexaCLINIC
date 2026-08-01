@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.20',
+      date: '01 de Agosto, 2026',
+      title: 'Restaurado Cadastro de Funcionários e Usuários + Estabilização Módulos',
+      description: 'Garantida a persistência e semeadura automática de funcionários e usuários administradores (Ana Carolina, J. Soares e TechCosta) no Firestore Cloud e Mock, além do repasse global da prop currentUser para todas as telas.',
+      changes: [
+        { type: 'Recuperação de Dados', text: 'Recuperado cadastro padrão e persistência de funcionários (supervisão, médicos e equipe) e usuários de acesso.' },
+        { type: 'Correção de Módulos', text: 'Eliminada a tela branca nos módulos de Estoque, Compras, RH, Financeiro e Configurações com repasse global de prop do usuário logado.' }
+      ]
+    },
+    {
       version: 'v2.1.16',
       date: '01 de Agosto, 2026',
       title: 'Correção nos Módulos de Compras, Estoque e RH',
