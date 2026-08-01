@@ -1,3 +1,10 @@
+## [v2.1.16] - 01 de Agosto, 2026
+### Correção de Tela Branca nos Módulos Compras, Estoque e RH
+- **Correção de Escopo & Props:** Corrigido o erro de compilação/escopo em `PurchasingPanel.jsx` e garantido o repasse da prop `currentUser` aos componentes `StockPanel`, `HRPanel`, `useStockLogic` e `useHRLogic`.
+- **Tratamento de Exceções em Leitura Firestore:** Adicionada proteção `try/catch` nas chamadas de dados do Firestore em `financialService.js`, `stockService.js` e `hrService.ts`, retornando listas vazias como fallback seguro em caso de falha de conexão ou permissão.
+
+---
+
 ## [v2.1.14] - 01 de Agosto, 2026
 ### Restauração Total de Permissões e Acessos Admin
 - **Autenticação & Sincronização RBAC:** Atualizada a lógica de escuta de estado de autenticação em `onAuthChange` do `authService.js`. Ao autenticar usuários administradores (`contato@techcosta.net`, `anacg@nexa.com`, `jsoares@nexa.com`), os perfis no Firestore são sincronizados e o papel `admin` com acesso a todos os setores (`enfermagem`, `medica`, `qualidade`, `faturamento`, `psicologia`, `nutricao`, `rh`, `recepcao`, `estoque`, `compras`) é assegurado.

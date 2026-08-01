@@ -130,10 +130,15 @@ export const getPurchases = async () => {
       const data = localStorage.getItem('sistema_indicadores_purchases');
       return data ? JSON.parse(data) : [];
     }
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-    const db = getFirestore(app);
-    const snap = await getDocs(collection(db, 'purchases'));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'purchases'));
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.error("Erro ao ler purchases do Firestore:", e);
+      return [];
+    }
   };
 
 export const createPurchase = async (purchaseData) => {

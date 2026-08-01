@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.16',
+      date: '01 de Agosto, 2026',
+      title: 'Correção nos Módulos de Compras, Estoque e RH',
+      description: 'Resolvido o problema de tela branca ao acessar os módulos de Compras, Estoque e RH por meio do repasse correto de props do usuário e tratamento de exceções assíncronas nas requisições.',
+      changes: [
+        { type: 'Correção de Renderização', text: 'Resolução da duplicidade de declarações de escopo e repasse de prop currentUser para os componentes StockPanel, HRPanel e PurchasingPanel.' },
+        { type: 'Tratamento de Erros', text: 'Proteção com blocos try/catch e retornos seguros de listas em chamadas do Firestore para evitar falhas de renderização.' }
+      ]
+    },
+    {
       version: 'v2.1.14',
       date: '01 de Agosto, 2026',
       title: 'Restauração Total de Permissões e Acessos Admin',

@@ -5,11 +5,11 @@ import {
 } from 'lucide-react';
 import { dbService } from '../firebase';
 
-export default function PurchasingPanel() {
+export default function PurchasingPanel({ currentUser }) {
   const [activeTab, setActiveTab] = useState('requests'); // 'requests' | 'approvals' | 'quotes' | 'products'
   const [purchases, setPurchases] = useState([]);
   const [stockItems, setStockItems] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [user, setUser] = useState(currentUser || null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ text: '', type: '' });
 
@@ -32,20 +32,24 @@ export default function PurchasingPanel() {
   const [activeQuoteId, setActiveQuoteId] = useState(null);
 
   useEffect(() => {
-    // Resolve mock session user
-    const sessionUserId = sessionStorage.getItem('sistema_indicadores_session');
-    dbService.getUsers().then(users => {
-      const found = users.find(u => u.uid === sessionUserId);
-      if (found) {
-        setCurrentUser(found);
-      } else {
-        // Fallback for mock environment
-        setCurrentUser({ name: 'Administrador TechCosta', role: 'admin', email: 'contato@techcosta.net' });
-      }
-    });
+    if (currentUser) {
+      setUser(currentUser);
+    } else {
+      // Resolve mock session user
+      const sessionUserId = sessionStorage.getItem('sistema_indicadores_session');
+      dbService.getUsers().then(users => {
+        const found = users.find(u => u.uid === sessionUserId);
+        if (found) {
+          setUser(found);
+        } else {
+          // Fallback for mock environment
+          setUser({ name: 'Administrador TechCosta', role: 'admin', email: 'contato@techcosta.net' });
+        }
+      });
+    }
 
     fetchData();
-  }, []);
+  }, [currentUser]);
 
   const fetchData = async () => {
     setLoading(true);

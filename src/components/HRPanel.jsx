@@ -24,8 +24,8 @@ const DEFAULT_DASHBOARD_LAYOUT = [
 
 import { useHRLogic } from './HR/hooks/useHRLogic';
 
-export default function HRPanel() {
-  const logic = useHRLogic();
+export default function HRPanel({ currentUser }) {
+  const logic = useHRLogic(currentUser);
   const {
     activeTab,
     setActiveTab,

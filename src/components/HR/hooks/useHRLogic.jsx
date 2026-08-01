@@ -22,7 +22,7 @@ const DEFAULT_DASHBOARD_LAYOUT = [
   { id: 'presenca_premiada', title: 'Presença Premiada', size: 'small' },
 ];
 
-export function useHRLogic() {
+export function useHRLogic(currentUser) {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'employees' | 'users' | 'reports' | 'audit'
   
   // Data States

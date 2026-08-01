@@ -9,8 +9,8 @@ import {
 
 import { useStockLogic } from './Stock/hooks/useStockLogic';
 
-export default function StockPanel() {
-  const stockLogic = useStockLogic();
+export default function StockPanel({ currentUser }) {
+  const stockLogic = useStockLogic(currentUser);
   const {
     activeTab,
     setActiveTab,

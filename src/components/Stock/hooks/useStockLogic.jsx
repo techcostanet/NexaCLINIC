@@ -7,7 +7,7 @@ import {
   ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Send, ClipboardList, Repeat
 } from 'lucide-react';
 
-export function useStockLogic() {
+export function useStockLogic(currentUser) {
   const [activeTab, setActiveTab] = useState('inventory'); // 'inventory' | 'physical_inventory' | 'transfers' | 'invoices' | 'suppliers' | 'sectors' | 'transactions' | 'expiry' | 'loans'
   
   // Data States
