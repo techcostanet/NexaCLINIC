@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dbService, authService } from '../firebase';
+import { dbService, authService } from '../../../firebase';
 import { 
   Users, UserPlus, Shield, Lock, Unlock, Edit2, Trash2, Plus, X, 
   Search, FileText, UploadCloud, Download, Calendar, ShieldAlert,

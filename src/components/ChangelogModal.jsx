@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.10',
+      date: '01 de Agosto, 2026',
+      title: 'Migração para TypeScript & Tipagem de Serviços',
+      description: 'Início da transição da base de código para TypeScript, visando maior segurança, autocompletar e robustez nas chamadas de serviço.',
+      changes: [
+        { type: 'Arquitetura', text: 'Configuração do ambiente TypeScript (tsconfig.json, types) e definição de interfaces globais.' },
+        { type: 'Refatoração', text: 'Migração do hrService.ts para TypeScript com tipagem completa de parâmetros e retornos.' }
+      ]
+    },
+    {
       version: 'v2.1.6',
       date: '01 de Agosto, 2026',
       title: 'Modularização de Componentes UI (Prioridade 2)',

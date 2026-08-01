@@ -1,7 +1,8 @@
 import { app } from '../../firebase';
 import { USE_MOCK, mockFirestore } from './mockDb';
+import type { Employee } from '../../types';
 
-export const getEmployees = async () => {
+export const getEmployees = async (): Promise<Employee[]> => {
     if (USE_MOCK) return mockFirestore.getEmployees();
     const { getFirestore, collection, getDocs, addDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
@@ -10,22 +11,22 @@ export const getEmployees = async () => {
       if (snap.empty) {
         // Seed initial employees into Cloud Firestore
         const mockEmps = await mockFirestore.getEmployees();
-        const seeded = [];
+        const seeded: Employee[] = [];
         for (const emp of mockEmps) {
           const { id, ...data } = emp;
           const ref = await addDoc(collection(db, 'employees'), data);
-          seeded.push({ id: ref.id, ...data });
+          seeded.push({ id: ref.id, ...(data as Omit<Employee, 'id'>) } as Employee);
         }
         return seeded;
       }
-      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
     } catch (err) {
       console.error("Erro ao buscar funcionários do Firestore:", err);
       return [];
     }
   };
 
-export const createEmployee = async (employeeData) => {
+export const createEmployee = async (employeeData: Omit<Employee, 'id'>): Promise<Employee> => {
     if (USE_MOCK) return mockFirestore.createEmployee(employeeData);
     const { getFirestore, collection, addDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
@@ -33,10 +34,10 @@ export const createEmployee = async (employeeData) => {
       ...employeeData,
       createdAt: new Date().toISOString()
     });
-    return { id: docRef.id, ...employeeData };
+    return { id: docRef.id, ...employeeData } as Employee;
   };
 
-export const updateEmployee = async (id, employeeData) => {
+export const updateEmployee = async (id: string, employeeData: Partial<Employee>): Promise<Partial<Employee> & { id: string }> => {
     if (USE_MOCK) return mockFirestore.updateEmployee(id, employeeData);
     const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
@@ -44,14 +45,14 @@ export const updateEmployee = async (id, employeeData) => {
     return { id, ...employeeData };
   };
 
-export const deleteEmployee = async (id) => {
+export const deleteEmployee = async (id: string): Promise<any> => {
     if (USE_MOCK) return mockFirestore.deleteEmployee(id);
     const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
     return deleteDoc(doc(db, 'employees', id));
   };
 
-export const getShifts = async () => {
+export const getShifts = async (): Promise<any[]> => {
     if (USE_MOCK) {
       return mockFirestore.getShifts();
     }
@@ -75,7 +76,7 @@ export const getShifts = async () => {
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   };
 
-export const createShift = async (shiftData) => {
+export const createShift = async (shiftData: any): Promise<any> => {
     if (USE_MOCK) {
       return mockFirestore.createShift(shiftData);
     }
@@ -85,7 +86,7 @@ export const createShift = async (shiftData) => {
     return { id: docRef.id, ...shiftData };
   };
 
-export const updateShift = async (id, shiftData) => {
+export const updateShift = async (id: string, shiftData: any): Promise<any> => {
     if (USE_MOCK) {
       return mockFirestore.updateShift(id, shiftData);
     }
@@ -94,7 +95,7 @@ export const updateShift = async (id, shiftData) => {
     return updateDoc(doc(db, 'shifts', id), shiftData);
   };
 
-export const deleteShift = async (id) => {
+export const deleteShift = async (id: string): Promise<any> => {
     if (USE_MOCK) {
       return mockFirestore.deleteShift(id);
     }
@@ -103,7 +104,7 @@ export const deleteShift = async (id) => {
     return deleteDoc(doc(db, 'shifts', id));
   };
 
-export const getTransportVouchers = async () => {
+export const getTransportVouchers = async (): Promise<any[]> => {
     if (USE_MOCK) return mockFirestore.getTransportVouchers();
     try {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
@@ -116,7 +117,7 @@ export const getTransportVouchers = async () => {
     }
   };
 
-export const createTransportVoucher = async (voucherData) => {
+export const createTransportVoucher = async (voucherData: any): Promise<any> => {
     if (USE_MOCK) return mockFirestore.createTransportVoucher(voucherData);
     const { getFirestore, collection, addDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
@@ -127,7 +128,7 @@ export const createTransportVoucher = async (voucherData) => {
     return { id: docRef.id, ...voucherData };
   };
 
-export const updateTransportVoucher = async (id, voucherData) => {
+export const updateTransportVoucher = async (id: string, voucherData: any): Promise<any> => {
     if (USE_MOCK) return mockFirestore.updateTransportVoucher(id, voucherData);
     const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
@@ -138,11 +139,10 @@ export const updateTransportVoucher = async (id, voucherData) => {
     return { id, ...voucherData };
   };
 
-export const deleteTransportVoucher = async (id) => {
+export const deleteTransportVoucher = async (id: string): Promise<any> => {
     if (USE_MOCK) return mockFirestore.deleteTransportVoucher(id);
     const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
     await deleteDoc(doc(db, 'transport_vouchers', id));
     return { success: true };
   };
-
