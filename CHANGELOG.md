@@ -1,3 +1,10 @@
+## [v2.1.14] - 01 de Agosto, 2026
+### Restauração Total de Permissões e Acessos Admin
+- **Autenticação & Sincronização RBAC:** Atualizada a lógica de escuta de estado de autenticação em `onAuthChange` do `authService.js`. Ao autenticar usuários administradores (`contato@techcosta.net`, `anacg@nexa.com`, `jsoares@nexa.com`), os perfis no Firestore são sincronizados e o papel `admin` com acesso a todos os setores (`enfermagem`, `medica`, `qualidade`, `faturamento`, `psicologia`, `nutricao`, `rh`, `recepcao`, `estoque`, `compras`) é assegurado.
+- **Resolução de Bloqueio de Módulos:** Eliminada a perda involuntária de papéis/permissões ao logar no Firebase Real.
+
+---
+
 ## [2.1.6] - 2026-08-01
 ### Refatoração (Prioridade 2)
 - Modularização do StockPanel.jsx (Extração de lógica para useStockLogic.js).

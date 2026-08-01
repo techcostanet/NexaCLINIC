@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.14',
+      date: '01 de Agosto, 2026',
+      title: 'Restauração Total de Permissões e Acessos Admin',
+      description: 'Garantido o sincronismo de perfis e permissões completas de Administrador (role admin + todos os setores) para as contas principais (contato@techcosta.net, anacg@nexa.com e jsoares@nexa.com).',
+      changes: [
+        { type: 'Autenticação & RBAC', text: 'Sincronização automática em onAuthChange do Firestore para contas de Administrador, liberando todos os módulos e setores do sistema.' },
+        { type: 'Correção de Bug', text: 'Resolução da regressão que desatribuía o papel de Admin após a autenticação via Firebase Real.' }
+      ]
+    },
+    {
       version: 'v2.1.10',
       date: '01 de Agosto, 2026',
       title: 'Migração para TypeScript & Tipagem de Serviços',

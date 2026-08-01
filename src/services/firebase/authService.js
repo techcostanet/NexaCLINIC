@@ -5,12 +5,62 @@ export const onAuthChange = (callback) => {
     if (USE_MOCK) {
       return mockAuth.onAuthStateChanged(callback);
     }
-    // We must return a function that can be called to unsubscribe.
-    // Since import() is async, we return a function that will call the real unsubscribe once resolved.
     let unsubscribe = () => {};
     import('firebase/auth').then(({ getAuth, onAuthStateChanged }) => {
       const auth = getAuth(app);
-      unsubscribe = onAuthStateChanged(auth, callback);
+      unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (!firebaseUser) {
+          callback(null);
+          return;
+        }
+        try {
+          const { getFirestore, doc, getDoc, setDoc } = await import('firebase/firestore');
+          const db = getFirestore(app);
+          const cleanEmail = (firebaseUser.email || '').trim().toLowerCase();
+          const adminEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'];
+          const isAdminEmail = adminEmails.includes(cleanEmail);
+
+          const userDocRef = doc(db, 'users', firebaseUser.uid);
+          const userSnap = await getDoc(userDocRef);
+
+          let userData = userSnap.exists() ? userSnap.data() : {};
+
+          // If admin email, guarantee admin role and all sectors
+          if (isAdminEmail) {
+            const allSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
+            userData = {
+              name: userData.name || (cleanEmail === 'contato@techcosta.net' ? 'Administrador TechCosta' : cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares'),
+              email: cleanEmail,
+              role: 'admin',
+              allowedSectors: allSectors,
+              status: 'active',
+              ...userData,
+              role: 'admin', // override to admin
+              allowedSectors: allSectors // override to all sectors
+            };
+
+            // Save/sync back to firestore asynchronously
+            setDoc(userDocRef, userData, { merge: true }).catch(err => console.error("Failed to sync admin user profile:", err));
+          } else if (!userSnap.exists()) {
+            userData = {
+              name: firebaseUser.displayName || cleanEmail || 'Usuário',
+              email: cleanEmail,
+              role: 'professional',
+              allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+              status: 'active'
+            };
+          }
+
+          callback({
+            uid: firebaseUser.uid,
+            email: cleanEmail,
+            ...userData
+          });
+        } catch (err) {
+          console.error("Erro ao carregar perfil do usuário no Firestore:", err);
+          callback(firebaseUser);
+        }
+      });
     });
     return () => unsubscribe();
   };
@@ -33,7 +83,6 @@ export const login = async (email, password) => {
           const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
           const { getFirestore, doc, setDoc } = await import('firebase/firestore');
           const db = getFirestore(app);
-          const isRH = cleanEmail === 'anacg@nexa.com';
           const userName = cleanEmail === 'contato@techcosta.net' 
             ? 'Administrador TechCosta' 
             : cleanEmail === 'anacg@nexa.com' 
@@ -42,8 +91,8 @@ export const login = async (email, password) => {
           await setDoc(doc(db, 'users', userCredential.user.uid), {
             name: userName,
             email: cleanEmail,
-            role: isRH ? 'rh' : 'admin',
-            allowedSectors: isRH ? ['rh'] : ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+            role: 'admin',
+            allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
             status: 'active',
             createdAt: new Date().toISOString()
           });
