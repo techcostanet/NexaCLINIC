@@ -9,14 +9,20 @@ const USE_MOCK = false;
 
 // Real Firebase credentials supplied by the user
 const firebaseConfig = {
-  apiKey: "AIzaSyBPw7Z_nhz7osMlGcdw4wAqXGFUkH27kug",
-  authDomain: "nexa-index.firebaseapp.com",
-  projectId: "nexa-index",
-  storageBucket: "nexa-index.firebasestorage.app",
-  messagingSenderId: "1089214920796",
-  appId: "1:1089214920796:web:120f3b158f599b0236ce99",
-  measurementId: "G-JB7DJRKXV4"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
+
+if (!USE_MOCK) {
+  if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+    console.error("Firebase config is missing required environment variables. Please check your .env file.");
+  }
+}
 
 // Initialize Firebase App
 let app;
@@ -194,7 +200,13 @@ export const authService = {
     const secondaryApp = initializeSecondaryApp(firebaseConfig, secondaryAppName);
     const secondaryAuth = getAuth(secondaryApp);
     
-    const tempPassword = email.split('@')[0] + '123';
+    // Enforcing password policy: 8 chars, 1 special, 1 number, 1 capital letter.
+    // Example: email "test@test.com" -> tempPassword "Test1234!"
+    const base = email.split('@')[0];
+    const capitalizedBase = base.charAt(0).toUpperCase() + base.slice(1);
+    const tempPassword = capitalizedBase.length >= 4 
+      ? capitalizedBase + '1234!' 
+      : capitalizedBase + 'Nexa1234!';
     
     try {
       const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, tempPassword);
