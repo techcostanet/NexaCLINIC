@@ -1,6 +1,6 @@
 import { app } from '../../firebase';
 import { USE_MOCK, mockFirestore } from './mockDb';
-import type { Employee } from '../../types';
+import type { Employee } from '../../types/index';
 
 export const getEmployees = async (): Promise<Employee[]> => {
     if (USE_MOCK) return mockFirestore.getEmployees();
