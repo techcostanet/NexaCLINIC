@@ -1,5 +1,19 @@
 import { app } from '../../firebase';
-import { USE_MOCK, mockFirestore } from './mockDb';
+import { USE_MOCK, mockFirestore, mockAuth } from './mockDb';
+
+export const onAuthChange = (callback) => {
+    if (USE_MOCK) {
+      return mockAuth.onAuthStateChanged(callback);
+    }
+    // We must return a function that can be called to unsubscribe.
+    // Since import() is async, we return a function that will call the real unsubscribe once resolved.
+    let unsubscribe = () => {};
+    import('firebase/auth').then(({ getAuth, onAuthStateChanged }) => {
+      const auth = getAuth(app);
+      unsubscribe = onAuthStateChanged(auth, callback);
+    });
+    return () => unsubscribe();
+  };
 
 export const login = async (email, password) => {
     if (USE_MOCK) {

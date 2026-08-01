@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { USE_MOCK } from './mockDb';
 
@@ -17,7 +18,7 @@ if (!USE_MOCK) {
   }
 }
 
-export let app: FirebaseApp | undefined;
+export let app = {} as FirebaseApp;
 
 if (!USE_MOCK) {
   if (getApps().length === 0) {
