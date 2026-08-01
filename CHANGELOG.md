@@ -1,3 +1,8 @@
+## [2.1.6] - 2026-08-01
+### Refatoração (Prioridade 2)
+- Modularização do StockPanel.jsx (Extração de lógica para useStockLogic.js).
+- Modularização do HRPanel.jsx (Extração de lógica para useHRLogic.js).
+
 # Histórico de Versões - NexaCLINIC
 
 ## [v2.1.5] - 01 de Agosto, 2026

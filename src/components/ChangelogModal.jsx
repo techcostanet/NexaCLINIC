@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.6',
+      date: '01 de Agosto, 2026',
+      title: 'Modularização de Componentes UI (Prioridade 2)',
+      description: 'Refatoração dos componentes gigantes (StockPanel.jsx e HRPanel.jsx) extraindo toda a lógica de negócio e estados para Custom Hooks dedicados.',
+      changes: [
+        { type: 'Custom Hooks', text: 'Criação de useStockLogic.js e useHRLogic.js, separando mais de 2.000 linhas de regras de negócio da camada visual.' },
+        { type: 'Desempenho', text: 'Melhoria significativa na manutenção e previsibilidade dos estados, preparando para a tipagem (TypeScript).' }
+      ]
+    },
+    {
       version: 'v2.1.5',
       date: '01 de Agosto, 2026',
       title: 'Refatoração da Arquitetura de Dados (Modularização firebase.js)',

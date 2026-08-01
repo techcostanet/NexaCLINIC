@@ -1,0 +1,5 @@
+{activeTab === 'sectors' && (
+            <button onClick={handleOpenSectorAdd} style={styles.addBtn}>
+              <Warehouse size={16} /> Novo Setor Físico
+            </button>
+          )

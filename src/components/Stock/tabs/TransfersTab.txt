@@ -1,0 +1,5 @@
+{activeTab === 'transfers' && (
+            <button onClick={handleOpenTransferModal} style={styles.addBtn}>
+              <Repeat size={16} /> Nova Transferência de Estoque
+            </button>
+          )
