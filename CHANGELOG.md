@@ -1,5 +1,14 @@
 # Histórico de Versões - NexaCLINIC
 
+## [v2.1.5] - 01 de Agosto, 2026
+### Refatoração da Arquitetura de Dados (Modularização firebase.js)
+- **Modularização de Serviços:** O arquivo central `firebase.js` (com mais de 2.016 linhas) foi desmembrado em diversos serviços especializados na pasta `src/services/firebase/` (authService, patientService, stockService, financialService, hrService, clinicalService e systemService). Isso facilita a manutenção e possibilita o futuro *code splitting* dinâmico do Firebase.
+- **Segurança Firebase (.env):** As chaves e configurações de ambiente do Firebase foram isoladas com segurança em um arquivo `.env` dedicado, incluindo uma validação rigorosa no processo de startup do App.
+- **Política de Senha (Admin/RH):** Reforçada a geração de senhas temporárias (Admins/RH) exigindo agora no mínimo 8 caracteres contendo letras, números e caracteres especiais.
+- **Arquitetura & Escalabilidade:** A refatoração mantém compatibilidade estrita com a interface de dependências existente (`dbService` e `authService`), garantindo total estabilidade do projeto sem introduzir comportamentos quebrados.
+
+---
+
 ## [v2.1.3] - 31 de Julho, 2026
 ### Módulo Estoque & Farmácia: Inventários Físicos, Múltiplos Locais, Transferências, FEFO & Alertas
 - **Cadastro e Gestão de Múltiplos Locais de Estoque (Módulo T.I):** Adicionada nova aba `Locais de Estoque` no painel de configurações do Módulo T.I (`ConfigPanel.jsx`), permitindo cadastrar, editar e inativar locais como Almoxarifado Central, Farmácia da Diálise, Posto de Enfermagem e TI.

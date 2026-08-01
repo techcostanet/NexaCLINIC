@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.5',
+      date: '01 de Agosto, 2026',
+      title: 'Refatoração da Arquitetura de Dados (Modularização firebase.js)',
+      description: 'Iniciada a refatoração do sistema para melhoria de performance e manutenção, decompondo o arquivo central de dados em múltiplos serviços especializados.',
+      changes: [
+        { type: 'Modularização de Serviços', text: 'firebase.js (2.016 linhas) desmembrado em authService, patientService, stockService, financialService, hrService, clinicalService e systemService.' },
+        { type: 'Segurança Firebase', text: 'Configurações de ambiente movidas para .env com validações rigorosas e política reforçada para senhas temporárias (Adm/RH).' },
+        { type: 'Desempenho', text: 'Melhoria na divisão de código (code splitting) e manutenção estrutural do projeto.' }
+      ]
+    },
+    {
       version: 'v2.1.3',
       date: '31 de Julho, 2026',
       title: 'Módulo Estoque & Farmácia: Inventários Físicos, Múltiplos Locais, Transferências & FEFO',
