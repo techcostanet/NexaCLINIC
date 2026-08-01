@@ -1,5 +1,0 @@
-{activeTab === 'suppliers' && (
-            <button onClick={handleOpenSupplierAdd} style={styles.addBtn}>
-              <Plus size={16} /> Novo Fornecedor
-            </button>
-          )

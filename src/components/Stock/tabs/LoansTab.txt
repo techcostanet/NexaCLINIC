@@ -1,5 +1,0 @@
-{activeTab === 'loans' && (
-            <button onClick={handleOpenLoanAdd} style={styles.addBtn}>
-              <Plus size={16} /> Novo Empréstimo
-            </button>
-          )

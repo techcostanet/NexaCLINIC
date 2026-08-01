@@ -1,8 +1,0 @@
-{activeTab === 'inventory' && (
-            <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={styles.filterSelect}>
-              <option value="">Todas as Categorias</option>
-              {categoriesList.map(c => (
-                <option key={c.id} value={c.name}>{c.name}</option>
-              ))}
-            </select>
-          )

@@ -1,5 +1,0 @@
-{activeTab === 'physical_inventory' && (
-            <button onClick={handleOpenInventoryAdd} style={styles.addBtn}>
-              <Plus size={16} /> Abrir Novo Inventário Físico
-            </button>
-          )

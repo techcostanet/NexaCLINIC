@@ -1,5 +1,0 @@
-{activeTab === 'invoices' && (
-            <button onClick={() => setShowXmlWizard(true)} style={styles.addBtn}>
-              <UploadCloud size={16} /> Importar XML de NF-e
-            </button>
-          )
