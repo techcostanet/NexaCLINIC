@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.23',
+      date: '01 de Agosto, 2026',
+      title: 'Correção de Permissões Firestore e Restauração de Dados',
+      description: 'Resolvido o problema de tela em branco nos módulos Estoque, Compras e RH, e corrigido o carregamento de dados (funcionários, usuários) que haviam sumido devido a bloqueios de segurança nas regras do Firestore.',
+      changes: [
+        { type: 'Correção Crítica', text: 'Correção das regras de segurança (firestore.rules) garantindo leitura e gravação para todas as coleções de retaguarda (estoque, financeiro, RH, etc).' },
+        { type: 'Correção de Renderização', text: 'Resolução de erro de execução (TypeError) no dbService que causava tela branca (crash) na montagem dos módulos principais.' }
+      ]
+    },
+    {
       version: 'v2.1.20',
       date: '01 de Agosto, 2026',
       title: 'Restaurado Cadastro de Funcionários e Usuários + Estabilização Módulos',

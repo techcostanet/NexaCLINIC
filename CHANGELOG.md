@@ -1,3 +1,10 @@
+## [v2.1.23] - 01 de Agosto, 2026
+### Correção de Permissões Firestore e Restauração de Dados
+- **Correção Crítica:** Atualizadas as regras de segurança do Firebase (firestore.rules) para liberar permissões de leitura/escrita para todas as coleções de módulos de retaguarda (estoque, RH, financeiro, compras).
+- **Correção de Crash:** Corrigido o `TypeError` em chamadas `dbService.getUsers()` não tratadas exportando corretamente `authFunctions` no `firebase.js`. Com isso, a tela branca ao entrar nos módulos Estoque, Compras e RH foi resolvida.
+
+---
+
 ## [v2.1.20] - 01 de Agosto, 2026
 ### Restauração do Cadastro de Funcionários/Usuários & Estabilização de Módulos
 - **Recuperação de Funcionários:** Implementada semeadura padrão em `getEmployees()` (`hrService.ts`) garantindo a presença dos funcionários (Ana Carolina Cerqueira Gonzaga, Dr. J. Soares, Administrador TechCosta, Maria Clara Santos, João Almoxarife).

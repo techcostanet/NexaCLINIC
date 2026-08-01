@@ -14,6 +14,7 @@ export const authService = {
 };
 
 export const dbService = {
+  ...authFunctions,
   ...patientFunctions,
   ...stockFunctions,
   ...financialFunctions,

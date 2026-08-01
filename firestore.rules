@@ -100,5 +100,28 @@ service cloud.firestore {
     match /audit_logs/{logId} { allow read, write: if isAuthenticated(); }
     match /tenant_settings/{settingId} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
     match /user_profiles/{profileId} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+
+    // Additional Stock & Purchasing Collections
+    match /inventory_items/{id} { allow read, write: if isAuthenticated(); }
+    match /stock_transactions/{id} { allow read, write: if isAuthenticated(); }
+    match /stock_sectors/{id} { allow read, write: if isAuthenticated(); }
+    match /suppliers/{id} { allow read, write: if isAuthenticated(); }
+    match /material_requisitions/{id} { allow read, write: if isAuthenticated(); }
+    match /stock_alerts/{id} { allow read, write: if isAuthenticated(); }
+    match /stock_locations/{id} { allow read, write: if isAuthenticated(); }
+    match /inventories/{id} { allow read, write: if isAuthenticated(); }
+    match /stock_transfers/{id} { allow read, write: if isAuthenticated(); }
+    match /stock_loans/{id} { allow read, write: if isAuthenticated(); }
+    match /product_categories/{id} { allow read, write: if isAuthenticated(); }
+
+    // Additional Financial Collections
+    match /accounts_payable/{id} { allow read, write: if isAuthenticated(); }
+    match /accounts_receivable/{id} { allow read, write: if isAuthenticated(); }
+    match /bank_statements/{id} { allow read, write: if isAuthenticated(); }
+    match /debts/{id} { allow read, write: if isAuthenticated(); }
+
+    // Additional HR Collections
+    match /transport_vouchers/{id} { allow read, write: if isAuthenticated(); }
+    match /hr_warnings/{id} { allow read, write: if isAuthenticated(); }
   }
 }
