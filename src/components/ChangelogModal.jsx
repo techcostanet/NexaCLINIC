@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.35',
+      date: '02 de Agosto, 2026',
+      title: 'Proteção Defensiva Completa no Módulo de Estoque',
+      description: 'Adicionada blindagem contra retornos assíncronos em segundo plano e opcional chaining em todas as abas e métricas do estoque.',
+      changes: [
+        { type: 'Módulo Estoque', text: 'Proteção contra exceções em dados de requisições, transferências e itens do estoque.' }
+      ]
+    },
+    {
       version: 'v2.1.33',
       date: '02 de Agosto, 2026',
       title: 'Resolução Definitiva de Importação de Ícones (FileText)',

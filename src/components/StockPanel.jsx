@@ -191,37 +191,37 @@ export default function StockPanel({ currentUser }) {
           onClick={() => setActiveTab('inventory')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'inventory' ? styles.tabBtnActive : {}) }}
         >
-          <Boxes size={16} /> Catálogo de Produtos ({items.length})
+          <Boxes size={16} /> Catálogo de Produtos ({(items || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('physical_inventory')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'physical_inventory' ? styles.tabBtnActive : {}) }}
         >
-          <ClipboardList size={16} /> Inventários Físicos ({inventories.length})
+          <ClipboardList size={16} /> Inventários Físicos ({(inventories || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('transfers')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'transfers' ? styles.tabBtnActive : {}) }}
         >
-          <Repeat size={16} /> Transferências de Estoque ({transfers.length})
+          <Repeat size={16} /> Transferências de Estoque ({(transfers || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('invoices')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'invoices' ? styles.tabBtnActive : {}) }}
         >
-          <FileText size={16} /> Entrada de Notas & XML ({invoices.length})
+          <FileText size={16} /> Entrada de Notas & XML ({(invoices || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('suppliers')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'suppliers' ? styles.tabBtnActive : {}) }}
         >
-          <Briefcase size={16} /> Fornecedores ({suppliers.length})
+          <Briefcase size={16} /> Fornecedores ({(suppliers || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('sectors')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'sectors' ? styles.tabBtnActive : {}) }}
         >
-          <Warehouse size={16} /> Setores de Estoque ({sectors.length})
+          <Warehouse size={16} /> Setores de Estoque ({(sectors || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('transactions')} 
@@ -239,13 +239,13 @@ export default function StockPanel({ currentUser }) {
           onClick={() => setActiveTab('loans')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'loans' ? styles.tabBtnActive : {}) }}
         >
-          <RefreshCw size={16} /> Empréstimos de Produtos ({loans.length})
+          <RefreshCw size={16} /> Empréstimos de Produtos ({(loans || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('requisitions')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'requisitions' ? styles.tabBtnActive : {}) }}
         >
-          <Send size={16} /> Atendimento de Requisições ({requisitions.filter(r => r.status === 'Pendente' || r.status === 'Parcial').length > 0 ? `${requisitions.filter(r => r.status === 'Pendente' || r.status === 'Parcial').length} Pendente(s)` : requisitions.length})
+          <Send size={16} /> Atendimento de Requisições ({(requisitions || []).filter(r => r && (r.status === 'Pendente' || r.status === 'Parcial')).length > 0 ? `${(requisitions || []).filter(r => r && (r.status === 'Pendente' || r.status === 'Parcial')).length} Pendente(s)` : (requisitions || []).length})
         </button>
       </div>
 

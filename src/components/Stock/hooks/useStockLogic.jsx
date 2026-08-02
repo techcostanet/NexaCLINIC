@@ -151,30 +151,30 @@ export function useStockLogic(currentUser) {
     setLoading(true);
     try {
       const [itemList, txList, supList, secList, invList, loanList, catList, locList, invsList, transList, reqList] = await Promise.all([
-        dbService.getInventoryItems(),
-        dbService.getStockTransactions(),
-        dbService.getSuppliers(),
-        dbService.getStockSectors(),
-        dbService.getPurchaseInvoices(),
-        dbService.getStockLoans ? dbService.getStockLoans() : [],
-        dbService.getProductCategories ? dbService.getProductCategories() : [],
-        dbService.getStockLocations ? dbService.getStockLocations() : [],
-        dbService.getInventories ? dbService.getInventories() : [],
-        dbService.getStockTransfers ? dbService.getStockTransfers() : [],
-        dbService.getMaterialRequisitions ? dbService.getMaterialRequisitions() : []
+        dbService.getInventoryItems ? dbService.getInventoryItems().catch(() => []) : [],
+        dbService.getStockTransactions ? dbService.getStockTransactions().catch(() => []) : [],
+        dbService.getSuppliers ? dbService.getSuppliers().catch(() => []) : [],
+        dbService.getStockSectors ? dbService.getStockSectors().catch(() => []) : [],
+        dbService.getPurchaseInvoices ? dbService.getPurchaseInvoices().catch(() => []) : [],
+        dbService.getStockLoans ? dbService.getStockLoans().catch(() => []) : [],
+        dbService.getProductCategories ? dbService.getProductCategories().catch(() => []) : [],
+        dbService.getStockLocations ? dbService.getStockLocations().catch(() => []) : [],
+        dbService.getInventories ? dbService.getInventories().catch(() => []) : [],
+        dbService.getStockTransfers ? dbService.getStockTransfers().catch(() => []) : [],
+        dbService.getMaterialRequisitions ? dbService.getMaterialRequisitions().catch(() => []) : []
       ]);
       
-      setItems(itemList);
-      setTransactions(txList);
-      setSuppliers(supList);
-      setSectors(secList);
-      setInvoices(invList);
-      setLoans(loanList);
-      setStockLocations(locList);
-      setInventories(invsList);
-      setTransfers(transList);
+      setItems(itemList || []);
+      setTransactions(txList || []);
+      setSuppliers(supList || []);
+      setSectors(secList || []);
+      setInvoices(invList || []);
+      setLoans(loanList || []);
+      setStockLocations(locList || []);
+      setInventories(invsList || []);
+      setTransfers(transList || []);
       setRequisitions(reqList || []);
-      setCategoriesList(catList.length > 0 ? catList : [
+      setCategoriesList((catList && catList.length > 0) ? catList : [
         { id: 'c1', name: 'Insumo Clínico' },
         { id: 'c2', name: 'Medicamento' },
         { id: 'c3', name: 'Concentrado' },
@@ -182,25 +182,25 @@ export function useStockLogic(currentUser) {
         { id: 'c5', name: 'Equipamento' }
       ]);
 
-      if (itemList.length > 0) {
+      if (itemList && itemList.length > 0) {
         setTxForm(f => ({ 
           ...f, 
           itemId: itemList[0].id,
-          sectorId: secList[0]?.id || ''
+          sectorId: secList?.[0]?.id || ''
         }));
         setItemForm(f => ({
           ...f,
-          defaultSectorId: secList[0]?.id || ''
+          defaultSectorId: secList?.[0]?.id || ''
         }));
       }
 
-      if (locList.length > 0) {
+      if (locList && locList.length > 0) {
         setInventoryForm(f => ({ ...f, locationId: locList[0].id }));
         setTransferForm(f => ({
           ...f,
           originLocationId: locList[0].id,
           destinationLocationId: locList[1]?.id || locList[0].id,
-          itemId: itemList[0]?.id || ''
+          itemId: itemList?.[0]?.id || ''
         }));
       }
     } catch (err) {

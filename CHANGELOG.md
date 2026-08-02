@@ -1,3 +1,9 @@
+## [v2.1.35] - 02 de Agosto, 2026
+### Proteção Defensiva no Módulo Estoque & Farmácia
+- **Módulo Estoque (StockPanel):** Adicionada proteção assíncrona com `catch` individual em cada requisição de dados (`Promise.all`) e Optional Chaining (`(requisitions || []).filter(...)`) no menu de abas e indicadores para impedir exceções de tela branca.
+
+---
+
 ## [v2.1.33] - 02 de Agosto, 2026
 ### Correção Crítica de Importação de Ícones
 - **ModuleSelector.jsx:** Importação explícita do ícone `FileText` da biblioteca `lucide-react` para resolver erro em tempo de execução ao tentar renderizar o novo módulo `NexaAPAC`.
