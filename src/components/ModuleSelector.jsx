@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, Settings, ShoppingCart, Calendar, ClipboardList } from 'lucide-react';
+import { BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, Settings, ShoppingCart, Calendar, ClipboardList, FileText } from 'lucide-react';
 import { authService } from '../firebase';
 
 export default function ModuleSelector({ user, onSelectModule }) {

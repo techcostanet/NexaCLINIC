@@ -1,3 +1,9 @@
+## [v2.1.33] - 02 de Agosto, 2026
+### Correção Crítica de Importação de Ícones
+- **ModuleSelector.jsx:** Importação explícita do ícone `FileText` da biblioteca `lucide-react` para resolver erro em tempo de execução ao tentar renderizar o novo módulo `NexaAPAC`.
+
+---
+
 ## [v2.1.31] - 02 de Agosto, 2026
 ### Correção de Renderização no Seletor de Módulos
 - **Seletor de Módulos (NexaCLINIC):** Adicionada validação defensiva para renderização dos ícones e verificação de permissões do novo módulo `NexaAPAC` para prevenir exceções de tela branca.

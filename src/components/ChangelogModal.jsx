@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.33',
+      date: '02 de Agosto, 2026',
+      title: 'Resolução Definitiva de Importação de Ícones (FileText)',
+      description: 'Adicionada importação explícita do ícone FileText no ModuleSelector prevenindo ReferenceError.',
+      changes: [
+        { type: 'Seletor de Módulos', text: 'Importado FileText do pacote lucide-react eliminando travamento no carregamento do portal.' }
+      ]
+    },
+    {
       version: 'v2.1.31',
       date: '02 de Agosto, 2026',
       title: 'Correção de Segurança e Renderização no Seletor de Módulos',
