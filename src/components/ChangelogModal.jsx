@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.25',
+      date: '02 de Agosto, 2026',
+      title: 'Mapeamento de KPIs no Estoque & Correções contra Tela Branca',
+      description: 'Painel de cards resumo de requisições incluído na aba "Atendimento de Requisições" do Estoque e aplicadas travas de segurança contra formatação de datas inválidas.',
+      changes: [
+        { type: 'Módulo Estoque & Farmácia', text: 'Adicionados os 4 cards KPI (Total de Pedidos, Pendentes, Entregas Parciais e Atendidos) no topo da aba Atendimento de Requisições do Estoque.' },
+        { type: 'Resiliência & Segurança', text: 'Prevenção contra tela branca (NaN date parsing) em tabelas de requisições, histórico de movimentações e controle de validade do Estoque.' }
+      ]
+    },
+    {
       version: 'v2.1.24',
       date: '02 de Agosto, 2026',
       title: 'Melhorias no Módulo de Recursos Humanos (RH) e Vale-Transporte',

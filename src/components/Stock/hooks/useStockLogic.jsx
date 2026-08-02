@@ -150,7 +150,7 @@ export function useStockLogic(currentUser) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [itemList, txList, supList, secList, invList, loanList, catList, locList, invsList, transList] = await Promise.all([
+      const [itemList, txList, supList, secList, invList, loanList, catList, locList, invsList, transList, reqList] = await Promise.all([
         dbService.getInventoryItems(),
         dbService.getStockTransactions(),
         dbService.getSuppliers(),
@@ -160,7 +160,8 @@ export function useStockLogic(currentUser) {
         dbService.getProductCategories ? dbService.getProductCategories() : [],
         dbService.getStockLocations ? dbService.getStockLocations() : [],
         dbService.getInventories ? dbService.getInventories() : [],
-        dbService.getStockTransfers ? dbService.getStockTransfers() : []
+        dbService.getStockTransfers ? dbService.getStockTransfers() : [],
+        dbService.getMaterialRequisitions ? dbService.getMaterialRequisitions() : []
       ]);
       
       setItems(itemList);
@@ -172,6 +173,7 @@ export function useStockLogic(currentUser) {
       setStockLocations(locList);
       setInventories(invsList);
       setTransfers(transList);
+      setRequisitions(reqList || []);
       setCategoriesList(catList.length > 0 ? catList : [
         { id: 'c1', name: 'Insumo Clínico' },
         { id: 'c2', name: 'Medicamento' },

@@ -688,7 +688,7 @@ export default function StockPanel({ currentUser }) {
                       const secName = sectors.find(s => s.id === tx.sectorId)?.name || 'Almoxarifado Central';
                       return (
                         <tr key={tx.id}>
-                          <td>{new Date(tx.date).toLocaleString('pt-BR')}</td>
+                          <td>{tx.date && !isNaN(new Date(tx.date).getTime()) ? new Date(tx.date).toLocaleString('pt-BR') : '-'}</td>
                           <td style={{ fontWeight: '600' }}>{tx.itemName}</td>
                           <td>
                             <span style={{ 
@@ -743,8 +743,8 @@ export default function StockPanel({ currentUser }) {
                           <td style={{ fontWeight: '600' }}>{tx.itemName}</td>
                           <td style={{ fontWeight: '700' }}>{tx.batch || '-'}</td>
                           <td>{tx.quantity}</td>
-                          <td>{new Date(tx.date).toLocaleDateString('pt-BR')}</td>
-                          <td>{tx.expiryDate ? new Date(tx.expiryDate).toLocaleDateString('pt-BR') : '-'}</td>
+                          <td>{tx.date && !isNaN(new Date(tx.date).getTime()) ? new Date(tx.date).toLocaleDateString('pt-BR') : '-'}</td>
+                          <td>{tx.expiryDate && !isNaN(new Date(tx.expiryDate).getTime()) ? new Date(tx.expiryDate).toLocaleDateString('pt-BR') : '-'}</td>
                           <td>
                             <span style={{ ...styles.expiryLabel, color: expiryInfo.color }}>
                               {expiryInfo.text}
@@ -852,6 +852,51 @@ export default function StockPanel({ currentUser }) {
       {/* Requisitions Fulfillment Tab Content */}
       {activeTab === 'requisitions' && (
         <div style={{ marginTop: '1rem' }}>
+          {/* Cards KPI de Requisições */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Total de Pedidos</span>
+                <Package size={20} color="#6b7280" />
+              </div>
+              <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--text-color)' }}>{requisitions.length}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Histórico total de requisições</div>
+            </div>
+
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border-color)', borderTop: '4px solid #f59e0b', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Pendentes</span>
+                <Clock size={20} color="#f59e0b" />
+              </div>
+              <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#d97706' }}>
+                {requisitions.filter(r => r.status === 'Pendente').length}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Aguardando separação na farmácia</div>
+            </div>
+
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border-color)', borderTop: '4px solid #ea580c', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Entregas Parciais</span>
+                <AlertTriangle size={20} color="#ea580c" />
+              </div>
+              <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#ea580c' }}>
+                {requisitions.filter(r => r.status === 'Parcial').length}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Entregues parcialmente</div>
+            </div>
+
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border-color)', borderTop: '4px solid #10b981', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Atendidos / Entregues</span>
+                <CheckCircle2 size={20} color="#10b981" />
+              </div>
+              <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#059669' }}>
+                {requisitions.filter(r => r.status === 'Entregue').length}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Concluídos com sucesso</div>
+            </div>
+          </div>
+
           <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '10px', border: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
@@ -901,8 +946,8 @@ export default function StockPanel({ currentUser }) {
                           {req.requisitionCode}
                         </td>
                         <td style={{ padding: '0.875rem 1rem' }}>
-                          <div>{new Date(req.createdAt).toLocaleDateString('pt-BR')}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div>{req.createdAt && !isNaN(new Date(req.createdAt).getTime()) ? new Date(req.createdAt).toLocaleDateString('pt-BR') : '-'}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{req.createdAt && !isNaN(new Date(req.createdAt).getTime()) ? new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
                         </td>
                         <td style={{ padding: '0.875rem 1rem' }}>{req.requestedBy}</td>
                         <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>{req.patientName || 'Uso Geral'}</td>

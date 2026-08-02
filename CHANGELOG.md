@@ -1,3 +1,10 @@
+## [v2.1.25] - 02 de Agosto, 2026
+### Mapeamento de KPIs no Estoque & Correção de Tela Branca
+- **Módulo Estoque (Atendimento de Requisições):** Adicionada a grade de 4 cards estatísticos (Total de Pedidos, Pendentes, Entregas Parciais, Atendidos/Entregues) para dar visão imediata dos indicadores da farmácia.
+- **Resiliência contra Tela Branca:** Tratamento e fallback para renderização de datas em tabelas do estoque, evitando falhas de execução no navegador.
+
+---
+
 ## [v2.1.24] - 02 de Agosto, 2026
 ### Melhorias no Módulo de Recursos Humanos (RH) e Vale-Transporte
 - **Presença Premiada:** Valor padrão inicial alterado para R$ 100,00 por colaborador elegível.
