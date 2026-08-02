@@ -106,6 +106,7 @@ export default function HRPanel({ currentUser }) {
     handleOpenEmpAdd,
     handleOpenEmpEdit,
     handleSaveEmployee,
+    handleDismissEmployee,
     handleDeleteEmployee,
     handleOpenVoucherAdd,
     handleOpenVoucherEdit,
@@ -737,7 +738,10 @@ export default function HRPanel({ currentUser }) {
                             <td>
                               <div style={{ display: 'flex', gap: '0.25rem' }}>
                                 <button onClick={() => handleOpenEmpEdit(emp)} style={styles.actionEditBtn} title="Abrir Ficha do Funcionário">Ficha</button>
-                                <button onClick={() => handleDeleteEmployee(emp)} style={{ ...styles.actionEditBtn, color: 'var(--danger-color)', borderColor: 'rgba(239,68,68,0.2)' }}>Excluir</button>
+                                {emp.status !== 'Inativo' && (
+                                  <button onClick={() => handleDismissEmployee(emp)} style={{ ...styles.actionEditBtn, color: '#d97706', borderColor: 'rgba(217,119,6,0.2)' }} title="Registrar Demissão / Desligamento">Demitir</button>
+                                )}
+                                <button onClick={() => handleDeleteEmployee(emp)} style={{ ...styles.actionEditBtn, color: 'var(--danger-color)', borderColor: 'rgba(239,68,68,0.2)' }} title="Excluir Permanentemente">Excluir</button>
                               </div>
                             </td>
                           </tr>
@@ -983,6 +987,19 @@ export default function HRPanel({ currentUser }) {
                         <option value="Temporário">Temporário</option>
                       </select>
                     </div>
+                    <div className="form-group">
+                      <label>Status no Sistema</label>
+                      <select className="form-control" value={empForm.status || 'Ativo'} onChange={e => setEmpForm({ ...empForm, status: e.target.value })}>
+                        <option value="Ativo">🟢 Ativo (Trabalhando)</option>
+                        <option value="Inativo">🔴 Inativo / Demitido</option>
+                      </select>
+                    </div>
+                    {empForm.status === 'Inativo' && (
+                      <div className="form-group">
+                        <label>Data de Desligamento / Demissão</label>
+                        <input type="date" className="form-control" value={empForm.terminationDate || ''} onChange={e => setEmpForm({ ...empForm, terminationDate: e.target.value })} />
+                      </div>
+                    )}
                     <div className="form-group">
                       <label>Salário Base (R$)</label>
                       <input type="number" className="form-control" value={empForm.salary} onChange={e => setEmpForm({ ...empForm, salary: e.target.value })} />
@@ -1396,7 +1413,7 @@ export default function HRPanel({ currentUser }) {
               <h2>{editingVoucher ? 'Editar Concessão de VT' : 'Nova Concessão de Vale-Transporte'}</h2>
               <button onClick={() => setShowVoucherModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
-            <form onSubmit={handleSaveVoucher} style={styles.modalForm}>
+            <form onSubmit={handleSaveVoucher} style={{ ...styles.modalForm, maxHeight: '80vh', overflowY: 'auto' }}>
               <div className="form-group">
                 <label>Funcionário *</label>
                 <select className="form-control" required value={voucherForm.employeeId} onChange={e => setVoucherForm({ ...voucherForm, employeeId: e.target.value })}>

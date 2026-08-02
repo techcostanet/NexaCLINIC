@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.24',
+      date: '02 de Agosto, 2026',
+      title: 'Melhorias no Módulo de Recursos Humanos (RH) e Vale-Transporte',
+      description: 'Ajuste de valor padrão da Presença Premiada para R$ 100,00, rolagem responsiva no modal de Vale-Transporte e adição de funcionalidade e campos para registro de demissão/desligamento de funcionários.',
+      changes: [
+        { type: 'Recursos Humanos', text: 'Presença Premiada configurada com valor padrão inicial de R$ 100,00.' },
+        { type: 'Usabilidade & UX', text: 'Modal de Nova Concessão de Vale-Transporte atualizado com rolagem interna (maxHeight: 80vh) garantindo visualização completa dos botões de confirmação e cancelamento.' },
+        { type: 'Recursos Humanos', text: 'Inclusão da opção de Demissão/Desligamento de funcionários com campo de data de saída, status inativo e atalho rápido de ação.' }
+      ]
+    },
+    {
       version: 'v2.1.23',
       date: '01 de Agosto, 2026',
       title: 'Correção de Permissões Firestore e Restauração de Dados',

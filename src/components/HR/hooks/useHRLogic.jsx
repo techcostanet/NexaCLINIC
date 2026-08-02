@@ -122,7 +122,7 @@ export function useHRLogic(currentUser) {
     cardNumber: '',
     discountPercent: '6'
   });
-  const [awardValue, setAwardValue] = useState(200);
+  const [awardValue, setAwardValue] = useState(100);
 
   useEffect(() => {
     fetchData();
@@ -324,6 +324,27 @@ export function useHRLogic(currentUser) {
       fetchData();
     } catch (err) {
       showAlert('Erro ao gravar dados do funcionário.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDismissEmployee = async (emp) => {
+    const termDate = prompt(`Confirma a demissão / desligamento do funcionário "${emp.name}"?\nDigite a data do desligamento (AAAA-MM-DD):`, new Date().toISOString().substring(0, 10));
+    if (!termDate) return;
+
+    setActionLoading(true);
+    try {
+      await dbService.updateEmployee(emp.id, {
+        ...emp,
+        status: 'Inativo',
+        terminationDate: termDate
+      });
+      showAlert(`Desligamento de "${emp.name}" registrado com sucesso!`, 'success');
+      logAuditAction('Desligamento / Demissão', `Funcionário ${emp.name} (ID: ${emp.id}) foi desligado na data ${termDate}.`);
+      fetchData();
+    } catch (err) {
+      showAlert('Erro ao registrar desligamento.', 'danger');
     } finally {
       setActionLoading(false);
     }
@@ -1178,6 +1199,7 @@ export function useHRLogic(currentUser) {
     handleOpenEmpAdd,
     handleOpenEmpEdit,
     handleSaveEmployee,
+    handleDismissEmployee,
     handleDeleteEmployee,
     handleOpenVoucherAdd,
     handleOpenVoucherEdit,
