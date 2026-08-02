@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.29',
+      date: '02 de Agosto, 2026',
+      title: 'Módulo Exclusivo NexaAPAC & Cards Clicáveis do Dashboard Financeiro',
+      description: 'Criação do módulo independente para Faturamento e APACs (NexaAPAC) e transformação de todos os cards KPI em botões interativos para exibição de detalhes completos.',
+      changes: [
+        { type: 'Módulo NexaAPAC', text: 'Módulo dedicado para auditoria de APACs, controle de renovação, gestão de glosas e exportação de remessas BPA/APAC.' },
+        { type: 'Módulo Financeiro', text: 'Removida a aba antiga de APACs e implementado modal interativo de detalhamento em cada card KPI do Dashboard.' }
+      ]
+    },
+    {
       version: 'v2.1.27',
       date: '02 de Agosto, 2026',
       title: 'Proteção Total contra Tela Branca nas Abas Catálogo e Entrada de Notas',

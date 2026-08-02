@@ -15,6 +15,7 @@ import ConfigPanel from './components/ConfigPanel';
 import PurchasingPanel from './components/PurchasingPanel';
 import CalendarPanel from './components/CalendarPanel';
 import TechnicianPanel from './components/TechnicianPanel';
+import ApacBillingPanel from './components/ApacBillingPanel';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -119,6 +120,8 @@ export default function App() {
           <HRPanel currentUser={user} />
         ) : currentModule === 'finance' ? (
           <FinancePanel currentUser={user} />
+        ) : currentModule === 'apac' ? (
+          <ApacBillingPanel currentUser={user} />
         ) : currentModule === 'purchasing' ? (
           <PurchasingPanel currentUser={user} />
         ) : currentModule === 'calendar' ? (

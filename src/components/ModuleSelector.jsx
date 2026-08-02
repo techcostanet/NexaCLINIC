@@ -61,10 +61,19 @@ export default function ModuleSelector({ user, onSelectModule }) {
       id: 'finance',
       title: 'Módulo Financeiro',
       subtitle: 'NexaFINANCE - Financeiro',
-      description: 'Fluxo de caixa, contas a pagar e receber, conciliação de glosas, alertas de APAC e importador de XML NF-e.',
+      description: 'Fluxo de caixa, contas a pagar e receber, conciliação bancária, parcelamentos e importação de XML NF-e.',
       icon: DollarSign,
       color: '#10b981', // emerald-500
       allowedRoles: ['admin', 'financial']
+    },
+    {
+      id: 'apac',
+      title: 'APACs & Faturamento',
+      subtitle: 'NexaAPAC - Faturamento',
+      description: 'Auditoria de guias APAC, faturamento SUS/Convênios, gestão de glosas e exportação de remessas BPA.',
+      icon: FileText,
+      color: '#ef4444', // red-500
+      allowedRoles: ['admin', 'financial', 'receptionist']
     },
     {
       id: 'calendar',

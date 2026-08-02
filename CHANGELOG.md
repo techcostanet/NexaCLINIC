@@ -1,3 +1,10 @@
+## [v2.1.29] - 02 de Agosto, 2026
+### Módulo Independente NexaAPAC & Dashboard Financeiro Interativo
+- **Novo Módulo NexaAPAC (APACs & Faturamento):** Módulo dedicado para auditoria de APACs de diálise, controle de vencimentos, gestão de glosas de convênios e geração de arquivos de remessa SUS.
+- **Dashboard Financeiro Clicável:** Todos os cards de KPI do Módulo Financeiro tornaram-se interativos, abrindo um modal completo com a listagem filtrada dos títulos, prazos e detalhamentos operacionais.
+
+---
+
 ## [v2.1.27] - 02 de Agosto, 2026
 ### Proteção Defensiva contra Tela Branca (Catálogo e Entrada de Notas)
 - **Catálogo de Produtos:** Blindagem das propriedades dos produtos (`currentStock`, `minStock`, `price`, `name`, `category`) prevenindo exceções de renderização em registros inconsistentes no banco.

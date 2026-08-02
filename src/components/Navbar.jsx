@@ -63,6 +63,8 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
     ? 'NexaHR'
     : currentModule === 'finance'
     ? 'NexaFINANCE'
+    : currentModule === 'apac'
+    ? 'NexaAPAC - Faturamento'
     : currentModule === 'purchasing'
     ? 'NexaPROCURE'
     : currentModule === 'calendar'

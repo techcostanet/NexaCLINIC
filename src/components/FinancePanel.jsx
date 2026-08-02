@@ -142,6 +142,10 @@ export default function FinancePanel() {
   });
   const [selectedDebtDetail, setSelectedDebtDetail] = useState(null);
 
+  // Modal interativo de detalhe de Card do Dashboard
+  const [selectedDashboardDetail, setSelectedDashboardDetail] = useState(null);
+  const [detailFilter, setDetailFilter] = useState('');
+
   // Sorting Helper Function
   const sortList = (list, sortConfig) => {
     if (!sortConfig || !sortConfig.key) return list;
@@ -546,12 +550,6 @@ export default function FinancePanel() {
           >
             Conciliação Bancária
           </button>
-          <button 
-            onClick={() => setActiveTab('apac')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'apac' ? styles.tabBtnActive : {}) }}
-          >
-            APACs & Faturamento
-          </button>
         </div>
 
         <button onClick={loadData} style={styles.refreshBtn} title="Atualizar dados">
@@ -658,6 +656,12 @@ export default function FinancePanel() {
                 return (
                   <div
                     key={card.id}
+                    onClick={() => {
+                      if (!isCustomizingDashboard) {
+                        setSelectedDashboardDetail(card);
+                        setDetailFilter('');
+                      }
+                    }}
                     style={{
                       gridColumn: getGridSpan(card.size),
                       backgroundColor: 'var(--bg-card)',
@@ -668,8 +672,11 @@ export default function FinancePanel() {
                       flexDirection: 'column',
                       justifyContent: 'space-between',
                       opacity: !card.visible && isCustomizingDashboard ? 0.5 : 1,
-                      transition: 'all 0.2s ease'
+                      cursor: isCustomizingDashboard ? 'default' : 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: isCustomizingDashboard ? 'none' : '0 1px 3px rgba(0,0,0,0.05)'
                     }}
+                    title={isCustomizingDashboard ? '' : `Clique para ver os detalhes completos de ${card.name}`}
                   >
                     {/* Controls overlay in customizing mode */}
                     {isCustomizingDashboard && (
@@ -861,6 +868,322 @@ export default function FinancePanel() {
                 );
               })}
           </div>
+
+          {/* Modal Interativo de Detalhamento dos Cards KPI do Dashboard */}
+          {selectedDashboardDetail && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(15, 23, 42, 0.65)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '1rem',
+              backdropFilter: 'blur(4px)'
+            }}>
+              <div style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '12px',
+                width: '100%',
+                maxWidth: '900px',
+                maxHeight: '90vh',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                overflow: 'hidden'
+              }}>
+                {/* Modal Header */}
+                <div style={{
+                  padding: '1.25rem 1.5rem',
+                  borderBottom: '1px solid var(--border-color)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: '#f8fafc'
+                }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                      Detalhamento Completo: {selectedDashboardDetail.name}
+                    </h3>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      Listagem detalhada e diagnósticos consolidados em tempo real
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedDashboardDetail(null)}
+                    style={{
+                      border: 'none',
+                      backgroundColor: 'transparent',
+                      cursor: 'pointer',
+                      padding: '0.25rem',
+                      borderRadius: '4px',
+                      color: 'var(--text-secondary)'
+                    }}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Modal Search / Action Filter Bar */}
+                <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '1rem', backgroundColor: '#ffffff' }}>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                    <input 
+                      type="text" 
+                      placeholder="Pesquisar nos registros deste card..."
+                      value={detailFilter}
+                      onChange={e => setDetailFilter(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.45rem 0.75rem 0.45rem 2.25rem',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border-color)',
+                        fontSize: '0.85rem'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Modal Body Table Content based on Card ID */}
+                <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
+                  {/* CARD: payables_today */}
+                  {selectedDashboardDetail.id === 'payables_today' && (
+                    <div>
+                      <div style={{ padding: '0.75rem 1rem', backgroundColor: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca', marginBottom: '1rem', color: '#991b1b', fontSize: '0.875rem' }}>
+                        <strong>Resumo:</strong> {payablesTodayOrOverdue.length} conta(s) com vencimento para HOJE ou já VENCIDAS, totalizando <strong>R$ {totalPayablesTodayOrOverdue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>.
+                      </div>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#f8fafc' }}>
+                            <th style={styles.th}>Fornecedor</th>
+                            <th style={styles.th}>Categoria</th>
+                            <th style={styles.th}>Data Vencimento</th>
+                            <th style={styles.th}>Valor (R$)</th>
+                            <th style={styles.th}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payablesTodayOrOverdue
+                            .filter(p => p.supplier.toLowerCase().includes(detailFilter.toLowerCase()) || p.category.toLowerCase().includes(detailFilter.toLowerCase()))
+                            .map(p => (
+                              <tr key={p.id} style={styles.tr}>
+                                <td style={styles.td}><strong>{p.supplier}</strong></td>
+                                <td style={styles.td}>{p.category}</td>
+                                <td style={{ ...styles.td, fontWeight: '700', color: p.dueDate < todayStr ? '#ef4444' : '#b45309' }}>
+                                  {p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'} {p.dueDate < todayStr ? '(Vencido)' : '(Hoje)'}
+                                </td>
+                                <td style={{ ...styles.td, fontWeight: '700' }}>R$ {(parseFloat(p.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                <td style={styles.td}>
+                                  <span style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
+                                    {p.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* CARD: payables_7days */}
+                  {selectedDashboardDetail.id === 'payables_7days' && (
+                    <div>
+                      <div style={{ padding: '0.75rem 1rem', backgroundColor: '#fffbeb', borderRadius: '8px', border: '1px solid #fde68a', marginBottom: '1rem', color: '#92400e', fontSize: '0.875rem' }}>
+                        <strong>Resumo:</strong> {payables7DaysList.length} conta(s) a vencer nos próximos 7 dias, somando <strong>R$ {totalPayables7Days.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>.
+                      </div>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#f8fafc' }}>
+                            <th style={styles.th}>Fornecedor</th>
+                            <th style={styles.th}>Categoria</th>
+                            <th style={styles.th}>Vencimento</th>
+                            <th style={styles.th}>Valor (R$)</th>
+                            <th style={styles.th}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payables7DaysList
+                            .filter(p => p.supplier.toLowerCase().includes(detailFilter.toLowerCase()))
+                            .map(p => (
+                              <tr key={p.id} style={styles.tr}>
+                                <td style={styles.td}><strong>{p.supplier}</strong></td>
+                                <td style={styles.td}>{p.category}</td>
+                                <td style={styles.td}>{p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}</td>
+                                <td style={{ ...styles.td, fontWeight: '700' }}>R$ {(parseFloat(p.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                <td style={styles.td}>
+                                  <span style={{ backgroundColor: '#fef3c7', color: '#b45309', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
+                                    {p.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* CARD: payables_15days */}
+                  {selectedDashboardDetail.id === 'payables_15days' && (
+                    <div>
+                      <div style={{ padding: '0.75rem 1rem', backgroundColor: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', marginBottom: '1rem', color: '#1e40af', fontSize: '0.875rem' }}>
+                        <strong>Resumo:</strong> {payables15DaysList.length} conta(s) a vencer nos próximos 15 dias, totalizando <strong>R$ {totalPayables15Days.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>.
+                      </div>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#f8fafc' }}>
+                            <th style={styles.th}>Fornecedor</th>
+                            <th style={styles.th}>Categoria</th>
+                            <th style={styles.th}>Vencimento</th>
+                            <th style={styles.th}>Valor (R$)</th>
+                            <th style={styles.th}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payables15DaysList
+                            .filter(p => p.supplier.toLowerCase().includes(detailFilter.toLowerCase()))
+                            .map(p => (
+                              <tr key={p.id} style={styles.tr}>
+                                <td style={styles.td}><strong>{p.supplier}</strong></td>
+                                <td style={styles.td}>{p.category}</td>
+                                <td style={styles.td}>{p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}</td>
+                                <td style={{ ...styles.td, fontWeight: '700' }}>R$ {(parseFloat(p.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                <td style={styles.td}>
+                                  <span style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
+                                    {p.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* CARD: receivables_today */}
+                  {selectedDashboardDetail.id === 'receivables_today' && (
+                    <div>
+                      <div style={{ padding: '0.75rem 1rem', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0', marginBottom: '1rem', color: '#166534', fontSize: '0.875rem' }}>
+                        <strong>Resumo:</strong> Contas a receber previstas para HOJE no valor total de <strong>R$ {totalReceivablesToday.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>. Já recebidos: <strong>R$ {receivedToday.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>.
+                      </div>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#f8fafc' }}>
+                            <th style={styles.th}>Cliente / Convênio</th>
+                            <th style={styles.th}>Categoria</th>
+                            <th style={styles.th}>Nº Guia/Doc</th>
+                            <th style={styles.th}>Valor (R$)</th>
+                            <th style={styles.th}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {receivablesToday
+                            .filter(r => r.client.toLowerCase().includes(detailFilter.toLowerCase()))
+                            .map(r => (
+                              <tr key={r.id} style={styles.tr}>
+                                <td style={styles.td}><strong>{r.client}</strong></td>
+                                <td style={styles.td}>{r.category}</td>
+                                <td style={styles.td}>{r.invoiceNumber || '-'}</td>
+                                <td style={{ ...styles.td, fontWeight: '700' }}>R$ {(parseFloat(r.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                <td style={styles.td}>
+                                  <span style={{ backgroundColor: r.status === 'Pago' ? '#dcfce7' : '#fee2e2', color: r.status === 'Pago' ? '#166534' : '#991b1b', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
+                                    {r.status === 'Pago' ? '✓ Recebido' : '⏳ Pendente'}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* CARD: cash_flow_summary */}
+                  {selectedDashboardDetail.id === 'cash_flow_summary' && (
+                    <div>
+                      <div style={{ padding: '0.75rem 1rem', backgroundColor: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', marginBottom: '1rem', color: '#1e40af', fontSize: '0.875rem' }}>
+                        <strong>Extrato Realizado:</strong> Saldo líquido de <strong>R$ {realizedBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> (Total Entradas Quitadas: R$ {totalReceivedRealized.toLocaleString('pt-BR')} | Total Saídas Quitadas: R$ {totalPaidRealized.toLocaleString('pt-BR')}).
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <h4 style={{ margin: '0 0 0.5rem 0', color: '#166534' }}>🟢 Entradas Quitadas (Recebidas)</h4>
+                          <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem' }}>
+                            {receivableList.filter(r => r.status === 'Pago').slice(0, 10).map(r => (
+                              <li key={r.id} style={{ padding: '0.35rem 0', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
+                                <span>{r.client}</span>
+                                <strong>R$ {r.amount.toLocaleString('pt-BR')}</strong>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <h4 style={{ margin: '0 0 0.5rem 0', color: '#991b1b' }}>🔴 Saídas Quitadas (Pagas)</h4>
+                          <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem' }}>
+                            {payableList.filter(p => p.status === 'Pago').slice(0, 10).map(p => (
+                              <li key={p.id} style={{ padding: '0.35rem 0', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
+                                <span>{p.supplier}</span>
+                                <strong>R$ {p.amount.toLocaleString('pt-BR')}</strong>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CARD: overdue_alerts */}
+                  {selectedDashboardDetail.id === 'overdue_alerts' && (
+                    <div>
+                      <div style={{ padding: '0.75rem 1rem', backgroundColor: '#fffbeb', borderRadius: '8px', border: '1px solid #fde68a', marginBottom: '1rem', color: '#92400e', fontSize: '0.875rem' }}>
+                        <strong>Alerta de Cobrança:</strong> {overduePayables.length} despesa(s) atrasada(s) e {overdueReceivables.length} receita(s) em atraso, somando <strong>R$ {totalOverdueAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>.
+                      </div>
+                      <h4 style={{ margin: '0 0 0.5rem 0', color: '#ef4444' }}>🔴 Despesas em Atraso (Pagar)</h4>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#f8fafc' }}>
+                            <th style={styles.th}>Fornecedor</th>
+                            <th style={styles.th}>Vencimento</th>
+                            <th style={styles.th}>Valor (R$)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {overduePayables.map(p => (
+                            <tr key={p.id} style={styles.tr}>
+                              <td style={styles.td}><strong>{p.supplier}</strong></td>
+                              <td style={{ ...styles.td, color: '#ef4444', fontWeight: '700' }}>{p.dueDate?.split('-').reverse().join('/')}</td>
+                              <td style={{ ...styles.td, fontWeight: '700' }}>R$ {p.amount.toLocaleString('pt-BR')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* GENERIC FALLBACK FOR OTHER CARDS */}
+                  {['cash_flow_bar', 'cost_distribution', 'ebitda', 'apac_glosa'].includes(selectedDashboardDetail.id) && (
+                    <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                      <h4>📊 Consolidação Gerencial do Indicador</h4>
+                      <p>Este card apresenta a consolidação acumulada de métricas do sistema financeiro e de auditoria da clínica.</p>
+                      <ul>
+                        <li><strong>Contas a Receber Totais:</strong> R$ {totalReceivables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</li>
+                        <li><strong>Contas a Pagar Totais:</strong> R$ {totalPayables.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</li>
+                        <li><strong>Diferença de Caixa Projetada:</strong> R$ {ebitdaProjected.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Modal Footer */}
+                <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', backgroundColor: '#f8fafc' }}>
+                  <button onClick={() => setSelectedDashboardDetail(null)} style={styles.btnSecondary}>
+                    Fechar Detalhamento
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1694,54 +2017,6 @@ export default function FinancePanel() {
                         ) : (
                           <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: '700' }}>✓ Concluído</span>
                         )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* APACs & Billing View */}
-      {activeTab === 'apac' && (
-        <div style={styles.tabContent}>
-          <div style={styles.apacAlertBanner}>
-            <AlertCircle size={20} color="#b45309" />
-            <div style={{ marginLeft: '0.75rem' }}>
-              <strong>Atenção ao faturamento:</strong> Há 3 guias APAC de pacientes ativas que vencem nos próximos 10 dias. Regularize o pedido médico de renovação para evitar glosas operacionais automáticas pelo SUS.
-            </div>
-          </div>
-
-          <div style={styles.tableWrapper}>
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th style={styles.th}>Paciente</th>
-                  <th style={styles.th}>Nº APAC Autorizada</th>
-                  <th style={styles.th}>Data de Vencimento</th>
-                  <th style={styles.th}>Dias Restantes</th>
-                  <th style={styles.th}>Status de Validade</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockApacs.map(apac => {
-                  const today = new Date();
-                  const expireDate = new Date(apac.expires);
-                  const diffTime = Math.abs(expireDate - today);
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  
-                  return (
-                    <tr key={apac.id} style={styles.tr}>
-                      <td style={styles.td}><strong>{apac.patientName}</strong></td>
-                      <td style={styles.td}>{apac.code}</td>
-                      <td style={styles.td}>{apac.expires.split('-').reverse().join('/')}</td>
-                      <td style={styles.td}>{diffDays} dias</td>
-                      <td style={styles.td}>
-                        <span style={{ ...styles.statusBadge, ...getApacBadgeStyle(apac.status) }}>
-                          {apac.status}
-                        </span>
                       </td>
                     </tr>
                   );
