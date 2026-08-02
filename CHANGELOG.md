@@ -1,3 +1,9 @@
+## [v2.1.31] - 02 de Agosto, 2026
+### Correção de Renderização no Seletor de Módulos
+- **Seletor de Módulos (NexaCLINIC):** Adicionada validação defensiva para renderização dos ícones e verificação de permissões do novo módulo `NexaAPAC` para prevenir exceções de tela branca.
+
+---
+
 ## [v2.1.29] - 02 de Agosto, 2026
 ### Módulo Independente NexaAPAC & Dashboard Financeiro Interativo
 - **Novo Módulo NexaAPAC (APACs & Faturamento):** Módulo dedicado para auditoria de APACs de diálise, controle de vencimentos, gestão de glosas de convênios e geração de arquivos de remessa SUS.

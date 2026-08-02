@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.31',
+      date: '02 de Agosto, 2026',
+      title: 'Correção de Segurança e Renderização no Seletor de Módulos',
+      description: 'Adicionada trava de segurança contra ausência de ícones ou permissões RBAC no portal de seleção de módulos.',
+      changes: [
+        { type: 'Portal de Módulos', text: 'Prevenção de exceção e tela branca ao listar o novo módulo APACs & Faturamento para perfis de acesso restrito.' }
+      ]
+    },
+    {
       version: 'v2.1.29',
       date: '02 de Agosto, 2026',
       title: 'Módulo Exclusivo NexaAPAC & Cards Clicáveis do Dashboard Financeiro',

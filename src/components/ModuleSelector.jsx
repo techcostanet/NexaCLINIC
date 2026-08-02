@@ -166,7 +166,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
       return mod.id === 'hr' || mod.id === 'quality';
     }
 
-    return mod.allowedRoles.includes(userRole);
+    return Array.isArray(mod.allowedRoles) ? mod.allowedRoles.includes(userRole) : true;
   });
 
   const roleLabel = userProfileConfig?.name || (
@@ -206,7 +206,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
                 onClick={() => onSelectModule(mod.id)}
               >
                 <div style={{ ...styles.iconBox, backgroundColor: mod.color }}>
-                  <Icon size={22} color="#fff" />
+                  {Icon ? <Icon size={22} color="#fff" /> : <FileText size={22} color="#fff" />}
                 </div>
                 <h3 style={styles.cardTitle}>{mod.title}</h3>
                 <span style={{ ...styles.cardSubtitle, color: mod.color }}>{mod.subtitle}</span>
