@@ -357,18 +357,21 @@ export default function StockPanel({ currentUser }) {
                       <td colSpan="8" style={styles.noDataCell}>Nenhum insumo no catálogo.</td>
                     </tr>
                   ) : (
-                    sortData(filteredItems, inventorySort).map(item => {
-                      const isLow = item.currentStock <= item.minStock;
-                      const sectorName = sectors.find(s => s.id === item.defaultSectorId)?.name || 'Almoxarifado Central';
+                    sortData(filteredItems, inventorySort).map((item, idx) => {
+                      const currentVal = parseFloat(item?.currentStock) || 0;
+                      const minVal = parseFloat(item?.minStock) || 0;
+                      const isLow = currentVal <= minVal;
+                      const sectorName = sectors.find(s => s.id === item?.defaultSectorId)?.name || 'Almoxarifado Central';
+                      const itemPrice = parseFloat(item?.price) || 0;
                       return (
-                        <tr key={item.id} style={isLow ? styles.rowWarning : {}}>
-                          <td style={{ fontWeight: '600' }}>{item.name}</td>
-                          <td><span style={styles.categoryBadge}>{item.category}</span></td>
+                        <tr key={item?.id || idx} style={isLow ? styles.rowWarning : {}}>
+                          <td style={{ fontWeight: '600' }}>{item?.name || 'Insumo Sem Nome'}</td>
+                          <td><span style={styles.categoryBadge}>{item?.category || 'Geral'}</span></td>
                           <td style={{ fontWeight: '700', color: isLow ? 'var(--danger-color)' : 'var(--text-primary)' }}>
-                            {item.currentStock} {item.unit}
+                            {currentVal} {item?.unit || 'unidades'}
                           </td>
                           <td>{sectorName}</td>
-                          <td>{item.minStock} {item.unit}</td>
+                          <td>{minVal} {item?.unit || 'unidades'}</td>
                           <td>
                             {isLow ? (
                               <span style={styles.badgeCritical}>Abaixo do Mínimo</span>
@@ -376,7 +379,7 @@ export default function StockPanel({ currentUser }) {
                               <span style={styles.badgeNormal}>Regular</span>
                             )}
                           </td>
-                          <td>R$ {item.price ? item.price.toFixed(2) : '0.00'}</td>
+                          <td>R$ {itemPrice.toFixed(2)}</td>
                           <td>
                             <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
                               <button onClick={() => handleOpenEditModal(item)} style={styles.actionEditBtn} title="Editar Item">
@@ -559,18 +562,21 @@ export default function StockPanel({ currentUser }) {
                       <td colSpan="8" style={styles.noDataCell}>Nenhuma Nota Fiscal importada ou registrada.</td>
                     </tr>
                   ) : (
-                    sortData(invoices, invoiceSort).map(inv => (
-                      <tr key={inv.id}>
-                        <td style={{ fontWeight: '600' }}>{inv.number}</td>
-                        <td style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{inv.accessKey || 'N/A'}</td>
-                        <td style={{ fontWeight: '600' }}>{inv.supplierName}</td>
-                        <td>{inv.issueDate ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}</td>
-                        <td>{inv.entryDate ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}</td>
-                        <td style={{ fontWeight: '700' }}>R$ {inv.totalValue ? inv.totalValue.toFixed(2) : '0.00'}</td>
-                        <td>{inv.items?.length || 0} produtos</td>
-                        <td><span style={styles.badgeNormal}>Processada</span></td>
-                      </tr>
-                    ))
+                    sortData(invoices, invoiceSort).map((inv, idx) => {
+                      const totalVal = parseFloat(inv?.totalValue) || 0;
+                      return (
+                        <tr key={inv?.id || idx}>
+                          <td style={{ fontWeight: '600' }}>{inv?.number || 'NF-e Sem Nº'}</td>
+                          <td style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{inv?.accessKey || 'N/A'}</td>
+                          <td style={{ fontWeight: '600' }}>{inv?.supplierName || 'Fornecedor Desconhecido'}</td>
+                          <td>{inv?.issueDate && !isNaN(new Date(inv.issueDate).getTime()) ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}</td>
+                          <td>{inv?.entryDate && !isNaN(new Date(inv.entryDate).getTime()) ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}</td>
+                          <td style={{ fontWeight: '700' }}>R$ {totalVal.toFixed(2)}</td>
+                          <td>{inv?.items?.length || 0} produtos</td>
+                          <td><span style={styles.badgeNormal}>Processada</span></td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>

@@ -1191,14 +1191,25 @@ export function useStockLogic(currentUser) {
   };
 
   const getFilteredItems = () => {
+    if (!Array.isArray(items)) return [];
     return items.filter(item => {
-      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+      if (!item) return false;
+      const name = item.name ? String(item.name).toLowerCase() : '';
+      const matchesSearch = name.includes((searchTerm || '').toLowerCase());
       const matchesCategory = filterCategory ? item.category === filterCategory : true;
       return matchesSearch && matchesCategory;
     });
   };
 
-  const getLowStockItems = () => items.filter(i => i.currentStock <= i.minStock);
+  const getLowStockItems = () => {
+    if (!Array.isArray(items)) return [];
+    return items.filter(i => {
+      if (!i) return false;
+      const current = parseFloat(i.currentStock) || 0;
+      const min = parseFloat(i.minStock) || 0;
+      return current <= min;
+    });
+  };
 
   const getExpiryTransactions = () => {
     return transactions

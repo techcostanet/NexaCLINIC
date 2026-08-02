@@ -1,3 +1,10 @@
+## [v2.1.27] - 02 de Agosto, 2026
+### Proteção Defensiva contra Tela Branca (Catálogo e Entrada de Notas)
+- **Catálogo de Produtos:** Blindagem das propriedades dos produtos (`currentStock`, `minStock`, `price`, `name`, `category`) prevenindo exceções de renderização em registros inconsistentes no banco.
+- **Entrada de Notas & XML:** Tratamento e fallback para formatação de moedas (`totalValue.toFixed(2)`) e validação estrita de datas (`issueDate` e `entryDate`).
+
+---
+
 ## [v2.1.25] - 02 de Agosto, 2026
 ### Mapeamento de KPIs no Estoque & Correção de Tela Branca
 - **Módulo Estoque (Atendimento de Requisições):** Adicionada a grade de 4 cards estatísticos (Total de Pedidos, Pendentes, Entregas Parciais, Atendidos/Entregues) para dar visão imediata dos indicadores da farmácia.

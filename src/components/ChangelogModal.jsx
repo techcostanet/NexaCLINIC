@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.27',
+      date: '02 de Agosto, 2026',
+      title: 'Proteção Total contra Tela Branca nas Abas Catálogo e Entrada de Notas',
+      description: 'Blindagem completa no tratamento de propriedades e conversões numéricas/datas para evitar travamento de renderização no módulo de Estoque.',
+      changes: [
+        { type: 'Módulo Estoque (Catálogo)', text: 'Adicionada verificação contra registros nulos ou incompletos na lista de insumos e no filtro de busca.' },
+        { type: 'Módulo Estoque (Entrada de Notas)', text: 'Adicionado tratamento defensivo na formatação de valores totais e datas de emissão/entrada das notas fiscais.' }
+      ]
+    },
+    {
       version: 'v2.1.25',
       date: '02 de Agosto, 2026',
       title: 'Mapeamento de KPIs no Estoque & Correções contra Tela Branca',
