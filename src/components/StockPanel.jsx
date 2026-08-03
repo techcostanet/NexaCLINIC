@@ -270,7 +270,7 @@ export default function StockPanel({ currentUser }) {
             <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={styles.filterSelect}>
               <option value="">Todas as Categorias</option>
               {categoriesList.map(c => (
-                <option key={c.id} value={c.name}>{c.name}</option>
+                <option key={c?.id || Math.random()} value={c?.name}>{c?.name}</option>
               ))}
             </select>
           )}
@@ -349,7 +349,7 @@ export default function StockPanel({ currentUser }) {
                       const currentVal = parseFloat(item?.currentStock) || 0;
                       const minVal = parseFloat(item?.minStock) || 0;
                       const isLow = currentVal <= minVal;
-                      const sectorName = sectors.find(s => s.id === item?.defaultSectorId)?.name || 'Almoxarifado Central';
+                      const sectorName = sectors.find(s => s?.id === item?.defaultSectorId)?.name || 'Almoxarifado Central';
                       const itemPrice = parseFloat(item?.price) || 0;
                       return (
                         <tr key={item?.id || idx} style={isLow ? styles.rowWarning : {}}>
@@ -426,35 +426,35 @@ export default function StockPanel({ currentUser }) {
                         <td style={{ fontWeight: '600' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <ClipboardList size={16} color="var(--primary-color)" />
-                            {inv.title}
+                            {inv?.title}
                           </div>
                         </td>
                         <td>
                           <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
                             <Warehouse size={13} style={{ marginRight: '4px' }} />
-                            {inv.locationName || 'Estoque Geral'}
+                            {inv?.locationName || 'Estoque Geral'}
                           </span>
                         </td>
-                        <td>{inv.createdAt ? new Date(inv.createdAt).toLocaleDateString('pt-BR') : '-'}</td>
-                        <td>{inv.items?.length || items.length} produtos</td>
+                        <td>{inv?.createdAt ? new Date(inv.createdAt).toLocaleDateString('pt-BR') : '-'}</td>
+                        <td>{inv?.items?.length || items.length} produtos</td>
                         <td>
                           <span style={{
                             padding: '0.25rem 0.6rem',
                             borderRadius: '12px',
                             fontSize: '0.75rem',
                             fontWeight: '700',
-                            backgroundColor: inv.status === 'Concluído' ? '#dcfce7' : '#fef3c7',
-                            color: inv.status === 'Concluído' ? '#166534' : '#92400e'
+                            backgroundColor: inv?.status === 'Concluído' ? '#dcfce7' : '#fef3c7',
+                            color: inv?.status === 'Concluído' ? '#166534' : '#92400e'
                           }}>
-                            {inv.status || 'Em Andamento'}
+                            {inv?.status || 'Em Andamento'}
                           </span>
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: '0.35rem' }}>
                             <button onClick={() => handleOpenCountModal(inv)} style={{ ...styles.actionEditBtn, backgroundColor: 'var(--primary-light)', color: 'var(--primary-color)' }}>
-                              <Edit size={13} /> {inv.status === 'Concluído' ? 'Ver Divergências' : 'Digitar Contagem'}
+                              <Edit size={13} /> {inv?.status === 'Concluído' ? 'Ver Divergências' : 'Digitar Contagem'}
                             </button>
-                            <button onClick={() => handleDeleteInventory(inv.id, inv.title)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }}>
+                            <button onClick={() => handleDeleteInventory(inv?.id, inv?.title)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }}>
                               <Trash2 size={13} /> Excluir
                             </button>
                           </div>
@@ -500,23 +500,23 @@ export default function StockPanel({ currentUser }) {
                     </tr>
                   ) : (
                     transfers.map(tr => (
-                      <tr key={tr.id}>
-                        <td>{tr.createdAt ? new Date(tr.createdAt).toLocaleString('pt-BR') : '-'}</td>
+                      <tr key={tr?.id || Math.random()}>
+                        <td>{tr?.createdAt ? new Date(tr.createdAt).toLocaleString('pt-BR') : '-'}</td>
                         <td style={{ fontWeight: '600', color: '#991b1b' }}>
                           <ArrowDownLeft size={14} style={{ marginRight: '4px' }} />
-                          {tr.originLocationName || 'Origem'}
+                          {tr?.originLocationName || 'Origem'}
                         </td>
                         <td style={{ fontWeight: '600', color: '#166534' }}>
                           <ArrowUpRight size={14} style={{ marginRight: '4px' }} />
-                          {tr.destinationLocationName || 'Destino'}
+                          {tr?.destinationLocationName || 'Destino'}
                         </td>
-                        <td style={{ fontWeight: '600' }}>{tr.itemName}</td>
-                        <td style={{ fontWeight: '700' }}>{tr.quantity} {tr.unit || 'unidades'}</td>
-                        <td>{tr.batch || 'S/L'} {tr.expiryDate ? `(${new Date(tr.expiryDate).toLocaleDateString('pt-BR')})` : ''}</td>
-                        <td>{tr.operator || 'Almoxarife'}</td>
+                        <td style={{ fontWeight: '600' }}>{tr?.itemName}</td>
+                        <td style={{ fontWeight: '700' }}>{tr?.quantity} {tr?.unit || 'unidades'}</td>
+                        <td>{tr?.batch || 'S/L'} {tr?.expiryDate ? `(${new Date(tr.expiryDate).toLocaleDateString('pt-BR')})` : ''}</td>
+                        <td>{tr?.operator || 'Almoxarife'}</td>
                         <td><span style={styles.badgeNormal}>Concluída</span></td>
                         <td>
-                          <button onClick={() => handleDeleteTransfer(tr.id)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }}>
+                          <button onClick={() => handleDeleteTransfer(tr?.id)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }}>
                             <Trash2 size={13} />
                           </button>
                         </td>
@@ -678,12 +678,12 @@ export default function StockPanel({ currentUser }) {
                     </tr>
                   ) : (
                     sortData(transactions, transactionSort).map(tx => {
-                      const isEntry = tx.type === 'Entrada';
-                      const secName = sectors.find(s => s.id === tx.sectorId)?.name || 'Almoxarifado Central';
+                      const isEntry = tx?.type === 'Entrada';
+                      const secName = sectors.find(s => s?.id === tx?.sectorId)?.name || 'Almoxarifado Central';
                       return (
-                        <tr key={tx.id}>
-                          <td>{tx.date && !isNaN(new Date(tx.date).getTime()) ? new Date(tx.date).toLocaleString('pt-BR') : '-'}</td>
-                          <td style={{ fontWeight: '600' }}>{tx.itemName}</td>
+                        <tr key={tx?.id || Math.random()}>
+                          <td>{tx?.date && !isNaN(new Date(tx.date).getTime()) ? new Date(tx.date).toLocaleString('pt-BR') : '-'}</td>
+                          <td style={{ fontWeight: '600' }}>{tx?.itemName}</td>
                           <td>
                             <span style={{ 
                               ...styles.txTypeBadge, 
@@ -692,14 +692,14 @@ export default function StockPanel({ currentUser }) {
                               borderColor: isEntry ? 'rgba(5, 150, 105, 0.1)' : 'rgba(225, 29, 72, 0.1)'
                             }}>
                               {isEntry ? <ArrowUpRight size={12} /> : <ArrowDownLeft size={12} />}
-                              {tx.type}
+                              {tx?.type}
                             </span>
                           </td>
-                          <td style={{ fontWeight: '700' }}>{tx.quantity}</td>
+                          <td style={{ fontWeight: '700' }}>{tx?.quantity}</td>
                           <td>{secName}</td>
-                          <td>{tx.batch || '-'}</td>
-                          <td>{tx.operator}</td>
-                          <td style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>{tx.notes || '-'}</td>
+                          <td>{tx?.batch || '-'}</td>
+                          <td>{tx?.operator}</td>
+                          <td style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>{tx?.notes || '-'}</td>
                         </tr>
                       );
                     })
@@ -731,20 +731,20 @@ export default function StockPanel({ currentUser }) {
                     </tr>
                   ) : (
                     expiryList.map(tx => {
-                      const expiryInfo = getExpiryStatus(tx.expiryDate);
+                      const expiryInfo = getExpiryStatus(tx?.expiryDate);
                       return (
-                        <tr key={tx.id}>
-                          <td style={{ fontWeight: '600' }}>{tx.itemName}</td>
-                          <td style={{ fontWeight: '700' }}>{tx.batch || '-'}</td>
-                          <td>{tx.quantity}</td>
-                          <td>{tx.date && !isNaN(new Date(tx.date).getTime()) ? new Date(tx.date).toLocaleDateString('pt-BR') : '-'}</td>
-                          <td>{tx.expiryDate && !isNaN(new Date(tx.expiryDate).getTime()) ? new Date(tx.expiryDate).toLocaleDateString('pt-BR') : '-'}</td>
+                        <tr key={tx?.id || Math.random()}>
+                          <td style={{ fontWeight: '600' }}>{tx?.itemName}</td>
+                          <td style={{ fontWeight: '700' }}>{tx?.batch || '-'}</td>
+                          <td>{tx?.quantity}</td>
+                          <td>{tx?.date && !isNaN(new Date(tx.date).getTime()) ? new Date(tx.date).toLocaleDateString('pt-BR') : '-'}</td>
+                          <td>{tx?.expiryDate && !isNaN(new Date(tx.expiryDate).getTime()) ? new Date(tx.expiryDate).toLocaleDateString('pt-BR') : '-'}</td>
                           <td>
                             <span style={{ ...styles.expiryLabel, color: expiryInfo.color }}>
                               {expiryInfo.text}
                             </span>
                           </td>
-                          <td>{tx.operator}</td>
+                          <td>{tx?.operator}</td>
                         </tr>
                       );
                     })
@@ -777,10 +777,10 @@ export default function StockPanel({ currentUser }) {
                     </tr>
                   ) : (
                     sortData(loans, loanSort).map(loan => {
-                      const isGiven = loan.type === 'Concedido';
-                      const isReturned = loan.status === 'Devolvido';
+                      const isGiven = loan?.type === 'Concedido';
+                      const isReturned = loan?.status === 'Devolvido';
                       return (
-                        <tr key={loan.id}>
+                        <tr key={loan?.id || Math.random()}>
                           <td>
                             <span style={{
                               padding: '0.2rem 0.5rem',
@@ -794,13 +794,13 @@ export default function StockPanel({ currentUser }) {
                             </span>
                           </td>
                           <td style={{ fontWeight: '600' }}>
-                            {loan.productName}
-                            {loan.notes && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{loan.notes}</div>}
+                            {loan?.productName}
+                            {loan?.notes && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{loan.notes}</div>}
                           </td>
-                          <td style={{ fontWeight: '700' }}>{loan.quantity} {loan.unit || ''}</td>
-                          <td><strong>{loan.partnerName}</strong></td>
-                          <td>{loan.loanDate ? loan.loanDate.split('-').reverse().join('/') : '-'}</td>
-                          <td>{loan.expectedReturnDate ? loan.expectedReturnDate.split('-').reverse().join('/') : 'Indefinido'}</td>
+                          <td style={{ fontWeight: '700' }}>{loan?.quantity} {loan?.unit || ''}</td>
+                          <td><strong>{loan?.partnerName}</strong></td>
+                          <td>{loan?.loanDate ? loan.loanDate.split('-').reverse().join('/') : '-'}</td>
+                          <td>{loan?.expectedReturnDate ? loan.expectedReturnDate.split('-').reverse().join('/') : 'Indefinido'}</td>
                           <td>
                             <span style={{
                               padding: '0.2rem 0.5rem',
@@ -810,7 +810,7 @@ export default function StockPanel({ currentUser }) {
                               backgroundColor: isReturned ? '#d1fae5' : '#fee2e2',
                               color: isReturned ? '#065f46' : '#991b1b'
                             }}>
-                              {isReturned ? `✓ Devolvido em ${loan.returnDate || ''}` : '⏳ Pendente (Ativo)'}
+                              {isReturned ? `✓ Devolvido em ${loan?.returnDate || ''}` : '⏳ Pendente (Ativo)'}
                             </span>
                           </td>
                           <td>
@@ -827,7 +827,7 @@ export default function StockPanel({ currentUser }) {
                               <button onClick={() => handleOpenLoanEdit(loan)} style={styles.actionEditBtn} title="Editar Empréstimo">
                                 <Edit size={13} />
                               </button>
-                              <button onClick={() => handleDeleteLoan(loan.id)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} title="Excluir">
+                              <button onClick={() => handleDeleteLoan(loan?.id)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} title="Excluir">
                                 <Trash2 size={13} />
                               </button>
                             </div>
@@ -863,7 +863,7 @@ export default function StockPanel({ currentUser }) {
                 <Clock size={20} color="#f59e0b" />
               </div>
               <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#d97706' }}>
-                {requisitions.filter(r => r.status === 'Pendente').length}
+                {requisitions.filter(r => r?.status === 'Pendente').length}
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Aguardando separação na farmácia</div>
             </div>
@@ -874,7 +874,7 @@ export default function StockPanel({ currentUser }) {
                 <AlertTriangle size={20} color="#ea580c" />
               </div>
               <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#ea580c' }}>
-                {requisitions.filter(r => r.status === 'Parcial').length}
+                {requisitions.filter(r => r?.status === 'Parcial').length}
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Entregues parcialmente</div>
             </div>
@@ -885,7 +885,7 @@ export default function StockPanel({ currentUser }) {
                 <CheckCircle2 size={20} color="#10b981" />
               </div>
               <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#059669' }}>
-                {requisitions.filter(r => r.status === 'Entregue').length}
+                {requisitions.filter(r => r?.status === 'Entregue').length}
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Concluídos com sucesso</div>
             </div>
@@ -903,10 +903,10 @@ export default function StockPanel({ currentUser }) {
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <span style={{ fontSize: '0.8rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.35rem 0.65rem', borderRadius: '9999px', fontWeight: '600', border: '1px solid #fde68a' }}>
-                  {requisitions.filter(r => r.status === 'Pendente').length} Pendente(s)
+                  {requisitions.filter(r => r?.status === 'Pendente').length} Pendente(s)
                 </span>
                 <span style={{ fontSize: '0.8rem', backgroundColor: '#ffedd5', color: '#c2410c', padding: '0.35rem 0.65rem', borderRadius: '9999px', fontWeight: '600', border: '1px solid #fed7aa' }}>
-                  {requisitions.filter(r => r.status === 'Parcial').length} Parcial(is)
+                  {requisitions.filter(r => r?.status === 'Parcial').length} Parcial(is)
                 </span>
               </div>
             </div>
@@ -935,20 +935,20 @@ export default function StockPanel({ currentUser }) {
                   </thead>
                   <tbody>
                     {requisitions.map((req) => (
-                      <tr key={req.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <tr key={req?.id || Math.random()} style={{ borderBottom: '1px solid var(--border-color)' }}>
                         <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: 'var(--primary-color)' }}>
-                          {req.requisitionCode}
+                          {req?.requisitionCode}
                         </td>
                         <td style={{ padding: '0.875rem 1rem' }}>
-                          <div>{req.createdAt && !isNaN(new Date(req.createdAt).getTime()) ? new Date(req.createdAt).toLocaleDateString('pt-BR') : '-'}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{req.createdAt && !isNaN(new Date(req.createdAt).getTime()) ? new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
+                          <div>{req?.createdAt && !isNaN(new Date(req.createdAt).getTime()) ? new Date(req.createdAt).toLocaleDateString('pt-BR') : '-'}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{req?.createdAt && !isNaN(new Date(req.createdAt).getTime()) ? new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
                         </td>
-                        <td style={{ padding: '0.875rem 1rem' }}>{req.requestedBy}</td>
-                        <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>{req.patientName || 'Uso Geral'}</td>
+                        <td style={{ padding: '0.875rem 1rem' }}>{req?.requestedBy}</td>
+                        <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>{req?.patientName || 'Uso Geral'}</td>
                         <td style={{ padding: '0.875rem 1rem' }}>
-                          {req.items && req.items.length > 0 ? (
+                          {req?.items && req.items.length > 0 ? (
                             <div>
-                              <div><strong>{req.items[0].itemName}</strong> ({req.items[0].requestedQuantity} {req.items[0].unit})</div>
+                              <div><strong>{req.items[0]?.itemName}</strong> ({req.items[0]?.requestedQuantity} {req.items[0]?.unit})</div>
                               {req.items.length > 1 && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>+ {req.items.length - 1} outro(s) item(ns)</div>}
                             </div>
                           ) : 'Sem itens'}
@@ -956,10 +956,10 @@ export default function StockPanel({ currentUser }) {
                         <td style={{ padding: '0.875rem 1rem' }}>
                           <span style={{ 
                             padding: '0.25rem 0.5rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '600',
-                            backgroundColor: req.status === 'Pendente' ? '#fef3c7' : req.status === 'Parcial' ? '#ffedd5' : req.status === 'Entregue' ? '#d1fae5' : '#fee2e2',
-                            color: req.status === 'Pendente' ? '#b45309' : req.status === 'Parcial' ? '#c2410c' : req.status === 'Entregue' ? '#047857' : '#b91c1c'
+                            backgroundColor: req?.status === 'Pendente' ? '#fef3c7' : req?.status === 'Parcial' ? '#ffedd5' : req?.status === 'Entregue' ? '#d1fae5' : '#fee2e2',
+                            color: req?.status === 'Pendente' ? '#b45309' : req?.status === 'Parcial' ? '#c2410c' : req?.status === 'Entregue' ? '#047857' : '#b91c1c'
                           }}>
-                            {req.status}
+                            {req?.status}
                           </span>
                         </td>
                         <td style={{ padding: '0.875rem 1rem', textAlign: 'right' }}>
@@ -967,11 +967,11 @@ export default function StockPanel({ currentUser }) {
                             onClick={() => handleOpenFulfillModal(req)}
                             style={{ 
                               padding: '0.4rem 0.8rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer',
-                              backgroundColor: req.status === 'Entregue' ? '#f3f4f6' : 'var(--primary-color)',
-                              color: req.status === 'Entregue' ? '#374151' : '#ffffff'
+                              backgroundColor: req?.status === 'Entregue' ? '#f3f4f6' : 'var(--primary-color)',
+                              color: req?.status === 'Entregue' ? '#374151' : '#ffffff'
                             }}
                           >
-                            {req.status === 'Entregue' ? 'Ver Atendimento' : 'Atender Requisição'}
+                            {req?.status === 'Entregue' ? 'Ver Atendimento' : 'Atender Requisição'}
                           </button>
                         </td>
                       </tr>

@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.39',
+      date: '03 de Agosto, 2026',
+      title: 'Solução Definitiva para Tela Branca no Estoque',
+      description: 'Implementação de salvaguardas no processamento de dados do módulo de Estoque para impedir crashes quando houver falha de sincronização ou dados nulos vindos do servidor.',
+      changes: [
+        { type: 'Módulo Estoque', text: 'Adição de verificações seguras (Optional Chaining) em todas as abas, garantindo que mesmo itens corrompidos no banco não causem a "Tela Branca".' },
+        { type: 'Sistema Base', text: 'Refatoração da rotina de ordenação das tabelas de listagens do painel de almoxarifado.' }
+      ]
+    },
+    {
       version: 'v2.1.37',
       date: '03 de Agosto, 2026',
       title: 'Arquitetura de Lazy Loading no Estoque & Reorganização de Abas',

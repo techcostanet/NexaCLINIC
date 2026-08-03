@@ -244,8 +244,8 @@ export function useStockLogic(currentUser) {
   const sortData = (list, sortConfig) => {
     if (!sortConfig || !sortConfig.key) return list;
     return [...list].sort((a, b) => {
-      let valA = a[sortConfig.key] ?? '';
-      let valB = b[sortConfig.key] ?? '';
+      let valA = (a && a[sortConfig.key]) ?? '';
+      let valB = (b && b[sortConfig.key]) ?? '';
 
       if (['currentStock', 'minStock', 'price', 'quantity', 'totalValue'].includes(sortConfig.key)) {
         valA = parseFloat(valA) || 0;

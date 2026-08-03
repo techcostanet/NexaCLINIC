@@ -1,3 +1,10 @@
+## [v2.1.39] - 03 de Agosto, 2026
+### Solução Definitiva para Tela Branca no Estoque (Prevenção de Dados Corrompidos)
+- **Componente StockPanel & useStockLogic:** Implementação de _Optional Chaining_ (`?.`) em todas as lógicas de mapeamento e filtragem de arrays (requisições, inventários, lotes, etc).
+- **Tratamento de Dados:** Correção do algoritmo de ordenação para impedir exceções ao acessar chaves de dados nulos ou deletados do Firebase, evitando crashes em cadeia e eliminando o erro da "Tela Branca".
+
+---
+
 ## [v2.1.37] - 03 de Agosto, 2026
 ### Otimização da Arquitetura do Estoque & Reorganização de Abas
 - **Setores de Estoque (Almoxarifados):** Aba movida do módulo de Estoque para a gestão centralizada no módulo de **T.I / Configurações** (`ConfigPanel.jsx`), permitindo gerenciamento completo pelos administradores.
