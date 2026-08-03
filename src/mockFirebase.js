@@ -2,6 +2,7 @@
 // This allows the app to run immediately without a real Firebase configuration.
 
 import initialSuppliers from './data/initialSuppliers.json';
+import initialProducts from './data/initialProducts.json';
 
 const MOCK_STORAGE_KEY = 'sistema_indicadores_mock_db';
 
@@ -13462,16 +13463,7 @@ const getDB = () => {
         text: 'Paciente relata boa adesão à dieta hipopotassêmica. Ganho de peso interdialítico médio de 2.1kg (adequado para o peso seco de 64kg).'
       }
     ],
-    inventory_items: [
-      { id: 'item-1', name: 'Dialisador HF80 (Alto Fluxo)', category: 'Insumo Clínico', currentStock: 120, minStock: 50, unit: 'unidades', price: 85.00 },
-      { id: 'item-2', name: 'Dialisador HF60 (Baixo Fluxo)', category: 'Insumo Clínico', currentStock: 15, minStock: 30, unit: 'unidades', price: 72.00 },
-      { id: 'item-3', name: 'Kit Linha Arterial/Venosa', category: 'Insumo Clínico', currentStock: 180, minStock: 60, unit: 'unidades', price: 28.50 },
-      { id: 'item-4', name: 'Agulha Fístula 16G', category: 'Insumo Clínico', currentStock: 350, minStock: 100, unit: 'unidades', price: 4.20 },
-      { id: 'item-5', name: 'Eritropoetina (EPO) 4000 UI', category: 'Medicamento', currentStock: 80, minStock: 30, unit: 'frascos', price: 45.00 },
-      { id: 'item-6', name: 'Sacarato Hidróxido Ferro III 100mg', category: 'Medicamento', currentStock: 8, minStock: 25, unit: 'ampolas', price: 18.90 },
-      { id: 'item-7', name: 'Concentrado Ácido de Hemodiálise', category: 'Concentrado', currentStock: 45, minStock: 15, unit: 'galões', price: 55.00 },
-      { id: 'item-8', name: 'Bicarbonato de Sódio Especial', category: 'Concentrado', currentStock: 50, minStock: 20, unit: 'galões', price: 32.00 }
-    ],
+    inventory_items: initialProducts,
     stock_transactions: [
       { id: 'tx-1', itemId: 'item-1', itemName: 'Dialisador HF80 (Alto Fluxo)', quantity: 150, type: 'Entrada', batch: 'L-A120', expiryDate: '2028-05-10', operator: 'Almoxarife João', date: '2026-07-01T09:00:00.000Z', notes: 'Compra regular nota fiscal 9931' },
       { id: 'tx-2', itemId: 'item-1', itemName: 'Dialisador HF80 (Alto Fluxo)', quantity: 30, type: 'Saída', batch: 'L-A120', expiryDate: '2028-05-10', operator: 'Almoxarife João', date: '2026-07-10T14:30:00.000Z', notes: 'Dispensação para a Sala 1' },

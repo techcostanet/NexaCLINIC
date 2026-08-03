@@ -1,16 +1,42 @@
 import { app } from '../../firebase';
 import { USE_MOCK, mockFirestore } from './mockDb';
 
+import initialProducts from '../../data/initialProducts.json';
+
 export const getInventoryItems = async () => {
     if (USE_MOCK) return mockFirestore.getInventoryItems();
     try {
-      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const { getFirestore, collection, getDocs, doc, writeBatch } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'inventory_items'));
-      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const existing = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      if (existing.length < 10 && Array.isArray(initialProducts) && initialProducts.length > 0) {
+        console.log("Seeding 1221 products to Firestore...");
+        try {
+          const chunkSize = 400;
+          const itemsCol = collection(db, 'inventory_items');
+          for (let i = 0; i < initialProducts.length; i += chunkSize) {
+            const chunk = initialProducts.slice(i, i + chunkSize);
+            const batch = writeBatch(db);
+            for (const item of chunk) {
+              const newDocRef = doc(itemsCol);
+              batch.set(newDocRef, { ...item, createdAt: new Date().toISOString() });
+            }
+            await batch.commit();
+          }
+          const newSnap = await getDocs(collection(db, 'inventory_items'));
+          return newSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (err) {
+          console.error("Erro ao popular batch de produtos no Firestore:", err);
+          return initialProducts;
+        }
+      }
+
+      return existing.length > 0 ? existing : initialProducts;
     } catch (e) {
       console.error("Erro ao carregar inventory_items do Firestore:", e);
-      return [];
+      return initialProducts;
     }
   };
 

@@ -173,11 +173,23 @@ export function useStockLogic(currentUser) {
       setSectors(safeArray(secList));
       setStockLocations(safeArray(locList));
       setCategoriesList((catList && safeArray(catList).length > 0) ? safeArray(catList) : [
-        { id: 'c1', name: 'Insumo Clínico' },
+        { id: 'c1', name: 'Insumo Clínico / MatMed' },
         { id: 'c2', name: 'Medicamento' },
-        { id: 'c3', name: 'Concentrado' },
-        { id: 'c4', name: 'Material Médico' },
-        { id: 'c5', name: 'Equipamento' }
+        { id: 'c3', name: 'Medicamento Controlado' },
+        { id: 'c4', name: 'OPME' },
+        { id: 'c5', name: 'Fios Cirúrgicos' },
+        { id: 'c6', name: 'Material de Limpeza' },
+        { id: 'c7', name: 'Bens Permanentes / Patrimônio' },
+        { id: 'c8', name: 'Material de Escritório' },
+        { id: 'c9', name: 'EPI' },
+        { id: 'c10', name: 'Osmose / Tratamento de Água' },
+        { id: 'c11', name: 'Serviços Terceirizados' },
+        { id: 'c12', name: 'Nutrição & Alimentação (SND)' },
+        { id: 'c13', name: 'Manutenção & Conservação' },
+        { id: 'c14', name: 'Obra & Infraestrutura' },
+        { id: 'c15', name: 'Tecnologia da Informação (T.I)' },
+        { id: 'c16', name: 'Descartáveis' },
+        { id: 'c17', name: 'Diálise Peritoneal' }
       ]);
 
       if (itemList && itemList.length > 0) {
