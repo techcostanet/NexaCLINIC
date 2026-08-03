@@ -8,6 +8,12 @@ import {
 } from 'lucide-react';
 
 export function useStockLogic(currentUser) {
+  const safeArray = (val) => {
+    if (Array.isArray(val)) return val;
+    if (val && typeof val === 'object') return Object.values(val);
+    return [];
+  };
+
   const [activeTab, setActiveTab] = useState('inventory'); // 'inventory' | 'physical_inventory' | 'transfers' | 'invoices' | 'suppliers' | 'sectors' | 'transactions' | 'expiry' | 'loans'
   
   // Data States
@@ -162,11 +168,11 @@ export function useStockLogic(currentUser) {
         dbService.getStockLocations ? dbService.getStockLocations().catch(() => []) : []
       ]);
       
-      setItems(itemList || []);
-      setSuppliers(supList || []);
-      setSectors(secList || []);
-      setStockLocations(locList || []);
-      setCategoriesList((catList && catList.length > 0) ? catList : [
+      setItems(safeArray(itemList));
+      setSuppliers(safeArray(supList));
+      setSectors(safeArray(secList));
+      setStockLocations(safeArray(locList));
+      setCategoriesList((catList && safeArray(catList).length > 0) ? safeArray(catList) : [
         { id: 'c1', name: 'Insumo Clínico' },
         { id: 'c2', name: 'Medicamento' },
         { id: 'c3', name: 'Concentrado' },
@@ -207,23 +213,23 @@ export function useStockLogic(currentUser) {
     try {
       if (tab === 'invoices' && invoices.length === 0) {
         const invList = await (dbService.getPurchaseInvoices ? dbService.getPurchaseInvoices().catch(() => []) : []);
-        setInvoices(invList || []);
+        setInvoices(safeArray(invList));
       } else if (tab === 'transactions' && transactions.length === 0) {
         const txList = await (dbService.getStockTransactions ? dbService.getStockTransactions().catch(() => []) : []);
         // Slice to 100 max to prevent React memory rendering crash (Tela Branca)
-        setTransactions((txList || []).slice(0, 100));
+        setTransactions(safeArray(txList).slice(0, 100));
       } else if (tab === 'requisitions' && requisitions.length === 0) {
         const reqList = await (dbService.getMaterialRequisitions ? dbService.getMaterialRequisitions().catch(() => []) : []);
-        setRequisitions(reqList || []);
+        setRequisitions(safeArray(reqList));
       } else if (tab === 'physical_inventory' && inventories.length === 0) {
         const invsList = await (dbService.getInventories ? dbService.getInventories().catch(() => []) : []);
-        setInventories(invsList || []);
+        setInventories(safeArray(invsList));
       } else if (tab === 'transfers' && transfers.length === 0) {
         const transList = await (dbService.getStockTransfers ? dbService.getStockTransfers().catch(() => []) : []);
-        setTransfers(transList || []);
+        setTransfers(safeArray(transList));
       } else if (tab === 'loans' && loans.length === 0) {
         const loanList = await (dbService.getStockLoans ? dbService.getStockLoans().catch(() => []) : []);
-        setLoans(loanList || []);
+        setLoans(safeArray(loanList));
       }
     } catch (err) {
       console.error(`Erro ao carregar dados da aba ${tab}:`, err);
@@ -242,6 +248,7 @@ export function useStockLogic(currentUser) {
 
   // Sorting Helper Functions
   const sortData = (list, sortConfig) => {
+    if (!Array.isArray(list)) return [];
     if (!sortConfig || !sortConfig.key) return list;
     return [...list].sort((a, b) => {
       let valA = (a && a[sortConfig.key]) ?? '';
@@ -1236,8 +1243,9 @@ export function useStockLogic(currentUser) {
   };
 
   const getExpiryTransactions = () => {
+    if (!Array.isArray(transactions)) return [];
     return transactions
-      .filter(t => t.type === 'Entrada' && t.expiryDate)
+      .filter(t => t && t.type === 'Entrada' && t.expiryDate)
       .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
   };
 

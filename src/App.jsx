@@ -16,6 +16,7 @@ import PurchasingPanel from './components/PurchasingPanel';
 import CalendarPanel from './components/CalendarPanel';
 import TechnicianPanel from './components/TechnicianPanel';
 import ApacBillingPanel from './components/ApacBillingPanel';
+import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -78,7 +79,34 @@ export default function App() {
     return <ModuleSelector user={user} onSelectModule={setCurrentModule} />;
   }
 
-  // Simple Router based on state inside Quality Portal
+  // Simple Router based on state
+  const renderContent = () => {
+    switch (currentModule) {
+      case 'reception':
+        return <ErrorBoundary><ReceptionPanel currentUser={user} /></ErrorBoundary>;
+      case 'clinical':
+        return <ErrorBoundary><ClinicalPanel currentUser={user} /></ErrorBoundary>;
+      case 'stock':
+        return <ErrorBoundary><StockPanel currentUser={user} /></ErrorBoundary>;
+      case 'hr':
+        return <ErrorBoundary><HRPanel currentUser={user} /></ErrorBoundary>;
+      case 'finance':
+        return <ErrorBoundary><FinancePanel currentUser={user} /></ErrorBoundary>;
+      case 'purchasing':
+        return <ErrorBoundary><PurchasingPanel currentUser={user} /></ErrorBoundary>;
+      case 'calendar':
+        return <ErrorBoundary><CalendarPanel currentUser={user} /></ErrorBoundary>;
+      case 'config':
+        return <ErrorBoundary><ConfigPanel currentUser={user} /></ErrorBoundary>;
+      case 'requisitions':
+        return <ErrorBoundary><TechnicianPanel currentUser={user} /></ErrorBoundary>;
+      case 'apac':
+        return <ErrorBoundary><ApacBillingPanel currentUser={user} /></ErrorBoundary>;
+      default:
+        return renderQualityPage();
+    }
+  };
+
   const renderQualityPage = () => {
     switch (currentPage) {
       case 'dashboard':
@@ -111,27 +139,27 @@ export default function App() {
       {/* Main body content area */}
       <main className="main-content">
         {currentModule === 'reception' ? (
-          <ReceptionPanel currentUser={user} />
+          <ErrorBoundary><ReceptionPanel currentUser={user} /></ErrorBoundary>
         ) : currentModule === 'clinical' ? (
-          <ClinicalPanel currentUser={user} />
+          <ErrorBoundary><ClinicalPanel currentUser={user} /></ErrorBoundary>
         ) : currentModule === 'stock' ? (
-          <StockPanel currentUser={user} />
+          <ErrorBoundary><StockPanel currentUser={user} /></ErrorBoundary>
         ) : currentModule === 'hr' ? (
-          <HRPanel currentUser={user} />
+          <ErrorBoundary><HRPanel currentUser={user} /></ErrorBoundary>
         ) : currentModule === 'finance' ? (
-          <FinancePanel currentUser={user} />
+          <ErrorBoundary><FinancePanel currentUser={user} /></ErrorBoundary>
         ) : currentModule === 'apac' ? (
-          <ApacBillingPanel currentUser={user} />
+          <ErrorBoundary><ApacBillingPanel currentUser={user} /></ErrorBoundary>
         ) : currentModule === 'purchasing' ? (
-          <PurchasingPanel currentUser={user} />
+          <ErrorBoundary><PurchasingPanel currentUser={user} /></ErrorBoundary>
         ) : currentModule === 'calendar' ? (
-          <CalendarPanel currentUser={user} />
+          <ErrorBoundary><CalendarPanel currentUser={user} /></ErrorBoundary>
         ) : currentModule === 'config' ? (
-          <ConfigPanel currentUser={user} />
+          <ErrorBoundary><ConfigPanel currentUser={user} /></ErrorBoundary>
         ) : currentModule === 'requisitions' ? (
-          <TechnicianPanel currentUser={user} />
+          <ErrorBoundary><TechnicianPanel currentUser={user} /></ErrorBoundary>
         ) : (
-          renderQualityPage()
+          <ErrorBoundary>{renderQualityPage()}</ErrorBoundary>
         )}
       </main>
 
