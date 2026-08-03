@@ -272,7 +272,7 @@ export function useStockLogic(currentUser) {
     const isActive = currentSort.key === key;
     return (
       <th 
-        style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }} 
+        style={{ padding: '0.75rem 1rem', fontWeight: '600', color: '#64748b', borderBottom: '1px solid var(--border-color)', backgroundColor: '#f8fafc', textAlign: 'left', cursor: 'pointer', userSelect: 'none' }} 
         onClick={() => {
           setSort({
             key,
