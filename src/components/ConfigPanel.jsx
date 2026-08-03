@@ -1001,6 +1001,80 @@ export default function ConfigPanel() {
         </div>
       )}
 
+      {/* Stock Location Modal (Módulo T.I) */}
+      {showLocationModal && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalCard, maxWidth: '500px' }}>
+            <div style={styles.modalHeader}>
+              <div>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{editingLocation ? 'Editar Local de Estoque' : 'Cadastrar Local de Estoque'}</h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Defina os locais físicos e almoxarifados da clínica.</span>
+              </div>
+              <button onClick={() => setShowLocationModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleSaveLocation} style={styles.modalForm}>
+              <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Nome do Local / Almoxarifado *</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  required 
+                  placeholder="Ex: Almoxarifado Central, Farmácia UTI, Centro Cirúrgico" 
+                  value={locationForm.name} 
+                  onChange={e => setLocationForm({ ...locationForm, name: e.target.value })} 
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Responsável pelo Local</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="Ex: Dra. Maria (Farmacêutica)" 
+                  value={locationForm.responsible} 
+                  onChange={e => setLocationForm({ ...locationForm, responsible: e.target.value })} 
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Status</label>
+                <select 
+                  className="form-control" 
+                  value={locationForm.status} 
+                  onChange={e => setLocationForm({ ...locationForm, status: e.target.value })} 
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}
+                >
+                  <option value="Ativo">Ativo</option>
+                  <option value="Inativo">Inativo</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Descrição / Observações</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="Ex: Depósito de medicamentos controlados e insumos da hemodiálise" 
+                  value={locationForm.description} 
+                  onChange={e => setLocationForm({ ...locationForm, description: e.target.value })} 
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                />
+              </div>
+
+              <div style={styles.modalFooter}>
+                <button type="button" onClick={() => setShowLocationModal(false)} className="btn btn-secondary" style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer' }}>Cancelar</button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', color: '#ffffff', padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}>
+                  {actionLoading ? 'Salvando...' : (editingLocation ? 'Salvar Alterações' : 'Cadastrar Local')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Category Modal (Módulo T.I) */}
       {showCategoryModal && (
         <div style={styles.modalOverlay}>

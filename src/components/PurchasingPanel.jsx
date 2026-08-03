@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ClipboardList, CheckSquare, DollarSign, Truck, Plus, 
-  Search, Building2, User, Clock, ArrowRight, ShieldAlert, Award
+  Search, Building2, User, Clock, ArrowRight, ShieldAlert, Award,
+  Edit, Trash2, X, Briefcase
 } from 'lucide-react';
 import { dbService } from '../firebase';
 
@@ -31,6 +32,23 @@ export default function PurchasingPanel({ currentUser }) {
   });
   const [activeQuoteId, setActiveQuoteId] = useState(null);
 
+  // Suppliers State (Módulo Compras)
+  const [suppliers, setSuppliers] = useState([]);
+  const [supplierSearch, setSupplierSearch] = useState('');
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [supplierForm, setSupplierForm] = useState({
+    name: '',
+    tradeName: '',
+    cnpj: '',
+    phone: '',
+    email: '',
+    contactPerson: '',
+    address: '',
+    notes: ''
+  });
+
   useEffect(() => {
     if (currentUser) {
       setUser(currentUser);
@@ -54,10 +72,12 @@ export default function PurchasingPanel({ currentUser }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [purList, itemsList] = await Promise.all([
+      const [purList, itemsList, suppList] = await Promise.all([
         dbService.getPurchases(),
-        dbService.getStockItems ? dbService.getStockItems() : []
+        dbService.getStockItems ? dbService.getStockItems() : [],
+        dbService.getSuppliers ? dbService.getSuppliers() : []
       ]);
+      setSuppliers(suppList || []);
       
       // Seed fallback stock items if empty
       let finalItems = itemsList;
@@ -79,6 +99,74 @@ export default function PurchasingPanel({ currentUser }) {
       showAlert('Erro ao carregar dados do portal de compras.', 'danger');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenSupplierAdd = () => {
+    setEditingSupplier(null);
+    setSupplierForm({
+      name: '',
+      tradeName: '',
+      cnpj: '',
+      phone: '',
+      email: '',
+      contactPerson: '',
+      address: '',
+      notes: ''
+    });
+    setShowSupplierModal(true);
+  };
+
+  const handleOpenSupplierEdit = (sup) => {
+    setEditingSupplier(sup);
+    setSupplierForm({
+      name: sup.name || '',
+      tradeName: sup.tradeName || '',
+      cnpj: sup.cnpj || '',
+      phone: sup.phone || '',
+      email: sup.email || '',
+      contactPerson: sup.contactPerson || '',
+      address: sup.address || '',
+      notes: sup.notes || ''
+    });
+    setShowSupplierModal(true);
+  };
+
+  const handleSaveSupplier = async (e) => {
+    e.preventDefault();
+    setActionLoading(true);
+    try {
+      if (editingSupplier) {
+        await dbService.updateSupplier(editingSupplier.id, supplierForm);
+        showAlert(`Fornecedor "${supplierForm.name}" atualizado!`, 'success');
+      } else {
+        await dbService.addSupplier(supplierForm);
+        showAlert(`Fornecedor "${supplierForm.name}" cadastrado!`, 'success');
+      }
+      setShowSupplierModal(false);
+      const updated = await dbService.getSuppliers();
+      setSuppliers(updated || []);
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao salvar fornecedor.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteSupplier = async (id, name) => {
+    if (!window.confirm(`Deseja realmente remover o fornecedor "${name}"?`)) return;
+    setActionLoading(true);
+    try {
+      await dbService.deleteSupplier(id);
+      showAlert(`Fornecedor "${name}" removido!`, 'success');
+      const updated = await dbService.getSuppliers();
+      setSuppliers(updated || []);
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao remover fornecedor.', 'danger');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -322,6 +410,9 @@ export default function PurchasingPanel({ currentUser }) {
             <Building2 size={16} /> Sala de Cotações (Comprador)
           </button>
         )}
+        <button onClick={() => setActiveTab('suppliers')} style={{ ...styles.tabBtn, ...(activeTab === 'suppliers' ? styles.tabBtnActive : {}) }}>
+          <Truck size={16} /> Cadastro de Fornecedores ({(suppliers || []).length})
+        </button>
       </div>
 
       {message.text && (
@@ -655,7 +746,158 @@ export default function PurchasingPanel({ currentUser }) {
               </div>
             </div>
           )}
+
+          {/* TAB 4: Gestão de Fornecedores (Módulo Compras) */}
+          {activeTab === 'suppliers' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-card)', padding: '1rem 1.25rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, maxWidth: '400px' }}>
+                  <Search size={18} color="var(--text-muted)" />
+                  <input 
+                    type="text" 
+                    placeholder="Buscar fornecedor por nome, CNPJ ou contato..." 
+                    className="form-control" 
+                    value={supplierSearch} 
+                    onChange={e => setSupplierSearch(e.target.value)} 
+                    style={{ fontSize: '0.85rem', padding: '0.45rem 0.75rem' }} 
+                  />
+                </div>
+                <button onClick={handleOpenSupplierAdd} className="btn btn-primary" style={{ backgroundColor: 'var(--primary-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
+                  <Plus size={16} /> Novo Fornecedor
+                </button>
+              </div>
+
+              <div style={styles.tableCard}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--bg-body)', textAlign: 'left' }}>
+                      <th style={{ padding: '0.85rem 1rem' }}>Razão Social / Nome Fantasia</th>
+                      <th style={{ padding: '0.85rem 1rem' }}>CNPJ</th>
+                      <th style={{ padding: '0.85rem 1rem' }}>Contato / Telefone</th>
+                      <th style={{ padding: '0.85rem 1rem' }}>Email</th>
+                      <th style={{ padding: '0.85rem 1rem' }}>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {suppliers.filter(s => 
+                      !supplierSearch || 
+                      (s.name && s.name.toLowerCase().includes(supplierSearch.toLowerCase())) ||
+                      (s.tradeName && s.tradeName.toLowerCase().includes(supplierSearch.toLowerCase())) ||
+                      (s.cnpj && s.cnpj.includes(supplierSearch))
+                    ).length === 0 ? (
+                      <tr>
+                        <td colSpan="5" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+                          Nenhum fornecedor encontrado. Clique em "Novo Fornecedor" para cadastrar.
+                        </td>
+                      </tr>
+                    ) : (
+                      suppliers.filter(s => 
+                        !supplierSearch || 
+                        (s.name && s.name.toLowerCase().includes(supplierSearch.toLowerCase())) ||
+                        (s.tradeName && s.tradeName.toLowerCase().includes(supplierSearch.toLowerCase())) ||
+                        (s.cnpj && s.cnpj.includes(supplierSearch))
+                      ).map(sup => (
+                        <tr key={sup.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                          <td style={{ padding: '0.85rem 1rem', fontWeight: '600' }}>
+                            <div>{sup.name}</div>
+                            {sup.tradeName && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{sup.tradeName}</span>}
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem' }}>{sup.cnpj || '-'}</td>
+                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem' }}>
+                            <div>{sup.contactPerson || '-'}</div>
+                            {sup.phone && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{sup.phone}</span>}
+                          </td>
+                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem' }}>{sup.email || '-'}</td>
+                          <td style={{ padding: '0.85rem 1rem' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <button onClick={() => handleOpenSupplierEdit(sup)} style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                <Edit size={14} /> Editar
+                              </button>
+                              <button onClick={() => handleDeleteSupplier(sup.id, sup.name)} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                <Trash2 size={14} /> Excluir
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </>
+      )}
+
+      {/* Supplier Modal */}
+      {showSupplierModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '1rem'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff', borderRadius: '16px', width: '100%', maxWidth: '580px',
+            overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid var(--border-color)'
+          }}>
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: '700' }}>
+                  {editingSupplier ? 'Editar Fornecedor' : 'Cadastrar Novo Fornecedor'}
+                </h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Gerenciamento de empresas fornecedoras de insumos e medicamentos.</span>
+              </div>
+              <button onClick={() => setShowSupplierModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleSaveSupplier} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block' }}>Razão Social *</label>
+                  <input type="text" className="form-control" required placeholder="Ex: Farmacêutica Distribuidora S.A." value={supplierForm.name} onChange={e => setSupplierForm({ ...supplierForm, name: e.target.value })} style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.875rem' }} />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block' }}>Nome Fantasia</label>
+                  <input type="text" className="form-control" placeholder="Ex: FarmaDist" value={supplierForm.tradeName} onChange={e => setSupplierForm({ ...supplierForm, tradeName: e.target.value })} style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.875rem' }} />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block' }}>CNPJ *</label>
+                  <input type="text" className="form-control" required placeholder="00.000.000/0001-00" value={supplierForm.cnpj} onChange={e => setSupplierForm({ ...supplierForm, cnpj: e.target.value })} style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.875rem' }} />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block' }}>Telefone / Celular</label>
+                  <input type="text" className="form-control" placeholder="(11) 99999-9999" value={supplierForm.phone} onChange={e => setSupplierForm({ ...supplierForm, phone: e.target.value })} style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.875rem' }} />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block' }}>E-mail Comercial</label>
+                  <input type="email" className="form-control" placeholder="vendas@distribuidora.com" value={supplierForm.email} onChange={e => setSupplierForm({ ...supplierForm, email: e.target.value })} style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.875rem' }} />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block' }}>Pessoa de Contato</label>
+                  <input type="text" className="form-control" placeholder="Ex: Carlos Santos (Vendedor)" value={supplierForm.contactPerson} onChange={e => setSupplierForm({ ...supplierForm, contactPerson: e.target.value })} style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.875rem' }} />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block' }}>Endereço Completo</label>
+                <input type="text" className="form-control" placeholder="Rua, Número, Bairro, Cidade - UF" value={supplierForm.address} onChange={e => setSupplierForm({ ...supplierForm, address: e.target.value })} style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.875rem' }} />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+                <button type="button" onClick={() => setShowSupplierModal(false)} className="btn btn-secondary" style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer' }}>Cancelar</button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: 'var(--primary-color)', color: '#ffffff', padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}>
+                  {actionLoading ? 'Salvando...' : (editingSupplier ? 'Salvar Alterações' : 'Cadastrar Fornecedor')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

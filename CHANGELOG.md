@@ -1,3 +1,11 @@
+## [v2.1.37] - 03 de Agosto, 2026
+### Otimização da Arquitetura do Estoque & Reorganização de Abas
+- **Setores de Estoque (Almoxarifados):** Aba movida do módulo de Estoque para a gestão centralizada no módulo de **T.I / Configurações** (`ConfigPanel.jsx`), permitindo gerenciamento completo pelos administradores.
+- **Cadastro de Fornecedores:** Aba movida do módulo de Estoque para o módulo de **Compras** (`PurchasingPanel.jsx`), integrando a gestão de fornecedores diretamente ao fluxo de cotações e suprimentos.
+- **Solução Definitiva de Tela Branca (Lazy Loading):** Refatoração do `useStockLogic.jsx` para carregar coleções do Firestore sob demanda por aba e limitar históricos longos de movimentação a 100 itens, reduzindo drasticamente o consumo de memória do navegador.
+
+---
+
 ## [v2.1.35] - 02 de Agosto, 2026
 ### Proteção Defensiva no Módulo Estoque & Farmácia
 - **Módulo Estoque (StockPanel):** Adicionada proteção assíncrona com `catch` individual em cada requisição de dados (`Promise.all`) e Optional Chaining (`(requisitions || []).filter(...)`) no menu de abas e indicadores para impedir exceções de tela branca.

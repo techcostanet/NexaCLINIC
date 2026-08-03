@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.37',
+      date: '03 de Agosto, 2026',
+      title: 'Arquitetura de Lazy Loading no Estoque & Reorganização de Abas',
+      description: 'Transferência das abas de Setores para T.I e Fornecedores para Compras, além do carregamento de dados sob demanda para eliminar telas brancas.',
+      changes: [
+        { type: 'Módulo T.I', text: 'Gestão completa de Setores de Estoque e Almoxarifados integrada ao ConfigPanel.' },
+        { type: 'Módulo Compras', text: 'Aba dedicada ao Cadastro e Edição de Fornecedores integrada ao fluxo de compras.' },
+        { type: 'Módulo Estoque', text: 'Carregamento Lazy Loading por aba e limitação de memória no Histórico para eliminar crashes de tela branca.' }
+      ]
+    },
+    {
       version: 'v2.1.35',
       date: '02 de Agosto, 2026',
       title: 'Proteção Defensiva Completa no Módulo de Estoque',

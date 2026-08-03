@@ -144,36 +144,28 @@ export function useStockLogic(currentUser) {
   const [itemMappings, setItemMappings] = useState([]);
 
   useEffect(() => {
-    fetchData();
+    fetchInitialData();
   }, []);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    fetchTabData(activeTab);
+  }, [activeTab]);
+
+  const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [itemList, txList, supList, secList, invList, loanList, catList, locList, invsList, transList, reqList] = await Promise.all([
+      const [itemList, supList, secList, catList, locList] = await Promise.all([
         dbService.getInventoryItems ? dbService.getInventoryItems().catch(() => []) : [],
-        dbService.getStockTransactions ? dbService.getStockTransactions().catch(() => []) : [],
         dbService.getSuppliers ? dbService.getSuppliers().catch(() => []) : [],
         dbService.getStockSectors ? dbService.getStockSectors().catch(() => []) : [],
-        dbService.getPurchaseInvoices ? dbService.getPurchaseInvoices().catch(() => []) : [],
-        dbService.getStockLoans ? dbService.getStockLoans().catch(() => []) : [],
         dbService.getProductCategories ? dbService.getProductCategories().catch(() => []) : [],
-        dbService.getStockLocations ? dbService.getStockLocations().catch(() => []) : [],
-        dbService.getInventories ? dbService.getInventories().catch(() => []) : [],
-        dbService.getStockTransfers ? dbService.getStockTransfers().catch(() => []) : [],
-        dbService.getMaterialRequisitions ? dbService.getMaterialRequisitions().catch(() => []) : []
+        dbService.getStockLocations ? dbService.getStockLocations().catch(() => []) : []
       ]);
       
       setItems(itemList || []);
-      setTransactions(txList || []);
       setSuppliers(supList || []);
       setSectors(secList || []);
-      setInvoices(invList || []);
-      setLoans(loanList || []);
       setStockLocations(locList || []);
-      setInventories(invsList || []);
-      setTransfers(transList || []);
-      setRequisitions(reqList || []);
       setCategoriesList((catList && catList.length > 0) ? catList : [
         { id: 'c1', name: 'Insumo Clínico' },
         { id: 'c2', name: 'Medicamento' },
@@ -205,10 +197,42 @@ export function useStockLogic(currentUser) {
       }
     } catch (err) {
       console.error(err);
-      showAlert('Erro ao carregar dados do estoque.', 'danger');
+      showAlert('Erro ao carregar dados iniciais do estoque.', 'danger');
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchTabData = async (tab) => {
+    try {
+      if (tab === 'invoices' && invoices.length === 0) {
+        const invList = await (dbService.getPurchaseInvoices ? dbService.getPurchaseInvoices().catch(() => []) : []);
+        setInvoices(invList || []);
+      } else if (tab === 'transactions' && transactions.length === 0) {
+        const txList = await (dbService.getStockTransactions ? dbService.getStockTransactions().catch(() => []) : []);
+        // Slice to 100 max to prevent React memory rendering crash (Tela Branca)
+        setTransactions((txList || []).slice(0, 100));
+      } else if (tab === 'requisitions' && requisitions.length === 0) {
+        const reqList = await (dbService.getMaterialRequisitions ? dbService.getMaterialRequisitions().catch(() => []) : []);
+        setRequisitions(reqList || []);
+      } else if (tab === 'physical_inventory' && inventories.length === 0) {
+        const invsList = await (dbService.getInventories ? dbService.getInventories().catch(() => []) : []);
+        setInventories(invsList || []);
+      } else if (tab === 'transfers' && transfers.length === 0) {
+        const transList = await (dbService.getStockTransfers ? dbService.getStockTransfers().catch(() => []) : []);
+        setTransfers(transList || []);
+      } else if (tab === 'loans' && loans.length === 0) {
+        const loanList = await (dbService.getStockLoans ? dbService.getStockLoans().catch(() => []) : []);
+        setLoans(loanList || []);
+      }
+    } catch (err) {
+      console.error(`Erro ao carregar dados da aba ${tab}:`, err);
+    }
+  };
+
+  const fetchData = async () => {
+    await fetchInitialData();
+    await fetchTabData(activeTab);
   };
 
   const showAlert = (text, type) => {

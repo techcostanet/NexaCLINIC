@@ -212,18 +212,6 @@ export default function StockPanel({ currentUser }) {
           <FileText size={16} /> Entrada de Notas & XML ({(invoices || []).length})
         </button>
         <button 
-          onClick={() => setActiveTab('suppliers')} 
-          style={{ ...styles.tabBtn, ...(activeTab === 'suppliers' ? styles.tabBtnActive : {}) }}
-        >
-          <Briefcase size={16} /> Fornecedores ({(suppliers || []).length})
-        </button>
-        <button 
-          onClick={() => setActiveTab('sectors')} 
-          style={{ ...styles.tabBtn, ...(activeTab === 'sectors' ? styles.tabBtnActive : {}) }}
-        >
-          <Warehouse size={16} /> Setores de Estoque ({(sectors || []).length})
-        </button>
-        <button 
           onClick={() => setActiveTab('transactions')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'transactions' ? styles.tabBtnActive : {}) }}
         >
