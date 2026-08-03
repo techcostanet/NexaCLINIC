@@ -34,9 +34,41 @@ export default function TechnicianPanel({ currentUser }) {
 
   // Items drafting in form
   const [selectedItemId, setSelectedItemId] = useState('');
+  const [itemSearchText, setItemSearchText] = useState('');
+  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
   const [requestedQty, setRequestedQty] = useState('1');
   const [reqItemsList, setReqItemsList] = useState([]);
   const [itemStockAlert, setItemStockAlert] = useState('');
+
+  // Sorted items and patients A-Z
+  const sortedStockItems = React.useMemo(() => {
+    return [...stockItems].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+  }, [stockItems]);
+
+  const sortedPatients = React.useMemo(() => {
+    return [...patients].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+  }, [patients]);
+
+  const filteredStockItems = React.useMemo(() => {
+    if (!itemSearchText.trim()) return sortedStockItems;
+    const term = itemSearchText.toLowerCase();
+    return sortedStockItems.filter(item => 
+      (item.name || '').toLowerCase().includes(term) ||
+      (item.code || '').toLowerCase().includes(term) ||
+      (item.category || '').toLowerCase().includes(term) ||
+      (item.barcode || '').toLowerCase().includes(term)
+    );
+  }, [sortedStockItems, itemSearchText]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('#product-search-container')) {
+        setIsProductDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -89,7 +121,9 @@ export default function TechnicianPanel({ currentUser }) {
     setIsGeneralUse(true);
     setNotes('');
     setReqItemsList([]);
-    setSelectedItemId(stockItems.length > 0 ? stockItems[0].id : '');
+    setSelectedItemId('');
+    setItemSearchText('');
+    setIsProductDropdownOpen(false);
     setRequestedQty('1');
     setItemStockAlert('');
     setShowModal(true);
@@ -106,7 +140,9 @@ export default function TechnicianPanel({ currentUser }) {
     setPatientName(req.patientName || '');
     setNotes(req.notes || '');
     setReqItemsList(req.items ? [...req.items] : []);
-    setSelectedItemId(stockItems.length > 0 ? stockItems[0].id : '');
+    setSelectedItemId('');
+    setItemSearchText('');
+    setIsProductDropdownOpen(false);
     setRequestedQty('1');
     setItemStockAlert('');
     setShowModal(true);
@@ -549,7 +585,7 @@ export default function TechnicianPanel({ currentUser }) {
                     required={!isGeneralUse}
                   >
                     <option value="">-- Selecione o Paciente --</option>
-                    {patients.map(p => (
+                    {sortedPatients.map(p => (
                       <option key={p.id} value={p.id}>
                         {p.name} {p.shift ? `(${p.shift} - ${p.room || 'Salão'})` : ''}
                       </option>
@@ -569,19 +605,134 @@ export default function TechnicianPanel({ currentUser }) {
                 )}
 
                 <div style={styles.addItemGrid}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ ...styles.label, fontSize: '0.8rem' }}>Material / Medicamento:</label>
-                    <select 
-                      value={selectedItemId} 
-                      onChange={(e) => { setSelectedItemId(e.target.value); setItemStockAlert(''); }}
-                      style={styles.input}
-                    >
-                      {stockItems.map(item => (
-                        <option key={item.id} value={item.id}>
-                          {item.name} ({item.category || 'Geral'}) - Saldo: {item.currentStock || 0} {item.unit || 'un'}
-                        </option>
-                      ))}
-                    </select>
+                  <div style={{ flex: 1, position: 'relative' }} id="product-search-container">
+                    <label style={{ ...styles.label, fontSize: '0.8rem' }}>Material / Medicamento (Ordem Alfabética):</label>
+                    <div style={{ position: 'relative' }}>
+                      <input 
+                        type="text"
+                        placeholder="🔍 Digite o nome ou código para pesquisar produto..."
+                        value={itemSearchText}
+                        onFocus={() => setIsProductDropdownOpen(true)}
+                        onChange={(e) => {
+                          setItemSearchText(e.target.value);
+                          setIsProductDropdownOpen(true);
+                          setItemStockAlert('');
+                          if (!e.target.value) setSelectedItemId('');
+                        }}
+                        style={{
+                          ...styles.input,
+                          paddingRight: '2.2rem',
+                          borderColor: selectedItemId ? '#10b981' : undefined,
+                          fontWeight: selectedItemId ? '600' : 'normal'
+                        }}
+                      />
+                      {itemSearchText && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setItemSearchText('');
+                            setSelectedItemId('');
+                            setIsProductDropdownOpen(true);
+                          }}
+                          style={{
+                            position: 'absolute',
+                            right: '0.5rem',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#6b7280',
+                            fontSize: '0.9rem',
+                            padding: '0.2rem 0.4rem'
+                          }}
+                          title="Limpar busca"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Live Filtered Dropdown */}
+                    {isProductDropdownOpen && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          maxHeight: '260px',
+                          overflowY: 'auto',
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '0.375rem',
+                          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)',
+                          zIndex: 1000,
+                          marginTop: '4px'
+                        }}
+                      >
+                        {filteredStockItems.length === 0 ? (
+                          <div style={{ padding: '0.75rem', fontSize: '0.85rem', color: '#64748b', textAlign: 'center' }}>
+                            Nenhum produto encontrado para "{itemSearchText}"
+                          </div>
+                        ) : (
+                          filteredStockItems.slice(0, 150).map(item => {
+                            const isSelected = item.id === selectedItemId;
+                            return (
+                              <div
+                                key={item.id}
+                                onClick={() => {
+                                  setSelectedItemId(item.id);
+                                  setItemSearchText(item.name);
+                                  setIsProductDropdownOpen(false);
+                                  setItemStockAlert('');
+                                }}
+                                style={{
+                                  padding: '0.5rem 0.75rem',
+                                  cursor: 'pointer',
+                                  borderBottom: '1px solid #f1f5f9',
+                                  backgroundColor: isSelected ? '#ecfdf5' : '#ffffff',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  fontSize: '0.85rem'
+                                }}
+                                onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                                onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#ffffff'; }}
+                              >
+                                <div>
+                                  <div style={{ fontWeight: 600, color: isSelected ? '#047857' : '#1e293b' }}>
+                                    {item.name}
+                                  </div>
+                                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                    {item.category || 'Geral'} {item.code ? `• Cód: ${item.code}` : ''}
+                                  </div>
+                                </div>
+                                <div style={{ textAlign: 'right', whiteSpace: 'nowrap', marginLeft: '0.5rem' }}>
+                                  <span
+                                    style={{
+                                      padding: '0.15rem 0.4rem',
+                                      borderRadius: '0.25rem',
+                                      fontSize: '0.75rem',
+                                      fontWeight: 600,
+                                      backgroundColor: (item.currentStock || 0) <= 0 ? '#fee2e2' : (item.currentStock || 0) <= (item.minStock || 10) ? '#fef3c7' : '#dcfce7',
+                                      color: (item.currentStock || 0) <= 0 ? '#991b1b' : (item.currentStock || 0) <= (item.minStock || 10) ? '#92400e' : '#166534'
+                                    }}
+                                  >
+                                    Saldo: {item.currentStock || 0} {item.unit || 'un'}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                        {filteredStockItems.length > 150 && (
+                          <div style={{ padding: '0.5rem', fontSize: '0.75rem', color: '#64748b', textAlign: 'center', backgroundColor: '#f8fafc', fontStyle: 'italic' }}>
+                            Mostrando 150 de {filteredStockItems.length} produtos. Digite para filtrar.
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ width: '100px' }}>
