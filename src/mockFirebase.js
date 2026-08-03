@@ -1,6 +1,8 @@
 // Mock Firebase Services using LocalStorage
 // This allows the app to run immediately without a real Firebase configuration.
 
+import initialSuppliers from './data/initialSuppliers.json';
+
 const MOCK_STORAGE_KEY = 'sistema_indicadores_mock_db';
 
 const getDefaultPatients = () => [
@@ -13475,10 +13477,7 @@ const getDB = () => {
       { id: 'tx-2', itemId: 'item-1', itemName: 'Dialisador HF80 (Alto Fluxo)', quantity: 30, type: 'Saída', batch: 'L-A120', expiryDate: '2028-05-10', operator: 'Almoxarife João', date: '2026-07-10T14:30:00.000Z', notes: 'Dispensação para a Sala 1' },
       { id: 'tx-3', itemId: 'item-6', itemName: 'Sacarato Hidróxido Ferro III 100mg', quantity: 10, type: 'Saída', batch: 'L-M400', expiryDate: '2026-08-30', operator: 'Farmacêutica Marta', date: '2026-07-14T11:15:00.000Z', notes: 'Aplicação de rotina pós-diálise' }
     ],
-    suppliers: [
-      { id: 'sup-1', name: 'Baxter Hospitalar Ltda', cnpj: '12.345.678/0001-90', contact: 'Carlos Silva', phone: '(11) 3211-4000', email: 'vendas@baxter.com.br' },
-      { id: 'sup-2', name: 'Fresenius Medical Care', cnpj: '98.765.432/0001-21', contact: 'Ana Paula', phone: '(21) 2102-1200', email: 'contato@fresenius.com.br' }
-    ],
+    suppliers: initialSuppliers,
     stock_sectors: [
       { id: 'sec-stock-1', name: 'Almoxarifado Central', description: 'Armazenamento geral de insumos da clínica' },
       { id: 'sec-stock-2', name: 'Farmácia Satélite', description: 'Dispensação imediata de medicamentos de alto custo' },

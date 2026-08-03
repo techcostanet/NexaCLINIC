@@ -73,16 +73,38 @@ export const createStockTransaction = async (txData) => {
     return { id: docRef.id, ...txData, date: new Date().toISOString() };
   };
 
+import initialSuppliers from '../../data/initialSuppliers.json';
+
 export const getSuppliers = async () => {
     if (USE_MOCK) return mockFirestore.getSuppliers();
     try {
-      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const { getFirestore, collection, getDocs, doc, writeBatch } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'suppliers'));
-      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const existing = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      if (existing.length < 10 && Array.isArray(initialSuppliers) && initialSuppliers.length > 0) {
+        console.log("Seeding 358 suppliers to Firestore...");
+        try {
+          const batch = writeBatch(db);
+          const suppliersCol = collection(db, 'suppliers');
+          for (const sup of initialSuppliers) {
+            const newDocRef = doc(suppliersCol);
+            batch.set(newDocRef, { ...sup, createdAt: new Date().toISOString() });
+          }
+          await batch.commit();
+          const newSnap = await getDocs(collection(db, 'suppliers'));
+          return newSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (err) {
+          console.error("Erro ao popular batch de fornecedores:", err);
+          return initialSuppliers;
+        }
+      }
+
+      return existing.length > 0 ? existing : initialSuppliers;
     } catch (e) {
       console.error("Erro ao carregar suppliers do Firestore:", e);
-      return [];
+      return initialSuppliers;
     }
   };
 
