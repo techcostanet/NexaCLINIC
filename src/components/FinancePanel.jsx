@@ -657,44 +657,7 @@ export default function FinancePanel() {
 
   return (
     <div style={styles.container}>
-      {/* Top Unit Selector Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', padding: '0.75rem 1.25rem', borderRadius: '10px', marginBottom: '1rem', color: '#fff' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Building2 size={20} color="#10b981" />
-          <div>
-            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '700', letterSpacing: '0.05em' }}>Filial Operacional</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1rem', fontWeight: '800', color: '#f8fafc' }}>Unidade {selectedUnit}</span>
-              <span style={{ backgroundColor: '#065f46', color: '#34d399', fontSize: '0.7rem', padding: '0.15rem 0.5rem', borderRadius: '12px', fontWeight: '700' }}>CONECTADO</span>
-            </div>
-          </div>
-        </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#1e293b', padding: '0.4rem 0.75rem', borderRadius: '8px', border: '1px solid #334155' }}>
-            <Sliders size={15} color="#94a3b8" />
-            <span style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>Filtrar Unidade:</span>
-            <select 
-              value={selectedUnit} 
-              onChange={(e) => setSelectedUnit(e.target.value)}
-              style={{ backgroundColor: 'transparent', border: 'none', color: '#10b981', fontWeight: '700', fontSize: '0.85rem', outline: 'none', cursor: 'pointer' }}
-            >
-              <option value="Betim" style={{ backgroundColor: '#1e293b', color: '#fff' }}>Betim (Matriz Clínicas)</option>
-              <option value="Contagem" style={{ backgroundColor: '#1e293b', color: '#fff' }}>Contagem</option>
-              <option value="Matriz" style={{ backgroundColor: '#1e293b', color: '#fff' }}>Matriz Belo Horizonte</option>
-              <option value="Todas" style={{ backgroundColor: '#1e293b', color: '#fff' }}>Todas as Filiais</option>
-            </select>
-          </div>
-
-          <button 
-            onClick={() => setShowImportBetimModal(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#059669', border: 'none', color: '#fff', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
-          >
-            <FileSpreadsheet size={16} />
-            <span>Importar Planilha Betim</span>
-          </button>
-        </div>
-      </div>
 
       {/* Navigation tabs */}
       <div style={styles.tabsHeader}>

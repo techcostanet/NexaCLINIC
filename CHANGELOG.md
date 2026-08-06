@@ -1,3 +1,10 @@
+## [v3.0.2] - 05 de Agosto, 2026
+### Ajuste de Interface & Simplificação Multi-Tenant
+- **Remoção da Barra Superior de Unidade e Importação:** Removida a barra de seleção de filial e botão de importação a pedido da gestão, alinhando a arquitetura para tratamento via Multi-Tenant.
+- **Limpeza Visual e Ajuste de UX:** Cabeçalho do módulo financeiro reorganizado com abas de navegação alinhadas e limpas no topo.
+
+---
+
 ## [v3.0.1] - 05 de Agosto, 2026
 ### 🚀 MARCO MAJOR: Lançamento dos Módulos NexaBUDGET, Centro de Custos & Integração Completa
 - **Salto de Versão Major (v3.0.1):** Versão oficial de lançamento dos novos módulos de **Orçamento X Realizado**, **Centro de Custos**, **Projeção de Saldo Fluxo** e **Gestão de Acordos/Renegociações**.

@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.2',
+      date: '05 de Agosto, 2026',
+      title: 'Ajuste de Interface & Simplificação de UX',
+      description: 'Remoção da barra superior de seleção de filial e botão de importação, preparando o módulo para o modelo de tenants e deixando a interface mais limpa.',
+      changes: [
+        { type: 'Interface & UX', text: 'Removida a barra superior de filiais/importação e reorganizado o cabeçalho de abas financeiras.' }
+      ]
+    },
+    {
       version: 'v3.0.1',
       date: '05 de Agosto, 2026',
       title: '🚀 Lançamento Major: Módulos NexaBUDGET, Centro de Custos & Integração Betim',
