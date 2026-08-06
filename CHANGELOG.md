@@ -1,10 +1,11 @@
-## [v2.1.45] - 05 de Agosto, 2026
-### Módulo NexaBUDGET (Orçamento X Realizado & Centro de Custos Betim)
-- **Visão Orçamento X Realizado:** Implementação da matriz de acompanhamento orçamentário por Centro de Custos (Insumos Dialíticos, Equipamentos, Utilitários, RH/Folha, Impostos Trabalhistas, Jurídico) com badges visuais de variância (🟢 Dentro da Meta, 🟡 Atenção, 🔴 Estouro Crítico).
-- **Importação do Fluxo de Caixa Betim (2026):** Mapeamento e sincronização completa dos 32 lançamentos de contas a pagar da Unidade Betim, incluindo meses de competência (Junho/25 a Agosto/26), parcelamentos (ex: `02/14`, `4-6`), encargos (FGTS, PIS, DCTFWeb) e baixas parciais.
-- **Projeção de Saldo Fluxo & Alertas:** Gráfico e tabela de curva de liquidez acumulada com alerta executivo do rombo financeiro e botão de simulação de renegociações.
-- **Acordos & Renegociações:** Nova aba para gestão de passivos renegociados em parcelas de longo prazo com fornecedores (ex: Lacerda Alimentação, Farmarin).
-- **Integração Compras → Financeiro:** Atualização do módulo de Compras (`PurchasingPanel.jsx`) para associar automaticamente o Centro de Custo `1.1 Insumos Dialíticos` e a Filial Betim ao aprovar pedidos de compra.
+## [v3.0.1] - 05 de Agosto, 2026
+### 🚀 MARCO MAJOR: Lançamento dos Módulos NexaBUDGET, Centro de Custos & Integração Completa
+- **Salto de Versão Major (v3.0.1):** Versão oficial de lançamento dos novos módulos de **Orçamento X Realizado**, **Centro de Custos**, **Projeção de Saldo Fluxo** e **Gestão de Acordos/Renegociações**.
+- **Preenchimento Total dos Dados de Betim (2026):** Sincronização completa de todos os 32 lançamentos da planilha em todas as visões do sistema (Contas a Pagar, Matriz Orçamentária por Centro de Custos, Saldo Fluxo Temporal e Acordos).
+- **Matriz Orçamento X Realizado:** Acompanhamento dinâmico de metas vs gastos executados em 12 Centros de Custo (Insumos Dialíticos, Equipamentos, Utilitários, RH/Folha, Tributos Trabalhistas, Jurídico) com alertas visuais de variância (🟢 Dentro da Meta | 🟡 Atenção | 🔴 Estouro Crítico).
+- **Projeção Executiva de Saldo Fluxo:** Tabela e curva de liquidez acumulada (Junho/25 a Agosto/26) com diagnóstico do rombo acumulado de -R$ 1.899.979,34 em Betim e botão de simulação de baixas.
+- **Acordos & Renegociações:** Controle centralizado de parcelamentos longos (ex: Lacerda Alimentação, Farmarin).
+- **Integração Total com Módulo de Compras:** Ordens de compra aprovadas vinculam automaticamente a Filial Betim e o Centro de Custos 1.1 de Insumos Dialíticos.
 
 ---
 

@@ -6,18 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v2.1.45',
+      version: 'v3.0.1',
       date: '05 de Agosto, 2026',
-      title: 'Módulo NexaBUDGET: Orçamento X Realizado & Centro de Custos Betim',
-      description: 'Lançamento da matriz de acompanhamento orçamentário por Centro de Custos, importação da planilha de Betim, projeção do saldo fluxo e gestão de acordos.',
+      title: '🚀 Lançamento Major: Módulos NexaBUDGET, Centro de Custos & Integração Betim',
+      description: 'Salto de versão para v3.0.1 simbolizando os novos módulos de Orçamento X Realizado, Centro de Custos, Projeção de Liquidez do Saldo Fluxo e Gestão de Acordos.',
       changes: [
         { type: 'Orçamento X Realizado', text: 'Matriz comparativa de metas vs gastos executados por centro de custos com badges visuais de variância (🟢/🟡/🔴).' },
-        { type: 'Importador Betim', text: 'Importação e autoclassificação dos 32 lançamentos de Contas a Pagar de Betim com meses de competência e parcelas.' },
-        { type: 'Saldo Fluxo', text: 'Tabela e curva de liquidez acumulada com alerta executivo do rombo financeiro e ponto de virada.' },
+        { type: 'Preenchimento Betim', text: 'Povoamento automático dos 32 lançamentos de Contas a Pagar de Betim em todas as tabelas e relatórios.' },
+        { type: 'Saldo Fluxo', text: 'Tabela e curva de liquidez acumulada (Jun/25 a Ago/26) com diagnóstico do rombo financeiro e botão de simulação de baixas.' },
         { type: 'Acordos & Renegociações', text: 'Gestão de passivos em parcelas de longo prazo (ex: Lacerda Alimentação, Farmarin).' },
-        { type: 'Integração Compras', text: 'Automatização do vínculo do Centro de Custos 1.1 Insumos Dialíticos e Filial Betim nas aprovações de ordens de compra.' }
+        { type: 'Sistema Integrado', text: 'Automatização do vínculo do Centro de Custos 1.1 Insumos Dialíticos e Filial Betim nas aprovações de ordens de compra.' }
       ]
     },
+
     {
       version: 'v2.1.39',
       date: '03 de Agosto, 2026',
