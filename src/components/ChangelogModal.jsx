@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.10',
+      date: '06 de Agosto, 2026',
+      title: 'Módulo de T.I. - Matriz RBAC Completa com 11 Módulos',
+      description: 'Expansão da matriz de permissões de acesso por perfil no painel NexaCONFIG para cobrir 100% dos módulos do sistema.',
+      changes: [
+        { type: 'Matriz RBAC', text: 'Adicionadas as colunas de Agenda & Consultas, Compras & Cotações e APACs & Faturamento.' },
+        { type: 'Segurança T.I.', text: 'Controle de Leitura, Escrita e Bloqueado dinâmico para todos os 11 portais do NexaCLINIC.' }
+      ]
+    },
+    {
       version: 'v3.0.9',
       date: '06 de Agosto, 2026',
       title: 'Correção de Exibição na Aba DRE Gerencial',

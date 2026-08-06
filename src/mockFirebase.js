@@ -12772,11 +12772,11 @@ const getDB = () => {
 
     if (!parsed.user_profiles) {
       parsed.user_profiles = [
-        { id: 'admin', name: 'Administrador / T.I.', permissions: { index: 'write', reception: 'write', clinical: 'write', stock: 'write', finance: 'write', hr: 'write', config: 'write' } },
-        { id: 'reception', name: 'Recepção / Atendimento', permissions: { index: 'read', reception: 'write', clinical: 'none', stock: 'none', finance: 'none', hr: 'none', config: 'none' } },
-        { id: 'clinical', name: 'Equipe Multiprofissional', permissions: { index: 'read', reception: 'read', clinical: 'write', stock: 'read', finance: 'none', hr: 'none', config: 'none' } },
-        { id: 'financial', name: 'Gestão Financeira', permissions: { index: 'read', reception: 'none', clinical: 'none', stock: 'none', finance: 'write', hr: 'none', config: 'none' } },
-        { id: 'hr', name: 'Recursos Humanos', permissions: { index: 'read', reception: 'none', clinical: 'none', stock: 'none', finance: 'none', hr: 'write', config: 'none' } }
+        { id: 'admin', name: 'Administrador / T.I.', permissions: { index: 'write', reception: 'write', clinical: 'write', calendar: 'write', stock: 'write', purchasing: 'write', requisitions: 'write', apac: 'write', finance: 'write', hr: 'write', config: 'write' } },
+        { id: 'reception', name: 'Recepção / Atendimento', permissions: { index: 'read', reception: 'write', clinical: 'none', calendar: 'write', stock: 'none', purchasing: 'none', requisitions: 'none', apac: 'read', finance: 'none', hr: 'none', config: 'none' } },
+        { id: 'clinical', name: 'Equipe Multiprofissional', permissions: { index: 'read', reception: 'read', clinical: 'write', calendar: 'read', stock: 'read', purchasing: 'none', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', config: 'none' } },
+        { id: 'financial', name: 'Gestão Financeira', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', purchasing: 'read', requisitions: 'none', apac: 'write', finance: 'write', hr: 'none', config: 'none' } },
+        { id: 'hr', name: 'Recursos Humanos', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', purchasing: 'read', requisitions: 'none', apac: 'none', finance: 'none', hr: 'write', config: 'none' } }
       ];
       updated = true;
     }

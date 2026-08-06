@@ -544,61 +544,76 @@ export default function ConfigPanel() {
           )}
 
           {/* TAB 2: RBAC Matrix */}
-          {activeTab === 'profiles' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div style={{
-                backgroundColor: 'var(--bg-card)',
-                borderRadius: '8px',
-                border: '1px solid var(--border-color)',
-                overflowX: 'auto',
-                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
-              }}>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Perfil / Função</th>
-                      <th>BI (INDEX)</th>
-                      <th>Atendimento (Recepção)</th>
-                      <th>Prontuário (Clínico)</th>
-                      <th>Estoque & Farmácia</th>
-                      <th>Requisições (Salão)</th>
-                      <th>Financeiro (Faturamento)</th>
-                      <th>Recursos Humanos (RH)</th>
-                      <th>Configurações T.I.</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {profiles.map(p => (
-                      <tr key={p.id}>
-                        <td style={{ fontWeight: '700' }}>{p.name}</td>
-                        {['index', 'reception', 'clinical', 'stock', 'requisitions', 'finance', 'hr', 'config'].map(modKey => (
-                          <td key={modKey}>
-                            <select 
-                              className="form-control"
-                              value={p.permissions[modKey] || 'none'}
-                              onChange={e => handlePermissionChange(p.id, modKey, e.target.value)}
-                              style={{ 
-                                fontSize: '0.8rem', 
-                                padding: '0.2rem 0.5rem', 
-                                border: '1px solid var(--border-color)',
-                                backgroundColor: p.permissions[modKey] === 'write' ? 'rgba(16,185,129,0.05)' : p.permissions[modKey] === 'read' ? 'rgba(59,130,246,0.05)' : 'transparent',
-                                color: p.permissions[modKey] === 'write' ? '#10b981' : p.permissions[modKey] === 'read' ? '#3b82f6' : 'var(--text-muted)',
-                                fontWeight: p.permissions[modKey] !== 'none' ? '700' : 'normal'
-                              }}
-                            >
-                              <option value="none">Bloqueado</option>
-                              <option value="read">Leitura</option>
-                              <option value="write">Escrita / Full</option>
-                            </select>
-                          </td>
+          {activeTab === 'profiles' && (() => {
+            const rbacModules = [
+              { key: 'index', label: 'BI & Qualidade (INDEX)' },
+              { key: 'reception', label: 'Recepção & Cadastro' },
+              { key: 'clinical', label: 'Prontuário & Clínico' },
+              { key: 'calendar', label: 'Agenda & Consultas' },
+              { key: 'stock', label: 'Estoque & Farmácia' },
+              { key: 'purchasing', label: 'Compras & Cotações' },
+              { key: 'requisitions', label: 'Requisições (Salão)' },
+              { key: 'apac', label: 'APACs & Faturamento' },
+              { key: 'finance', label: 'Módulo Financeiro' },
+              { key: 'hr', label: 'Recursos Humanos (RH)' },
+              { key: 'config', label: 'Configurações T.I.' }
+            ];
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{
+                  backgroundColor: 'var(--bg-card)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  overflowX: 'auto',
+                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                }}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={{ minWidth: '180px' }}>Perfil / Função</th>
+                        {rbacModules.map(m => (
+                          <th key={m.key} style={{ minWidth: '140px', textAlign: 'center' }}>{m.label}</th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {profiles.map(p => (
+                        <tr key={p.id}>
+                          <td style={{ fontWeight: '700', whiteSpace: 'nowrap' }}>{p.name}</td>
+                          {rbacModules.map(mod => {
+                            const modKey = mod.key;
+                            const currentPerm = p.permissions?.[modKey] || 'none';
+                            return (
+                              <td key={modKey} style={{ textAlign: 'center' }}>
+                                <select 
+                                  className="form-control"
+                                  value={currentPerm}
+                                  onChange={e => handlePermissionChange(p.id, modKey, e.target.value)}
+                                  style={{ 
+                                    fontSize: '0.8rem', 
+                                    padding: '0.2rem 0.5rem', 
+                                    border: '1px solid var(--border-color)',
+                                    backgroundColor: currentPerm === 'write' ? 'rgba(16,185,129,0.05)' : currentPerm === 'read' ? 'rgba(59,130,246,0.05)' : 'transparent',
+                                    color: currentPerm === 'write' ? '#10b981' : currentPerm === 'read' ? '#3b82f6' : 'var(--text-muted)',
+                                    fontWeight: currentPerm !== 'none' ? '700' : 'normal'
+                                  }}
+                                >
+                                  <option value="none">Bloqueado</option>
+                                  <option value="read">Leitura</option>
+                                  <option value="write">Escrita / Full</option>
+                                </select>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* TAB 3: Users */}
           {activeTab === 'users' && (

@@ -1,3 +1,10 @@
+## [v3.0.10] - 06 de Agosto, 2026
+### Módulo de T.I. - Matriz RBAC Completa (11 Módulos)
+- **Matriz de Permissões RBAC (NexaCONFIG):** Atualização da matriz de controle de acessos por perfil para englobar todos os 11 módulos do sistema.
+- **Módulos Adicionados à Matriz:** Inclusão das colunas de permissão para **Agenda & Consultas** (`calendar`), **Compras & Cotações** (`purchasing`) e **APACs & Faturamento** (`apac`).
+
+---
+
 ## [v3.0.9] - 06 de Agosto, 2026
 ### Correção de Importação do Ícone na Aba DRE Gerencial
 - **Correção de Erro de Execução (ReferenceError):** Adicionada a importação do componente `Activity` da biblioteca `lucide-react` em `FinancePanel.jsx`, corrigindo a falha ao renderizar a aba de DRE Gerencial.
