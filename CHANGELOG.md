@@ -1,3 +1,11 @@
+## [v3.0.5] - 06 de Agosto, 2026
+### Correção de Fuso Horário nas Datas de Nascimento dos Dependentes (RH)
+- **Correção no Módulo RH (Exibição de Datas):** Implementação da função `formatDateBR` para formatar datas no formato `YYYY-MM-DD` diretamente sem conversão UTC, eliminando o erro que exibia datas de nascimento de dependentes com 1 dia a menos (fuso horário BRT UTC-3).
+- **Adequação Geral no RH:** Atualização das listagens de dependentes, advertências, ausências, vacinas, documentos e contratos em experiência para uso da formatação segura de datas.
+- **Integridade dos Dados:** Confirmada a integridade de todos os registros armazenados no Firestore Cloud para Geisiane Morais, Mirelli Bispo, Moises da Silva e Shayanne Cristine.
+
+---
+
 ## [v3.0.2] - 05 de Agosto, 2026
 ### Ajuste de Interface & Simplificação Multi-Tenant
 - **Remoção da Barra Superior de Unidade e Importação:** Removida a barra de seleção de filial e botão de importação a pedido da gestão, alinhando a arquitetura para tratamento via Multi-Tenant.

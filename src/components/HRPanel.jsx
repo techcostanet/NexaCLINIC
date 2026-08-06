@@ -24,6 +24,20 @@ const DEFAULT_DASHBOARD_LAYOUT = [
 
 import { useHRLogic } from './HR/hooks/useHRLogic';
 
+export const formatDateBR = (dateVal) => {
+  if (!dateVal) return '-';
+  if (typeof dateVal === 'string') {
+    const cleanStr = dateVal.trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(cleanStr)) {
+      const [year, month, day] = cleanStr.substring(0, 10).split('-');
+      return `${day}/${month}/${year}`;
+    }
+  }
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return '-';
+  return d.toLocaleDateString('pt-BR');
+};
+
 export default function HRPanel({ currentUser }) {
   const logic = useHRLogic(currentUser);
   const {
@@ -381,7 +395,7 @@ export default function HRPanel({ currentUser }) {
                                     <strong onClick={() => handleOpenEmpByName(w.empName)} style={{ color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }} title={`Abrir ficha de ${w.empName}`}>{w.empName}</strong> - {w.motive}
                                     <span style={styles.listSubText}>{w.text}</span>
                                   </div>
-                                  <span style={styles.listBadge}>{new Date(w.date).toLocaleDateString('pt-BR')}</span>
+                                  <span style={styles.listBadge}>{formatDateBR(w.date)}</span>
                                 </div>
                               ))
                             )}
@@ -403,7 +417,7 @@ export default function HRPanel({ currentUser }) {
                                     <span style={styles.listSubText}>Lote: {v.lot || '-'}</span>
                                   </div>
                                   <span style={{ ...styles.listBadge, backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444' }}>
-                                    Vence: {new Date(v.expiryDate).toLocaleDateString('pt-BR')}
+                                    Vence: {formatDateBR(v.expiryDate)}
                                   </span>
                                 </div>
                               ))
@@ -430,7 +444,7 @@ export default function HRPanel({ currentUser }) {
                                     backgroundColor: abs.type === 'Falta Injustificada' ? '#fee2e2' : '#f1f5f9',
                                     color: abs.type === 'Falta Injustificada' ? '#991b1b' : '#475569' 
                                   }}>
-                                    {new Date(abs.date).toLocaleDateString('pt-BR')}
+                                    {formatDateBR(abs.date)}
                                   </span>
                                 </div>
                               ))
@@ -455,7 +469,7 @@ export default function HRPanel({ currentUser }) {
                                       <span style={styles.listSubText}>{e.role} {e.expStageLabel ? `• ${e.expStageLabel}` : ''}</span>
                                     </div>
                                     <span style={{ ...styles.listBadge, backgroundColor: '#fef3c7', color: '#d97706' }}>
-                                      Vence: {target.toLocaleDateString('pt-BR')}
+                                      Vence: {formatDateBR(target)}
                                     </span>
                                   </div>
                                 );
@@ -729,7 +743,7 @@ export default function HRPanel({ currentUser }) {
                               <span style={styles.categoryBadge}>{sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId}</span>
                             </td>
                             <td>{emp.contractType}</td>
-                            <td>{emp.admissionDate ? new Date(emp.admissionDate).toLocaleDateString('pt-BR') : '-'}</td>
+                            <td>{formatDateBR(emp.admissionDate)}</td>
                             <td>
                               {warnCount > 0 && <span style={{ ...styles.badgeCritical, marginRight: '0.25rem' }}>{warnCount} Adv.</span>}
                               {docCount > 0 && <span style={styles.badgeNormal}>{docCount} Docs</span>}
@@ -1074,7 +1088,7 @@ export default function HRPanel({ currentUser }) {
                             <tr key={idx}>
                               <td style={{ fontWeight: '600' }}>{dep.name}</td>
                               <td>{dep.relationship}</td>
-                              <td>{new Date(dep.birthDate).toLocaleDateString('pt-BR')}</td>
+                              <td>{formatDateBR(dep.birthDate)}</td>
                               <td>
                                 <button type="button" onClick={() => setEmpForm(f => ({ ...f, dependents: f.dependents.filter((_, i) => i !== idx) }))} style={{ ...styles.actionEditBtn, color: 'var(--danger-color)' }}>
                                   Remover
@@ -1133,7 +1147,7 @@ export default function HRPanel({ currentUser }) {
                         ) : (
                           empForm.absences.map((abs, idx) => (
                             <tr key={idx}>
-                              <td>{new Date(abs.date).toLocaleDateString('pt-BR')}</td>
+                              <td>{formatDateBR(abs.date)}</td>
                               <td>
                                 <span style={{
                                   padding: '0.2rem 0.5rem',
@@ -1207,7 +1221,7 @@ export default function HRPanel({ currentUser }) {
                         ) : (
                           empForm.warnings.map((w, idx) => (
                             <tr key={idx}>
-                              <td>{new Date(w.date).toLocaleDateString('pt-BR')}</td>
+                              <td>{formatDateBR(w.date)}</td>
                               <td style={{ fontWeight: '600' }}>{w.motive}</td>
                               <td>{w.text}</td>
                               <td>
@@ -1287,9 +1301,9 @@ export default function HRPanel({ currentUser }) {
                               <tr key={idx}>
                                 <td style={{ fontWeight: '600' }}>{vac.name}</td>
                                 <td>{vac.dose}</td>
-                                <td>{new Date(vac.date).toLocaleDateString('pt-BR')}</td>
+                                <td>{formatDateBR(vac.date)}</td>
                                 <td>{vac.lot || '-'}</td>
-                                <td>{vac.expiryDate ? new Date(vac.expiryDate).toLocaleDateString('pt-BR') : '-'}</td>
+                                <td>{formatDateBR(vac.expiryDate)}</td>
                                 <td>
                                   {vac.expiryDate ? (
                                     <span style={{ fontWeight: '700', color: valInfo.color }}>{valInfo.text}</span>
@@ -1364,7 +1378,7 @@ export default function HRPanel({ currentUser }) {
                                 <td>
                                   {docItem.expiryDate ? (
                                     <span style={{ fontWeight: '700', color: valInfo.color }}>
-                                      {new Date(docItem.expiryDate).toLocaleDateString('pt-BR')} ({valInfo.text})
+                                      {formatDateBR(docItem.expiryDate)} ({valInfo.text})
                                     </span>
                                   ) : (
                                     <span style={{ color: 'var(--text-muted)' }}>Vitalício</span>

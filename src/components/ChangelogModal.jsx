@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.5',
+      date: '06 de Agosto, 2026',
+      title: 'Correção de Fuso Horário nas Datas de Nascimento dos Dependentes',
+      description: 'Correção da formatação de data no módulo de Recursos Humanos para tratar strings YYYY-MM-DD sem distorção por fuso horário UTC (GMT-3), resolvendo a exibição incorreta do dia de nascimento dos dependentes.',
+      changes: [
+        { type: 'Recursos Humanos', text: 'Implementada formatação segura de datas (formatDateBR), garantindo a exibição exata de nascimentos de dependentes e histórico do RH.' },
+        { type: 'Banco de Dados', text: 'Integridade confirmada de todas as datas gravadas no Cloud Firestore.' }
+      ]
+    },
+    {
       version: 'v3.0.2',
       date: '05 de Agosto, 2026',
       title: 'Ajuste de Interface & Simplificação de UX',
