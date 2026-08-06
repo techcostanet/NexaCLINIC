@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.7',
+      date: '06 de Agosto, 2026',
+      title: 'Módulo Financeiro (Parte 2) - Auto-ordenação Dinâmica por Colunas',
+      description: 'Implementação do recurso de auto-ordenação interativa ao clicar no cabeçalho (▲/▼) de todas as tabelas e visões do módulo financeiro.',
+      changes: [
+        { type: 'Orçamento X Realizado', text: 'Ordenação por Centro de Custos, Orçado, Pago, Devido, Desvio R$, Execução % e Status.' },
+        { type: 'Acordos & Renegociações', text: 'Ordenação por Fornecedor, Filial, Total Renegociado, Parcelamento e Status.' },
+        { type: 'Conciliação Bancária', text: 'Ordenação por Data Extrato, Banco, Descrição, Tipo, Valor e Status.' },
+        { type: 'Projeção Saldo Fluxo', text: 'Ordenação por Mês Competência, Total Devido, Pago e Saldo Fluxo Acumulado.' }
+      ]
+    },
+    {
       version: 'v3.0.6',
       date: '06 de Agosto, 2026',
       title: 'Módulo Financeiro (Parte 1) - Botões de Ação e Gestão Completa',

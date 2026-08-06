@@ -1,3 +1,12 @@
+## [v3.0.7] - 06 de Agosto, 2026
+### Módulo Financeiro (Parte 2) - Auto-ordenação Dinâmica em Todas as Tabelas
+- **Orçamento X Realizado:** Adicionada ordenação ao clicar no cabeçalho de todas as colunas (Código/Centro de Custo, Categoria Pai, Orçado, Pago, Devido, Desvio R$, Execução % e Status Variância).
+- **Acordos & Renegociações:** Adicionada ordenação interativa por Fornecedor, Filial, Total Renegociado, Nº Parcelas, Valor Parcela, Progresso e Status.
+- **Conciliação Bancária:** Extrato bancário agora permite ordenação por Data, Banco, Descrição, Tipo (Crédito/Débito), Valor e Status.
+- **Projeção Saldo Fluxo:** Tabela de liquidez temporal com ordenação por Mês, Devido, Pago, Saldo do Mês e Saldo Fluxo Acumulado.
+
+---
+
 ## [v3.0.6] - 06 de Agosto, 2026
 ### Módulo Financeiro (Parte 1) - Botões de Ação e Gestão Completa
 - **Orçamento X Realizado:** Adicionados botões de Edição e Exclusão para metas orçamentárias na matriz por Centro de Custos.

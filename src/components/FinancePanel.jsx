@@ -188,6 +188,10 @@ export default function FinancePanel() {
   const [payableSort, setPayableSort] = useState({ key: 'dueDate', direction: 'asc' });
   const [receivableSort, setReceivableSort] = useState({ key: 'dueDate', direction: 'asc' });
   const [debtSort, setDebtSort] = useState({ key: 'firstDueDate', direction: 'asc' });
+  const [budgetSort, setBudgetSort] = useState({ key: 'code', direction: 'asc' });
+  const [agreementSort, setAgreementSort] = useState({ key: 'supplier', direction: 'asc' });
+  const [reconciliationSort, setReconciliationSort] = useState({ key: 'date', direction: 'asc' });
+  const [projectionSort, setProjectionSort] = useState({ key: 'monthIndex', direction: 'asc' });
 
   // Debts & Installments States
   const [debtsList, setDebtsList] = useState([]);
@@ -218,7 +222,7 @@ export default function FinancePanel() {
       let valA = a[sortConfig.key] ?? '';
       let valB = b[sortConfig.key] ?? '';
 
-      if (['amount', 'totalAmount', 'installmentAmount', 'installmentCount'].includes(sortConfig.key)) {
+      if (['amount', 'totalAmount', 'installmentAmount', 'installmentCount', 'planned', 'realized', 'due', 'devio', 'pctExecution', 'paidInstallments', 'devido', 'pago', 'saldo', 'fluxo', 'monthIndex'].includes(sortConfig.key)) {
         valA = parseFloat(valA) || 0;
         valB = parseFloat(valB) || 0;
       } else {
@@ -2395,18 +2399,18 @@ export default function FinancePanel() {
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={styles.th}>Data Extrato</th>
-                  <th style={styles.th}>Banco</th>
-                  <th style={styles.th}>Descrição no Banco</th>
-                  <th style={styles.th}>Tipo</th>
-                  <th style={styles.th}>Valor Extrato</th>
-                  <th style={styles.th}>Status Conciliação</th>
+                  {renderSortableHeader('Data Extrato', 'date', reconciliationSort, setReconciliationSort)}
+                  {renderSortableHeader('Banco', 'bankName', reconciliationSort, setReconciliationSort)}
+                  {renderSortableHeader('Descrição no Banco', 'description', reconciliationSort, setReconciliationSort)}
+                  {renderSortableHeader('Tipo', 'type', reconciliationSort, setReconciliationSort)}
+                  {renderSortableHeader('Valor Extrato', 'amount', reconciliationSort, setReconciliationSort)}
+                  {renderSortableHeader('Status Conciliação', 'status', reconciliationSort, setReconciliationSort)}
                   <th style={styles.th}>Observação / Diagnóstico</th>
                   <th style={styles.th}>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {bankStatements.map(stmt => {
+                {sortList(bankStatements, reconciliationSort).map(stmt => {
                   const isConciled = stmt.status === 'Conciliado';
                   return (
                     <tr key={stmt.id} style={styles.tr}>
@@ -2628,19 +2632,19 @@ export default function FinancePanel() {
             <table style={styles.table}>
               <thead>
                 <tr style={{ backgroundColor: '#f8fafc' }}>
-                  <th style={styles.th}>Código & Centro de Custo</th>
-                  <th style={styles.th}>Categoria Pai</th>
-                  <th style={styles.th}>Meta Orçada (R$)</th>
-                  <th style={styles.th}>Realizado / Pago (R$)</th>
-                  <th style={styles.th}>Devido / Cadastrado (R$)</th>
-                  <th style={styles.th}>Desvio (R$)</th>
-                  <th style={styles.th}>Execução</th>
-                  <th style={styles.th}>Status Variância</th>
+                  {renderSortableHeader('Código & Centro de Custo', 'code', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Categoria Pai', 'parentName', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Meta Orçada (R$)', 'planned', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Realizado / Pago (R$)', 'realized', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Devido / Cadastrado (R$)', 'due', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Desvio (R$)', 'devio', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Execução', 'pctExecution', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Status Variância', 'statusText', budgetSort, setBudgetSort)}
                   <th style={styles.th}>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {costCenters.map(cc => {
+                {sortList(costCenters.map(cc => {
                   const bPlan = budgetPlans.find(b => b.costCenterId === cc.id);
                   const planned = parseFloat(bPlan?.plannedAmount) || 0;
 
@@ -2667,6 +2671,29 @@ export default function FinancePanel() {
                     statusColor = '#92400e';
                     statusText = '🟡 Atenção (Excedeu Meta)';
                   }
+
+                  return {
+                    ...cc,
+                    bPlan,
+                    planned,
+                    realized,
+                    due,
+                    devio,
+                    pctExecution,
+                    statusBg,
+                    statusColor,
+                    statusText
+                  };
+                }), budgetSort).map(cc => {
+                  const bPlan = cc.bPlan;
+                  const planned = cc.planned;
+                  const due = cc.due;
+                  const realized = cc.realized;
+                  const devio = cc.devio;
+                  const pctExecution = cc.pctExecution;
+                  const statusBg = cc.statusBg;
+                  const statusColor = cc.statusColor;
+                  const statusText = cc.statusText;
 
                   return (
                     <tr key={cc.id} style={styles.tr}>
@@ -2806,30 +2833,30 @@ export default function FinancePanel() {
             <table style={styles.table}>
               <thead>
                 <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                  <th style={{ ...styles.th, color: '#f8fafc' }}>Mês Competência</th>
-                  <th style={{ ...styles.th, color: '#f8fafc' }}>Situação Predominante</th>
-                  <th style={{ ...styles.th, color: '#f8fafc' }}>Total Devido no Mês (R$)</th>
-                  <th style={{ ...styles.th, color: '#f8fafc' }}>Total Pago no Mês (R$)</th>
-                  <th style={{ ...styles.th, color: '#f8fafc' }}>Saldo do Mês (R$)</th>
-                  <th style={{ ...styles.th, color: '#f8fafc' }}>Saldo Fluxo Acumulado (R$)</th>
+                  {renderSortableHeader('Mês Competência', 'monthIndex', projectionSort, setProjectionSort)}
+                  {renderSortableHeader('Situação Predominante', 'status', projectionSort, setProjectionSort)}
+                  {renderSortableHeader('Total Devido no Mês (R$)', 'devido', projectionSort, setProjectionSort)}
+                  {renderSortableHeader('Total Pago no Mês (R$)', 'pago', projectionSort, setProjectionSort)}
+                  {renderSortableHeader('Saldo do Mês (R$)', 'saldo', projectionSort, setProjectionSort)}
+                  {renderSortableHeader('Saldo Fluxo Acumulado (R$)', 'fluxo', projectionSort, setProjectionSort)}
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { month: 'JUN/2025', status: 'ATRASADO', devido: 0, pago: 0, fluxo: 0 },
-                  { month: 'SET/2025', status: 'ATRASADO', devido: 52940.94, pago: 0, fluxo: -52940.94 },
-                  { month: 'OUT/2025', status: 'ATRASADO', devido: 56828.78, pago: 0, fluxo: -109769.72 },
-                  { month: 'NOV/2025', status: 'ATRASADO', devido: 50010.72, pago: 0, fluxo: -159780.44 },
-                  { month: 'DEZ/2025', status: 'ATRASADO', devido: 54472.12, pago: 0, fluxo: -214252.56 },
-                  { month: 'JAN/2026', status: 'ATRASADO', devido: 53056.61, pago: 0, fluxo: -267309.17 },
-                  { month: 'FEV/2026', status: 'ATRASADO', devido: 104417.71, pago: 0, fluxo: -371726.88 },
-                  { month: 'MAR/2026', status: 'ATRASADO', devido: 49200.00, pago: 0, fluxo: -420926.88 },
-                  { month: 'ABR/2026', status: 'ATRASADO', devido: 198115.05, pago: 0, fluxo: -619041.93 },
-                  { month: 'MAI/2026', status: 'ATRASADO', devido: 45403.04, pago: 1340.00, fluxo: -663104.97 },
-                  { month: 'JUN/2026', status: 'ATRASADO', devido: 126532.07, pago: 0, fluxo: -795139.42 },
-                  { month: 'JUL/2026', status: 'ATRASADO / BAIXAS', devido: 477151.10, pago: 57445.95, fluxo: -1222310.85 },
-                  { month: 'AGO/2026', status: 'A VENCER', devido: 677668.49, pago: 392644.50, fluxo: -1899979.34 }
-                ].map((row, i) => (
+                {sortList([
+                  { monthIndex: 1, month: 'JUN/2025', status: 'ATRASADO', devido: 0, pago: 0, saldo: 0, fluxo: initialCashBalance + 0 },
+                  { monthIndex: 2, month: 'SET/2025', status: 'ATRASADO', devido: 52940.94, pago: 0, saldo: -52940.94, fluxo: initialCashBalance - 52940.94 },
+                  { monthIndex: 3, month: 'OUT/2025', status: 'ATRASADO', devido: 56828.78, pago: 0, saldo: -56828.78, fluxo: initialCashBalance - 109769.72 },
+                  { monthIndex: 4, month: 'NOV/2025', status: 'ATRASADO', devido: 50010.72, pago: 0, saldo: -50010.72, fluxo: initialCashBalance - 159780.44 },
+                  { monthIndex: 5, month: 'DEZ/2025', status: 'ATRASADO', devido: 54472.12, pago: 0, saldo: -54472.12, fluxo: initialCashBalance - 214252.56 },
+                  { monthIndex: 6, month: 'JAN/2026', status: 'ATRASADO', devido: 53056.61, pago: 0, saldo: -53056.61, fluxo: initialCashBalance - 267309.17 },
+                  { monthIndex: 7, month: 'FEV/2026', status: 'ATRASADO', devido: 104417.71, pago: 0, saldo: -104417.71, fluxo: initialCashBalance - 371726.88 },
+                  { monthIndex: 8, month: 'MAR/2026', status: 'ATRASADO', devido: 49200.00, pago: 0, saldo: -49200.00, fluxo: initialCashBalance - 420926.88 },
+                  { monthIndex: 9, month: 'ABR/2026', status: 'ATRASADO', devido: 198115.05, pago: 0, saldo: -198115.05, fluxo: initialCashBalance - 619041.93 },
+                  { monthIndex: 10, month: 'MAI/2026', status: 'ATRASADO', devido: 45403.04, pago: 1340.00, saldo: -44063.04, fluxo: initialCashBalance - 663104.97 },
+                  { monthIndex: 11, month: 'JUN/2026', status: 'ATRASADO', devido: 126532.07, pago: 0, saldo: -126532.07, fluxo: initialCashBalance - 795139.42 },
+                  { monthIndex: 12, month: 'JUL/2026', status: 'ATRASADO / BAIXAS', devido: 477151.10, pago: 57445.95, saldo: -419705.15, fluxo: initialCashBalance - 1222310.85 },
+                  { monthIndex: 13, month: 'AGO/2026', status: 'A VENCER', devido: 677668.49, pago: 392644.50, saldo: -285023.99, fluxo: initialCashBalance - 1899979.34 }
+                ], projectionSort).map((row, i) => (
                   <tr key={i} style={{ ...styles.tr, backgroundColor: row.fluxo < 0 ? '#fff5f5' : '#ffffff' }}>
                     <td style={styles.td}><strong style={{ color: '#0f172a' }}>{row.month}</strong></td>
                     <td style={styles.td}>
@@ -2843,8 +2870,8 @@ export default function FinancePanel() {
                     <td style={{ ...styles.td, fontWeight: '700', color: '#059669' }}>
                       R$ {row.pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </td>
-                    <td style={{ ...styles.td, fontWeight: '700', color: '#dc2626' }}>
-                      -R$ {row.devido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    <td style={{ ...styles.td, fontWeight: '700', color: row.saldo < 0 ? '#dc2626' : '#059669' }}>
+                      {row.saldo < 0 ? `-R$ ${Math.abs(row.saldo).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : `R$ ${row.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                     </td>
                     <td style={{ ...styles.td, fontWeight: '900', color: row.fluxo < 0 ? '#b91c1c' : '#059669', fontSize: '0.9rem' }}>
                       {row.fluxo < 0 ? `-R$ ${Math.abs(row.fluxo).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : `R$ ${row.fluxo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
@@ -2959,18 +2986,18 @@ export default function FinancePanel() {
             <table style={styles.table}>
               <thead>
                 <tr style={{ backgroundColor: '#f8fafc' }}>
-                  <th style={styles.th}>Fornecedor / Credor</th>
-                  <th style={styles.th}>Filial</th>
-                  <th style={styles.th}>Total Renegociado</th>
-                  <th style={styles.th}>Parcelamento</th>
-                  <th style={styles.th}>Valor Parcela</th>
-                  <th style={styles.th}>Progresso</th>
-                  <th style={styles.th}>Status</th>
+                  {renderSortableHeader('Fornecedor / Credor', 'supplier', agreementSort, setAgreementSort)}
+                  {renderSortableHeader('Filial', 'unit', agreementSort, setAgreementSort)}
+                  {renderSortableHeader('Total Renegociado', 'totalAmount', agreementSort, setAgreementSort)}
+                  {renderSortableHeader('Parcelamento', 'installmentCount', agreementSort, setAgreementSort)}
+                  {renderSortableHeader('Valor Parcela', 'installmentAmount', agreementSort, setAgreementSort)}
+                  {renderSortableHeader('Progresso', 'paidInstallments', agreementSort, setAgreementSort)}
+                  {renderSortableHeader('Status', 'status', agreementSort, setAgreementSort)}
                   <th style={styles.th}>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {agreementsList.map(agr => (
+                {sortList(agreementsList, agreementSort).map(agr => (
                   <tr key={agr.id} style={styles.tr}>
                     <td style={styles.td}>
                       <strong style={{ color: '#0f172a' }}>{agr.supplier}</strong>
