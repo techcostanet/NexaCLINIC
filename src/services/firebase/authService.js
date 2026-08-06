@@ -166,6 +166,37 @@ export const createUser = async (email, name, role, allowedSectors) => {
       try {
         await secondaryApp.delete();
       } catch (e) {}
+
+      if (err.code === 'auth/email-already-in-use') {
+        const cleanEmail = (email || '').trim().toLowerCase();
+        try {
+          const { getFirestore, collection, getDocs, setDoc, doc } = await import('firebase/firestore');
+          const db = getFirestore(app);
+          const snap = await getDocs(collection(db, 'users'));
+          const existingUserDoc = snap.docs.find(d => (d.data().email || '').trim().toLowerCase() === cleanEmail);
+          
+          const targetUid = existingUserDoc ? existingUserDoc.id : `user-${Math.random().toString(36).substr(2, 9)}`;
+          const userPayload = {
+            uid: targetUid,
+            email: cleanEmail,
+            name: name || 'Operador',
+            role: role || 'reception',
+            allowedSectors: allowedSectors || [],
+            status: 'active',
+            updatedAt: new Date().toISOString()
+          };
+
+          await setDoc(doc(db, 'users', targetUid), userPayload, { merge: true });
+          return { uid: targetUid, email: cleanEmail, name, role, isExisting: true };
+        } catch (dbErr) {
+          console.error("Erro ao sincronizar perfil do usuário existente no Firestore:", dbErr);
+        }
+      }
+
+      if (err.code === 'auth/invalid-email') {
+        throw new Error(`O e-mail "${email}" é inválido.`);
+      }
+
       throw err;
     }
   };

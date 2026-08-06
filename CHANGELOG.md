@@ -1,3 +1,10 @@
+## [v3.0.12] - 06 de Agosto, 2026
+### Resiliência no Cadastro de Usuários (Tratamento de E-mail Existente)
+- **Tratamento `auth/email-already-in-use`:** Tratamento inteligente para logins que já possuem cadastro de autenticação no Firebase (por exemplo, criados em tentativas anteriores). O sistema agora sincroniza e vincula o documento no Firestore sem bloquear o operador com erro bruto.
+- **Mensagem Amigável:** Notificação clara e explicativa no modal de cadastro ao re-vincular um e-mail existente no sistema.
+
+---
+
 ## [v3.0.11] - 06 de Agosto, 2026
 ### Correção no Cadastro de Usuários (Firebase Config)
 - **Correção de Autenticação:** Exportação e importação do objeto `firebaseConfig` em `authService.js` e `config.ts`, resolvendo o erro `ReferenceError: firebaseConfig is not defined` ao tentar cadastrar novos usuários.

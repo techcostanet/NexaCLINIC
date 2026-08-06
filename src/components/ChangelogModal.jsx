@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.12',
+      date: '06 de Agosto, 2026',
+      title: 'Resiliência no Cadastro de Usuários (E-mail Existente)',
+      description: 'Sincronização automática e tratamento amigável caso o login já esteja registrado na autenticação.',
+      changes: [
+        { type: 'Autenticação', text: 'Captura graciosa de auth/email-already-in-use com atualização do perfil no Firestore.' }
+      ]
+    },
+    {
       version: 'v3.0.11',
       date: '06 de Agosto, 2026',
       title: 'Correção no Cadastro de Usuários (Firebase Config)',

@@ -207,18 +207,21 @@ export default function ConfigPanel() {
         setShowUserModal(false);
       } else {
         const tempPass = Math.random().toString(36).substring(2, 10);
-        await dbService.createUser(userForm.email, userForm.name, userForm.role, []);
+        const res = await dbService.createUser(userForm.email, userForm.name, userForm.role, []);
         // Get created user to update employeeId & status if set
         const updatedUsers = await dbService.getUsers();
-        const created = updatedUsers.find(u => u.email === userForm.email);
+        const created = updatedUsers.find(u => (u.email || '').toLowerCase() === userForm.email.toLowerCase());
         if (created) {
           await dbService.updateUser(created.uid, {
             employeeId: userForm.employeeId,
             status: userForm.status
           });
         }
-        setTempPasswordMessage(`Usuário criado! Senha temporária gerada: ${tempPass}`);
-        logAudit('Criação de Usuário', `Usuário de login ${userForm.email} criado sob perfil ${userForm.role}.`);
+        const msg = res?.isExisting
+          ? `O e-mail "${userForm.email}" já possuía cadastro de login na autenticação. O perfil e as permissões de "${userForm.name}" foram sincronizados com sucesso!`
+          : `Usuário criado com sucesso! Senha temporária gerada: ${tempPass}`;
+        setTempPasswordMessage(msg);
+        logAudit('Criação de Usuário', `Usuário de login ${userForm.email} salvo sob perfil ${userForm.role}.`);
       }
       fetchData();
     } catch (err) {
