@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.6',
+      date: '06 de Agosto, 2026',
+      title: 'Módulo Financeiro (Parte 1) - Botões de Ação e Gestão Completa',
+      description: 'Implementação das funcionalidades de Criar, Editar, Excluir e Ajustar Saldo Inicial de Caixa nas abas de Orçamento, Acordos, Projeção de Caixa e Conciliação Bancária.',
+      changes: [
+        { type: 'Orçamento X Realizado', text: 'Opções de edição e exclusão de metas orçamentárias na matriz por centro de custos.' },
+        { type: 'Acordos & Renegociações', text: 'Adicionados botões de edição e exclusão de acordos faturados com fornecedores.' },
+        { type: 'Projeção Saldo Fluxo', text: 'Modal de ajuste de Saldo Inicial de Caixa para cálculo de liquidez acumulada.' },
+        { type: 'Conciliação Bancária', text: 'Formulário de Novo Lançamento Manual no extrato, remoção de itens e desfazer conciliação.' }
+      ]
+    },
+    {
       version: 'v3.0.5',
       date: '06 de Agosto, 2026',
       title: 'Correção de Fuso Horário nas Datas de Nascimento dos Dependentes',

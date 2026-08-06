@@ -71,6 +71,28 @@ export default function FinancePanel() {
     notes: ''
   });
 
+  // Initial Cash Balance for Cashflow Projection
+  const [initialCashBalance, setInitialCashBalance] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sistema_indicadores_initial_cash_balance');
+      return saved !== null ? parseFloat(saved) : 150000;
+    } catch {
+      return 150000;
+    }
+  });
+  const [showEditCashBalance, setShowEditCashBalance] = useState(false);
+  const [tempCashBalance, setTempCashBalance] = useState('');
+
+  // Manual Bank Statement Modal State
+  const [showAddManualStatement, setShowAddManualStatement] = useState(false);
+  const [newManualStatement, setNewManualStatement] = useState({
+    date: new Date().toISOString().substring(0, 10),
+    bankName: 'Itaú Unibanco (PJ)',
+    description: '',
+    amount: '',
+    type: 'Débito'
+  });
+
   const [partialItem, setPartialItem] = useState(null);
   const [partialAmountPaid, setPartialAmountPaid] = useState('');
   const [showImportBetimModal, setShowImportBetimModal] = useState(false);
@@ -314,6 +336,135 @@ export default function FinancePanel() {
       try {
         await dbService.deleteDebt(id);
         if (selectedDebtDetail?.id === id) setSelectedDebtDetail(null);
+        loadData();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleEditBudgetClick = (bPlan, ccId) => {
+    if (bPlan) {
+      setNewBudget({
+        id: bPlan.id,
+        costCenterId: bPlan.costCenterId || ccId,
+        plannedAmount: bPlan.plannedAmount ? String(bPlan.plannedAmount) : '',
+        year: bPlan.year || 2026,
+        month: bPlan.month || 7,
+        notes: bPlan.notes || ''
+      });
+    } else {
+      setNewBudget({
+        costCenterId: ccId || '1.1',
+        plannedAmount: '',
+        year: 2026,
+        month: 7,
+        notes: ''
+      });
+    }
+    setShowAddBudget(true);
+  };
+
+  const handleDeleteBudgetPlan = async (id) => {
+    if (confirm('Deseja realmente excluir esta meta orçamentária?')) {
+      try {
+        if (dbService.deleteBudgetPlan) await dbService.deleteBudgetPlan(id);
+        loadData();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleEditAgreementClick = (agr) => {
+    setNewAgreement({
+      id: agr.id,
+      supplier: agr.supplier || '',
+      totalAmount: agr.totalAmount ? String(agr.totalAmount) : '',
+      installmentCount: agr.installmentCount ? String(agr.installmentCount) : '6',
+      installmentAmount: agr.installmentAmount ? String(agr.installmentAmount) : '',
+      dueDay: agr.dueDay ? String(agr.dueDay) : '10',
+      notes: agr.notes || ''
+    });
+    setShowAddAgreement(true);
+  };
+
+  const handleDeleteAgreement = async (id) => {
+    if (confirm('Deseja realmente excluir este acordo?')) {
+      try {
+        if (dbService.deleteAgreement) await dbService.deleteAgreement(id);
+        loadData();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleSaveInitialCashBalance = (e) => {
+    e.preventDefault();
+    const val = parseFloat(tempCashBalance);
+    if (isNaN(val)) return alert('Informe um valor válido para o saldo inicial de caixa.');
+    setInitialCashBalance(val);
+    try {
+      localStorage.setItem('sistema_indicadores_initial_cash_balance', String(val));
+    } catch (err) {
+      console.error(err);
+    }
+    setShowEditCashBalance(false);
+  };
+
+  const handleSaveManualStatement = async (e) => {
+    e.preventDefault();
+    if (!newManualStatement.description || !newManualStatement.amount) {
+      alert('Preencha a descrição e o valor da movimentação bancária.');
+      return;
+    }
+    try {
+      const numVal = parseFloat(newManualStatement.amount) || 0;
+      const finalAmt = newManualStatement.type === 'Débito' ? -Math.abs(numVal) : Math.abs(numVal);
+      await dbService.saveBankStatement({
+        date: newManualStatement.date,
+        bankName: newManualStatement.bankName || 'Itaú Unibanco (PJ)',
+        description: newManualStatement.description,
+        amount: finalAmt,
+        type: newManualStatement.type,
+        status: 'Pendente',
+        note: 'Lançamento manual de extrato',
+        importedAt: new Date().toISOString()
+      });
+      setShowAddManualStatement(false);
+      setNewManualStatement({
+        date: new Date().toISOString().substring(0, 10),
+        bankName: 'Itaú Unibanco (PJ)',
+        description: '',
+        amount: '',
+        type: 'Débito'
+      });
+      loadData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteStatement = async (id) => {
+    if (confirm('Deseja remover este item do extrato bancário?')) {
+      try {
+        if (dbService.deleteBankStatement) await dbService.deleteBankStatement(id);
+        loadData();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleUnreconcileStatement = async (stmt) => {
+    if (confirm('Deseja desfazer a conciliação deste lançamento bancário?')) {
+      try {
+        await dbService.saveBankStatement({
+          ...stmt,
+          status: 'Pendente',
+          note: 'Conciliação desfeita pelo operador'
+        });
         loadData();
       } catch (err) {
         console.error(err);
@@ -2155,11 +2306,89 @@ export default function FinancePanel() {
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button onClick={() => setShowAddManualStatement(!showAddManualStatement)} style={styles.btnPrimary}>
+                <Plus size={14} /> Novo Lançamento Manual
+              </button>
               <button onClick={() => alert('Simulação de Leitura de Extrato OFX/CSV concluída com sucesso!')} style={styles.btnSecondary}>
                 <Upload size={14} /> Importar OFX / CSV
               </button>
             </div>
           </div>
+
+          {/* Form Modal for Manual Bank Statement Entry */}
+          {showAddManualStatement && (
+            <form onSubmit={handleSaveManualStatement} style={{ ...styles.formContainer, border: '2px solid #3b82f6', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>🏦 Novo Lançamento Manual no Extrato Bancário</h4>
+                <button type="button" onClick={() => setShowAddManualStatement(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={styles.formGrid}>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Data da Movimentação</label>
+                  <input 
+                    type="date" 
+                    value={newManualStatement.date} 
+                    onChange={e => setNewManualStatement({ ...newManualStatement, date: e.target.value })}
+                    style={styles.input}
+                    required
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Banco / Conta</label>
+                  <input 
+                    type="text" 
+                    value={newManualStatement.bankName} 
+                    onChange={e => setNewManualStatement({ ...newManualStatement, bankName: e.target.value })}
+                    placeholder="Ex: Itaú Unibanco (PJ)"
+                    style={styles.input}
+                    required
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Descrição / Histórico</label>
+                  <input 
+                    type="text" 
+                    value={newManualStatement.description} 
+                    onChange={e => setNewManualStatement({ ...newManualStatement, description: e.target.value })}
+                    placeholder="Ex: Tarifa Manutenção Conta / PIX Recebido"
+                    style={styles.input}
+                    required
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Tipo de Movimentação</label>
+                  <select 
+                    value={newManualStatement.type} 
+                    onChange={e => setNewManualStatement({ ...newManualStatement, type: e.target.value })}
+                    style={styles.input}
+                  >
+                    <option value="Débito">Débito (Saída / Tarifa)</option>
+                    <option value="Crédito">Crédito (Entrada / Rendimento)</option>
+                  </select>
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Valor (R$)</label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    value={newManualStatement.amount} 
+                    onChange={e => setNewManualStatement({ ...newManualStatement, amount: e.target.value })}
+                    placeholder="Ex: 85.50"
+                    style={styles.input}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setShowAddManualStatement(false)} style={styles.btnSecondary}>Cancelar</button>
+                <button type="submit" style={styles.btnSave}>Salvar Lançamento</button>
+              </div>
+            </form>
+          )}
 
           {/* Bank Statements Reconciliation Table */}
           <div style={styles.tableWrapper}>
@@ -2217,8 +2446,8 @@ export default function FinancePanel() {
                         {stmt.note || 'Lançamento conferido e aprovado pelo operador.'}
                       </td>
                       <td style={styles.td}>
-                        {!isConciled ? (
-                          <div style={{ display: 'flex', gap: '0.35rem' }}>
+                        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                          {!isConciled ? (
                             <button 
                               onClick={() => handleQuickReconcile(stmt)} 
                               style={{ ...styles.actionBtnCheck, backgroundColor: '#10b981', color: '#ffffff', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
@@ -2226,10 +2455,19 @@ export default function FinancePanel() {
                             >
                               <Check size={12} /> Conciliar 1-Clique
                             </button>
-                          </div>
-                        ) : (
-                          <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: '700' }}>✓ Concluído</span>
-                        )}
+                          ) : (
+                            <button 
+                              onClick={() => handleUnreconcileStatement(stmt)}
+                              style={{ ...styles.actionBtnCheck, backgroundColor: '#fef3c7', color: '#b45309', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem' }}
+                              title="Desfazer conciliação e voltar para pendente"
+                            >
+                              Desfazer
+                            </button>
+                          )}
+                          <button onClick={() => handleDeleteStatement(stmt.id)} style={styles.actionBtnDelete} title="Excluir Item do Extrato">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -2398,6 +2636,7 @@ export default function FinancePanel() {
                   <th style={styles.th}>Desvio (R$)</th>
                   <th style={styles.th}>Execução</th>
                   <th style={styles.th}>Status Variância</th>
+                  <th style={styles.th}>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -2467,6 +2706,22 @@ export default function FinancePanel() {
                           {statusText}
                         </span>
                       </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                          <button 
+                            onClick={() => handleEditBudgetClick(bPlan, cc.id)} 
+                            style={{ ...styles.actionBtnCheck, backgroundColor: '#f1f5f9', color: '#334155' }} 
+                            title="Editar Meta Orçamentária"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          {bPlan && (
+                            <button onClick={() => handleDeleteBudgetPlan(bPlan.id)} style={styles.actionBtnDelete} title="Excluir Meta">
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -2480,7 +2735,7 @@ export default function FinancePanel() {
       {activeTab === 'cashflow_projection' && (
         <div style={styles.tabContent}>
           {/* Executive Warning Alert Banner for Betim */}
-          <div style={{ backgroundColor: '#fef2f2', border: '2px solid #fca5a5', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+          <div style={{ backgroundColor: '#fef2f2', border: '2px solid #fca5a5', borderRadius: '12px', padding: '1.25rem', marginBottom: '1rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
             <AlertTriangle size={28} color="#dc2626" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
               <h3 style={{ margin: 0, color: '#991b1b', fontSize: '1.1rem', fontWeight: '800' }}>
@@ -2492,6 +2747,59 @@ export default function FinancePanel() {
               </p>
             </div>
           </div>
+
+          {/* Action Bar with Initial Cash Balance Adjustment */}
+          <div style={{ ...styles.actionsBar, marginBottom: '1.25rem' }}>
+            <div>
+              <h4 style={{ margin: 0, color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.95rem' }}>
+                💵 Saldo Inicial de Caixa Definido: <span style={{ color: '#059669', fontWeight: '800' }}>R$ {initialCashBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+              </h4>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Ponto de partida do saldo bancário para a projeção de liquidez da Unidade {selectedUnit}
+              </span>
+            </div>
+
+            <button 
+              onClick={() => {
+                setTempCashBalance(String(initialCashBalance));
+                setShowEditCashBalance(!showEditCashBalance);
+              }} 
+              style={styles.btnSecondary}
+            >
+              <Sliders size={14} />
+              <span>Ajustar Saldo Inicial de Caixa</span>
+            </button>
+          </div>
+
+          {/* Modal to Adjust Initial Cash Balance */}
+          {showEditCashBalance && (
+            <form onSubmit={handleSaveInitialCashBalance} style={{ ...styles.formContainer, border: '2px solid #3b82f6', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>💵 Ajustar Saldo Inicial de Caixa da Clínica</h4>
+                <button type="button" onClick={() => setShowEditCashBalance(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Valor do Saldo Inicial em Caixa (R$)</label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  value={tempCashBalance} 
+                  onChange={e => setTempCashBalance(e.target.value)}
+                  placeholder="Ex: 150000.00"
+                  style={styles.input}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setShowEditCashBalance(false)} style={styles.btnSecondary}>Cancelar</button>
+                <button type="submit" style={styles.btnSave}>Salvar Saldo Inicial</button>
+              </div>
+            </form>
+          )}
 
           {/* Timeline Monthly Projections Table */}
           <div style={styles.tableWrapper}>
@@ -2658,6 +2966,7 @@ export default function FinancePanel() {
                   <th style={styles.th}>Valor Parcela</th>
                   <th style={styles.th}>Progresso</th>
                   <th style={styles.th}>Status</th>
+                  <th style={styles.th}>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -2688,6 +2997,20 @@ export default function FinancePanel() {
                       <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem', borderRadius: '12px', backgroundColor: '#d1fae5', color: '#065f46' }}>
                         {agr.status || 'Ativo'}
                       </span>
+                    </td>
+                    <td style={styles.td}>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button 
+                          onClick={() => handleEditAgreementClick(agr)} 
+                          style={{ ...styles.actionBtnCheck, backgroundColor: '#f1f5f9', color: '#334155' }} 
+                          title="Editar Acordo"
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <button onClick={() => handleDeleteAgreement(agr.id)} style={styles.actionBtnDelete} title="Excluir Acordo">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

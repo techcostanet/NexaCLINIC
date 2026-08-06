@@ -1,3 +1,12 @@
+## [v3.0.6] - 06 de Agosto, 2026
+### Módulo Financeiro (Parte 1) - Botões de Ação e Gestão Completa
+- **Orçamento X Realizado:** Adicionados botões de Edição e Exclusão para metas orçamentárias na matriz por Centro de Custos.
+- **Acordos & Renegociações:** Adicionadas opções de Edição e Exclusão para contratos de acordos com fornecedores.
+- **Projeção Saldo Fluxo:** Criado botão e modal de "Ajuste de Saldo Inicial de Caixa" com gravação persistente para a liquidez temporal.
+- **Conciliação Bancária:** Adicionadas opções de "Novo Lançamento Manual no Extrato", Exclusão de itens do extrato e ação de "Desfazer Conciliação".
+
+---
+
 ## [v3.0.5] - 06 de Agosto, 2026
 ### Correção de Fuso Horário nas Datas de Nascimento dos Dependentes (RH)
 - **Correção no Módulo RH (Exibição de Datas):** Implementação da função `formatDateBR` para formatar datas no formato `YYYY-MM-DD` diretamente sem conversão UTC, eliminando o erro que exibia datas de nascimento de dependentes com 1 dia a menos (fuso horário BRT UTC-3).

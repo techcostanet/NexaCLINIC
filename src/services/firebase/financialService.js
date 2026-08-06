@@ -308,4 +308,29 @@ export const saveAgreement = async (agr) => {
     return { id: ref.id, ...agr };
   };
 
+export const deleteBudgetPlan = async (id) => {
+    if (USE_MOCK) return { success: true };
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'budget_plans', id));
+    return { success: true };
+  };
+
+export const deleteAgreement = async (id) => {
+    if (USE_MOCK) return { success: true };
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'agreements', id));
+    return { success: true };
+  };
+
+export const deleteBankStatement = async (id) => {
+    if (USE_MOCK) return { success: true };
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'bank_statements', id));
+    return { success: true };
+  };
+
+
 
