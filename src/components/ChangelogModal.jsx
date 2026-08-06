@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.13',
+      date: '06 de Agosto, 2026',
+      title: 'Ajuste de Senha do Usuário Daliam',
+      description: 'Configuração da credencial daliam@nexa.com para a senha dalia123.',
+      changes: [
+        { type: 'Autenticação', text: 'Definição da senha dalia123 para o operador daliam@nexa.com.' }
+      ]
+    },
+    {
       version: 'v3.0.12',
       date: '06 de Agosto, 2026',
       title: 'Resiliência no Cadastro de Usuários (E-mail Existente)',

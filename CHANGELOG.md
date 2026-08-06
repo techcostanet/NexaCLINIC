@@ -1,3 +1,9 @@
+## [v3.0.13] - 06 de Agosto, 2026
+### Ajuste de Padrão de Senha do Usuário daliam@nexa.com
+- **Senha Padrão Configurada:** Ajustada a credencial de acesso do usuário `daliam@nexa.com` para a senha `dalia123`.
+
+---
+
 ## [v3.0.12] - 06 de Agosto, 2026
 ### Resiliência no Cadastro de Usuários (Tratamento de E-mail Existente)
 - **Tratamento `auth/email-already-in-use`:** Tratamento inteligente para logins que já possuem cadastro de autenticação no Firebase (por exemplo, criados em tentativas anteriores). O sistema agora sincroniza e vincula o documento no Firestore sem bloquear o operador com erro bruto.

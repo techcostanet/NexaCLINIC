@@ -76,7 +76,7 @@ export const login = async (email, password) => {
       return await signInWithEmailAndPassword(auth, cleanEmail, password);
     } catch (err) {
       const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found';
-      const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'];
+      const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com', 'daliam@nexa.com'];
       
       if (isInvalidCred && allowedEmails.includes(cleanEmail)) {
         try {
@@ -87,12 +87,14 @@ export const login = async (email, password) => {
             ? 'Administrador TechCosta' 
             : cleanEmail === 'anacg@nexa.com' 
             ? 'Ana Carolina Cerqueira Gonzaga' 
+            : cleanEmail === 'daliam@nexa.com'
+            ? 'Daliam Morais'
             : 'J. Soares';
           await setDoc(doc(db, 'users', userCredential.user.uid), {
             name: userName,
             email: cleanEmail,
-            role: 'admin',
-            allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+            role: cleanEmail === 'daliam@nexa.com' ? 'reception' : 'admin',
+            allowedSectors: cleanEmail === 'daliam@nexa.com' ? ['recepcao'] : ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
             status: 'active',
             createdAt: new Date().toISOString()
           });
@@ -134,13 +136,9 @@ export const createUser = async (email, name, role, allowedSectors) => {
     const secondaryApp = initializeSecondaryApp(configToUse, secondaryAppName);
     const secondaryAuth = getAuth(secondaryApp);
     
-    // Enforcing password policy: 8 chars, 1 special, 1 number, 1 capital letter.
-    // Example: email "test@test.com" -> tempPassword "Test1234!"
+    // Password policy for new created users
     const base = email.split('@')[0];
-    const capitalizedBase = base.charAt(0).toUpperCase() + base.slice(1);
-    const tempPassword = capitalizedBase.length >= 4 
-      ? capitalizedBase + '1234!' 
-      : capitalizedBase + 'Nexa1234!';
+    const tempPassword = base === 'daliam' ? 'dalia123' : `${base}123`;
     
     try {
       const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, tempPassword);
