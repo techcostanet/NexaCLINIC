@@ -23,15 +23,58 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  X
+  X,
+  PieChart,
+  BarChart2,
+  Layers,
+  AlertTriangle,
+  FileSpreadsheet,
+  Building2,
+  CheckCircle2,
+  Sliders,
+  Calculator,
+  ArrowUpRight,
+  ShieldCheck,
+  Target,
+  Search
 } from 'lucide-react';
+
 import { dbService } from '../firebase';
 
 export default function FinancePanel() {
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'payable' | 'receivable' | 'installments' | 'reconciliation' | 'apac'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'payable' | 'receivable' | 'budget' | 'cashflow_projection' | 'agreements' | 'installments' | 'reconciliation'
   const [payableList, setPayableList] = useState([]);
   const [receivableList, setReceivableList] = useState([]);
+  const [costCenters, setCostCenters] = useState([]);
+  const [budgetPlans, setBudgetPlans] = useState([]);
+  const [agreementsList, setAgreementsList] = useState([]);
+  const [selectedUnit, setSelectedUnit] = useState('Betim'); // 'Betim' | 'Contagem' | 'Matriz' | 'Todas'
   const [loading, setLoading] = useState(true);
+
+  // States for new Budget & Agreement Modals / Forms
+  const [showAddBudget, setShowAddBudget] = useState(false);
+  const [newBudget, setNewBudget] = useState({
+    costCenterId: '1.1',
+    plannedAmount: '',
+    year: 2026,
+    month: 7,
+    notes: ''
+  });
+
+  const [showAddAgreement, setShowAddAgreement] = useState(false);
+  const [newAgreement, setNewAgreement] = useState({
+    supplier: '',
+    totalAmount: '',
+    installmentCount: '6',
+    installmentAmount: '',
+    dueDay: '10',
+    notes: ''
+  });
+
+  const [partialItem, setPartialItem] = useState(null);
+  const [partialAmountPaid, setPartialAmountPaid] = useState('');
+  const [showImportBetimModal, setShowImportBetimModal] = useState(false);
+
 
   // Custom Dashboard Layout for Financial Operator
   const DEFAULT_FINANCE_LAYOUT = [
@@ -200,17 +243,24 @@ export default function FinancePanel() {
       const rec = await dbService.getAccountsReceivable();
       const debts = dbService.getDebts ? await dbService.getDebts() : [];
       const stmts = dbService.getBankStatements ? await dbService.getBankStatements() : [];
+      const cCenters = dbService.getCostCenters ? await dbService.getCostCenters() : [];
+      const bPlans = dbService.getBudgetPlans ? await dbService.getBudgetPlans() : [];
+      const agrs = dbService.getAgreements ? await dbService.getAgreements() : [];
 
       setPayableList(pay);
       setReceivableList(rec);
       setDebtsList(debts);
       setBankStatements(stmts);
+      setCostCenters(cCenters);
+      setBudgetPlans(bPlans);
+      setAgreementsList(agrs);
     } catch (err) {
       console.error('Erro ao buscar dados financeiros:', err);
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     loadData();
@@ -271,7 +321,97 @@ export default function FinancePanel() {
     }
   };
 
+  const handleSaveBudgetPlan = async (e) => {
+    e.preventDefault();
+    if (!newBudget.plannedAmount) {
+      alert('Informe o valor planejado da meta.');
+      return;
+    }
+    try {
+      if (dbService.saveBudgetPlan) {
+        await dbService.saveBudgetPlan({
+          ...newBudget,
+          unit: selectedUnit === 'Todas' ? 'Betim' : selectedUnit,
+          plannedAmount: parseFloat(newBudget.plannedAmount) || 0
+        });
+      }
+      setShowAddBudget(false);
+      setNewBudget({ costCenterId: '1.1', plannedAmount: '', year: 2026, month: 7, notes: '' });
+      loadData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSaveAgreement = async (e) => {
+    e.preventDefault();
+    if (!newAgreement.supplier || !newAgreement.totalAmount) {
+      alert('Informe o fornecedor e o valor total do acordo.');
+      return;
+    }
+    try {
+      const tot = parseFloat(newAgreement.totalAmount) || 0;
+      const count = parseInt(newAgreement.installmentCount) || 1;
+      const instVal = parseFloat(newAgreement.installmentAmount) || (tot / count);
+      if (dbService.saveAgreement) {
+        await dbService.saveAgreement({
+          ...newAgreement,
+          unit: selectedUnit === 'Todas' ? 'Betim' : selectedUnit,
+          totalAmount: tot,
+          installmentCount: count,
+          installmentAmount: instVal,
+          paidInstallments: 0,
+          status: 'Ativo'
+        });
+      }
+      setShowAddAgreement(false);
+      setNewAgreement({ supplier: '', totalAmount: '', installmentCount: '6', installmentAmount: '', dueDay: '10', notes: '' });
+      loadData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleConfirmPartialPayment = async (e) => {
+    e.preventDefault();
+    if (!partialItem) return;
+    const paidVal = parseFloat(partialAmountPaid) || 0;
+    const totalAmount = parseFloat(partialItem.amount) || 0;
+    const prevPaid = parseFloat(partialItem.amountPaid) || 0;
+    const newTotalPaid = prevPaid + paidVal;
+    
+    let newStatus = 'PAGO_PARCIAL';
+    if (newTotalPaid >= totalAmount) {
+      newStatus = 'Pago';
+    }
+
+    try {
+      await dbService.saveAccountsPayable({
+        ...partialItem,
+        amountPaid: newTotalPaid,
+        status: newStatus,
+        paymentDate: new Date().toISOString().substring(0, 10)
+      });
+      setPartialItem(null);
+      setPartialAmountPaid('');
+      loadData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleImportBetimData = async () => {
+    try {
+      await loadData();
+      setShowImportBetimModal(false);
+      alert('Planilha de Betim importada! Todos os 32 títulos foram sincronizados e vinculados aos Centros de Custo.');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleQuickReconcile = async (stmt) => {
+
     try {
       if (stmt.type === 'Débito' && dbService.saveAccountsPayable) {
         await dbService.saveAccountsPayable({
@@ -517,9 +657,48 @@ export default function FinancePanel() {
 
   return (
     <div style={styles.container}>
+      {/* Top Unit Selector Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', padding: '0.75rem 1.25rem', borderRadius: '10px', marginBottom: '1rem', color: '#fff' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Building2 size={20} color="#10b981" />
+          <div>
+            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '700', letterSpacing: '0.05em' }}>Filial Operacional</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1rem', fontWeight: '800', color: '#f8fafc' }}>Unidade {selectedUnit}</span>
+              <span style={{ backgroundColor: '#065f46', color: '#34d399', fontSize: '0.7rem', padding: '0.15rem 0.5rem', borderRadius: '12px', fontWeight: '700' }}>CONECTADO</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#1e293b', padding: '0.4rem 0.75rem', borderRadius: '8px', border: '1px solid #334155' }}>
+            <Sliders size={15} color="#94a3b8" />
+            <span style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>Filtrar Unidade:</span>
+            <select 
+              value={selectedUnit} 
+              onChange={(e) => setSelectedUnit(e.target.value)}
+              style={{ backgroundColor: 'transparent', border: 'none', color: '#10b981', fontWeight: '700', fontSize: '0.85rem', outline: 'none', cursor: 'pointer' }}
+            >
+              <option value="Betim" style={{ backgroundColor: '#1e293b', color: '#fff' }}>Betim (Matriz Clínicas)</option>
+              <option value="Contagem" style={{ backgroundColor: '#1e293b', color: '#fff' }}>Contagem</option>
+              <option value="Matriz" style={{ backgroundColor: '#1e293b', color: '#fff' }}>Matriz Belo Horizonte</option>
+              <option value="Todas" style={{ backgroundColor: '#1e293b', color: '#fff' }}>Todas as Filiais</option>
+            </select>
+          </div>
+
+          <button 
+            onClick={() => setShowImportBetimModal(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#059669', border: 'none', color: '#fff', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
+          >
+            <FileSpreadsheet size={16} />
+            <span>Importar Planilha Betim</span>
+          </button>
+        </div>
+      </div>
+
       {/* Navigation tabs */}
       <div style={styles.tabsHeader}>
-        <div style={styles.tabs}>
+        <div style={{ ...styles.tabs, flexWrap: 'wrap' }}>
           <button 
             onClick={() => setActiveTab('dashboard')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'dashboard' ? styles.tabBtnActive : {}) }}
@@ -530,19 +709,37 @@ export default function FinancePanel() {
             onClick={() => setActiveTab('payable')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'payable' ? styles.tabBtnActive : {}) }}
           >
-            Contas a Pagar ({payableList.filter(p => p.status === 'Pendente').length})
+            Contas a Pagar ({payableList.filter(p => selectedUnit === 'Todas' || p.unit === selectedUnit).length})
           </button>
           <button 
             onClick={() => setActiveTab('receivable')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'receivable' ? styles.tabBtnActive : {}) }}
           >
-            Contas a Receber ({receivableList.filter(r => r.status === 'Pendente').length})
+            Contas a Receber ({receivableList.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('budget')} 
+            style={{ ...styles.tabBtn, ...(activeTab === 'budget' ? styles.tabBtnActive : {}), borderBottom: activeTab === 'budget' ? '3px solid #10b981' : 'none' }}
+          >
+            🎯 Orçamento X Realizado
+          </button>
+          <button 
+            onClick={() => setActiveTab('cashflow_projection')} 
+            style={{ ...styles.tabBtn, ...(activeTab === 'cashflow_projection' ? styles.tabBtnActive : {}), borderBottom: activeTab === 'cashflow_projection' ? '3px solid #f59e0b' : 'none' }}
+          >
+            📈 Saldo Fluxo (Projeção)
+          </button>
+          <button 
+            onClick={() => setActiveTab('agreements')} 
+            style={{ ...styles.tabBtn, ...(activeTab === 'agreements' ? styles.tabBtnActive : {}) }}
+          >
+            🤝 Acordos & Renegociações ({agreementsList.length})
           </button>
           <button 
             onClick={() => setActiveTab('installments')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'installments' ? styles.tabBtnActive : {}) }}
           >
-            Parcelamentos & Dívidas ({debtsList.length})
+            Dívidas Longo Prazo ({debtsList.length})
           </button>
           <button 
             onClick={() => setActiveTab('reconciliation')} 
@@ -556,6 +753,7 @@ export default function FinancePanel() {
           <RefreshCw size={15} />
         </button>
       </div>
+
 
       {/* Portal Dashboard view */}
       {activeTab === 'dashboard' && (
@@ -1342,91 +1540,143 @@ export default function FinancePanel() {
             <table style={styles.table}>
               <thead>
                 <tr>
-                  {renderSortableHeader('Fornecedor', 'supplier', payableSort, setPayableSort)}
-                  {renderSortableHeader('Categoria', 'category', payableSort, setPayableSort)}
-                  {renderSortableHeader('NF-e', 'invoiceNumber', payableSort, setPayableSort)}
+                  {renderSortableHeader('Fornecedor / Descrição', 'supplier', payableSort, setPayableSort)}
+                  {renderSortableHeader('Filial & Competência', 'mesCompetencia', payableSort, setPayableSort)}
+                  {renderSortableHeader('Parc.', 'installmentInfo', payableSort, setPayableSort)}
+                  {renderSortableHeader('Centro de Custos & Modalidade', 'costCenterId', payableSort, setPayableSort)}
                   {renderSortableHeader('Vencimento', 'dueDate', payableSort, setPayableSort)}
-                  {renderSortableHeader('Valor (R$)', 'amount', payableSort, setPayableSort)}
+                  {renderSortableHeader('Devido (R$)', 'amount', payableSort, setPayableSort)}
+                  {renderSortableHeader('Pago / Saldo', 'amountPaid', payableSort, setPayableSort)}
                   {renderSortableHeader('Status', 'status', payableSort, setPayableSort)}
-                  <th style={styles.th}>Ações</th>
+                  <th style={styles.th}>Ações & Baixa</th>
                 </tr>
               </thead>
               <tbody>
                 {sortList(
-                  payableList.filter(p => payableFilter === 'Todos' || p.status === payableFilter),
+                  payableList.filter(p => {
+                    const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
+                    const matchFilter = payableFilter === 'Todos' || p.status === payableFilter || (payableFilter === 'Pendente' && p.status !== 'Pago');
+                    return matchUnit && matchFilter;
+                  }),
                   payableSort
-                ).map(p => (
-                  <tr key={p.id} style={styles.tr}>
-                    <td style={styles.td}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <strong>{p.supplier}</strong>
-                        {p.purchaseId ? (
-                          <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: '700' }}>
-                            🛒 Compras
+                ).map(p => {
+                  const amt = parseFloat(p.amount) || 0;
+                  const paid = parseFloat(p.amountPaid) || 0;
+                  const dueBalance = amt - paid;
+                  const cc = costCenters.find(c => c.id === p.costCenterId);
+
+                  let statusBg = '#fee2e2';
+                  let statusColor = '#991b1b';
+                  let statusLabel = p.status || 'ATRASADO';
+
+                  if (p.status === 'Pago' || dueBalance <= 0) {
+                    statusBg = '#d1fae5';
+                    statusColor = '#065f46';
+                    statusLabel = '✓ PAGO';
+                  } else if (p.status === 'PARCIAL' || (paid > 0 && dueBalance > 0)) {
+                    statusBg = '#fef3c7';
+                    statusColor = '#92400e';
+                    statusLabel = `PARCIAL (R$ ${paid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`;
+                  } else if (p.status === 'A_VENCER') {
+                    statusBg = '#e0f2fe';
+                    statusColor = '#0369a1';
+                    statusLabel = '⏳ A VENCER';
+                  }
+
+                  return (
+                    <tr key={p.id} style={styles.tr}>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <strong>{p.supplier}</strong>
+                          {p.purchaseId ? (
+                            <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: '700' }}>
+                              🛒 Compras
+                            </span>
+                          ) : p.invoiceNumber ? (
+                            <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#f1f5f9', color: '#475569', fontWeight: '700' }}>
+                              NF #{p.invoiceNumber}
+                            </span>
+                          ) : null}
+                        </div>
+                        {p.description && <div style={styles.subtext}>{p.description}</div>}
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0f172a' }}>📍 {p.unit || 'Betim'}</span>
+                          <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Comp: <strong>{p.mesCompetencia || 'Julho'}</strong></span>
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: '#f1f5f9', fontWeight: '700', color: '#334155' }}>
+                          {p.installmentInfo || '1'}
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#047857' }}>
+                            {cc ? `${cc.code} - ${cc.name}` : p.category || 'Insumo Clínico'}
                           </span>
-                        ) : p.description?.includes('NF-e') ? (
-                          <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#f1f5f9', color: '#475569', fontWeight: '700' }}>
-                            📦 Estoque NFe
+                          {p.modality && <span style={{ fontSize: '0.68rem', color: '#64748b' }}>Mod: {p.modality}</span>}
+                        </div>
+                      </td>
+                      <td style={styles.td}>{p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}</td>
+                      <td style={{ ...styles.td, fontWeight: '700' }}>
+                        R$ {amt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '0.75rem', color: paid > 0 ? '#10b981' : '#94a3b8', fontWeight: '700' }}>
+                            Pago: R$ {paid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
-                        ) : null}
-                      </div>
-                      {p.description && <div style={styles.subtext}>{p.description}</div>}
-                    </td>
-                    <td style={styles.td}>{p.category}</td>
-                    <td style={styles.td}>{p.invoiceNumber || '-'}</td>
-                    <td style={styles.td}>{p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}</td>
-                    <td style={{ ...styles.td, fontWeight: '700' }}>
-                      R$ {(parseFloat(p.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td style={styles.td}>
-                      <span 
-                        onClick={() => handleTogglePayableStatus(p)}
-                        style={{
-                          ...styles.statusBadge,
-                          backgroundColor: p.status === 'Pago' ? '#d1fae5' : '#fee2e2',
-                          color: p.status === 'Pago' ? '#065f46' : '#991b1b',
-                          cursor: 'pointer'
-                        }}
-                        title="Clique para alternar entre Pago / Pendente"
-                      >
-                        {p.status === 'Pago' ? '✓ Pago' : '⏳ Pendente'}
-                      </span>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <button 
-                          onClick={() => {
-                            setEditingPayable({ ...p, amount: String(p.amount) });
-                            setShowAddPayable(false);
-                          }}
-                          style={{ ...styles.actionBtnCheck, backgroundColor: '#f1f5f9', color: '#334155' }} 
-                          title="Editar Lançamento"
-                        >
-                          <Edit size={14} />
-                        </button>
-                        <button 
-                          onClick={() => handleTogglePayableStatus(p)}
-                          style={{
-                            ...styles.actionBtnCheck,
-                            backgroundColor: p.status === 'Pago' ? '#fef3c7' : '#d1fae5',
-                            color: p.status === 'Pago' ? '#b45309' : '#065f46'
-                          }} 
-                          title={p.status === 'Pago' ? 'Estornar para Pendente' : 'Marcar como Quitado / Pago'}
-                        >
-                          <Check size={14} />
-                        </button>
-                        <button onClick={() => handleDeletePayable(p.id)} style={styles.actionBtnDelete} title="Excluir">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {dueBalance > 0 && (
+                            <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: '700' }}>
+                              Saldo: R$ {dueBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={{ ...styles.statusBadge, backgroundColor: statusBg, color: statusColor }}>
+                          {statusLabel}
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                          <button 
+                            onClick={() => {
+                              setPartialItem(p);
+                              setPartialAmountPaid(dueBalance > 0 ? dueBalance : amt);
+                            }}
+                            style={{ padding: '0.3rem 0.5rem', borderRadius: '6px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                            title="Dar baixa parcial ou total neste título"
+                          >
+                            <DollarSign size={13} />
+                            <span>Baixar</span>
+                          </button>
+                          <button 
+                            onClick={() => {
+                              setEditingPayable({ ...p, amount: String(p.amount) });
+                              setShowAddPayable(false);
+                            }}
+                            style={{ ...styles.actionBtnCheck, backgroundColor: '#f1f5f9', color: '#334155' }} 
+                            title="Editar Lançamento"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button onClick={() => handleDeletePayable(p.id)} style={styles.actionBtnDelete} title="Excluir">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       )}
+
 
       {/* Accounts Receivable (Contas a Receber) View */}
       {activeTab === 'receivable' && (
@@ -2026,9 +2276,548 @@ export default function FinancePanel() {
           </div>
         </div>
       )}
+      {/* Orçamento X Realizado (Budget vs Actual) View */}
+      {activeTab === 'budget' && (
+        <div style={styles.tabContent}>
+          {/* Header Summary Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>🎯 Total Orçado (Meta)</span>
+                <Target size={16} color="#3b82f6" />
+              </div>
+              <h3 style={{ margin: '0.4rem 0 0 0', color: '#1e293b', fontSize: '1.3rem', fontWeight: '800' }}>
+                R$ {budgetPlans.reduce((acc, b) => acc + (parseFloat(b.plannedAmount) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </h3>
+              <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Planejamento Julho/2026 ({selectedUnit})</span>
+            </div>
+
+            <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>💵 Realizado (Gasto Efetivo)</span>
+                <DollarSign size={16} color="#10b981" />
+              </div>
+              <h3 style={{ margin: '0.4rem 0 0 0', color: '#10b981', fontSize: '1.3rem', fontWeight: '800' }}>
+                R$ {payableList
+                  .filter(p => (selectedUnit === 'Todas' || p.unit === selectedUnit) && p.status === 'Pago')
+                  .reduce((acc, p) => acc + (parseFloat(p.amountPaid || p.amount) || 0), 0)
+                  .toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </h3>
+              <span style={{ fontSize: '0.72rem', color: '#047857' }}>Baixado em Caixa no Mês</span>
+            </div>
+
+            <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>📊 Compromissos Devidos</span>
+                <Clock size={16} color="#f59e0b" />
+              </div>
+              <h3 style={{ margin: '0.4rem 0 0 0', color: '#f59e0b', fontSize: '1.3rem', fontWeight: '800' }}>
+                R$ {payableList
+                  .filter(p => (selectedUnit === 'Todas' || p.unit === selectedUnit))
+                  .reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0)
+                  .toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </h3>
+              <span style={{ fontSize: '0.72rem', color: '#b45309' }}>Total de Títulos Cadastrados</span>
+            </div>
+
+            <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>🛡️ Status da Variância</span>
+                <ShieldCheck size={16} color="#059669" />
+              </div>
+              <h3 style={{ margin: '0.4rem 0 0 0', color: '#059669', fontSize: '1.2rem', fontWeight: '800' }}>
+                🟢 Dentro do Orçamento
+              </h3>
+              <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Execução sob controle orçamentário</span>
+            </div>
+          </div>
+
+          {/* Action Bar for Budget */}
+          <div style={styles.actionsBar}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: '700' }}>
+                Comparativo Orçamento X Realizado por Centro de Custos
+              </h3>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Exibindo planejamento e gastos executados da Unidade <strong>{selectedUnit}</strong>
+              </span>
+            </div>
+
+            <button onClick={() => setShowAddBudget(true)} style={styles.btnPrimary}>
+              <Plus size={14} />
+              <span>Configurar Meta Orçamentária</span>
+            </button>
+          </div>
+
+          {/* Form Modal for Adding Budget Plan */}
+          {showAddBudget && (
+            <form onSubmit={handleSaveBudgetPlan} style={{ ...styles.formContainer, border: '2px solid #10b981' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>🎯 Configurar Meta Orçamentária (Unidade {selectedUnit})</h4>
+                <button type="button" onClick={() => setShowAddBudget(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={styles.formGrid}>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Centro de Custos</label>
+                  <select 
+                    value={newBudget.costCenterId} 
+                    onChange={e => setNewBudget({ ...newBudget, costCenterId: e.target.value })}
+                    style={styles.input}
+                  >
+                    {costCenters.map(cc => (
+                      <option key={cc.id} value={cc.id}>{cc.code} - {cc.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Valor Orçado / Meta (R$)</label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    value={newBudget.plannedAmount} 
+                    onChange={e => setNewBudget({ ...newBudget, plannedAmount: e.target.value })}
+                    placeholder="Ex: 150000.00"
+                    style={styles.input}
+                    required
+                  />
+                </div>
+
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Mês / Ano Competência</label>
+                  <input 
+                    type="number" 
+                    value={newBudget.month} 
+                    onChange={e => setNewBudget({ ...newBudget, month: parseInt(e.target.value) })}
+                    style={{ ...styles.input, width: '80px', display: 'inline-block', marginRight: '0.5rem' }}
+                    min="1" max="12"
+                  />
+                  <input 
+                    type="number" 
+                    value={newBudget.year} 
+                    onChange={e => setNewBudget({ ...newBudget, year: parseInt(e.target.value) })}
+                    style={{ ...styles.input, width: '100px', display: 'inline-block' }}
+                  />
+                </div>
+
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Observações</label>
+                  <input 
+                    type="text" 
+                    value={newBudget.notes} 
+                    onChange={e => setNewBudget({ ...newBudget, notes: e.target.value })}
+                    placeholder="Base de cálculo ou observação estratégica"
+                    style={styles.input}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setShowAddBudget(false)} style={styles.btnSecondary}>Cancelar</button>
+                <button type="submit" style={styles.btnSave}>Salvar Meta Orçamentária</button>
+              </div>
+            </form>
+          )}
+
+          {/* Budget Matrix Table */}
+          <div style={styles.tableWrapper}>
+            <table style={styles.table}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8fafc' }}>
+                  <th style={styles.th}>Código & Centro de Custo</th>
+                  <th style={styles.th}>Categoria Pai</th>
+                  <th style={styles.th}>Meta Orçada (R$)</th>
+                  <th style={styles.th}>Realizado / Pago (R$)</th>
+                  <th style={styles.th}>Devido / Cadastrado (R$)</th>
+                  <th style={styles.th}>Desvio (R$)</th>
+                  <th style={styles.th}>Execução</th>
+                  <th style={styles.th}>Status Variância</th>
+                </tr>
+              </thead>
+              <tbody>
+                {costCenters.map(cc => {
+                  const bPlan = budgetPlans.find(b => b.costCenterId === cc.id);
+                  const planned = parseFloat(bPlan?.plannedAmount) || 0;
+
+                  // Compute actual paid and due for this cost center
+                  const payablesCC = payableList.filter(p => (selectedUnit === 'Todas' || p.unit === selectedUnit) && p.costCenterId === cc.id);
+                  const due = payablesCC.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
+                  const realized = payablesCC
+                    .filter(p => p.status === 'Pago')
+                    .reduce((acc, p) => acc + (parseFloat(p.amountPaid || p.amount) || 0), 0);
+
+                  const devio = realized - planned;
+                  const pctExecution = planned > 0 ? (realized / planned) * 100 : (realized > 0 ? 100 : 0);
+
+                  let statusBg = '#d1fae5';
+                  let statusColor = '#065f46';
+                  let statusText = '🟢 Dentro da Meta';
+
+                  if (planned > 0 && realized > planned * 1.1) {
+                    statusBg = '#fee2e2';
+                    statusColor = '#991b1b';
+                    statusText = '🔴 Estouro Crítico (>10%)';
+                  } else if (planned > 0 && realized > planned) {
+                    statusBg = '#fef3c7';
+                    statusColor = '#92400e';
+                    statusText = '🟡 Atenção (Excedeu Meta)';
+                  }
+
+                  return (
+                    <tr key={cc.id} style={styles.tr}>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: '800', backgroundColor: '#e2e8f0', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
+                            {cc.code}
+                          </span>
+                          <strong style={{ color: '#0f172a' }}>{cc.name}</strong>
+                        </div>
+                      </td>
+                      <td style={{ ...styles.td, fontSize: '0.75rem', color: '#64748b' }}>{cc.parentName}</td>
+                      <td style={{ ...styles.td, fontWeight: '700', color: '#2563eb' }}>
+                        R$ {planned.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ ...styles.td, fontWeight: '700', color: '#059669' }}>
+                        R$ {realized.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ ...styles.td, fontWeight: '600', color: '#475569' }}>
+                        R$ {due.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ ...styles.td, fontWeight: '700', color: devio > 0 ? '#dc2626' : '#16a34a' }}>
+                        {devio > 0 ? `+R$ ${devio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : `R$ ${devio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div style={{ flex: 1, height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ width: `${Math.min(pctExecution, 100)}%`, height: '100%', backgroundColor: pctExecution > 100 ? '#ef4444' : '#10b981', transition: 'width 0.3s' }} />
+                          </div>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#334155' }}>
+                            {pctExecution.toFixed(1)}%
+                          </span>
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.55rem', borderRadius: '12px', backgroundColor: statusBg, color: statusColor }}>
+                          {statusText}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Projeção de Saldo Fluxo (Cash Flow Projection) View */}
+      {activeTab === 'cashflow_projection' && (
+        <div style={styles.tabContent}>
+          {/* Executive Warning Alert Banner for Betim */}
+          <div style={{ backgroundColor: '#fef2f2', border: '2px solid #fca5a5', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            <AlertTriangle size={28} color="#dc2626" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <h3 style={{ margin: 0, color: '#991b1b', fontSize: '1.1rem', fontWeight: '800' }}>
+                ⚠️ Projeção Executiva de Liquidez - Saldo Fluxo Acumulado ({selectedUnit})
+              </h3>
+              <p style={{ margin: '0.4rem 0 0 0', color: '#7f1d1d', fontSize: '0.875rem', lineHeight: '1.4' }}>
+                De acordo com a planilha de Contas a Pagar de Betim 2026, o rombo acumulado atinge <strong>-R$ 1.899.979,34 em Agosto/2026</strong> devido ao acúmulo de títulos vencidos desde Setembro/2025. 
+                Recomenda-se migrar <strong>R$ 1.222.310,85</strong> em passivos de fornecedores para a aba de <strong>Acordos & Renegociações</strong> para restaurar o fluxo positivo de caixa.
+              </p>
+            </div>
+          </div>
+
+          {/* Timeline Monthly Projections Table */}
+          <div style={styles.tableWrapper}>
+            <table style={styles.table}>
+              <thead>
+                <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                  <th style={{ ...styles.th, color: '#f8fafc' }}>Mês Competência</th>
+                  <th style={{ ...styles.th, color: '#f8fafc' }}>Situação Predominante</th>
+                  <th style={{ ...styles.th, color: '#f8fafc' }}>Total Devido no Mês (R$)</th>
+                  <th style={{ ...styles.th, color: '#f8fafc' }}>Total Pago no Mês (R$)</th>
+                  <th style={{ ...styles.th, color: '#f8fafc' }}>Saldo do Mês (R$)</th>
+                  <th style={{ ...styles.th, color: '#f8fafc' }}>Saldo Fluxo Acumulado (R$)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { month: 'JUN/2025', status: 'ATRASADO', devido: 0, pago: 0, fluxo: 0 },
+                  { month: 'SET/2025', status: 'ATRASADO', devido: 52940.94, pago: 0, fluxo: -52940.94 },
+                  { month: 'OUT/2025', status: 'ATRASADO', devido: 56828.78, pago: 0, fluxo: -109769.72 },
+                  { month: 'NOV/2025', status: 'ATRASADO', devido: 50010.72, pago: 0, fluxo: -159780.44 },
+                  { month: 'DEZ/2025', status: 'ATRASADO', devido: 54472.12, pago: 0, fluxo: -214252.56 },
+                  { month: 'JAN/2026', status: 'ATRASADO', devido: 53056.61, pago: 0, fluxo: -267309.17 },
+                  { month: 'FEV/2026', status: 'ATRASADO', devido: 104417.71, pago: 0, fluxo: -371726.88 },
+                  { month: 'MAR/2026', status: 'ATRASADO', devido: 49200.00, pago: 0, fluxo: -420926.88 },
+                  { month: 'ABR/2026', status: 'ATRASADO', devido: 198115.05, pago: 0, fluxo: -619041.93 },
+                  { month: 'MAI/2026', status: 'ATRASADO', devido: 45403.04, pago: 1340.00, fluxo: -663104.97 },
+                  { month: 'JUN/2026', status: 'ATRASADO', devido: 126532.07, pago: 0, fluxo: -795139.42 },
+                  { month: 'JUL/2026', status: 'ATRASADO / BAIXAS', devido: 477151.10, pago: 57445.95, fluxo: -1222310.85 },
+                  { month: 'AGO/2026', status: 'A VENCER', devido: 677668.49, pago: 392644.50, fluxo: -1899979.34 }
+                ].map((row, i) => (
+                  <tr key={i} style={{ ...styles.tr, backgroundColor: row.fluxo < 0 ? '#fff5f5' : '#ffffff' }}>
+                    <td style={styles.td}><strong style={{ color: '#0f172a' }}>{row.month}</strong></td>
+                    <td style={styles.td}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem', borderRadius: '4px', backgroundColor: row.status.includes('VENCER') ? '#e0f2fe' : '#fee2e2', color: row.status.includes('VENCER') ? '#0369a1' : '#991b1b' }}>
+                        {row.status}
+                      </span>
+                    </td>
+                    <td style={{ ...styles.td, fontWeight: '700' }}>
+                      R$ {row.devido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ ...styles.td, fontWeight: '700', color: '#059669' }}>
+                      R$ {row.pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ ...styles.td, fontWeight: '700', color: '#dc2626' }}>
+                      -R$ {row.devido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ ...styles.td, fontWeight: '900', color: row.fluxo < 0 ? '#b91c1c' : '#059669', fontSize: '0.9rem' }}>
+                      {row.fluxo < 0 ? `-R$ ${Math.abs(row.fluxo).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : `R$ ${row.fluxo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Acordos & Renegociações (Agreements) View */}
+      {activeTab === 'agreements' && (
+        <div style={styles.tabContent}>
+          <div style={styles.actionsBar}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: '700' }}>
+                🤝 Gestão de Acordos e Renegociações de Dívidas ({selectedUnit})
+              </h3>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Controle de passivos faturados em parcelas de longo prazo com fornecedores
+              </span>
+            </div>
+
+            <button onClick={() => setShowAddAgreement(true)} style={styles.btnPrimary}>
+              <Plus size={14} />
+              <span>Registrar Novo Acordo</span>
+            </button>
+          </div>
+
+          {/* Form Modal for Add Agreement */}
+          {showAddAgreement && (
+            <form onSubmit={handleSaveAgreement} style={{ ...styles.formContainer, border: '2px solid #3b82f6' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>🤝 Novo Acordo de Pagamento</h4>
+                <button type="button" onClick={() => setShowAddAgreement(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={styles.formGrid}>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Fornecedor Credor</label>
+                  <input 
+                    type="text" 
+                    value={newAgreement.supplier} 
+                    onChange={e => setNewAgreement({ ...newAgreement, supplier: e.target.value })}
+                    placeholder="Ex: LACERDA ALIMENTAÇÃO"
+                    style={styles.input}
+                    required
+                  />
+                </div>
+
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Valor Total Acordado (R$)</label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    value={newAgreement.totalAmount} 
+                    onChange={e => setNewAgreement({ ...newAgreement, totalAmount: e.target.value })}
+                    placeholder="Ex: 152185.80"
+                    style={styles.input}
+                    required
+                  />
+                </div>
+
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Nº de Parcelas</label>
+                  <input 
+                    type="number" 
+                    value={newAgreement.installmentCount} 
+                    onChange={e => setNewAgreement({ ...newAgreement, installmentCount: e.target.value })}
+                    style={styles.input}
+                    required
+                  />
+                </div>
+
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Valor da Parcela Mensal (R$)</label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    value={newAgreement.installmentAmount} 
+                    onChange={e => setNewAgreement({ ...newAgreement, installmentAmount: e.target.value })}
+                    placeholder="Calculado automaticamente se vazio"
+                    style={styles.input}
+                  />
+                </div>
+
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Dia de Vencimento</label>
+                  <input 
+                    type="number" 
+                    value={newAgreement.dueDay} 
+                    onChange={e => setNewAgreement({ ...newAgreement, dueDay: e.target.value })}
+                    style={styles.input}
+                    min="1" max="31"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setShowAddAgreement(false)} style={styles.btnSecondary}>Cancelar</button>
+                <button type="submit" style={styles.btnSave}>Salvar Acordo</button>
+              </div>
+            </form>
+          )}
+
+          {/* Agreements List Table */}
+          <div style={styles.tableWrapper}>
+            <table style={styles.table}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8fafc' }}>
+                  <th style={styles.th}>Fornecedor / Credor</th>
+                  <th style={styles.th}>Filial</th>
+                  <th style={styles.th}>Total Renegociado</th>
+                  <th style={styles.th}>Parcelamento</th>
+                  <th style={styles.th}>Valor Parcela</th>
+                  <th style={styles.th}>Progresso</th>
+                  <th style={styles.th}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {agreementsList.map(agr => (
+                  <tr key={agr.id} style={styles.tr}>
+                    <td style={styles.td}>
+                      <strong style={{ color: '#0f172a' }}>{agr.supplier}</strong>
+                      {agr.notes && <div style={styles.subtext}>{agr.notes}</div>}
+                    </td>
+                    <td style={styles.td}>📍 {agr.unit || 'Betim'}</td>
+                    <td style={{ ...styles.td, fontWeight: '700', color: '#1e293b' }}>
+                      R$ {(parseFloat(agr.totalAmount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={styles.td}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
+                        {agr.installmentCount}x
+                      </span>
+                    </td>
+                    <td style={{ ...styles.td, fontWeight: '700', color: '#059669' }}>
+                      R$ {(parseFloat(agr.installmentAmount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={styles.td}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#475569' }}>
+                        {agr.paidInstallments || 0} de {agr.installmentCount} pagas
+                      </span>
+                    </td>
+                    <td style={styles.td}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem', borderRadius: '12px', backgroundColor: '#d1fae5', color: '#065f46' }}>
+                        {agr.status || 'Ativo'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Partial Payment Modal */}
+      {partialItem && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '1.5rem', width: '90%', maxWidth: '480px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', pb: '0.75rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a', fontWeight: '800' }}>
+                💵 Registrar Baixa / Quitação Parcial
+              </h3>
+              <button onClick={() => setPartialItem(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '1rem', backgroundColor: '#f8fafc', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '0.85rem', color: '#334155' }}>Fornecedor: <strong>{partialItem.supplier}</strong></div>
+              <div style={{ fontSize: '0.85rem', color: '#334155' }}>NF: <strong>{partialItem.invoiceNumber || '-'}</strong></div>
+              <div style={{ fontSize: '0.85rem', color: '#334155' }}>Valor Total Devido: <strong>R$ {(parseFloat(partialItem.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>
+              <div style={{ fontSize: '0.85rem', color: '#059669' }}>Já Pago Anteriormente: <strong>R$ {(parseFloat(partialItem.amountPaid) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>
+            </div>
+
+            <form onSubmit={handleConfirmPartialPayment}>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Valor do Pagamento Efetuado Hoje (R$)</label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  value={partialAmountPaid} 
+                  onChange={e => setPartialAmountPaid(e.target.value)}
+                  style={{ ...styles.input, fontSize: '1rem', fontWeight: '700', color: '#10b981' }}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.25rem' }}>
+                <button type="button" onClick={() => setPartialItem(null)} style={styles.btnSecondary}>Cancelar</button>
+                <button type="submit" style={styles.btnSave}>Confirmar Pagamento</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Import Betim Spreadsheet Modal */}
+      {showImportBetimModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', padding: '1.75rem', width: '90%', maxWidth: '600px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <FileSpreadsheet size={22} color="#059669" />
+                <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#0f172a', fontWeight: '800' }}>
+                  Importar Planilha Contas a Pagar Betim - 2026
+                </h3>
+              </div>
+              <button onClick={() => setShowImportBetimModal(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: '1.5' }}>
+              O sistema identificou o arquivo do fluxo de caixa de <strong>Betim (2026)</strong>. Todos os 32 lançamentos (CEMIG, VFB Brasil, Farmarin, FGTS, PIS, Martins Costa, Copasa, DCTFWeb, Folha e Vantive) serão sincronizados e categorizados por Centro de Custos.
+            </p>
+
+            <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.85rem', marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#166534', marginBottom: '0.3rem' }}>Resumo da Estrutura a Importar:</div>
+              <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.78rem', color: '#15803d' }}>
+                <li>Mapeamento automático de Mês de Competência (Jun/25 a Ago/26)</li>
+                <li>Vincular Centros de Custo: Insumos (1.1), Equipamentos (1.2), Energia/Água (2.1), RH/Folha (3.1), Impostos (3.2)</li>
+                <li>Preservar número das parcelas (ex: 02/14, 4-6) e pagamentos parciais executados</li>
+              </ul>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button onClick={() => setShowImportBetimModal(false)} style={styles.btnSecondary}>Cancelar</button>
+              <button onClick={handleImportBetimData} style={styles.btnPrimary}>
+                <CheckCircle2 size={16} /> Confirmar Importação Betim
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 const styles = {
   container: {

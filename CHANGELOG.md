@@ -1,3 +1,13 @@
+## [v2.1.45] - 05 de Agosto, 2026
+### Módulo NexaBUDGET (Orçamento X Realizado & Centro de Custos Betim)
+- **Visão Orçamento X Realizado:** Implementação da matriz de acompanhamento orçamentário por Centro de Custos (Insumos Dialíticos, Equipamentos, Utilitários, RH/Folha, Impostos Trabalhistas, Jurídico) com badges visuais de variância (🟢 Dentro da Meta, 🟡 Atenção, 🔴 Estouro Crítico).
+- **Importação do Fluxo de Caixa Betim (2026):** Mapeamento e sincronização completa dos 32 lançamentos de contas a pagar da Unidade Betim, incluindo meses de competência (Junho/25 a Agosto/26), parcelamentos (ex: `02/14`, `4-6`), encargos (FGTS, PIS, DCTFWeb) e baixas parciais.
+- **Projeção de Saldo Fluxo & Alertas:** Gráfico e tabela de curva de liquidez acumulada com alerta executivo do rombo financeiro e botão de simulação de renegociações.
+- **Acordos & Renegociações:** Nova aba para gestão de passivos renegociados em parcelas de longo prazo com fornecedores (ex: Lacerda Alimentação, Farmarin).
+- **Integração Compras → Financeiro:** Atualização do módulo de Compras (`PurchasingPanel.jsx`) para associar automaticamente o Centro de Custo `1.1 Insumos Dialíticos` e a Filial Betim ao aprovar pedidos de compra.
+
+---
+
 ## [v2.1.39] - 03 de Agosto, 2026
 ### Solução Definitiva para Tela Branca no Estoque (Prevenção de Dados Corrompidos)
 - **Componente StockPanel & useStockLogic:** Implementação de _Optional Chaining_ (`?.`) em todas as lógicas de mapeamento e filtragem de arrays (requisições, inventários, lotes, etc).

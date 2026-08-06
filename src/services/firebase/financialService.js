@@ -245,3 +245,67 @@ export const saveXmlImport = async (xmlData) => {
     return { id: ref.id, ...xmlData };
   };
 
+export const getCostCenters = async () => {
+    if (USE_MOCK || !mockFirestore) return mockFirestore.getCostCenters();
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'cost_centers'));
+      if (snap.empty) return mockFirestore.getCostCenters();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      return mockFirestore.getCostCenters();
+    }
+  };
+
+export const getBudgetPlans = async () => {
+    if (USE_MOCK || !mockFirestore) return mockFirestore.getBudgetPlans();
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'budget_plans'));
+      if (snap.empty) return mockFirestore.getBudgetPlans();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      return mockFirestore.getBudgetPlans();
+    }
+  };
+
+export const saveBudgetPlan = async (plan) => {
+    if (USE_MOCK || !mockFirestore) return mockFirestore.saveBudgetPlan(plan);
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (plan.id) {
+      await setDoc(doc(db, 'budget_plans', plan.id), plan, { merge: true });
+      return plan;
+    }
+    const ref = await addDoc(collection(db, 'budget_plans'), { ...plan, createdAt: new Date().toISOString() });
+    return { id: ref.id, ...plan };
+  };
+
+export const getAgreements = async () => {
+    if (USE_MOCK || !mockFirestore) return mockFirestore.getAgreements();
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'agreements'));
+      if (snap.empty) return mockFirestore.getAgreements();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      return mockFirestore.getAgreements();
+    }
+  };
+
+export const saveAgreement = async (agr) => {
+    if (USE_MOCK || !mockFirestore) return mockFirestore.saveAgreement(agr);
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (agr.id) {
+      await setDoc(doc(db, 'agreements', agr.id), agr, { merge: true });
+      return agr;
+    }
+    const ref = await addDoc(collection(db, 'agreements'), { ...agr, createdAt: new Date().toISOString() });
+    return { id: ref.id, ...agr };
+  };
+
+

@@ -345,6 +345,9 @@ export default function PurchasingPanel({ currentUser }) {
         dueDate.setDate(dueDate.getDate() + 30);
         await dbService.saveAccountsPayable({
           id: payableRefId,
+          unit: 'Betim',
+          costCenterId: '1.1',
+          mesCompetencia: new Date().toISOString().substring(0, 7),
           supplier: selectedSupplier.name,
           cnpj: selectedSupplier.cnpj || '12.345.678/0001-90',
           description: `Compra: ${req.productName} (Ref: Pedido #${req.id})`,
@@ -357,6 +360,7 @@ export default function PurchasingPanel({ currentUser }) {
           createdAt: new Date().toISOString()
         });
       }
+
 
       showAlert('Compra finalizada, estoque abastecido e conta a pagar lançada no Financeiro!', 'success');
       setActiveQuoteId(null);

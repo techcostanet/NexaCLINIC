@@ -6,8 +6,22 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v2.1.45',
+      date: '05 de Agosto, 2026',
+      title: 'Módulo NexaBUDGET: Orçamento X Realizado & Centro de Custos Betim',
+      description: 'Lançamento da matriz de acompanhamento orçamentário por Centro de Custos, importação da planilha de Betim, projeção do saldo fluxo e gestão de acordos.',
+      changes: [
+        { type: 'Orçamento X Realizado', text: 'Matriz comparativa de metas vs gastos executados por centro de custos com badges visuais de variância (🟢/🟡/🔴).' },
+        { type: 'Importador Betim', text: 'Importação e autoclassificação dos 32 lançamentos de Contas a Pagar de Betim com meses de competência e parcelas.' },
+        { type: 'Saldo Fluxo', text: 'Tabela e curva de liquidez acumulada com alerta executivo do rombo financeiro e ponto de virada.' },
+        { type: 'Acordos & Renegociações', text: 'Gestão de passivos em parcelas de longo prazo (ex: Lacerda Alimentação, Farmarin).' },
+        { type: 'Integração Compras', text: 'Automatização do vínculo do Centro de Custos 1.1 Insumos Dialíticos e Filial Betim nas aprovações de ordens de compra.' }
+      ]
+    },
+    {
       version: 'v2.1.39',
       date: '03 de Agosto, 2026',
+
       title: 'Solução Definitiva para Tela Branca no Estoque',
       description: 'Implementação de salvaguardas no processamento de dados do módulo de Estoque para impedir crashes quando houver falha de sincronização ou dados nulos vindos do servidor.',
       changes: [

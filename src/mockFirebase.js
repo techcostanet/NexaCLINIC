@@ -14774,9 +14774,157 @@ export const mockFirestore = {
   },
 
   // Financial management
+  getCostCenters: async () => {
+    const db = getDB();
+    if (!db.cost_centers || db.cost_centers.length === 0) {
+      db.cost_centers = [
+        { id: '1.1', code: '1.1', name: 'Insumos Dialíticos & Clínicos', parentId: '1', parentName: '1. OPERACIONAL CLÍNICO', unit: 'Betim' },
+        { id: '1.2', code: '1.2', name: 'Equipamentos & Tecnologia', parentId: '1', parentName: '1. OPERACIONAL CLÍNICO', unit: 'Betim' },
+        { id: '1.3', code: '1.3', name: 'Laboratório & Exames', parentId: '1', parentName: '1. OPERACIONAL CLÍNICO', unit: 'Betim' },
+        { id: '1.4', code: '1.4', name: 'Gases Medicinais & Oxigênio', parentId: '1', parentName: '1. OPERACIONAL CLÍNICO', unit: 'Betim' },
+        { id: '2.1', code: '2.1', name: 'Energia Elétrica & Água', parentId: '2', parentName: '2. INFRAESTRUTURA & UTILIDADES', unit: 'Betim' },
+        { id: '2.2', code: '2.2', name: 'Manutenção, Limpeza & Alimentação', parentId: '2', parentName: '2. INFRAESTRUTURA & UTILIDADES', unit: 'Betim' },
+        { id: '3.1', code: '3.1', name: 'Folha de Pagamento & Férias', parentId: '3', parentName: '3. RH & RECURSOS HUMANOS', unit: 'Betim' },
+        { id: '3.2', code: '3.2', name: 'Impostos Trabalhistas & Encargos (INSS, FGTS, PIS)', parentId: '3', parentName: '3. RH & RECURSOS HUMANOS', unit: 'Betim' },
+        { id: '3.3', code: '3.3', name: 'Benefícios & Sindicato', parentId: '3', parentName: '3. RH & RECURSOS HUMANOS', unit: 'Betim' },
+        { id: '4.1', code: '4.1', name: 'Jurídico & Consultoria', parentId: '4', parentName: '4. ADMINISTRATIVO & GOVERNANÇA', unit: 'Betim' },
+        { id: '4.2', code: '4.2', name: 'Contabilidade & Conselhos (CRM, COREN)', parentId: '4', parentName: '4. ADMINISTRATIVO & GOVERNANÇA', unit: 'Betim' },
+        { id: '5.1', code: '5.1', name: 'Segurança & Logística', parentId: '5', parentName: '5. SEGURANÇA & TRANSPORTE', unit: 'Betim' }
+      ];
+      setDB(db);
+    }
+    return db.cost_centers;
+  },
+
+  getBudgetPlans: async () => {
+    const db = getDB();
+    if (!db.budget_plans || db.budget_plans.length === 0) {
+      db.budget_plans = [
+        { id: 'bp-1', unit: 'Betim', year: 2026, month: 7, costCenterId: '1.1', plannedAmount: 180000.00, notes: 'Orçamento previsto para insumos dialíticos' },
+        { id: 'bp-2', unit: 'Betim', year: 2026, month: 7, costCenterId: '1.2', plannedAmount: 90000.00, notes: 'Orçamento para locação e manutenção de máquinas' },
+        { id: 'bp-3', unit: 'Betim', year: 2026, month: 7, costCenterId: '2.1', plannedAmount: 130000.00, notes: 'Orçamento previsto Energia (CEMIG) + Água (COPASA)' },
+        { id: 'bp-4', unit: 'Betim', year: 2026, month: 7, costCenterId: '3.1', plannedAmount: 420000.00, notes: 'Orçamento Folha + Férias' },
+        { id: 'bp-5', unit: 'Betim', year: 2026, month: 7, costCenterId: '3.2', plannedAmount: 250000.00, notes: 'Orçamento Tributos Trabalhistas (DCTFWEB/FGTS/PIS)' },
+        { id: 'bp-6', unit: 'Betim', year: 2026, month: 7, costCenterId: '4.1', plannedAmount: 15000.00, notes: 'Orçamento Serviços Jurídicos' },
+        { id: 'bp-7', unit: 'Betim', year: 2026, month: 7, costCenterId: '4.2', plannedAmount: 10000.00, notes: 'Orçamento Contabilidade e Anuidades Conselhos' }
+      ];
+      setDB(db);
+    }
+    return db.budget_plans;
+  },
+
+  saveBudgetPlan: async (plan) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (!db.budget_plans) db.budget_plans = [];
+    let updated;
+    if (plan.id) {
+      const idx = db.budget_plans.findIndex(b => b.id === plan.id);
+      if (idx > -1) {
+        db.budget_plans[idx] = { ...db.budget_plans[idx], ...plan };
+        updated = db.budget_plans[idx];
+      }
+    } else {
+      updated = { id: 'bp-' + Math.random().toString(36).substr(2, 9), ...plan };
+      db.budget_plans.push(updated);
+    }
+    setDB(db);
+    return updated;
+  },
+
+  getAgreements: async () => {
+    const db = getDB();
+    if (!db.agreements || db.agreements.length === 0) {
+      db.agreements = [
+        {
+          id: 'agr-1',
+          supplier: 'LACERDA ALIMENTAÇÃO',
+          unit: 'Betim',
+          totalAmount: 152185.80,
+          installmentCount: 6,
+          installmentAmount: 25364.30,
+          paidInstallments: 3,
+          dueDay: 10,
+          status: 'Ativo',
+          notes: 'Acordo referente a fornecimento de marmitas e lanches clínicos'
+        },
+        {
+          id: 'agr-2',
+          supplier: 'FARMARIN INDUSTRIA E COMERCIO LTDA',
+          unit: 'Betim',
+          totalAmount: 354371.22,
+          installmentCount: 14,
+          installmentAmount: 25312.23,
+          paidInstallments: 2,
+          dueDay: 2,
+          status: 'Ativo',
+          notes: 'Renegociação de fornecimento de concentrados e capilares'
+        }
+      ];
+      setDB(db);
+    }
+    return db.agreements;
+  },
+
+  saveAgreement: async (agr) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (!db.agreements) db.agreements = [];
+    let updated;
+    if (agr.id) {
+      const idx = db.agreements.findIndex(a => a.id === agr.id);
+      if (idx > -1) {
+        db.agreements[idx] = { ...db.agreements[idx], ...agr };
+        updated = db.agreements[idx];
+      }
+    } else {
+      updated = { id: 'agr-' + Math.random().toString(36).substr(2, 9), ...agr };
+      db.agreements.push(updated);
+    }
+    setDB(db);
+    return updated;
+  },
+
   getAccountsPayable: async () => {
     const db = getDB();
-    return db.accounts_payable || [];
+    if (!db.accounts_payable || db.accounts_payable.length === 0) {
+      db.accounts_payable = [
+        { id: 'betim-pay-1', unit: 'Betim', mesCompetencia: 'junho', status: 'ATRASADO', dueDate: '2025-09-01', installmentInfo: '1', supplier: 'CEMIG', cnpj: '06.981.180/0001-16', invoiceNumber: 'ENERGIA', amount: 52940.94, amountPaid: 0, costCenterId: '2.1', modality: 'ENERGIA', description: 'Conta de Energia Elétrica Betim' },
+        { id: 'betim-pay-2', unit: 'Betim', mesCompetencia: 'SET', status: 'ATRASADO', dueDate: '2025-09-01', installmentInfo: '1', supplier: 'CEMIG', cnpj: '06.981.180/0001-16', invoiceNumber: 'ENERGIA', amount: 52940.94, amountPaid: 0, costCenterId: '2.1', modality: 'ENERGIA', description: 'Conta de Energia Elétrica Betim' },
+        { id: 'betim-pay-3', unit: 'Betim', mesCompetencia: 'OUT', status: 'ATRASADO', dueDate: '2025-10-01', installmentInfo: '1', supplier: 'CEMIG', cnpj: '06.981.180/0001-16', invoiceNumber: 'ENERGIA', amount: 56828.78, amountPaid: 0, costCenterId: '2.1', modality: 'ENERGIA', description: 'Conta de Energia Elétrica Betim' },
+        { id: 'betim-pay-4', unit: 'Betim', mesCompetencia: 'NOV', status: 'ATRASADO', dueDate: '2025-11-01', installmentInfo: '1', supplier: 'CEMIG', cnpj: '06.981.180/0001-16', invoiceNumber: 'ENERGIA', amount: 50010.72, amountPaid: 0, costCenterId: '2.1', modality: 'ENERGIA', description: 'Conta de Energia Elétrica Betim' },
+        { id: 'betim-pay-5', unit: 'Betim', mesCompetencia: 'DEZ', status: 'ATRASADO', dueDate: '2025-12-01', installmentInfo: '1', supplier: 'CEMIG', cnpj: '06.981.180/0001-16', invoiceNumber: 'ENERGIA', amount: 54472.12, amountPaid: 0, costCenterId: '2.1', modality: 'ENERGIA', description: 'Conta de Energia Elétrica Betim' },
+        { id: 'betim-pay-6', unit: 'Betim', mesCompetencia: 'JAN', status: 'ATRASADO', dueDate: '2026-01-01', installmentInfo: '1', supplier: 'CEMIG', cnpj: '06.981.180/0001-16', invoiceNumber: 'ENERGIA', amount: 47726.61, amountPaid: 0, costCenterId: '2.1', modality: 'ENERGIA', description: 'Conta de Energia Elétrica Betim' },
+        { id: 'betim-pay-7', unit: 'Betim', mesCompetencia: 'JAN', status: 'ATRASADO', dueDate: '2026-01-25', installmentInfo: '1', supplier: 'VFB BRASIL LTDA', cnpj: '12.345.678/0001-90', invoiceNumber: '58599', amount: 5330.00, amountPaid: 0, costCenterId: '1.2', modality: 'EQUIPAMENTOS', description: 'Manutenção Equipamentos' },
+        { id: 'betim-pay-8', unit: 'Betim', mesCompetencia: 'FEV', status: 'ATRASADO', dueDate: '2026-02-02', installmentInfo: '1', supplier: 'CEMIG', cnpj: '06.981.180/0001-16', invoiceNumber: 'ENERGIA', amount: 47735.49, amountPaid: 0, costCenterId: '2.1', modality: 'ENERGIA', description: 'Conta de Energia Elétrica Betim' },
+        { id: 'betim-pay-9', unit: 'Betim', mesCompetencia: 'FEV', status: 'ATRASADO', dueDate: '2026-02-03', installmentInfo: '1', supplier: 'CEMIG', cnpj: '06.981.180/0001-16', invoiceNumber: 'ENERGIA', amount: 53336.22, amountPaid: 0, costCenterId: '2.1', modality: 'ENERGIA', description: 'Conta de Energia Elétrica Betim' },
+        { id: 'betim-pay-10', unit: 'Betim', mesCompetencia: 'FEV', status: 'ATRASADO', dueDate: '2026-02-09', installmentInfo: '1', supplier: 'VFB BRASIL LTDA', cnpj: '12.345.678/0001-90', invoiceNumber: '59621', amount: 3346.00, amountPaid: 0, costCenterId: '1.2', modality: 'EQUIPAMENTOS', description: 'Peças e Reparos' },
+        { id: 'betim-pay-11', unit: 'Betim', mesCompetencia: 'MAR', status: 'ATRASADO', dueDate: '2026-03-15', installmentInfo: '1', supplier: 'VFB BRASIL LTDA', cnpj: '12.345.678/0001-90', invoiceNumber: '61195', amount: 49200.00, amountPaid: 0, costCenterId: '1.2', modality: 'EQUIPAMENTOS', description: 'Aquisição Peças Dialisadores' },
+        { id: 'betim-pay-12', unit: 'Betim', mesCompetencia: 'ABR', status: 'ATRASADO', dueDate: '2026-04-13', installmentInfo: '1', supplier: 'HORTA SOARES COMERCIO E REPRESENTAÇÃO LTDA', cnpj: '98.765.432/0001-10', invoiceNumber: '60 PARCIAL', amount: 49934.64, amountPaid: 0, costCenterId: '1.1', modality: 'INSUMOS', description: 'Fornecimento Insumos Hospitalares' },
+        { id: 'betim-pay-13', unit: 'Betim', mesCompetencia: 'ABR', status: 'ATRASADO', dueDate: '2026-04-13', installmentInfo: '1', supplier: 'HORTA SOARES COMERCIO E REPRESENTAÇÃO LTDA', cnpj: '98.765.432/0001-10', invoiceNumber: '61', amount: 99538.98, amountPaid: 0, costCenterId: '1.1', modality: 'INSUMOS', description: 'Fornecimento Insumos Dialíticos' },
+        { id: 'betim-pay-14', unit: 'Betim', mesCompetencia: 'ABR', status: 'ATRASADO', dueDate: '2026-04-20', installmentInfo: '1', supplier: 'FGTS', cnpj: '00.000.000/0001-00', invoiceNumber: '3', amount: 38641.43, amountPaid: 0, costCenterId: '3.2', modality: 'FGTS', description: 'Guia Recolhimento FGTS Betim' },
+        { id: 'betim-pay-15', unit: 'Betim', mesCompetencia: 'ABR', status: 'ATRASADO', dueDate: '2026-04-27', installmentInfo: '1', supplier: 'PIS', cnpj: '00.000.000/0001-00', invoiceNumber: 'PIS', amount: 10000.00, amountPaid: 0, costCenterId: '3.2', modality: 'PIS', description: 'Imposto Folha PIS' },
+        { id: 'betim-pay-16', unit: 'Betim', mesCompetencia: 'MAI', status: 'ATRASADO', dueDate: '2026-05-01', installmentInfo: '1', supplier: 'FARMARIN INDUSTRIA E COMERCIO LTDA', cnpj: '11.222.333/0001-44', invoiceNumber: '456584', amount: 44063.04, amountPaid: 0, costCenterId: '1.1', modality: 'MEDICAMENTOS', description: 'Concentrados de Hemodiálise' },
+        { id: 'betim-pay-17', unit: 'Betim', mesCompetencia: 'MAI', status: 'PARCIAL', dueDate: '2026-05-15', installmentInfo: '1', supplier: 'NACIONAL TINTAS LTDA', cnpj: '44.555.666/0001-77', invoiceNumber: '56551', amount: 1340.00, amountPaid: 1340.00, costCenterId: '2.2', modality: 'MANUTENÇÃO', description: 'Tintas Reforma Salão Betim' },
+        { id: 'betim-pay-18', unit: 'Betim', mesCompetencia: 'JUN', status: 'ATRASADO', dueDate: '2026-06-11', installmentInfo: '1', supplier: 'CEMIG', cnpj: '06.981.180/0001-16', invoiceNumber: 'ENERGIA', amount: 53769.95, amountPaid: 0, costCenterId: '2.1', modality: 'ENERGIA', description: 'Energia Elétrica Mês Junho' },
+        { id: 'betim-pay-19', unit: 'Betim', mesCompetencia: 'JUN', status: 'ATRASADO', dueDate: '2026-06-27', installmentInfo: '1', supplier: 'COPASA', cnpj: '17.281.106/0001-03', invoiceNumber: '413587258', amount: 72762.12, amountPaid: 0, costCenterId: '2.1', modality: 'ÁGUA', description: 'Conta de Água e Esgoto Trata Betim' },
+        { id: 'betim-pay-20', unit: 'Betim', mesCompetencia: 'JUL', status: 'ATRASADO', dueDate: '2026-07-20', installmentInfo: '1', supplier: 'GUIA DCTFWEB', cnpj: '00.000.000/0001-00', invoiceNumber: 'INSS', amount: 230791.45, amountPaid: 0, costCenterId: '3.2', modality: 'INSS', description: 'Guia Unificada INSS/DCTFWeb' },
+        { id: 'betim-pay-21', unit: 'Betim', mesCompetencia: 'JUL', status: 'PARCIAL', dueDate: '2026-07-20', installmentInfo: '1', supplier: 'MOURA E BASTOS SOCIEDADE DE ADVOGADOS', cnpj: '33.444.555/0001-88', invoiceNumber: '141', amount: 1815.00, amountPaid: 1815.00, costCenterId: '4.1', modality: 'JURÍDICO', description: 'Honorários Advocatícios' },
+        { id: 'betim-pay-22', unit: 'Betim', mesCompetencia: 'JUL', status: 'PARCIAL', dueDate: '2026-07-26', installmentInfo: '1', supplier: 'ACACIA COMERCIO DE MEDICAMENTOS LTDA', cnpj: '22.333.444/0001-55', invoiceNumber: '346506', amount: 7634.54, amountPaid: 7634.54, costCenterId: '1.1', modality: 'MEDICAMENTOS', description: 'Medicamentos Injetáveis' },
+        { id: 'betim-pay-23', unit: 'Betim', mesCompetencia: 'JUL', status: 'PARCIAL', dueDate: '2026-07-26', installmentInfo: '1', supplier: 'GERAIS COM. E IMP. DE MAT. E EQUIP. MEDICOS LTDA', cnpj: '55.666.777/0001-99', invoiceNumber: '5964', amount: 19586.00, amountPaid: 19586.00, costCenterId: '1.1', modality: 'INSUMOS', description: 'Linhas Arteriovenosas' },
+        { id: 'betim-pay-24', unit: 'Betim', mesCompetencia: 'JUL', status: 'PARCIAL', dueDate: '2026-07-26', installmentInfo: '1', supplier: 'ACACIA COMERCIO DE MEDICAMENTOS LTDA', cnpj: '22.333.444/0001-55', invoiceNumber: '346768', amount: 28015.01, amountPaid: 28015.01, costCenterId: '1.1', modality: 'MEDICAMENTOS', description: 'Eritropoetina e Ferro Endovenoso' },
+        { id: 'betim-pay-25', unit: 'Betim', mesCompetencia: 'JUL', status: 'PARCIAL', dueDate: '2026-07-31', installmentInfo: '1', supplier: 'OXIMIL OXIGENIO MINAS GERAIS LTDA', cnpj: '66.777.888/0001-11', invoiceNumber: '19867', amount: 310.40, amountPaid: 310.40, costCenterId: '1.4', modality: 'OXIGÊNIO', description: 'Recarga Cilindros O2 Medicamento' },
+        { id: 'betim-pay-26', unit: 'Betim', mesCompetencia: 'AGO', status: 'A_VENCER', dueDate: '2026-08-05', installmentInfo: '1', supplier: 'FOLHA PAGTO', cnpj: '00.000.000/0001-00', invoiceNumber: 'FOLHA PAGTO', amount: 392644.50, amountPaid: 392644.50, costCenterId: '3.1', modality: 'FOLHA PAGTO', description: 'Folha de Pagamento Salários Corpo Clínico e Funcionários' },
+        { id: 'betim-pay-27', unit: 'Betim', mesCompetencia: 'AGO', status: 'A_VENCER', dueDate: '2026-08-06', installmentInfo: '1', supplier: 'FÉRIAS MARIA GISLENE', cnpj: '00.000.000/0001-00', invoiceNumber: 'FÉRIAS', amount: 4508.85, amountPaid: 0, costCenterId: '3.1', modality: 'FÉRIAS', description: 'Provento Férias Enfermagem' },
+        { id: 'betim-pay-28', unit: 'Betim', mesCompetencia: 'AGO', status: 'A_VENCER', dueDate: '2026-08-06', installmentInfo: '1', supplier: 'FÉRIAS MATHEUS OLIVEIRA', cnpj: '00.000.000/0001-00', invoiceNumber: 'FÉRIAS', amount: 4254.62, amountPaid: 0, costCenterId: '3.1', modality: 'FÉRIAS', description: 'Provento Férias Técnico HD' },
+        { id: 'betim-pay-29', unit: 'Betim', mesCompetencia: 'AGO', status: 'A_VENCER', dueDate: '2026-08-07', installmentInfo: '1', supplier: 'TRINDADE BARBOSA ANALISES CLINICAS LTDA', cnpj: '77.888.999/0001-22', invoiceNumber: '4128', amount: 43423.10, amountPaid: 0, costCenterId: '1.3', modality: 'LABORATÓRIO', description: 'Exames Mensais de Sorologia e Bioquímica Dialíticos' },
+        { id: 'betim-pay-30', unit: 'Betim', mesCompetencia: 'AGO', status: 'A_VENCER', dueDate: '2026-08-10', installmentInfo: '4-6', supplier: 'LACERDA ALIMENTAÇÃO ACORDO', cnpj: '88.999.000/0001-33', invoiceNumber: 'ACORDO', amount: 25364.30, amountPaid: 0, costCenterId: '2.2', modality: 'ACORDO', description: 'Acordo Fornecimento Refeições Pacientes/Staff' },
+        { id: 'betim-pay-31', unit: 'Betim', mesCompetencia: 'AGO', status: 'A_VENCER', dueDate: '2026-08-10', installmentInfo: '1', supplier: 'VANTIVE HEALT BRASIL LTDA', cnpj: '99.000.111/0001-44', invoiceNumber: '123599', amount: 2984.56, amountPaid: 0, costCenterId: '1.2', modality: 'EQUIPAMENTOS', description: 'Locação Módulos Hemodiálise' },
+        { id: 'betim-pay-32', unit: 'Betim', mesCompetencia: 'AGO', status: 'A_VENCER', dueDate: '2026-08-10', installmentInfo: '1', supplier: 'VANTIVE HEALT BRASIL LTDA', cnpj: '99.000.111/0001-44', invoiceNumber: '125520', amount: 2984.56, amountPaid: 0, costCenterId: '1.2', modality: 'EQUIPAMENTOS', description: 'Locação Módulos Hemodiálise' }
+      ];
+      setDB(db);
+    }
+    return db.accounts_payable;
   },
 
   saveAccountsPayable: async (item) => {
