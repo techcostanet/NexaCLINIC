@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.14',
+      date: '06 de Agosto, 2026',
+      title: 'Resiliência de Login do Operador Daliam',
+      description: 'Rotina com verificação inteligente de senhas para o login daliam@nexa.com.',
+      changes: [
+        { type: 'Autenticação', text: 'Permite login com dalia123, Daliam1234! ou daliam123.' }
+      ]
+    },
+    {
       version: 'v3.0.13',
       date: '06 de Agosto, 2026',
       title: 'Ajuste de Senha do Usuário Daliam',

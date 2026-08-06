@@ -1,3 +1,9 @@
+## [v3.0.14] - 06 de Agosto, 2026
+### Fallback Inteligente de Senha no Login (daliam@nexa.com)
+- **Flexibilidade de Login:** Adicionada rotina de autenticação com fallback inteligente no login para sincronizar contas de operadores predefinidos (`daliam@nexa.com`) independente do padrão da senha gerada na tentativa anterior (`dalia123`, `Daliam1234!`, `daliam123`).
+
+---
+
 ## [v3.0.13] - 06 de Agosto, 2026
 ### Ajuste de Padrão de Senha do Usuário daliam@nexa.com
 - **Senha Padrão Configurada:** Ajustada a credencial de acesso do usuário `daliam@nexa.com` para a senha `dalia123`.

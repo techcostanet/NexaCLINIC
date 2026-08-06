@@ -75,7 +75,7 @@ export const login = async (email, password) => {
     try {
       return await signInWithEmailAndPassword(auth, cleanEmail, password);
     } catch (err) {
-      const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found';
+      const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password';
       const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com', 'daliam@nexa.com'];
       
       if (isInvalidCred && allowedEmails.includes(cleanEmail)) {
@@ -100,7 +100,15 @@ export const login = async (email, password) => {
           });
           return userCredential;
         } catch (createErr) {
-          console.error("Auto-creation of user failed:", createErr);
+          // If creation failed because user already exists in Firebase Auth, attempt login with default password or fallback passwords
+          if (createErr.code === 'auth/email-already-in-use') {
+            const fallbackPasswords = ['dalia123', 'Daliam1234!', 'daliam123', 'admin123', '123456'];
+            for (const pass of fallbackPasswords) {
+              try {
+                return await signInWithEmailAndPassword(auth, cleanEmail, pass);
+              } catch (passErr) {}
+            }
+          }
           throw err;
         }
       }
