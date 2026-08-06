@@ -1,4 +1,4 @@
-import { app } from '../../firebase';
+import { app, firebaseConfig } from '../../firebase';
 import { USE_MOCK, mockFirestore, mockAuth } from './mockDb';
 
 export const onAuthChange = (callback) => {
@@ -125,8 +125,13 @@ export const createUser = async (email, name, role, allowedSectors) => {
     const { getFirestore, doc, setDoc } = await import('firebase/firestore');
 
     // Create a secondary app instance to register the new user without logging out the administrator
+    const configToUse = (firebaseConfig && firebaseConfig.apiKey) ? firebaseConfig : (app && app.options && app.options.apiKey ? app.options : null);
+    if (!configToUse) {
+      throw new Error('As credenciais do Firebase (VITE_FIREBASE_API_KEY) não estão configuradas no ambiente.');
+    }
+
     const secondaryAppName = `secondary-${Math.random().toString(36).substr(2, 9)}`;
-    const secondaryApp = initializeSecondaryApp(firebaseConfig, secondaryAppName);
+    const secondaryApp = initializeSecondaryApp(configToUse, secondaryAppName);
     const secondaryAuth = getAuth(secondaryApp);
     
     // Enforcing password policy: 8 chars, 1 special, 1 number, 1 capital letter.

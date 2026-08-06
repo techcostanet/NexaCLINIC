@@ -1,3 +1,10 @@
+## [v3.0.11] - 06 de Agosto, 2026
+### Correção no Cadastro de Usuários (Firebase Config)
+- **Correção de Autenticação:** Exportação e importação do objeto `firebaseConfig` em `authService.js` e `config.ts`, resolvendo o erro `ReferenceError: firebaseConfig is not defined` ao tentar cadastrar novos usuários.
+- **Validação de Credenciais:** Adicionada verificação preventiva para garantir a correta inicialização das instâncias secundárias do Firebase Auth.
+
+---
+
 ## [v3.0.10] - 06 de Agosto, 2026
 ### Módulo de T.I. - Matriz RBAC Completa (11 Módulos)
 - **Matriz de Permissões RBAC (NexaCONFIG):** Atualização da matriz de controle de acessos por perfil para englobar todos os 11 módulos do sistema.

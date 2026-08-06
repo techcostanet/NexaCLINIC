@@ -1,4 +1,4 @@
-export { app } from './services/firebase/config';
+export { app, firebaseConfig } from './services/firebase/config';
 
 import * as authFunctions from './services/firebase/authService';
 import * as patientFunctions from './services/firebase/patientService';

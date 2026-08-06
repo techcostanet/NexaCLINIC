@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.11',
+      date: '06 de Agosto, 2026',
+      title: 'Correção no Cadastro de Usuários (Firebase Config)',
+      description: 'Correção da importação das configurações do Firebase que impedia a criação de novos acessos de usuários.',
+      changes: [
+        { type: 'Autenticação', text: 'Exportação e vinculação do objeto firebaseConfig no serviço de criação de contas.' }
+      ]
+    },
+    {
       version: 'v3.0.10',
       date: '06 de Agosto, 2026',
       title: 'Módulo de T.I. - Matriz RBAC Completa com 11 Módulos',
