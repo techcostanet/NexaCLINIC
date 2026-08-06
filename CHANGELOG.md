@@ -1,3 +1,11 @@
+## [v3.0.8] - 06 de Agosto, 2026
+### Módulo Financeiro (Parte 3) - Ampliação Cadastral e DRE Gerencial
+- **📊 DRE Gerencial:** Nova aba com demonstração financeira completa: Receita Bruta, Impostos (ISS/PIS/COFINS ~6%), Receita Líquida, Custos Variáveis (Insumos/Medicamentos), Margem de Contribuição %, Custos Fixos (Folha/Aluguel), EBITDA % e Lucro Líquido.
+- **📝 Ampliação Cadastral:** Inclusão de novos campos nos modais e lançamentos de Pagar e Receber: Forma de Pagamento (PIX, Boleto, Cartões, TED, Dinheiro), Banco/Conta Destino e Classificação de Natureza (Custo Fixo Recorrente vs Custo Variável).
+- **🏷️ Badges Visuais:** Exibição destacada do meio de pagamento e número do documento nas tabelas de lançamentos.
+
+---
+
 ## [v3.0.7] - 06 de Agosto, 2026
 ### Módulo Financeiro (Parte 2) - Auto-ordenação Dinâmica em Todas as Tabelas
 - **Orçamento X Realizado:** Adicionada ordenação ao clicar no cabeçalho de todas as colunas (Código/Centro de Custo, Categoria Pai, Orçado, Pago, Devido, Desvio R$, Execução % e Status Variância).

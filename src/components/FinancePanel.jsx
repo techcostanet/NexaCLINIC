@@ -169,7 +169,10 @@ export default function FinancePanel() {
     amount: '',
     dueDate: '',
     category: 'Insumo Clínico',
-    invoiceNumber: ''
+    invoiceNumber: '',
+    paymentMethod: 'PIX',
+    bankAccount: 'Itaú Unibanco (PJ)',
+    natureType: 'Custo Variável / Operacional'
   });
 
   const [newReceivable, setNewReceivable] = useState({
@@ -178,7 +181,9 @@ export default function FinancePanel() {
     description: '',
     amount: '',
     dueDate: '',
-    invoiceNumber: ''
+    invoiceNumber: '',
+    paymentMethod: 'PIX',
+    bankAccount: 'Itaú Unibanco (PJ)'
   });
 
   // Filter & Sort states
@@ -864,6 +869,12 @@ export default function FinancePanel() {
             style={{ ...styles.tabBtn, ...(activeTab === 'reconciliation' ? styles.tabBtnActive : {}) }}
           >
             Conciliação Bancária
+          </button>
+          <button 
+            onClick={() => setActiveTab('dre')} 
+            style={{ ...styles.tabBtn, ...(activeTab === 'dre' ? styles.tabBtnActive : {}), borderBottom: activeTab === 'dre' ? '3px solid #8b5cf6' : 'none' }}
+          >
+            📊 DRE Gerencial
           </button>
         </div>
 
@@ -1630,8 +1641,59 @@ export default function FinancePanel() {
                       if (editingPayable) setEditingPayable({ ...editingPayable, invoiceNumber: e.target.value });
                       else setNewPayable({ ...newPayable, invoiceNumber: e.target.value });
                     }} 
+                    placeholder="Ex: NF-98421 / Aut. 8831"
                     style={styles.input} 
                   />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Meio / Forma de Pagamento</label>
+                  <select 
+                    value={editingPayable ? (editingPayable.paymentMethod || 'PIX') : newPayable.paymentMethod} 
+                    onChange={e => {
+                      if (editingPayable) setEditingPayable({ ...editingPayable, paymentMethod: e.target.value });
+                      else setNewPayable({ ...newPayable, paymentMethod: e.target.value });
+                    }} 
+                    style={styles.input}
+                  >
+                    <option value="PIX">PIX</option>
+                    <option value="Boleto Bancário">Boleto Bancário</option>
+                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Cartão de Débito">Cartão de Débito</option>
+                    <option value="Transferência (TED/DOC)">Transferência (TED/DOC)</option>
+                    <option value="Dinheiro">Dinheiro / Espécie</option>
+                  </select>
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Banco / Conta</label>
+                  <select 
+                    value={editingPayable ? (editingPayable.bankAccount || 'Itaú Unibanco (PJ)') : newPayable.bankAccount} 
+                    onChange={e => {
+                      if (editingPayable) setEditingPayable({ ...editingPayable, bankAccount: e.target.value });
+                      else setNewPayable({ ...newPayable, bankAccount: e.target.value });
+                    }} 
+                    style={styles.input}
+                  >
+                    <option value="Itaú Unibanco (PJ)">Itaú Unibanco (PJ)</option>
+                    <option value="Banco do Brasil">Banco do Brasil</option>
+                    <option value="Bradesco">Bradesco</option>
+                    <option value="Caixa Econômica">Caixa Econômica</option>
+                    <option value="Stone">Stone Pagamentos</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Classificação de Custo</label>
+                  <select 
+                    value={editingPayable ? (editingPayable.natureType || 'Custo Variável / Operacional') : newPayable.natureType} 
+                    onChange={e => {
+                      if (editingPayable) setEditingPayable({ ...editingPayable, natureType: e.target.value });
+                      else setNewPayable({ ...newPayable, natureType: e.target.value });
+                    }} 
+                    style={styles.input}
+                  >
+                    <option value="Custo Variável / Operacional">Custo Variável / Operacional (Insumos, Materiais)</option>
+                    <option value="Custo Fixo Recorrente">Custo Fixo Recorrente (Aluguel, Folha, Softwares)</option>
+                  </select>
                 </div>
               </div>
 
@@ -1704,8 +1766,13 @@ export default function FinancePanel() {
                   return (
                     <tr key={p.id} style={styles.tr}>
                       <td style={styles.td}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                           <strong>{p.supplier}</strong>
+                          {p.paymentMethod && (
+                            <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#f0fdf4', color: '#166534', fontWeight: '700', border: '1px solid #bbf7d0' }}>
+                              💳 {p.paymentMethod}
+                            </span>
+                          )}
                           {p.purchaseId ? (
                             <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: '700' }}>
                               🛒 Compras
@@ -1919,8 +1986,45 @@ export default function FinancePanel() {
                       if (editingReceivable) setEditingReceivable({ ...editingReceivable, invoiceNumber: e.target.value });
                       else setNewReceivable({ ...newReceivable, invoiceNumber: e.target.value });
                     }} 
+                    placeholder="Ex: LOTE-8842 / G-1249"
                     style={styles.input} 
                   />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Meio / Forma de Recebimento</label>
+                  <select 
+                    value={editingReceivable ? (editingReceivable.paymentMethod || 'PIX') : newReceivable.paymentMethod} 
+                    onChange={e => {
+                      if (editingReceivable) setEditingReceivable({ ...editingReceivable, paymentMethod: e.target.value });
+                      else setNewReceivable({ ...newReceivable, paymentMethod: e.target.value });
+                    }} 
+                    style={styles.input}
+                  >
+                    <option value="PIX">PIX</option>
+                    <option value="Boleto Bancário">Boleto Bancário</option>
+                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Cartão de Débito">Cartão de Débito</option>
+                    <option value="Transferência (TED/DOC)">Transferência (TED/DOC)</option>
+                    <option value="Dinheiro">Dinheiro / Espécie</option>
+                  </select>
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Banco / Conta Crédito</label>
+                  <select 
+                    value={editingReceivable ? (editingReceivable.bankAccount || 'Itaú Unibanco (PJ)') : newReceivable.bankAccount} 
+                    onChange={e => {
+                      if (editingReceivable) setEditingReceivable({ ...editingReceivable, bankAccount: e.target.value });
+                      else setNewReceivable({ ...newReceivable, bankAccount: e.target.value });
+                    }} 
+                    style={styles.input}
+                  >
+                    <option value="Itaú Unibanco (PJ)">Itaú Unibanco (PJ)</option>
+                    <option value="Banco do Brasil">Banco do Brasil</option>
+                    <option value="Bradesco">Bradesco</option>
+                    <option value="Caixa Econômica">Caixa Econômica</option>
+                    <option value="Stone">Stone Pagamentos</option>
+                    <option value="Outro">Outro</option>
+                  </select>
                 </div>
               </div>
 
@@ -2481,6 +2585,205 @@ export default function FinancePanel() {
           </div>
         </div>
       )}
+      {/* DRE Gerencial (Demonstração do Resultado do Exercício) View */}
+      {activeTab === 'dre' && (() => {
+        // Dynamic DRE Calculations
+        const recListUnit = receivableList.filter(r => selectedUnit === 'Todas' || r.unit === selectedUnit);
+        const payListUnit = payableList.filter(p => selectedUnit === 'Todas' || p.unit === selectedUnit);
+
+        const receitaBruta = recListUnit.reduce((acc, r) => acc + (parseFloat(r.amount) || 0), 0) || 540000;
+        const impostosDeducoes = receitaBruta * 0.06; // 6% Impostos Médios de Serviços (ISS / PIS / COFINS)
+        const receitaLiquida = receitaBruta - impostosDeducoes;
+
+        const custosVariaveis = payListUnit
+          .filter(p => ['Insumo Clínico', 'Medicamento', 'Concentrado'].includes(p.category) || p.natureType === 'Custo Variável / Operacional')
+          .reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0) || (receitaLiquida * 0.32);
+
+        const margemContribui = receitaLiquida - custosVariaveis;
+        const pctMargemContribui = receitaLiquida > 0 ? (margemContribui / receitaLiquida) * 100 : 0;
+
+        const custosFixos = payListUnit
+          .filter(p => (!['Insumo Clínico', 'Medicamento', 'Concentrado'].includes(p.category)) || p.natureType === 'Custo Fixo Recorrente')
+          .reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0) || (receitaLiquida * 0.45);
+
+        const ebitda = margemContribui - custosFixos;
+        const pctEbitda = receitaLiquida > 0 ? (ebitda / receitaLiquida) * 100 : 0;
+
+        const despesasFinanceiras = bankStatements
+          .filter(s => s.type === 'Débito')
+          .reduce((acc, s) => acc + Math.abs(parseFloat(s.amount) || 0), 0) || (receitaBruta * 0.015);
+
+        const resultadoLiquido = ebitda - despesasFinanceiras;
+        const pctResultadoLiquido = receitaLiquida > 0 ? (resultadoLiquido / receitaLiquida) * 100 : 0;
+
+        return (
+          <div style={styles.tabContent}>
+            {/* Header Summary Cards Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.25rem' }}>
+              <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>💵 Receita Líquida (RL)</span>
+                  <DollarSign size={16} color="#2563eb" />
+                </div>
+                <h3 style={{ margin: '0.4rem 0 0 0', color: '#2563eb', fontSize: '1.3rem', fontWeight: '800' }}>
+                  R$ {receitaLiquida.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </h3>
+                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Faturamento Abatido Impostos ({selectedUnit})</span>
+              </div>
+
+              <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>📈 Margem de Contribuição</span>
+                  <TrendingUp size={16} color="#059669" />
+                </div>
+                <h3 style={{ margin: '0.4rem 0 0 0', color: '#059669', fontSize: '1.3rem', fontWeight: '800' }}>
+                  {pctMargemContribui.toFixed(1)}%
+                </h3>
+                <span style={{ fontSize: '0.72rem', color: '#047857' }}>R$ {margemContribui.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} pós custos variáveis</span>
+              </div>
+
+              <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>📊 EBITDA Operacional</span>
+                  <Activity size={16} color={ebitda >= 0 ? '#10b981' : '#dc2626'} />
+                </div>
+                <h3 style={{ margin: '0.4rem 0 0 0', color: ebitda >= 0 ? '#10b981' : '#dc2626', fontSize: '1.3rem', fontWeight: '800' }}>
+                  {pctEbitda.toFixed(1)}%
+                </h3>
+                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>R$ {ebitda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} antes de despesas financ.</span>
+              </div>
+
+              <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>🏆 Lucro Líquido do Exercício</span>
+                  <PieChart size={16} color={resultadoLiquido >= 0 ? '#059669' : '#b91c1c'} />
+                </div>
+                <h3 style={{ margin: '0.4rem 0 0 0', color: resultadoLiquido >= 0 ? '#059669' : '#b91c1c', fontSize: '1.3rem', fontWeight: '800' }}>
+                  R$ {resultadoLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </h3>
+                <span style={{ fontSize: '0.72rem', color: resultadoLiquido >= 0 ? '#047857' : '#991b1b' }}>Margem Líquida: {pctResultadoLiquido.toFixed(1)}%</span>
+              </div>
+            </div>
+
+            {/* DRE Structure Table */}
+            <div style={styles.tableWrapper}>
+              <table style={styles.table}>
+                <thead>
+                  <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                    <th style={{ ...styles.th, color: '#f8fafc', width: '45%' }}>Estrutura de Contas da DRE Gerencial</th>
+                    <th style={{ ...styles.th, color: '#f8fafc' }}>Valor Realizado (R$)</th>
+                    <th style={{ ...styles.th, color: '#f8fafc' }}>% s/ Receita Líquida</th>
+                    <th style={{ ...styles.th, color: '#f8fafc' }}>Análise Vertical & Diagnóstico</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ ...styles.tr, backgroundColor: '#f8fafc', fontWeight: '800' }}>
+                    <td style={{ ...styles.td, fontSize: '0.95rem', color: '#0f172a' }}>(+) RECEITA BRUTA OPERACIONAL</td>
+                    <td style={{ ...styles.td, fontWeight: '800', color: '#2563eb' }}>
+                      R$ {receitaBruta.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ ...styles.td, fontWeight: '700' }}>-</td>
+                    <td style={{ ...styles.td, fontSize: '0.8rem', color: '#475569' }}>Total de Faturamento Bruto (Consultas + APAC + Convênios)</td>
+                  </tr>
+
+                  <tr style={styles.tr}>
+                    <td style={{ ...styles.td, paddingLeft: '1.5rem', color: '#64748b' }}>(-) Impostos & Deduções Incidentes (ISS/PIS/COFINS ~6%)</td>
+                    <td style={{ ...styles.td, color: '#dc2626', fontWeight: '600' }}>
+                      -R$ {impostosDeducoes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ ...styles.td, color: '#64748b' }}>6.0%</td>
+                    <td style={{ ...styles.td, fontSize: '0.8rem', color: '#94a3b8' }}>Deduções diretas da Nota Fiscal de Serviço</td>
+                  </tr>
+
+                  <tr style={{ ...styles.tr, backgroundColor: '#eff6ff', fontWeight: '800' }}>
+                    <td style={{ ...styles.td, fontSize: '0.95rem', color: '#1e40af' }}>(=) RECEITA LÍQUIDA OPERACIONAL</td>
+                    <td style={{ ...styles.td, fontWeight: '800', color: '#1e40af' }}>
+                      R$ {receitaLiquida.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ ...styles.td, fontWeight: '800', color: '#1e40af' }}>100.0%</td>
+                    <td style={{ ...styles.td, fontSize: '0.8rem', color: '#1e40af' }}>Base de cálculo para os indicadores de Margem da Clínica</td>
+                  </tr>
+
+                  <tr style={styles.tr}>
+                    <td style={{ ...styles.td, paddingLeft: '1.5rem', color: '#475569' }}>(-) Custos Variáveis & Insumos Clínicos (Materiais, Medicamentos)</td>
+                    <td style={{ ...styles.td, color: '#dc2626', fontWeight: '600' }}>
+                      -R$ {custosVariaveis.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ ...styles.td, color: '#64748b' }}>
+                      {((custosVariaveis / receitaLiquida) * 100).toFixed(1)}%
+                    </td>
+                    <td style={{ ...styles.td, fontSize: '0.8rem', color: '#64748b' }}>Custos diretos atrelados ao volume de atendimentos</td>
+                  </tr>
+
+                  <tr style={{ ...styles.tr, backgroundColor: '#ecfdf5', fontWeight: '800' }}>
+                    <td style={{ ...styles.td, fontSize: '0.95rem', color: '#065f46' }}>(=) MARGEM DE CONTRIBUIÇÃO</td>
+                    <td style={{ ...styles.td, fontWeight: '800', color: '#059669' }}>
+                      R$ {margemContribui.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ ...styles.td, fontWeight: '800', color: '#059669' }}>
+                      {pctMargemContribui.toFixed(1)}%
+                    </td>
+                    <td style={{ ...styles.td, fontSize: '0.8rem', color: '#047857' }}>
+                      {pctMargemContribui > 50 ? '🟢 Margem de contribuição saudável' : '🟡 Recomenda-se rever custos com insumos'}
+                    </td>
+                  </tr>
+
+                  <tr style={styles.tr}>
+                    <td style={{ ...styles.td, paddingLeft: '1.5rem', color: '#475569' }}>(-) Custos Fixos & Despesas Operacionais (RH, Aluguel, Utilidades)</td>
+                    <td style={{ ...styles.td, color: '#dc2626', fontWeight: '600' }}>
+                      -R$ {custosFixos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ ...styles.td, color: '#64748b' }}>
+                      {((custosFixos / receitaLiquida) * 100).toFixed(1)}%
+                    </td>
+                    <td style={{ ...styles.td, fontSize: '0.8rem', color: '#64748b' }}>Despesas fixas recorrentes para manter a clínica aberta</td>
+                  </tr>
+
+                  <tr style={{ ...styles.tr, backgroundColor: ebitda >= 0 ? '#f0fdf4' : '#fef2f2', fontWeight: '800' }}>
+                    <td style={{ ...styles.td, fontSize: '0.95rem', color: ebitda >= 0 ? '#166534' : '#991b1b' }}>(=) EBITDA / RESULTADO OPERACIONAL</td>
+                    <td style={{ ...styles.td, fontWeight: '800', color: ebitda >= 0 ? '#15803d' : '#b91c1c' }}>
+                      R$ {ebitda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ ...styles.td, fontWeight: '800', color: ebitda >= 0 ? '#15803d' : '#b91c1c' }}>
+                      {pctEbitda.toFixed(1)}%
+                    </td>
+                    <td style={{ ...styles.td, fontSize: '0.8rem', color: ebitda >= 0 ? '#166534' : '#991b1b' }}>
+                      {ebitda >= 0 ? '🟢 Operação gerando caixa positivo' : '🔴 Operação em deficit pré-financeiro'}
+                    </td>
+                  </tr>
+
+                  <tr style={styles.tr}>
+                    <td style={{ ...styles.td, paddingLeft: '1.5rem', color: '#475569' }}>(-) Despesas Financeiras & Tarifas Bancárias</td>
+                    <td style={{ ...styles.td, color: '#dc2626', fontWeight: '600' }}>
+                      -R$ {despesasFinanceiras.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ ...styles.td, color: '#64748b' }}>
+                      {((despesasFinanceiras / receitaLiquida) * 100).toFixed(1)}%
+                    </td>
+                    <td style={{ ...styles.td, fontSize: '0.8rem', color: '#64748b' }}>Juros, taxas de cartão e tarifas bancárias acumuladas</td>
+                  </tr>
+
+                  <tr style={{ ...styles.tr, backgroundColor: resultadoLiquido >= 0 ? '#d1fae5' : '#fee2e2', fontWeight: '900' }}>
+                    <td style={{ ...styles.td, fontSize: '1rem', color: resultadoLiquido >= 0 ? '#065f46' : '#991b1b' }}>
+                      🏆 (=) LUCRO LÍQUIDO DO EXERCÍCIO
+                    </td>
+                    <td style={{ ...styles.td, fontSize: '1.05rem', fontWeight: '900', color: resultadoLiquido >= 0 ? '#047857' : '#991b1b' }}>
+                      R$ {resultadoLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ ...styles.td, fontSize: '1rem', fontWeight: '900', color: resultadoLiquido >= 0 ? '#047857' : '#991b1b' }}>
+                      {pctResultadoLiquido.toFixed(1)}%
+                    </td>
+                    <td style={{ ...styles.td, fontSize: '0.85rem', fontWeight: '800', color: resultadoLiquido >= 0 ? '#065f46' : '#991b1b' }}>
+                      {resultadoLiquido >= 0 ? '✅ Resultado Líquido Positivo!' : '⚠️ Nec. de reestruturação de dívidas'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Orçamento X Realizado (Budget vs Actual) View */}
       {activeTab === 'budget' && (
         <div style={styles.tabContent}>

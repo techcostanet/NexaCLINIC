@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.8',
+      date: '06 de Agosto, 2026',
+      title: 'Módulo Financeiro (Parte 3) - Ampliação Cadastral e DRE Gerencial',
+      description: 'Criação da aba DRE Gerencial (Demonstração do Resultado do Exercício) e expansão cadastral com Meio de Pagamento, Banco/Conta e Natureza de Custos.',
+      changes: [
+        { type: 'DRE Gerencial', text: 'Estrutura completa com Receita Bruta, Impostos, Margem de Contribuição, Custos Fixos, EBITDA e Lucro Líquido.' },
+        { type: 'Ampliação Cadastral', text: 'Novos campos para Meio de Pagamento (PIX, Boleto, Cartões, TED), Banco/Conta e Custo Fixo vs Variável.' },
+        { type: 'Badges em Tabela', text: 'Exibição visual do meio de pagamento e número do documento nos lançamentos de Pagar e Receber.' }
+      ]
+    },
+    {
       version: 'v3.0.7',
       date: '06 de Agosto, 2026',
       title: 'Módulo Financeiro (Parte 2) - Auto-ordenação Dinâmica por Colunas',
