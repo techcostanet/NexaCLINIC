@@ -1,3 +1,9 @@
+## [v3.0.9] - 06 de Agosto, 2026
+### Correção de Importação do Ícone na Aba DRE Gerencial
+- **Correção de Erro de Execução (ReferenceError):** Adicionada a importação do componente `Activity` da biblioteca `lucide-react` em `FinancePanel.jsx`, corrigindo a falha ao renderizar a aba de DRE Gerencial.
+
+---
+
 ## [v3.0.8] - 06 de Agosto, 2026
 ### Módulo Financeiro (Parte 3) - Ampliação Cadastral e DRE Gerencial
 - **📊 DRE Gerencial:** Nova aba com demonstração financeira completa: Receita Bruta, Impostos (ISS/PIS/COFINS ~6%), Receita Líquida, Custos Variáveis (Insumos/Medicamentos), Margem de Contribuição %, Custos Fixos (Folha/Aluguel), EBITDA % e Lucro Líquido.

@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.9',
+      date: '06 de Agosto, 2026',
+      title: 'Correção de Exibição na Aba DRE Gerencial',
+      description: 'Correção de importação do ícone de atividade que causava exceção de runtime ao clicar no DRE.',
+      changes: [
+        { type: 'Correção DRE', text: 'Inclusão do ícone Activity do lucide-react em FinancePanel.jsx.' }
+      ]
+    },
+    {
       version: 'v3.0.8',
       date: '06 de Agosto, 2026',
       title: 'Módulo Financeiro (Parte 3) - Ampliação Cadastral e DRE Gerencial',

@@ -36,7 +36,8 @@ import {
   ArrowUpRight,
   ShieldCheck,
   Target,
-  Search
+  Search,
+  Activity
 } from 'lucide-react';
 
 import { dbService } from '../firebase';
