@@ -1,4 +1,4 @@
-import { app, firebaseConfig } from '../../firebase';
+import { app, firebaseConfig } from './config';
 import { USE_MOCK, mockFirestore, mockAuth } from './mockDb';
 
 export const onAuthChange = (callback) => {
@@ -61,6 +61,9 @@ export const onAuthChange = (callback) => {
           callback(firebaseUser);
         }
       });
+    }).catch(err => {
+      console.error("Erro ao inicializar Firebase Auth no onAuthChange:", err);
+      callback(null);
     });
     return () => unsubscribe();
   };

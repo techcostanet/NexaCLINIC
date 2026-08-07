@@ -1,3 +1,10 @@
+## [v3.1.1] - 07 de Agosto, 2026
+### Resiliência & Correção do Estado de Carregamento Infinito
+- **Correção de Dependência Circular:** Refatoração de todos os serviços em `src/services/firebase/` para importar a instância do Firebase diretamente de `./config`, eliminando importações circulares que bloqueavam a inicialização do app.
+- **Safety Timeout na Autenticação:** Implementada proteção em `App.jsx` e tratamento no `authService.onAuthChange` para que a tela de carregamento ("Carregando NexaCLINIC...") seja liberada automaticamente em até 3.5 segundos em caso de falha de conexão ou atraso de resposta do Firebase.
+
+---
+
 ## [v3.1.0] - 07 de Agosto, 2026
 ### Módulo NexaSERVICE - Emissão de PDF & Prontuário Técnico do Equipamento
 - **Emissão de PDF do Histórico:** Adicionada funcionalidade para exportar/imprimir o Prontuário Técnico completo e histórico de manutenção de cada equipamento em PDF.

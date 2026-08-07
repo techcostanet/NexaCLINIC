@@ -26,15 +26,33 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
 
   useEffect(() => {
+    let isMounted = true;
+    
+    // Safety fallback: Release loading screen after 3.5s if Auth is delayed/offline
+    const authTimer = setTimeout(() => {
+      if (isMounted) {
+        setLoading(prev => {
+          if (prev) {
+            console.warn('Auth loading timeout reached - unlocking UI screen.');
+            return false;
+          }
+          return prev;
+        });
+      }
+    }, 3500);
+
     // Listen to Auth changes (Mock or Firebase real)
     const unsubscribe = authService.onAuthChange((currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-      
-      // If user logs out, reset states
-      if (!currentUser) {
-        setCurrentModule('selector');
-        setCurrentPage('dashboard');
+      if (isMounted) {
+        clearTimeout(authTimer);
+        setUser(currentUser);
+        setLoading(false);
+        
+        // If user logs out, reset states
+        if (!currentUser) {
+          setCurrentModule('selector');
+          setCurrentPage('dashboard');
+        }
       }
     });
 
@@ -54,6 +72,8 @@ export default function App() {
     window.addEventListener('tenant-branding-changed', loadBranding);
 
     return () => {
+      isMounted = false;
+      clearTimeout(authTimer);
       unsubscribe();
       window.removeEventListener('tenant-branding-changed', loadBranding);
     };

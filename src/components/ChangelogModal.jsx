@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.1.1',
+      date: '07 de Agosto, 2026',
+      title: 'Correção de Carregamento & Inicialização Resiliente',
+      description: 'Eliminação da dependência circular de inicialização e adição de timeout de segurança para evitar travamento na tela de carregamento.',
+      changes: [
+        { type: 'Arquitetura', text: 'Importação direta do app Firebase em todos os módulos de serviço para remover ciclo de módulos.' },
+        { type: 'Resiliência', text: 'Safety timeout na autenticação para desbloquear a interface automaticamente.' }
+      ]
+    },
+    {
       version: 'v3.1.0',
       date: '07 de Agosto, 2026',
       title: 'Emissão de PDF do Histórico & Lançamento NexaSERVICE v3.1.0',
