@@ -1,3 +1,12 @@
+## [v3.1.4] - 07 de Agosto, 2026
+### Abertura Descentralizada de Chamados & Notificações por E-mail no NexaSERVICE
+- **Abertura Descentralizada para Qualquer Funcionário:** Reformulação do fluxo de abertura de Chamados / Ordens de Serviço. Qualquer funcionário (médicos, enfermeiros, recepção, administrativo) pode abrir chamados de forma limpa e simplificada, com identificação automática do usuário logado.
+- **Painel de Atendimento Técnico Separado:** Modal exclusivo para a equipe de Manutenção/TI/Engenharia Clínica com triagem, laudo técnico, causa raiz, atribuição de técnicos e custos.
+- **Notificação Automática por E-mail:** A cada atualização de status ou inclusão de parecer técnico, o solicitante recebe uma notificação por e-mail com o andamento do chamado.
+- **Timeline de Apontamentos:** Histórico completo de alterações e logs de e-mail armazenado no registro da Ordem de Serviço.
+
+---
+
 ## [v3.1.3] - 07 de Agosto, 2026
 ### Correção de Roteamento do Módulo NexaSERVICE
 - **Unificação de Roteamento:** Correção do renderizador principal em `src/App.jsx` para invocar diretamente a função `renderContent()`. Uma expressão ternária duplicada no JSX omitia a rota do módulo `maintenance`, resultando na exibição incorreta do painel de Qualidade/BI.

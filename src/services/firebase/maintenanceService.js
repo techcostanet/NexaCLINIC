@@ -365,7 +365,7 @@ export const getServiceOrders = async () => {
   }
 };
 
-export const saveServiceOrder = async (orderData) => {
+export const saveServiceOrder = async (orderData, updateNote = '', notifyEmail = true) => {
   const isNew = !orderData.id;
   const now = new Date().toISOString();
 
@@ -376,9 +376,49 @@ export const saveServiceOrder = async (orderData) => {
     orderData.code = orderData.code || `OS-${dateStr}-${seqStr}`;
     orderData.openDate = orderData.openDate || now;
     orderData.status = orderData.status || 'Aberta';
+    orderData.priority = orderData.priority || 'Média';
+    orderData.type = orderData.type || 'Corretiva';
     orderData.partsUsed = orderData.partsUsed || [];
     orderData.laborCost = Number(orderData.laborCost || 0);
     orderData.totalCost = Number(orderData.totalCost || 0);
+    orderData.timelineLogs = [
+      {
+        id: `log-${Date.now()}`,
+        date: now,
+        author: orderData.requesterName || 'Solicitante',
+        status: orderData.status,
+        note: 'Chamado aberto no sistema.'
+      }
+    ];
+  } else {
+    orderData.timelineLogs = orderData.timelineLogs || [];
+    if (updateNote || orderData.status) {
+      orderData.timelineLogs.unshift({
+        id: `log-${Date.now()}`,
+        date: now,
+        author: orderData.lastUpdatedBy || 'Técnico Manutenção/TI',
+        status: orderData.status,
+        note: updateNote || `Status alterado para: ${orderData.status}`
+      });
+    }
+  }
+
+  // Handle Automatic Email Notification
+  if (notifyEmail && orderData.requesterEmail) {
+    const notification = {
+      date: now,
+      recipientEmail: orderData.requesterEmail,
+      subject: `[NexaSERVICE] Atualização na Ordem de Serviço ${orderData.code}`,
+      status: orderData.status,
+      equipment: orderData.equipmentName,
+      note: updateNote || (isNew ? 'Sua solicitação foi recebida e está aguardando triagem técnica.' : `A Ordem de Serviço mudou para o status: ${orderData.status}`),
+      sent: true
+    };
+
+    orderData.emailNotifications = orderData.emailNotifications || [];
+    orderData.emailNotifications.unshift(notification);
+    
+    console.log(`📧 [Notificação E-mail Enviada para ${orderData.requesterEmail}]:`, notification.subject, notification.note);
   }
 
   if (USE_MOCK) {
@@ -414,7 +454,7 @@ export const saveServiceOrder = async (orderData) => {
     }
   } catch (err) {
     console.error('Erro ao salvar service order no Firestore:', err);
-    return saveServiceOrder({ ...orderData });
+    return saveServiceOrder({ ...orderData }, updateNote, notifyEmail);
   }
 };
 

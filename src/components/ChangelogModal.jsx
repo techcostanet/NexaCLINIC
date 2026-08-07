@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.1.4',
+      date: '07 de Agosto, 2026',
+      title: 'Abertura Descentralizada de Chamados & Workflow de E-mail',
+      description: 'Qualquer funcionário abre chamados em 1 clique com auto-identificação e recebe atualizações por e-mail.',
+      changes: [
+        { type: 'Experiência do Usuário', text: 'Modal simplificado para funcionários com nome, e-mail e setor preenchidos automaticamente.' },
+        { type: 'Gestão Técnica', text: 'Atendimento técnico avançado para a equipe de Manutenção/TI com laudos e prazos de SLA.' },
+        { type: 'Notificações', text: 'Envio automático de e-mail ao solicitante a cada avanço no status da OS com timeline.' }
+      ]
+    },
+    {
       version: 'v3.1.3',
       date: '07 de Agosto, 2026',
       title: 'Correção no Roteamento do Portal NexaSERVICE',

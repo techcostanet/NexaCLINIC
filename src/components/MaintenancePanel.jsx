@@ -197,9 +197,13 @@ export default function MaintenancePanel({ currentUser }) {
     const partsTotal = orderForm.partsUsed.reduce((acc, p) => acc + (Number(p.unitCost || 0) * Number(p.quantity || 1)), 0);
     const totalCost = partsTotal + Number(orderForm.laborCost || 0);
 
+    const isNew = !editingOrder;
     const payload = {
       ...orderForm,
       id: editingOrder ? editingOrder.id : undefined,
+      requesterName: orderForm.requesterName || currentUser?.name || 'Solicitante',
+      requesterEmail: orderForm.requesterEmail || currentUser?.email || 'contato@techcosta.net',
+      lastUpdatedBy: currentUser?.name || 'Técnico',
       equipmentName: selectedEq ? selectedEq.name : 'Equipamento não especificado',
       equipmentCategory: selectedEq ? selectedEq.category : 'Outros',
       sector: selectedEq ? selectedEq.sector : orderForm.requesterSector,
@@ -208,7 +212,11 @@ export default function MaintenancePanel({ currentUser }) {
     };
 
     try {
-      await dbService.saveServiceOrder(payload);
+      const updateNoteText = isNew 
+        ? 'Chamado aberto no sistema.'
+        : (orderForm.updateNote || `Atendimento atualizado por ${currentUser?.name || 'Técnico'}. Status alterado para: ${orderForm.status}`);
+
+      await dbService.saveServiceOrder(payload, updateNoteText, orderForm.notifyRequesterEmail);
       
       // Update Equipment Status if order status changes to Inoperante / Em Manutenção
       if (selectedEq) {
@@ -223,7 +231,12 @@ export default function MaintenancePanel({ currentUser }) {
         }
       }
 
-      showAlert(`Ordem de Serviço ${editingOrder ? 'atualizada' : 'aberta'} com sucesso!`, 'success');
+      showAlert(
+        isNew 
+          ? `Ordem de Serviço aberta com sucesso! E-mail de confirmação enviado para ${payload.requesterEmail}.`
+          : `Ordem de Serviço ${editingOrder.code} atualizada! ${orderForm.notifyRequesterEmail ? `E-mail enviado para ${payload.requesterEmail}.` : ''}`, 
+        'success'
+      );
       setShowOrderModal(false);
       setEditingOrder(null);
       fetchData();
@@ -241,10 +254,13 @@ export default function MaintenancePanel({ currentUser }) {
       priority: 'Média',
       status: 'Aberta',
       requesterName: currentUser?.name || 'Solicitante',
-      requesterSector: eq ? eq.sector : 'Geral',
+      requesterEmail: currentUser?.email || 'contato@techcosta.net',
+      requesterSector: eq ? eq.sector : (currentUser?.allowedSectors?.[0] || 'Enfermagem'),
       assignedTechnician: '',
       description: '',
       diagnostic: '',
+      updateNote: '',
+      notifyRequesterEmail: true,
       laborCost: '0.00',
       partsUsed: []
     });
@@ -258,11 +274,14 @@ export default function MaintenancePanel({ currentUser }) {
       type: os.type || 'Corretiva',
       priority: os.priority || 'Média',
       status: os.status || 'Aberta',
-      requesterName: os.requesterName || '',
+      requesterName: os.requesterName || currentUser?.name || '',
+      requesterEmail: os.requesterEmail || currentUser?.email || 'contato@techcosta.net',
       requesterSector: os.requesterSector || '',
       assignedTechnician: os.assignedTechnician || '',
       description: os.description || '',
       diagnostic: os.diagnostic || '',
+      updateNote: '',
+      notifyRequesterEmail: true,
       laborCost: os.laborCost || '0.00',
       partsUsed: os.partsUsed || []
     });
@@ -901,126 +920,253 @@ export default function MaintenancePanel({ currentUser }) {
         </div>
       )}
 
-      {/* MODAL: NOVA / EDITAR ORDEM DE SERVIÇO */}
+      {/* MODAL: NOVA OS (SOLICITANTE) / ATENDIMENTO TÉCNICO */}
       {showOrderModal && (
         <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+          <div style={{ ...styles.modalContent, maxWidth: '650px' }}>
             <div style={styles.modalHeader}>
               <h3 style={styles.modalTitle}>
-                {editingOrder ? `Editar OS: ${editingOrder.code}` : 'Nova Ordem de Serviço'}
+                {editingOrder ? `Atendimento Técnico: ${editingOrder.code}` : 'Solicitar Reparo / Nova Ordem de Serviço'}
               </h3>
               <button onClick={() => setShowOrderModal(false)} style={styles.closeBtn}>
                 <X size={20} />
               </button>
             </div>
 
+            {/* Context Header Banner */}
+            {!editingOrder ? (
+              <div style={{ padding: '0.75rem 1rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#166534', fontWeight: '600', fontSize: '0.85rem' }}>
+                  <User size={18} color="#16a34a" />
+                  <div>
+                    <div><strong>Solicitante:</strong> {currentUser?.name || 'Funcionário Logado'}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 'normal' }}>
+                      E-mail: {currentUser?.email || 'contato@techcosta.net'} | Setor: {orderForm.requesterSector || 'Geral'}
+                    </div>
+                  </div>
+                </div>
+                <span style={{ fontSize: '0.75rem', background: '#dcfce7', color: '#15803d', padding: '0.2rem 0.6rem', borderRadius: '12px', fontWeight: '700' }}>
+                  Nova Abertura
+                </span>
+              </div>
+            ) : (
+              <div style={{ padding: '0.75rem 1rem', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '8px', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <span style={{ fontWeight: '700', color: '#0369a1', fontSize: '0.9rem' }}>
+                    [{editingOrder.code}] {editingOrder.equipmentName}
+                  </span>
+                  <span style={{ ...styles.badge, backgroundColor: getStatusBadgeStyle(editingOrder.status).bg, color: getStatusBadgeStyle(editingOrder.status).text, border: `1px solid ${getStatusBadgeStyle(editingOrder.status).border}` }}>
+                    {editingOrder.status}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#334155', marginBottom: '0.4rem' }}>
+                  <strong>Solicitante:</strong> {editingOrder.requesterName} ({editingOrder.requesterEmail || 'Sem e-mail informado'}) • Setor: {editingOrder.sector}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#475569', background: '#fff', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                  <strong>Sintoma Relatado:</strong> "{editingOrder.description}"
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSaveOrder} style={styles.formGrid}>
-              <div style={styles.formField}>
-                <label style={styles.label}>Equipamento / Ativo *</label>
-                <select 
-                  value={orderForm.equipmentId} 
-                  onChange={(e) => setOrderForm({ ...orderForm, equipmentId: e.target.value })}
-                  style={styles.input}
-                  required
-                >
-                  <option value="">Selecione um equipamento cadastrado...</option>
-                  {equipments.map(eq => (
-                    <option key={eq.id} value={eq.id}>
-                      [{eq.code}] {eq.name} ({eq.category} - {eq.sector})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {!editingOrder ? (
+                /* -------------------------------------------------------------
+                   MODO ABERTURA: QUALQUER FUNCIONÁRIO (SIMPLIFICADO)
+                ------------------------------------------------------------- */
+                <>
+                  <div style={styles.formField}>
+                    <label style={styles.label}>Selecione o Equipamento / Ativo Defeituoso *</label>
+                    <select 
+                      value={orderForm.equipmentId} 
+                      onChange={(e) => {
+                        const selectedEq = equipments.find(eq => eq.id === e.target.value);
+                        setOrderForm({ 
+                          ...orderForm, 
+                          equipmentId: e.target.value,
+                          requesterSector: selectedEq ? selectedEq.sector : orderForm.requesterSector
+                        });
+                      }}
+                      style={styles.input}
+                      required
+                    >
+                      <option value="">Selecione o equipamento ou patrimônio...</option>
+                      {equipments.map(eq => (
+                        <option key={eq.id} value={eq.id}>
+                          [{eq.code}] {eq.name} — Setor: {eq.sector} ({eq.category})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div style={styles.formRow2}>
-                <div style={styles.formField}>
-                  <label style={styles.label}>Tipo de OS *</label>
-                  <select 
-                    value={orderForm.type} 
-                    onChange={(e) => setOrderForm({ ...orderForm, type: e.target.value })}
-                    style={styles.input}
-                  >
-                    <option value="Corretiva">Corretiva (Quebra/Falha)</option>
-                    <option value="Preventiva">Preventiva (Revisão)</option>
-                    <option value="Calibração">Calibração / Preditiva</option>
-                    <option value="TI - Hardware">T.I. - Hardware</option>
-                    <option value="TI - Software">T.I. - Software / Sistemas</option>
-                    <option value="Instalação">Instalação / Comissionamento</option>
-                  </select>
-                </div>
+                  <div style={styles.formRow2}>
+                    <div style={styles.formField}>
+                      <label style={styles.label}>Tipo de Falha / Ocorrência *</label>
+                      <select 
+                        value={orderForm.type} 
+                        onChange={(e) => setOrderForm({ ...orderForm, type: e.target.value })}
+                        style={styles.input}
+                      >
+                        <option value="Corretiva">Equipamento Quebrado / Defeito</option>
+                        <option value="TI - Hardware">TI - Computador / Impressora / Monitor</option>
+                        <option value="TI - Software">TI - Sistema / Senha / Erro de Software</option>
+                        <option value="Infraestrutura">Ar Condicionado / Elétrica / Predial</option>
+                        <option value="Preventiva">Solicitação de Revisão / Calibração</option>
+                      </select>
+                    </div>
 
-                <div style={styles.formField}>
-                  <label style={styles.label}>Prioridade / SLA *</label>
-                  <select 
-                    value={orderForm.priority} 
-                    onChange={(e) => setOrderForm({ ...orderForm, priority: e.target.value })}
-                    style={styles.input}
-                  >
-                    <option value="Baixa">Baixa (Até 48 horas)</option>
-                    <option value="Média">Média (Até 24 horas)</option>
-                    <option value="Alta">Alta (Até 8 horas)</option>
-                    <option value="Crítico">Crítico / Parada (Até 2 horas)</option>
-                  </select>
-                </div>
-              </div>
+                    <div style={styles.formField}>
+                      <label style={styles.label}>Urgência / Impacto no Atendimento *</label>
+                      <select 
+                        value={orderForm.priority} 
+                        onChange={(e) => setOrderForm({ ...orderForm, priority: e.target.value })}
+                        style={styles.input}
+                      >
+                        <option value="Baixa">Baixa (Não impede o trabalho)</option>
+                        <option value="Média">Média (Dificulta o trabalho)</option>
+                        <option value="Alta">Alta (Parou o setor / Atendimento afetado)</option>
+                        <option value="Crítico">Crítico (Risco a paciente / Parada Geral)</option>
+                      </select>
+                    </div>
+                  </div>
 
-              <div style={styles.formRow2}>
-                <div style={styles.formField}>
-                  <label style={styles.label}>Status Atual da OS</label>
-                  <select 
-                    value={orderForm.status} 
-                    onChange={(e) => setOrderForm({ ...orderForm, status: e.target.value })}
-                    style={styles.input}
-                  >
-                    <option value="Aberta">Aberta (Aguardando Triagem)</option>
-                    <option value="Em Diagnóstico">Em Diagnóstico</option>
-                    <option value="Aguardando Peça">Aguardando Peça / Terceiro</option>
-                    <option value="Em Execução">Em Execução</option>
-                    <option value="Concluída">Concluída</option>
-                  </select>
-                </div>
+                  <div style={styles.formField}>
+                    <label style={styles.label}>Descrição Detalhada do Problema / Sintoma *</label>
+                    <textarea 
+                      rows={4} 
+                      placeholder="Descreva com detalhes o sintoma apresentado, barulhos, mensagens de erro ou mau funcionamento..."
+                      value={orderForm.description}
+                      onChange={(e) => setOrderForm({ ...orderForm, description: e.target.value })}
+                      style={styles.textarea}
+                      required
+                    />
+                  </div>
 
-                <div style={styles.formField}>
-                  <label style={styles.label}>Técnico / Responsável</label>
-                  <input 
-                    type="text" 
-                    placeholder="Nome do técnico ou empresa terceirizada"
-                    value={orderForm.assignedTechnician}
-                    onChange={(e) => setOrderForm({ ...orderForm, assignedTechnician: e.target.value })}
-                    style={styles.input}
-                  />
-                </div>
-              </div>
+                  <div style={{ padding: '0.6rem 0.8rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '0.8rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <ShieldCheck size={16} color="#0891b2" />
+                    <span>Ao enviar, este chamado será encaminhado para a equipe técnica e um e-mail de confirmação será enviado para <strong>{currentUser?.email || 'seu e-mail'}</strong>.</span>
+                  </div>
+                </>
+              ) : (
+                /* -------------------------------------------------------------
+                   MODO ATENDIMENTO TÉCNICO: EQUIPE DE MANUTENÇÃO & TI
+                ------------------------------------------------------------- */
+                <>
+                  <div style={styles.formRow2}>
+                    <div style={styles.formField}>
+                      <label style={styles.label}>Status Atual do Atendimento *</label>
+                      <select 
+                        value={orderForm.status} 
+                        onChange={(e) => setOrderForm({ ...orderForm, status: e.target.value })}
+                        style={{ ...styles.input, fontWeight: '700', color: '#0369a1' }}
+                      >
+                        <option value="Aberta">Aberta (Aguardando Triagem)</option>
+                        <option value="Em Diagnóstico">Em Diagnóstico</option>
+                        <option value="Aguardando Peça">Aguardando Peça / Terceiro</option>
+                        <option value="Em Execução">Em Execução</option>
+                        <option value="Concluída">Concluída (Resolvido)</option>
+                        <option value="Cancelada">Cancelada</option>
+                      </select>
+                    </div>
 
-              <div style={styles.formField}>
-                <label style={styles.label}>Descrição do Problema / Sintoma Reportado *</label>
-                <textarea 
-                  rows={3} 
-                  placeholder="Relate detalhadamente o sintoma apresentado pelo equipamento..."
-                  value={orderForm.description}
-                  onChange={(e) => setOrderForm({ ...orderForm, description: e.target.value })}
-                  style={styles.textarea}
-                  required
-                />
-              </div>
+                    <div style={styles.formField}>
+                      <label style={styles.label}>Técnico Responsável *</label>
+                      <input 
+                        type="text" 
+                        placeholder="Nome do técnico ou empresa terceirizada"
+                        value={orderForm.assignedTechnician}
+                        onChange={(e) => setOrderForm({ ...orderForm, assignedTechnician: e.target.value })}
+                        style={styles.input}
+                      />
+                    </div>
+                  </div>
 
-              <div style={styles.formField}>
-                <label style={styles.label}>Laudo Técnico / Diagnóstico da Solução</label>
-                <textarea 
-                  rows={3} 
-                  placeholder="Causa raiz identificada, testes efetuados e laudo técnico da solução..."
-                  value={orderForm.diagnostic}
-                  onChange={(e) => setOrderForm({ ...orderForm, diagnostic: e.target.value })}
-                  style={styles.textarea}
-                />
-              </div>
+                  <div style={styles.formRow2}>
+                    <div style={styles.formField}>
+                      <label style={styles.label}>Ajustar Prioridade / SLA</label>
+                      <select 
+                        value={orderForm.priority} 
+                        onChange={(e) => setOrderForm({ ...orderForm, priority: e.target.value })}
+                        style={styles.input}
+                      >
+                        <option value="Baixa">Baixa (Até 48 horas)</option>
+                        <option value="Média">Média (Até 24 horas)</option>
+                        <option value="Alta">Alta (Até 8 horas)</option>
+                        <option value="Crítico">Crítico (Até 2 horas)</option>
+                      </select>
+                    </div>
+
+                    <div style={styles.formField}>
+                      <label style={styles.label}>Custo de Mão de Obra / Serviço (R$)</label>
+                      <input 
+                        type="number" 
+                        step="0.01"
+                        placeholder="0.00"
+                        value={orderForm.laborCost}
+                        onChange={(e) => setOrderForm({ ...orderForm, laborCost: e.target.value })}
+                        style={styles.input}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={styles.formField}>
+                    <label style={styles.label}>Laudo Técnico & Diagnóstico da Solução</label>
+                    <textarea 
+                      rows={3} 
+                      placeholder="Causa raiz identificada, procedimentos efetuados, testes aplicados e parecer da solução..."
+                      value={orderForm.diagnostic}
+                      onChange={(e) => setOrderForm({ ...orderForm, diagnostic: e.target.value })}
+                      style={styles.textarea}
+                    />
+                  </div>
+
+                  <div style={styles.formField}>
+                    <label style={styles.label}>Apontamento de Andamento (Notificação ao Solicitante)</label>
+                    <textarea 
+                      rows={2} 
+                      placeholder="Descreva o que foi feito nesta etapa para enviar por e-mail ao solicitante..."
+                      value={orderForm.updateNote}
+                      onChange={(e) => setOrderForm({ ...orderForm, updateNote: e.target.value })}
+                      style={styles.textarea}
+                    />
+                  </div>
+
+                  <div style={{ padding: '0.6rem 0.8rem', background: '#ecfeff', border: '1px solid #a5f3fc', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', color: '#0891b2' }}>
+                      <input 
+                        type="checkbox"
+                        checked={orderForm.notifyRequesterEmail}
+                        onChange={(e) => setOrderForm({ ...orderForm, notifyRequesterEmail: e.target.checked })}
+                      />
+                      <span>Enviar notificação por e-mail para: <strong>{editingOrder.requesterEmail || orderForm.requesterEmail}</strong></span>
+                    </label>
+                  </div>
+
+                  {/* Timeline Logs */}
+                  {editingOrder.timelineLogs && editingOrder.timelineLogs.length > 0 && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <label style={{ ...styles.label, marginBottom: '0.4rem', color: '#334155' }}>Histórico de Apontamentos & E-mails Enviados</label>
+                      <div style={{ maxHeight: '130px', overflowY: 'auto', background: '#f8fafc', padding: '0.6rem', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        {editingOrder.timelineLogs.map((log, idx) => (
+                          <div key={log.id || idx} style={{ fontSize: '0.78rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.3rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b' }}>
+                              <span><strong>{log.author}</strong> — Status: <span style={{ color: '#0891b2', fontWeight: '600' }}>{log.status}</span></span>
+                              <span>{new Date(log.date).toLocaleString('pt-BR')}</span>
+                            </div>
+                            <div style={{ color: '#1e293b', marginTop: '0.1rem' }}>{log.note}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
 
               <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setShowOrderModal(false)} style={styles.btnSecondary}>
                   Cancelar
                 </button>
                 <button type="submit" style={styles.btnPrimary}>
-                  Salvar Ordem de Serviço
+                  {editingOrder ? 'Salvar Atendimento Técnico' : 'Enviar Chamado / Abrir OS'}
                 </button>
               </div>
             </form>
