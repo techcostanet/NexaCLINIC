@@ -102,6 +102,27 @@ export default function MaintenancePanel({ currentUser }) {
     setTimeout(() => setMessage({ text: '', type: '' }), 4000);
   };
 
+  // Check User Permission (Tech / Admin vs Standard Employee)
+  const isTechOrAdmin = useMemo(() => {
+    if (!currentUser) return false;
+    if (currentUser.role === 'admin' || currentUser.role === 'technician' || currentUser.role === 'eng' || currentUser.role === 'ti') return true;
+    if (currentUser.email === 'contato@techcosta.net' || currentUser.email === 'anacg@nexa.com' || currentUser.email === 'jsoares@nexa.com') return true;
+    const allowed = currentUser.allowedSectors || [];
+    return allowed.some(sec => ['manutencao', 'ti', 'engenharia', 'admin'].includes(String(sec).toLowerCase()));
+  }, [currentUser]);
+
+  // User specific orders (Standard Employees only see their own opened orders)
+  const userOrders = useMemo(() => {
+    if (isTechOrAdmin) return serviceOrders;
+    const userEmail = (currentUser?.email || '').trim().toLowerCase();
+    const userName = (currentUser?.name || '').trim().toLowerCase();
+    return serviceOrders.filter(o => {
+      const osEmail = (o.requesterEmail || '').trim().toLowerCase();
+      const osName = (o.requesterName || '').trim().toLowerCase();
+      return (userEmail && osEmail === userEmail) || (userName && osName === userName);
+    });
+  }, [serviceOrders, isTechOrAdmin, currentUser]);
+
   // KPI Calculations
   const kpis = useMemo(() => {
     const totalEq = equipments.length;
@@ -110,22 +131,28 @@ export default function MaintenancePanel({ currentUser }) {
     const predEq = equipments.filter(e => e.category === 'Infraestrutura').length;
     const inopEq = equipments.filter(e => e.status === 'Inoperante' || e.status === 'Em Manutenção').length;
 
-    const openOrders = serviceOrders.filter(o => o.status === 'Aberta' || o.status === 'Em Diagnóstico' || o.status === 'Em Execução').length;
+    const openOrders = serviceOrders.filter(o => o.status === 'Aberta' || o.status === 'Em Diagnóstico' || o.status === 'Em Execução' || o.status === 'Aguardando Peça').length;
     const completedOrders = serviceOrders.filter(o => o.status === 'Concluída' || o.status === 'Encerrada').length;
     
-    // Total spent on maintenance
+    const myOpenOrders = userOrders.filter(o => o.status === 'Aberta' || o.status === 'Em Diagnóstico' || o.status === 'Em Execução' || o.status === 'Aguardando Peça').length;
+    const myCompletedOrders = userOrders.filter(o => o.status === 'Concluída' || o.status === 'Encerrada').length;
+
     const totalCost = serviceOrders.reduce((sum, o) => sum + (Number(o.totalCost) || 0), 0);
 
-    // Preventive compliance
     const todayStr = new Date().toISOString().split('T')[0];
     const overduePreventives = equipments.filter(e => e.nextPreventiveDate && e.nextPreventiveDate < todayStr).length;
 
-    return { totalEq, bioEq, tiEq, predEq, inopEq, openOrders, completedOrders, totalCost, overduePreventives };
-  }, [equipments, serviceOrders]);
+    return { 
+      totalEq, bioEq, tiEq, predEq, inopEq, 
+      openOrders, completedOrders, 
+      myOpenOrders, myCompletedOrders,
+      totalCost, overduePreventives 
+    };
+  }, [equipments, serviceOrders, userOrders]);
 
   // Filtering Service Orders
   const filteredOrders = useMemo(() => {
-    return serviceOrders.filter(order => {
+    return userOrders.filter(order => {
       const matchesSearch = 
         (order.code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (order.equipmentName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -138,7 +165,7 @@ export default function MaintenancePanel({ currentUser }) {
 
       return matchesSearch && matchesStatus && matchesType && matchesCategory;
     });
-  }, [serviceOrders, searchTerm, statusFilter, typeFilter, categoryFilter]);
+  }, [userOrders, searchTerm, statusFilter, typeFilter, categoryFilter]);
 
   // Filtering Equipments
   const filteredEquipments = useMemo(() => {
@@ -518,11 +545,13 @@ export default function MaintenancePanel({ currentUser }) {
 
         <div style={styles.headerActions}>
           <button onClick={() => handleOpenNewOrder()} style={styles.btnPrimary}>
-            <Plus size={16} /> Nova Ordem de Serviço
+            <Plus size={16} /> Solicitar Reparo / Nova OS
           </button>
-          <button onClick={handleOpenNewEquipment} style={styles.btnSecondary}>
-            <HardDrive size={16} /> Novo Equipamento
-          </button>
+          {isTechOrAdmin && (
+            <button onClick={handleOpenNewEquipment} style={styles.btnSecondary}>
+              <HardDrive size={16} /> Novo Equipamento
+            </button>
+          )}
         </div>
       </div>
 
@@ -536,43 +565,67 @@ export default function MaintenancePanel({ currentUser }) {
 
       {/* KPI Cards Row */}
       <div style={styles.kpiGrid}>
-        <div style={styles.kpiCard}>
-          <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>Total de Ativos</span>
-            <HardDrive size={18} color="#0891b2" />
-          </div>
-          <div style={styles.kpiValue}>{kpis.totalEq}</div>
-          <span style={styles.kpiSub}>Bio: {kpis.bioEq} | TI: {kpis.tiEq} | Predial: {kpis.predEq}</span>
-        </div>
+        {!isTechOrAdmin ? (
+          <>
+            <div style={styles.kpiCard}>
+              <div style={styles.kpiHeader}>
+                <span style={styles.kpiLabel}>Meus Chamados em Aberto</span>
+                <Clock size={18} color="#f59e0b" />
+              </div>
+              <div style={{ ...styles.kpiValue, color: '#f59e0b' }}>{kpis.myOpenOrders}</div>
+              <span style={styles.kpiSub}>Em triagem / atendimento técnico</span>
+            </div>
 
-        <div style={styles.kpiCard}>
-          <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>OS em Aberto / Andamento</span>
-            <Clock size={18} color="#f59e0b" />
-          </div>
-          <div style={{ ...styles.kpiValue, color: '#f59e0b' }}>{kpis.openOrders}</div>
-          <span style={styles.kpiSub}>{kpis.completedOrders} Ordens Concluídas</span>
-        </div>
+            <div style={styles.kpiCard}>
+              <div style={styles.kpiHeader}>
+                <span style={styles.kpiLabel}>Meus Chamados Concluídos</span>
+                <CheckCircle2 size={18} color="#10b981" />
+              </div>
+              <div style={{ ...styles.kpiValue, color: '#10b981' }}>{kpis.myCompletedOrders}</div>
+              <span style={styles.kpiSub}>Resolvidos com sucesso</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={styles.kpiCard}>
+              <div style={styles.kpiHeader}>
+                <span style={styles.kpiLabel}>Total de Ativos</span>
+                <HardDrive size={18} color="#0891b2" />
+              </div>
+              <div style={styles.kpiValue}>{kpis.totalEq}</div>
+              <span style={styles.kpiSub}>Bio: {kpis.bioEq} | TI: {kpis.tiEq} | Predial: {kpis.predEq}</span>
+            </div>
 
-        <div style={styles.kpiCard}>
-          <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>Equipamentos em Manutenção</span>
-            <AlertTriangle size={18} color="#ef4444" />
-          </div>
-          <div style={{ ...styles.kpiValue, color: '#ef4444' }}>{kpis.inopEq}</div>
-          <span style={styles.kpiSub}>{kpis.overduePreventives} Preventivas Atrasadas</span>
-        </div>
+            <div style={styles.kpiCard}>
+              <div style={styles.kpiHeader}>
+                <span style={styles.kpiLabel}>OS em Aberto / Andamento</span>
+                <Clock size={18} color="#f59e0b" />
+              </div>
+              <div style={{ ...styles.kpiValue, color: '#f59e0b' }}>{kpis.openOrders}</div>
+              <span style={styles.kpiSub}>{kpis.completedOrders} Ordens Concluídas</span>
+            </div>
 
-        <div style={styles.kpiCard}>
-          <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>Custo Acumulado Manutenção</span>
-            <DollarSign size={18} color="#10b981" />
-          </div>
-          <div style={{ ...styles.kpiValue, color: '#10b981' }}>
-            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(kpis.totalCost)}
-          </div>
-          <span style={styles.kpiSub}>Peças + Serviços Terceiros</span>
-        </div>
+            <div style={styles.kpiCard}>
+              <div style={styles.kpiHeader}>
+                <span style={styles.kpiLabel}>Equipamentos em Manutenção</span>
+                <AlertTriangle size={18} color="#ef4444" />
+              </div>
+              <div style={{ ...styles.kpiValue, color: '#ef4444' }}>{kpis.inopEq}</div>
+              <span style={styles.kpiSub}>{kpis.overduePreventives} Preventivas Atrasadas</span>
+            </div>
+
+            <div style={styles.kpiCard}>
+              <div style={styles.kpiHeader}>
+                <span style={styles.kpiLabel}>Custo Acumulado Manutenção</span>
+                <DollarSign size={18} color="#10b981" />
+              </div>
+              <div style={{ ...styles.kpiValue, color: '#10b981' }}>
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(kpis.totalCost)}
+              </div>
+              <span style={styles.kpiSub}>Peças + Serviços Terceiros</span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Navigation Tabs */}
@@ -581,26 +634,31 @@ export default function MaintenancePanel({ currentUser }) {
           style={{ ...styles.tabButton, ...(activeTab === 'orders' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('orders')}
         >
-          <FileText size={16} /> Ordens de Serviço ({serviceOrders.length})
+          <FileText size={16} /> {isTechOrAdmin ? `Ordens de Serviço (${serviceOrders.length})` : `Meus Chamados (${userOrders.length})`}
         </button>
-        <button 
-          style={{ ...styles.tabButton, ...(activeTab === 'equipments' ? styles.tabActive : {}) }}
-          onClick={() => setActiveTab('equipments')}
-        >
-          <HardDrive size={16} /> Equipamentos & Ativos ({equipments.length})
-        </button>
-        <button 
-          style={{ ...styles.tabButton, ...(activeTab === 'calendar' ? styles.tabActive : {}) }}
-          onClick={() => setActiveTab('calendar')}
-        >
-          <Calendar size={16} /> Cronograma de Preventivas
-        </button>
-        <button 
-          style={{ ...styles.tabButton, ...(activeTab === 'kpi' ? styles.tabActive : {}) }}
-          onClick={() => setActiveTab('kpi')}
-        >
-          <BarChart3 size={16} /> Indicadores & BI
-        </button>
+
+        {isTechOrAdmin && (
+          <>
+            <button 
+              style={{ ...styles.tabButton, ...(activeTab === 'equipments' ? styles.tabActive : {}) }}
+              onClick={() => setActiveTab('equipments')}
+            >
+              <HardDrive size={16} /> Equipamentos & Ativos ({equipments.length})
+            </button>
+            <button 
+              style={{ ...styles.tabButton, ...(activeTab === 'calendar' ? styles.tabActive : {}) }}
+              onClick={() => setActiveTab('calendar')}
+            >
+              <Calendar size={16} /> Cronograma de Preventivas
+            </button>
+            <button 
+              style={{ ...styles.tabButton, ...(activeTab === 'kpi' ? styles.tabActive : {}) }}
+              onClick={() => setActiveTab('kpi')}
+            >
+              <BarChart3 size={16} /> Indicadores & BI
+            </button>
+          </>
+        )}
       </div>
 
       {/* Search and Filters Bar */}
@@ -1046,6 +1104,43 @@ export default function MaintenancePanel({ currentUser }) {
                     <span>Ao enviar, este chamado será encaminhado para a equipe técnica e um e-mail de confirmação será enviado para <strong>{currentUser?.email || 'seu e-mail'}</strong>.</span>
                   </div>
                 </>
+              ) : !isTechOrAdmin ? (
+                /* -------------------------------------------------------------
+                   MODO VISUALIZAÇÃO DO SOLICITANTE (LEITURA)
+                ------------------------------------------------------------- */
+                <>
+                  <div style={{ padding: '0.75rem', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '0.5rem' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#334155', marginBottom: '0.4rem' }}>
+                      <strong>Técnico Responsável:</strong> <span style={{ color: '#0891b2', fontWeight: '600' }}>{editingOrder.assignedTechnician || 'Aguardando atribuição pela equipe'}</span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#334155', marginBottom: '0.4rem' }}>
+                      <strong>Prioridade / SLA:</strong> {editingOrder.priority}
+                    </div>
+                    {editingOrder.diagnostic && (
+                      <div style={{ fontSize: '0.85rem', color: '#166534', background: '#f0fdf4', padding: '0.5rem', borderRadius: '4px', border: '1px solid #bbf7d0', marginTop: '0.4rem' }}>
+                        <strong>Laudo Técnico / Parecer:</strong> {editingOrder.diagnostic}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Timeline Logs */}
+                  {editingOrder.timelineLogs && editingOrder.timelineLogs.length > 0 && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <label style={{ ...styles.label, marginBottom: '0.4rem', color: '#334155' }}>Histórico de Apontamentos & E-mails Enviados</label>
+                      <div style={{ maxHeight: '160px', overflowY: 'auto', background: '#f8fafc', padding: '0.6rem', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        {editingOrder.timelineLogs.map((log, idx) => (
+                          <div key={log.id || idx} style={{ fontSize: '0.78rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.3rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b' }}>
+                              <span><strong>{log.author}</strong> — Status: <span style={{ color: '#0891b2', fontWeight: '600' }}>{log.status}</span></span>
+                              <span>{new Date(log.date).toLocaleString('pt-BR')}</span>
+                            </div>
+                            <div style={{ color: '#1e293b', marginTop: '0.1rem' }}>{log.note}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 /* -------------------------------------------------------------
                    MODO ATENDIMENTO TÉCNICO: EQUIPE DE MANUTENÇÃO & TI
@@ -1163,11 +1258,13 @@ export default function MaintenancePanel({ currentUser }) {
 
               <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setShowOrderModal(false)} style={styles.btnSecondary}>
-                  Cancelar
+                  {(!editingOrder || isTechOrAdmin) ? 'Cancelar' : 'Fechar'}
                 </button>
-                <button type="submit" style={styles.btnPrimary}>
-                  {editingOrder ? 'Salvar Atendimento Técnico' : 'Enviar Chamado / Abrir OS'}
-                </button>
+                {(!editingOrder || isTechOrAdmin) && (
+                  <button type="submit" style={styles.btnPrimary}>
+                    {editingOrder ? 'Salvar Atendimento Técnico' : 'Enviar Chamado / Abrir OS'}
+                  </button>
+                )}
               </div>
             </form>
           </div>

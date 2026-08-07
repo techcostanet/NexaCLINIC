@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.1.5',
+      date: '07 de Agosto, 2026',
+      title: 'Visão Personalizada por Perfil no NexaSERVICE',
+      description: 'Painel simplificado com 2 cards e aba de Meus Chamados para funcionários comuns, mantendo o controle total para Manutenção & Admins.',
+      changes: [
+        { type: 'Acesso Restrito', text: 'Funcionários visualizam exclusivamente as OSs que eles mesmos abriram com modo de leitura.' },
+        { type: 'Cards de KPI', text: 'Cards simplificados (Em Aberto / Concluídos) para funcionários e 4 cards gerenciais para a equipe técnica.' }
+      ]
+    },
+    {
       version: 'v3.1.4',
       date: '07 de Agosto, 2026',
       title: 'Abertura Descentralizada de Chamados & Workflow de E-mail',

@@ -1,3 +1,11 @@
+## [v3.1.5] - 07 de Agosto, 2026
+### Visão Personalizada por Perfil (Funcionário vs Equipe Técnica/Admin) no NexaSERVICE
+- **Painel Simplificado para Funcionários:** Funcionários padrão enxergam apenas 2 cards de KPI (*Meus Chamados em Aberto* e *Meus Chamados Concluídos*), possuem acesso exclusivo à aba *Ordens de Serviço* e visualizam **somente as OSs abertas por eles mesmos**.
+- **Modo de Leitura de Chamados:** Ao clicar em um chamado aberto, o funcionário visualiza o status, técnico responsável, laudo e histórico de e-mails de forma transparente.
+- **Painel Completo para Manutenção & Admins:** Administradores e a equipe de Manutenção/TI continuam com acesso total ao painel (Cards de Ativos e Custos, 4 Abas completas, Inventário, Cronograma e Atendimento Técnico).
+
+---
+
 ## [v3.1.4] - 07 de Agosto, 2026
 ### Abertura Descentralizada de Chamados & Notificações por E-mail no NexaSERVICE
 - **Abertura Descentralizada para Qualquer Funcionário:** Reformulação do fluxo de abertura de Chamados / Ordens de Serviço. Qualquer funcionário (médicos, enfermeiros, recepção, administrativo) pode abrir chamados de forma limpa e simplificada, com identificação automática do usuário logado.
