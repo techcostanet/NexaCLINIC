@@ -59,6 +59,8 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
     ? 'NexaCLINIC - Clínico'
     : currentModule === 'stock'
     ? 'NexaSTOCK'
+    : currentModule === 'maintenance'
+    ? 'NexaSERVICE - Manutenção & TI'
     : currentModule === 'hr'
     ? 'NexaHR'
     : currentModule === 'finance'

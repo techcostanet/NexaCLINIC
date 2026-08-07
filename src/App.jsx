@@ -16,6 +16,7 @@ import PurchasingPanel from './components/PurchasingPanel';
 import CalendarPanel from './components/CalendarPanel';
 import TechnicianPanel from './components/TechnicianPanel';
 import ApacBillingPanel from './components/ApacBillingPanel';
+import MaintenancePanel from './components/MaintenancePanel';
 import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
@@ -88,6 +89,8 @@ export default function App() {
         return <ErrorBoundary><ClinicalPanel currentUser={user} /></ErrorBoundary>;
       case 'stock':
         return <ErrorBoundary><StockPanel currentUser={user} /></ErrorBoundary>;
+      case 'maintenance':
+        return <ErrorBoundary><MaintenancePanel currentUser={user} /></ErrorBoundary>;
       case 'hr':
         return <ErrorBoundary><HRPanel currentUser={user} /></ErrorBoundary>;
       case 'finance':

@@ -1,3 +1,13 @@
+## [v3.0.15] - 07 de Agosto, 2026
+### Módulo NexaSERVICE (Gestão de Manutenção, Engenharia Clínica & T.I.)
+- **Novo Portal NexaSERVICE:** Criação e disponibilização do módulo completo de Manutenção & T.I. para controle patrimonial de ativos biomédicos, infraestrutura predial, T.I. Hardware (servidores, desktops, impressoras, nobreaks) e T.I. Software (licenças, sistemas, bancos de dados e certificados digitais).
+- **Gestão de Ordens de Serviço (OS):** Suporte completo para abertura, atribuição técnica, diagnóstico e encerramento de OS Corretivas, Preventivas, Calibrações/Preditivas e Chamados de T.I. (Hardware/Software).
+- **Histórico Rastreável do Equipamento:** Ficha individualizada por patrimônio/QR Code contendo a linha do tempo de intervenções, custos acumulados e laudos técnicos.
+- **Indicadores de Desempenho (BI):** Cálculo automatizado de MTBF (Tempo Médio entre Falhas), MTTR (Tempo Médio de Reparo), % de cumprimento de preventivas e SLA de chamados de T.I.
+- **Integração RBAC & Seletor de Módulos:** Inclusão do card `NexaSERVICE` no `ModuleSelector.jsx` e inclusão do módulo na matriz de permissões no `ConfigPanel.jsx`.
+
+---
+
 ## [v3.0.14] - 06 de Agosto, 2026
 ### Fallback Inteligente de Senha no Login (daliam@nexa.com)
 - **Flexibilidade de Login:** Adicionada rotina de autenticação com fallback inteligente no login para sincronizar contas de operadores predefinidos (`daliam@nexa.com`) independente do padrão da senha gerada na tentativa anterior (`dalia123`, `Daliam1234!`, `daliam123`).

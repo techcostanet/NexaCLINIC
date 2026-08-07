@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.15',
+      date: '07 de Agosto, 2026',
+      title: 'Módulo NexaSERVICE (Gestão de Manutenção, Engenharia & TI)',
+      description: 'Disponibilização do módulo completo de gestão de ativos biomédicos, prediais e suporte de TI (Hardware/Software) com Ordens de Serviço e histórico por equipamento.',
+      changes: [
+        { type: 'Ativos', text: 'Cadastro unificado de equipamentos biomédicos, prediais, TI Hardware e TI Software com QR Code.' },
+        { type: 'Ordem de Serviço', text: 'Fluxo completo de OS Corretiva, Preventiva, Calibração e TI com diagnostico técnico.' },
+        { type: 'Histórico & BI', text: 'Linha do tempo de intervenções por equipamento e indicadores MTBF, MTTR e SLA.' }
+      ]
+    },
+    {
       version: 'v3.0.14',
       date: '06 de Agosto, 2026',
       title: 'Resiliência de Login do Operador Daliam',

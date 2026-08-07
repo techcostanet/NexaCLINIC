@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, Settings, ShoppingCart, Calendar, ClipboardList, FileText } from 'lucide-react';
+import { BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, Settings, ShoppingCart, Calendar, ClipboardList, FileText, Wrench } from 'lucide-react';
 import { authService } from '../firebase';
 
 export default function ModuleSelector({ user, onSelectModule }) {
@@ -38,6 +38,15 @@ export default function ModuleSelector({ user, onSelectModule }) {
       icon: Package,
       color: '#f59e0b', // amber-500
       allowedRoles: ['admin', 'professional', 'stock_keeper']
+    },
+    {
+      id: 'maintenance',
+      title: 'Manutenção, Engenharia & TI',
+      subtitle: 'NexaSERVICE - Ordem de Serviço',
+      description: 'Gestão de ativos biomédicos, prediais e suporte de TI (Hardware/Software) com histórico por equipamento.',
+      icon: Wrench,
+      color: '#0891b2', // cyan-600
+      allowedRoles: ['admin', 'professional', 'technician', 'rh']
     },
     {
       id: 'quality',
