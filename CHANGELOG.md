@@ -1,3 +1,10 @@
+## [v3.1.3] - 07 de Agosto, 2026
+### Correção de Roteamento do Módulo NexaSERVICE
+- **Unificação de Roteamento:** Correção do renderizador principal em `src/App.jsx` para invocar diretamente a função `renderContent()`. Uma expressão ternária duplicada no JSX omitia a rota do módulo `maintenance`, resultando na exibição incorreta do painel de Qualidade/BI.
+- **Acesso ao NexaSERVICE:** O portal de Manutenção, Engenharia Clínica & T.I. agora abre diretamente o painel de ativos, Ordens de Serviço, preventivas e indicadores.
+
+---
+
 ## [v3.1.2] - 07 de Agosto, 2026
 ### Fallback de Credenciais do Firebase & Correção de auth/invalid-api-key
 - **Credenciais de Fallback no Firebase:** Inclusão de fallbacks diretos para as chaves do Firebase em `src/services/firebase/config.ts` e criação do `.env` para evitar erros de `auth/invalid-api-key` caso variáveis de ambiente estejam ausentes no build.

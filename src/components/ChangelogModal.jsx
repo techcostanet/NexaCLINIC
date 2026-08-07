@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.1.3',
+      date: '07 de Agosto, 2026',
+      title: 'Correção no Roteamento do Portal NexaSERVICE',
+      description: 'Ajuste do renderizador em App.jsx para carregar o painel correto de Manutenção & TI ao selecionar o portal.',
+      changes: [
+        { type: 'Navegação', text: 'Correção de fallback indevido que exibia o painel de BI/Qualidade ao entrar no NexaSERVICE.' },
+        { type: 'Roteamento', text: 'Unificação da função renderContent() no contêiner principal da aplicação.' }
+      ]
+    },
+    {
       version: 'v3.1.2',
       date: '07 de Agosto, 2026',
       title: 'Fallback de Credenciais do Firebase & Correção de Autenticação',

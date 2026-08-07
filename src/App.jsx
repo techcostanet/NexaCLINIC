@@ -161,29 +161,7 @@ export default function App() {
 
       {/* Main body content area */}
       <main className="main-content">
-        {currentModule === 'reception' ? (
-          <ErrorBoundary><ReceptionPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'clinical' ? (
-          <ErrorBoundary><ClinicalPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'stock' ? (
-          <ErrorBoundary><StockPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'hr' ? (
-          <ErrorBoundary><HRPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'finance' ? (
-          <ErrorBoundary><FinancePanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'apac' ? (
-          <ErrorBoundary><ApacBillingPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'purchasing' ? (
-          <ErrorBoundary><PurchasingPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'calendar' ? (
-          <ErrorBoundary><CalendarPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'config' ? (
-          <ErrorBoundary><ConfigPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'requisitions' ? (
-          <ErrorBoundary><TechnicianPanel currentUser={user} /></ErrorBoundary>
-        ) : (
-          <ErrorBoundary>{renderQualityPage()}</ErrorBoundary>
-        )}
+        {renderContent()}
       </main>
 
       {/* Footer copyright */}
