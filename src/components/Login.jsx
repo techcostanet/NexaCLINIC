@@ -15,10 +15,17 @@ export default function Login({ onLoginSuccess }) {
 
     try {
       await authService.login(email, password);
-      // Success is handled by the onAuthChange listener in App.jsx,
-      // but we can trigger immediate check if needed.
     } catch (err) {
-      setError(err.message || 'Falha ao autenticar.');
+      console.error("Erro no login:", err);
+      let msg = 'Falha ao autenticar no sistema.';
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        msg = 'E-mail ou senha incorretos. Por favor, verifique suas credenciais.';
+      } else if (err.code === 'auth/invalid-api-key') {
+        msg = 'Chave de API do Firebase não configurada. Re-tentativa automática em andamento.';
+      } else if (err.message) {
+        msg = err.message.replace(/^Firebase:\s*/, '');
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

@@ -73,12 +73,33 @@ export const login = async (email, password) => {
       return mockAuth.signInWithEmailAndPassword(email, password);
     }
     const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } = await import('firebase/auth');
-    const auth = getAuth(app);
+    let auth = getAuth(app);
     const cleanEmail = (email || '').trim().toLowerCase();
+
     try {
       return await signInWithEmailAndPassword(auth, cleanEmail, password);
     } catch (err) {
-      const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password';
+      // If API key was invalid or missing, attempt re-initialization with explicit fallback config
+      if (err.code === 'auth/invalid-api-key' || !firebaseConfig.apiKey) {
+        try {
+          const { initializeApp: reInitApp } = await import('firebase/app');
+          const fallbackApp = reInitApp({
+            apiKey: "AIzaSyBPw7Z_nhz7osMlGcdw4wAqXGFUkH27kug",
+            authDomain: "nexa-index.firebaseapp.com",
+            projectId: "nexa-index",
+            storageBucket: "nexa-index.firebasestorage.app",
+            messagingSenderId: "1089214920796",
+            appId: "1:1089214920796:web:120f3b158f599b0236ce99",
+            measurementId: "G-JB7DJRKXV4"
+          }, `fallback-${Date.now()}`);
+          auth = getAuth(fallbackApp);
+          return await signInWithEmailAndPassword(auth, cleanEmail, password);
+        } catch (fallbackErr) {
+          console.error("Erro na re-tentativa com fallback config:", fallbackErr);
+        }
+      }
+
+      const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-api-key';
       const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com', 'daliam@nexa.com'];
       
       if (isInvalidCred && allowedEmails.includes(cleanEmail)) {
@@ -103,7 +124,6 @@ export const login = async (email, password) => {
           });
           return userCredential;
         } catch (createErr) {
-          // If creation failed because user already exists in Firebase Auth, attempt login with default password or fallback passwords
           if (createErr.code === 'auth/email-already-in-use') {
             const fallbackPasswords = ['dalia123', 'Daliam1234!', 'daliam123', 'admin123', '123456'];
             for (const pass of fallbackPasswords) {

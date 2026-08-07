@@ -1,3 +1,11 @@
+## [v3.1.2] - 07 de Agosto, 2026
+### Fallback de Credenciais do Firebase & Correção de auth/invalid-api-key
+- **Credenciais de Fallback no Firebase:** Inclusão de fallbacks diretos para as chaves do Firebase em `src/services/firebase/config.ts` e criação do `.env` para evitar erros de `auth/invalid-api-key` caso variáveis de ambiente estejam ausentes no build.
+- **Auto-recuperação no Login:** Adicionada rotina de re-inicialização dinâmica no `authService.login` para alternar para credenciais ativas de produção caso haja falha na chave principal.
+- **Tradução Amigável de Erros:** Tradução em `Login.jsx` de códigos brutos do Firebase para mensagens amigáveis em português.
+
+---
+
 ## [v3.1.1] - 07 de Agosto, 2026
 ### Resiliência & Correção do Estado de Carregamento Infinito
 - **Correção de Dependência Circular:** Refatoração de todos os serviços em `src/services/firebase/` para importar a instância do Firebase diretamente de `./config`, eliminando importações circulares que bloqueavam a inicialização do app.

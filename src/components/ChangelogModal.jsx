@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.1.2',
+      date: '07 de Agosto, 2026',
+      title: 'Fallback de Credenciais do Firebase & Correção de Autenticação',
+      description: 'Garantia de chaves de API válidas no build de produção com auto-recuperação e mensagens em português.',
+      changes: [
+        { type: 'Firebase Auth', text: 'Chaves de API padrão inclusas como fallback em config.ts e .env para o projeto nexa-index.' },
+        { type: 'Resiliência', text: 'Tolerância no login com re-tentativa dinâmica contra erros auth/invalid-api-key.' }
+      ]
+    },
+    {
       version: 'v3.1.1',
       date: '07 de Agosto, 2026',
       title: 'Correção de Carregamento & Inicialização Resiliente',
