@@ -1,3 +1,11 @@
+## [v3.1.9] - 07 de Agosto, 2026
+### Correção do Fluxo de Envio e Confirmação de Chamados no NexaSERVICE
+- **Eliminação de Trancamento no Envio:** Corrigida a recursão no serviço de manutenção que impedia o fechamento do modal ao clicar em "Enviar Chamado / Abrir OS".
+- **Sincronização Instantânea do Chamado:** O chamado aberto é adicionado imediatamente à lista do funcionário solicitante e da equipe técnica de manutenção/TI.
+- **Mensagem de Sucesso Clara:** Exibição de alerta destacado com o número do chamado gerado e confirmação de envio do e-mail de notificação.
+
+---
+
 ## [v3.1.8] - 07 de Agosto, 2026
 ### Correção da Visão Adaptativa do NexaSERVICE por Perfil do Usuário
 - **Correção da Verificação `isTechOrAdmin`:** Removidos e-mails hardcoded da verificação de permissões técnicas. Usuários com perfil *Recursos Humanos* (como `anacg@nexa.com`) agora entram no módulo *NexaSERVICE* na **visão reduzida de funcionários** (2 cards de KPI e aba exclusiva de Meus Chamados).

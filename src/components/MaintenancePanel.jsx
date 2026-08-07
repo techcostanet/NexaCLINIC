@@ -243,7 +243,7 @@ export default function MaintenancePanel({ currentUser }) {
         ? 'Chamado aberto no sistema.'
         : (orderForm.updateNote || `Atendimento atualizado por ${currentUser?.name || 'Técnico'}. Status alterado para: ${orderForm.status}`);
 
-      await dbService.saveServiceOrder(payload, updateNoteText, orderForm.notifyRequesterEmail);
+      const savedOS = await dbService.saveServiceOrder(payload, updateNoteText, orderForm.notifyRequesterEmail);
       
       // Update Equipment Status if order status changes to Inoperante / Em Manutenção
       if (selectedEq) {
@@ -258,9 +258,21 @@ export default function MaintenancePanel({ currentUser }) {
         }
       }
 
+      if (savedOS) {
+        setServiceOrders(prev => {
+          const idx = prev.findIndex(o => o.id === savedOS.id);
+          if (idx >= 0) {
+            const updated = [...prev];
+            updated[idx] = savedOS;
+            return updated;
+          }
+          return [savedOS, ...prev];
+        });
+      }
+
       showAlert(
         isNew 
-          ? `Ordem de Serviço aberta com sucesso! E-mail de confirmação enviado para ${payload.requesterEmail}.`
+          ? `✅ Chamado ${savedOS?.code || ''} aberto com sucesso! E-mail de confirmação enviado para ${payload.requesterEmail}.`
           : `Ordem de Serviço ${editingOrder.code} atualizada! ${orderForm.notifyRequesterEmail ? `E-mail enviado para ${payload.requesterEmail}.` : ''}`, 
         'success'
       );

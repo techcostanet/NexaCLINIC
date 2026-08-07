@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.1.9',
+      date: '07 de Agosto, 2026',
+      title: 'Correção na Abertura & Atualização Instantânea de OS',
+      description: 'Abertura de chamados concluída sem travamentos com atualização em tempo real nas listas do funcionário e da manutenção.',
+      changes: [
+        { type: 'Abertura de Chamado', text: 'Modal fecha automaticamente exibindo a mensagem de confirmação de envio.' },
+        { type: 'Sincronização em Tempo Real', text: 'A OS aberta aparece imediatamente em "Meus Chamados" e no painel da equipe de Manutenção/TI.' }
+      ]
+    },
+    {
       version: 'v3.1.8',
       date: '07 de Agosto, 2026',
       title: 'Ajuste Fino da Visão Reduzida do NexaSERVICE',

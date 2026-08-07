@@ -453,8 +453,19 @@ export const saveServiceOrder = async (orderData, updateNote = '', notifyEmail =
       return { id: docRef.id, ...orderData };
     }
   } catch (err) {
-    console.error('Erro ao salvar service order no Firestore:', err);
-    return saveServiceOrder({ ...orderData }, updateNote, notifyEmail);
+    console.error('Erro ao salvar service order no Firestore, utilizando salvamento resiliente:', err);
+    const list = getStoredOrders();
+    if (!isNew) {
+      const idx = list.findIndex(o => o.id === orderData.id);
+      if (idx >= 0) list[idx] = { ...list[idx], ...orderData, updatedAt: now };
+      else list.push({ ...orderData, createdAt: now });
+    } else {
+      const newId = `OS-${Date.now().toString(36).toUpperCase()}`;
+      orderData = { id: newId, ...orderData, createdAt: now };
+      list.unshift(orderData);
+    }
+    saveStoredOrders(list);
+    return orderData;
   }
 };
 
