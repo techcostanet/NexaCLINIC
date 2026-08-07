@@ -145,7 +145,10 @@ export default function ModuleSelector({ user, onSelectModule }) {
   const userProfileConfig = profiles.find((p) => p.id === userRole);
 
   const visibleModules = modules.filter((mod) => {
-    // Admin always sees everything
+    // Módulo de Manutenção & TI (NexaSERVICE) é universal para todos os funcionários abrirem chamados
+    if (mod.id === 'maintenance') return true;
+
+    // Admin sempre visualiza todos os módulos
     if (userRole === 'admin') return true;
 
     // Check specific sector restrictions on user object if present (e.g. allowedSectors: ['rh'])
@@ -154,9 +157,9 @@ export default function ModuleSelector({ user, onSelectModule }) {
       const modSector = mod.id === 'hr' ? 'rh' : mod.id === 'quality' ? 'qualidade' : mod.id;
       // If user has restricted sectors, verify sector inclusion
       if (user.allowedSectors.length > 0 && !user.allowedSectors.includes('all') && !user.allowedSectors.includes('admin')) {
-        // Special mapping for RH role: RH and Quality (BI)
+        // Special mapping for RH role: RH, Quality (BI) e Manutenção (NexaSERVICE)
         if (userRole === 'rh') {
-          return mod.id === 'hr' || mod.id === 'quality';
+          return mod.id === 'hr' || mod.id === 'quality' || mod.id === 'maintenance';
         }
         return user.allowedSectors.includes(modSector);
       }
@@ -172,7 +175,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
 
     // Default fallback if profile permissions matrix hasn't loaded or isn't set
     if (userRole === 'rh') {
-      return mod.id === 'hr' || mod.id === 'quality';
+      return mod.id === 'hr' || mod.id === 'quality' || mod.id === 'maintenance';
     }
 
     return Array.isArray(mod.allowedRoles) ? mod.allowedRoles.includes(userRole) : true;

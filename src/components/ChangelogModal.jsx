@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.1.7',
+      date: '07 de Agosto, 2026',
+      title: 'Acesso Universal ao Módulo NexaSERVICE',
+      description: 'Liberado o acesso ao portal de Manutenção & TI para todos os funcionários da clínica abrirem chamados.',
+      changes: [
+        { type: 'Acesso Global', text: 'NexaSERVICE visível para todos os perfis na tela de seleção de portais.' },
+        { type: 'Visão Restrita', text: 'Funcionários não-técnicos entram automaticamente com o painel reduzido de chamados.' }
+      ]
+    },
+    {
       version: 'v3.1.6',
       date: '07 de Agosto, 2026',
       title: 'Correção de Persistência de Perfis (RBAC)',

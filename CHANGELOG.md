@@ -1,3 +1,10 @@
+## [v3.1.7] - 07 de Agosto, 2026
+### Acesso Universal ao Módulo NexaSERVICE para Abertura Descentralizada de Chamados
+- **Disponibilização Universal:** O card do módulo *NexaSERVICE - Ordem de Serviço* passa a aparecer na tela de seleção de portais para **todos os usuários e funcionários autenticados da clínica/hospital** (Recepção, Recursos Humanos, Financeiro, Assistencial, Estoque, etc.).
+- **Visualização Reduzida Automática:** Funcionários que não pertencem à equipe técnica/manutenção entram no módulo com a visão reduzida (Cards de *Meus Chamados*, apenas 1 aba de *Ordens de Serviço* com seus próprios chamados e modal em modo de leitura).
+
+---
+
 ## [v3.1.6] - 07 de Agosto, 2026
 ### Correção na Persistência de Perfis e Permissões (RBAC) no NexaCONFIG
 - **Correção da Alteração de Perfil de Usuários:** Removida a trava que reescrevia o perfil de usuários cadastrados de volta para `Administrador / T.I.` a cada sincronização.
