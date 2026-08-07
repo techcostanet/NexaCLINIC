@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.2.1',
+      date: '07 de Agosto, 2026',
+      title: 'Modulo Financeiro: Densidade Compacta & Seletor de Período',
+      description: 'Formatos de linhas compacta/normal em Contas a Pagar e seletor rápido de mês/ano com novos cards agrupados no Dashboard.',
+      changes: [
+        { type: 'Contas a Pagar', text: 'Opção de alternar entre o modo Compacto (padrão) e Normal com persistência das preferências.' },
+        { type: 'Dashboard', text: 'Seletor de 1 clique para filtro de mês e ano com exibição automática do mês corrente.' },
+        { type: 'Métricas & Cards', text: 'Novos cards para Contas a Pagar do Mês, Vencidos do Mês e Vencidos do Mês Anterior organizados lado a lado.' }
+      ]
+    },
+    {
       version: 'v3.2.0',
       date: '07 de Agosto, 2026',
       title: 'Sincronização em Tempo Real na Nuvem (Cloud Real-Time)',

@@ -1,3 +1,11 @@
+## [v3.2.1] - 07 de Agosto, 2026
+### Aprimoramentos do Módulo Financeiro: Densidade de Linhas e Seletor Fácil de Período
+- **Seletor de Densidade das Linhas (Contas a Pagar):** Implementada a alternância de exibição das linhas entre o formato **Compacto (Padrão)** e **Normal**, permitindo visualização otimizada com mais dados por página.
+- **Seletor Fácil de Mês e Ano (Dashboard Financeiro):** Adicionado seletor de 1 clique com pílulas dos meses (Jan-Dez), controle de ano, atalho para o "Mês Atual" e opção "Ano Todo", exibindo por padrão o mês corrente.
+- **Quadros KPI Organizados & Relacionados (Dashboard):** Adicionados novos cards interativos: *Contas a Pagar do Mês*, *Vencidos do Mês* e *Vencidos do Mês Anterior*, posicionados estrategicamente lado a lado com quadros similares.
+
+---
+
 ## [v3.2.0] - 07 de Agosto, 2026
 ### Sincronização em Tempo Real na Nuvem (Cloud Firestore Real-time) no NexaSERVICE
 - **Sincronização Multi-Dispositivo (Cloud Real-Time):** Implementação de listeners nativos do Firebase Cloud Firestore (`onSnapshot`) para Ordens de Serviço (`service_orders`) e Ativos (`equipments`).
