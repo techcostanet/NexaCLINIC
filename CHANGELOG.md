@@ -1,3 +1,11 @@
+## [v3.1.0] - 07 de Agosto, 2026
+### Módulo NexaSERVICE - Emissão de PDF & Prontuário Técnico do Equipamento
+- **Emissão de PDF do Histórico:** Adicionada funcionalidade para exportar/imprimir o Prontuário Técnico completo e histórico de manutenção de cada equipamento em PDF.
+- **Relatório Estruturado:** Inclui dados cadastrais do ativo, QR Code, resumo de custos acumulados de peças/serviços, timeline completa de Ordens de Serviço (com sintomas e laudos técnicos) e campos para assinatura da Engenharia Clínica / Responsável Técnico.
+- **Lançamento do Novo Módulo (Versão Minor v3.1.0):** Atualização da versão do sistema para `v3.1.0`.
+
+---
+
 ## [v3.0.15] - 07 de Agosto, 2026
 ### Módulo NexaSERVICE (Gestão de Manutenção, Engenharia Clínica & T.I.)
 - **Novo Portal NexaSERVICE:** Criação e disponibilização do módulo completo de Manutenção & T.I. para controle patrimonial de ativos biomédicos, infraestrutura predial, T.I. Hardware (servidores, desktops, impressoras, nobreaks) e T.I. Software (licenças, sistemas, bancos de dados e certificados digitais).

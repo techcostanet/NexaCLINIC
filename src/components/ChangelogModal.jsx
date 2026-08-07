@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.1.0',
+      date: '07 de Agosto, 2026',
+      title: 'Emissão de PDF do Histórico & Lançamento NexaSERVICE v3.1.0',
+      description: 'Geração de Prontuário Técnico e Histórico de Manutenção do Equipamento em formato PDF pronto para impressão.',
+      changes: [
+        { type: 'Relatórios PDF', text: 'Emissão de Prontuário Técnico completo com dados cadastrais, resumo de custos e laudos em PDF.' },
+        { type: 'Assinaturas', text: 'Campos formais de assinatura do Engenheiro Clínico/TI e Responsável Técnico no documento impresso.' },
+        { type: 'Versão Minor', text: 'Atualização oficial do sistema para a versão 3.1.0.' }
+      ]
+    },
+    {
       version: 'v3.0.15',
       date: '07 de Agosto, 2026',
       title: 'Módulo NexaSERVICE (Gestão de Manutenção, Engenharia & TI)',

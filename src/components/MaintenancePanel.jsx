@@ -306,6 +306,155 @@ export default function MaintenancePanel({ currentUser }) {
     setShowHistoryModal(true);
   };
 
+  const handleGenerateEquipmentPdf = (eq) => {
+    if (!eq) return;
+    const eqOrders = serviceOrders.filter(o => o.equipmentId === eq.id);
+    const totalCost = eqOrders.reduce((sum, o) => sum + (Number(o.totalCost) || 0), 0);
+    const issueDate = new Date().toLocaleDateString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    const printWindow = window.open('', '_blank', 'width=900,height=850');
+    if (!printWindow) {
+      showAlert('Por favor, permita janelas pop-up no seu navegador para gerar o PDF.', 'danger');
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <title>Prontuário Técnico - ${eq.code} - ${eq.name}</title>
+        <style>
+          @page { size: A4; margin: 12mm; }
+          body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1e293b; line-height: 1.5; margin: 0; padding: 15px; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0891b2; padding-bottom: 12px; margin-bottom: 20px; }
+          .header-title { font-size: 18px; font-weight: 800; color: #0891b2; text-transform: uppercase; letter-spacing: 0.5px; }
+          .header-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+          .section-title { font-size: 13px; font-weight: 700; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-top: 20px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+          .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; font-size: 11px; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; }
+          .info-item { display: flex; justify-content: space-between; }
+          .info-label { font-weight: bold; color: #475569; }
+          .info-value { color: #0f172a; font-weight: 600; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+          th { background-color: #f1f5f9; color: #334155; font-weight: bold; text-transform: uppercase; padding: 8px; border: 1px solid #cbd5e1; text-align: left; font-size: 10px; }
+          td { padding: 8px; border: 1px solid #e2e8f0; vertical-align: top; }
+          .os-code { font-weight: bold; color: #0891b2; }
+          .os-diagnostic { background-color: #f0fdf4; color: #166534; padding: 6px; border-radius: 4px; margin-top: 4px; font-size: 10px; border: 1px solid #bbf7d0; }
+          .summary-box { display: flex; justify-content: space-between; background: #ecfeff; border: 1px solid #a5f3fc; padding: 10px 15px; border-radius: 6px; margin-top: 15px; font-size: 12px; font-weight: bold; color: #0e7490; }
+          .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 60px; text-align: center; font-size: 11px; page-break-inside: avoid; }
+          .signature-line { border-top: 1px solid #64748b; padding-top: 5px; font-weight: bold; color: #334155; }
+          @media print {
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="no-print" style="margin-bottom: 15px; text-align: right;">
+          <button onclick="window.print()" style="background: #0891b2; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">🖨️ Imprimir / Salvar em PDF</button>
+        </div>
+
+        <div class="header">
+          <div>
+            <div class="header-title">NexaCLINIC - Prontuário Técnico do Equipamento</div>
+            <div class="header-sub">Histórico Rastreável de Manutenção, Engenharia Clínica & T.I.</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-weight: bold; font-size: 11px;">Emissão: ${issueDate}</div>
+            <div style="font-size: 10px; color: #64748b;">Sistema NexaSERVICE v3.1.0</div>
+          </div>
+        </div>
+
+        <div class="section-title">1. Dados Cadastrais do Ativo</div>
+        <div class="info-grid">
+          <div class="info-item"><span class="info-label">Código Patrimônio:</span> <span class="info-value">${eq.code}</span></div>
+          <div class="info-item"><span class="info-label">Nome do Ativo:</span> <span class="info-value">${eq.name}</span></div>
+          <div class="info-item"><span class="info-label">Categoria:</span> <span class="info-value">${eq.category} (${eq.subcategory || 'Geral'})</span></div>
+          <div class="info-item"><span class="info-label">Setor / Localização:</span> <span class="info-value">${eq.sector}</span></div>
+          <div class="info-item"><span class="info-label">Marca / Fabricante:</span> <span class="info-value">${eq.brand || 'N/A'}</span></div>
+          <div class="info-item"><span class="info-label">Modelo:</span> <span class="info-value">${eq.model || 'N/A'}</span></div>
+          <div class="info-item"><span class="info-label">Número de Série:</span> <span class="info-value">${eq.serialNumber || 'N/A'}</span></div>
+          <div class="info-item"><span class="info-label">Status Operacional:</span> <span class="info-value">${eq.status}</span></div>
+          <div class="info-item"><span class="info-label">Periodicidade Preventiva:</span> <span class="info-value">A cada ${eq.preventiveIntervalDays || 90} dias</span></div>
+          <div class="info-item"><span class="info-label">Próxima Preventiva:</span> <span class="info-value">${eq.nextPreventiveDate ? new Date(eq.nextPreventiveDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'}</span></div>
+        </div>
+
+        <div class="summary-box">
+          <span>Total de Intervenções: ${eqOrders.length} OS(s)</span>
+          <span>Custo Acumulado Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalCost)}</span>
+        </div>
+
+        <div class="section-title">2. Histórico Rastreável de Ordens de Serviço (OS)</div>
+        ${eqOrders.length === 0 ? `
+          <p style="font-size: 11px; color: #64748b; font-style: italic; padding: 10px; background: #f8fafc; border-radius: 4px;">Nenhuma Ordem de Serviço registrada para este equipamento até a presente data.</p>
+        ` : `
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 15%;">Código / Data</th>
+                <th style="width: 15%;">Tipo / SLA</th>
+                <th style="width: 25%;">Solicitante & Técnico</th>
+                <th style="width: 35%;">Sintoma & Laudo Técnico</th>
+                <th style="width: 10%;">Custo Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${eqOrders.map(os => `
+                <tr>
+                  <td>
+                    <div class="os-code">${os.code}</div>
+                    <div style="color: #64748b; font-size: 10px;">Abertura: ${new Date(os.openDate).toLocaleDateString('pt-BR')}</div>
+                    ${os.completionDate ? `<div style="color: #166534; font-size: 10px;">Conclusão: ${new Date(os.completionDate).toLocaleDateString('pt-BR')}</div>` : ''}
+                  </td>
+                  <td>
+                    <strong>${os.type}</strong><br/>
+                    <span style="font-size: 10px; color: #64748b;">SLA: ${os.priority}</span>
+                  </td>
+                  <td>
+                    <div><strong>Sol.:</strong> ${os.requesterName} (${os.requesterSector})</div>
+                    <div style="color: #0891b2;"><strong>Téc.:</strong> ${os.assignedTechnician || 'Não atribuído'}</div>
+                  </td>
+                  <td>
+                    <div><strong>Sintoma:</strong> ${os.description}</div>
+                    ${os.diagnostic ? `<div class="os-diagnostic"><strong>Laudo Técnico:</strong> ${os.diagnostic}</div>` : ''}
+                  </td>
+                  <td style="font-weight: bold; color: #0f172a;">
+                    ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(os.totalCost || 0)}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `}
+
+        <div class="signatures">
+          <div>
+            <div class="signature-line">Engenharia Clínica / T.I. Responsável</div>
+            <div style="font-size: 10px; color: #64748b;">Assinatura e Carimbo</div>
+          </div>
+          <div>
+            <div class="signature-line">Responsável Técnico do Setor / Unidade</div>
+            <div style="font-size: 10px; color: #64748b;">Assinatura e Aceite</div>
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 300);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
   const handleOpenQr = (eq) => {
     setSelectedEqQr(eq);
     setShowQrModal(true);
@@ -1042,9 +1191,14 @@ export default function MaintenancePanel({ currentUser }) {
                 <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0891b2' }}>{selectedEqHistory.code}</span>
                 <h3 style={styles.modalTitle}>Histórico Rastreável de Manutenção: {selectedEqHistory.name}</h3>
               </div>
-              <button onClick={() => setShowHistoryModal(false)} style={styles.closeBtn}>
-                <X size={20} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button onClick={() => handleGenerateEquipmentPdf(selectedEqHistory)} style={styles.btnPrimary} title="Gerar PDF / Imprimir Prontuário Técnico">
+                  <Printer size={15} /> Gerar PDF
+                </button>
+                <button onClick={() => setShowHistoryModal(false)} style={styles.closeBtn}>
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
             <div style={{ padding: '1rem 0' }}>
