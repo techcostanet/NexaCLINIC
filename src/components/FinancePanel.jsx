@@ -41,8 +41,9 @@ import {
 } from 'lucide-react';
 
 import { dbService } from '../firebase';
+import FinanceReportsModal from './FinanceReportsModal';
 
-export default function FinancePanel() {
+export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'payable' | 'receivable' | 'budget' | 'cashflow_projection' | 'agreements' | 'installments' | 'reconciliation'
   const [payableList, setPayableList] = useState([]);
   const [receivableList, setReceivableList] = useState([]);
@@ -3896,6 +3897,17 @@ export default function FinancePanel() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Reports Modal */}
+      {isReportsOpen && (
+        <FinanceReportsModal 
+          onClose={() => setIsReportsOpen(false)}
+          payableList={payableList}
+          receivableList={receivableList}
+          costCenters={costCenters}
+          // Assuming tenantSettings might be globally fetched, pass default for now
+        />
       )}
     </div>
   );

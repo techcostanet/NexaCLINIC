@@ -1,7 +1,7 @@
 {
   "name": "sistema-indicadores",
   "private": true,
-  "version": "3.2.2",
+  "version": "3.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,10 +14,13 @@
   },
   "dependencies": {
     "firebase": "^12.16.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^1.24.0",
     "papaparse": "^5.5.4",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",

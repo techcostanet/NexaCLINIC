@@ -1,3 +1,12 @@
+## [v3.3.0] - 07 de Agosto, 2026
+### Nova Central de Relatórios Financeiros (15 Relatórios Completos)
+- **Central Global de Relatórios:** Novo botão global "Relatórios" inserido ao lado do botão de "Trocar Portal", acessível dentro de qualquer módulo, iniciando com suporte robusto ao Módulo Financeiro.
+- **15 Modelos de Relatórios Estratégicos:** Lançamento de 15 tipos de relatórios avançados, incluindo Extrato Geral, DRE Simplificado, Despesas por Centro de Custo, Receitas por Categoria, Previsão de Fluxo de Caixa (30/60/90), Inadimplência, Top Fornecedores e muito mais.
+- **Motor de Exportação PDF & Excel:** Todos os relatórios podem ser gerados instantaneamente na tela com opção nativa de exportação formal para **PDF** (com logotipo e cabeçalho da empresa) ou extração bruta de dados via planilha **Excel (XLSX)**.
+- **Filtros Avançados Integrados:** Filtragem nativa por Período de Data (Início e Fim) e Unidade/Filial para maior precisão analítica.
+
+---
+
 ## [v3.2.2] - 07 de Agosto, 2026
 ### Otimização Ultra-Compacta na Tabela de Contas a Pagar
 - **Ocultação de Subtextos e Badges Secundários no Modo Compacto:** Removidas descrições longas (ex: "Concentrado Ácido...") e selos secundários (`NF #...`, `🛒 Compras`), mantendo apenas o nome do fornecedor e forma de pagamento.

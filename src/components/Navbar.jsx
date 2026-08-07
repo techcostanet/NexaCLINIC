@@ -3,7 +3,7 @@ import { authService, dbService } from '../firebase';
 import { Activity, LogOut, Menu, X, BarChart3, UploadCloud, Users, HeartPulse, FileText, LayoutGrid, Megaphone, ShoppingCart } from 'lucide-react';
 import ChangelogModal from './ChangelogModal';
 
-export default function Navbar({ user, currentPage, setCurrentPage, currentModule, setCurrentModule }) {
+export default function Navbar({ user, currentPage, setCurrentPage, currentModule, setCurrentModule, setIsReportsOpen }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [tenantSettings, setTenantSettings] = useState({ name: 'Nexa Nefrologia', logo: '' });
@@ -90,15 +90,29 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
           <span style={styles.brandText}>{tenantSettings.name} <span style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 'normal' }}>({portalName})</span></span>
         </div>
 
-        {/* Back to Portal Selector Button */}
-        <button 
-          onClick={handleBackToSelector} 
-          style={styles.backSelectorBtn}
-          title="Alternar entre portais/módulos"
-        >
-          <LayoutGrid size={16} />
-          <span className="desktop-only">Trocar Portal</span>
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          {/* Reports Button */}
+          {currentModule !== 'selector' && setIsReportsOpen && (
+            <button 
+              onClick={() => setIsReportsOpen(true)} 
+              style={{ ...styles.backSelectorBtn, backgroundColor: '#ecfdf5', color: '#047857', border: '1px solid #10b981' }}
+              title="Abrir Central de Relatórios"
+            >
+              <FileText size={16} />
+              <span className="desktop-only">Relatórios</span>
+            </button>
+          )}
+
+          {/* Back to Portal Selector Button */}
+          <button 
+            onClick={handleBackToSelector} 
+            style={styles.backSelectorBtn}
+            title="Alternar entre portais/módulos"
+          >
+            <LayoutGrid size={16} />
+            <span className="desktop-only">Trocar Portal</span>
+          </button>
+        </div>
 
         {/* Desktop Menu */}
         <div style={styles.desktopMenu}>

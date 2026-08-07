@@ -24,6 +24,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [currentModule, setCurrentModule] = useState('selector'); // 'selector' | 'quality' | 'reception'
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [isReportsOpen, setIsReportsOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -114,7 +115,7 @@ export default function App() {
       case 'hr':
         return <ErrorBoundary><HRPanel currentUser={user} /></ErrorBoundary>;
       case 'finance':
-        return <ErrorBoundary><FinancePanel currentUser={user} /></ErrorBoundary>;
+        return <ErrorBoundary><FinancePanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'purchasing':
         return <ErrorBoundary><PurchasingPanel currentUser={user} /></ErrorBoundary>;
       case 'calendar':
@@ -157,6 +158,7 @@ export default function App() {
         setCurrentPage={setCurrentPage} 
         currentModule={currentModule}
         setCurrentModule={setCurrentModule}
+        setIsReportsOpen={setIsReportsOpen}
       />
 
       {/* Main body content area */}

@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.0',
+      date: '07 de Agosto, 2026',
+      title: 'Nova Central de Relatórios Financeiros (15 Relatórios)',
+      description: 'Lançamento da nova central global de relatórios avançados com filtros de data/filial e exportação nativa.',
+      changes: [
+        { type: 'Relatórios Financeiros', text: '15 relatórios estratégicos implementados (Extrato, Inadimplência, Despesas por CC, etc).' },
+        { type: 'Motor de Exportação', text: 'Capacidade de gerar PDF com a marca da clínica e planilhas Excel (XLSX) instantaneamente.' },
+        { type: 'Acesso Global', text: 'Novo botão "Relatórios" inserido globalmente ao lado da troca de portais no menu principal.' }
+      ]
+    },
+    {
       version: 'v3.2.2',
       date: '07 de Agosto, 2026',
       title: 'Ajuste Ultra-Compacto no Contas a Pagar',
