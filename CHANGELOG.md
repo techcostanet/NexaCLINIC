@@ -1,3 +1,11 @@
+## [v3.2.0] - 07 de Agosto, 2026
+### Sincronização em Tempo Real na Nuvem (Cloud Firestore Real-time) no NexaSERVICE
+- **Sincronização Multi-Dispositivo (Cloud Real-Time):** Implementação de listeners nativos do Firebase Cloud Firestore (`onSnapshot`) para Ordens de Serviço (`service_orders`) e Ativos (`equipments`).
+- **Atualização Instantânea em Múltiplos PCs:** Quando um chamado é aberto ou atualizado em um computador/dispositivo, ele aparece automaticamente e em tempo real em todas as telas conectadas no hospital/clínica sem necessidade de atualizar a página (`F5`).
+- **Padrão Arquitetural de Nuvem:** Estabelecida a arquitetura de escuta ativa em tempo real como diretriz padrão de desenvolvimento do sistema.
+
+---
+
 ## [v3.1.9] - 07 de Agosto, 2026
 ### Correção do Fluxo de Envio e Confirmação de Chamados no NexaSERVICE
 - **Eliminação de Trancamento no Envio:** Corrigida a recursão no serviço de manutenção que impedia o fechamento do modal ao clicar em "Enviar Chamado / Abrir OS".

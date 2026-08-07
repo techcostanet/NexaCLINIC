@@ -74,7 +74,30 @@ export default function MaintenancePanel({ currentUser }) {
   });
 
   useEffect(() => {
+    setLoading(true);
+    let unsubOrders = () => {};
+    let unsubEquips = () => {};
+
+    if (dbService.subscribeToServiceOrders) {
+      unsubOrders = dbService.subscribeToServiceOrders((orders) => {
+        setServiceOrders(orders || []);
+        setLoading(false);
+      });
+    }
+
+    if (dbService.subscribeToEquipments) {
+      unsubEquips = dbService.subscribeToEquipments((eqs) => {
+        setEquipments(eqs || []);
+        setLoading(false);
+      });
+    }
+
     fetchData();
+
+    return () => {
+      if (typeof unsubOrders === 'function') unsubOrders();
+      if (typeof unsubEquips === 'function') unsubEquips();
+    };
   }, []);
 
   const fetchData = async () => {

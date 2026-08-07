@@ -487,3 +487,60 @@ export const deleteServiceOrder = async (id) => {
     return { success: true, id };
   }
 };
+
+// ----------------------------------------------------------------------
+// REAL-TIME FIRESTORE CLOUD LISTENERS (SINCRONIZAÇÃO EM TEMPO REAL)
+// ----------------------------------------------------------------------
+
+export const subscribeToServiceOrders = (callback) => {
+  if (USE_MOCK) {
+    callback(getStoredOrders());
+    return () => {};
+  }
+  let unsubscribe = () => {};
+  import('firebase/firestore').then(({ getFirestore, collection, onSnapshot }) => {
+    const db = getFirestore(app);
+    unsubscribe = onSnapshot(collection(db, 'service_orders'), (snap) => {
+      const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (items.length > 0) {
+        items.sort((a, b) => new Date(b.createdAt || b.openDate || 0) - new Date(a.createdAt || a.openDate || 0));
+        callback(items);
+      } else {
+        getServiceOrders().then(callback);
+      }
+    }, (err) => {
+      console.error("Erro no listener real-time de service_orders:", err);
+      callback(getStoredOrders());
+    });
+  }).catch(err => {
+    console.error("Erro ao carregar Firestore no listener de service_orders:", err);
+  });
+
+  return () => unsubscribe();
+};
+
+export const subscribeToEquipments = (callback) => {
+  if (USE_MOCK) {
+    callback(getStoredEquipments());
+    return () => {};
+  }
+  let unsubscribe = () => {};
+  import('firebase/firestore').then(({ getFirestore, collection, onSnapshot }) => {
+    const db = getFirestore(app);
+    unsubscribe = onSnapshot(collection(db, 'equipments'), (snap) => {
+      const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (items.length > 0) {
+        callback(items);
+      } else {
+        getEquipments().then(callback);
+      }
+    }, (err) => {
+      console.error("Erro no listener real-time de equipments:", err);
+      callback(getStoredEquipments());
+    });
+  }).catch(err => {
+    console.error("Erro ao carregar Firestore no listener de equipments:", err);
+  });
+
+  return () => unsubscribe();
+};

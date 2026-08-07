@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.2.0',
+      date: '07 de Agosto, 2026',
+      title: 'Sincronização em Tempo Real na Nuvem (Cloud Real-Time)',
+      description: 'Implementação de listeners onSnapshot no Firebase Cloud Firestore para sincronização instantânea entre múltiplos PCs.',
+      changes: [
+        { type: 'Nuvem Real-Time', text: 'Chamados abertos em um PC aparecem imediatamente nas outras máquinas conectadas sem F5.' },
+        { type: 'Arquitetura', text: 'Estabelecido o padrão de escuta ativa na nuvem para os módulos do sistema.' }
+      ]
+    },
+    {
       version: 'v3.1.9',
       date: '07 de Agosto, 2026',
       title: 'Correção na Abertura & Atualização Instantânea de OS',
