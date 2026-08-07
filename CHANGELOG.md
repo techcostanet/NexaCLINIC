@@ -1,3 +1,10 @@
+## [v3.1.6] - 07 de Agosto, 2026
+### Correção na Persistência de Perfis e Permissões (RBAC) no NexaCONFIG
+- **Correção da Alteração de Perfil de Usuários:** Removida a trava que reescrevia o perfil de usuários cadastrados de volta para `Administrador / T.I.` a cada sincronização.
+- **Persistência Efetiva de Recursos Humanos:** Alterações de perfil salvas pelo administrador (ex: alterar *Ana Carolina Cerqueira Gonzaga* para *Recursos Humanos*) agora são gravadas e mantidas permanentemente no banco de dados.
+
+---
+
 ## [v3.1.5] - 07 de Agosto, 2026
 ### Visão Personalizada por Perfil (Funcionário vs Equipe Técnica/Admin) no NexaSERVICE
 - **Painel Simplificado para Funcionários:** Funcionários padrão enxergam apenas 2 cards de KPI (*Meus Chamados em Aberto* e *Meus Chamados Concluídos*), possuem acesso exclusivo à aba *Ordens de Serviço* e visualizam **somente as OSs abertas por eles mesmos**.

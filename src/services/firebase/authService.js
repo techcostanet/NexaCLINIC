@@ -17,38 +17,25 @@ export const onAuthChange = (callback) => {
           const { getFirestore, doc, getDoc, setDoc } = await import('firebase/firestore');
           const db = getFirestore(app);
           const cleanEmail = (firebaseUser.email || '').trim().toLowerCase();
-          const adminEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'];
-          const isAdminEmail = adminEmails.includes(cleanEmail);
-
           const userDocRef = doc(db, 'users', firebaseUser.uid);
           const userSnap = await getDoc(userDocRef);
 
           let userData = userSnap.exists() ? userSnap.data() : {};
 
-          // If admin email, guarantee admin role and all sectors
-          if (isAdminEmail) {
+          // Se o usuário não existir no Firestore, cria as informações padrão iniciais
+          if (!userSnap.exists()) {
             const allSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
+            const isSuperAdmin = cleanEmail === 'contato@techcosta.net';
             userData = {
-              name: userData.name || (cleanEmail === 'contato@techcosta.net' ? 'Administrador TechCosta' : cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares'),
+              name: firebaseUser.displayName || (isSuperAdmin ? 'Administrador TechCosta' : cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'Operador'),
               email: cleanEmail,
-              role: 'admin',
+              role: isSuperAdmin ? 'admin' : 'reception',
               allowedSectors: allSectors,
-              status: 'active',
-              ...userData,
-              role: 'admin', // override to admin
-              allowedSectors: allSectors // override to all sectors
-            };
-
-            // Save/sync back to firestore asynchronously
-            setDoc(userDocRef, userData, { merge: true }).catch(err => console.error("Failed to sync admin user profile:", err));
-          } else if (!userSnap.exists()) {
-            userData = {
-              name: firebaseUser.displayName || cleanEmail || 'Usuário',
-              email: cleanEmail,
-              role: 'professional',
-              allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
               status: 'active'
             };
+
+            // Salva perfil inicial no Firestore
+            setDoc(userDocRef, userData, { merge: true }).catch(err => console.error("Failed to sync initial user profile:", err));
           }
 
           callback({
@@ -256,11 +243,6 @@ export const getUsers = async () => {
           rawUsers.push(defU);
           // Seed back to Firestore asynchronously
           setDoc(doc(db, 'users', defU.uid), defU, { merge: true }).catch(e => console.error(e));
-        } else {
-          // Force admin role and full sectors for default accounts
-          found.role = 'admin';
-          found.allowedSectors = allSectors;
-          found.status = 'active';
         }
       });
 

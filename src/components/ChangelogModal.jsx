@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.1.6',
+      date: '07 de Agosto, 2026',
+      title: 'Correção de Persistência de Perfis (RBAC)',
+      description: 'Correção no fluxo de edição de usuários permitindo alterar perfis (ex: Recursos Humanos) sem sobrescrita automática.',
+      changes: [
+        { type: 'Correção de Bug', text: 'Removida trava que forçava o perfil de Administrador / T.I. em contas cadastradas.' },
+        { type: 'Segurança RBAC', text: 'Alterações de perfil salvas no painel de configurações agora são preservadas no Firestore.' }
+      ]
+    },
+    {
       version: 'v3.1.5',
       date: '07 de Agosto, 2026',
       title: 'Visão Personalizada por Perfil no NexaSERVICE',
