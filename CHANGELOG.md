@@ -1,3 +1,10 @@
+## [v3.1.8] - 07 de Agosto, 2026
+### Correção da Visão Adaptativa do NexaSERVICE por Perfil do Usuário
+- **Correção da Verificação `isTechOrAdmin`:** Removidos e-mails hardcoded da verificação de permissões técnicas. Usuários com perfil *Recursos Humanos* (como `anacg@nexa.com`) agora entram no módulo *NexaSERVICE* na **visão reduzida de funcionários** (2 cards de KPI e aba exclusiva de Meus Chamados).
+- **Consistência Dinâmica RBAC:** A renderização do painel de manutenção segue estritamente a role atribuída ao usuário no banco de dados.
+
+---
+
 ## [v3.1.7] - 07 de Agosto, 2026
 ### Acesso Universal ao Módulo NexaSERVICE para Abertura Descentralizada de Chamados
 - **Disponibilização Universal:** O card do módulo *NexaSERVICE - Ordem de Serviço* passa a aparecer na tela de seleção de portais para **todos os usuários e funcionários autenticados da clínica/hospital** (Recepção, Recursos Humanos, Financeiro, Assistencial, Estoque, etc.).

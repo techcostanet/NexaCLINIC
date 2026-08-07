@@ -106,7 +106,7 @@ export default function MaintenancePanel({ currentUser }) {
   const isTechOrAdmin = useMemo(() => {
     if (!currentUser) return false;
     if (currentUser.role === 'admin' || currentUser.role === 'technician' || currentUser.role === 'eng' || currentUser.role === 'ti') return true;
-    if (currentUser.email === 'contato@techcosta.net' || currentUser.email === 'anacg@nexa.com' || currentUser.email === 'jsoares@nexa.com') return true;
+    if (currentUser.email === 'contato@techcosta.net') return true;
     const allowed = currentUser.allowedSectors || [];
     return allowed.some(sec => ['manutencao', 'ti', 'engenharia', 'admin'].includes(String(sec).toLowerCase()));
   }, [currentUser]);

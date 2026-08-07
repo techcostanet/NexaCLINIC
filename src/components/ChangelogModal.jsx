@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.1.8',
+      date: '07 de Agosto, 2026',
+      title: 'Ajuste Fino da Visão Reduzida do NexaSERVICE',
+      description: 'Garantido que usuários de Recursos Humanos (ex: anacg@nexa.com) vejam a interface reduzida de funcionários no NexaSERVICE.',
+      changes: [
+        { type: 'Correção de Permissão', text: 'Removida exceção hardcoded que forçava visão técnica para determinados e-mails.' },
+        { type: 'Perfil Funcionário', text: 'Visualização simplificada de 2 cards e aba única de chamados aplicada dinamicamente conforme perfil do usuário.' }
+      ]
+    },
+    {
       version: 'v3.1.7',
       date: '07 de Agosto, 2026',
       title: 'Acesso Universal ao Módulo NexaSERVICE',
