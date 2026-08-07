@@ -1,3 +1,11 @@
+## [v3.2.2] - 07 de Agosto, 2026
+### Otimização Ultra-Compacta na Tabela de Contas a Pagar
+- **Ocultação de Subtextos e Badges Secundários no Modo Compacto:** Removidas descrições longas (ex: "Concentrado Ácido...") e selos secundários (`NF #...`, `🛒 Compras`), mantendo apenas o nome do fornecedor e forma de pagamento.
+- **Formatação Inline dos Valores (Pago / Saldo):** Eliminação das quebras de linha e rótulos de texto no modo compacto, exibindo apenas os valores numéricos formatados em linha única sem ocupar múltiplas linhas.
+- **Redução da Altura das Linhas:** Ajustada a altura das linhas para 28px no modo compacto para maximizar o número de registros visíveis simultaneamente.
+
+---
+
 ## [v3.2.1] - 07 de Agosto, 2026
 ### Aprimoramentos do Módulo Financeiro: Densidade de Linhas e Seletor Fácil de Período
 - **Seletor de Densidade das Linhas (Contas a Pagar):** Implementada a alternância de exibição das linhas entre o formato **Compacto (Padrão)** e **Normal**, permitindo visualização otimizada com mais dados por página.

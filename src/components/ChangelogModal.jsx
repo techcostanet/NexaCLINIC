@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.2.2',
+      date: '07 de Agosto, 2026',
+      title: 'Ajuste Ultra-Compacto no Contas a Pagar',
+      description: 'Otimização de espaço com remoção de descrições/NF secundárias e exibição inline dos números de Pago/Saldo.',
+      changes: [
+        { type: 'Modo Compacto', text: 'Removidos subtextos e badges secundárias para manter as linhas ultra finas.' },
+        { type: 'Valores Pago/Saldo', text: 'Formatação dos números em linha única sem quebra de texto ou ocupação de múltiplas linhas.' }
+      ]
+    },
+    {
       version: 'v3.2.1',
       date: '07 de Agosto, 2026',
       title: 'Modulo Financeiro: Densidade Compacta & Seletor de Período',

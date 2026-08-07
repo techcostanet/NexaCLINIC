@@ -2177,8 +2177,8 @@ export default function FinancePanel() {
                   const dueBalance = amt - paid;
                   const cc = costCenters.find(c => c.id === p.costCenterId);
                   const isCompact = payableRowDensity === 'compacta';
-                  const cellPadding = isCompact ? '0.35rem 0.5rem' : '0.75rem 1rem';
-                  const cellFontSize = isCompact ? '0.78rem' : '0.85rem';
+                  const cellPadding = isCompact ? '0.22rem 0.35rem' : '0.75rem 1rem';
+                  const cellFontSize = isCompact ? '0.76rem' : '0.85rem';
 
                   let statusBg = '#fee2e2';
                   let statusColor = '#991b1b';
@@ -2199,78 +2199,110 @@ export default function FinancePanel() {
                   }
 
                   return (
-                    <tr key={p.id} style={styles.tr}>
-                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                          <strong>{p.supplier}</strong>
+                    <tr key={p.id} style={{ ...styles.tr, height: isCompact ? '28px' : 'auto' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, lineHeight: isCompact ? '1.15' : '1.3' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: isCompact ? 'nowrap' : 'wrap' }}>
+                          <strong style={{ whiteSpace: isCompact ? 'nowrap' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isCompact ? '220px' : 'none' }} title={p.supplier}>
+                            {p.supplier}
+                          </strong>
                           {p.paymentMethod && (
-                            <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#f0fdf4', color: '#166534', fontWeight: '700', border: '1px solid #bbf7d0' }}>
+                            <span style={{ fontSize: '0.62rem', padding: '0.05rem 0.35rem', borderRadius: '3px', backgroundColor: '#f0fdf4', color: '#166534', fontWeight: '700', border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>
                               💳 {p.paymentMethod}
                             </span>
                           )}
-                          {p.purchaseId ? (
+                          {!isCompact && p.purchaseId ? (
                             <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: '700' }}>
                               🛒 Compras
                             </span>
-                          ) : p.invoiceNumber ? (
+                          ) : (!isCompact && p.invoiceNumber) ? (
                             <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#f1f5f9', color: '#475569', fontWeight: '700' }}>
                               NF #{p.invoiceNumber}
                             </span>
                           ) : null}
                         </div>
-                        {p.description && <div style={{ ...styles.subtext, marginTop: isCompact ? '0.05rem' : '0.15rem' }}>{p.description}</div>}
+                        {!isCompact && p.description && <div style={{ ...styles.subtext, marginTop: '0.15rem' }}>{p.description}</div>}
                       </td>
-                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize }}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0f172a' }}>📍 {p.unit || 'Betim'}</span>
-                          <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Comp: <strong>{p.mesCompetencia || 'Julho'}</strong></span>
-                        </div>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        {isCompact ? (
+                          <span style={{ fontWeight: '600', color: '#0f172a' }}>📍 {p.unit || 'Betim'} ({p.mesCompetencia || 'Jul'})</span>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0f172a' }}>📍 {p.unit || 'Betim'}</span>
+                            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Comp: <strong>{p.mesCompetencia || 'Julho'}</strong></span>
+                          </div>
+                        )}
                       </td>
-                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize }}>
-                        <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: '#f1f5f9', fontWeight: '700', color: '#334155' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: isCompact ? '0.7rem' : '0.75rem', padding: isCompact ? '0.05rem 0.35rem' : '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: '#f1f5f9', fontWeight: '700', color: '#334155' }}>
                           {p.installmentInfo || '1'}
                         </span>
                       </td>
-                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize }}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#047857' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        {isCompact ? (
+                          <span style={{ fontWeight: '700', color: '#047857' }} title={cc ? `${cc.code} - ${cc.name}` : p.category}>
                             {cc ? `${cc.code} - ${cc.name}` : p.category || 'Insumo Clínico'}
                           </span>
-                          {p.modality && <span style={{ fontSize: '0.68rem', color: '#64748b' }}>Mod: {p.modality}</span>}
-                        </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#047857' }}>
+                              {cc ? `${cc.code} - ${cc.name}` : p.category || 'Insumo Clínico'}
+                            </span>
+                            {p.modality && <span style={{ fontSize: '0.68rem', color: '#64748b' }}>Mod: {p.modality}</span>}
+                          </div>
+                        )}
                       </td>
-                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize }}>{p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}</td>
-                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, fontWeight: '700' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        {p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}
+                      </td>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, fontWeight: '700', whiteSpace: 'nowrap' }}>
                         R$ {amt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </td>
-                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize }}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '0.75rem', color: paid > 0 ? '#10b981' : '#94a3b8', fontWeight: '700' }}>
-                            Pago: R$ {paid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                          {dueBalance > 0 && (
-                            <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: '700' }}>
-                              Saldo: R$ {dueBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        {isCompact ? (
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}>
+                            {paid > 0 && (
+                              <span style={{ color: '#10b981', fontWeight: '700' }} title="Valor Pago">
+                                R$ {paid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </span>
+                            )}
+                            {dueBalance > 0 && (
+                              <span style={{ color: '#ef4444', fontWeight: '700' }} title="Saldo Devedor">
+                                {paid > 0 ? '/ ' : ''}R$ {dueBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </span>
+                            )}
+                            {paid === 0 && dueBalance === 0 && (
+                              <span style={{ color: '#94a3b8' }}>R$ 0,00</span>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: '0.75rem', color: paid > 0 ? '#10b981' : '#94a3b8', fontWeight: '700' }}>
+                              Pago: R$ {paid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>
-                          )}
-                        </div>
+                            {dueBalance > 0 && (
+                              <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: '700' }}>
+                                Saldo: R$ {dueBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
-                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize }}>
-                        <span style={{ ...styles.statusBadge, backgroundColor: statusBg, color: statusColor, padding: isCompact ? '0.1rem 0.4rem' : '0.2rem 0.5rem' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        <span style={{ ...styles.statusBadge, backgroundColor: statusBg, color: statusColor, padding: isCompact ? '0.05rem 0.35rem' : '0.2rem 0.5rem', fontSize: isCompact ? '0.7rem' : '0.75rem' }}>
                           {statusLabel}
                         </span>
                       </td>
-                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize }}>
-                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', gap: '0.2rem' }}>
                           <button 
                             onClick={() => {
                               setPartialItem(p);
                               setPartialAmountPaid(dueBalance > 0 ? dueBalance : amt);
                             }}
-                            style={{ padding: isCompact ? '0.2rem 0.4rem' : '0.3rem 0.5rem', borderRadius: '6px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                            style={{ padding: isCompact ? '0.15rem 0.35rem' : '0.3rem 0.5rem', borderRadius: '4px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857', fontSize: '0.72rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.15rem' }}
                             title="Dar baixa parcial ou total neste título"
                           >
-                            <DollarSign size={13} />
+                            <DollarSign size={12} />
                             <span>Baixar</span>
                           </button>
                           <button 
@@ -2278,13 +2310,13 @@ export default function FinancePanel() {
                               setEditingPayable({ ...p, amount: String(p.amount) });
                               setShowAddPayable(false);
                             }}
-                            style={{ ...styles.actionBtnCheck, padding: isCompact ? '0.25rem' : '0.35rem', backgroundColor: '#f1f5f9', color: '#334155' }} 
+                            style={{ ...styles.actionBtnCheck, padding: isCompact ? '0.2rem' : '0.35rem', backgroundColor: '#f1f5f9', color: '#334155' }} 
                             title="Editar Lançamento"
                           >
-                            <Edit size={14} />
+                            <Edit size={13} />
                           </button>
-                          <button onClick={() => handleDeletePayable(p.id)} style={{ ...styles.actionBtnDelete, padding: isCompact ? '0.25rem' : '0.35rem' }} title="Excluir">
-                            <Trash2 size={14} />
+                          <button onClick={() => handleDeletePayable(p.id)} style={{ ...styles.actionBtnDelete, padding: isCompact ? '0.2rem' : '0.35rem' }} title="Excluir">
+                            <Trash2 size={13} />
                           </button>
                         </div>
                       </td>
