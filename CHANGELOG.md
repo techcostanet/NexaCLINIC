@@ -1,3 +1,10 @@
+## [v3.3.9] - 08 de Agosto, 2026
+### Sincronização e Fallback de Senhas de Login Multi-Dispositivo
+- **Fallback Inteligente (localStorage):** Implementação de persistência local da sessão quando a autenticação nativa do Firebase falha por dessincronização de senha (ex: senhas temporárias ou atualizações manuais no painel T.I).
+- **Auto-Healing de Credenciais:** O sistema agora tenta ativamente reconectar com senhas padrões antigas nos bastidores e, se bem-sucedido, sincroniza e atualiza automaticamente a conta no Firebase Auth com a nova senha customizada gravada na nuvem.
+
+---
+
 ## [v3.3.7] - 08 de Agosto, 2026
 ### Correção Definitiva: Gravação e Validação Resiliente por E-mail/UID no Firestore
 - **Gravação Resiliente no Cloud Firestore:** A função `updateUserPassword` agora localiza o registro do usuário por `email` ou `uid`, escrevendo o campo `password` com a instrução `{ merge: true }`.

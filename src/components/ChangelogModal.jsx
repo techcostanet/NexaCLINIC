@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.9',
+      date: '08 de Agosto, 2026',
+      title: 'Sincronização e Fallback de Senhas de Login Multi-Dispositivo',
+      description: 'Implementação de persistência local para garantir o acesso quando o cache do Firebase não sincroniza a nova senha de imediato em outros computadores.',
+      changes: [
+        { type: 'Fallback Inteligente', text: 'Persistência local da sessão (localStorage) quando a autenticação nativa do Firebase falha por dessincronização de senha (ex: senhas temporárias ou atualizações manuais no painel T.I).' },
+        { type: 'Auto-Healing', text: 'O sistema tenta ativamente reconectar com senhas padrões antigas e, se bem-sucedido, sincroniza e atualiza automaticamente a conta no Firebase Auth com a nova senha gravada na nuvem.' }
+      ]
+    },
+    {
       version: 'v3.3.7',
       date: '08 de Agosto, 2026',
       title: 'Correção Definitiva: Busca por E-mail ou UID na Gravação de Senha Cloud',
