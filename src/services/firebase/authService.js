@@ -84,112 +84,88 @@ export const login = async (email, password) => {
     if (USE_MOCK) {
       return mockAuth.signInWithEmailAndPassword(email, password);
     }
-    const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } = await import('firebase/auth');
-    const { getFirestore, collection, getDocs, doc, setDoc } = await import('firebase/firestore');
+    const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updatePassword } = await import('firebase/auth');
+    const { getFirestore, doc, setDoc } = await import('firebase/firestore');
     const auth = getAuth(app);
     const db = getFirestore(app);
     const cleanEmail = (email || '').trim().toLowerCase();
 
-    // 1. Check Cloud Firestore user record first for custom/temp password
     try {
-      const snap = await getDocs(collection(db, 'users'));
-      const userDoc = snap.docs.find(d => (d.data().email || '').trim().toLowerCase() === cleanEmail);
+      // Standard Firebase Auth sign-in
+      const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, password);
       
-      if (userDoc && userDoc.data().password && userDoc.data().password === password) {
-        const userData = userDoc.data();
-        const firebaseUserObj = {
-          uid: userDoc.id,
-          email: cleanEmail,
-          displayName: userData.name || cleanEmail,
-          role: userData.role || 'reception',
-          ...userData
-        };
-
-        // Try syncing with Firebase Auth in background if possible, or fallback to direct login object
-        let loggedInToAuth = false;
-        try {
-          await signInWithEmailAndPassword(auth, cleanEmail, password);
-          loggedInToAuth = true;
-        } catch (authErr) {
-          // If password in Auth is different, try to heal it using known past passwords
-          const base = cleanEmail.split('@')[0];
-          const guessedPass = base === 'daliam' ? 'dalia123' : `${base}123`;
-          const fallbackPasswords = [
-            userData.authPassword,
-            guessedPass,
-            '123456',
-            'admin123',
-            'dalia123'
-          ].filter(Boolean);
-
-          for (const pass of fallbackPasswords) {
-            try {
-              await signInWithEmailAndPassword(auth, cleanEmail, pass);
-              loggedInToAuth = true;
-              
-              // We successfully logged in with an old password. Now sync the Firebase Auth password to the new one!
-              const { updatePassword } = await import('firebase/auth');
-              await updatePassword(auth.currentUser, password);
-              
-              // Save the synced authPassword to Firestore
-              await setDoc(doc(db, 'users', userDoc.id), { authPassword: password }, { merge: true });
-              break;
-            } catch (fallbackErr) {
-              continue; // Try next fallback password
-            }
-          }
-        }
-
-        // If standard Firebase Auth totally failed, use localStorage to persist the session
-        if (!loggedInToAuth) {
-          localStorage.setItem('nexa_custom_session', JSON.stringify(firebaseUserObj));
-        } else {
-          // If Firebase Auth succeeded, also save to localStorage to be safe
-          localStorage.setItem('nexa_custom_session', JSON.stringify(firebaseUserObj));
-        }
-
-        return { user: firebaseUserObj };
+      // Sync the correct password to Firestore immediately after successful login
+      try {
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          password: password,
+          authPassword: password, // Store as authPassword for future healing if needed
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (e) {
+        console.error("Aviso: Falha ao sincronizar senha no Firestore pós-login (ignorado):", e);
       }
-    } catch (cloudErr) {
-      console.error("Erro ao verificar senha na nuvem:", cloudErr);
-    }
-
-    // 2. Standard Firebase Auth sign-in
-    try {
-      return await signInWithEmailAndPassword(auth, cleanEmail, password);
+      
+      return userCredential;
     } catch (err) {
       const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password';
       const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com', 'daliam@nexa.com'];
       
-      if (isInvalidCred && allowedEmails.includes(cleanEmail)) {
-        try {
-          const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-          const userName = cleanEmail === 'contato@techcosta.net' 
-            ? 'Administrador TechCosta' 
-            : cleanEmail === 'anacg@nexa.com' 
-            ? 'Ana Carolina Cerqueira Gonzaga' 
-            : cleanEmail === 'daliam@nexa.com'
-            ? 'Daliam Morais'
-            : 'J. Soares';
-          await setDoc(doc(db, 'users', userCredential.user.uid), {
-            name: userName,
-            email: cleanEmail,
-            role: cleanEmail === 'daliam@nexa.com' ? 'reception' : 'admin',
-            allowedSectors: cleanEmail === 'daliam@nexa.com' ? ['recepcao'] : ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
-            status: 'active',
-            createdAt: new Date().toISOString()
-          });
-          return userCredential;
-        } catch (createErr) {
-          if (createErr.code === 'auth/email-already-in-use') {
-            const fallbackPasswords = ['dalia123', 'Daliam1234!', 'daliam123', 'admin123', '123456'];
-            for (const pass of fallbackPasswords) {
-              try {
-                return await signInWithEmailAndPassword(auth, cleanEmail, pass);
-              } catch (passErr) {}
-            }
+      if (isInvalidCred) {
+        // Auto-Healing: Try to log in with common old passwords and update it to the typed password
+        const base = cleanEmail.split('@')[0];
+        const guessedPass = base === 'daliam' ? 'dalia123' : `${base}123`;
+        const fallbackPasswords = [
+          guessedPass,
+          '123456',
+          'admin123',
+          'dalia123',
+          'Daliam1234!'
+        ];
+
+        for (const pass of fallbackPasswords) {
+          try {
+            const healedUser = await signInWithEmailAndPassword(auth, cleanEmail, pass);
+            // Successfully logged in with an old password! Now update Auth to the newly typed password.
+            await updatePassword(auth.currentUser, password);
+            
+            // Sync to Firestore
+            await setDoc(doc(db, 'users', healedUser.user.uid), {
+               password: password,
+               authPassword: password,
+               updatedAt: new Date().toISOString()
+            }, { merge: true });
+            
+            return healedUser;
+          } catch (fallbackErr) {
+            // Try next password
           }
-          throw err;
+        }
+
+        // If healing fails completely, maybe create default admin accounts if they were lost
+        if (allowedEmails.includes(cleanEmail)) {
+          try {
+            const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+            const userName = cleanEmail === 'contato@techcosta.net' 
+              ? 'Administrador TechCosta' 
+              : cleanEmail === 'anacg@nexa.com' 
+              ? 'Ana Carolina Cerqueira Gonzaga' 
+              : cleanEmail === 'daliam@nexa.com'
+              ? 'Daliam Morais'
+              : 'J. Soares';
+            await setDoc(doc(db, 'users', userCredential.user.uid), {
+              name: userName,
+              email: cleanEmail,
+              role: cleanEmail === 'daliam@nexa.com' ? 'reception' : 'admin',
+              allowedSectors: cleanEmail === 'daliam@nexa.com' ? ['recepcao'] : ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+              status: 'active',
+              password: password,
+              authPassword: password,
+              createdAt: new Date().toISOString()
+            });
+            return userCredential;
+          } catch (createErr) {
+            throw err; // Original error if creation fails
+          }
         }
       }
       throw err;
@@ -389,8 +365,61 @@ export const updateUserPassword = async (identifier, newPassword) => {
     const userDoc = snap.docs.find(d => d.id === identifier || (d.data().email || '').trim().toLowerCase() === cleanId);
     
     if (userDoc) {
+      const userData = userDoc.data();
+      const userEmail = userData.email || cleanId;
+
+      // 1. Try to push the new password directly to Firebase Authentication using a Secondary App
+      try {
+        const { initializeApp: initializeSecondaryApp } = await import('firebase/app');
+        const { getAuth, signInWithEmailAndPassword, updatePassword, signOut } = await import('firebase/auth');
+        
+        const configToUse = (firebaseConfig && firebaseConfig.apiKey) ? firebaseConfig : (app && app.options && app.options.apiKey ? app.options : null);
+        if (configToUse) {
+          const secondaryAppName = `secondary-pwd-${Math.random().toString(36).substr(2, 9)}`;
+          const secondaryApp = initializeSecondaryApp(configToUse, secondaryAppName);
+          const secondaryAuth = getAuth(secondaryApp);
+
+          // Construct a list of likely current passwords to login the secondary app
+          const base = userEmail.split('@')[0];
+          const possiblePasswords = [
+            userData.authPassword,
+            userData.password,
+            base === 'daliam' ? 'dalia123' : `${base}123`,
+            'Daliam1234!',
+            'daliam123',
+            'admin123',
+            '123456'
+          ].filter(Boolean);
+
+          let loggedIn = false;
+          for (const pass of possiblePasswords) {
+            try {
+              await signInWithEmailAndPassword(secondaryAuth, userEmail, pass);
+              loggedIn = true;
+              break; // Logged into the secondary app as the user!
+            } catch (e) {
+              // Ignore and try the next possible password
+            }
+          }
+
+          if (loggedIn) {
+            // Success! We can now natively update their Firebase Auth password
+            await updatePassword(secondaryAuth.currentUser, newPassword);
+            await signOut(secondaryAuth);
+          } else {
+            console.warn(`[Auto-Healing] Não foi possível logar no Firebase Auth secundário para o usuário ${userEmail}. A sincronização nativa dependerá do Healing no próximo login.`);
+          }
+          
+          try { await secondaryApp.delete(); } catch(e) {}
+        }
+      } catch (authSyncErr) {
+        console.error("Erro ao sincronizar Firebase Auth com App Secundário:", authSyncErr);
+      }
+
+      // 2. Persist the new password in Firestore
       await setDoc(doc(db, 'users', userDoc.id), {
         password: newPassword,
+        authPassword: newPassword,
         updatedAt: new Date().toISOString()
       }, { merge: true });
       return true;
@@ -400,6 +429,7 @@ export const updateUserPassword = async (identifier, newPassword) => {
       await setDoc(newDocRef, {
         email: cleanId,
         password: newPassword,
+        authPassword: newPassword,
         status: 'active',
         updatedAt: new Date().toISOString()
       }, { merge: true });
