@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.21',
+      date: '08/08/2026',
+      title: 'Remoção de T.I. do Módulo de Manutenção',
+      description: 'Limpeza de escopo e remoção de todos os recursos de TI para focar exclusivamente na Manutenção Clínica/Predial.',
+      changes: [
+        { type: 'Limpeza de Escopo', text: 'Remoção completa de referências, KPIs e categorias de Tecnologia da Informação (TI) da tela de Manutenção.' },
+        { type: 'Base de Dados', text: 'Exclusão de equipamentos simulados de hardware/software de TI e suas respectivas Ordens de Serviço do banco inicial.' },
+        { type: 'Permissões', text: 'Ajuste no controle de acesso, centralizando o módulo apenas para cargos de administração e engenharia/manutenção.' }
+      ]
+    },
+    {
       version: '3.3.20',
       date: '08/08/2026',
       title: 'Módulo de Manutenção - Carga de Máquinas de Hemodiálise e Osmose',

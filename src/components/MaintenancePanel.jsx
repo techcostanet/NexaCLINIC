@@ -113,7 +113,7 @@ export default function MaintenancePanel({ currentUser }) {
       setServiceOrders(osList || []);
       setStockItems(itemsList || []);
     } catch (err) {
-      console.error('Erro ao carregar dados de Manutenção & TI:', err);
+      console.error('Erro ao carregar dados de Manutenção:', err);
       showAlert('Erro ao carregar dados do módulo de Manutenção.', 'danger');
     } finally {
       setLoading(false);
@@ -128,10 +128,10 @@ export default function MaintenancePanel({ currentUser }) {
   // Check User Permission (Tech / Admin vs Standard Employee)
   const isTechOrAdmin = useMemo(() => {
     if (!currentUser) return false;
-    if (currentUser.role === 'admin' || currentUser.role === 'technician' || currentUser.role === 'eng' || currentUser.role === 'ti') return true;
+    if (currentUser.role === 'admin' || currentUser.role === 'technician' || currentUser.role === 'eng') return true;
     if (currentUser.email === 'contato@techcosta.net') return true;
     const allowed = currentUser.allowedSectors || [];
-    return allowed.some(sec => ['manutencao', 'ti', 'engenharia', 'admin'].includes(String(sec).toLowerCase()));
+    return allowed.some(sec => ['manutencao', 'engenharia', 'admin'].includes(String(sec).toLowerCase()));
   }, [currentUser]);
 
   // User specific orders (Standard Employees only see their own opened orders)
@@ -150,7 +150,7 @@ export default function MaintenancePanel({ currentUser }) {
   const kpis = useMemo(() => {
     const totalEq = equipments.length;
     const bioEq = equipments.filter(e => e.category === 'Biomédico').length;
-    const tiEq = equipments.filter(e => e.category?.startsWith('TI')).length;
+
     const predEq = equipments.filter(e => e.category === 'Infraestrutura').length;
     const inopEq = equipments.filter(e => e.status === 'Inoperante' || e.status === 'Em Manutenção').length;
 
@@ -166,7 +166,7 @@ export default function MaintenancePanel({ currentUser }) {
     const overduePreventives = equipments.filter(e => e.nextPreventiveDate && e.nextPreventiveDate < todayStr).length;
 
     return { 
-      totalEq, bioEq, tiEq, predEq, inopEq, 
+      totalEq, bioEq, predEq, inopEq, 
       openOrders, completedOrders, 
       myOpenOrders, myCompletedOrders,
       totalCost, overduePreventives 
@@ -628,7 +628,7 @@ export default function MaintenancePanel({ currentUser }) {
                 <HardDrive size={18} color="#0891b2" />
               </div>
               <div style={styles.kpiValue}>{kpis.totalEq}</div>
-              <span style={styles.kpiSub}>Bio: {kpis.bioEq} | TI: {kpis.tiEq} | Predial: {kpis.predEq}</span>
+              <span style={styles.kpiSub}>Bio: {kpis.bioEq} | Predial: {kpis.predEq}</span>
             </div>
 
             <div style={styles.kpiCard}>
@@ -1178,7 +1178,7 @@ export default function MaintenancePanel({ currentUser }) {
                 </>
               ) : (
                 /* -------------------------------------------------------------
-                   MODO ATENDIMENTO TÉCNICO: EQUIPE DE MANUTENÇÃO & TI
+                   MODO ATENDIMENTO TÉCNICO: EQUIPE DE MANUTENÇÃO
                 ------------------------------------------------------------- */
                 <>
                   <div style={styles.formRow2}>
@@ -1354,8 +1354,6 @@ export default function MaintenancePanel({ currentUser }) {
                     style={styles.input}
                   >
                     <option value="Biomédico">Biomédico & Clínico</option>
-                    <option value="TI Hardware">TI - Hardware</option>
-                    <option value="TI Software">TI - Software & Licença</option>
                     <option value="Infraestrutura">Infraestrutura & Predial</option>
                   </select>
                 </div>
