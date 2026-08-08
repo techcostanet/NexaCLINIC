@@ -41,8 +41,9 @@ import {
 } from 'lucide-react';
 
 import { dbService } from '../firebase';
+import FinanceReportsModal from './FinanceReportsModal';
 
-export default function FinancePanel() {
+export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'payable' | 'receivable' | 'budget' | 'cashflow_projection' | 'agreements' | 'installments' | 'reconciliation'
   const [payableList, setPayableList] = useState([]);
   const [receivableList, setReceivableList] = useState([]);
@@ -101,12 +102,15 @@ export default function FinancePanel() {
 
   // Custom Dashboard Layout for Financial Operator
   const DEFAULT_FINANCE_LAYOUT = [
-    { id: 'payables_today', name: '🔴 Contas a Pagar Hoje & Vencidas', size: 'small', visible: true },
+    { id: 'payables_month', name: '📅 Contas a Pagar do Mês', size: 'small', visible: true },
+    { id: 'overdue_current_month', name: '🔴 Vencidos do Mês', size: 'small', visible: true },
+    { id: 'overdue_prev_month', name: '⚠️ Vencidos do Mês Anterior', size: 'small', visible: true },
+    { id: 'payables_today', name: '🚨 Pagar Hoje & Atrasados', size: 'small', visible: true },
     { id: 'payables_7days', name: '🗓️ Contas a Pagar (Próximos 7 Dias)', size: 'small', visible: true },
     { id: 'payables_15days', name: '🗓️ Contas a Pagar (Próximos 15 Dias)', size: 'small', visible: true },
     { id: 'receivables_today', name: '🟢 Contas a Receber Hoje', size: 'small', visible: true },
     { id: 'cash_flow_summary', name: '💵 Saldo em Caixa (Realizado)', size: 'small', visible: true },
-    { id: 'overdue_alerts', name: '⚠️ Títulos em Atraso', size: 'small', visible: true },
+    { id: 'overdue_alerts', name: '⚠️ Títulos em Atraso Geral', size: 'small', visible: true },
     { id: 'cash_flow_bar', name: '📊 Fluxo de Caixa (Entradas vs Saídas)', size: 'medium', visible: true },
     { id: 'cost_distribution', name: '🍰 Distribuição de Despesas por Categoria', size: 'medium', visible: true },
     { id: 'ebitda', name: '📈 EBITDA Realizado (Visão Executiva)', size: 'small', visible: false },
@@ -116,7 +120,14 @@ export default function FinancePanel() {
   const [dashboardLayout, setDashboardLayout] = useState(() => {
     try {
       const saved = localStorage.getItem('sistema_indicadores_finance_dashboard_layout');
-      return saved ? JSON.parse(saved) : DEFAULT_FINANCE_LAYOUT;
+      if (!saved) return DEFAULT_FINANCE_LAYOUT;
+      const parsed = JSON.parse(saved);
+      const existingIds = new Set(parsed.map(c => c.id));
+      const missingCards = DEFAULT_FINANCE_LAYOUT.filter(c => !existingIds.has(c.id));
+      if (missingCards.length > 0) {
+        return [...missingCards, ...parsed];
+      }
+      return parsed;
     } catch {
       return DEFAULT_FINANCE_LAYOUT;
     }
@@ -190,6 +201,44 @@ export default function FinancePanel() {
   // Filter & Sort states
   const [payableFilter, setPayableFilter] = useState('Todos'); // 'Todos' | 'Pendente' | 'Pago'
   const [receivableFilter, setReceivableFilter] = useState('Todos'); // 'Todos' | 'Pendente' | 'Pago'
+
+  // Formato das linhas de registros em Contas a Pagar ('compacta' por padrão | 'normal')
+  const [payableRowDensity, setPayableRowDensity] = useState(() => {
+    try {
+      return localStorage.getItem('sistema_indicadores_payable_density') || 'compacta';
+    } catch {
+      return 'compacta';
+    }
+  });
+
+  const handleSetPayableDensity = (density) => {
+    setPayableRowDensity(density);
+    try {
+      localStorage.setItem('sistema_indicadores_payable_density', density);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Seletor Fácil de Mês e Ano para o Dashboard (padrão: mês corrente)
+  const now = new Date();
+  const [selectedDashboardYear, setSelectedDashboardYear] = useState(() => now.getFullYear());
+  const [selectedDashboardMonth, setSelectedDashboardMonth] = useState(() => now.getMonth() + 1); // 1-12 | 0 = 'Ano Todo'
+
+  const MONTH_NAMES = [
+    { value: 1, label: 'Jan', full: 'Janeiro' },
+    { value: 2, label: 'Fev', full: 'Fevereiro' },
+    { value: 3, label: 'Mar', full: 'Março' },
+    { value: 4, label: 'Abr', full: 'Abril' },
+    { value: 5, label: 'Mai', full: 'Maio' },
+    { value: 6, label: 'Jun', full: 'Junho' },
+    { value: 7, label: 'Jul', full: 'Julho' },
+    { value: 8, label: 'Ago', full: 'Agosto' },
+    { value: 9, label: 'Set', full: 'Setembro' },
+    { value: 10, label: 'Out', full: 'Outubro' },
+    { value: 11, label: 'Nov', full: 'Novembro' },
+    { value: 12, label: 'Dez', full: 'Dezembro' }
+  ];
 
   const [payableSort, setPayableSort] = useState({ key: 'dueDate', direction: 'asc' });
   const [receivableSort, setReceivableSort] = useState({ key: 'dueDate', direction: 'asc' });
@@ -757,6 +806,56 @@ export default function FinancePanel() {
   // Operational Dashboard Calculations (Today & Overdue)
   const todayStr = new Date().toISOString().substring(0, 10);
 
+  // Month & Year Filter Prefixes
+  const selectedMonthStr = String(selectedDashboardMonth).padStart(2, '0');
+  const selectedMonthPrefix = selectedDashboardMonth === 0 
+    ? `${selectedDashboardYear}-` 
+    : `${selectedDashboardYear}-${selectedMonthStr}`;
+
+  // Previous month calculation
+  let prevMonthVal = selectedDashboardMonth === 0 ? (now.getMonth() === 0 ? 12 : now.getMonth()) : (selectedDashboardMonth === 1 ? 12 : selectedDashboardMonth - 1);
+  let prevYearVal = selectedDashboardMonth === 0 ? (now.getMonth() === 0 ? selectedDashboardYear - 1 : selectedDashboardYear) : (selectedDashboardMonth === 1 ? selectedDashboardYear - 1 : selectedDashboardYear);
+  const prevMonthPrefix = `${prevYearVal}-${String(prevMonthVal).padStart(2, '0')}`;
+
+  // 1. Contas a pagar do Mês
+  const payablesSelectedMonthList = payableList.filter(p => {
+    const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
+    const matchMonth = p.dueDate && p.dueDate.startsWith(selectedMonthPrefix);
+    return matchUnit && matchMonth;
+  });
+  const totalPayablesSelectedMonth = payablesSelectedMonthList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const paidPayablesSelectedMonth = payablesSelectedMonthList
+    .filter(p => p.status === 'Pago' || (parseFloat(p.amountPaid) || 0) >= (parseFloat(p.amount) || 0))
+    .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const pendingPayablesSelectedMonth = totalPayablesSelectedMonth - paidPayablesSelectedMonth;
+
+  // 2. Vencidos do Mês Anterior
+  const overduePrevMonthList = payableList.filter(p => {
+    const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
+    const matchMonth = p.dueDate && p.dueDate.startsWith(prevMonthPrefix);
+    const isPaid = p.status === 'Pago' || ((parseFloat(p.amountPaid) || 0) >= (parseFloat(p.amount) || 0) && (parseFloat(p.amount) || 0) > 0);
+    return matchUnit && matchMonth && !isPaid;
+  });
+  const totalOverduePrevMonth = overduePrevMonthList.reduce((acc, curr) => {
+    const amt = parseFloat(curr.amount) || 0;
+    const paid = parseFloat(curr.amountPaid) || 0;
+    return acc + Math.max(0, amt - paid);
+  }, 0);
+
+  // 3. Vencidos do Mês Corrente / Selecionado
+  const overdueSelectedMonthList = payableList.filter(p => {
+    const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
+    const matchMonth = p.dueDate && p.dueDate.startsWith(selectedMonthPrefix);
+    const isPaid = p.status === 'Pago' || ((parseFloat(p.amountPaid) || 0) >= (parseFloat(p.amount) || 0) && (parseFloat(p.amount) || 0) > 0);
+    const isOverdue = p.dueDate && p.dueDate < todayStr;
+    return matchUnit && matchMonth && !isPaid && isOverdue;
+  });
+  const totalOverdueSelectedMonth = overdueSelectedMonthList.reduce((acc, curr) => {
+    const amt = parseFloat(curr.amount) || 0;
+    const paid = parseFloat(curr.amountPaid) || 0;
+    return acc + Math.max(0, amt - paid);
+  }, 0);
+
   const payablesTodayOrOverdue = payableList.filter(p => p.status !== 'Pago' && (p.dueDate || '') <= todayStr);
   const totalPayablesTodayOrOverdue = payablesTodayOrOverdue.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
@@ -888,11 +987,110 @@ export default function FinancePanel() {
       {/* Portal Dashboard view */}
       {activeTab === 'dashboard' && (
         <div>
+          {/* Seletor Fácil de Mês e Ano (1 Clique, padrão: Mês Corrente) */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justify: 'space-between',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginBottom: '1rem',
+            padding: '0.75rem 1rem',
+            backgroundColor: 'var(--bg-card)',
+            borderRadius: '10px',
+            border: '1px solid var(--border-color)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Calendar size={18} color="#10b981" />
+              <span style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-primary)' }}>Filtro de Período do Dashboard:</span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {/* Seletor de Ano */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', backgroundColor: 'var(--bg-secondary)', padding: '0.2rem 0.4rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                <button onClick={() => setSelectedDashboardYear(prev => prev - 1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '0.1rem 0.3rem', color: 'var(--text-primary)' }} title="Ano Anterior"><ChevronLeft size={14} /></button>
+                <span style={{ fontWeight: '700', fontSize: '0.85rem', color: '#10b981', minWidth: '42px', textAlign: 'center' }}>{selectedDashboardYear}</span>
+                <button onClick={() => setSelectedDashboardYear(prev => prev + 1)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '0.1rem 0.3rem', color: 'var(--text-primary)' }} title="Próximo Ano"><ChevronRight size={14} /></button>
+              </div>
+
+              {/* Botões de Mês (1 Clique) */}
+              <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                {MONTH_NAMES.map(m => {
+                  const isCurrentRealMonth = (m.value === (now.getMonth() + 1)) && (selectedDashboardYear === now.getFullYear());
+                  const isSelected = selectedDashboardMonth === m.value;
+                  return (
+                    <button
+                      key={m.value}
+                      onClick={() => setSelectedDashboardMonth(m.value)}
+                      style={{
+                        padding: '0.3rem 0.55rem',
+                        fontSize: '0.78rem',
+                        fontWeight: isSelected ? '700' : '500',
+                        borderRadius: '6px',
+                        border: isSelected ? '1px solid #10b981' : '1px solid var(--border-color)',
+                        backgroundColor: isSelected ? '#10b981' : (isCurrentRealMonth ? 'rgba(16,185,129,0.1)' : 'var(--bg-secondary)'),
+                        color: isSelected ? '#ffffff' : (isCurrentRealMonth ? '#059669' : 'var(--text-primary)'),
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                      title={isCurrentRealMonth ? `${m.label} (Mês Atual)` : `Selecionar ${m.full}`}
+                    >
+                      {m.label}
+                    </button>
+                  );
+                })}
+
+                {/* Botão de Atalho para Mês Atual */}
+                <button
+                  onClick={() => {
+                    setSelectedDashboardYear(now.getFullYear());
+                    setSelectedDashboardMonth(now.getMonth() + 1);
+                  }}
+                  style={{
+                    padding: '0.3rem 0.6rem',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    borderRadius: '6px',
+                    border: '1px solid #3b82f6',
+                    backgroundColor: (selectedDashboardMonth === now.getMonth() + 1 && selectedDashboardYear === now.getFullYear()) ? '#3b82f6' : 'transparent',
+                    color: (selectedDashboardMonth === now.getMonth() + 1 && selectedDashboardYear === now.getFullYear()) ? '#ffffff' : '#3b82f6',
+                    cursor: 'pointer',
+                    marginLeft: '0.25rem'
+                  }}
+                  title="Restaurar visualização para o mês corrente"
+                >
+                  Mês Atual
+                </button>
+
+                {/* Botão de Ano Todo */}
+                <button
+                  onClick={() => setSelectedDashboardMonth(0)}
+                  style={{
+                    padding: '0.3rem 0.6rem',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    borderRadius: '6px',
+                    border: selectedDashboardMonth === 0 ? '1px solid #8b5cf6' : '1px solid var(--border-color)',
+                    backgroundColor: selectedDashboardMonth === 0 ? '#8b5cf6' : 'transparent',
+                    color: selectedDashboardMonth === 0 ? '#ffffff' : 'var(--text-muted)',
+                    cursor: 'pointer'
+                  }}
+                  title="Visualizar todo o ano acumulado"
+                >
+                  Ano Todo
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Customization Toolbar Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0.5rem 0.75rem', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
             <div>
               <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>Painel de Operações Financeiras</span>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>Visão customizável para operadores</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
+                Exibindo: <strong>{selectedDashboardMonth > 0 ? MONTH_NAMES[selectedDashboardMonth - 1].full : 'Ano Todo'} / {selectedDashboardYear}</strong>
+              </span>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <button 
@@ -1026,10 +1224,55 @@ export default function FinancePanel() {
                     )}
 
                     {/* Operational Card Content Renderers */}
+                    {card.id === 'payables_month' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                        <div style={styles.kpiHeader}>
+                          <span style={styles.kpiLabel}>Contas a Pagar do Mês ({selectedDashboardMonth > 0 ? MONTH_NAMES[selectedDashboardMonth - 1].label : 'Ano'}/{selectedDashboardYear})</span>
+                          <Calendar size={18} color="#3b82f6" />
+                        </div>
+                        <span style={{ ...styles.kpiValue, color: '#3b82f6' }}>
+                          R$ {totalPayablesSelectedMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <div style={styles.kpiFooter}>
+                          Pago: R$ {paidPayablesSelectedMonth.toLocaleString('pt-BR')} | Pendente: R$ {pendingPayablesSelectedMonth.toLocaleString('pt-BR')} ({payablesSelectedMonthList.length} contas)
+                        </div>
+                      </div>
+                    )}
+
+                    {card.id === 'overdue_current_month' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                        <div style={styles.kpiHeader}>
+                          <span style={styles.kpiLabel}>Vencidos do Mês ({selectedDashboardMonth > 0 ? MONTH_NAMES[selectedDashboardMonth - 1].label : 'Ano'}/{selectedDashboardYear})</span>
+                          <AlertTriangle size={18} color="#ef4444" />
+                        </div>
+                        <span style={{ ...styles.kpiValue, color: totalOverdueSelectedMonth > 0 ? '#ef4444' : '#10b981' }}>
+                          R$ {totalOverdueSelectedMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <div style={styles.kpiFooter}>
+                          {overdueSelectedMonthList.length} conta(s) vencida(s) no período
+                        </div>
+                      </div>
+                    )}
+
+                    {card.id === 'overdue_prev_month' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                        <div style={styles.kpiHeader}>
+                          <span style={styles.kpiLabel}>Vencidos do Mês Anterior ({MONTH_NAMES[prevMonthVal - 1].label}/{prevYearVal})</span>
+                          <Clock size={18} color="#f59e0b" />
+                        </div>
+                        <span style={{ ...styles.kpiValue, color: totalOverduePrevMonth > 0 ? '#f59e0b' : '#10b981' }}>
+                          R$ {totalOverduePrevMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <div style={styles.kpiFooter}>
+                          {overduePrevMonthList.length} conta(s) pendente(s) do mês anterior
+                        </div>
+                      </div>
+                    )}
+
                     {card.id === 'payables_today' && (
                       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
                         <div style={styles.kpiHeader}>
-                          <span style={styles.kpiLabel}>Contas a Pagar Hoje / Vencidas</span>
+                          <span style={styles.kpiLabel}>Pagar Hoje / Atrasados</span>
                           <AlertCircle size={18} color="#ef4444" />
                         </div>
                         <span style={{ ...styles.kpiValue, color: payablesTodayOrOverdue.length > 0 ? '#ef4444' : '#10b981' }}>
@@ -1278,6 +1521,146 @@ export default function FinancePanel() {
 
                 {/* Modal Body Table Content based on Card ID */}
                 <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
+                  {/* CARD: payables_month */}
+                  {selectedDashboardDetail.id === 'payables_month' && (
+                    <div>
+                      <div style={{ padding: '0.75rem 1rem', backgroundColor: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', marginBottom: '1rem', color: '#1e40af', fontSize: '0.875rem' }}>
+                        <strong>Resumo do Mês ({selectedDashboardMonth > 0 ? MONTH_NAMES[selectedDashboardMonth - 1].full : 'Ano Todo'}/{selectedDashboardYear}):</strong> Total de <strong>R$ {totalPayablesSelectedMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> em {payablesSelectedMonthList.length} conta(s). (Quitados: R$ {paidPayablesSelectedMonth.toLocaleString('pt-BR')} | Saldo Pendente: R$ {pendingPayablesSelectedMonth.toLocaleString('pt-BR')})
+                      </div>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#f8fafc' }}>
+                            <th style={styles.th}>Fornecedor</th>
+                            <th style={styles.th}>Categoria</th>
+                            <th style={styles.th}>Vencimento</th>
+                            <th style={styles.th}>Valor (R$)</th>
+                            <th style={styles.th}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payablesSelectedMonthList
+                            .filter(p => p.supplier.toLowerCase().includes(detailFilter.toLowerCase()) || p.category.toLowerCase().includes(detailFilter.toLowerCase()))
+                            .map(p => (
+                              <tr key={p.id} style={styles.tr}>
+                                <td style={styles.td}><strong>{p.supplier}</strong></td>
+                                <td style={styles.td}>{p.category}</td>
+                                <td style={styles.td}>{p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}</td>
+                                <td style={{ ...styles.td, fontWeight: '700' }}>R$ {(parseFloat(p.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                <td style={styles.td}>
+                                  <span style={{
+                                    backgroundColor: p.status === 'Pago' ? '#dcfce7' : (p.dueDate < todayStr ? '#fee2e2' : '#e0f2fe'),
+                                    color: p.status === 'Pago' ? '#166534' : (p.dueDate < todayStr ? '#991b1b' : '#0369a1'),
+                                    padding: '0.2rem 0.5rem',
+                                    borderRadius: '4px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '700'
+                                  }}>
+                                    {p.status === 'Pago' ? '✓ Pago' : (p.dueDate < todayStr ? '⚠️ Vencido' : '⏳ A Vencer')}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* CARD: overdue_current_month */}
+                  {selectedDashboardDetail.id === 'overdue_current_month' && (
+                    <div>
+                      <div style={{ padding: '0.75rem 1rem', backgroundColor: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca', marginBottom: '1rem', color: '#991b1b', fontSize: '0.875rem' }}>
+                        <strong>Vencidos no Mês ({selectedDashboardMonth > 0 ? MONTH_NAMES[selectedDashboardMonth - 1].full : 'Ano'}/{selectedDashboardYear}):</strong> {overdueSelectedMonthList.length} conta(s) vencida(s) totalizando <strong>R$ {totalOverdueSelectedMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> em aberto.
+                      </div>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#f8fafc' }}>
+                            <th style={styles.th}>Fornecedor</th>
+                            <th style={styles.th}>Vencimento</th>
+                            <th style={styles.th}>Valor Devido (R$)</th>
+                            <th style={styles.th}>Ação</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {overdueSelectedMonthList
+                            .filter(p => p.supplier.toLowerCase().includes(detailFilter.toLowerCase()))
+                            .map(p => {
+                              const amt = parseFloat(p.amount) || 0;
+                              const paid = parseFloat(p.amountPaid) || 0;
+                              const due = amt - paid;
+                              return (
+                                <tr key={p.id} style={styles.tr}>
+                                  <td style={styles.td}><strong>{p.supplier}</strong></td>
+                                  <td style={{ ...styles.td, color: '#ef4444', fontWeight: '700' }}>{p.dueDate?.split('-').reverse().join('/')}</td>
+                                  <td style={{ ...styles.td, fontWeight: '700', color: '#ef4444' }}>R$ {due.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                  <td style={styles.td}>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedDashboardDetail(null);
+                                        setActiveTab('payable');
+                                        setPartialItem(p);
+                                        setPartialAmountPaid(due);
+                                      }}
+                                      style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                                    >
+                                      Baixar Título
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* CARD: overdue_prev_month */}
+                  {selectedDashboardDetail.id === 'overdue_prev_month' && (
+                    <div>
+                      <div style={{ padding: '0.75rem 1rem', backgroundColor: '#fffbeb', borderRadius: '8px', border: '1px solid #fde68a', marginBottom: '1rem', color: '#92400e', fontSize: '0.875rem' }}>
+                        <strong>Pendências do Mês Anterior ({MONTH_NAMES[prevMonthVal - 1].full}/{prevYearVal}):</strong> {overduePrevMonthList.length} conta(s) não quitadas no mês anterior, totalizando <strong>R$ {totalOverduePrevMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>.
+                      </div>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#f8fafc' }}>
+                            <th style={styles.th}>Fornecedor</th>
+                            <th style={styles.th}>Vencimento</th>
+                            <th style={styles.th}>Valor Devido (R$)</th>
+                            <th style={styles.th}>Ação</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {overduePrevMonthList
+                            .filter(p => p.supplier.toLowerCase().includes(detailFilter.toLowerCase()))
+                            .map(p => {
+                              const amt = parseFloat(p.amount) || 0;
+                              const paid = parseFloat(p.amountPaid) || 0;
+                              const due = amt - paid;
+                              return (
+                                <tr key={p.id} style={styles.tr}>
+                                  <td style={styles.td}><strong>{p.supplier}</strong></td>
+                                  <td style={{ ...styles.td, color: '#f59e0b', fontWeight: '700' }}>{p.dueDate?.split('-').reverse().join('/')}</td>
+                                  <td style={{ ...styles.td, fontWeight: '700', color: '#b45309' }}>R$ {due.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                  <td style={styles.td}>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedDashboardDetail(null);
+                                        setActiveTab('payable');
+                                        setPartialItem(p);
+                                        setPartialAmountPaid(due);
+                                      }}
+                                      style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                                    >
+                                      Baixar Título
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
                   {/* CARD: payables_today */}
                   {selectedDashboardDetail.id === 'payables_today' && (
                     <div>
@@ -1519,26 +1902,75 @@ export default function FinancePanel() {
       {activeTab === 'payable' && (
         <div style={styles.tabContent}>
           <div style={styles.actionsBar}>
-            <div style={styles.filtersGroup}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginRight: '0.5rem' }}>Filtro:</span>
-              <button 
-                onClick={() => setPayableFilter('Todos')}
-                style={{ ...styles.filterBadge, ...(payableFilter === 'Todos' ? styles.filterBadgeActive : {}) }}
-              >
-                Todos
-              </button>
-              <button 
-                onClick={() => setPayableFilter('Pendente')}
-                style={{ ...styles.filterBadge, ...(payableFilter === 'Pendente' ? styles.filterBadgeActive : {}) }}
-              >
-                Pendente
-              </button>
-              <button 
-                onClick={() => setPayableFilter('Pago')}
-                style={{ ...styles.filterBadge, ...(payableFilter === 'Pago' ? styles.filterBadgeActive : {}) }}
-              >
-                Pago
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <div style={styles.filtersGroup}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginRight: '0.5rem' }}>Filtro:</span>
+                <button 
+                  onClick={() => setPayableFilter('Todos')}
+                  style={{ ...styles.filterBadge, ...(payableFilter === 'Todos' ? styles.filterBadgeActive : {}) }}
+                >
+                  Todos
+                </button>
+                <button 
+                  onClick={() => setPayableFilter('Pendente')}
+                  style={{ ...styles.filterBadge, ...(payableFilter === 'Pendente' ? styles.filterBadgeActive : {}) }}
+                >
+                  Pendente
+                </button>
+                <button 
+                  onClick={() => setPayableFilter('Pago')}
+                  style={{ ...styles.filterBadge, ...(payableFilter === 'Pago' ? styles.filterBadgeActive : {}) }}
+                >
+                  Pago
+                </button>
+              </div>
+
+              {/* Seletor de Formato das Linhas (Compacta ou Normal - Padrão: Compacta) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: 'var(--bg-secondary)', padding: '0.2rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', padding: '0 0.3rem', fontWeight: '600' }}>Linhas:</span>
+                <button
+                  onClick={() => handleSetPayableDensity('compacta')}
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    fontSize: '0.75rem',
+                    fontWeight: payableRowDensity === 'compacta' ? '700' : '500',
+                    borderRadius: '4px',
+                    border: 'none',
+                    backgroundColor: payableRowDensity === 'compacta' ? 'var(--bg-card)' : 'transparent',
+                    color: payableRowDensity === 'compacta' ? '#10b981' : 'var(--text-muted)',
+                    boxShadow: payableRowDensity === 'compacta' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}
+                  title="Modo Compacto (Padrão): exibe mais registros por página"
+                >
+                  <Sliders size={12} />
+                  <span>Compacta</span>
+                </button>
+                <button
+                  onClick={() => handleSetPayableDensity('normal')}
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    fontSize: '0.75rem',
+                    fontWeight: payableRowDensity === 'normal' ? '700' : '500',
+                    borderRadius: '4px',
+                    border: 'none',
+                    backgroundColor: payableRowDensity === 'normal' ? 'var(--bg-card)' : 'transparent',
+                    color: payableRowDensity === 'normal' ? '#10b981' : 'var(--text-muted)',
+                    boxShadow: payableRowDensity === 'normal' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}
+                  title="Modo Normal: espaçamento padrão"
+                >
+                  <Layers size={12} />
+                  <span>Normal</span>
+                </button>
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -1729,7 +2161,7 @@ export default function FinancePanel() {
                   {renderSortableHeader('Devido (R$)', 'amount', payableSort, setPayableSort)}
                   {renderSortableHeader('Pago / Saldo', 'amountPaid', payableSort, setPayableSort)}
                   {renderSortableHeader('Status', 'status', payableSort, setPayableSort)}
-                  <th style={styles.th}>Ações & Baixa</th>
+                  <th style={{ ...styles.th, padding: payableRowDensity === 'compacta' ? '0.45rem 0.5rem' : '0.75rem 1rem' }}>Ações & Baixa</th>
                 </tr>
               </thead>
               <tbody>
@@ -1745,6 +2177,9 @@ export default function FinancePanel() {
                   const paid = parseFloat(p.amountPaid) || 0;
                   const dueBalance = amt - paid;
                   const cc = costCenters.find(c => c.id === p.costCenterId);
+                  const isCompact = payableRowDensity === 'compacta';
+                  const cellPadding = isCompact ? '0.22rem 0.35rem' : '0.75rem 1rem';
+                  const cellFontSize = isCompact ? '0.76rem' : '0.85rem';
 
                   let statusBg = '#fee2e2';
                   let statusColor = '#991b1b';
@@ -1765,78 +2200,110 @@ export default function FinancePanel() {
                   }
 
                   return (
-                    <tr key={p.id} style={styles.tr}>
-                      <td style={styles.td}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                          <strong>{p.supplier}</strong>
+                    <tr key={p.id} style={{ ...styles.tr, height: isCompact ? '28px' : 'auto' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, lineHeight: isCompact ? '1.15' : '1.3' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: isCompact ? 'nowrap' : 'wrap' }}>
+                          <strong style={{ whiteSpace: isCompact ? 'nowrap' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isCompact ? '220px' : 'none' }} title={p.supplier}>
+                            {p.supplier}
+                          </strong>
                           {p.paymentMethod && (
-                            <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#f0fdf4', color: '#166534', fontWeight: '700', border: '1px solid #bbf7d0' }}>
+                            <span style={{ fontSize: '0.62rem', padding: '0.05rem 0.35rem', borderRadius: '3px', backgroundColor: '#f0fdf4', color: '#166534', fontWeight: '700', border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>
                               💳 {p.paymentMethod}
                             </span>
                           )}
-                          {p.purchaseId ? (
+                          {!isCompact && p.purchaseId ? (
                             <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: '700' }}>
                               🛒 Compras
                             </span>
-                          ) : p.invoiceNumber ? (
+                          ) : (!isCompact && p.invoiceNumber) ? (
                             <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#f1f5f9', color: '#475569', fontWeight: '700' }}>
                               NF #{p.invoiceNumber}
                             </span>
                           ) : null}
                         </div>
-                        {p.description && <div style={styles.subtext}>{p.description}</div>}
+                        {!isCompact && p.description && <div style={{ ...styles.subtext, marginTop: '0.15rem' }}>{p.description}</div>}
                       </td>
-                      <td style={styles.td}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0f172a' }}>📍 {p.unit || 'Betim'}</span>
-                          <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Comp: <strong>{p.mesCompetencia || 'Julho'}</strong></span>
-                        </div>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        {isCompact ? (
+                          <span style={{ fontWeight: '600', color: '#0f172a' }}>📍 {p.unit || 'Betim'} ({p.mesCompetencia || 'Jul'})</span>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0f172a' }}>📍 {p.unit || 'Betim'}</span>
+                            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Comp: <strong>{p.mesCompetencia || 'Julho'}</strong></span>
+                          </div>
+                        )}
                       </td>
-                      <td style={styles.td}>
-                        <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: '#f1f5f9', fontWeight: '700', color: '#334155' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: isCompact ? '0.7rem' : '0.75rem', padding: isCompact ? '0.05rem 0.35rem' : '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: '#f1f5f9', fontWeight: '700', color: '#334155' }}>
                           {p.installmentInfo || '1'}
                         </span>
                       </td>
-                      <td style={styles.td}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#047857' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        {isCompact ? (
+                          <span style={{ fontWeight: '700', color: '#047857' }} title={cc ? `${cc.code} - ${cc.name}` : p.category}>
                             {cc ? `${cc.code} - ${cc.name}` : p.category || 'Insumo Clínico'}
                           </span>
-                          {p.modality && <span style={{ fontSize: '0.68rem', color: '#64748b' }}>Mod: {p.modality}</span>}
-                        </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#047857' }}>
+                              {cc ? `${cc.code} - ${cc.name}` : p.category || 'Insumo Clínico'}
+                            </span>
+                            {p.modality && <span style={{ fontSize: '0.68rem', color: '#64748b' }}>Mod: {p.modality}</span>}
+                          </div>
+                        )}
                       </td>
-                      <td style={styles.td}>{p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}</td>
-                      <td style={{ ...styles.td, fontWeight: '700' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        {p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}
+                      </td>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, fontWeight: '700', whiteSpace: 'nowrap' }}>
                         R$ {amt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </td>
-                      <td style={styles.td}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '0.75rem', color: paid > 0 ? '#10b981' : '#94a3b8', fontWeight: '700' }}>
-                            Pago: R$ {paid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                          {dueBalance > 0 && (
-                            <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: '700' }}>
-                              Saldo: R$ {dueBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        {isCompact ? (
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}>
+                            {paid > 0 && (
+                              <span style={{ color: '#10b981', fontWeight: '700' }} title="Valor Pago">
+                                R$ {paid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </span>
+                            )}
+                            {dueBalance > 0 && (
+                              <span style={{ color: '#ef4444', fontWeight: '700' }} title="Saldo Devedor">
+                                {paid > 0 ? '/ ' : ''}R$ {dueBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </span>
+                            )}
+                            {paid === 0 && dueBalance === 0 && (
+                              <span style={{ color: '#94a3b8' }}>R$ 0,00</span>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: '0.75rem', color: paid > 0 ? '#10b981' : '#94a3b8', fontWeight: '700' }}>
+                              Pago: R$ {paid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>
-                          )}
-                        </div>
+                            {dueBalance > 0 && (
+                              <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: '700' }}>
+                                Saldo: R$ {dueBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
-                      <td style={styles.td}>
-                        <span style={{ ...styles.statusBadge, backgroundColor: statusBg, color: statusColor }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        <span style={{ ...styles.statusBadge, backgroundColor: statusBg, color: statusColor, padding: isCompact ? '0.05rem 0.35rem' : '0.2rem 0.5rem', fontSize: isCompact ? '0.7rem' : '0.75rem' }}>
                           {statusLabel}
                         </span>
                       </td>
-                      <td style={styles.td}>
-                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', gap: '0.2rem' }}>
                           <button 
                             onClick={() => {
                               setPartialItem(p);
                               setPartialAmountPaid(dueBalance > 0 ? dueBalance : amt);
                             }}
-                            style={{ padding: '0.3rem 0.5rem', borderRadius: '6px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                            style={{ padding: isCompact ? '0.15rem 0.35rem' : '0.3rem 0.5rem', borderRadius: '4px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857', fontSize: '0.72rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.15rem' }}
                             title="Dar baixa parcial ou total neste título"
                           >
-                            <DollarSign size={13} />
+                            <DollarSign size={12} />
                             <span>Baixar</span>
                           </button>
                           <button 
@@ -1844,13 +2311,13 @@ export default function FinancePanel() {
                               setEditingPayable({ ...p, amount: String(p.amount) });
                               setShowAddPayable(false);
                             }}
-                            style={{ ...styles.actionBtnCheck, backgroundColor: '#f1f5f9', color: '#334155' }} 
+                            style={{ ...styles.actionBtnCheck, padding: isCompact ? '0.2rem' : '0.35rem', backgroundColor: '#f1f5f9', color: '#334155' }} 
                             title="Editar Lançamento"
                           >
-                            <Edit size={14} />
+                            <Edit size={13} />
                           </button>
-                          <button onClick={() => handleDeletePayable(p.id)} style={styles.actionBtnDelete} title="Excluir">
-                            <Trash2 size={14} />
+                          <button onClick={() => handleDeletePayable(p.id)} style={{ ...styles.actionBtnDelete, padding: isCompact ? '0.2rem' : '0.35rem' }} title="Excluir">
+                            <Trash2 size={13} />
                           </button>
                         </div>
                       </td>
@@ -3430,6 +3897,17 @@ export default function FinancePanel() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Reports Modal */}
+      {isReportsOpen && (
+        <FinanceReportsModal 
+          onClose={() => setIsReportsOpen(false)}
+          payableList={payableList}
+          receivableList={receivableList}
+          costCenters={costCenters}
+          // Assuming tenantSettings might be globally fetched, pass default for now
+        />
       )}
     </div>
   );

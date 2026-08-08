@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, Settings, ShoppingCart, Calendar, ClipboardList, FileText } from 'lucide-react';
+import { BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, Settings, ShoppingCart, Calendar, ClipboardList, FileText, Wrench } from 'lucide-react';
 import { authService } from '../firebase';
 
 export default function ModuleSelector({ user, onSelectModule }) {
@@ -38,6 +38,15 @@ export default function ModuleSelector({ user, onSelectModule }) {
       icon: Package,
       color: '#f59e0b', // amber-500
       allowedRoles: ['admin', 'professional', 'stock_keeper']
+    },
+    {
+      id: 'maintenance',
+      title: 'Manutenção, Engenharia & TI',
+      subtitle: 'NexaSERVICE - Ordem de Serviço',
+      description: 'Gestão de ativos biomédicos, prediais e suporte de TI (Hardware/Software) com histórico por equipamento.',
+      icon: Wrench,
+      color: '#0891b2', // cyan-600
+      allowedRoles: ['admin', 'professional', 'technician', 'rh']
     },
     {
       id: 'quality',
@@ -136,7 +145,10 @@ export default function ModuleSelector({ user, onSelectModule }) {
   const userProfileConfig = profiles.find((p) => p.id === userRole);
 
   const visibleModules = modules.filter((mod) => {
-    // Admin always sees everything
+    // Módulo de Manutenção & TI (NexaSERVICE) é universal para todos os funcionários abrirem chamados
+    if (mod.id === 'maintenance') return true;
+
+    // Admin sempre visualiza todos os módulos
     if (userRole === 'admin') return true;
 
     // Check specific sector restrictions on user object if present (e.g. allowedSectors: ['rh'])
@@ -145,9 +157,9 @@ export default function ModuleSelector({ user, onSelectModule }) {
       const modSector = mod.id === 'hr' ? 'rh' : mod.id === 'quality' ? 'qualidade' : mod.id;
       // If user has restricted sectors, verify sector inclusion
       if (user.allowedSectors.length > 0 && !user.allowedSectors.includes('all') && !user.allowedSectors.includes('admin')) {
-        // Special mapping for RH role: RH and Quality (BI)
+        // Special mapping for RH role: RH, Quality (BI) e Manutenção (NexaSERVICE)
         if (userRole === 'rh') {
-          return mod.id === 'hr' || mod.id === 'quality';
+          return mod.id === 'hr' || mod.id === 'quality' || mod.id === 'maintenance';
         }
         return user.allowedSectors.includes(modSector);
       }
@@ -163,7 +175,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
 
     // Default fallback if profile permissions matrix hasn't loaded or isn't set
     if (userRole === 'rh') {
-      return mod.id === 'hr' || mod.id === 'quality';
+      return mod.id === 'hr' || mod.id === 'quality' || mod.id === 'maintenance';
     }
 
     return Array.isArray(mod.allowedRoles) ? mod.allowedRoles.includes(userRole) : true;

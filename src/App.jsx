@@ -16,6 +16,7 @@ import PurchasingPanel from './components/PurchasingPanel';
 import CalendarPanel from './components/CalendarPanel';
 import TechnicianPanel from './components/TechnicianPanel';
 import ApacBillingPanel from './components/ApacBillingPanel';
+import MaintenancePanel from './components/MaintenancePanel';
 import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
@@ -23,17 +24,36 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [currentModule, setCurrentModule] = useState('selector'); // 'selector' | 'quality' | 'reception'
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [isReportsOpen, setIsReportsOpen] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    
+    // Safety fallback: Release loading screen after 3.5s if Auth is delayed/offline
+    const authTimer = setTimeout(() => {
+      if (isMounted) {
+        setLoading(prev => {
+          if (prev) {
+            console.warn('Auth loading timeout reached - unlocking UI screen.');
+            return false;
+          }
+          return prev;
+        });
+      }
+    }, 3500);
+
     // Listen to Auth changes (Mock or Firebase real)
     const unsubscribe = authService.onAuthChange((currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-      
-      // If user logs out, reset states
-      if (!currentUser) {
-        setCurrentModule('selector');
-        setCurrentPage('dashboard');
+      if (isMounted) {
+        clearTimeout(authTimer);
+        setUser(currentUser);
+        setLoading(false);
+        
+        // If user logs out, reset states
+        if (!currentUser) {
+          setCurrentModule('selector');
+          setCurrentPage('dashboard');
+        }
       }
     });
 
@@ -53,6 +73,8 @@ export default function App() {
     window.addEventListener('tenant-branding-changed', loadBranding);
 
     return () => {
+      isMounted = false;
+      clearTimeout(authTimer);
       unsubscribe();
       window.removeEventListener('tenant-branding-changed', loadBranding);
     };
@@ -88,10 +110,12 @@ export default function App() {
         return <ErrorBoundary><ClinicalPanel currentUser={user} /></ErrorBoundary>;
       case 'stock':
         return <ErrorBoundary><StockPanel currentUser={user} /></ErrorBoundary>;
+      case 'maintenance':
+        return <ErrorBoundary><MaintenancePanel currentUser={user} /></ErrorBoundary>;
       case 'hr':
         return <ErrorBoundary><HRPanel currentUser={user} /></ErrorBoundary>;
       case 'finance':
-        return <ErrorBoundary><FinancePanel currentUser={user} /></ErrorBoundary>;
+        return <ErrorBoundary><FinancePanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'purchasing':
         return <ErrorBoundary><PurchasingPanel currentUser={user} /></ErrorBoundary>;
       case 'calendar':
@@ -134,33 +158,12 @@ export default function App() {
         setCurrentPage={setCurrentPage} 
         currentModule={currentModule}
         setCurrentModule={setCurrentModule}
+        setIsReportsOpen={setIsReportsOpen}
       />
 
       {/* Main body content area */}
       <main className="main-content">
-        {currentModule === 'reception' ? (
-          <ErrorBoundary><ReceptionPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'clinical' ? (
-          <ErrorBoundary><ClinicalPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'stock' ? (
-          <ErrorBoundary><StockPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'hr' ? (
-          <ErrorBoundary><HRPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'finance' ? (
-          <ErrorBoundary><FinancePanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'apac' ? (
-          <ErrorBoundary><ApacBillingPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'purchasing' ? (
-          <ErrorBoundary><PurchasingPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'calendar' ? (
-          <ErrorBoundary><CalendarPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'config' ? (
-          <ErrorBoundary><ConfigPanel currentUser={user} /></ErrorBoundary>
-        ) : currentModule === 'requisitions' ? (
-          <ErrorBoundary><TechnicianPanel currentUser={user} /></ErrorBoundary>
-        ) : (
-          <ErrorBoundary>{renderQualityPage()}</ErrorBoundary>
-        )}
+        {renderContent()}
       </main>
 
       {/* Footer copyright */}

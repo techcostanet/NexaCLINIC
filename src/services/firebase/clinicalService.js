@@ -1,4 +1,4 @@
-import { app } from '../../firebase';
+import { app } from './config';
 import { USE_MOCK, mockFirestore } from './mockDb';
 
 export const getIndicators = async () => {

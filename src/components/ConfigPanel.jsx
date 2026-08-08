@@ -579,6 +579,7 @@ export default function ConfigPanel() {
               { key: 'clinical', label: 'Prontuário & Clínico' },
               { key: 'calendar', label: 'Agenda & Consultas' },
               { key: 'stock', label: 'Estoque & Farmácia' },
+              { key: 'maintenance', label: 'Manutenção & T.I. (SERVICE)' },
               { key: 'purchasing', label: 'Compras & Cotações' },
               { key: 'requisitions', label: 'Requisições (Salão)' },
               { key: 'apac', label: 'APACs & Faturamento' },
