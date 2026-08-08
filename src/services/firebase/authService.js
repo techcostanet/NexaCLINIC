@@ -94,18 +94,38 @@ export const login = async (email, password) => {
       // Standard Firebase Auth sign-in
       const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, password);
       
+      let finalUser = { uid: userCredential.user.uid, email: cleanEmail };
+      
       // Sync the correct password to Firestore immediately after successful login
       try {
-        await setDoc(doc(db, 'users', userCredential.user.uid), {
+        const { getDoc } = await import('firebase/firestore');
+        const userDocRef = doc(db, 'users', userCredential.user.uid);
+        
+        await setDoc(userDocRef, {
           password: password,
           authPassword: password, // Store as authPassword for future healing if needed
           updatedAt: new Date().toISOString()
         }, { merge: true });
+
+        // Fetch user data for UI state
+        const userSnap = await getDoc(userDocRef);
+        if (userSnap.exists()) {
+          finalUser = { ...finalUser, ...userSnap.data() };
+        }
+        
+        const adminEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'];
+        if (adminEmails.includes(cleanEmail)) {
+           finalUser.role = 'admin';
+           finalUser.allowedSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
+           if (!finalUser.name) {
+             finalUser.name = cleanEmail === 'contato@techcosta.net' ? 'Administrador TechCosta' : cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares';
+           }
+        }
       } catch (e) {
         console.error("Aviso: Falha ao sincronizar senha no Firestore pós-login (ignorado):", e);
       }
       
-      return userCredential;
+      return { user: finalUser };
     } catch (err) {
       const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password';
       const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com', 'daliam@nexa.com'];
@@ -128,14 +148,32 @@ export const login = async (email, password) => {
             // Successfully logged in with an old password! Now update Auth to the newly typed password.
             await updatePassword(auth.currentUser, password);
             
+            let finalUser = { uid: healedUser.user.uid, email: cleanEmail };
             // Sync to Firestore
-            await setDoc(doc(db, 'users', healedUser.user.uid), {
-               password: password,
-               authPassword: password,
-               updatedAt: new Date().toISOString()
-            }, { merge: true });
+            try {
+              const { getDoc } = await import('firebase/firestore');
+              const userDocRef = doc(db, 'users', healedUser.user.uid);
+              await setDoc(userDocRef, {
+                 password: password,
+                 authPassword: password,
+                 updatedAt: new Date().toISOString()
+              }, { merge: true });
+              
+              const userSnap = await getDoc(userDocRef);
+              if (userSnap.exists()) {
+                finalUser = { ...finalUser, ...userSnap.data() };
+              }
+              const adminEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'];
+              if (adminEmails.includes(cleanEmail)) {
+                 finalUser.role = 'admin';
+                 finalUser.allowedSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
+                 if (!finalUser.name) {
+                   finalUser.name = cleanEmail === 'contato@techcosta.net' ? 'Administrador TechCosta' : cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares';
+                 }
+              }
+            } catch (e) {}
             
-            return healedUser;
+            return { user: finalUser };
           } catch (fallbackErr) {
             // Try next password
           }
@@ -152,7 +190,9 @@ export const login = async (email, password) => {
               : cleanEmail === 'daliam@nexa.com'
               ? 'Daliam Morais'
               : 'J. Soares';
-            await setDoc(doc(db, 'users', userCredential.user.uid), {
+              
+            const userPayload = {
+              uid: userCredential.user.uid,
               name: userName,
               email: cleanEmail,
               role: cleanEmail === 'daliam@nexa.com' ? 'reception' : 'admin',
@@ -161,8 +201,9 @@ export const login = async (email, password) => {
               password: password,
               authPassword: password,
               createdAt: new Date().toISOString()
-            });
-            return userCredential;
+            };
+            await setDoc(doc(db, 'users', userCredential.user.uid), userPayload);
+            return { user: userPayload };
           } catch (createErr) {
             throw err; // Original error if creation fails
           }
