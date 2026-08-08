@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../firebase';
-import { BarChart3, Calendar, Filter, CheckCircle, AlertCircle, HelpCircle, ShieldAlert } from 'lucide-react';
+import { BarChart3, Calendar, Filter, CheckCircle, AlertCircle, HelpCircle, ShieldAlert, Printer, FileText } from 'lucide-react';
 
 // A premium SVG Sparkline and Trend chart component
 function DynamicChart({ history, target, unit, lowerIsBetter, chartType = 'line' }) {
@@ -242,6 +242,35 @@ export default function Dashboard({ currentUser }) {
   const [availablePeriods, setAvailablePeriods] = useState([]);
   const [chartTypes, setChartTypes] = useState({});
 
+  const handlePrint = (metricId, layout) => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @page { size: ${layout}; margin: 10mm; }
+      @media print {
+        body { margin: 0; padding: 0; background: white; }
+        body * { visibility: hidden; }
+        #metric-card-${metricId}, #metric-card-${metricId} * { visibility: visible; }
+        #metric-card-${metricId} {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          margin: 0 !important;
+          padding: 20px !important;
+          box-shadow: none !important;
+          border: none !important;
+        }
+        .no-print { display: none !important; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    setTimeout(() => {
+      window.print();
+      document.head.removeChild(style);
+    }, 100);
+  };
+
   useEffect(() => {
     fetchInitialData();
   }, []);
@@ -481,10 +510,28 @@ export default function Dashboard({ currentUser }) {
           ) : (
             <div className="grid grid-cols-2">
               {metricsForPeriod.map((metric) => (
-                <div key={metric.id} className="card" style={styles.metricCard}>
+                <div key={metric.id} id={`metric-card-${metric.id}`} className="card" style={styles.metricCard}>
                   {/* Metric Title & Description */}
                   <div>
-                    <h3 style={styles.metricName}>{metric.name}</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <h3 style={styles.metricName}>{metric.name}</h3>
+                      <div className="no-print" style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button 
+                          onClick={() => handlePrint(metric.id, 'portrait')}
+                          title="Imprimir Retrato"
+                          style={styles.printBtn}
+                        >
+                          <FileText size={14} /> Retrato
+                        </button>
+                        <button 
+                          onClick={() => handlePrint(metric.id, 'landscape')}
+                          title="Imprimir Paisagem"
+                          style={styles.printBtn}
+                        >
+                          <FileText size={14} style={{ transform: 'rotate(-90deg)' }} /> Paisagem
+                        </button>
+                      </div>
+                    </div>
                     <p style={styles.metricDesc}>{metric.description}</p>
                   </div>
 
@@ -693,6 +740,19 @@ const styles = {
     fontSize: '0.78rem',
     color: 'var(--text-secondary)',
     lineHeight: '1.4',
+  },
+  printBtn: {
+    background: 'none',
+    border: '1px solid var(--border-color)',
+    borderRadius: '4px',
+    fontSize: '0.7rem',
+    padding: '2px 6px',
+    color: 'var(--text-secondary)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.2rem',
+    transition: 'all 0.15s',
   },
   valueRow: {
     display: 'flex',

@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.15',
+      date: '08/08/2026',
+      title: 'Restrição de Acesso e Impressão BI',
+      description: 'Aprimoramentos de segurança e usabilidade no módulo de BI.',
+      changes: [
+        { type: 'Segurança', text: 'Restrição de acesso: Apenas administradores podem lançar dados e acessar a página de Upload no módulo de BI.' },
+        { type: 'Recursos', text: 'Nova funcionalidade: Opção de impressão de gráficos de indicadores em formatos retrato e paisagem.' }
+      ]
+    },
+    {
       version: '3.3.14',
       date: '08/08/2026',
       title: 'Ajuste de Prioridade RBAC',

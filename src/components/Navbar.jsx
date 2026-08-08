@@ -37,8 +37,8 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
   const navItems = [];
   if (currentModule === 'quality') {
     navItems.push({ id: 'dashboard', label: 'Dashboard', icon: BarChart3 });
-    navItems.push({ id: 'upload', label: 'Lançar Dados', icon: FileText });
     if (user && user.role === 'admin') {
+      navItems.push({ id: 'upload', label: 'Lançar Dados', icon: FileText });
       navItems.push({ id: 'admin', label: 'Painel Admin', icon: Users });
     }
   }
