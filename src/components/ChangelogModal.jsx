@@ -6,13 +6,13 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v3.0.15',
+      version: 'v3.3.3',
       date: '08 de Agosto, 2026',
-      title: 'Módulo T.I: Alteração e Geração de Senha Temporária na Nuvem',
-      description: 'Opções de definir nova senha e gerar senha temporária com sincronização imediata no banco Firestore Cloud para acesso de qualquer local.',
+      title: 'Módulo T.I: Gerenciador de Senhas na Nuvem & Integração Total v3.3.3',
+      description: 'Geração de senhas temporárias e alteração de senha no T.I com sincronização no Firestore Cloud + Integração com a Central de 15 Relatórios (PDF/Excel).',
       changes: [
-        { type: 'Gestão de Usuários', text: 'Inclusão dos botões e formulários de "Senha" e "Gerar Temp" na tabela de usuários do sistema no NexaCONFIG (T.I).' },
-        { type: 'Autenticação Cloud', text: 'Sincronização imediata das credenciais no Firestore Cloud com fallback automático no fluxo de login.' }
+        { type: 'Gestão de Senhas (T.I)', text: 'Opções de "Senha" e "Gerar Temp" com salvamento em tempo real no Cloud Firestore para acesso universal.' },
+        { type: 'Relatórios Financeiros', text: 'Inclusão do ecossistema de relatórios (DRE, Extrato, Curva ABC, Fluxo de Caixa) com exportação PDF/Excel.' }
       ]
     },
     {

@@ -1,7 +1,7 @@
-## [v3.0.15] - 08 de Agosto, 2026
-### Módulo T.I: Alteração e Geração de Senha Temporária na Nuvem
-- **Recurso de Alteração de Senha:** Adicionadas opções de alterar a senha manualmente e gerar senhas temporárias dinâmicas diretamente na aba de Usuários do Sistema (Módulo de T.I / NexaCONFIG).
-- **Sincronização Imédiata na Nuvem (Cloud Firestore):** A nova senha ou a senha temporária é gravada e sincronizada instantaneamente na nuvem, permitindo que o usuário realize login de qualquer dispositivo ou local sem depender de trocas locais.
+## [v3.3.3] - 08 de Agosto, 2026
+### Módulo T.I: Gerenciador de Senhas na Nuvem & Integração Total v3.3.3
+- **Recurso de Alteração de Senha & Senha Temporária:** Adicionadas opções de alterar a senha manualmente e gerar senhas temporárias dinâmicas diretamente na aba de Usuários do Sistema (Módulo de T.I / NexaCONFIG).
+- **Sincronização Integrada:** Mantidos todos os novos recursos recentes (Central de 15 Relatórios Financeiros com PDF/Excel, NexaSERVICE, Matriz RBAC 100%) agregados com a novidade de gestão de senhas.
 
 ---
 
