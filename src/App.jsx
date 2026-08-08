@@ -136,11 +136,7 @@ export default function App() {
       case 'dashboard':
         return <Dashboard currentUser={user} />;
       case 'upload':
-        if (user.role === 'admin') {
-          return <UploadData currentUser={user} />;
-        }
-        setCurrentPage('dashboard');
-        return <Dashboard currentUser={user} />;
+        return <UploadData currentUser={user} />;
       case 'admin':
         // Guard for Admin Panel
         if (user.role === 'admin') {

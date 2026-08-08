@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.16',
+      date: '08/08/2026',
+      title: 'Desbloqueio de Lançamento BI',
+      description: 'Ajuste nas permissões de acesso ao módulo de BI.',
+      changes: [
+        { type: 'Acessibilidade', text: 'Liberação de acesso: A página de Upload/Lançamento de Dados no módulo de BI foi liberada novamente para todos os perfis, permitindo que todos os setores insiram os dados de seus indicadores.' }
+      ]
+    },
+    {
       version: '3.3.15',
       date: '08/08/2026',
       title: 'Restrição de Acesso e Impressão BI',
