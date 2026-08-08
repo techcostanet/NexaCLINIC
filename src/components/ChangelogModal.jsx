@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.14',
+      date: '08/08/2026',
+      title: 'Ajuste de Prioridade RBAC',
+      description: 'Correção na hierarquia de exibição de módulos baseada em permissões.',
+      changes: [
+        { type: 'RBAC', text: 'A configuração do RBAC (Perfis & Permissões) agora sobrepõe o limite antigo de setores do usuário, resolvendo a exibição correta dos módulos para a equipe multiprofissional e novos usuários.' }
+      ]
+    },
+    {
       version: 'v3.3.13',
       date: '08 de Agosto, 2026',
       title: 'Ajuste Crítico de Autenticação e Perfil',

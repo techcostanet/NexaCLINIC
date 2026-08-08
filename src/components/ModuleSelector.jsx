@@ -151,10 +151,18 @@ export default function ModuleSelector({ user, onSelectModule }) {
     // Admin sempre visualiza todos os módulos
     if (userRole === 'admin') return true;
 
+    // Map module IDs to RBAC permission keys
+    const permKey = mod.id === 'quality' ? 'index' : mod.id;
+
+    // Check dynamic RBAC matrix se disponível (Tem prioridade sobre legacy allowedSectors)
+    if (userProfileConfig && userProfileConfig.permissions && userProfileConfig.permissions[permKey] !== undefined) {
+      return userProfileConfig.permissions[permKey] !== 'none';
+    }
+
     // Check specific sector restrictions on user object if present (e.g. allowedSectors: ['rh'])
     if (user?.allowedSectors && Array.isArray(user.allowedSectors)) {
       // Map module IDs to sector names
-      const modSector = mod.id === 'hr' ? 'rh' : mod.id === 'quality' ? 'qualidade' : mod.id;
+      const modSector = mod.id === 'hr' ? 'rh' : mod.id === 'quality' ? 'qualidade' : mod.id === 'stock' ? 'estoque' : mod.id === 'purchasing' ? 'compras' : mod.id === 'clinical' ? 'medica' : mod.id === 'finance' ? 'faturamento' : mod.id === 'reception' ? 'recepcao' : mod.id;
       // If user has restricted sectors, verify sector inclusion
       if (user.allowedSectors.length > 0 && !user.allowedSectors.includes('all') && !user.allowedSectors.includes('admin')) {
         // Special mapping for RH role: RH, Quality (BI) e Manutenção (NexaSERVICE)
@@ -163,14 +171,6 @@ export default function ModuleSelector({ user, onSelectModule }) {
         }
         return user.allowedSectors.includes(modSector);
       }
-    }
-
-    // Map module IDs to RBAC permission keys
-    const permKey = mod.id === 'quality' ? 'index' : mod.id;
-
-    // Check dynamic RBAC matrix if available
-    if (userProfileConfig && userProfileConfig.permissions && userProfileConfig.permissions[permKey] !== undefined) {
-      return userProfileConfig.permissions[permKey] !== 'none';
     }
 
     // Default fallback if profile permissions matrix hasn't loaded or isn't set
