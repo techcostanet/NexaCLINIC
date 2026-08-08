@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.23',
+      date: '08/08/2026',
+      title: 'Varredura Completa de T.I. no Módulo de Manutenção',
+      description: 'Remoção minuciosa de todas as menções, opções, exemplos e textos referentes a Tecnologia da Informação.',
+      changes: [
+        { type: 'Limpeza Geral', text: 'Remoção de opções de formulário (Hardware/Software/Computador/Monitor), exemplos (Servidor Dell, Data Center) e textos da Navbar, Seletor de Módulos e Painel.' },
+        { type: 'Engenharia Clínica', text: 'Módulo 100% focado na gestão de equipamentos biomédicos e prediais da clínica.' }
+      ]
+    },
+    {
       version: '3.3.21',
       date: '08/08/2026',
       title: 'Remoção de T.I. do Módulo de Manutenção',

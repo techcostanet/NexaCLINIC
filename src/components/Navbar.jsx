@@ -60,7 +60,7 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
     : currentModule === 'stock'
     ? 'NexaSTOCK'
     : currentModule === 'maintenance'
-    ? 'NexaSERVICE - Manutenção & TI'
+    ? 'NexaSERVICE - Manutenção'
     : currentModule === 'hr'
     ? 'NexaHR'
     : currentModule === 'finance'

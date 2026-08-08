@@ -41,9 +41,9 @@ export default function ModuleSelector({ user, onSelectModule }) {
     },
     {
       id: 'maintenance',
-      title: 'Manutenção, Engenharia & TI',
+      title: 'Manutenção & Engenharia Clínica',
       subtitle: 'NexaSERVICE - Ordem de Serviço',
-      description: 'Gestão de ativos biomédicos, prediais e suporte de TI (Hardware/Software) com histórico por equipamento.',
+      description: 'Gestão de ativos biomédicos e prediais com histórico técnico por equipamento e chamados de ordem de serviço.',
       icon: Wrench,
       color: '#0891b2', // cyan-600
       allowedRoles: ['admin', 'professional', 'technician', 'rh']
@@ -145,7 +145,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
   const userProfileConfig = profiles.find((p) => p.id === userRole);
 
   const visibleModules = modules.filter((mod) => {
-    // Módulo de Manutenção & TI (NexaSERVICE) é universal para todos os funcionários abrirem chamados
+    // Módulo de Manutenção (NexaSERVICE) é universal para todos os funcionários abrirem chamados
     if (mod.id === 'maintenance') return true;
 
     // Admin sempre visualiza todos os módulos

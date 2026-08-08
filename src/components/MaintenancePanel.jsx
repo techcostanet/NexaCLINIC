@@ -571,9 +571,9 @@ export default function MaintenancePanel({ currentUser }) {
             <Wrench size={24} color="#fff" />
           </div>
           <div>
-            <h1 style={styles.title}>NexaSERVICE - Manutenção & TI</h1>
+            <h1 style={styles.title}>NexaSERVICE - Manutenção</h1>
             <p style={styles.subtitle}>
-              Gestão integrada de Ativos Hospitalares, Engenharia Clínica, Equipamentos Prediais e Suporte de TI (Hardware & Software)
+              Gestão integrada de Ativos Hospitalares, Engenharia Clínica e Equipamentos Prediais
             </p>
           </div>
         </div>
@@ -715,10 +715,8 @@ export default function MaintenancePanel({ currentUser }) {
             onChange={(e) => setCategoryFilter(e.target.value)}
             style={styles.selectFilter}
           >
-            <option value="all">Todas Categoria (Biomédico, TI, Predial)</option>
+            <option value="all">Todas as Categorias (Biomédico, Predial)</option>
             <option value="Biomédico">Biomédico & Clínico</option>
-            <option value="TI Hardware">TI - Hardware</option>
-            <option value="TI Software">TI - Software & Licenças</option>
             <option value="Infraestrutura">Infraestrutura & Predial</option>
           </select>
 
@@ -732,8 +730,6 @@ export default function MaintenancePanel({ currentUser }) {
               <option value="Corretiva">Corretiva</option>
               <option value="Preventiva">Preventiva</option>
               <option value="Calibração">Calibração / Preditiva</option>
-              <option value="TI - Hardware">TI - Hardware</option>
-              <option value="TI - Software">TI - Software</option>
               <option value="Instalação">Instalação / Comissionamento</option>
             </select>
           )}
@@ -978,7 +974,7 @@ export default function MaintenancePanel({ currentUser }) {
       {activeTab === 'kpi' && (
         <div style={styles.kpiContainer}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a', marginBottom: '1rem' }}>
-            Indicadores de Desempenho (BI Manutenção & TI)
+            Indicadores de Desempenho (BI Manutenção)
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
@@ -1100,8 +1096,6 @@ export default function MaintenancePanel({ currentUser }) {
                         style={styles.input}
                       >
                         <option value="Corretiva">Equipamento Quebrado / Defeito</option>
-                        <option value="TI - Hardware">TI - Computador / Impressora / Monitor</option>
-                        <option value="TI - Software">TI - Sistema / Senha / Erro de Software</option>
                         <option value="Infraestrutura">Ar Condicionado / Elétrica / Predial</option>
                         <option value="Preventiva">Solicitação de Revisão / Calibração</option>
                       </select>
@@ -1336,7 +1330,7 @@ export default function MaintenancePanel({ currentUser }) {
                   <label style={styles.label}>Nome do Equipamento *</label>
                   <input 
                     type="text" 
-                    placeholder="Ex: Máquina de Hemodiálise, Servidor Dell..."
+                    placeholder="Ex: Máquina de Hemodiálise, Gerador, Osmose..."
                     value={eqForm.name}
                     onChange={(e) => setEqForm({ ...eqForm, name: e.target.value })}
                     style={styles.input}
@@ -1362,7 +1356,7 @@ export default function MaintenancePanel({ currentUser }) {
                   <label style={styles.label}>Setor / Localização *</label>
                   <input 
                     type="text" 
-                    placeholder="Ex: Salão A, Data Center, Recepção..."
+                    placeholder="Ex: Salão A de Hemodiálise, Recepção, Área Técnica..."
                     value={eqForm.sector}
                     onChange={(e) => setEqForm({ ...eqForm, sector: e.target.value })}
                     style={styles.input}
