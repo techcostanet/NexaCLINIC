@@ -2565,6 +2565,52 @@ const INITIAL_SERVICE_ORDERS = [
   }
 ];
 
+
+export const sanitizeTIEquipments = (list) => {
+  if (!Array.isArray(list)) return [];
+  return list.filter(e => {
+    if (!e) return false;
+    const cat = String(e.category || '').toLowerCase();
+    const subcat = String(e.subcategory || '').toLowerCase();
+    const id = String(e.id || '').toLowerCase();
+    const name = String(e.name || '').toLowerCase();
+    const code = String(e.code || '').toLowerCase();
+    const sector = String(e.sector || '').toLowerCase();
+
+    if (cat.includes('ti') || cat.includes('software') || cat.includes('hardware')) return false;
+    if (subcat.includes('servidor') || subcat.includes('impressora') || subcat.includes('erp')) return false;
+    if (id.includes('ti-') || id.includes('sw-') || id.includes('eqp-ti') || id.includes('eqp-sw')) return false;
+    if (code.includes('ti-') || code.includes('sw-') || code.includes('pat-ti') || code.includes('pat-sw')) return false;
+    if (name.includes('servidor') || name.includes('poweredge') || name.includes('zebra') || name.includes('licença nexa')) return false;
+    if (sector.includes('ti data center')) return false;
+
+    return true;
+  });
+};
+
+export const sanitizeTIOrders = (list) => {
+  if (!Array.isArray(list)) return [];
+  return list.filter(o => {
+    if (!o) return false;
+    const cat = String(o.equipmentCategory || o.category || '').toLowerCase();
+    const eqId = String(o.equipmentId || '').toLowerCase();
+    const type = String(o.type || '').toLowerCase();
+    const desc = String(o.description || '').toLowerCase();
+    const name = String(o.equipmentName || '').toLowerCase();
+    const tech = String(o.assignedTechnician || '').toLowerCase();
+    const req = String(o.requesterName || '').toLowerCase();
+
+    if (cat.includes('ti') || cat.includes('software') || cat.includes('hardware')) return false;
+    if (eqId.includes('ti') || eqId.includes('sw')) return false;
+    if (type.includes('ti')) return false;
+    if (desc.includes('servidor') || desc.includes('poweredge') || desc.includes('zebra')) return false;
+    if (name.includes('servidor') || name.includes('poweredge') || name.includes('zebra')) return false;
+    if (tech.includes('ti') || req.includes('ti')) return false;
+
+    return true;
+  });
+};
+
 const getStoredEquipments = () => {
   try {
     const data = localStorage.getItem(LOCAL_STORAGE_EQUIPMENTS_KEY);
@@ -2630,9 +2676,9 @@ export const getEquipments = async () => {
       }
       await batch.commit();
       const newSnap = await getDocs(collection(db, 'equipments'));
-      return newSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      return sanitizeTIEquipments(newSnap.docs.map(d => ({ id: d.id, ...d.data() })));
     }
-    return items;
+    return sanitizeTIEquipments(items);
   } catch (err) {
     console.error('Erro ao carregar equipments do Firestore:', err);
     return getStoredEquipments();
@@ -2718,7 +2764,7 @@ export const getServiceOrders = async () => {
       }
       await batch.commit();
       const newSnap = await getDocs(collection(db, 'service_orders'));
-      return newSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      return sanitizeTIOrders(newSnap.docs.map(d => ({ id: d.id, ...d.data() })));
     }
     return items;
   } catch (err) {

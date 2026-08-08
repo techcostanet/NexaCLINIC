@@ -80,14 +80,33 @@ export default function MaintenancePanel({ currentUser }) {
 
     if (dbService.subscribeToServiceOrders) {
       unsubOrders = dbService.subscribeToServiceOrders((orders) => {
-        setServiceOrders(orders || []);
+        setServiceOrders((orders || []).filter(o => {
+          const cat = String(o.equipmentCategory || o.category || '').toLowerCase();
+          const eqId = String(o.equipmentId || '').toLowerCase();
+          const type = String(o.type || '').toLowerCase();
+          const desc = String(o.description || '').toLowerCase();
+          const name = String(o.equipmentName || '').toLowerCase();
+          return !cat.includes('ti') && !cat.includes('software') && !cat.includes('hardware') &&
+                 !eqId.includes('ti') && !eqId.includes('sw') && !type.includes('ti') &&
+                 !desc.includes('servidor') && !desc.includes('poweredge') && !desc.includes('zebra') &&
+                 !name.includes('servidor') && !name.includes('poweredge') && !name.includes('zebra');
+        }));
         setLoading(false);
       });
     }
 
     if (dbService.subscribeToEquipments) {
       unsubEquips = dbService.subscribeToEquipments((eqs) => {
-        setEquipments(eqs || []);
+        setEquipments((eqs || []).filter(e => {
+          const cat = String(e.category || '').toLowerCase();
+          const id = String(e.id || '').toLowerCase();
+          const name = String(e.name || '').toLowerCase();
+          const code = String(e.code || '').toLowerCase();
+          return !cat.includes('ti') && !cat.includes('software') && !cat.includes('hardware') &&
+                 !id.includes('ti-') && !id.includes('sw-') && !id.includes('eqp-ti') && !id.includes('eqp-sw') &&
+                 !code.includes('ti-') && !code.includes('sw-') && !code.includes('pat-ti') && !code.includes('pat-sw') &&
+                 !name.includes('servidor') && !name.includes('poweredge') && !name.includes('zebra');
+        }));
         setLoading(false);
       });
     }
@@ -109,8 +128,27 @@ export default function MaintenancePanel({ currentUser }) {
         dbService.getInventoryItems ? dbService.getInventoryItems() : []
       ]);
 
-      setEquipments(eqList || []);
-      setServiceOrders(osList || []);
+      setEquipments((eqList || []).filter(e => {
+        const cat = String(e.category || '').toLowerCase();
+        const id = String(e.id || '').toLowerCase();
+        const name = String(e.name || '').toLowerCase();
+        const code = String(e.code || '').toLowerCase();
+        return !cat.includes('ti') && !cat.includes('software') && !cat.includes('hardware') &&
+               !id.includes('ti-') && !id.includes('sw-') && !id.includes('eqp-ti') && !id.includes('eqp-sw') &&
+               !code.includes('ti-') && !code.includes('sw-') && !code.includes('pat-ti') && !code.includes('pat-sw') &&
+               !name.includes('servidor') && !name.includes('poweredge') && !name.includes('zebra');
+      }));
+      setServiceOrders((osList || []).filter(o => {
+        const cat = String(o.equipmentCategory || o.category || '').toLowerCase();
+        const eqId = String(o.equipmentId || '').toLowerCase();
+        const type = String(o.type || '').toLowerCase();
+        const desc = String(o.description || '').toLowerCase();
+        const name = String(o.equipmentName || '').toLowerCase();
+        return !cat.includes('ti') && !cat.includes('software') && !cat.includes('hardware') &&
+               !eqId.includes('ti') && !eqId.includes('sw') && !type.includes('ti') &&
+               !desc.includes('servidor') && !desc.includes('poweredge') && !desc.includes('zebra') &&
+               !name.includes('servidor') && !name.includes('poweredge') && !name.includes('zebra');
+      }));
       setStockItems(itemsList || []);
     } catch (err) {
       console.error('Erro ao carregar dados de Manutenção:', err);

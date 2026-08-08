@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.24',
+      date: '08/08/2026',
+      title: 'Expurgo Automático de Ativos de TI Legados',
+      description: 'Limpeza automática e sanitização de cache local (localStorage) e banco contra equipamentos de TI antigos.',
+      changes: [
+        { type: 'Sanitização de Dados', text: 'Filtragem automática em tempo de execução para eliminar de forma definitiva Servidores Dell, Impressoras Zebra e itens de TI remanescentes em navegadores.' }
+      ]
+    },
+    {
       version: '3.3.23',
       date: '08/08/2026',
       title: 'Varredura Completa de T.I. no Módulo de Manutenção',
