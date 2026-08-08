@@ -15,8 +15,8 @@ export default function Login({ onLoginSuccess }) {
 
     try {
       const res = await authService.login(email, password);
-      if (res && res.user && onLoginSuccess) {
-        onLoginSuccess(res.user);
+      if (res && onLoginSuccess) {
+        onLoginSuccess(res.user || res); // Backwards compatible
       }
     } catch (err) {
       console.error("Erro no login:", err);

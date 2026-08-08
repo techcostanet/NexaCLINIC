@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.13',
+      date: '08 de Agosto, 2026',
+      title: 'Ajuste Crítico de Autenticação e Perfil',
+      description: 'Correções focadas na estabilidade do acesso e sincronização do perfil do usuário.',
+      changes: [
+        { type: 'Autenticação', text: 'Redefinição forçada de senha para usuário específico diretamente no Firebase Auth e Firestore.' },
+        { type: 'Sincronização', text: 'Correção no retorno do objeto de usuário no Login para garantir carregamento imediato do perfil (módulos e nome).' }
+      ]
+    },
+    {
       version: 'v3.3.9',
       date: '08 de Agosto, 2026',
       title: 'Sincronização e Fallback de Senhas de Login Multi-Dispositivo',

@@ -1,0 +1,71 @@
+{"users": [
+{
+  "localId": "DHbftFi6j5YcLUOfjK15miaTX1K3",
+  "email": "script_temp_runner@nexa.com",
+  "emailVerified": false,
+  "passwordHash": "FVwtUTE4d0LLnCFKOxYxC/e+UZHuEesYTibkZWItSF32bZAAghQbvgissTjafCu4NzFijXFUirt6nrgt7k2efw==",
+  "salt": "49L43z6teMuung==",
+  "lastSignedInAt": "1786020029124",
+  "createdAt": "1786020029124",
+  "providerUserInfo": []
+},
+{
+  "localId": "PyS5i3gDuUSpNU1fsI3Znx0ficb2",
+  "email": "giulliasp@nexa.com",
+  "emailVerified": false,
+  "passwordHash": "lplcxmdFEl3nymvoSbfmfwbL/0Vfs/V2ceTZHETN8LhYdQ+DRYEkH0bLzJkvEDUnGtsJHSBrsDJi9l4X/2pF5g==",
+  "salt": "fl+oe1ujEq/zhg==",
+  "lastSignedInAt": "1784893354976",
+  "createdAt": "1784893354976",
+  "providerUserInfo": []
+},
+{
+  "localId": "QKIXa0yBatRYSBqZGwFkXDvb4qf2",
+  "email": "daliam@nexa.com",
+  "emailVerified": false,
+  "passwordHash": "FoZ85TL5S2HoqhRqldpBK6t1XEcvdzu0xCRHpQ69b3Q3JI/cbsm2HqSFngEuduIIJ7dSus/cuapoZUZdwN9mjg==",
+  "salt": "k2pwxMuMBEaaCg==",
+  "lastSignedInAt": "1786128132807",
+  "createdAt": "1786042426294",
+  "providerUserInfo": []
+},
+{
+  "localId": "a30LU26XLYPLgOJPWD0rPBO25Sw2",
+  "email": "admin@clinica.com",
+  "emailVerified": false,
+  "passwordHash": "XmWLI4+5SLwIfELqYkMqxWDFMlglWYNzlwNy4R+5DbaS3gscCn2aUUgaJOyggU0M1sQZkmK2llXd4eQZCErrog==",
+  "salt": "jsLu0jhNN7Dgvw==",
+  "lastSignedInAt": "1784045595966",
+  "createdAt": "1784045440159",
+  "providerUserInfo": []
+},
+{
+  "localId": "c3vopPYNW5hfZPoqOODtcIbrxIf1",
+  "email": "anacg@nexa.com",
+  "emailVerified": false,
+  "passwordHash": "HLqnc3FGKu6NwDs6SELHlRWCFR2/dzO6ugEfvf8ufBrasrN8exCmTLbR67tSpF75bFXPuxePCLDBtMpFASMN4A==",
+  "salt": "9/vg11/moyz+jA==",
+  "lastSignedInAt": "1786203002980",
+  "createdAt": "1784743804315",
+  "providerUserInfo": []
+},
+{
+  "localId": "kfCryQTiSVMLOEPIhQQbqL0Ipyr1",
+  "email": "contato@techcosta.net",
+  "emailVerified": false,
+  "passwordHash": "iVGUkm+2/jt11DSMblxyh0roUVNMcFOxIUS1bB8gwNuPRAannt0fr+0OYQJZY92E+fP4mAnhjXCtnY/XXb626w==",
+  "salt": "uMT9Dw6MlIMmDA==",
+  "lastSignedInAt": "1786202898744",
+  "createdAt": "1784743786430",
+  "providerUserInfo": []
+},
+{
+  "localId": "srac5sNxa3TQjQvvENHNAggc5nW2",
+  "email": "jsoares@nexa.com",
+  "emailVerified": false,
+  "passwordHash": "6LygoN8i7fqNL2DS9nuk3Cgof1/JvA6XSeRBlnyroYfNAVyOnlK23IBoCDDrhAxO6B1QZBxiKmIwJdQNrjU9zw==",
+  "salt": "1pYRoy7r+2hYUA==",
+  "lastSignedInAt": "1785435425724",
+  "createdAt": "1784926491480",
+  "providerUserInfo": []
+}]}
