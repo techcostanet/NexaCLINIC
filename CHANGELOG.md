@@ -1,3 +1,10 @@
+## [v3.0.15] - 08 de Agosto, 2026
+### Módulo T.I: Alteração e Geração de Senha Temporária na Nuvem
+- **Recurso de Alteração de Senha:** Adicionadas opções de alterar a senha manualmente e gerar senhas temporárias dinâmicas diretamente na aba de Usuários do Sistema (Módulo de T.I / NexaCONFIG).
+- **Sincronização Imédiata na Nuvem (Cloud Firestore):** A nova senha ou a senha temporária é gravada e sincronizada instantaneamente na nuvem, permitindo que o usuário realize login de qualquer dispositivo ou local sem depender de trocas locais.
+
+---
+
 ## [v3.0.14] - 06 de Agosto, 2026
 ### Fallback Inteligente de Senha no Login (daliam@nexa.com)
 - **Flexibilidade de Login:** Adicionada rotina de autenticação com fallback inteligente no login para sincronizar contas de operadores predefinidos (`daliam@nexa.com`) independente do padrão da senha gerada na tentativa anterior (`dalia123`, `Daliam1234!`, `daliam123`).

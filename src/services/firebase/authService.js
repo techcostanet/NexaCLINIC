@@ -76,6 +76,28 @@ export const login = async (email, password) => {
       return await signInWithEmailAndPassword(auth, cleanEmail, password);
     } catch (err) {
       const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password';
+
+      // Check Cloud Firestore user record for custom/temp password
+      try {
+        const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+        const db = getFirestore(app);
+        const snap = await getDocs(collection(db, 'users'));
+        const userDoc = snap.docs.find(d => (d.data().email || '').trim().toLowerCase() === cleanEmail);
+        if (userDoc && userDoc.data().password && userDoc.data().password === password) {
+          // Password matches cloud Firestore stored password! Log in user under their record
+          const userData = userDoc.data();
+          return {
+            user: {
+              uid: userDoc.id,
+              email: cleanEmail,
+              displayName: userData.name
+            }
+          };
+        }
+      } catch (cloudErr) {
+        console.error("Erro ao verificar senha na nuvem:", cloudErr);
+      }
+      
       const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com', 'daliam@nexa.com'];
       
       if (isInvalidCred && allowedEmails.includes(cleanEmail)) {
@@ -291,6 +313,28 @@ export const updateUserPermissions = async (uid, allowedSectors) => {
     const db = getFirestore(app);
     return updateDoc(doc(db, 'users', uid), { allowedSectors, updatedAt: new Date().toISOString() });
   };
+
+export const updateUserPassword = async (uid, newPassword) => {
+  if (USE_MOCK) {
+    return mockFirestore.updateUserPassword ? mockFirestore.updateUserPassword(uid, newPassword) : true;
+  }
+  const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  return updateDoc(doc(db, 'users', uid), {
+    password: newPassword,
+    updatedAt: new Date().toISOString()
+  });
+};
+
+export const generateTempPassword = async (uid) => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
+  let tempPass = '';
+  for (let i = 0; i < 8; i++) {
+    tempPass += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  await updateUserPassword(uid, tempPass);
+  return tempPass;
+};
 
 export const updateUser = async (uid, userData) => {
     if (USE_MOCK) {

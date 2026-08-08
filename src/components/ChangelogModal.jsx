@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.0.15',
+      date: '08 de Agosto, 2026',
+      title: 'Módulo T.I: Alteração e Geração de Senha Temporária na Nuvem',
+      description: 'Opções de definir nova senha e gerar senha temporária com sincronização imediata no banco Firestore Cloud para acesso de qualquer local.',
+      changes: [
+        { type: 'Gestão de Usuários', text: 'Inclusão dos botões e formulários de "Senha" e "Gerar Temp" na tabela de usuários do sistema no NexaCONFIG (T.I).' },
+        { type: 'Autenticação Cloud', text: 'Sincronização imediata das credenciais no Firestore Cloud com fallback automático no fluxo de login.' }
+      ]
+    },
+    {
       version: 'v3.0.14',
       date: '06 de Agosto, 2026',
       title: 'Resiliência de Login do Operador Daliam',

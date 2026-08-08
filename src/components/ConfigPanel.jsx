@@ -3,7 +3,7 @@ import { dbService } from '../firebase';
 import { 
   Settings, Users, Shield, Globe, Database, Key, Check, Plus, X, 
   Trash2, ShieldAlert, CheckCircle2, Copy, Download, Upload, Palette,
-  ListFilter, Edit, Warehouse
+  ListFilter, Edit, Warehouse, KeyRound, RefreshCw
 } from 'lucide-react';
 
 export default function ConfigPanel() {
@@ -46,9 +46,11 @@ export default function ConfigPanel() {
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [tempPasswordMessage, setTempPasswordMessage] = useState('');
+  const [generatedTempPass, setGeneratedTempPass] = useState('');
   const [userForm, setUserForm] = useState({
     name: '',
     email: '',
+    password: '',
     role: 'reception', // profileId
     employeeId: '',
     status: 'active'
@@ -196,31 +198,54 @@ export default function ConfigPanel() {
     setShowUserModal(true);
   };
 
+  const handleGenerateTempPassword = async (user) => {
+    const targetUser = user || editingUser;
+    if (!targetUser) return;
+    setActionLoading(true);
+    try {
+      const tempPass = await dbService.generateTempPassword(targetUser.uid);
+      setGeneratedTempPass(tempPass);
+      showAlert(`Senha temporária gerada e salva no banco cloud para ${targetUser.name}!`, 'success');
+      logAudit('Senha Temporária Gerada', `Gerada nova senha temporária para o usuário ${targetUser.email}.`);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao gerar senha temporária.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleSaveUser = async (e) => {
     e.preventDefault();
     setActionLoading(true);
     try {
       if (editingUser) {
         await dbService.updateUser(editingUser.uid, userForm);
-        showAlert(`Acesso de "${userForm.name}" gravado!`, 'success');
+        if (userForm.password) {
+          await dbService.updateUserPassword(editingUser.uid, userForm.password);
+        }
+        showAlert(`Acesso de "${userForm.name}" gravado com sucesso no banco cloud!`, 'success');
         logAudit('Modificação de Usuário', `Usuário ${userForm.email} editado. Status: ${userForm.status}, Perfil: ${userForm.role}`);
         setShowUserModal(false);
       } else {
-        const tempPass = Math.random().toString(36).substring(2, 10);
+        const tempPass = userForm.password || Math.random().toString(36).substring(2, 10);
         const res = await dbService.createUser(userForm.email, userForm.name, userForm.role, []);
-        // Get created user to update employeeId & status if set
+        // Get created user to update employeeId, password & status
         const updatedUsers = await dbService.getUsers();
         const created = updatedUsers.find(u => (u.email || '').toLowerCase() === userForm.email.toLowerCase());
         if (created) {
           await dbService.updateUser(created.uid, {
             employeeId: userForm.employeeId,
-            status: userForm.status
+            status: userForm.status,
+            password: tempPass
           });
         }
         const msg = res?.isExisting
-          ? `O e-mail "${userForm.email}" já possuía cadastro de login na autenticação. O perfil e as permissões de "${userForm.name}" foram sincronizados com sucesso!`
-          : `Usuário criado com sucesso! Senha temporária gerada: ${tempPass}`;
+          ? `O e-mail "${userForm.email}" já possuía cadastro de login na autenticação. O perfil e a senha de "${userForm.name}" foram sincronizados na nuvem!`
+          : `Usuário criado com sucesso! Senha configurada na nuvem: ${tempPass}`;
         setTempPasswordMessage(msg);
+        setGeneratedTempPass(tempPass);
         logAudit('Criação de Usuário', `Usuário de login ${userForm.email} salvo sob perfil ${userForm.role}.`);
       }
       fetchData();
@@ -674,9 +699,15 @@ export default function ConfigPanel() {
                             </span>
                           </td>
                           <td>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                               <button onClick={() => handleOpenUserEdit(user)} style={styles.actionEditBtn}>
                                 Editar
+                              </button>
+                              <button onClick={() => { handleOpenUserEdit(user); }} style={{ ...styles.actionEditBtn, color: 'var(--primary-color)' }}>
+                                <KeyRound size={13} style={{ marginRight: '2px', verticalAlign: 'middle' }} /> Senha
+                              </button>
+                              <button onClick={() => handleGenerateTempPassword(user)} style={{ ...styles.actionEditBtn, color: '#f59e0b' }}>
+                                <RefreshCw size={13} style={{ marginRight: '2px', verticalAlign: 'middle' }} /> Gerar Temp
                               </button>
                               <button onClick={() => handleToggleUserStatus(user)} style={{ ...styles.actionEditBtn, color: user.status === 'active' ? 'var(--danger-color)' : '#10b981' }}>
                                 {user.status === 'active' ? 'Bloquear' : 'Ativar'}
@@ -997,6 +1028,41 @@ export default function ConfigPanel() {
                       ))}
                     </select>
                   </div>
+
+                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>
+                      {editingUser ? 'Nova Senha (deixe em branco para manter a atual)' : 'Senha de Acesso Inicial'}
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder={editingUser ? "Digite a nova senha de login" : "Ex: MinhaSenha123"} 
+                        value={userForm.password} 
+                        onChange={e => setUserForm({ ...userForm, password: e.target.value })} 
+                        style={{ flex: 1, padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                      />
+                      {editingUser && (
+                        <button 
+                          type="button" 
+                          onClick={() => handleGenerateTempPassword(editingUser)}
+                          disabled={actionLoading}
+                          className="btn btn-outline"
+                          title="Gerar Senha Temporária Dinâmica"
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: '600', color: '#f59e0b', borderColor: '#f59e0b', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                          <RefreshCw size={14} /> Gerar Temporária
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {generatedTempPass && (
+                    <div style={{ ...styles.alert, backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b', marginBottom: '0.85rem' }}>
+                      <KeyRound size={16} />
+                      <span>Senha Temporária Atual Salva na Nuvem: <strong>{generatedTempPass}</strong></span>
+                    </div>
+                  )}
                   
                   <div className="form-group" style={{ marginBottom: '0.85rem' }}>
                     <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Status de Login</label>
