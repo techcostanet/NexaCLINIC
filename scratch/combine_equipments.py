@@ -1,0 +1,147 @@
+# -*- coding: utf-8 -*-
+import json
+
+with open("scratch/extracted_equipments.json", "r", encoding="utf-8") as f:
+    extracted = json.load(f)
+
+# Original 6 initial items
+original_6 = [
+  {
+    "id": 'EQP-BIO-001',
+    "code": 'PAT-00101',
+    "name": 'Máquina de Hemodiálise Fresenius 4008S',
+    "category": 'Biomédico',
+    "subcategory": 'Hemodiálise',
+    "brand": 'Fresenius Medical Care',
+    "model": '4008S Classic',
+    "serialNumber": 'SN-4008S-9921',
+    "sector": 'Salão A de Hemodiálise',
+    "criticality": 'Alta',
+    "status": 'Em Operação',
+    "acquisitionDate": '2023-01-15',
+    "acquisitionValue": 125000.00,
+    "warrantyUntil": '2026-01-15',
+    "preventiveIntervalDays": 90,
+    "lastPreventiveDate": '2026-05-10',
+    "nextPreventiveDate": '2026-08-10',
+    "requiresCalibration": True,
+    "calibrationValidUntil": '2026-11-20',
+    "notes": 'Equipamento principal de diálise. Calibração de condutividade e fluxo em dia.'
+  },
+  {
+    "id": 'EQP-BIO-002',
+    "code": 'PAT-00102',
+    "name": 'Sistema de Osmose Reversa Duplo Passo 1500L/h',
+    "category": 'Biomédico',
+    "subcategory": 'Tratamento de Água',
+    "brand": 'PermeaTech',
+    "model": 'OSMO-DUO-1500',
+    "serialNumber": 'SN-OSM-2022-88',
+    "sector": 'Central de Tratamento de Água (CTA)',
+    "criticality": 'Alta',
+    "status": 'Em Operação',
+    "acquisitionDate": '2022-06-10',
+    "acquisitionValue": 280000.00,
+    "warrantyUntil": '2025-06-10',
+    "preventiveIntervalDays": 30,
+    "lastPreventiveDate": '2026-07-05',
+    "nextPreventiveDate": '2026-08-05',
+    "requiresCalibration": True,
+    "calibrationValidUntil": '2026-12-01',
+    "notes": 'Controle contínuo de condutividade e teste bacteriológico semanal.'
+  },
+  {
+    "id": 'EQP-TI-001',
+    "code": 'PAT-TI-001',
+    "name": 'Servidor Principal Dell PowerEdge R750',
+    "category": 'TI Hardware',
+    "subcategory": 'Servidor',
+    "brand": 'Dell Technologies',
+    "model": 'PowerEdge R750 Xeon Silver',
+    "serialNumber": 'DELL-R750-77X92',
+    "sector": 'TI Data Center',
+    "criticality": 'Alta',
+    "status": 'Em Operação',
+    "acquisitionDate": '2024-03-01',
+    "acquisitionValue": 45000.00,
+    "warrantyUntil": '2027-03-01',
+    "preventiveIntervalDays": 180,
+    "lastPreventiveDate": '2026-03-15',
+    "nextPreventiveDate": '2026-09-15',
+    "requiresCalibration": False,
+    "calibrationValidUntil": '',
+    "notes": 'Hospeda o banco de dados NexaCLINIC e serviços de aplicação. RAID 10 configurado.'
+  },
+  {
+    "id": 'EQP-SW-001',
+    "code": 'PAT-SW-001',
+    "name": 'Licença NexaCLINIC Enterprise v3.0',
+    "category": 'TI Software',
+    "subcategory": 'ERP / Sistema Clínico',
+    "brand": 'NexaAI Tech',
+    "model": 'CLINIC v3.0',
+    "serialNumber": 'LIC-NEXA-2026-ENT',
+    "sector": 'TI Data Center',
+    "criticality": 'Alta',
+    "status": 'Em Operação',
+    "acquisitionDate": '2025-01-01',
+    "acquisitionValue": 18000.00,
+    "warrantyUntil": '2027-01-01',
+    "preventiveIntervalDays": 90,
+    "lastPreventiveDate": '2026-06-01',
+    "nextPreventiveDate": '2026-09-01',
+    "requiresCalibration": False,
+    "calibrationValidUntil": '',
+    "notes": 'Suporta múltiplos módulos: Clínico, Recepção, Estoque, Financeiro e Manutenção.'
+  },
+  {
+    "id": 'EQP-PRED-001',
+    "code": 'PAT-PRD-001',
+    "name": 'Grupo Gerador Stemac 250kVA CUMMINS',
+    "category": 'Infraestrutura',
+    "subcategory": 'Energia',
+    "brand": 'Stemac / Cummins',
+    "model": 'ST-250KVA-SILENT',
+    "serialNumber": 'GEN-250-8891',
+    "sector": 'Área Técnica Externa',
+    "criticality": 'Alta',
+    "status": 'Em Operação',
+    "acquisitionDate": '2021-11-20',
+    "acquisitionValue": 195000.00,
+    "warrantyUntil": '2024-11-20',
+    "preventiveIntervalDays": 30,
+    "lastPreventiveDate": '2026-07-15',
+    "nextPreventiveDate": '2026-08-15',
+    "requiresCalibration": True,
+    "calibrationValidUntil": '2027-01-10',
+    "notes": 'Teste de transferência automática de carga semanal realizado às terças-feiras.'
+  },
+  {
+    "id": 'EQP-TI-002',
+    "code": 'PAT-TI-002',
+    "name": 'Impressora Térmica de Pulseiras e Receitas Zebra ZD421',
+    "category": 'TI Hardware',
+    "subcategory": 'Impressora',
+    "brand": 'Zebra Technologies',
+    "model": 'ZD421 Direct Thermal',
+    "serialNumber": 'ZEB-ZD421-5512',
+    "sector": 'Recepção 01',
+    "criticality": 'Média',
+    "status": 'Em Operação',
+    "acquisitionDate": '2024-05-10',
+    "acquisitionValue": 3200.00,
+    "warrantyUntil": '2026-05-10',
+    "preventiveIntervalDays": 120,
+    "lastPreventiveDate": '2026-05-20',
+    "nextPreventiveDate": '2026-09-20',
+    "requiresCalibration": False,
+    "calibrationValidUntil": '',
+    "notes": 'Impressão de etiquetas de identificação de pacientes e amostras laboratoriais.'
+  }
+]
+
+combined = original_6 + extracted
+print(f"Total equipment count: {len(combined)}")
+
+with open("scratch/combined_initial_equipments.json", "w", encoding="utf-8") as f:
+    json.dump(combined, f, ensure_ascii=False, indent=2)

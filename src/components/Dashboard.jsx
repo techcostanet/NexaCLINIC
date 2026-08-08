@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../firebase';
 import { BarChart3, Calendar, Filter, CheckCircle, AlertCircle, HelpCircle, ShieldAlert, Printer, FileText } from 'lucide-react';
+import AtaPsicologiaModal from './AtaPsicologiaModal';
 
 // A premium SVG Sparkline and Trend chart component
 function DynamicChart({ history, target, unit, lowerIsBetter, chartType = 'line' }) {
@@ -241,6 +242,7 @@ export default function Dashboard({ currentUser }) {
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [availablePeriods, setAvailablePeriods] = useState([]);
   const [chartTypes, setChartTypes] = useState({});
+  const [showAtaModal, setShowAtaModal] = useState(false);
 
   const handlePrint = (metricId, layout) => {
     const style = document.createElement('style');
@@ -446,6 +448,19 @@ export default function Dashboard({ currentUser }) {
                   </select>
                 </div>
               </div>
+              
+              {selectedSector === 'psicologia' && (
+                <div className="form-group" style={{ marginBottom: 0, display: 'flex', alignItems: 'flex-end' }}>
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={() => setShowAtaModal(true)}
+                    style={{ height: '38px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <FileText size={18} />
+                    Gerar Ata Mensal
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -618,6 +633,14 @@ export default function Dashboard({ currentUser }) {
             </div>
           )}
         </>
+      )}
+      {/* Modals and Overlays */}
+      {showAtaModal && selectedSector === 'psicologia' && (
+        <AtaPsicologiaModal 
+          onClose={() => setShowAtaModal(false)} 
+          selectedPeriod={selectedPeriod}
+          currentUser={currentUser}
+        />
       )}
     </div>
   );

@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.20',
+      date: '08/08/2026',
+      title: 'Módulo de Manutenção - Carga de Máquinas de Hemodiálise e Osmose',
+      description: 'Análise, desduplicação e cadastro completo de 112 máquinas de hemodiálise Nipro Diamax 220F e unidades de Osmose Portátil no Módulo de Manutenção.',
+      changes: [
+        { type: 'Equipamentos', text: 'Carga completa de 105 Máquinas de Hemodiálise Nipro Diamax 220F com número de série, salão, ponto de atendimento e histórico unificado de coleta de dialisato (2025 e 2026).' },
+        { type: 'Tratamento de Água', text: 'Cadastro de 7 unidades de Osmose Portátil para diálise externa (Deltamed, Ipabras e Vexer).' },
+        { type: 'Desduplicação', text: 'Cruzamento e consolidação de dados dos cronogramas 2025 e 2026 com remoção automática de registros duplicados por número de série.' }
+      ]
+    },
+    {
       version: '3.3.16',
       date: '08/08/2026',
       title: 'Desbloqueio de Lançamento BI',
