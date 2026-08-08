@@ -1,7 +1,7 @@
-## [v3.3.5] - 08 de Agosto, 2026
-### Correção Crítica: Autenticação Prioritária via Nuvem (Cloud Firestore)
-- **Consulta Prioritária de Credencial na Nuvem:** O sistema agora consulta a coleção `users` no Cloud Firestore no exato momento do clique em "Entrar no Sistema". Ao identificar a senha temporária/alterada salva na nuvem, valida o login imediatamente para o usuário.
-- **Login Universal Multi-Navegador:** Garante acesso imediato de qualquer navegador ou dispositivo secundário utilizando a senha temporária recém-gerada pelo T.I.
+## [v3.3.7] - 08 de Agosto, 2026
+### Correção Definitiva: Gravação e Validação Resiliente por E-mail/UID no Firestore
+- **Gravação Resiliente no Cloud Firestore:** A função `updateUserPassword` agora localiza o registro do usuário por `email` ou `uid`, escrevendo o campo `password` com a instrução `{ merge: true }`.
+- **Validação Imediata entre Navegadores:** Correção do problema onde a senha temporária/nova gerada no Navegador 1 não afetava a conta no Navegador 2 devido a divergências entre a chave ID interna e a chave do e-mail de login.
 
 ---
 

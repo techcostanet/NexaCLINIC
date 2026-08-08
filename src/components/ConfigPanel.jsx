@@ -203,9 +203,10 @@ export default function ConfigPanel() {
     if (!targetUser) return;
     setActionLoading(true);
     try {
-      const tempPass = await dbService.generateTempPassword(targetUser.uid);
+      const identifier = targetUser.email || targetUser.uid;
+      const tempPass = await dbService.generateTempPassword(identifier);
       setGeneratedTempPass(tempPass);
-      showAlert(`Senha temporária gerada e salva no banco cloud para ${targetUser.name}!`, 'success');
+      showAlert(`Senha temporária gerada e salva na nuvem para ${targetUser.name || targetUser.email}!`, 'success');
       logAudit('Senha Temporária Gerada', `Gerada nova senha temporária para o usuário ${targetUser.email}.`);
       fetchData();
     } catch (err) {
@@ -223,7 +224,8 @@ export default function ConfigPanel() {
       if (editingUser) {
         await dbService.updateUser(editingUser.uid, userForm);
         if (userForm.password) {
-          await dbService.updateUserPassword(editingUser.uid, userForm.password);
+          const identifier = editingUser.email || editingUser.uid;
+          await dbService.updateUserPassword(identifier, userForm.password);
         }
         showAlert(`Acesso de "${userForm.name}" gravado com sucesso no banco cloud!`, 'success');
         logAudit('Modificação de Usuário', `Usuário ${userForm.email} editado. Status: ${userForm.status}, Perfil: ${userForm.role}`);

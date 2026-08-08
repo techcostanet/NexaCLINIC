@@ -321,25 +321,50 @@ export const updateUserPermissions = async (uid, allowedSectors) => {
     return updateDoc(doc(db, 'users', uid), { allowedSectors, updatedAt: new Date().toISOString() });
   };
 
-export const updateUserPassword = async (uid, newPassword) => {
+export const updateUserPassword = async (identifier, newPassword) => {
   if (USE_MOCK) {
-    return mockFirestore.updateUserPassword ? mockFirestore.updateUserPassword(uid, newPassword) : true;
+    return mockFirestore.updateUserPassword ? mockFirestore.updateUserPassword(identifier, newPassword) : true;
   }
-  const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
+  const { getFirestore, collection, getDocs, doc, setDoc } = await import('firebase/firestore');
   const db = getFirestore(app);
-  return updateDoc(doc(db, 'users', uid), {
-    password: newPassword,
-    updatedAt: new Date().toISOString()
-  });
+  
+  // Identifier can be uid or email
+  const cleanId = (identifier || '').trim().toLowerCase();
+  
+  try {
+    const snap = await getDocs(collection(db, 'users'));
+    const userDoc = snap.docs.find(d => d.id === identifier || (d.data().email || '').trim().toLowerCase() === cleanId);
+    
+    if (userDoc) {
+      await setDoc(doc(db, 'users', userDoc.id), {
+        password: newPassword,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      return true;
+    } else if (cleanId.includes('@')) {
+      // Create record if not found by email
+      const newDocRef = doc(db, 'users', `user-${Math.random().toString(36).substr(2, 9)}`);
+      await setDoc(newDocRef, {
+        email: cleanId,
+        password: newPassword,
+        status: 'active',
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      return true;
+    }
+  } catch (err) {
+    console.error("Erro ao atualizar senha no Firestore:", err);
+    throw err;
+  }
 };
 
-export const generateTempPassword = async (uid) => {
+export const generateTempPassword = async (identifier) => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
   let tempPass = '';
   for (let i = 0; i < 8; i++) {
     tempPass += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  await updateUserPassword(uid, tempPass);
+  await updateUserPassword(identifier, tempPass);
   return tempPass;
 };
 

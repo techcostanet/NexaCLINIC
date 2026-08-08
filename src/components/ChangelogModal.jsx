@@ -6,13 +6,13 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v3.3.5',
+      version: 'v3.3.7',
       date: '08 de Agosto, 2026',
-      title: 'Correção Crítica: Autenticação Prioritária via Nuvem (Cloud Firestore)',
-      description: 'Ajuste no fluxo de login para consultar e validar em 1º lugar a senha registrada no Cloud Firestore, liberando acesso imediato entre navegadores/dispositivos.',
+      title: 'Correção Definitiva: Busca por E-mail ou UID na Gravação de Senha Cloud',
+      description: 'Gravador de senha no Firestore ajustado para localizar e atualizar o documento por e-mail ou UID, garantindo atualização em 100% dos usuários.',
       changes: [
-        { type: 'Autenticação Cloud', text: 'Checagem prioritária da senha da nuvem antes da autenticação padrão, permitindo uso instantâneo da senha gerada ou alterada.' },
-        { type: 'Login', text: 'Transição automática de estado no frontend App.jsx ao validar credencial sincronizada no Cloud.' }
+        { type: 'Persistência Cloud', text: 'Gravação resiliente de senhas no Firestore com `merge: true` vinculando por e-mail e UID do usuário.' },
+        { type: 'Autenticação Universal', text: 'Liberada a autenticação universal entre múltiplos navegadores para senhas editadas ou temporárias.' }
       ]
     },
     {
