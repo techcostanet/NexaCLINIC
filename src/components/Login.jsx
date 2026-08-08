@@ -14,7 +14,10 @@ export default function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
-      await authService.login(email, password);
+      const res = await authService.login(email, password);
+      if (res && res.user && onLoginSuccess) {
+        onLoginSuccess(res.user);
+      }
     } catch (err) {
       console.error("Erro no login:", err);
       let msg = 'Falha ao autenticar no sistema.';

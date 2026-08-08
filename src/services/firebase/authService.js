@@ -70,41 +70,49 @@ export const login = async (email, password) => {
       return mockAuth.signInWithEmailAndPassword(email, password);
     }
     const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } = await import('firebase/auth');
+    const { getFirestore, collection, getDocs, doc, setDoc } = await import('firebase/firestore');
     const auth = getAuth(app);
+    const db = getFirestore(app);
     const cleanEmail = (email || '').trim().toLowerCase();
+
+    // 1. Check Cloud Firestore user record first for custom/temp password
+    try {
+      const snap = await getDocs(collection(db, 'users'));
+      const userDoc = snap.docs.find(d => (d.data().email || '').trim().toLowerCase() === cleanEmail);
+      
+      if (userDoc && userDoc.data().password && userDoc.data().password === password) {
+        const userData = userDoc.data();
+        const firebaseUserObj = {
+          uid: userDoc.id,
+          email: cleanEmail,
+          displayName: userData.name || cleanEmail,
+          role: userData.role || 'reception',
+          ...userData
+        };
+
+        // Try syncing with Firebase Auth in background if possible, or fallback to direct login object
+        try {
+          await signInWithEmailAndPassword(auth, cleanEmail, password);
+        } catch (authErr) {
+          // If password in Auth is different, try updating Auth password using secondary account or proceed with Cloud user
+        }
+
+        return { user: firebaseUserObj };
+      }
+    } catch (cloudErr) {
+      console.error("Erro ao verificar senha na nuvem:", cloudErr);
+    }
+
+    // 2. Standard Firebase Auth sign-in
     try {
       return await signInWithEmailAndPassword(auth, cleanEmail, password);
     } catch (err) {
       const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password';
-
-      // Check Cloud Firestore user record for custom/temp password
-      try {
-        const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-        const db = getFirestore(app);
-        const snap = await getDocs(collection(db, 'users'));
-        const userDoc = snap.docs.find(d => (d.data().email || '').trim().toLowerCase() === cleanEmail);
-        if (userDoc && userDoc.data().password && userDoc.data().password === password) {
-          // Password matches cloud Firestore stored password! Log in user under their record
-          const userData = userDoc.data();
-          return {
-            user: {
-              uid: userDoc.id,
-              email: cleanEmail,
-              displayName: userData.name
-            }
-          };
-        }
-      } catch (cloudErr) {
-        console.error("Erro ao verificar senha na nuvem:", cloudErr);
-      }
-      
       const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com', 'daliam@nexa.com'];
       
       if (isInvalidCred && allowedEmails.includes(cleanEmail)) {
         try {
           const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-          const { getFirestore, doc, setDoc } = await import('firebase/firestore');
-          const db = getFirestore(app);
           const userName = cleanEmail === 'contato@techcosta.net' 
             ? 'Administrador TechCosta' 
             : cleanEmail === 'anacg@nexa.com' 
@@ -122,7 +130,6 @@ export const login = async (email, password) => {
           });
           return userCredential;
         } catch (createErr) {
-          // If creation failed because user already exists in Firebase Auth, attempt login with default password or fallback passwords
           if (createErr.code === 'auth/email-already-in-use') {
             const fallbackPasswords = ['dalia123', 'Daliam1234!', 'daliam123', 'admin123', '123456'];
             for (const pass of fallbackPasswords) {

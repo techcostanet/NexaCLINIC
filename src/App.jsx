@@ -93,7 +93,7 @@ export default function App() {
 
   // Auth Guard Guard
   if (!user) {
-    return <Login />;
+    return <Login onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />;
   }
 
   // If authenticated but no module selected, show selector
