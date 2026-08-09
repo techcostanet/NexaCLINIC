@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.26',
+      date: '08/08/2026',
+      title: 'Modos de Visualização (Compacto, Normal, Card) e Limpeza de Setores',
+      description: 'Adicionado seletor de modo de exibição nas abas e padronização da lista de setores.',
+      changes: [
+        { type: 'Visualização', text: 'Opções de visualização em modo Compacto (Padrão), Normal e Card para Ordens de Serviço, Equipamentos e Cronograma.' },
+        { type: 'Setores', text: 'Remoção de Salão A/B/C da lista padrão de setores para uso dos Salões 1, 2 e 3.' }
+      ]
+    },
+    {
       version: '3.3.25',
       date: '08/08/2026',
       title: 'Seletor de Setor e Localização de Equipamentos',

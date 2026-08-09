@@ -4,12 +4,15 @@ import {
   Wrench, Plus, Search, Filter, X, FileText, CheckCircle2, 
   AlertTriangle, Clock, Trash2, Edit, AlertCircle, HardDrive, 
   ShieldAlert, Calendar, BarChart3, QrCode, Cpu, Laptop, Layers, 
-  ChevronRight, RefreshCw, Check, AlertOctagon, Activity, DollarSign,
+  ChevronRight, RefreshCw, Check, AlertOctagon, Activity, DollarSign, AlignJustify, List, LayoutGrid,
   User, CheckSquare, Eye, Printer, ShieldCheck
 } from 'lucide-react';
 
 export default function MaintenancePanel({ currentUser }) {
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'equipments' | 'calendar' | 'kpi'
+  const [ordersViewMode, setOrdersViewMode] = useState('compact'); // 'compact' | 'normal' | 'card'
+  const [equipmentsViewMode, setEquipmentsViewMode] = useState('compact');
+  const [calendarViewMode, setCalendarViewMode] = useState('compact');
   const [equipments, setEquipments] = useState([]);
   const [serviceOrders, setServiceOrders] = useState([]);
   const [stockItems, setStockItems] = useState([]);
@@ -838,69 +841,102 @@ export default function MaintenancePanel({ currentUser }) {
               <p style={{ fontWeight: '600', color: '#475569', marginTop: '0.5rem' }}>Nenhuma Ordem de Serviço encontrada.</p>
               <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Aperte no botão "Nova Ordem de Serviço" acima para abrir um novo chamado.</p>
             </div>
+          ) : ordersViewMode === 'card' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+              {filteredOrders.map(order => {
+                const statusBadge = getStatusBadgeStyle(order.status);
+                return (
+                  <div key={order.id} style={{ background: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '1rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <span style={{ fontWeight: '700', fontSize: '0.9rem', color: '#0f172a' }}>{order.code}</span>
+                        <span style={{ ...styles.badge, backgroundColor: statusBadge.bg, color: statusBadge.text, border: `1px solid ${statusBadge.border}` }}>
+                          {order.status}
+                        </span>
+                      </div>
+                      <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#1e293b', margin: '0.2rem 0' }}>{order.equipmentName}</h4>
+                      <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0.1rem 0' }}>Local: <strong>{order.sector}</strong> | Categoria: {order.equipmentCategory}</p>
+                      <p style={{ fontSize: '0.8rem', color: '#475569', marginTop: '0.4rem' }}><strong>Problema:</strong> {order.description}</p>
+                      <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#475569', background: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>Tipo: {order.type}</span>
+                        {getPriorityBadge(order.priority)}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', paddingTop: '0.6rem', borderTop: '1px solid #f1f5f9' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                        <div>Sol: {order.requesterName}</div>
+                        <div style={{ color: '#0891b2', fontWeight: '500' }}>{order.assignedTechnician || 'Aguardando atribuição'}</div>
+                      </div>
+                      <button onClick={() => handleOpenEditOrder(order)} style={styles.btnCardAction} title="Editar OS / Atendimento">
+                        <Edit size={14} color="#0284c7" /> Atender OS
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             <div style={styles.tableContainer}>
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th style={styles.th}>Código OS</th>
-                    <th style={styles.th}>Equipamento / Ativo</th>
-                    <th style={styles.th}>Categoria</th>
-                    <th style={styles.th}>Tipo & Prioridade</th>
-                    <th style={styles.th}>Solicitante / Setor</th>
-                    <th style={styles.th}>Técnico Responsável</th>
-                    <th style={styles.th}>Status</th>
-                    <th style={styles.th}>Ações</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Código OS</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Equipamento / Ativo</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Categoria</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Tipo & Prioridade</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Solicitante / Setor</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Técnico Responsável</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Status</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredOrders.map(order => {
                     const statusBadge = getStatusBadgeStyle(order.status);
+                    const isCompact = ordersViewMode === 'compact';
                     return (
                       <tr key={order.id} style={styles.tr}>
-                        <td style={styles.td}>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
                           <span style={{ fontWeight: '700', color: '#0f172a' }}>{order.code}</span>
-                          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                            {new Date(order.openDate).toLocaleDateString('pt-BR')}
-                          </div>
+                          <span style={{ fontSize: '0.7rem', color: '#94a3b8', marginLeft: '0.4rem' }}>
+                            ({new Date(order.openDate).toLocaleDateString('pt-BR')})
+                          </span>
                         </td>
-                        <td style={styles.td}>
-                          <div style={{ fontWeight: '600', color: '#1e293b' }}>{order.equipmentName}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{order.sector}</div>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <span style={{ fontWeight: '600', color: '#1e293b' }}>{order.equipmentName}</span>
+                          <span style={{ fontSize: '0.72rem', color: '#64748b', marginLeft: '0.4rem' }}>[{order.sector}]</span>
                         </td>
-                        <td style={styles.td}>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
                           <span style={styles.categoryBadge}>{order.equipmentCategory}</span>
                         </td>
-                        <td style={styles.td}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                            <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#475569' }}>{order.type}</span>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#475569' }}>{order.type}</span>
                             {getPriorityBadge(order.priority)}
                           </div>
                         </td>
-                        <td style={styles.td}>
-                          <div style={{ fontSize: '0.85rem', color: '#334155' }}>{order.requesterName}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{order.requesterSector}</div>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <span>{order.requesterName}</span>
+                          <span style={{ fontSize: '0.72rem', color: '#64748b', marginLeft: '0.3rem' }}>({order.requesterSector})</span>
                         </td>
-                        <td style={styles.td}>
-                          <div style={{ fontSize: '0.85rem', fontWeight: '500', color: '#0891b2' }}>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <span style={{ fontWeight: '500', color: '#0891b2' }}>
                             {order.assignedTechnician || 'Aguardando atribuição'}
-                          </div>
+                          </span>
                         </td>
-                        <td style={styles.td}>
-                          <span style={{ ...styles.badge, backgroundColor: statusBadge.bg, color: statusBadge.text, border: `1px solid ${statusBadge.border}` }}>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <span style={{ ...styles.badge, backgroundColor: statusBadge.bg, color: statusBadge.text, border: `1px solid ${statusBadge.border}`, padding: isCompact ? '0.15rem 0.4rem' : '0.25rem 0.5rem', fontSize: isCompact ? '0.7rem' : '0.75rem' }}>
                             {order.status}
                           </span>
                         </td>
-                        <td style={styles.td}>
-                          <div style={{ display: 'flex', gap: '0.4rem' }}>
-                            <button 
-                              onClick={() => handleOpenEditOrder(order)} 
-                              style={styles.actionBtn}
-                              title="Editar OS / Laudo Técnico"
-                            >
-                              <Edit size={15} color="#0284c7" />
-                            </button>
-                          </div>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <button 
+                            onClick={() => handleOpenEditOrder(order)} 
+                            style={{ ...styles.actionBtn, padding: isCompact ? '0.15rem 0.3rem' : '0.3rem 0.5rem' }}
+                            title="Editar OS / Laudo Técnico"
+                          >
+                            <Edit size={14} color="#0284c7" />
+                          </button>
                         </td>
                       </tr>
                     );
@@ -925,7 +961,7 @@ export default function MaintenancePanel({ currentUser }) {
               <HardDrive size={40} color="#cbd5e1" />
               <p style={{ fontWeight: '600', color: '#475569', marginTop: '0.5rem' }}>Nenhum equipamento cadastrado com os filtros selecionados.</p>
             </div>
-          ) : (
+          ) : equipmentsViewMode === 'card' ? (
             <div style={styles.eqGrid}>
               {filteredEquipments.map(eq => {
                 const statusBadge = getStatusBadgeStyle(eq.status);
@@ -991,6 +1027,81 @@ export default function MaintenancePanel({ currentUser }) {
                 );
               })}
             </div>
+          ) : (
+            <div style={styles.tableContainer}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Patrimônio</th>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Equipamento</th>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Categoria</th>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Marca / Modelo</th>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Nº Série</th>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Setor / Local</th>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Próx. Preventiva</th>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Status</th>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredEquipments.map(eq => {
+                    const statusBadge = getStatusBadgeStyle(eq.status);
+                    const relatedOsCount = serviceOrders.filter(o => o.equipmentId === eq.id).length;
+                    const isCompact = equipmentsViewMode === 'compact';
+                    const isOverdue = eq.nextPreventiveDate && eq.nextPreventiveDate < new Date().toISOString().split('T')[0];
+
+                    return (
+                      <tr key={eq.id} style={styles.tr}>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <span style={{ fontWeight: '700', color: '#0f172a' }}>{eq.code}</span>
+                        </td>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <span style={{ fontWeight: '600', color: '#1e293b' }}>{eq.name}</span>
+                        </td>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <span style={styles.categoryBadge}>{eq.category}</span>
+                        </td>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <span>{eq.brand || 'N/A'} {eq.model ? `- ${eq.model}` : ''}</span>
+                        </td>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <span>{eq.serialNumber || 'N/A'}</span>
+                        </td>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <span style={{ fontWeight: '600', color: '#334155' }}>{eq.sector}</span>
+                        </td>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <span style={{ fontWeight: '600', color: isOverdue ? '#ef4444' : '#166534' }}>
+                            {eq.nextPreventiveDate ? new Date(eq.nextPreventiveDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não agendada'}
+                          </span>
+                        </td>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <span style={{ ...styles.badge, backgroundColor: statusBadge.bg, color: statusBadge.text, padding: isCompact ? '0.15rem 0.4rem' : '0.25rem 0.5rem', fontSize: isCompact ? '0.7rem' : '0.75rem' }}>
+                            {eq.status}
+                          </span>
+                        </td>
+                        <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
+                          <div style={{ display: 'flex', gap: '0.3rem' }}>
+                            <button onClick={() => handleOpenHistory(eq)} style={{ ...styles.actionBtn, padding: '0.2rem 0.4rem' }} title="Histórico de OS">
+                              <Clock size={13} /> ({relatedOsCount})
+                            </button>
+                            <button onClick={() => handleOpenQr(eq)} style={{ ...styles.actionBtn, padding: '0.2rem 0.4rem' }} title="Tag QR Code">
+                              <QrCode size={13} />
+                            </button>
+                            <button onClick={() => handleOpenNewOrder(eq)} style={{ ...styles.btnPrimary, padding: '0.2rem 0.4rem', fontSize: '0.72rem' }} title="Abrir OS">
+                              <Wrench size={12} /> OS
+                            </button>
+                            <button onClick={() => handleOpenEditEquipment(eq)} style={{ ...styles.actionBtn, padding: '0.2rem 0.4rem' }} title="Editar">
+                              <Edit size={13} color="#0284c7" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -1005,32 +1116,118 @@ export default function MaintenancePanel({ currentUser }) {
             </h2>
           </div>
 
-          <div style={styles.preventiveList}>
-            {equipments.map(eq => {
-              const isOverdue = eq.nextPreventiveDate && eq.nextPreventiveDate < new Date().toISOString().split('T')[0];
-              return (
-                <div key={eq.id} style={{ ...styles.preventiveItem, borderLeft: isOverdue ? '4px solid #ef4444' : '4px solid #10b981' }}>
-                  <div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>{eq.code} • {eq.category}</span>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#1e293b', margin: '0.1rem 0' }}>{eq.name}</h4>
-                    <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Local: {eq.sector} | Periodicidade: Cada {eq.preventiveIntervalDays || 90} dias</p>
+          {calendarViewMode === 'card' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+              {equipments.map(eq => {
+                const isOverdue = eq.nextPreventiveDate && eq.nextPreventiveDate < new Date().toISOString().split('T')[0];
+                return (
+                  <div key={eq.id} style={{ background: '#ffffff', borderRadius: '8px', border: isOverdue ? '1px solid #fca5a5' : '1px solid #cbd5e1', padding: '1rem', borderLeft: isOverdue ? '5px solid #ef4444' : '5px solid #10b981', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>
+                        <span>{eq.code}</span>
+                        <span>{eq.category}</span>
+                      </div>
+                      <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#1e293b', margin: '0.3rem 0' }}>{eq.name}</h4>
+                      <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0.2rem 0' }}>Local: <strong>{eq.sector}</strong></p>
+                      <p style={{ fontSize: '0.75rem', color: '#475569' }}>Intervalo: Cada {eq.preventiveIntervalDays || 90} dias</p>
+                    </div>
+                    <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: '600', color: isOverdue ? '#ef4444' : '#166534' }}>
+                          {isOverdue ? 'ATRASADA!' : 'Próxima:'}
+                        </div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a' }}>
+                          {eq.nextPreventiveDate ? new Date(eq.nextPreventiveDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não definida'}
+                        </div>
+                      </div>
+                      <button onClick={() => handleOpenNewOrder(eq)} style={{ ...styles.btnPrimary, padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
+                        <Wrench size={12} /> Agendar OS
+                      </button>
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+          ) : calendarViewMode === 'normal' ? (
+            <div style={styles.preventiveList}>
+              {equipments.map(eq => {
+                const isOverdue = eq.nextPreventiveDate && eq.nextPreventiveDate < new Date().toISOString().split('T')[0];
+                return (
+                  <div key={eq.id} style={{ ...styles.preventiveItem, borderLeft: isOverdue ? '4px solid #ef4444' : '4px solid #10b981' }}>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>{eq.code} • {eq.category}</span>
+                      <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#1e293b', margin: '0.1rem 0' }}>{eq.name}</h4>
+                      <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Local: {eq.sector} | Periodicidade: Cada {eq.preventiveIntervalDays || 90} dias</p>
+                    </div>
 
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: '600', color: isOverdue ? '#ef4444' : '#166534' }}>
-                      {isOverdue ? 'PREVENTIVA ATRASADA!' : 'Próxima Preventiva:'}
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: '600', color: isOverdue ? '#ef4444' : '#166534' }}>
+                        {isOverdue ? 'PREVENTIVA ATRASADA!' : 'Próxima Preventiva:'}
+                      </div>
+                      <div style={{ fontSize: '1rem', fontWeight: '700', color: '#0f172a' }}>
+                        {eq.nextPreventiveDate ? new Date(eq.nextPreventiveDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não definida'}
+                      </div>
+                      <button onClick={() => handleOpenNewOrder(eq)} style={{ ...styles.btnPrimary, padding: '0.25rem 0.5rem', fontSize: '0.75rem', marginTop: '0.4rem' }}>
+                        <Wrench size={12} /> Agendar OS Preventiva
+                      </button>
                     </div>
-                    <div style={{ fontSize: '1rem', fontWeight: '700', color: '#0f172a' }}>
-                      {eq.nextPreventiveDate ? new Date(eq.nextPreventiveDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não definida'}
-                    </div>
-                    <button onClick={() => handleOpenNewOrder(eq)} style={{ ...styles.btnPrimary, padding: '0.25rem 0.5rem', fontSize: '0.75rem', marginTop: '0.4rem' }}>
-                      <Wrench size={12} /> Agendar OS Preventiva
-                    </button>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={styles.tableContainer}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Código</th>
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Equipamento</th>
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Setor / Local</th>
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Periodicidade</th>
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Próxima Preventiva</th>
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Situação</th>
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {equipments.map(eq => {
+                    const isOverdue = eq.nextPreventiveDate && eq.nextPreventiveDate < new Date().toISOString().split('T')[0];
+                    return (
+                      <tr key={eq.id} style={styles.tr}>
+                        <td style={{ ...styles.td, padding: '0.25rem 0.5rem', fontSize: '0.78rem' }}>
+                          <span style={{ fontWeight: '700', color: '#0f172a' }}>{eq.code}</span>
+                        </td>
+                        <td style={{ ...styles.td, padding: '0.25rem 0.5rem', fontSize: '0.78rem' }}>
+                          <span style={{ fontWeight: '600', color: '#1e293b' }}>{eq.name}</span>
+                        </td>
+                        <td style={{ ...styles.td, padding: '0.25rem 0.5rem', fontSize: '0.78rem' }}>
+                          <span>{eq.sector}</span>
+                        </td>
+                        <td style={{ ...styles.td, padding: '0.25rem 0.5rem', fontSize: '0.78rem' }}>
+                          <span>Cada {eq.preventiveIntervalDays || 90} dias</span>
+                        </td>
+                        <td style={{ ...styles.td, padding: '0.25rem 0.5rem', fontSize: '0.78rem' }}>
+                          <span style={{ fontWeight: '700', color: isOverdue ? '#ef4444' : '#0f172a' }}>
+                            {eq.nextPreventiveDate ? new Date(eq.nextPreventiveDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não definida'}
+                          </span>
+                        </td>
+                        <td style={{ ...styles.td, padding: '0.25rem 0.5rem', fontSize: '0.78rem' }}>
+                          <span style={{ ...styles.badge, backgroundColor: isOverdue ? '#fee2e2' : '#dcfce7', color: isOverdue ? '#991b1b' : '#166534', padding: '0.15rem 0.4rem', fontSize: '0.7rem' }}>
+                            {isOverdue ? 'Atrasada' : 'Em Dia'}
+                          </span>
+                        </td>
+                        <td style={{ ...styles.td, padding: '0.25rem 0.5rem', fontSize: '0.78rem' }}>
+                          <button onClick={() => handleOpenNewOrder(eq)} style={{ ...styles.btnPrimary, padding: '0.2rem 0.45rem', fontSize: '0.72rem' }}>
+                            <Wrench size={12} /> Agendar OS
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -1057,7 +1254,7 @@ export default function MaintenancePanel({ currentUser }) {
             </div>
 
             <div style={styles.biCard}>
-              <h3 style={styles.biTitle}>SLA de Atendimento T.I.</h3>
+              <h3 style={styles.biTitle}>SLA de Atendimento Técnico</h3>
               <div style={styles.biValueBox}>
                 <div>
                   <span style={styles.biLabel}>Chamados no Prazo</span>
