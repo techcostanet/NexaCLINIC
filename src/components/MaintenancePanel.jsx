@@ -28,6 +28,30 @@ export default function MaintenancePanel({ currentUser }) {
 
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState(null);
+  const [isCustomSector, setIsCustomSector] = useState(false);
+
+  const sectorOptions = useMemo(() => {
+    const defaultSectors = [
+      "Salão-1",
+      "Salão-2",
+      "Salão-3",
+      "Salão A de Hemodiálise",
+      "Salão B de Hemodiálise",
+      "Salão C de Hemodiálise",
+      "Tratamento de Água (ETA / Osmose)",
+      "Reúso de Dialisadores",
+      "Posto de Enfermagem",
+      "Consultório Médico",
+      "EXPURGO / CME (Esterilização)",
+      "Recepção / Atendimento",
+      "Farmácia Clínica / Estoque",
+      "Área Técnica / Gerador / Compressores",
+      "Administrativo / Diretoria",
+      "Copa / Refeitório"
+    ];
+    const existingSectors = equipments.map(e => e.sector).filter(Boolean);
+    return Array.from(new Set([...defaultSectors, ...existingSectors]));
+  }, [equipments]);
 
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedEqHistory, setSelectedEqHistory] = useState(null);
@@ -411,12 +435,14 @@ export default function MaintenancePanel({ currentUser }) {
       calibrationValidUntil: '',
       notes: ''
     });
+    setIsCustomSector(false);
     setShowEquipmentModal(true);
   };
 
   const handleOpenEditEquipment = (eq) => {
     setEditingEquipment(eq);
     setEqForm({ ...eq });
+    setIsCustomSector(Boolean(eq.sector && !sectorOptions.includes(eq.sector)));
     setShowEquipmentModal(true);
   };
 
@@ -1392,14 +1418,37 @@ export default function MaintenancePanel({ currentUser }) {
 
                 <div style={styles.formField}>
                   <label style={styles.label}>Setor / Localização *</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: Salão A de Hemodiálise, Recepção, Área Técnica..."
-                    value={eqForm.sector}
-                    onChange={(e) => setEqForm({ ...eqForm, sector: e.target.value })}
+                  <select 
+                    value={sectorOptions.includes(eqForm.sector) ? eqForm.sector : (eqForm.sector ? 'Outro' : '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === 'Outro') {
+                        setEqForm({ ...eqForm, sector: '' });
+                        setIsCustomSector(true);
+                      } else {
+                        setEqForm({ ...eqForm, sector: val });
+                        setIsCustomSector(false);
+                      }
+                    }}
                     style={styles.input}
-                    required
-                  />
+                    required={!isCustomSector}
+                  >
+                    <option value="">Selecione o setor ou localização...</option>
+                    {sectorOptions.map(sec => (
+                      <option key={sec} value={sec}>{sec}</option>
+                    ))}
+                    <option value="Outro">Outro (Digitar setor personalizado...)</option>
+                  </select>
+                  {(isCustomSector || (eqForm.sector && !sectorOptions.includes(eqForm.sector))) && (
+                    <input 
+                      type="text" 
+                      placeholder="Digite o setor personalizado (Ex: Laboratório...)"
+                      value={eqForm.sector}
+                      onChange={(e) => setEqForm({ ...eqForm, sector: e.target.value })}
+                      style={{ ...styles.input, marginTop: '0.4rem' }}
+                      required
+                    />
+                  )}
                 </div>
               </div>
 
@@ -1408,7 +1457,7 @@ export default function MaintenancePanel({ currentUser }) {
                   <label style={styles.label}>Marca / Fabricante</label>
                   <input 
                     type="text" 
-                    placeholder="Ex: Fresenius, Dell, Zebra..."
+                    placeholder="Ex: Nipro, Fresenius, Stemac, Deltamed..."
                     value={eqForm.brand}
                     onChange={(e) => setEqForm({ ...eqForm, brand: e.target.value })}
                     style={styles.input}
@@ -1419,7 +1468,7 @@ export default function MaintenancePanel({ currentUser }) {
                   <label style={styles.label}>Modelo / Versão</label>
                   <input 
                     type="text" 
-                    placeholder="Ex: 4008S, PowerEdge R750..."
+                    placeholder="Ex: 4008S, Diamax 220F, ST-250KVA..."
                     value={eqForm.model}
                     onChange={(e) => setEqForm({ ...eqForm, model: e.target.value })}
                     style={styles.input}

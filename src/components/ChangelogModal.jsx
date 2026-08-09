@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.25',
+      date: '08/08/2026',
+      title: 'Seletor de Setor e Localização de Equipamentos',
+      description: 'Opções padronizadas de localização (Salão-1, Salão-2, Salão-3, etc) com suporte a setores personalizados.',
+      changes: [
+        { type: 'Formulário', text: 'Adicionado menu suspenso de setores contendo Salão-1, Salão-2, Salão-3, Salão A/B/C, Tratamento de Água, Reúso, CME, Enfermagem e opção de setor personalizado.' },
+        { type: 'Praticidade', text: 'Integração dinâmica dos setores existentes no sistema às opções selecionáveis.' }
+      ]
+    },
+    {
       version: '3.3.24',
       date: '08/08/2026',
       title: 'Expurgo Automático de Ativos de TI Legados',
