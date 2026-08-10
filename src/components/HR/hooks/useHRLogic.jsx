@@ -111,6 +111,10 @@ export function useHRLogic(currentUser) {
 
   // Transport Vouchers State
   const [transportVouchers, setTransportVouchers] = useState([]);
+  const [selectedVtPeriod, setSelectedVtPeriod] = useState('2026-08');
+  const [showVtImportModal, setShowVtImportModal] = useState(false);
+  const [vtImportPeriod, setVtImportPeriod] = useState('2026-09');
+  const [vtImportRawText, setVtImportRawText] = useState('');
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [voucherForm, setVoucherForm] = useState({
@@ -447,6 +451,101 @@ export function useHRLogic(currentUser) {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleBatchImportVTSubmit = async (period, vouchersList) => {
+    if (!vouchersList || vouchersList.length === 0) {
+      return showAlert('Nenhum dado válido para importar.', 'warning');
+    }
+    setActionLoading(true);
+    try {
+      await dbService.importTransportVouchersBatch(period, vouchersList);
+      showAlert(`Sucesso! ${vouchersList.length} concessões de VT importadas para o mês ${period}.`, 'success');
+      logAuditAction('Importação em Lote de VT', `Importados ${vouchersList.length} vales para o período ${period}.`);
+      setSelectedVtPeriod(period);
+      setShowVtImportModal(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao realizar importação em lote de VT.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSimulateNextMonthVT = async (targetPeriod) => {
+    if (!targetPeriod) return;
+    const currentList = transportVouchers.filter(v => (v.period || '2026-08') === selectedVtPeriod);
+    if (currentList.length === 0) {
+      return showAlert('Não existem dados no mês selecionado para projetar o próximo mês.', 'warning');
+    }
+    if (!window.confirm(`Deseja gerar a previsão de Vale-Transporte para o mês ${targetPeriod} com base nos ${currentList.length} colaboradores do período ${selectedVtPeriod}?`)) return;
+
+    setActionLoading(true);
+    try {
+      const simulated = currentList.map(v => {
+        const expected = parseFloat(v.expectedValue || v.totalValue) || 0;
+        const currentBal = Math.max(0, parseFloat(v.currentBalance) || 0);
+        const req = Math.max(0, expected - currentBal);
+        return {
+          employeeName: v.employeeName || (employees.find(e => e.id === v.employeeId)?.name || 'Colaborador'),
+          employeeId: v.employeeId,
+          idaCost: v.idaCost || 6.25,
+          voltaCost: v.voltaCost || 6.25,
+          dailyCost: v.dailyCost || 12.50,
+          workSchedule: v.workSchedule || 'SEGUNDA A SÁBADO',
+          expectedValue: expected,
+          balancePrevious: currentBal,
+          currentBalance: Math.max(0, currentBal - ((v.dailyCost || 12.50) * 10)),
+          rechargeNeeded: req,
+          route: v.route || 'Linha Urbana',
+          cardType: v.cardType || 'BetimCARD / BHBus',
+          cardNumber: v.cardNumber || ''
+        };
+      });
+
+      await dbService.importTransportVouchersBatch(targetPeriod, simulated);
+      showAlert(`Projeção para ${targetPeriod} criada com sucesso!`, 'success');
+      logAuditAction('Projeção de VT', `Gerou projeção de VT para ${targetPeriod}.`);
+      setSelectedVtPeriod(targetPeriod);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao gerar projeção do próximo mês.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleExportVTReport = () => {
+    const periodList = transportVouchers.filter(v => (v.period || '2026-08') === selectedVtPeriod);
+    if (periodList.length === 0) {
+      return showAlert('Nenhum dado para exportar no período selecionado.', 'warning');
+    }
+
+    let csvContent = "COLABORADOR;ESCALA;VALOR_IDA;VALOR_VOLTA;TARIFA_DIARIA;PREVISTO;SALDO_CARTAO;RECARGA_NECESSARIA;DESTAQUE\n";
+    periodList.forEach(v => {
+      const name = v.employeeName || (employees.find(e => e.id === v.employeeId)?.name || 'Sem Nome');
+      const escala = v.workSchedule || 'SEGUNDA A SÁBADO';
+      const ida = (parseFloat(v.idaCost) || 0).toFixed(2);
+      const volta = (parseFloat(v.voltaCost) || 0).toFixed(2);
+      const daily = (parseFloat(v.dailyCost) || 0).toFixed(2);
+      const prev = (parseFloat(v.expectedValue || v.totalValue) || 0).toFixed(2);
+      const bal = (parseFloat(v.currentBalance) || 0).toFixed(2);
+      const req = (parseFloat(v.rechargeNeeded) || 0).toFixed(2);
+      const tag = v.highlightType === 'orange' ? 'Especial/Novo' : (v.highlightType === 'yellow' ? 'Excedente' : (v.highlightType === 'red' ? 'Negativo' : 'Normal'));
+      
+      csvContent += `"${name}";"${escala}";${ida};${volta};${daily};${prev};${bal};${req};"${tag}"\n`;
+    });
+
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Relatorio_Vale_Transporte_${selectedVtPeriod}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Base64 Photo Upload Handler

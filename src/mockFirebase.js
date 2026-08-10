@@ -12752,10 +12752,123 @@ const getDB = () => {
       updated = true;
     }
 
-    if (!parsed.transport_vouchers) {
+    if (!parsed.transport_vouchers || !parsed.transport_vouchers.some(v => v.period === '2026-08')) {
+      const defaultAugustData = [
+        { employeeName: 'ADRIAN GABRIEL ALENCAR MOURA LEAL', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '2ª A 6ª', expectedValue: 262.50, balancePrevious: 251.25, currentBalance: 131.25, rechargeNeeded: 131.25, highlightType: null },
+        { employeeName: 'ALEXSANDRA REZENDE DE OLIVEIRA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '2ª A 6ª', expectedValue: 262.50, balancePrevious: 176.25, currentBalance: 56.25, rechargeNeeded: 206.25, highlightType: null },
+        { employeeName: 'ANA CAROLINA CERQUEIRA GONZAGA', idaCost: 6.25, voltaCost: 12.50, dailyCost: 18.75, workSchedule: '2ª A 6ª', expectedValue: 393.75, balancePrevious: 276.25, currentBalance: 156.25, rechargeNeeded: 237.50, highlightType: null },
+        { employeeName: 'ANA CAROLINA GUALBERTO DE CARVALHO SILVA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 382.50, currentBalance: 262.50, rechargeNeeded: 62.50, highlightType: null },
+        { employeeName: 'ANA CAROLINA LOPES SOUSA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '12X36', expectedValue: 200.00, balancePrevious: 170.00, currentBalance: 50.00, rechargeNeeded: 150.00, highlightType: null },
+        { employeeName: 'ANA CAROLINE ALVARO CORDEIRO OLIVEIRA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 295.00, currentBalance: 175.00, rechargeNeeded: 150.00, highlightType: null },
+        { employeeName: 'AVILMAR FERREIRA SANTOS', idaCost: 13.95, voltaCost: 6.25, dailyCost: 40.40, workSchedule: '2ª A 6ª', expectedValue: 80.80, balancePrevious: 0.00, currentBalance: 0.00, rechargeNeeded: 80.80, highlightType: 'orange' },
+        { employeeName: 'BARBARA COSTA PEREIRA', idaCost: 8.45, voltaCost: 8.45, dailyCost: 16.90, workSchedule: '2ª A 6ª', expectedValue: 354.90, balancePrevious: 0.00, currentBalance: 0.00, rechargeNeeded: 354.90, highlightType: 'orange' },
+        { employeeName: 'BRENO PORTES DE OLIVEIRA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 338.75, currentBalance: 218.75, rechargeNeeded: 106.25, highlightType: null },
+        { employeeName: 'CAMILA GABRIELE SANTOS SOUZA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 395.00, currentBalance: 275.00, rechargeNeeded: 50.00, highlightType: null },
+        { employeeName: 'CARLA EDUARDA DA SILVA MENDES', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '2ª A 6ª', expectedValue: 262.50, balancePrevious: 238.75, currentBalance: 118.75, rechargeNeeded: 143.75, highlightType: null },
+        { employeeName: 'CASSIA APARECIDA DE AVILA', idaCost: 17.00, voltaCost: 17.00, dailyCost: 34.00, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 884.00, balancePrevious: 0.00, currentBalance: 0.00, rechargeNeeded: 884.00, highlightType: 'orange' },
+        { employeeName: 'CATIA BATISTA DE OLIVEIRA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 338.75, currentBalance: 218.75, rechargeNeeded: 106.25, highlightType: null },
+        { employeeName: 'CLAÚDIO VINÍCIUS DO PATROCÍNIO', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 145.00, currentBalance: 25.00, rechargeNeeded: 300.00, highlightType: null },
+        { employeeName: 'CLEIDE MOREIRA ROCHA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 137.50, balancePrevious: 188.75, currentBalance: 68.75, rechargeNeeded: 68.75, highlightType: null },
+        { employeeName: 'DAIANE CARVALHO SILVA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 382.50, currentBalance: 262.50, rechargeNeeded: 62.50, highlightType: null },
+        { employeeName: 'DANIELY ALVES DE SOUZA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 332.50, currentBalance: 212.50, rechargeNeeded: 112.50, highlightType: null },
+        { employeeName: 'DAVINE TAMARA RODRIGUES', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 301.25, currentBalance: 181.25, rechargeNeeded: 143.75, highlightType: null },
+        { employeeName: 'DEBORA LUIZA ALVES RESENDE DOS SANTOS', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 382.50, currentBalance: 262.50, rechargeNeeded: 62.50, highlightType: null },
+        { employeeName: 'DEISE GRAZIELE CARDOSO PINTO', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 307.50, currentBalance: 187.50, rechargeNeeded: 137.50, highlightType: null },
+        { employeeName: 'DEUZENITE PEREIRA FRANCISCO', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 263.75, currentBalance: 143.75, rechargeNeeded: 181.25, highlightType: null },
+        { employeeName: 'EDIR EVANGELISTA DE OLIVEIRA PONTES', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '12X36', expectedValue: 200.00, balancePrevious: 195.00, currentBalance: 75.00, rechargeNeeded: 125.00, highlightType: null },
+        { employeeName: 'ELISIANE FIRMINO DE PAULO', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 232.50, currentBalance: 112.50, rechargeNeeded: 212.50, highlightType: null },
+        { employeeName: 'GABRIELLY GONÇAVES DUARTE', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '2ª A 6ª', expectedValue: 262.50, balancePrevious: 176.25, currentBalance: 56.25, rechargeNeeded: 206.25, highlightType: null },
+        { employeeName: 'GISLAINE MOREIRA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 401.25, currentBalance: 281.25, rechargeNeeded: 43.75, highlightType: null },
+        { employeeName: 'GIULLIA HANNA SANTOS', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '2ª A 6ª', expectedValue: 262.50, balancePrevious: 338.75, currentBalance: 218.75, rechargeNeeded: 43.75, highlightType: null },
+        { employeeName: 'GUILHERME FERREIRA MOZONI', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 238.75, currentBalance: 118.75, rechargeNeeded: 206.25, highlightType: null },
+        { employeeName: 'HELLEN PRISCILA DIAS DE CAMPOS', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 343.85, currentBalance: 223.85, rechargeNeeded: 101.15, highlightType: null },
+        { employeeName: 'IVANETE ROSA CASTRO DE ALMEIDA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '12X36', expectedValue: 200.00, balancePrevious: 401.25, currentBalance: 281.25, rechargeNeeded: -81.25, highlightType: 'yellow' },
+        { employeeName: 'IZAMARA DE JESUS SILVA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '12X36', expectedValue: 200.00, balancePrevious: 145.00, currentBalance: 25.00, rechargeNeeded: 175.00, highlightType: null },
+        { employeeName: 'JAINE PINHEIRO PAIM', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 201.25, currentBalance: 81.25, rechargeNeeded: 243.75, highlightType: null },
+        { employeeName: 'JAQUELINE DE OLIVEIRA SILVA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '12X36', expectedValue: 200.00, balancePrevious: 251.25, currentBalance: 131.25, rechargeNeeded: 68.75, highlightType: null },
+        { employeeName: 'JESSICA LUCIANA GONÇALVES DE ARAUJO', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 213.75, currentBalance: 93.75, rechargeNeeded: 231.25, highlightType: null },
+        { employeeName: 'JHENIFER FAUSTINO DIAS', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 263.75, currentBalance: 143.75, rechargeNeeded: 181.25, highlightType: null },
+        { employeeName: 'JHONATA BATISTA LOPES', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '12X36', expectedValue: 62.50, balancePrevious: 226.25, currentBalance: 106.25, rechargeNeeded: 0.00, highlightType: null },
+        { employeeName: 'JOANA CRISTINA GOMES DA SILVA SANTOS', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 370.00, currentBalance: 250.00, rechargeNeeded: 75.00, highlightType: null },
+        { employeeName: 'JOÃO VITOR PEREIRA DA SILVA ANDRADE', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 445.00, currentBalance: 325.00, rechargeNeeded: 60.00, highlightType: null },
+        { employeeName: 'JOSE DOS SANTOS VIEIRA DO CARMO', idaCost: 12.50, voltaCost: 12.50, dailyCost: 25.00, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 650.00, balancePrevious: 475.10, currentBalance: 355.10, rechargeNeeded: 294.90, highlightType: null },
+        { employeeName: 'KAUA HENRIQUE FERREIRA DA SILVA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '2ª A 6ª', expectedValue: 262.50, balancePrevious: 120.00, currentBalance: 0.00, rechargeNeeded: 262.50, highlightType: null },
+        { employeeName: 'KETLEN NATALIA MARIA DOS SANTOS MACHADO', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 257.55, currentBalance: 137.55, rechargeNeeded: 187.45, highlightType: null },
+        { employeeName: 'LARISSA STEFANY EVANGELISTA TELES', idaCost: 8.45, voltaCost: 8.45, dailyCost: 16.90, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 439.40, balancePrevious: 0.00, currentBalance: 0.00, rechargeNeeded: 439.40, highlightType: 'orange' },
+        { employeeName: 'LEILA DOS SANTOS COSTA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 338.75, currentBalance: 218.75, rechargeNeeded: 106.25, highlightType: null },
+        { employeeName: 'LETICIA DE OLIVEIRA BRAGA', idaCost: 0.00, voltaCost: 6.25, dailyCost: 6.25, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 162.50, balancePrevious: 226.25, currentBalance: 106.25, rechargeNeeded: 56.25, highlightType: null },
+        { employeeName: 'LIA CRISTINA DE OLIVEIRA SILVA ANTONIO DO ESPIRITO SANTO', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 540.00, currentBalance: 420.00, rechargeNeeded: 0.00, highlightType: null },
+        { employeeName: 'MARIANA DE MORAIS CARVALHO', idaCost: 17.45, voltaCost: 17.45, dailyCost: 34.90, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 907.40, balancePrevious: 0.00, currentBalance: 0.00, rechargeNeeded: 907.40, highlightType: 'orange' },
+        { employeeName: 'MARIANA DE PAULA RODRIGUES PINTO', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '2ª A 6ª', expectedValue: 262.50, balancePrevious: 113.75, currentBalance: -6.25, rechargeNeeded: 268.75, highlightType: 'red' },
+        { employeeName: 'MARILENE BARBOSA DA SILVA MENDONÇA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 445.00, currentBalance: 325.00, rechargeNeeded: 0.00, highlightType: null },
+        { employeeName: 'MARILIA RODRIGUES GONÇALVES DEODATO', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 307.50, currentBalance: 187.50, rechargeNeeded: 137.50, highlightType: null },
+        { employeeName: 'MARLENE DOS ANJOS SOARES DA SILVA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 420.00, currentBalance: 300.00, rechargeNeeded: 25.00, highlightType: null },
+        { employeeName: 'MARLY MARQUES DE OLIVEIRA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 301.25, currentBalance: 181.25, rechargeNeeded: 143.75, highlightType: null },
+        { employeeName: 'MAYANE CABRAL DA MOTA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '12X36', expectedValue: 200.00, balancePrevious: 86.20, currentBalance: -33.80, rechargeNeeded: 233.80, highlightType: 'red' },
+        { employeeName: 'NATÁLIA GERALDA DE SOUZA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 276.25, currentBalance: 156.25, rechargeNeeded: 168.75, highlightType: null },
+        { employeeName: 'NYCOLE GOMES SOARES', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 288.75, currentBalance: 168.75, rechargeNeeded: 156.25, highlightType: null },
+        { employeeName: 'PAMELA CRISTINA DE SOUZA MATOS', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 251.25, currentBalance: 131.25, rechargeNeeded: 193.75, highlightType: null },
+        { employeeName: 'PEDRO CASTRO DE ALMEIDA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '2ª A 6ª', expectedValue: 262.50, balancePrevious: 0.00, currentBalance: -120.00, rechargeNeeded: 382.50, highlightType: 'red' },
+        { employeeName: 'POLIANA SABRINA MARTINS DUARTE', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '2ª A 6ª', expectedValue: 262.50, balancePrevious: 313.75, currentBalance: 193.75, rechargeNeeded: 68.75, highlightType: null },
+        { employeeName: 'RITA RENATA MOREIRA XAVIER', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '2ª A 6ª', expectedValue: 262.50, balancePrevious: 376.25, currentBalance: 256.25, rechargeNeeded: 10.00, highlightType: null },
+        { employeeName: 'ROSANA BARBOSA DOS SANTOS', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 395.00, currentBalance: 275.00, rechargeNeeded: 50.00, highlightType: null },
+        { employeeName: 'SHEILA FERREIRA SCHUFFNER', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 257.50, currentBalance: 137.50, rechargeNeeded: 187.50, highlightType: null },
+        { employeeName: 'SIDNEI APARECIDO PEREIRA PEIXOTO', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '12X36', expectedValue: 200.00, balancePrevious: 332.50, currentBalance: 212.50, rechargeNeeded: 0.00, highlightType: null },
+        { employeeName: 'SILVANA RODRIGUES MARQUES', idaCost: 18.00, voltaCost: 18.00, dailyCost: 36.00, workSchedule: '12X36', expectedValue: 576.00, balancePrevious: 468.00, currentBalance: 0.00, rechargeNeeded: 108.00, highlightType: 'orange' },
+        { employeeName: 'SUILA JULIANA RODRIGUES NOGUEIRA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 257.50, currentBalance: 137.50, rechargeNeeded: 187.50, highlightType: null },
+        { employeeName: 'TATIELE VITOR DE OLIVEIRA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: 'SEGUNDA A SÁBADO', expectedValue: 325.00, balancePrevious: 388.75, currentBalance: 268.75, rechargeNeeded: 56.25, highlightType: null },
+        { employeeName: 'THALITA MAIA NOGUEIRA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '12X36', expectedValue: 200.00, balancePrevious: 138.75, currentBalance: 18.75, rechargeNeeded: 181.25, highlightType: null },
+        { employeeName: 'THAMER MAIA NOGUEIRA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '12X36', expectedValue: 200.00, balancePrevious: 263.75, currentBalance: 143.75, rechargeNeeded: 56.25, highlightType: null },
+        { employeeName: 'VITORIA MARIA BALDAIA OLIVEIRA COSTA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '2ª A 6ª', expectedValue: 262.50, balancePrevious: 182.50, currentBalance: 62.50, rechargeNeeded: 200.00, highlightType: null },
+        { employeeName: 'YASMIN LORENI DE SOUZA SILVA', idaCost: 6.25, voltaCost: 6.25, dailyCost: 12.50, workSchedule: '2ª A 6ª', expectedValue: 262.50, balancePrevious: 357.50, currentBalance: 237.50, rechargeNeeded: 50.00, highlightType: null }
+      ];
+
+      if (!parsed.employees) parsed.employees = [];
+
+      const augustVouchers = defaultAugustData.map((v, idx) => {
+        let emp = parsed.employees.find(e => e.name && e.name.trim().toLowerCase() === v.employeeName.trim().toLowerCase());
+        if (!emp) {
+          emp = {
+            id: 'emp-vtaug-' + (idx + 1),
+            name: v.employeeName,
+            role: 'Colaborador CLT',
+            sectorId: 'rh',
+            admissionDate: '2024-01-01',
+            contractType: 'CLT',
+            salary: 2500,
+            status: 'Ativo',
+            city: 'Betim',
+            state: 'MG'
+          };
+          parsed.employees.push(emp);
+        }
+        return {
+          id: 'vt-aug-' + (idx + 1),
+          employeeId: emp.id,
+          employeeName: v.employeeName,
+          route: 'Linha Urbana - Betim / BH',
+          idaCost: v.idaCost,
+          voltaCost: v.voltaCost,
+          dailyCost: v.dailyCost,
+          workSchedule: v.workSchedule,
+          expectedValue: v.expectedValue,
+          daysCount: v.workSchedule === '2ª A 6ª' ? 21 : (v.workSchedule === '12X36' ? 16 : 26),
+          totalValue: v.expectedValue,
+          balancePrevious: v.balancePrevious,
+          currentBalance: v.currentBalance,
+          rechargeNeeded: Math.max(0, v.rechargeNeeded),
+          rawRechargeNeeded: v.rechargeNeeded,
+          cardType: 'BetimCARD / BHBus',
+          cardNumber: '31' + String(100000 + idx),
+          period: '2026-08',
+          highlightType: v.highlightType,
+          discountPercent: 6
+        };
+      });
+
       parsed.transport_vouchers = [
-        { id: 'vt-1', employeeId: 'emp-1', route: '302B - Industrial / Centro', dailyCost: 11.00, daysCount: 22, totalValue: 242.00, cardType: 'BHBus', cardNumber: '00112233', discountPercent: 6 },
-        { id: 'vt-2', employeeId: 'emp-2', route: 'Metrô + Alimentador', dailyCost: 14.50, daysCount: 20, totalValue: 290.00, cardType: 'Ótimo', cardNumber: '99887766', discountPercent: 6 }
+        ...(parsed.transport_vouchers || []).filter(v => v.period !== '2026-08'),
+        ...augustVouchers
       ];
       updated = true;
     }
@@ -14765,6 +14878,71 @@ export const mockFirestore = {
       setDB(db);
     }
     return { success: true };
+  },
+
+  importTransportVouchersBatch: async (period, vouchersList) => {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const db = getDB();
+    if (!db.transport_vouchers) db.transport_vouchers = [];
+    if (!db.employees) db.employees = [];
+
+    // Filter out previous vouchers for this period
+    db.transport_vouchers = db.transport_vouchers.filter(v => v.period !== period);
+
+    const newItems = vouchersList.map((v, idx) => {
+      let empName = (v.employeeName || v.name || 'Sem Nome').trim();
+      let emp = db.employees.find(e => e.name && e.name.trim().toLowerCase() === empName.toLowerCase());
+      if (!emp && empName) {
+        emp = {
+          id: 'emp-imp-' + Math.random().toString(36).substr(2, 7),
+          name: empName.toUpperCase(),
+          role: 'Colaborador CLT',
+          sectorId: 'rh',
+          admissionDate: new Date().toISOString().split('T')[0],
+          contractType: 'CLT',
+          salary: 2500,
+          status: 'Ativo',
+          city: 'Betim',
+          state: 'MG'
+        };
+        db.employees.push(emp);
+      }
+
+      const ida = parseFloat(v.idaCost || v.ida) || 0;
+      const volta = parseFloat(v.voltaCost || v.volta) || 0;
+      const daily = parseFloat(v.dailyCost || v.totalDia) || (ida + volta);
+      const expected = parseFloat(v.expectedValue || v.previsto) || 0;
+      const prevBal = parseFloat(v.balancePrevious || v.noCartao) || 0;
+      const currBal = parseFloat(v.currentBalance || v.cartao) || 0;
+      const req = parseFloat(v.rechargeNeeded || v.recarga) || 0;
+
+      return {
+        id: 'vt-' + period.replace('-', '') + '-' + (idx + 1),
+        employeeId: emp ? emp.id : '',
+        employeeName: empName.toUpperCase(),
+        route: v.route || 'Linha Urbana',
+        idaCost: ida,
+        voltaCost: volta,
+        dailyCost: daily,
+        workSchedule: v.workSchedule || v.escala || 'SEGUNDA A SÁBADO',
+        expectedValue: expected,
+        daysCount: parseInt(v.daysCount) || (v.workSchedule === '2ª A 6ª' ? 21 : (v.workSchedule === '12X36' ? 16 : 26)),
+        totalValue: expected,
+        balancePrevious: prevBal,
+        currentBalance: currBal,
+        rechargeNeeded: Math.max(0, req),
+        rawRechargeNeeded: req,
+        cardType: v.cardType || 'BetimCARD / BHBus',
+        cardNumber: v.cardNumber || '',
+        period: period,
+        highlightType: v.highlightType || (req < 0 ? 'yellow' : (prevBal === 0 && currBal === 0 ? 'orange' : null)),
+        discountPercent: 6
+      };
+    });
+
+    db.transport_vouchers.push(...newItems);
+    setDB(db);
+    return newItems;
   },
 
   // Audit Logs

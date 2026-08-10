@@ -201,3 +201,20 @@ export const deleteTransportVoucher = async (id: string): Promise<any> => {
     await deleteDoc(doc(db, 'transport_vouchers', id));
     return { success: true };
   };
+
+export const importTransportVouchersBatch = async (period: string, vouchersList: any[]): Promise<any> => {
+    if (USE_MOCK) return mockFirestore.importTransportVouchersBatch(period, vouchersList);
+    const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const results = [];
+    for (const item of vouchersList) {
+      const docRef = await addDoc(collection(db, 'transport_vouchers'), {
+        ...item,
+        period,
+        createdAt: new Date().toISOString()
+      });
+      results.push({ id: docRef.id, ...item, period });
+    }
+    return results;
+  };
+

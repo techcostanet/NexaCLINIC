@@ -105,6 +105,10 @@ export default function HRPanel({ currentUser }) {
     setShowImportPreview,
     transportVouchers,
     setTransportVouchers,
+    selectedVtPeriod,
+    setSelectedVtPeriod,
+    handleSimulateNextMonthVT,
+    handleExportVTReport,
     showVoucherModal,
     setShowVoucherModal,
     editingVoucher,
@@ -518,111 +522,205 @@ export default function HRPanel({ currentUser }) {
           )}
 
           {/* TAB: Vale-Transporte */}
-          {activeTab === 'transport' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-color)' }}>Benefício de Vale-Transporte (VT)</h2>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Configuração de itinerários, controle de recargas e simulação de descontos em folha de pagamento.</p>
-                </div>
-                <button onClick={handleOpenVoucherAdd} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: '#ec4899' }}>
-                  <Plus size={16} /> Nova Concessão
-                </button>
-              </div>
+          {activeTab === 'transport' && (() => {
+            const currentVtList = transportVouchers.filter(v => (v.period || '2026-08') === selectedVtPeriod);
+            const totalPrevisto = currentVtList.reduce((acc, curr) => acc + (parseFloat(curr.expectedValue || curr.totalValue || ((curr.dailyCost || 0) * (curr.daysCount || 22))) || 0), 0);
+            const totalSaldo = currentVtList.reduce((acc, curr) => acc + (parseFloat(curr.currentBalance) || 0), 0);
+            const totalRecarga = currentVtList.reduce((acc, curr) => acc + (parseFloat(curr.rechargeNeeded) > 0 ? parseFloat(curr.rechargeNeeded) : 0), 0);
+            const totalDescontoFolha = currentVtList.reduce((acc, curr) => {
+              const emp = employees.find(e => e.id === curr.employeeId || (e.name && e.name.trim().toLowerCase() === (curr.employeeName || '').trim().toLowerCase()));
+              const sal = emp ? parseFloat(emp.salary) || 2500 : 2500;
+              const maxDiscount = sal * 0.06;
+              const cost = parseFloat(curr.expectedValue || curr.totalValue) || 0;
+              return acc + Math.min(maxDiscount, cost);
+            }, 0);
 
-              {/* VT Summary Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                <div style={{ ...styles.kpiCard, borderLeftColor: '#ec4899', display: 'flex', flexDirection: 'column' }}>
-                  <span style={styles.kpiLabel}>Total de Beneficiários</span>
-                  <span style={styles.kpiVal}>{transportVouchers.length}</span>
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Bus size={20} style={{ color: '#ec4899' }} /> Gestão & Concessão de Vale-Transporte (VT)
+                    </h2>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Controle de itinerários, recargas por período, regras de cartão e folha de pagamento.</p>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    {/* Period Selector */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--bg-card)', padding: '0.4rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                      <label style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>Mês/Ano:</label>
+                      <select
+                        value={selectedVtPeriod}
+                        onChange={(e) => setSelectedVtPeriod(e.target.value)}
+                        style={{ border: 'none', background: 'transparent', fontWeight: '700', color: 'var(--text-color)', cursor: 'pointer', outline: 'none' }}
+                      >
+                        <option value="2026-08">Agosto / 2026</option>
+                        <option value="2026-09">Setembro / 2026</option>
+                        <option value="2026-10">Outubro / 2026</option>
+                        <option value="2026-07">Julho / 2026</option>
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={() => handleSimulateNextMonthVT(selectedVtPeriod === '2026-08' ? '2026-09' : '2026-10')}
+                      className="btn"
+                      style={{ backgroundColor: '#8b5cf6', color: '#fff', fontSize: '0.85rem', padding: '0.5rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderRadius: '6px', fontWeight: '600' }}
+                      title="Projetar recargas para o próximo mês com base no período selecionado"
+                    >
+                      ⚡ Projeção Próximo Mês
+                    </button>
+
+                    <button
+                      onClick={handleExportVTReport}
+                      className="btn"
+                      style={{ backgroundColor: '#10b981', color: '#fff', fontSize: '0.85rem', padding: '0.5rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderRadius: '6px', fontWeight: '600' }}
+                    >
+                      <Download size={15} /> Exportar Relatório VT
+                    </button>
+
+                    <button onClick={handleOpenVoucherAdd} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: '#ec4899' }}>
+                      <Plus size={16} /> Nova Concessão
+                    </button>
+                  </div>
                 </div>
-                <div style={{ ...styles.kpiCard, borderLeftColor: '#10b981', display: 'flex', flexDirection: 'column' }}>
-                  <span style={styles.kpiLabel}>Custo Bruto Mensal VT</span>
-                  <span style={styles.kpiVal}>
-                    R$ {transportVouchers.reduce((acc, curr) => acc + ((parseFloat(curr.dailyCost) || 0) * (parseInt(curr.daysCount) || 0)), 0).toFixed(2)}
-                  </span>
+
+                {/* VT Summary Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                  <div style={{ ...styles.kpiCard, borderLeftColor: '#ec4899', display: 'flex', flexDirection: 'column' }}>
+                    <span style={styles.kpiLabel}>Beneficiários no Mês</span>
+                    <span style={styles.kpiVal}>{currentVtList.length}</span>
+                  </div>
+                  <div style={{ ...styles.kpiCard, borderLeftColor: '#3b82f6', display: 'flex', flexDirection: 'column' }}>
+                    <span style={styles.kpiLabel}>Custo Previsto Bruto</span>
+                    <span style={styles.kpiVal}>R$ {totalPrevisto.toFixed(2)}</span>
+                  </div>
+                  <div style={{ ...styles.kpiCard, borderLeftColor: '#10b981', display: 'flex', flexDirection: 'column' }}>
+                    <span style={styles.kpiLabel}>Saldo em Cartões</span>
+                    <span style={styles.kpiVal}>R$ {totalSaldo.toFixed(2)}</span>
+                  </div>
+                  <div style={{ ...styles.kpiCard, borderLeftColor: '#ef4444', display: 'flex', flexDirection: 'column' }}>
+                    <span style={styles.kpiLabel}>Recarga Necessária Total</span>
+                    <span style={styles.kpiVal}>R$ {totalRecarga.toFixed(2)}</span>
+                  </div>
+                  <div style={{ ...styles.kpiCard, borderLeftColor: '#f59e0b', display: 'flex', flexDirection: 'column' }}>
+                    <span style={styles.kpiLabel}>Desconto Folha (6%)</span>
+                    <span style={styles.kpiVal}>R$ {totalDescontoFolha.toFixed(2)}</span>
+                  </div>
                 </div>
-                <div style={{ ...styles.kpiCard, borderLeftColor: '#3b82f6', display: 'flex', flexDirection: 'column' }}>
-                  <span style={styles.kpiLabel}>Desconto Consolidado em Folha</span>
-                  <span style={styles.kpiVal}>
-                    R$ {transportVouchers.reduce((acc, curr) => {
-                      const emp = employees.find(e => e.id === curr.employeeId);
-                      const sal = emp ? parseFloat(emp.salary) || 0 : 0;
-                      const maxDiscount = sal * 0.06;
-                      const totalCost = (parseFloat(curr.dailyCost) || 0) * (parseInt(curr.daysCount) || 0);
-                      const actualDiscount = Math.min(maxDiscount, totalCost);
-                      return acc + actualDiscount;
-                    }, 0).toFixed(2)}
-                  </span>
+
+                {/* Table Container */}
+                <div style={{
+                  backgroundColor: 'var(--bg-card)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                  overflowX: 'auto'
+                }}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Colaborador</th>
+                        <th>Cargo / Setor</th>
+                        <th>Escala</th>
+                        <th>Valores Tarifa</th>
+                        <th>Previsto Mês</th>
+                        <th>Saldo Cartão</th>
+                        <th>Recarga Necessária</th>
+                        <th>Destaque / Status</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentVtList.length === 0 ? (
+                        <tr><td colSpan="9" style={styles.noDataCell}>Nenhuma concessão de vale-transporte encontrada para {selectedVtPeriod}.</td></tr>
+                      ) : (
+                        currentVtList.map((v) => {
+                          const emp = employees.find(e => e.id === v.employeeId || (e.name && e.name.trim().toLowerCase() === (v.employeeName || '').trim().toLowerCase()));
+                          const empName = v.employeeName || (emp ? emp.name : 'Desconhecido');
+                          const empRole = emp ? emp.role : 'Colaborador CLT';
+                          const empSector = emp ? (sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId) : 'RH';
+                          
+                          const ida = parseFloat(v.idaCost) || 0;
+                          const volta = parseFloat(v.voltaCost) || 0;
+                          const daily = parseFloat(v.dailyCost) || (ida + volta);
+                          const expected = parseFloat(v.expectedValue || v.totalValue || (daily * (v.daysCount || 22))) || 0;
+                          const currentBal = parseFloat(v.currentBalance || 0);
+                          const recharge = parseFloat(v.rechargeNeeded || 0);
+                          const rawRecharge = v.rawRechargeNeeded !== undefined ? parseFloat(v.rawRechargeNeeded) : recharge;
+
+                          // Highlight rules matching PDF
+                          let highlightStyle = {};
+                          let highlightBadge = null;
+
+                          if (v.highlightType === 'orange' || (v.balancePrevious === 0 && currentBal === 0 && expected > 0)) {
+                            highlightStyle = { backgroundColor: '#fff7ed' };
+                            highlightBadge = (
+                              <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem', borderRadius: '12px', backgroundColor: '#ffedd5', color: '#c2410c', border: '1px solid #fed7aa' }}>
+                                🟠 Concessão Especial / Nova Rota
+                              </span>
+                            );
+                          } else if (v.highlightType === 'yellow' || rawRecharge < 0) {
+                            highlightStyle = { backgroundColor: '#fefce8' };
+                            highlightBadge = (
+                              <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem', borderRadius: '12px', backgroundColor: '#fef9c3', color: '#a16207', border: '1px solid #fef08a' }}>
+                                🟡 Saldo Sobrando (Excedente)
+                              </span>
+                            );
+                          } else if (v.highlightType === 'red' || currentBal < 0) {
+                            highlightStyle = { backgroundColor: '#fef2f2' };
+                            highlightBadge = (
+                              <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem', borderRadius: '12px', backgroundColor: '#fee2e2', color: '#b91c1c', border: '1px solid #fecaca' }}>
+                                🔴 Saldo Negativo / Ajustar
+                              </span>
+                            );
+                          } else {
+                            highlightBadge = (
+                              <span style={{ fontSize: '0.75rem', fontWeight: '600', padding: '0.2rem 0.5rem', borderRadius: '12px', backgroundColor: '#f0fdf4', color: '#15803d' }}>
+                                🟢 Recarga Normal
+                              </span>
+                            );
+                          }
+
+                          return (
+                            <tr key={v.id} style={highlightStyle}>
+                              <td style={{ fontWeight: '600', color: 'var(--text-color)' }}>
+                                {empName}
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{v.route || 'Linha Urbana'}</div>
+                              </td>
+                              <td style={{ fontSize: '0.85rem' }}>{empRole} <span style={{ color: 'var(--text-muted)' }}>({empSector})</span></td>
+                              <td style={{ fontWeight: '700', fontSize: '0.85rem' }}>{v.workSchedule || 'SEGUNDA A SÁBADO'}</td>
+                              <td style={{ fontSize: '0.85rem' }}>
+                                <div>Total: <strong>R$ {daily.toFixed(2)}</strong></div>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Ida: R$ {ida.toFixed(2)} | Volta: R$ {volta.toFixed(2)}</span>
+                              </td>
+                              <td style={{ color: '#3b82f6', fontWeight: '700' }}>R$ {expected.toFixed(2)}</td>
+                              <td style={{ color: currentBal < 0 ? '#ef4444' : '#10b981', fontWeight: '700' }}>
+                                R$ {currentBal.toFixed(2)}
+                              </td>
+                              <td style={{ color: recharge > 0 ? '#ef4444' : '#6b7280', fontWeight: '800', fontSize: '0.95rem' }}>
+                                R$ {recharge.toFixed(2)}
+                              </td>
+                              <td>{highlightBadge}</td>
+                              <td>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                  <button onClick={() => handleOpenVoucherEdit(v)} style={styles.actionEditBtn}>
+                                    Editar
+                                  </button>
+                                  <button onClick={() => handleDeleteVoucher(v.id)} style={{ ...styles.actionEditBtn, color: 'var(--danger-color)' }}>
+                                    Excluir
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-
-              <div style={{
-                backgroundColor: 'var(--bg-card)',
-                borderRadius: '8px',
-                border: '1px solid var(--border-color)',
-                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
-                overflowX: 'auto'
-              }}>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Funcionário</th>
-                      <th>Cargo / Setor</th>
-                      <th>Itinerário / Rota</th>
-                      <th>Escala</th>
-                      <th>Tarifa Diária</th>
-                      <th>Valor Carga (Previsto)</th>
-                      <th>Saldo Atual (Cartão)</th>
-                      <th>Recarga Necessária</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transportVouchers.length === 0 ? (
-                      <tr><td colSpan="9" style={styles.noDataCell}>Nenhuma concessão de vale-transporte configurada.</td></tr>
-                    ) : (
-                      transportVouchers.map((v) => {
-                        const emp = employees.find(e => e.id === v.employeeId);
-                        const empName = emp ? emp.name : 'Desconhecido';
-                        const empRole = emp ? emp.role : '-';
-                        const empSector = emp ? (sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId) : '-';
-                        const totalCost = (parseFloat(v.dailyCost) || 0) * (parseInt(v.daysCount) || 0);
-                        const currentBalance = parseFloat(v.currentBalance || 0);
-                        const rechargeNeeded = totalCost - currentBalance;
-
-                        return (
-                          <tr key={v.id}>
-                            <td style={{ fontWeight: '600' }}>{empName}</td>
-                            <td>{empRole} ({empSector})</td>
-                            <td>
-                              <div style={{ fontWeight: '500' }}>{v.route || '-'}</div>
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{v.cardType} - {v.cardNumber || 'Sem cartão'}</span>
-                            </td>
-                            <td style={{ fontWeight: '700' }}>{v.workSchedule || 'SEGUNDA A SÁBADO'}</td>
-                            <td>R$ {parseFloat(v.dailyCost || 0).toFixed(2)}</td>
-                            <td style={{ color: '#3b82f6', fontWeight: '700' }}>R$ {totalCost.toFixed(2)}</td>
-                            <td style={{ color: '#10b981', fontWeight: '700' }}>R$ {currentBalance.toFixed(2)}</td>
-                            <td style={{ color: '#ef4444', fontWeight: '700' }}>R$ {rechargeNeeded > 0 ? rechargeNeeded.toFixed(2) : '0.00'}</td>
-                            <td>
-                              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button onClick={() => handleOpenVoucherEdit(v)} style={styles.actionEditBtn}>
-                                  Editar
-                                </button>
-                                <button onClick={() => handleDeleteVoucher(v.id)} style={{ ...styles.actionEditBtn, color: 'var(--danger-color)' }}>
-                                  Excluir
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* TAB 2: Employees Directory */}
           {activeTab === 'employees' && (

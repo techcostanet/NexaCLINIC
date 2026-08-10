@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.31',
+      date: '10/08/2026',
+      title: 'Importação Oficial de Vale-Transporte (Agosto/2026 - 67 Colaboradores) & Projeção Futura',
+      description: 'Leitura e importação completa da planilha de Agosto/2026 com 67 colaboradores, destaques visuais de saldo e ferramenta de projeção para meses futuros.',
+      changes: [
+        { type: 'Importação', text: 'Importação rigorosa de 67 colaboradores com valores de Ida, Volta, Total Dia, Escala (2ªa6ª, Seg-Sáb, 12x36), Previsto, Saldo 01/08 e Recarga Necessária.' },
+        { type: 'Sincronização RH', text: 'Vinculação automática de todos os colaboradores com o cadastro central de funcionários do módulo RH.' },
+        { type: 'Visualização & Cores', text: 'Destaque em Laranja para Concessões Especiais, Amarelo para Saldo Excedente e Vermelho para Saldo Negativo/Ajustar.' },
+        { type: 'Projeção & Exportação', text: 'Ferramenta de projeção automatizada para meses seguintes e exportação do relatório de recarga em formato CSV.' }
+      ]
+    },
+    {
       version: '3.3.28',
       date: '10/08/2026',
       title: 'Atualização e Importação de Vale-Transporte (Módulo RH)',
