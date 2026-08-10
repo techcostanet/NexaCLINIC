@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.34',
+      date: '10/08/2026',
+      title: 'Importação do Histórico de Março/2026 e Abril/2026 de Vale-Transporte',
+      description: 'Leitura e cadastramento completo dos relatórios de VT de Março/2026 e Abril/2026, cobrindo o histórico semestral completo no RH.',
+      changes: [
+        { type: 'Base Histórica', text: 'Cadastramento de todos os colaboradores e recargas dos períodos de Março/2026 e Abril/2026.' },
+        { type: 'Navegação Temporal', text: 'Inclusão de Março/2026 e Abril/2026 no seletor de períodos do painel de Vale-Transporte.' }
+      ]
+    },
+    {
       version: '3.3.33',
       date: '10/08/2026',
       title: 'Importação de Vale-Transporte dos Meses Anteriores (Junho/2026 e Maio/2026)',
