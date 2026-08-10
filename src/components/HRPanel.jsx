@@ -570,11 +570,11 @@ export default function HRPanel({ currentUser }) {
                       <th>Funcionário</th>
                       <th>Cargo / Setor</th>
                       <th>Itinerário / Rota</th>
+                      <th>Escala</th>
                       <th>Tarifa Diária</th>
-                      <th>Dias Recarga</th>
-                      <th>Valor Carga</th>
-                      <th>Desconto Salarial (6%)</th>
-                      <th>Cartão</th>
+                      <th>Valor Carga (Previsto)</th>
+                      <th>Saldo Atual (Cartão)</th>
+                      <th>Recarga Necessária</th>
                       <th>Ações</th>
                     </tr>
                   </thead>
@@ -587,40 +587,23 @@ export default function HRPanel({ currentUser }) {
                         const empName = emp ? emp.name : 'Desconhecido';
                         const empRole = emp ? emp.role : '-';
                         const empSector = emp ? (sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId) : '-';
-                        const sal = emp ? parseFloat(emp.salary) || 0 : 0;
-                        const maxDiscount = sal * 0.06;
                         const totalCost = (parseFloat(v.dailyCost) || 0) * (parseInt(v.daysCount) || 0);
-                        const actualDiscount = Math.min(maxDiscount, totalCost);
+                        const currentBalance = parseFloat(v.currentBalance || 0);
+                        const rechargeNeeded = totalCost - currentBalance;
 
                         return (
                           <tr key={v.id}>
                             <td style={{ fontWeight: '600' }}>{empName}</td>
                             <td>{empRole} ({empSector})</td>
                             <td>
-                              <div style={{ fontWeight: '500' }}>{v.route}</div>
+                              <div style={{ fontWeight: '500' }}>{v.route || '-'}</div>
                               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{v.cardType} - {v.cardNumber || 'Sem cartão'}</span>
                             </td>
+                            <td style={{ fontWeight: '700' }}>{v.workSchedule || 'SEGUNDA A SÁBADO'}</td>
                             <td>R$ {parseFloat(v.dailyCost || 0).toFixed(2)}</td>
-                            <td style={{ fontWeight: '700' }}>{v.daysCount} dias</td>
-                            <td style={{ color: '#10b981', fontWeight: '700' }}>R$ {totalCost.toFixed(2)}</td>
-                            <td style={{ color: '#ef4444', fontWeight: '600' }}>
-                              R$ {actualDiscount.toFixed(2)}
-                              <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--text-muted)' }}>
-                                ({maxDiscount > totalCost ? 'Desconto integral' : 'Limite 6% atingido'})
-                              </span>
-                            </td>
-                            <td>
-                              <span style={{ 
-                                padding: '0.2rem 0.5rem', 
-                                borderRadius: '12px', 
-                                fontSize: '0.75rem', 
-                                fontWeight: '700',
-                                backgroundColor: '#f1f5f9',
-                                color: '#475569'
-                              }}>
-                                {v.cardType}
-                              </span>
-                            </td>
+                            <td style={{ color: '#3b82f6', fontWeight: '700' }}>R$ {totalCost.toFixed(2)}</td>
+                            <td style={{ color: '#10b981', fontWeight: '700' }}>R$ {currentBalance.toFixed(2)}</td>
+                            <td style={{ color: '#ef4444', fontWeight: '700' }}>R$ {rechargeNeeded > 0 ? rechargeNeeded.toFixed(2) : '0.00'}</td>
                             <td>
                               <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <button onClick={() => handleOpenVoucherEdit(v)} style={styles.actionEditBtn}>
@@ -1444,12 +1427,42 @@ export default function HRPanel({ currentUser }) {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                 <div className="form-group">
+                  <label>Custo Ida (R$)</label>
+                  <input type="number" step="0.05" className="form-control" value={voucherForm.idaCost} onChange={e => {
+                    const ida = parseFloat(e.target.value) || 0;
+                    const volta = parseFloat(voucherForm.voltaCost) || 0;
+                    setVoucherForm({ ...voucherForm, idaCost: e.target.value, dailyCost: (ida + volta).toFixed(2) });
+                  }} />
+                </div>
+                <div className="form-group">
+                  <label>Custo Volta (R$)</label>
+                  <input type="number" step="0.05" className="form-control" value={voucherForm.voltaCost} onChange={e => {
+                    const ida = parseFloat(voucherForm.idaCost) || 0;
+                    const volta = parseFloat(e.target.value) || 0;
+                    setVoucherForm({ ...voucherForm, voltaCost: e.target.value, dailyCost: (ida + volta).toFixed(2) });
+                  }} />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                <div className="form-group">
+                  <label>Escala de Trabalho *</label>
+                  <input type="text" className="form-control" required placeholder="Ex: SEGUNDA A SÁBADO" value={voucherForm.workSchedule} onChange={e => setVoucherForm({ ...voucherForm, workSchedule: e.target.value })} />
+                </div>
+                <div className="form-group">
                   <label>Tarifa Diária (R$) *</label>
                   <input type="number" step="0.05" className="form-control" required value={voucherForm.dailyCost} onChange={e => setVoucherForm({ ...voucherForm, dailyCost: e.target.value })} />
                 </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                 <div className="form-group">
                   <label>Dias de Carga *</label>
                   <input type="number" className="form-control" required value={voucherForm.daysCount} onChange={e => setVoucherForm({ ...voucherForm, daysCount: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>Saldo Atual (Cartão) R$</label>
+                  <input type="number" step="0.05" className="form-control" value={voucherForm.currentBalance} onChange={e => setVoucherForm({ ...voucherForm, currentBalance: e.target.value })} />
                 </div>
               </div>
 
@@ -1478,10 +1491,16 @@ export default function HRPanel({ currentUser }) {
               </div>
 
               <div style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--bg-body)', border: '1px solid var(--border-color)', margin: '1rem 0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                  <span>Valor Total da Carga Mensal:</span>
-                  <strong style={{ color: '#10b981' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                  <span>Valor Total Previsto:</span>
+                  <strong style={{ color: '#3b82f6' }}>
                     R$ {((parseFloat(voucherForm.dailyCost) || 0) * (parseInt(voucherForm.daysCount) || 0)).toFixed(2)}
+                  </strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                  <span>Recarga Necessária (Previsto - Saldo):</span>
+                  <strong style={{ color: '#ef4444' }}>
+                    R$ {Math.max(0, ((parseFloat(voucherForm.dailyCost) || 0) * (parseInt(voucherForm.daysCount) || 0)) - (parseFloat(voucherForm.currentBalance) || 0)).toFixed(2)}
                   </strong>
                 </div>
               </div>

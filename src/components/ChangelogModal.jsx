@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.28',
+      date: '10/08/2026',
+      title: 'Atualização e Importação de Vale-Transporte (Módulo RH)',
+      description: 'Adicionados novos campos no painel de Vale-Transporte e realizada a importação da planilha de Julho de 2026.',
+      changes: [
+        { type: 'Novos Campos', text: 'Adicionados os campos Custo Ida, Custo Volta, Escala, Saldo Atual e Recarga Necessária no formulário e listagem.' },
+        { type: 'Importação', text: 'Criação de script para processar e importar os dados da planilha de Vale-Transporte para o banco de dados.' }
+      ]
+    },
+    {
       version: '3.3.26',
       date: '08/08/2026',
       title: 'Modos de Visualização (Compacto, Normal, Card) e Limpeza de Setores',

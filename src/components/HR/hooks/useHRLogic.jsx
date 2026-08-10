@@ -116,8 +116,12 @@ export function useHRLogic(currentUser) {
   const [voucherForm, setVoucherForm] = useState({
     employeeId: '',
     route: '',
-    dailyCost: '11.00',
+    idaCost: '6.25',
+    voltaCost: '6.25',
+    dailyCost: '12.50',
     daysCount: '22',
+    workSchedule: 'SEGUNDA A SÁBADO',
+    currentBalance: '0.00',
     cardType: 'BHBus',
     cardNumber: '',
     discountPercent: '6'
@@ -372,8 +376,12 @@ export function useHRLogic(currentUser) {
     setVoucherForm({
       employeeId: employees[0]?.id || '',
       route: '',
-      dailyCost: '11.00',
+      idaCost: '6.25',
+      voltaCost: '6.25',
+      dailyCost: '12.50',
       daysCount: '22',
+      workSchedule: 'SEGUNDA A SÁBADO',
+      currentBalance: '0.00',
       cardType: 'BHBus',
       cardNumber: '',
       discountPercent: '6'
@@ -386,8 +394,12 @@ export function useHRLogic(currentUser) {
     setVoucherForm({
       employeeId: v.employeeId,
       route: v.route || '',
+      idaCost: v.idaCost ? v.idaCost.toString() : '0',
+      voltaCost: v.voltaCost ? v.voltaCost.toString() : '0',
       dailyCost: v.dailyCost ? v.dailyCost.toString() : '0',
       daysCount: v.daysCount ? v.daysCount.toString() : '0',
+      workSchedule: v.workSchedule || 'SEGUNDA A SÁBADO',
+      currentBalance: v.currentBalance ? v.currentBalance.toString() : '0',
       cardType: v.cardType || 'BHBus',
       cardNumber: v.cardNumber || '',
       discountPercent: v.discountPercent ? v.discountPercent.toString() : '6'
