@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.35',
+      date: '2026-08-10',
+      title: 'Importação Final e Preparo de Futuro',
+      description: 'Conclusão da importação de Janeiro e Fevereiro e otimização do módulo HR para projeções futuras.',
+      changes: [
+        { type: 'Importação', text: 'Importação concluída do histórico completo de Janeiro e Fevereiro de 2026.' },
+        { type: 'Otimização', text: 'Otimização do componente HRPanel.jsx para tornar o cálculo do mês de projeção do VT totalmente dinâmico, suportando recargas e cálculos sem limitação de datas hardcoded.' },
+        { type: 'Interface', text: 'O seletor de meses de VT agora exibe 24 meses consecutivos a partir de 2026 de forma dinâmica.' }
+      ]
+    },
+    {
       version: '3.3.34',
       date: '10/08/2026',
       title: 'Importação do Histórico de Março/2026 e Abril/2026 de Vale-Transporte',

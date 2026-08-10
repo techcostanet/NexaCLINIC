@@ -554,19 +554,24 @@ export default function HRPanel({ currentUser }) {
                         onChange={(e) => setSelectedVtPeriod(e.target.value)}
                         style={{ border: 'none', background: 'transparent', fontWeight: '700', color: 'var(--text-color)', cursor: 'pointer', outline: 'none' }}
                       >
-                        <option value="2026-08">Agosto / 2026</option>
-                        <option value="2026-07">Julho / 2026</option>
-                        <option value="2026-06">Junho / 2026</option>
-                        <option value="2026-05">Maio / 2026</option>
-                        <option value="2026-04">Abril / 2026</option>
-                        <option value="2026-03">Março / 2026</option>
-                        <option value="2026-09">Setembro / 2026</option>
-                        <option value="2026-10">Outubro / 2026</option>
+                        {Array.from({ length: 24 }).map((_, i) => {
+                          const d = new Date(2026, 0); // Start from Jan 2026
+                          d.setMonth(d.getMonth() + i);
+                          const val = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                          const label = d.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+                          return <option key={val} value={val}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>;
+                        }).reverse()}
                       </select>
                     </div>
 
                     <button
-                      onClick={() => handleSimulateNextMonthVT(selectedVtPeriod === '2026-08' ? '2026-09' : '2026-10')}
+                      onClick={() => {
+                        const [y, m] = (selectedVtPeriod || '2026-08').split('-');
+                        let nextM = parseInt(m, 10) + 1;
+                        let nextY = parseInt(y, 10);
+                        if (nextM > 12) { nextM = 1; nextY++; }
+                        handleSimulateNextMonthVT(`${nextY}-${nextM.toString().padStart(2, '0')}`);
+                      }}
                       className="btn"
                       style={{ backgroundColor: '#8b5cf6', color: '#fff', fontSize: '0.85rem', padding: '0.5rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderRadius: '6px', fontWeight: '600' }}
                       title="Projetar recargas para o próximo mês com base no período selecionado"
