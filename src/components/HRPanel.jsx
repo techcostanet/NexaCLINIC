@@ -555,9 +555,11 @@ export default function HRPanel({ currentUser }) {
                         style={{ border: 'none', background: 'transparent', fontWeight: '700', color: 'var(--text-color)', cursor: 'pointer', outline: 'none' }}
                       >
                         <option value="2026-08">Agosto / 2026</option>
+                        <option value="2026-07">Julho / 2026</option>
+                        <option value="2026-06">Junho / 2026</option>
+                        <option value="2026-05">Maio / 2026</option>
                         <option value="2026-09">Setembro / 2026</option>
                         <option value="2026-10">Outubro / 2026</option>
-                        <option value="2026-07">Julho / 2026</option>
                       </select>
                     </div>
 

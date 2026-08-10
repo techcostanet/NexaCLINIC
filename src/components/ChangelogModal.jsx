@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: '3.3.33',
+      date: '10/08/2026',
+      title: 'Importação de Vale-Transporte dos Meses Anteriores (Junho/2026 e Maio/2026)',
+      description: 'Processamento e importação dos relatórios oficiais de VT de Junho/2026 e Maio/2026 com mais de 80 colaboradores por período.',
+      changes: [
+        { type: 'Histórico Completo', text: 'Importação integral das planilhas de Junho/2026 e Maio/2026 com tarifas de ida/volta, saldos em cartão e recargas.' },
+        { type: 'Seletor de Períodos', text: 'Opções de consulta estendidas no Mês/Ano incluindo Maio/2026, Junho/2026, Julho/2026 e Agosto/2026.' }
+      ]
+    },
+    {
       version: '3.3.31',
       date: '10/08/2026',
       title: 'Importação Oficial de Vale-Transporte (Agosto/2026 - 67 Colaboradores) & Projeção Futura',
