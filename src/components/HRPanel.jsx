@@ -440,7 +440,7 @@ export default function HRPanel({ currentUser }) {
                               recentAbsences.slice(0, 4).map((abs, idx) => (
                                 <div key={idx} style={styles.listItem}>
                                   <div>
-                                    <strong onClick={() => handleOpenEmpByName(abs.empName)} style={{ color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }} title={`Abrir ficha de ${abs.empName}`}>{abs.empName}</strong> - {abs.type} ({abs.hours}h)
+                                    <strong onClick={() => handleOpenEmpByName(abs.empName)} style={{ color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }} title={`Abrir ficha de ${abs.empName}`}>{abs.empName}</strong> - {abs.type} ({abs.days !== undefined ? `${abs.days} dia(s)` : `${abs.hours}h`})
                                     <span style={styles.listSubText}>{abs.motive || 'Sem observação'}</span>
                                   </div>
                                   <span style={{ 
@@ -1211,8 +1211,8 @@ export default function HRPanel({ currentUser }) {
                         </select>
                       </div>
                       <div className="form-group">
-                        <label>Horas Perdidas</label>
-                        <input type="number" className="form-control" placeholder="8" value={newAbsence.hours} onChange={e => setNewAbsence({ ...newAbsence, hours: e.target.value })} />
+                        <label>Dias Perdidos</label>
+                        <input type="number" step="0.5" min="0.5" className="form-control" placeholder="1" value={newAbsence.days !== undefined ? newAbsence.days : (newAbsence.hours ? parseFloat(newAbsence.hours) / 8 : '1')} onChange={e => setNewAbsence({ ...newAbsence, days: e.target.value })} />
                       </div>
                       <div className="form-group">
                         <label>Motivo / Observação</label>
@@ -1226,7 +1226,7 @@ export default function HRPanel({ currentUser }) {
                         <tr>
                           <th>Data</th>
                           <th>Tipo</th>
-                          <th>Horas</th>
+                          <th>Dias</th>
                           <th>Motivo</th>
                           <th>Ações</th>
                         </tr>
@@ -1251,7 +1251,9 @@ export default function HRPanel({ currentUser }) {
                                   {abs.type}
                                 </span>
                               </td>
-                              <td style={{ fontWeight: '600' }}>{abs.hours}h</td>
+                              <td style={{ fontWeight: '600' }}>
+                                {abs.days !== undefined ? `${abs.days} dia(s)` : (abs.hours ? `${parseFloat(abs.hours) / 8} dia(s)` : '-')}
+                              </td>
                               <td>{abs.motive || '-'}</td>
                               <td>
                                 <button type="button" onClick={() => setEmpForm(f => ({ ...f, absences: f.absences.filter((_, i) => i !== idx) }))} style={{ ...styles.actionEditBtn, color: 'var(--danger-color)' }}>

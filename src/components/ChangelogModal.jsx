@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.39',
+      date: '11/08/2026',
+      title: 'Ausências de Colaboradores por Dias (Módulo RH)',
+      description: 'Atualização na aba de Ausências da ficha do colaborador para contagem e registro de faltas/ausências em Dias Perdidos (em vez de Horas).',
+      changes: [
+        { type: 'Recursos Humanos', text: 'Alterado o campo "Horas Perdidas" para "Dias Perdidos" na ficha de Ausências do colaborador.' },
+        { type: 'Tabela & Widgets', text: 'Coluna da tabela e lista de ausências recentes atualizadas para contabilizar e exibir quantidade de Dias.' }
+      ]
+    },
+    {
       version: 'v3.3.38',
       date: '11/08/2026',
       title: 'Restrição de Perfil Administrador Exclusivo e Ajuste de Usuárias RH',

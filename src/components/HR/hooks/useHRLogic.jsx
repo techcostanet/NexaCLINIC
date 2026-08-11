@@ -102,7 +102,7 @@ export function useHRLogic(currentUser) {
   const [newWarning, setNewWarning] = useState({ date: new Date().toISOString().substring(0, 10), motive: 'Atraso Injustificado', text: '', docUrl: '' });
   const [newVaccine, setNewVaccine] = useState({ name: 'Hepatite B', dose: '1ª Dose', date: new Date().toISOString().substring(0, 10), expiryDate: '', lot: '' });
   const [newDoc, setNewDoc] = useState({ name: '', category: 'Identidade (RG)', expiryDate: '', fileUrl: '' });
-  const [newAbsence, setNewAbsence] = useState({ date: new Date().toISOString().substring(0, 10), type: 'Falta Injustificada', hours: '8', motive: '' });
+  const [newAbsence, setNewAbsence] = useState({ date: new Date().toISOString().substring(0, 10), type: 'Falta Injustificada', days: '1', motive: '' });
 
   // Import State
   const [csvData, setCsvData] = useState([]);
@@ -609,14 +609,17 @@ export function useHRLogic(currentUser) {
   };
 
   const handleAddAbsence = () => {
-    if (!newAbsence.hours) return showAlert('Informe as horas de ausência.', 'warning');
+    const daysInput = newAbsence.days !== undefined ? newAbsence.days : newAbsence.hours;
+    if (!daysInput) return showAlert('Informe os dias de ausência.', 'warning');
+    const daysNum = parseFloat(daysInput) || 1;
     const absItem = {
       id: 'abs-' + Math.random().toString(36).substr(2, 5),
       ...newAbsence,
-      hours: parseFloat(newAbsence.hours) || 0
+      days: daysNum,
+      hours: daysNum * 8
     };
     setEmpForm(f => ({ ...f, absences: [...(f.absences || []), absItem] }));
-    setNewAbsence({ date: new Date().toISOString().substring(0, 10), type: 'Falta Injustificada', hours: '8', motive: '' });
+    setNewAbsence({ date: new Date().toISOString().substring(0, 10), type: 'Falta Injustificada', days: '1', motive: '' });
   };
 
   // ----------------------------------------------------
