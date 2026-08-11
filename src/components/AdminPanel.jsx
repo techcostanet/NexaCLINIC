@@ -113,6 +113,8 @@ export default function AdminPanel({ currentUser }) {
     setNewRole(role);
     if (role === 'admin') {
       setNewSectors(sectors.map(s => s.id));
+    } else if (role === 'rh') {
+      setNewSectors(['rh']);
     } else {
       setNewSectors([]);
     }
@@ -138,12 +140,16 @@ export default function AdminPanel({ currentUser }) {
 
     setActionLoading(true);
     try {
+      const finalAllowedSectors = newRole === 'admin' 
+        ? sectors.map(s => s.id) 
+        : (newRole === 'rh' ? ['rh'] : newSectors);
+
       if (editingUser) {
         await dbService.updateUser(editingUser.uid, {
           name: newName,
           email: newEmail,
           role: newRole,
-          allowedSectors: newRole === 'admin' ? sectors.map(s => s.id) : newSectors,
+          allowedSectors: finalAllowedSectors,
           status: newStatus
         });
         showAlert(`Profissional "${newName}" atualizado com sucesso!`, 'success');
@@ -592,6 +598,16 @@ export default function AdminPanel({ currentUser }) {
                     <input
                       type="radio"
                       name="role"
+                      checked={newRole === 'rh'}
+                      onChange={() => handleRoleChange('rh')}
+                      disabled={actionLoading}
+                    />
+                    <span>Recursos Humanos (RH)</span>
+                  </label>
+                  <label style={styles.radioLabel}>
+                    <input
+                      type="radio"
+                      name="role"
                       checked={newRole === 'admin'}
                       onChange={() => handleRoleChange('admin')}
                       disabled={actionLoading}
@@ -626,7 +642,13 @@ export default function AdminPanel({ currentUser }) {
               {newRole === 'admin' && (
                 <div className="alert alert-warning" style={{ fontSize: '0.8rem', padding: '0.75rem', marginBottom: '1rem' }}>
                   <Shield size={16} style={{ flexShrink: 0 }} />
-                  <span>Admins possuem acesso total a todas as áreas.</span>
+                  <span>Atenção: O perfil de Administrador é restrito exclusivamente ao usuário contato@techcosta.net.</span>
+                </div>
+              )}
+              {newRole === 'rh' && (
+                <div className="alert alert-info" style={{ fontSize: '0.8rem', padding: '0.75rem', marginBottom: '1rem' }}>
+                  <Shield size={16} style={{ flexShrink: 0 }} />
+                  <span>Perfil Recursos Humanos: acesso dedicado aos portais NexaHR, Qualidade/BI e Chamados.</span>
                 </div>
               )}
 
@@ -702,8 +724,11 @@ export default function AdminPanel({ currentUser }) {
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{u.email}</div>
                       </td>
                       <td>
-                        <span className={`badge ${u.role === 'admin' ? 'badge-admin' : 'badge-prof'}`}>
-                          {u.role === 'admin' ? 'Admin' : 'Profissional'}
+                        <span
+                          className={`badge ${u.role === 'admin' ? 'badge-admin' : u.role === 'rh' ? 'badge-rh' : 'badge-prof'}`}
+                          style={u.role === 'rh' ? { backgroundColor: '#fce7f3', color: '#9d174d', fontWeight: '600' } : {}}
+                        >
+                          {u.role === 'admin' ? 'Admin' : u.role === 'rh' ? 'Recursos Humanos' : 'Profissional'}
                         </span>
                       </td>
                       <td>

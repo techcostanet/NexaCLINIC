@@ -12209,8 +12209,8 @@ const getDB = () => {
           uid: 'jsoares-uid',
           email: 'jsoares@nexa.com',
           name: 'J. Soares',
-          role: 'admin',
-          allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+          role: 'rh',
+          allowedSectors: ['rh'],
           status: 'active'
         }
       ];
@@ -13491,8 +13491,8 @@ const getDB = () => {
         uid: 'jsoares-uid',
         email: 'jsoares@nexa.com',
         name: 'J. Soares',
-        role: 'admin',
-        allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+        role: 'rh',
+        allowedSectors: ['rh'],
         status: 'active',
         createdAt: new Date().toISOString()
       }

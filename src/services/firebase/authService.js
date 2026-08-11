@@ -27,7 +27,7 @@ export const onAuthChange = (callback) => {
           const { getFirestore, doc, getDoc, setDoc } = await import('firebase/firestore');
           const db = getFirestore(app);
           const cleanEmail = (firebaseUser.email || '').trim().toLowerCase();
-          const adminEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'];
+          const adminEmails = ['contato@techcosta.net'];
           const isAdminEmail = adminEmails.includes(cleanEmail);
 
           const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -39,7 +39,7 @@ export const onAuthChange = (callback) => {
           if (isAdminEmail) {
             const allSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
             userData = {
-              name: userData.name || (cleanEmail === 'contato@techcosta.net' ? 'Administrador TechCosta' : cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares'),
+              name: userData.name || 'Administrador TechCosta',
               email: cleanEmail,
               role: 'admin',
               allowedSectors: allSectors,
@@ -51,14 +51,26 @@ export const onAuthChange = (callback) => {
 
             // Save/sync back to firestore asynchronously
             setDoc(userDocRef, userData, { merge: true }).catch(err => console.error("Failed to sync admin user profile:", err));
-          } else if (!userSnap.exists()) {
-            userData = {
-              name: firebaseUser.displayName || cleanEmail || 'Usuário',
-              email: cleanEmail,
-              role: 'professional',
-              allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
-              status: 'active'
-            };
+          } else {
+            // Check if user is anacg or jsoares, which must strictly be RH
+            const isRhFixedUser = cleanEmail === 'anacg@nexa.com' || cleanEmail === 'jsoares@nexa.com';
+            if (isRhFixedUser && (userData.role === 'admin' || !userData.role || !userData.allowedSectors || userData.allowedSectors.length === 0)) {
+              userData.role = 'rh';
+              userData.allowedSectors = ['rh'];
+              userData.status = 'active';
+              if (!userData.name) {
+                userData.name = cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares';
+              }
+              setDoc(userDocRef, { role: 'rh', allowedSectors: ['rh'], status: 'active', name: userData.name }, { merge: true }).catch(err => console.error("Failed to sync RH user profile:", err));
+            } else if (!userSnap.exists()) {
+              userData = {
+                name: firebaseUser.displayName || cleanEmail || 'Usuário',
+                email: cleanEmail,
+                role: 'professional',
+                allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+                status: 'active'
+              };
+            }
           }
 
           const finalUser = {
@@ -113,12 +125,18 @@ export const login = async (email, password) => {
           finalUser = { ...finalUser, ...userSnap.data() };
         }
         
-        const adminEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'];
+        const adminEmails = ['contato@techcosta.net'];
         if (adminEmails.includes(cleanEmail)) {
            finalUser.role = 'admin';
            finalUser.allowedSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
            if (!finalUser.name) {
-             finalUser.name = cleanEmail === 'contato@techcosta.net' ? 'Administrador TechCosta' : cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares';
+             finalUser.name = 'Administrador TechCosta';
+           }
+        } else if (cleanEmail === 'anacg@nexa.com' || cleanEmail === 'jsoares@nexa.com') {
+           finalUser.role = 'rh';
+           finalUser.allowedSectors = ['rh'];
+           if (!finalUser.name) {
+             finalUser.name = cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares';
            }
         }
       } catch (e) {
@@ -163,12 +181,18 @@ export const login = async (email, password) => {
               if (userSnap.exists()) {
                 finalUser = { ...finalUser, ...userSnap.data() };
               }
-              const adminEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com'];
+              const adminEmails = ['contato@techcosta.net'];
               if (adminEmails.includes(cleanEmail)) {
                  finalUser.role = 'admin';
                  finalUser.allowedSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
                  if (!finalUser.name) {
-                   finalUser.name = cleanEmail === 'contato@techcosta.net' ? 'Administrador TechCosta' : cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares';
+                   finalUser.name = 'Administrador TechCosta';
+                 }
+              } else if (cleanEmail === 'anacg@nexa.com' || cleanEmail === 'jsoares@nexa.com') {
+                 finalUser.role = 'rh';
+                 finalUser.allowedSectors = ['rh'];
+                 if (!finalUser.name) {
+                   finalUser.name = cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares';
                  }
               }
             } catch (e) {}
@@ -191,12 +215,18 @@ export const login = async (email, password) => {
               ? 'Daliam Morais'
               : 'J. Soares';
               
+            const isTechCosta = cleanEmail === 'contato@techcosta.net';
+            const isDaliam = cleanEmail === 'daliam@nexa.com';
+            const isRhUser = cleanEmail === 'anacg@nexa.com' || cleanEmail === 'jsoares@nexa.com';
+            const defaultRole = isTechCosta ? 'admin' : (isDaliam ? 'reception' : (isRhUser ? 'rh' : 'professional'));
+            const defaultSectors = isTechCosta ? allSectors : (isDaliam ? ['recepcao'] : (isRhUser ? ['rh'] : ['rh']));
+            
             const userPayload = {
               uid: userCredential.user.uid,
               name: userName,
               email: cleanEmail,
-              role: cleanEmail === 'daliam@nexa.com' ? 'reception' : 'admin',
-              allowedSectors: cleanEmail === 'daliam@nexa.com' ? ['recepcao'] : ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+              role: defaultRole,
+              allowedSectors: defaultSectors,
               status: 'active',
               password: password,
               authPassword: password,
@@ -310,8 +340,8 @@ export const getUsers = async () => {
     const allSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
     const defaultUsers = [
       { uid: 'techcosta-admin-uid', email: 'contato@techcosta.net', name: 'Administrador TechCosta', role: 'admin', allowedSectors: allSectors, status: 'active' },
-      { uid: 'anacg-uid', email: 'anacg@nexa.com', name: 'Ana Carolina Cerqueira Gonzaga', role: 'admin', allowedSectors: allSectors, status: 'active' },
-      { uid: 'jsoares-uid', email: 'jsoares@nexa.com', name: 'J. Soares', role: 'admin', allowedSectors: allSectors, status: 'active' }
+      { uid: 'anacg-uid', email: 'anacg@nexa.com', name: 'Ana Carolina Cerqueira Gonzaga', role: 'rh', allowedSectors: ['rh'], status: 'active' },
+      { uid: 'jsoares-uid', email: 'jsoares@nexa.com', name: 'J. Soares', role: 'rh', allowedSectors: ['rh'], status: 'active' }
     ];
 
     if (USE_MOCK) {
@@ -325,7 +355,7 @@ export const getUsers = async () => {
       const snap = await getDocs(collection(db, 'users'));
       let rawUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
 
-      // Ensure default admin users exist in the list
+      // Ensure default users exist in the list and roles are correct
       defaultUsers.forEach(defU => {
         const found = rawUsers.find(u => (u.email || '').toLowerCase() === defU.email.toLowerCase());
         if (!found) {
@@ -333,9 +363,16 @@ export const getUsers = async () => {
           // Seed back to Firestore asynchronously
           setDoc(doc(db, 'users', defU.uid), defU, { merge: true }).catch(e => console.error(e));
         } else {
-          // Force admin role and full sectors for default accounts
-          found.role = 'admin';
-          found.allowedSectors = allSectors;
+          // Force contato@techcosta.net to admin, and anacg/jsoares to rh
+          if (defU.email === 'contato@techcosta.net') {
+            found.role = 'admin';
+            found.allowedSectors = allSectors;
+          } else if (defU.email === 'anacg@nexa.com' || defU.email === 'jsoares@nexa.com') {
+            found.role = 'rh';
+            found.allowedSectors = ['rh'];
+            // Heal in Firestore if it was stored as admin
+            setDoc(doc(db, 'users', found.uid), { role: 'rh', allowedSectors: ['rh'] }, { merge: true }).catch(e => console.error(e));
+          }
           found.status = 'active';
         }
       });

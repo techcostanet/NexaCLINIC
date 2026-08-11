@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.38',
+      date: '11/08/2026',
+      title: 'Restrição de Perfil Administrador Exclusivo e Ajuste de Usuárias RH',
+      description: 'Restrição do perfil de Administrador exclusivamente ao e-mail contato@techcosta.net e fixação do perfil de Recursos Humanos (RH) para as usuárias anacg@nexa.com e jsoares@nexa.com.',
+      changes: [
+        { type: 'Segurança & RBAC', text: 'Perfil Administrador atribuído e mantido exclusivamente para contato@techcosta.net.' },
+        { type: 'Controle de Acesso', text: 'Reconfiguração automática e permanente do perfil das usuárias anacg@nexa.com e jsoares@nexa.com para Recursos Humanos (RH).' },
+        { type: 'Módulo TI', text: 'Disponibilização da opção explícita de perfil Recursos Humanos (RH) no gerenciamento de usuários do painel de administração/TI.' }
+      ]
+    },
+    {
       version: 'v3.3.35',
       date: '2026-08-10',
       title: 'Importação Final e Preparo de Futuro',
