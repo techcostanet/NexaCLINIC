@@ -2032,6 +2032,13 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button 
+                onClick={() => setShowImportBetimModal(true)} 
+                style={styles.btnSecondary}
+              >
+                <FileSpreadsheet size={14} />
+                <span>Importar Planilha Betim 2026</span>
+              </button>
+              <button 
                 onClick={() => {
                   setEditingPayable(null);
                   setShowAddPayable(!showAddPayable);
