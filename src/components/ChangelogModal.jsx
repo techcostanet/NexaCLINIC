@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.42',
+      date: '11/08/2026',
+      title: 'Importação Contas a Pagar Betim 2026 (Módulo Financeiro)',
+      description: 'Implementada rotina automatizada e anti-duplicidade para importação dos 1.191 registros da planilha de Contas a Pagar (Betim) referente a 2026.',
+      changes: [
+        { type: 'Módulo Financeiro', text: 'Adicionada importação inteligente JSON via painel financeiro.' }
+      ]
+    },
+    {
       version: 'v3.3.40',
       date: '11/08/2026',
       title: 'Novos Motivos de Advertência no RH (Desídia e Indisciplina)',

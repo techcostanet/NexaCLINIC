@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 
 import { dbService } from '../firebase';
+import import2026Data from '../data/import_2026.json';
 import FinanceReportsModal from './FinanceReportsModal';
 
 export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
@@ -612,11 +613,67 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
   const handleImportBetimData = async () => {
     try {
+      const currentPayables = await dbService.getAccountsPayable();
+      let insertedCount = 0;
+      let duplicateCount = 0;
+
+      for (const record of import2026Data) {
+        const supplier = String(record.fornecedor || '').trim();
+        const description = String(record.despesa || '').trim();
+        let amount = Number(record.valor);
+        if (isNaN(amount)) amount = 0;
+        
+        let dueDate = record.vencimento;
+        if (dueDate && dueDate.includes('/')) {
+          const parts = dueDate.split('/');
+          if (parts.length === 3) {
+            dueDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+          }
+        }
+
+        let status = 'Pendente';
+        const st = String(record.status || '').toUpperCase().trim();
+        if (st === 'PAGO') status = 'Pago';
+        else if (st === 'ATRASADO') status = 'Atrasado';
+        else if (st === 'A VENCER' || st === 'PARCELAMENTO' || st === 'A VENCER ') status = 'Pendente';
+
+        let costCenter = '2.1.0'; 
+        const grp = String(record.grupo || '').toUpperCase();
+        if (grp.includes('MAT') || grp.includes('MED')) costCenter = '1.1.0'; 
+        else if (grp.includes('FUNCIONAMENTO') || grp.includes('ENERGIA')) costCenter = '2.1.0';
+        else if (grp.includes('PESSOAL') || grp.includes('FGTS')) costCenter = '3.1.0'; 
+        else if (grp.includes('IMPOSTOS')) costCenter = '3.2.0';
+
+        const isDuplicate = currentPayables.some(p => {
+          const pAmount = Number(p.amount) || 0;
+          return p.supplier === supplier && Math.abs(pAmount - amount) < 0.01 && p.dueDate === dueDate;
+        });
+
+        if (!isDuplicate) {
+          await dbService.saveAccountsPayable({
+            supplier: supplier,
+            cnpj: '00.000.000/0001-00',
+            description: description,
+            amount: amount,
+            dueDate: dueDate,
+            category: record.grupo || 'Serviço/Utilidades',
+            invoiceNumber: String(record.nf || ''),
+            status: status,
+            costCenter: costCenter,
+            createdAt: new Date().toISOString()
+          });
+          insertedCount++;
+        } else {
+          duplicateCount++;
+        }
+      }
+
       await loadData();
       setShowImportBetimModal(false);
-      alert('Planilha de Betim importada! Todos os 32 títulos foram sincronizados e vinculados aos Centros de Custo.');
+      alert(`Planilha importada! Novos: ${insertedCount}. Duplicados ignorados: ${duplicateCount}.`);
     } catch (err) {
       console.error(err);
+      alert('Erro ao importar: ' + err.message);
     }
   };
 
