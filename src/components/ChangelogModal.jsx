@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.40',
+      date: '11/08/2026',
+      title: 'Novos Motivos de Advertência no RH (Desídia e Indisciplina)',
+      description: 'Inclusão das opções "Desídia" e "Indisciplina" no menu de motivos ao registrar advertências na ficha do colaborador.',
+      changes: [
+        { type: 'Recursos Humanos', text: 'Adicionados os motivos "Desídia" e "Indisciplina" na seleção de advertências do colaborador.' }
+      ]
+    },
+    {
       version: 'v3.3.39',
       date: '11/08/2026',
       title: 'Ausências de Colaboradores por Dias (Módulo RH)',

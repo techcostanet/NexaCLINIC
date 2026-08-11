@@ -1282,6 +1282,8 @@ export default function HRPanel({ currentUser }) {
                           <option value="Atraso Injustificado">Atraso Injustificado</option>
                           <option value="Falta Injustificada">Falta Injustificada</option>
                           <option value="Insubordinação">Insubordinação</option>
+                          <option value="Desídia">Desídia</option>
+                          <option value="Indisciplina">Indisciplina</option>
                           <option value="Uso Inadequado de EPI">Uso Inadequado de EPI</option>
                           <option value="Outros">Outros</option>
                         </select>
