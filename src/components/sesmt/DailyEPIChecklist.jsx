@@ -3,7 +3,9 @@ import { dbService } from '../../firebase';
 import { Save } from 'lucide-react';
 
 const SECTORS = [
-  'Salão Hemodiálise', 
+  'Salão-1', 
+  'Salão-2', 
+  'Salão-3', 
   'Diálise Peritoneal', 
   'Hemodiálise Externa', 
   'Bloco Cirúrgico', 

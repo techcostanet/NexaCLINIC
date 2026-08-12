@@ -1,3 +1,10 @@
+## [v3.3.60] - 12 de Agosto, 2026
+### Desmembramento dos Setores de Hemodiálise no SESMT (Salão-1, Salão-2 e Salão-3)
+- **Setores SESMT:** Substituição da opção única "Salão Hemodiálise" pelos setores específicos "Salão-1", "Salão-2" e "Salão-3" no formulário de verificação diária de EPI.
+- **Gráficos & BI:** Atualização e alinhamento dos indicadores de não-conformidade por setor no painel do SESMT.
+
+---
+
 ## [v3.3.58] - 12 de Agosto, 2026
 ### Expansão da Matriz RBAC & Perfis de Permissão
 - **Matriz RBAC:** Inclusão do módulo SESMT & Segurança (NexaSAFE) na matriz de permissões por perfil.

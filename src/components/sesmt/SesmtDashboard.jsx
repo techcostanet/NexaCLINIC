@@ -58,7 +58,7 @@ export default function SesmtDashboard({ currentUser }) {
   const displaySectorData = sectorData.length > 0 ? sectorData : [
     { name: 'Bloco Cirúrgico', 'Não Conforme': 4 },
     { name: 'Reuso', 'Não Conforme': 3 },
-    { name: 'Salão Hemodiálise', 'Não Conforme': 1 }
+    { name: 'Salão-1', 'Não Conforme': 1 }
   ];
 
   // 2. Extinguisher Status
