@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.53',
+      date: '12/08/2026',
+      title: 'Módulo SESMT & Perfil de Acesso para roseannefa',
+      description: 'Criação do módulo SESMT & Segurança do Trabalho, perfil RBAC próprio e vinculação da usuária roseannefa.',
+      changes: [
+        { type: 'Módulo SESMT', text: 'Desenvolvimento do novo portal NexaSAFE (Checklist Diário EPI, Extintores, Hidrantes e BI Dashboard).' },
+        { type: 'RBAC / Governança', text: 'Criação do Perfil de Acesso SESMT & Segurança do Trabalho no controle de acessos.' },
+        { type: 'Gestão de Usuários', text: 'Cadastro e vinculação da usuária Roseanne Faria (roseannefa@nexa.com) ao perfil SESMT.' }
+      ]
+    },
+    {
       version: 'v3.3.50',
       date: '12/08/2026',
       title: 'Correção de Autenticação e Fallback de Login',

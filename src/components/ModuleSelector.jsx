@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, Settings, ShoppingCart, Calendar, ClipboardList, FileText, Wrench } from 'lucide-react';
+import { BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, Settings, ShoppingCart, Calendar, ClipboardList, FileText, Wrench, ShieldCheck } from 'lucide-react';
 import { authService } from '../firebase';
 
 export default function ModuleSelector({ user, onSelectModule }) {
@@ -119,6 +119,15 @@ export default function ModuleSelector({ user, onSelectModule }) {
       icon: Settings,
       color: '#8b5cf6', // violet-500
       allowedRoles: ['admin']
+    },
+    {
+      id: 'sesmt',
+      title: 'SESMT & Segurança',
+      subtitle: 'NexaSAFE - Segurança',
+      description: 'Checklists de EPI, inspeções de extintores e hidrantes, e painel de conformidade e riscos.',
+      icon: ShieldCheck,
+      color: '#059669', // emerald-600
+      allowedRoles: ['admin', 'rh', 'technician', 'sesmt']
     }
   ];
 
@@ -188,6 +197,8 @@ export default function ModuleSelector({ user, onSelectModule }) {
       ? 'Recursos Humanos' 
       : userRole === 'financial' 
       ? 'Gestão Financeira' 
+      : userRole === 'sesmt'
+      ? 'SESMT & Segurança do Trabalho'
       : userRole === 'receptionist' 
       ? 'Recepção' 
       : 'Profissional Clínico'

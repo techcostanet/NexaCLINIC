@@ -71,6 +71,14 @@ export const onAuthChange = (callback) => {
                 userData.name = 'Dália Moraes';
               }
               setDoc(userDocRef, { role: 'financial', allowedSectors: userData.allowedSectors, status: 'active', name: userData.name }, { merge: true }).catch(err => console.error("Failed to sync Finance user profile:", err));
+            } else if ((cleanEmail === 'roseannefa@nexa.com' || cleanEmail.startsWith('roseannefa')) && (userData.role !== 'sesmt' || !userData.allowedSectors || userData.allowedSectors.length === 0)) {
+              userData.role = 'sesmt';
+              userData.allowedSectors = ['sesmt'];
+              userData.status = 'active';
+              if (!userData.name) {
+                userData.name = 'Roseanne Faria';
+              }
+              setDoc(userDocRef, { role: 'sesmt', allowedSectors: ['sesmt'], status: 'active', name: userData.name }, { merge: true }).catch(err => console.error("Failed to sync SESMT user profile:", err));
             } else if (!userSnap.exists()) {
               userData = {
                 name: firebaseUser.displayName || cleanEmail || 'Usuário',
@@ -153,6 +161,12 @@ export const login = async (email, password) => {
            if (!finalUser.name) {
              finalUser.name = 'Dália Moraes';
            }
+        } else if (cleanEmail === 'roseannefa@nexa.com' || cleanEmail.startsWith('roseannefa')) {
+           finalUser.role = 'sesmt';
+           finalUser.allowedSectors = ['sesmt'];
+           if (!finalUser.name) {
+             finalUser.name = 'Roseanne Faria';
+           }
         }
       } catch (e) {
         console.error("Aviso: Falha ao sincronizar senha no Firestore pós-login (ignorado):", e);
@@ -163,7 +177,7 @@ export const login = async (email, password) => {
       console.warn("Firebase Auth sign-in failed:", err.code, err.message);
       const isTooManyRequests = err.code === 'auth/too-many-requests';
       const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || isTooManyRequests;
-      const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com', 'daliam@nexa.com'];
+      const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com', 'daliam@nexa.com', 'roseannefa@nexa.com'];
 
       if (isInvalidCred) {
         try {
@@ -188,6 +202,10 @@ export const login = async (email, password) => {
                 finalUser.role = 'financial';
                 finalUser.allowedSectors = ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'];
                 finalUser.name = finalUser.name || 'Dália Moraes';
+              } else if (cleanEmail === 'roseannefa@nexa.com' || cleanEmail.startsWith('roseannefa')) {
+                finalUser.role = 'sesmt';
+                finalUser.allowedSectors = ['sesmt'];
+                finalUser.name = finalUser.name || 'Roseanne Faria';
               } else if (cleanEmail === 'anacg@nexa.com' || cleanEmail === 'jsoares@nexa.com') {
                 finalUser.role = 'rh';
                 finalUser.allowedSectors = ['rh'];
@@ -312,7 +330,8 @@ export const getUsers = async () => {
       { uid: 'techcosta-admin-uid', email: 'contato@techcosta.net', name: 'Administrador TechCosta', role: 'admin', allowedSectors: allSectors, status: 'active' },
       { uid: 'anacg-uid', email: 'anacg@nexa.com', name: 'Ana Carolina Cerqueira Gonzaga', role: 'rh', allowedSectors: ['rh'], status: 'active' },
       { uid: 'jsoares-uid', email: 'jsoares@nexa.com', name: 'J. Soares', role: 'rh', allowedSectors: ['rh'], status: 'active' },
-      { uid: 'daliam-uid', email: 'daliam@nexa.com', name: 'Dália Moraes', role: 'financial', allowedSectors: ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'], status: 'active' }
+      { uid: 'daliam-uid', email: 'daliam@nexa.com', name: 'Dália Moraes', role: 'financial', allowedSectors: ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'], status: 'active' },
+      { uid: 'roseannefa-uid', email: 'roseannefa@nexa.com', name: 'Roseanne Faria', role: 'sesmt', allowedSectors: ['sesmt'], status: 'active' }
     ];
 
     if (USE_MOCK) {
@@ -347,6 +366,10 @@ export const getUsers = async () => {
             found.role = 'financial';
             found.allowedSectors = ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'];
             setDoc(doc(db, 'users', found.uid), { role: 'financial', allowedSectors: found.allowedSectors }, { merge: true }).catch(e => console.error(e));
+          } else if (defU.email === 'roseannefa@nexa.com') {
+            found.role = 'sesmt';
+            found.allowedSectors = ['sesmt'];
+            setDoc(doc(db, 'users', found.uid), { role: 'sesmt', allowedSectors: ['sesmt'] }, { merge: true }).catch(e => console.error(e));
           }
           found.status = 'active';
         }

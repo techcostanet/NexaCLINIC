@@ -1,3 +1,11 @@
+## [v3.3.53] - 12 de Agosto, 2026
+### Módulo SESMT & Perfil de Acesso para roseannefa
+- **Módulo SESMT & Segurança:** Implementado o portal NexaSAFE contendo os formulários digitais de Verificação Diária de EPI, Inspeção Semanal de Extintores e Inspeção Semanal de Hidrantes, acompanhado do Dashboard com indicadores em tempo real (Recharts).
+- **Perfil de Permissão SESMT:** Adicionado novo perfil RBAC `sesmt` ("SESMT & Segurança do Trabalho") com permissão de escrita e gestão do módulo SESMT.
+- **Usuária Roseanne Faria (`roseannefa`):** Criada e vinculada a usuária `roseannefa@nexa.com` com perfil `sesmt` e permissões ativas.
+
+---
+
 ## [v3.3.50] - 12 de Agosto, 2026
 ### Correção de Autenticação e Fallback de Login (Módulo TI)
 - **Correção de Bloqueio Auth:** Resolvido erro `auth/too-many-requests` ao tentar autenticar e implementado fallback inteligente para contas do sistema (`daliam@nexa.com`, `anacg@nexa.com`, etc.), permitindo acesso fluido sem travamento de tentativas.

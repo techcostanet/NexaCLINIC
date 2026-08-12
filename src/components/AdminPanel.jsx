@@ -608,6 +608,16 @@ export default function AdminPanel({ currentUser }) {
                     <input
                       type="radio"
                       name="role"
+                      checked={newRole === 'sesmt'}
+                      onChange={() => handleRoleChange('sesmt')}
+                      disabled={actionLoading}
+                    />
+                    <span>SESMT & Segurança</span>
+                  </label>
+                  <label style={styles.radioLabel}>
+                    <input
+                      type="radio"
+                      name="role"
                       checked={newRole === 'admin'}
                       onChange={() => handleRoleChange('admin')}
                       disabled={actionLoading}

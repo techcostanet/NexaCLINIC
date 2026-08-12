@@ -13455,7 +13455,8 @@ const getDB = () => {
         { id: 'reception', name: 'Recepção / Atendimento', permissions: { index: 'read', reception: 'write', clinical: 'none', calendar: 'write', stock: 'none', purchasing: 'none', requisitions: 'none', apac: 'read', finance: 'none', hr: 'none', config: 'none' } },
         { id: 'clinical', name: 'Equipe Multiprofissional', permissions: { index: 'read', reception: 'read', clinical: 'write', calendar: 'read', stock: 'read', purchasing: 'none', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', config: 'none' } },
         { id: 'financial', name: 'Gestão Financeira', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', purchasing: 'read', requisitions: 'none', apac: 'write', finance: 'write', hr: 'none', config: 'none' } },
-        { id: 'hr', name: 'Recursos Humanos', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', purchasing: 'read', requisitions: 'none', apac: 'none', finance: 'none', hr: 'write', config: 'none' } }
+        { id: 'hr', name: 'Recursos Humanos', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', purchasing: 'read', requisitions: 'none', apac: 'none', finance: 'none', hr: 'write', config: 'none' } },
+        { id: 'sesmt', name: 'SESMT & Segurança do Trabalho', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', purchasing: 'none', requisitions: 'none', apac: 'none', finance: 'none', hr: 'none', sesmt: 'write', config: 'none' } }
       ];
       updated = true;
     }
@@ -13495,6 +13496,15 @@ const getDB = () => {
         allowedSectors: ['rh'],
         status: 'active',
         createdAt: new Date().toISOString()
+      },
+      {
+        uid: 'roseannefa-uid',
+        email: 'roseannefa@nexa.com',
+        name: 'Roseanne Faria',
+        role: 'sesmt',
+        allowedSectors: ['sesmt'],
+        status: 'active',
+        createdAt: new Date().toISOString()
       }
     ],
     sectors: [
@@ -13503,7 +13513,8 @@ const getDB = () => {
       { id: 'qualidade', name: 'Qualidade', description: 'Satisfação do paciente e auditorias' },
       { id: 'faturamento', name: 'Faturamento', description: 'Glosas, custos e faturamento de diálise' },
       { id: 'psicologia', name: 'Psicologia', description: 'Métricas de cobertura de atendimento psicológico, risco emocional e encaminhamentos à rede.' },
-      { id: 'nutricao', name: 'Nutrição', description: 'Métricas de cobertura de atendimento nutricional, adequação metabólica e controle de peso.' }
+      { id: 'nutricao', name: 'Nutrição', description: 'Métricas de cobertura de atendimento nutricional, adequação metabólica e controle de peso.' },
+      { id: 'sesmt', name: 'SESMT & Segurança', description: 'Inspeções de EPI, Extintores e Hidrantes' }
     ],
     indicators: [
       { id: 'taxa_infeccao_cateter', name: 'Taxa de Infecção por Cateter', sectorId: 'enfermagem', unit: '%', target: 1.5, description: 'Percentual de pacientes com infecção de acesso vascular (cateter)' },

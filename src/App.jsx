@@ -17,6 +17,7 @@ import CalendarPanel from './components/CalendarPanel';
 import TechnicianPanel from './components/TechnicianPanel';
 import ApacBillingPanel from './components/ApacBillingPanel';
 import MaintenancePanel from './components/MaintenancePanel';
+import SesmtDashboard from './components/sesmt/SesmtDashboard';
 import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
@@ -126,6 +127,8 @@ export default function App() {
         return <ErrorBoundary><TechnicianPanel currentUser={user} /></ErrorBoundary>;
       case 'apac':
         return <ErrorBoundary><ApacBillingPanel currentUser={user} /></ErrorBoundary>;
+      case 'sesmt':
+        return <ErrorBoundary><SesmtDashboard currentUser={user} /></ErrorBoundary>;
       default:
         return renderQualityPage();
     }
