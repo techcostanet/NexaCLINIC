@@ -72,63 +72,63 @@ export default function WeeklyFireExtinguisherForm() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h2 className="text-xl font-bold mb-6 text-gray-800">Inspeção Semanal de Extintores de Incêndio</h2>
+    <div style={styles.card}>
+      <h2 style={styles.cardTitle}>Inspeção Semanal de Extintores de Incêndio</h2>
       
       {message && (
-        <div className={`p-4 mb-6 rounded ${message.includes('Erro') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+        <div style={{ ...styles.alert, backgroundColor: message.includes('Erro') ? '#fef2f2' : '#f0fdf4', color: message.includes('Erro') ? '#991b1b' : '#166534', border: `1px solid ${message.includes('Erro') ? '#f87171' : '#4ade80'}` }}>
           {message}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Data da Inspeção</label>
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <div style={styles.grid2}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Data da Inspeção</label>
             <input 
               type="date" 
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              style={styles.input}
               required 
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Inspetor</label>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Nome do Inspetor</label>
             <input 
               type="text" 
               name="inspectorName"
               value={formData.inspectorName}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              style={styles.input}
               placeholder="Assinatura/Nome"
               required 
             />
           </div>
         </div>
 
-        <div className="overflow-x-auto border border-gray-200 rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-teal-700 text-white">
+        <div style={styles.tableContainer}>
+          <table style={styles.table}>
+            <thead style={styles.tableHead}>
               <tr>
-                <th className="px-3 py-3 text-left font-semibold">N°</th>
-                <th className="px-3 py-3 text-left font-semibold">Tipo</th>
+                <th style={styles.th}>N°</th>
+                <th style={styles.th}>Tipo</th>
                 {CRITERIA.map(c => (
-                  <th key={c.id} className="px-2 py-3 text-center font-semibold text-xs">{c.label}</th>
+                  <th key={c.id} style={{...styles.th, textAlign: 'center'}}>{c.label}</th>
                 ))}
-                <th className="px-3 py-3 text-left font-semibold">Validade</th>
+                <th style={styles.th}>Validade</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody>
               {formData.items.map((item, index) => (
-                <tr key={item.extinguisherNum} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 font-medium text-gray-900">{item.extinguisherNum}</td>
-                  <td className="px-3 py-2">
+                <tr key={item.extinguisherNum} style={styles.tr}>
+                  <td style={{...styles.td, fontWeight: 'bold'}}>{item.extinguisherNum}</td>
+                  <td style={styles.td}>
                     <select
                       value={item.type}
                       onChange={(e) => handleItemChange(index, 'type', e.target.value)}
-                      className="w-full p-1 text-xs border border-gray-300 rounded"
+                      style={styles.selectSmall}
                     >
                       <option value="">Selecione</option>
                       <option value="AP">Água Press.</option>
@@ -136,24 +136,35 @@ export default function WeeklyFireExtinguisherForm() {
                       <option value="CO2">CO2</option>
                     </select>
                   </td>
-                  {CRITERIA.map(c => (
-                    <td key={c.id} className="px-2 py-2 text-center">
-                      <select
-                        value={item.evaluations[c.id]}
-                        onChange={(e) => handleEvaluationChange(index, c.id, e.target.value)}
-                        className={`w-full p-1 text-xs border rounded font-semibold ${item.evaluations[c.id] === 'C' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}
-                      >
-                        <option value="C">C</option>
-                        <option value="NC">NC</option>
-                      </select>
-                    </td>
-                  ))}
-                  <td className="px-3 py-2">
+                  {CRITERIA.map(c => {
+                    const isC = item.evaluations[c.id] === 'C';
+                    return (
+                      <td key={c.id} style={{...styles.td, textAlign: 'center'}}>
+                        <select
+                          value={item.evaluations[c.id]}
+                          onChange={(e) => handleEvaluationChange(index, c.id, e.target.value)}
+                          style={{
+                            ...styles.selectSmall,
+                            backgroundColor: isC ? '#f0fdf4' : '#fef2f2',
+                            color: isC ? '#15803d' : '#b91c1c',
+                            borderColor: isC ? '#bbf7d0' : '#fecaca',
+                            fontWeight: 'bold',
+                            textAlign: 'center',
+                            padding: '0.2rem'
+                          }}
+                        >
+                          <option value="C">C</option>
+                          <option value="NC">NC</option>
+                        </select>
+                      </td>
+                    );
+                  })}
+                  <td style={styles.td}>
                     <input 
                       type="date"
                       value={item.validity}
                       onChange={(e) => handleItemChange(index, 'validity', e.target.value)}
-                      className="w-full p-1 text-xs border border-gray-300 rounded"
+                      style={styles.inputSmall}
                     />
                   </td>
                 </tr>
@@ -162,11 +173,11 @@ export default function WeeklyFireExtinguisherForm() {
           </table>
         </div>
 
-        <div className="flex justify-end pt-4">
+        <div style={styles.actions}>
           <button 
             type="submit" 
             disabled={loading}
-            className="flex items-center space-x-2 bg-teal-700 text-white px-6 py-2 rounded hover:bg-teal-800 disabled:opacity-50"
+            style={loading ? {...styles.btnPrimary, opacity: 0.7} : styles.btnPrimary}
           >
             <Save size={20} />
             <span>{loading ? 'Salvando...' : 'Salvar Inspeção'}</span>
@@ -176,3 +187,117 @@ export default function WeeklyFireExtinguisherForm() {
     </div>
   );
 }
+
+const styles = {
+  card: {
+    backgroundColor: '#ffffff',
+    padding: '1.5rem',
+    borderRadius: '12px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    border: '1px solid #e2e8f0',
+  },
+  cardTitle: {
+    fontSize: '1.25rem',
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: '1.5rem',
+  },
+  alert: {
+    padding: '1rem',
+    borderRadius: '8px',
+    marginBottom: '1.5rem',
+    fontWeight: '500',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+  },
+  grid2: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: '1rem',
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  label: {
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    color: '#475569',
+  },
+  input: {
+    padding: '0.6rem',
+    borderRadius: '8px',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.9rem',
+    width: '100%',
+    boxSizing: 'border-box'
+  },
+  inputSmall: {
+    padding: '0.3rem',
+    borderRadius: '4px',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.75rem',
+    width: '100%',
+    boxSizing: 'border-box'
+  },
+  selectSmall: {
+    padding: '0.3rem',
+    borderRadius: '4px',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.75rem',
+    width: '100%',
+    boxSizing: 'border-box',
+    cursor: 'pointer'
+  },
+  tableContainer: {
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    overflowX: 'auto',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    minWidth: '800px'
+  },
+  tableHead: {
+    backgroundColor: '#0f766e',
+  },
+  th: {
+    padding: '0.75rem 0.5rem',
+    textAlign: 'left',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    color: '#ffffff',
+    borderBottom: '1px solid #e2e8f0',
+  },
+  tr: {
+    borderBottom: '1px solid #f1f5f9',
+  },
+  td: {
+    padding: '0.5rem',
+    fontSize: '0.85rem',
+    color: '#334155',
+  },
+  actions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: '1rem',
+  },
+  btnPrimary: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    backgroundColor: '#0f766e',
+    color: '#ffffff',
+    padding: '0.6rem 1.25rem',
+    borderRadius: '8px',
+    border: 'none',
+    fontWeight: '600',
+    fontSize: '0.9rem',
+    cursor: 'pointer',
+  }
+};

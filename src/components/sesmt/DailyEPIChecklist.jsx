@@ -62,7 +62,6 @@ export default function DailyEPIChecklist() {
         createdAt: new Date().toISOString()
       });
       setMessage('Checklist salvo com sucesso!');
-      // Reset after 3 seconds
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error(error);
@@ -73,46 +72,46 @@ export default function DailyEPIChecklist() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h2 className="text-xl font-bold mb-6 text-gray-800">Checklist de Verificação Diária de EPI e Segurança</h2>
+    <div style={styles.card}>
+      <h2 style={styles.cardTitle}>Checklist de Verificação Diária de EPI e Segurança</h2>
       
       {message && (
-        <div className={`p-4 mb-6 rounded ${message.includes('Erro') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+        <div style={{ ...styles.alert, backgroundColor: message.includes('Erro') ? '#fef2f2' : '#f0fdf4', color: message.includes('Erro') ? '#991b1b' : '#166534', border: `1px solid ${message.includes('Erro') ? '#f87171' : '#4ade80'}` }}>
           {message}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Data</label>
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <div style={styles.grid3}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Data</label>
             <input 
               type="date" 
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              style={styles.input}
               required 
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Horário</label>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Horário</label>
             <input 
               type="time" 
               name="time"
               value={formData.time}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              style={styles.input}
               required 
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Setor</label>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Setor</label>
             <select 
               name="sector"
               value={formData.sector}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              style={styles.input}
             >
               {SECTORS.map(sector => (
                 <option key={sector} value={sector}>{sector}</option>
@@ -121,65 +120,62 @@ export default function DailyEPIChecklist() {
           </div>
         </div>
 
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div style={styles.tableContainer}>
+          <table style={styles.table}>
+            <thead style={styles.tableHead}>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Avaliação</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Observações</th>
+                <th style={styles.th}>Descrição</th>
+                <th style={{...styles.th, textAlign: 'center'}}>Avaliação</th>
+                <th style={styles.th}>Observações</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody>
               {ITEMS.map(item => (
-                <tr key={item.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <tr key={item.id} style={styles.tr}>
+                  <td style={styles.td}>
                     {item.label}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                    <div className="flex justify-center space-x-4">
-                      <label className="flex items-center space-x-1 cursor-pointer">
+                  <td style={{...styles.td, textAlign: 'center'}}>
+                    <div style={styles.radioGroup}>
+                      <label style={styles.radioLabel}>
                         <input 
                           type="radio" 
                           name={`status-${item.id}`} 
                           value="C" 
                           checked={formData.evaluations[item.id].status === 'C'}
                           onChange={(e) => handleEvaluationChange(item.id, 'status', e.target.value)}
-                          className="text-green-600 focus:ring-green-500"
                         />
-                        <span className="text-green-600 font-medium" title="Conforme">C</span>
+                        <span style={{ color: '#16a34a', fontWeight: 'bold' }} title="Conforme">C</span>
                       </label>
-                      <label className="flex items-center space-x-1 cursor-pointer">
+                      <label style={styles.radioLabel}>
                         <input 
                           type="radio" 
                           name={`status-${item.id}`} 
                           value="NC" 
                           checked={formData.evaluations[item.id].status === 'NC'}
                           onChange={(e) => handleEvaluationChange(item.id, 'status', e.target.value)}
-                          className="text-red-600 focus:ring-red-500"
                         />
-                        <span className="text-red-600 font-medium" title="Não Conforme">NC</span>
+                        <span style={{ color: '#dc2626', fontWeight: 'bold' }} title="Não Conforme">NC</span>
                       </label>
-                      <label className="flex items-center space-x-1 cursor-pointer">
+                      <label style={styles.radioLabel}>
                         <input 
                           type="radio" 
                           name={`status-${item.id}`} 
                           value="NA" 
                           checked={formData.evaluations[item.id].status === 'NA'}
                           onChange={(e) => handleEvaluationChange(item.id, 'status', e.target.value)}
-                          className="text-gray-400 focus:ring-gray-400"
                         />
-                        <span className="text-gray-500 font-medium" title="Não Avaliado">NA</span>
+                        <span style={{ color: '#6b7280', fontWeight: 'bold' }} title="Não Avaliado">NA</span>
                       </label>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td style={styles.td}>
                     <input 
                       type="text" 
                       value={formData.evaluations[item.id].observation}
                       onChange={(e) => handleEvaluationChange(item.id, 'observation', e.target.value)}
                       placeholder="Observações..."
-                      className="w-full p-2 border border-gray-300 rounded"
+                      style={styles.input}
                     />
                   </td>
                 </tr>
@@ -188,38 +184,38 @@ export default function DailyEPIChecklist() {
           </table>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Enfermeiro(a) Responsável</label>
+        <div style={styles.grid2}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Enfermeiro(a) Responsável</label>
             <input 
               type="text" 
               name="enfermeiro"
               value={formData.enfermeiro}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              style={styles.input}
               placeholder="Nome"
               required 
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Técnico de Segurança do Trabalho</label>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Técnico de Segurança do Trabalho</label>
             <input 
               type="text" 
               name="tecnicoSeguranca"
               value={formData.tecnicoSeguranca}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
+              style={styles.input}
               placeholder="Nome"
               required 
             />
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div style={styles.actions}>
           <button 
             type="submit" 
             disabled={loading}
-            className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+            style={loading ? {...styles.btnPrimary, opacity: 0.7} : styles.btnPrimary}
           >
             <Save size={20} />
             <span>{loading ? 'Salvando...' : 'Salvar Checklist'}</span>
@@ -229,3 +225,116 @@ export default function DailyEPIChecklist() {
     </div>
   );
 }
+
+const styles = {
+  card: {
+    backgroundColor: '#ffffff',
+    padding: '1.5rem',
+    borderRadius: '12px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    border: '1px solid #e2e8f0',
+  },
+  cardTitle: {
+    fontSize: '1.25rem',
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: '1.5rem',
+  },
+  alert: {
+    padding: '1rem',
+    borderRadius: '8px',
+    marginBottom: '1.5rem',
+    fontWeight: '500',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+  },
+  grid3: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '1rem',
+  },
+  grid2: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: '1rem',
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  label: {
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    color: '#475569',
+  },
+  input: {
+    padding: '0.6rem',
+    borderRadius: '8px',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.9rem',
+    width: '100%',
+    boxSizing: 'border-box'
+  },
+  tableContainer: {
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    overflow: 'hidden',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+  },
+  tableHead: {
+    backgroundColor: '#f8fafc',
+  },
+  th: {
+    padding: '0.75rem 1rem',
+    textAlign: 'left',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    borderBottom: '1px solid #e2e8f0',
+  },
+  tr: {
+    borderBottom: '1px solid #f1f5f9',
+  },
+  td: {
+    padding: '0.75rem 1rem',
+    fontSize: '0.85rem',
+    color: '#334155',
+  },
+  radioGroup: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '1rem',
+  },
+  radioLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    cursor: 'pointer',
+  },
+  actions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: '1rem',
+  },
+  btnPrimary: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    backgroundColor: '#0891b2',
+    color: '#ffffff',
+    padding: '0.6rem 1.25rem',
+    borderRadius: '8px',
+    border: 'none',
+    fontWeight: '600',
+    fontSize: '0.9rem',
+    cursor: 'pointer',
+  }
+};

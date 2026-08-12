@@ -142,7 +142,7 @@ export default function AdminPanel({ currentUser }) {
     try {
       const finalAllowedSectors = newRole === 'admin' 
         ? sectors.map(s => s.id) 
-        : (newRole === 'rh' ? ['rh'] : newSectors);
+        : (newRole === 'rh' ? ['rh'] : (newRole === 'sesmt' ? ['sesmt'] : newSectors));
 
       if (editingUser) {
         await dbService.updateUser(editingUser.uid, {
@@ -735,10 +735,10 @@ export default function AdminPanel({ currentUser }) {
                       </td>
                       <td>
                         <span
-                          className={`badge ${u.role === 'admin' ? 'badge-admin' : u.role === 'rh' ? 'badge-rh' : 'badge-prof'}`}
-                          style={u.role === 'rh' ? { backgroundColor: '#fce7f3', color: '#9d174d', fontWeight: '600' } : {}}
+                          className={`badge ${u.role === 'admin' ? 'badge-admin' : u.role === 'rh' ? 'badge-rh' : u.role === 'sesmt' ? 'badge-sesmt' : 'badge-prof'}`}
+                          style={u.role === 'rh' ? { backgroundColor: '#fce7f3', color: '#9d174d', fontWeight: '600' } : u.role === 'sesmt' ? { backgroundColor: '#dcfce7', color: '#166534', fontWeight: '600' } : {}}
                         >
-                          {u.role === 'admin' ? 'Admin' : u.role === 'rh' ? 'Recursos Humanos' : 'Profissional'}
+                          {u.role === 'admin' ? 'Admin' : u.role === 'rh' ? 'Recursos Humanos' : u.role === 'sesmt' ? 'SESMT & Segurança' : 'Profissional'}
                         </span>
                       </td>
                       <td>
