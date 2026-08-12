@@ -548,25 +548,40 @@ export const deleteUser = async (uid) => {
     return deleteDoc(doc(db, 'users', uid));
   };
 
+export const DEFAULT_USER_PROFILES = [
+  { id: 'admin', name: 'Administrador / T.I.', permissions: { index: 'write', reception: 'write', clinical: 'write', calendar: 'write', stock: 'write', maintenance: 'write', purchasing: 'write', requisitions: 'write', apac: 'write', finance: 'write', hr: 'write', sesmt: 'write', config: 'write' } },
+  { id: 'reception', name: 'Recepção / Atendimento', permissions: { index: 'read', reception: 'write', clinical: 'none', calendar: 'write', stock: 'none', maintenance: 'read', purchasing: 'none', requisitions: 'none', apac: 'read', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
+  { id: 'clinical', name: 'Equipe Multiprofissional', permissions: { index: 'read', reception: 'read', clinical: 'write', calendar: 'read', stock: 'read', maintenance: 'read', purchasing: 'none', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
+  { id: 'financial', name: 'Gestão Financeira', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'read', purchasing: 'read', requisitions: 'none', apac: 'write', finance: 'write', hr: 'none', sesmt: 'none', config: 'none' } },
+  { id: 'hr', name: 'Recursos Humanos (RH)', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'read', purchasing: 'read', requisitions: 'none', apac: 'none', finance: 'none', hr: 'write', sesmt: 'read', config: 'none' } },
+  { id: 'sesmt', name: 'SESMT & Segurança do Trabalho', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'read', purchasing: 'none', requisitions: 'none', apac: 'none', finance: 'none', hr: 'read', sesmt: 'write', config: 'none' } },
+  { id: 'stock_keeper', name: 'Almoxarifado & Farmácia', permissions: { index: 'read', reception: 'none', clinical: 'read', calendar: 'none', stock: 'write', maintenance: 'read', purchasing: 'write', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
+  { id: 'technician', name: 'Manutenção & Engenharia Clínica', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'read', maintenance: 'write', purchasing: 'read', requisitions: 'read', apac: 'none', finance: 'none', hr: 'none', sesmt: 'read', config: 'none' } },
+  { id: 'apac', name: 'Faturamento & APACs', permissions: { index: 'read', reception: 'read', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'none', purchasing: 'none', requisitions: 'none', apac: 'write', finance: 'read', hr: 'none', sesmt: 'none', config: 'none' } },
+  { id: 'purchasing', name: 'Compras & Suprimentos', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'read', maintenance: 'none', purchasing: 'write', requisitions: 'read', apac: 'none', finance: 'read', hr: 'none', sesmt: 'none', config: 'none' } }
+];
+
 export const getUserProfiles = async () => {
     if (USE_MOCK) return mockFirestore.getUserProfiles();
     try {
       const { getFirestore, collection, getDocs, doc, setDoc } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'user_profiles'));
-      if (!snap.empty) {
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      let existingProfiles = snap.empty ? [] : snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      // Auto-seed missing default profiles into Firestore
+      for (const defProf of DEFAULT_USER_PROFILES) {
+        const found = existingProfiles.find(p => p.id === defProf.id);
+        if (!found) {
+          const { id, ...data } = defProf;
+          await setDoc(doc(db, 'user_profiles', id), data);
+          existingProfiles.push(defProf);
+        }
       }
-      // Seed default profiles to Cloud Firestore if empty
-      const defaultProfiles = await mockFirestore.getUserProfiles();
-      for (const prof of defaultProfiles) {
-        const { id, ...data } = prof;
-        await setDoc(doc(db, 'user_profiles', id), data);
-      }
-      return defaultProfiles;
+      return existingProfiles;
     } catch (e) {
       console.error('Erro ao ler user_profiles do Firestore:', e);
-      return [];
+      return DEFAULT_USER_PROFILES;
     }
   };
 

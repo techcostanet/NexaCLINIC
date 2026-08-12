@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.58',
+      date: '12/08/2026',
+      title: 'Expansão da Matriz RBAC & Perfis de Permissão (SESMT, Almoxarifado, Manutenção e mais)',
+      description: 'Atualização e sincronização da matriz RBAC e seletor de perfis de usuário para incluir SESMT & Segurança do Trabalho, Almoxarifado & Farmácia, Manutenção & Engenharia Clínica, Faturamento & APACs e Compras & Suprimentos.',
+      changes: [
+        { type: 'Matriz RBAC', text: 'Inclusão do módulo SESMT & Segurança (NexaSAFE) na matriz de permissões por perfil.' },
+        { type: 'Perfis de Permissão', text: 'Expansão do seletor de perfis de usuário para cobrir os 10 perfis do sistema (Administrador, Recepção, Clínico, Financeiro, RH, SESMT, Almoxarifado, Manutenção, APACs e Compras).' },
+        { type: 'Sincronização Cloud', text: 'Auto-seeding inteligente garantindo a gravação de todos os perfis e suas respectivas permissões na coleção user_profiles no Firestore.' }
+      ]
+    },
+    {
       version: 'v3.3.56',
       date: '12/08/2026',
       title: '4 Modos de Visualização & Busca no Portal de Módulos',

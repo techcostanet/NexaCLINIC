@@ -1,4 +1,12 @@
-## [v3.3.54] - 12 de Agosto, 2026
+## [v3.3.58] - 12 de Agosto, 2026
+### Expansão da Matriz RBAC & Perfis de Permissão
+- **Matriz RBAC:** Inclusão do módulo SESMT & Segurança (NexaSAFE) na matriz de permissões por perfil.
+- **Perfis de Permissão:** Expansão do seletor de perfis de usuário para cobrir os 10 perfis do sistema (Administrador, Recepção, Clínico, Financeiro, RH, SESMT, Almoxarifado, Manutenção, APACs e Compras).
+- **Sincronização Cloud:** Auto-seeding inteligente garantindo a gravação de todos os perfis e suas respectivas permissões na coleção `user_profiles` no Firestore.
+
+---
+
+## [v3.3.56] - 12 de Agosto, 2026
 ### Módulo SESMT & Perfil de Acesso para roseannefa
 - **Módulo SESMT & Segurança:** Implementado o portal NexaSAFE contendo os formulários digitais de Verificação Diária de EPI, Inspeção Semanal de Extintores e Inspeção Semanal de Hidrantes, acompanhado do Dashboard com indicadores em tempo real (Recharts).
 - **Perfil de Permissão SESMT:** Adicionado novo perfil RBAC `sesmt` ("SESMT & Segurança do Trabalho") com permissão de escrita e gestão do módulo SESMT.

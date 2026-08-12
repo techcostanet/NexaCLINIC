@@ -587,6 +587,7 @@ export default function ConfigPanel() {
               { key: 'apac', label: 'APACs & Faturamento' },
               { key: 'finance', label: 'Módulo Financeiro' },
               { key: 'hr', label: 'Recursos Humanos (RH)' },
+              { key: 'sesmt', label: 'SESMT & Segurança (SAFE)' },
               { key: 'config', label: 'Configurações T.I.' }
             ];
 
