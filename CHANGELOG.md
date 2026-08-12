@@ -1,4 +1,4 @@
-## [v3.3.53] - 12 de Agosto, 2026
+## [v3.3.54] - 12 de Agosto, 2026
 ### Módulo SESMT & Perfil de Acesso para roseannefa
 - **Módulo SESMT & Segurança:** Implementado o portal NexaSAFE contendo os formulários digitais de Verificação Diária de EPI, Inspeção Semanal de Extintores e Inspeção Semanal de Hidrantes, acompanhado do Dashboard com indicadores em tempo real (Recharts).
 - **Perfil de Permissão SESMT:** Adicionado novo perfil RBAC `sesmt` ("SESMT & Segurança do Trabalho") com permissão de escrita e gestão do módulo SESMT.

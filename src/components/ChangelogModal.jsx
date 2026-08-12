@@ -6,7 +6,7 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v3.3.53',
+      version: 'v3.3.54',
       date: '12/08/2026',
       title: 'Módulo SESMT & Perfil de Acesso para roseannefa',
       description: 'Criação do módulo SESMT & Segurança do Trabalho, perfil RBAC próprio e vinculação da usuária roseannefa.',
