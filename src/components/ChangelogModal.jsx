@@ -6,7 +6,7 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v3.3.60',
+      version: 'v3.3.61',
       date: '12/08/2026',
       title: 'Desmembramento dos Setores de Hemodiálise no SESMT (Salão-1, Salão-2 e Salão-3)',
       description: 'Ajuste na seleção de setores do formulário de Verificação Diária de EPI (NexaSAFE), dividindo o Salão de Hemodiálise em Salão-1, Salão-2 e Salão-3 para maior precisão na auditoria.',
