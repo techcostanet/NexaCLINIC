@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.56',
+      date: '12/08/2026',
+      title: '4 Modos de Visualização & Busca no Portal de Módulos',
+      description: 'Implementação de 4 modos de exibição (Grid Padrão, Lista Detalhada, Lista Compacta e Cards Expandidos) com busca por texto em tempo real no Portal de Módulos.',
+      changes: [
+        { type: 'Visualizações', text: 'Inclusão dos 4 modos de exibição no seletor de módulos (Grid, Detalhada, Compacta e Expandida), mantendo o Grid como visão padrão.' },
+        { type: 'Busca em Tempo Real', text: 'Adicionada barra de pesquisa para filtrar módulos instantaneamente por nome, subtítulo ou descrição.' },
+        { type: 'Usabilidade', text: 'Barra de ferramentas superior intuitiva para alteração de layout com 1 clique e resposta responsiva.' }
+      ]
+    },
+    {
       version: 'v3.3.54',
       date: '12/08/2026',
       title: 'Módulo SESMT & Perfil de Acesso para roseannefa',
