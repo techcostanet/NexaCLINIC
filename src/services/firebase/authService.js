@@ -52,8 +52,9 @@ export const onAuthChange = (callback) => {
             // Save/sync back to firestore asynchronously
             setDoc(userDocRef, userData, { merge: true }).catch(err => console.error("Failed to sync admin user profile:", err));
           } else {
-            // Check if user is anacg or jsoares, which must strictly be RH
+            // Check if user is anacg or jsoares (RH) or daliam (Finance)
             const isRhFixedUser = cleanEmail === 'anacg@nexa.com' || cleanEmail === 'jsoares@nexa.com';
+            const isFinanceFixedUser = cleanEmail === 'daliam@nexa.com';
             if (isRhFixedUser && (userData.role === 'admin' || !userData.role || !userData.allowedSectors || userData.allowedSectors.length === 0)) {
               userData.role = 'rh';
               userData.allowedSectors = ['rh'];
@@ -62,6 +63,14 @@ export const onAuthChange = (callback) => {
                 userData.name = cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares';
               }
               setDoc(userDocRef, { role: 'rh', allowedSectors: ['rh'], status: 'active', name: userData.name }, { merge: true }).catch(err => console.error("Failed to sync RH user profile:", err));
+            } else if (isFinanceFixedUser && (userData.role !== 'financial' || !userData.allowedSectors || userData.allowedSectors.length === 0)) {
+              userData.role = 'financial';
+              userData.allowedSectors = ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'];
+              userData.status = 'active';
+              if (!userData.name) {
+                userData.name = 'Dália Moraes';
+              }
+              setDoc(userDocRef, { role: 'financial', allowedSectors: userData.allowedSectors, status: 'active', name: userData.name }, { merge: true }).catch(err => console.error("Failed to sync Finance user profile:", err));
             } else if (!userSnap.exists()) {
               userData = {
                 name: firebaseUser.displayName || cleanEmail || 'Usuário',
@@ -138,6 +147,12 @@ export const login = async (email, password) => {
            if (!finalUser.name) {
              finalUser.name = cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares';
            }
+        } else if (cleanEmail === 'daliam@nexa.com') {
+           finalUser.role = 'financial';
+           finalUser.allowedSectors = ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'];
+           if (!finalUser.name) {
+             finalUser.name = 'Dália Moraes';
+           }
         }
       } catch (e) {
         console.error("Aviso: Falha ao sincronizar senha no Firestore pós-login (ignorado):", e);
@@ -194,6 +209,12 @@ export const login = async (email, password) => {
                  if (!finalUser.name) {
                    finalUser.name = cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares';
                  }
+              } else if (cleanEmail === 'daliam@nexa.com') {
+                 finalUser.role = 'financial';
+                 finalUser.allowedSectors = ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'];
+                 if (!finalUser.name) {
+                   finalUser.name = 'Dália Moraes';
+                 }
               }
             } catch (e) {}
             
@@ -218,8 +239,8 @@ export const login = async (email, password) => {
             const isTechCosta = cleanEmail === 'contato@techcosta.net';
             const isDaliam = cleanEmail === 'daliam@nexa.com';
             const isRhUser = cleanEmail === 'anacg@nexa.com' || cleanEmail === 'jsoares@nexa.com';
-            const defaultRole = isTechCosta ? 'admin' : (isDaliam ? 'reception' : (isRhUser ? 'rh' : 'professional'));
-            const defaultSectors = isTechCosta ? allSectors : (isDaliam ? ['recepcao'] : (isRhUser ? ['rh'] : ['rh']));
+            const defaultRole = isTechCosta ? 'admin' : (isDaliam ? 'financial' : (isRhUser ? 'rh' : 'professional'));
+            const defaultSectors = isTechCosta ? allSectors : (isDaliam ? ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'] : (isRhUser ? ['rh'] : ['rh']));
             
             const userPayload = {
               uid: userCredential.user.uid,
@@ -341,7 +362,8 @@ export const getUsers = async () => {
     const defaultUsers = [
       { uid: 'techcosta-admin-uid', email: 'contato@techcosta.net', name: 'Administrador TechCosta', role: 'admin', allowedSectors: allSectors, status: 'active' },
       { uid: 'anacg-uid', email: 'anacg@nexa.com', name: 'Ana Carolina Cerqueira Gonzaga', role: 'rh', allowedSectors: ['rh'], status: 'active' },
-      { uid: 'jsoares-uid', email: 'jsoares@nexa.com', name: 'J. Soares', role: 'rh', allowedSectors: ['rh'], status: 'active' }
+      { uid: 'jsoares-uid', email: 'jsoares@nexa.com', name: 'J. Soares', role: 'rh', allowedSectors: ['rh'], status: 'active' },
+      { uid: 'daliam-uid', email: 'daliam@nexa.com', name: 'Dália Moraes', role: 'financial', allowedSectors: ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'], status: 'active' }
     ];
 
     if (USE_MOCK) {
@@ -363,7 +385,7 @@ export const getUsers = async () => {
           // Seed back to Firestore asynchronously
           setDoc(doc(db, 'users', defU.uid), defU, { merge: true }).catch(e => console.error(e));
         } else {
-          // Force contato@techcosta.net to admin, and anacg/jsoares to rh
+          // Force contato@techcosta.net to admin, anacg/jsoares to rh, and daliam to financial
           if (defU.email === 'contato@techcosta.net') {
             found.role = 'admin';
             found.allowedSectors = allSectors;
@@ -372,6 +394,10 @@ export const getUsers = async () => {
             found.allowedSectors = ['rh'];
             // Heal in Firestore if it was stored as admin
             setDoc(doc(db, 'users', found.uid), { role: 'rh', allowedSectors: ['rh'] }, { merge: true }).catch(e => console.error(e));
+          } else if (defU.email === 'daliam@nexa.com') {
+            found.role = 'financial';
+            found.allowedSectors = ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'];
+            setDoc(doc(db, 'users', found.uid), { role: 'financial', allowedSectors: found.allowedSectors }, { merge: true }).catch(e => console.error(e));
           }
           found.status = 'active';
         }

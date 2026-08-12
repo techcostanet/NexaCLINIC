@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.48',
+      date: '12/08/2026',
+      title: 'Restauração de Acesso Financeiro (daliam@nexa.com)',
+      description: 'Ajuste de permissões e perfis de usuário no sistema.',
+      changes: [
+        { type: 'Módulo TI', text: 'Restaurado acesso da usuária Dália Moraes (daliam@nexa.com) ao Módulo Financeiro com perfil de Gestão Financeira.' }
+      ]
+    },
+    {
       version: 'v3.3.46',
       date: '12/08/2026',
       title: 'Atualizações no Módulo Financeiro',

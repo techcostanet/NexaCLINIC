@@ -1,3 +1,9 @@
+## [v3.3.48] - 12 de Agosto, 2026
+### Restauração de Acessos Financeiros (Módulo TI & Autenticação)
+- **Acesso do Usuário:** Corrigida e restaurada a regra de permissões da usuária **daliam@nexa.com** (Dália Moraes), definindo seu perfil como **Gestão Financeira (`financial`)** com acesso garantido ao Módulo Financeiro (`NexaFINANCE`), Faturamento, Compras e Qualidade.
+
+---
+
 ## [v3.3.46] - 12 de Agosto, 2026
 ### Atualizações no Módulo Financeiro
 - **Filtro de Período:** Adicionado filtro de Mês/Ano para a visualização padrão de Contas a Pagar, exibindo sempre o mês corrente.
