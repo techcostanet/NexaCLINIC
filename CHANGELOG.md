@@ -1,3 +1,10 @@
+## [v3.3.46] - 12 de Agosto, 2026
+### Atualizações no Módulo Financeiro
+- **Filtro de Período:** Adicionado filtro de Mês/Ano para a visualização padrão de Contas a Pagar, exibindo sempre o mês corrente.
+- **Remoção de Botão e Duplicatas:** Removido o botão de Limpar Duplicatas, visto que os 456 registros em duplicidade foram excluídos diretamente no banco de dados com um script.
+
+---
+
 ## [v3.3.44] - 12 de Agosto, 2026
 ### Atualizações no Módulo Financeiro
 - **Limpeza de Duplicatas:** Adicionado botão para remover registros duplicados importados na planilha de Betim.

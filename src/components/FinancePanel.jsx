@@ -202,6 +202,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
   // Filter & Sort states
   const [payableFilter, setPayableFilter] = useState('Todos'); // 'Todos' | 'Pendente' | 'Pago'
+  const [payableMonthFilter, setPayableMonthFilter] = useState(() => {
+    const today = new Date();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const yyyy = today.getFullYear();
+    return `${yyyy}-${mm}`;
+  });
   const [receivableFilter, setReceivableFilter] = useState('Todos'); // 'Todos' | 'Pendente' | 'Pago'
 
   // Formato das linhas de registros em Contas a Pagar ('compacta' por padrão | 'normal')
@@ -1964,6 +1970,13 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
               <div style={styles.filtersGroup}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginRight: '0.5rem' }}>Filtro:</span>
+                <input 
+                  type="month"
+                  value={payableMonthFilter}
+                  onChange={(e) => setPayableMonthFilter(e.target.value)}
+                  style={{ padding: '0.35rem 0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)', outline: 'none', marginRight: '0.5rem', fontSize: '0.85rem' }}
+                  title="Mês/Ano de Vencimento"
+                />
                 <button 
                   onClick={() => setPayableFilter('Todos')}
                   style={{ ...styles.filterBadge, ...(payableFilter === 'Todos' ? styles.filterBadgeActive : {}) }}
@@ -2033,34 +2046,6 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button 
-                onClick={async () => {
-                  if(!window.confirm('Tem certeza que deseja limpar registros duplicados? Isso pode demorar um pouco.')) return;
-                  try {
-                    const snap = await dbService.getAccountsPayable();
-                    const seen = new Set();
-                    let deleted = 0;
-                    for (const p of snap) {
-                      const key = `${p.supplier}_${p.amount}_${p.dueDate}`;
-                      if (seen.has(key)) {
-                        await dbService.deleteAccountsPayable(p.id);
-                        deleted++;
-                      } else {
-                        seen.add(key);
-                      }
-                    }
-                    alert(`Limpeza concluída! ${deleted} registros duplicados foram removidos.`);
-                    loadData();
-                  } catch (e) {
-                    console.error(e);
-                    alert('Erro ao remover duplicatas: ' + e.message);
-                  }
-                }} 
-                style={styles.btnSecondary}
-              >
-                <Trash2 size={14} />
-                <span>Limpar Duplicatas</span>
-              </button>
               <button 
                 onClick={() => {
                   setEditingPayable(null);
@@ -2256,7 +2241,13 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   payableList.filter(p => {
                     const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
                     const matchFilter = payableFilter === 'Todos' || p.status === payableFilter || (payableFilter === 'Pendente' && p.status !== 'Pago');
-                    return matchUnit && matchFilter;
+                    
+                    let matchMonth = true;
+                    if (payableMonthFilter && p.dueDate) {
+                      matchMonth = p.dueDate.startsWith(payableMonthFilter);
+                    }
+                    
+                    return matchUnit && matchFilter && matchMonth;
                   }),
                   payableSort
                 ).map(p => {

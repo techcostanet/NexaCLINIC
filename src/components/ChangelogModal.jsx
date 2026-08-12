@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.46',
+      date: '12/08/2026',
+      title: 'Atualizações no Módulo Financeiro',
+      description: 'Adição de filtro por Mês/Ano no Contas a Pagar e exclusão de notas duplicadas.',
+      changes: [
+        { type: 'Módulo Financeiro', text: 'Adicionado filtro de Mês/Ano para a visualização padrão de Contas a Pagar.' },
+        { type: 'Módulo Financeiro', text: 'Removido botão Limpar Duplicatas, exclusão realizada via script.' }
+      ]
+    },
+    {
       version: 'v3.3.44',
       date: '12/08/2026',
       title: 'Atualizações no Módulo Financeiro',
