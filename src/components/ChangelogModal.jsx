@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.44',
+      date: '12/08/2026',
+      title: 'Atualizações no Módulo Financeiro',
+      description: 'Limpeza de duplicatas, remoção da importação da planilha, troca de coluna para "Número da Nota" e campo de data no registro de baixa.',
+      changes: [
+        { type: 'Módulo Financeiro', text: 'Adicionado botão para remover registros duplicados importados.' },
+        { type: 'Módulo Financeiro', text: 'Botão de importação da planilha de Betim removido.' },
+        { type: 'Módulo Financeiro', text: 'Coluna "Filial & Competência" substituída por "Número da Nota".' },
+        { type: 'Módulo Financeiro', text: 'Inserido campo "Data do Pagamento" no momento de baixar um título.' }
+      ]
+    },
+    {
       version: 'v3.3.42',
       date: '11/08/2026',
       title: 'Importação Contas a Pagar Betim 2026 (Módulo Financeiro)',

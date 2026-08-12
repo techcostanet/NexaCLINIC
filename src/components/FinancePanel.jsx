@@ -98,6 +98,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
   const [partialItem, setPartialItem] = useState(null);
   const [partialAmountPaid, setPartialAmountPaid] = useState('');
+  const [partialPaymentDate, setPartialPaymentDate] = useState(new Date().toISOString().substring(0, 10));
   const [showImportBetimModal, setShowImportBetimModal] = useState(false);
 
 
@@ -601,10 +602,11 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         ...partialItem,
         amountPaid: newTotalPaid,
         status: newStatus,
-        paymentDate: new Date().toISOString().substring(0, 10)
+        paymentDate: partialPaymentDate
       });
       setPartialItem(null);
       setPartialAmountPaid('');
+      setPartialPaymentDate(new Date().toISOString().substring(0, 10));
       loadData();
     } catch (err) {
       console.error(err);
@@ -2032,11 +2034,32 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button 
-                onClick={() => setShowImportBetimModal(true)} 
+                onClick={async () => {
+                  if(!window.confirm('Tem certeza que deseja limpar registros duplicados? Isso pode demorar um pouco.')) return;
+                  try {
+                    const snap = await dbService.getAccountsPayable();
+                    const seen = new Set();
+                    let deleted = 0;
+                    for (const p of snap) {
+                      const key = `${p.supplier}_${p.amount}_${p.dueDate}`;
+                      if (seen.has(key)) {
+                        await dbService.deleteAccountsPayable(p.id);
+                        deleted++;
+                      } else {
+                        seen.add(key);
+                      }
+                    }
+                    alert(`Limpeza concluída! ${deleted} registros duplicados foram removidos.`);
+                    loadData();
+                  } catch (e) {
+                    console.error(e);
+                    alert('Erro ao remover duplicatas: ' + e.message);
+                  }
+                }} 
                 style={styles.btnSecondary}
               >
-                <FileSpreadsheet size={14} />
-                <span>Importar Planilha Betim 2026</span>
+                <Trash2 size={14} />
+                <span>Limpar Duplicatas</span>
               </button>
               <button 
                 onClick={() => {
@@ -2218,7 +2241,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               <thead>
                 <tr>
                   {renderSortableHeader('Fornecedor / Descrição', 'supplier', payableSort, setPayableSort)}
-                  {renderSortableHeader('Filial & Competência', 'mesCompetencia', payableSort, setPayableSort)}
+                  {renderSortableHeader('Número da Nota', 'invoiceNumber', payableSort, setPayableSort)}
                   {renderSortableHeader('Parc.', 'installmentInfo', payableSort, setPayableSort)}
                   {renderSortableHeader('Centro de Custos & Modalidade', 'costCenterId', payableSort, setPayableSort)}
                   {renderSortableHeader('Vencimento', 'dueDate', payableSort, setPayableSort)}
@@ -2289,11 +2312,10 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                       </td>
                       <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
                         {isCompact ? (
-                          <span style={{ fontWeight: '600', color: '#0f172a' }}>📍 {p.unit || 'Betim'} ({p.mesCompetencia || 'Jul'})</span>
+                          <span style={{ fontWeight: '600', color: '#0f172a' }}>NF: {p.invoiceNumber || '-'}</span>
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0f172a' }}>📍 {p.unit || 'Betim'}</span>
-                            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Comp: <strong>{p.mesCompetencia || 'Julho'}</strong></span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0f172a' }}>NF #{p.invoiceNumber || '-'}</span>
                           </div>
                         )}
                       </td>
@@ -3904,7 +3926,17 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
             <form onSubmit={handleConfirmPartialPayment}>
               <div style={styles.inputGroup}>
-                <label style={styles.label}>Valor do Pagamento Efetuado Hoje (R$)</label>
+                <label style={styles.label}>Data do Pagamento</label>
+                <input 
+                  type="date" 
+                  value={partialPaymentDate} 
+                  onChange={e => setPartialPaymentDate(e.target.value)}
+                  style={styles.input}
+                  required
+                />
+              </div>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Valor Pago (R$)</label>
                 <input 
                   type="number" 
                   step="0.01" 
@@ -3916,7 +3948,10 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.25rem' }}>
-                <button type="button" onClick={() => setPartialItem(null)} style={styles.btnSecondary}>Cancelar</button>
+                <button type="button" onClick={() => {
+                  setPartialItem(null);
+                  setPartialPaymentDate(new Date().toISOString().substring(0, 10));
+                }} style={styles.btnSecondary}>Cancelar</button>
                 <button type="submit" style={styles.btnSave}>Confirmar Pagamento</button>
               </div>
             </form>
