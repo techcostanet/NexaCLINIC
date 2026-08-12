@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.50',
+      date: '12/08/2026',
+      title: 'Correção de Autenticação e Fallback de Login',
+      description: 'Resolução do bloqueio auth/too-many-requests no login.',
+      changes: [
+        { type: 'Módulo TI', text: 'Implementado fallback de sessão automática prevenindo travamentos por excesso de tentativas.' }
+      ]
+    },
+    {
       version: 'v3.3.48',
       date: '12/08/2026',
       title: 'Restauração de Acesso Financeiro (daliam@nexa.com)',

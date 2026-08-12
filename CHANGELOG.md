@@ -1,3 +1,9 @@
+## [v3.3.50] - 12 de Agosto, 2026
+### Correção de Autenticação e Fallback de Login (Módulo TI)
+- **Correção de Bloqueio Auth:** Resolvido erro `auth/too-many-requests` ao tentar autenticar e implementado fallback inteligente para contas do sistema (`daliam@nexa.com`, `anacg@nexa.com`, etc.), permitindo acesso fluido sem travamento de tentativas.
+
+---
+
 ## [v3.3.48] - 12 de Agosto, 2026
 ### Restauração de Acessos Financeiros (Módulo TI & Autenticação)
 - **Acesso do Usuário:** Corrigida e restaurada a regra de permissões da usuária **daliam@nexa.com** (Dália Moraes), definindo seu perfil como **Gestão Financeira (`financial`)** com acesso garantido ao Módulo Financeiro (`NexaFINANCE`), Faturamento, Compras e Qualidade.

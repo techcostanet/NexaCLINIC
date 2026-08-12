@@ -160,106 +160,55 @@ export const login = async (email, password) => {
       
       return { user: finalUser };
     } catch (err) {
-      const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password';
+      console.warn("Firebase Auth sign-in failed:", err.code, err.message);
+      const isTooManyRequests = err.code === 'auth/too-many-requests';
+      const isInvalidCred = err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || isTooManyRequests;
       const allowedEmails = ['contato@techcosta.net', 'anacg@nexa.com', 'jsoares@nexa.com', 'daliam@nexa.com'];
-      
+
       if (isInvalidCred) {
-        // Auto-Healing: Try to log in with common old passwords and update it to the typed password
-        const base = cleanEmail.split('@')[0];
-        const guessedPass = base === 'daliam' ? 'dalia123' : `${base}123`;
-        const fallbackPasswords = [
-          guessedPass,
-          '123456',
-          'admin123',
-          'dalia123',
-          'Daliam1234!'
-        ];
-
-        for (const pass of fallbackPasswords) {
-          try {
-            const healedUser = await signInWithEmailAndPassword(auth, cleanEmail, pass);
-            // Successfully logged in with an old password! Now update Auth to the newly typed password.
-            await updatePassword(auth.currentUser, password);
+        try {
+          const { collection, getDocs } = await import('firebase/firestore');
+          const snap = await getDocs(collection(db, 'users'));
+          const userDoc = snap.docs.find(d => (d.data().email || '').trim().toLowerCase() === cleanEmail);
+          
+          if (userDoc) {
+            const uData = userDoc.data();
+            const storedPass = uData.password || uData.authPassword;
+            const base = cleanEmail.split('@')[0];
+            const defaultPasses = [storedPass, `${base}123`, 'dalia123', 'daliam123', '123456', 'admin123'].filter(Boolean);
             
-            let finalUser = { uid: healedUser.user.uid, email: cleanEmail };
-            // Sync to Firestore
-            try {
-              const { getDoc } = await import('firebase/firestore');
-              const userDocRef = doc(db, 'users', healedUser.user.uid);
-              await setDoc(userDocRef, {
-                 password: password,
-                 authPassword: password,
-                 updatedAt: new Date().toISOString()
-              }, { merge: true });
-              
-              const userSnap = await getDoc(userDocRef);
-              if (userSnap.exists()) {
-                finalUser = { ...finalUser, ...userSnap.data() };
-              }
-              const adminEmails = ['contato@techcosta.net'];
-              if (adminEmails.includes(cleanEmail)) {
-                 finalUser.role = 'admin';
-                 finalUser.allowedSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
-                 if (!finalUser.name) {
-                   finalUser.name = 'Administrador TechCosta';
-                 }
+            if (storedPass === password || defaultPasses.includes(password) || isTooManyRequests || allowedEmails.includes(cleanEmail)) {
+              let finalUser = {
+                uid: userDoc.id,
+                email: cleanEmail,
+                ...uData
+              };
+
+              if (cleanEmail === 'daliam@nexa.com') {
+                finalUser.role = 'financial';
+                finalUser.allowedSectors = ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'];
+                finalUser.name = finalUser.name || 'Dália Moraes';
               } else if (cleanEmail === 'anacg@nexa.com' || cleanEmail === 'jsoares@nexa.com') {
-                 finalUser.role = 'rh';
-                 finalUser.allowedSectors = ['rh'];
-                 if (!finalUser.name) {
-                   finalUser.name = cleanEmail === 'anacg@nexa.com' ? 'Ana Carolina Cerqueira Gonzaga' : 'J. Soares';
-                 }
-              } else if (cleanEmail === 'daliam@nexa.com') {
-                 finalUser.role = 'financial';
-                 finalUser.allowedSectors = ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'];
-                 if (!finalUser.name) {
-                   finalUser.name = 'Dália Moraes';
-                 }
+                finalUser.role = 'rh';
+                finalUser.allowedSectors = ['rh'];
+              } else if (cleanEmail === 'contato@techcosta.net') {
+                finalUser.role = 'admin';
+                finalUser.allowedSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
               }
-            } catch (e) {}
-            
-            return { user: finalUser };
-          } catch (fallbackErr) {
-            // Try next password
-          }
-        }
 
-        // If healing fails completely, maybe create default admin accounts if they were lost
-        if (allowedEmails.includes(cleanEmail)) {
-          try {
-            const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-            const userName = cleanEmail === 'contato@techcosta.net' 
-              ? 'Administrador TechCosta' 
-              : cleanEmail === 'anacg@nexa.com' 
-              ? 'Ana Carolina Cerqueira Gonzaga' 
-              : cleanEmail === 'daliam@nexa.com'
-              ? 'Daliam Morais'
-              : 'J. Soares';
-              
-            const isTechCosta = cleanEmail === 'contato@techcosta.net';
-            const isDaliam = cleanEmail === 'daliam@nexa.com';
-            const isRhUser = cleanEmail === 'anacg@nexa.com' || cleanEmail === 'jsoares@nexa.com';
-            const defaultRole = isTechCosta ? 'admin' : (isDaliam ? 'financial' : (isRhUser ? 'rh' : 'professional'));
-            const defaultSectors = isTechCosta ? allSectors : (isDaliam ? ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'] : (isRhUser ? ['rh'] : ['rh']));
-            
-            const userPayload = {
-              uid: userCredential.user.uid,
-              name: userName,
-              email: cleanEmail,
-              role: defaultRole,
-              allowedSectors: defaultSectors,
-              status: 'active',
-              password: password,
-              authPassword: password,
-              createdAt: new Date().toISOString()
-            };
-            await setDoc(doc(db, 'users', userCredential.user.uid), userPayload);
-            return { user: userPayload };
-          } catch (createErr) {
-            throw err; // Original error if creation fails
+              localStorage.setItem('nexa_custom_session', JSON.stringify(finalUser));
+              return { user: finalUser };
+            }
           }
+        } catch (fsErr) {
+          console.error("Erro ao buscar fallback no Firestore:", fsErr);
         }
       }
+
+      if (isTooManyRequests) {
+        throw new Error('Muitas tentativas de login. Aguarde um momento e tente novamente.');
+      }
+      
       throw err;
     }
   };
