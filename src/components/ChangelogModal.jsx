@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.62',
+      date: '14/08/2026',
+      title: 'Módulo SESMT - Ajuste de Colunas de Extintores',
+      description: 'Padronização de todas as colunas da tabela de extintores e inclusão do campo de assinatura.',
+      changes: [
+        { type: 'Módulo SESMT', text: 'Adicionados e corrigidos os nomes das colunas: N° Extintor, Tipo, Acesso e Visib., Sinalização, Pino, Lacre / anel, Pressurização, Mangueira, Bico, Estado Físico, Validade e Assinatura.' },
+        { type: 'Módulo SESMT', text: 'Inclusão do campo de Assinatura individual por extintor e novo visual com alto contraste nos cabeçalhos.' }
+      ]
+    },
+    {
       version: 'v3.3.61',
       date: '12/08/2026',
       title: 'Desmembramento dos Setores de Hemodiálise no SESMT (Salão-1, Salão-2 e Salão-3)',

@@ -22,6 +22,7 @@ export default function WeeklyFireExtinguisherForm() {
       extinguisherNum: i + 1,
       type: '',
       validity: '',
+      signature: '',
       evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
     }))
   });
@@ -112,18 +113,19 @@ export default function WeeklyFireExtinguisherForm() {
           <table style={styles.table}>
             <thead style={styles.tableHead}>
               <tr>
-                <th style={styles.th}>N°</th>
+                <th style={styles.th}>N° Extintor</th>
                 <th style={styles.th}>Tipo</th>
                 {CRITERIA.map(c => (
                   <th key={c.id} style={{...styles.th, textAlign: 'center'}}>{c.label}</th>
                 ))}
-                <th style={styles.th}>Validade</th>
+                <th style={{...styles.th, textAlign: 'center'}}>Validade</th>
+                <th style={{...styles.th, textAlign: 'center'}}>Assinatura</th>
               </tr>
             </thead>
             <tbody>
               {formData.items.map((item, index) => (
                 <tr key={item.extinguisherNum} style={styles.tr}>
-                  <td style={{...styles.td, fontWeight: 'bold'}}>{item.extinguisherNum}</td>
+                  <td style={{...styles.td, fontWeight: 'bold', textAlign: 'center'}}>{item.extinguisherNum}</td>
                   <td style={styles.td}>
                     <select
                       value={item.type}
@@ -164,6 +166,15 @@ export default function WeeklyFireExtinguisherForm() {
                       type="date"
                       value={item.validity}
                       onChange={(e) => handleItemChange(index, 'validity', e.target.value)}
+                      style={styles.inputSmall}
+                    />
+                  </td>
+                  <td style={styles.td}>
+                    <input 
+                      type="text"
+                      value={item.signature || ''}
+                      onChange={(e) => handleItemChange(index, 'signature', e.target.value)}
+                      placeholder="Assinatura"
                       style={styles.inputSmall}
                     />
                   </td>
@@ -264,15 +275,17 @@ const styles = {
     minWidth: '800px'
   },
   tableHead: {
-    backgroundColor: '#0f766e',
+    backgroundColor: '#154c79',
   },
   th: {
     padding: '0.75rem 0.5rem',
-    textAlign: 'left',
+    textAlign: 'center',
     fontSize: '0.75rem',
     fontWeight: '700',
     color: '#ffffff',
-    borderBottom: '1px solid #e2e8f0',
+    borderRight: '1px solid rgba(255, 255, 255, 0.2)',
+    borderBottom: '1px solid #cbd5e1',
+    whiteSpace: 'nowrap'
   },
   tr: {
     borderBottom: '1px solid #f1f5f9',
@@ -281,6 +294,7 @@ const styles = {
     padding: '0.5rem',
     fontSize: '0.85rem',
     color: '#334155',
+    borderRight: '1px solid #f1f5f9',
   },
   actions: {
     display: 'flex',

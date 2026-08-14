@@ -1,3 +1,9 @@
+## [v3.3.62] - 14 de Agosto, 2026
+### Módulo SESMT - Ajuste de Colunas de Extintores
+- **Tabela de Extintores:** Atualizados os nomes e cabeçalhos de todas as colunas da inspeção de extintores (`N° Extintor`, `Tipo`, `Acesso e Visib.`, `Sinalização`, `Pino`, `Lacre / anel`, `Pressurização`, `Mangueira`, `Bico`, `Estado Físico`, `Validade` e `Assinatura`), com inclusão do campo de assinatura individual por extintor e novo visual com contraste navy blue.
+
+---
+
 ## [v3.3.61] - 12 de Agosto, 2026
 ### Desmembramento dos Setores de Hemodiálise no SESMT (Salão-1, Salão-2 e Salão-3)
 - **Setores SESMT:** Substituição da opção única "Salão Hemodiálise" pelos setores específicos "Salão-1", "Salão-2" e "Salão-3" no formulário de verificação diária de EPI.
@@ -14,6 +20,14 @@
 ---
 
 ## [v3.3.56] - 12 de Agosto, 2026
+### 4 Modos de Visualização & Busca no Portal de Módulos
+- **Visualizações:** Inclusão dos 4 modos de exibição no seletor de módulos (Grid, Detalhada, Compacta e Expandida), mantendo o Grid como visão padrão.
+- **Busca em Tempo Real:** Adicionada barra de pesquisa para filtrar módulos instantaneamente por nome, subtítulo ou descrição.
+- **Usabilidade:** Barra de ferramentas superior intuitiva para alteração de layout com 1 clique e resposta responsiva.
+
+---
+
+## [v3.3.54] - 12 de Agosto, 2026
 ### Módulo SESMT & Perfil de Acesso para roseannefa
 - **Módulo SESMT & Segurança:** Implementado o portal NexaSAFE contendo os formulários digitais de Verificação Diária de EPI, Inspeção Semanal de Extintores e Inspeção Semanal de Hidrantes, acompanhado do Dashboard com indicadores em tempo real (Recharts).
 - **Perfil de Permissão SESMT:** Adicionado novo perfil RBAC `sesmt` ("SESMT & Segurança do Trabalho") com permissão de escrita e gestão do módulo SESMT.
