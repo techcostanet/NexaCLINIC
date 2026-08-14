@@ -157,8 +157,11 @@ export default function ModuleSelector({ user, onSelectModule }) {
 
   const userRole = user?.role || 'professional';
   
+  const isRhRole = userRole === 'rh' || userRole === 'hr';
+  const normalizedUserRole = isRhRole ? 'hr' : userRole;
+
   // Find current user profile configuration from stored RBAC profiles
-  const userProfileConfig = profiles.find((p) => p.id === userRole);
+  const userProfileConfig = profiles.find((p) => p.id === userRole || p.id === normalizedUserRole || (isRhRole && (p.id === 'hr' || p.id === 'rh')));
 
   const visibleModules = modules.filter((mod) => {
     // Módulo de Manutenção (NexaSERVICE) é universal para todos os funcionários abrirem chamados
@@ -179,18 +182,18 @@ export default function ModuleSelector({ user, onSelectModule }) {
     if (user?.allowedSectors && Array.isArray(user.allowedSectors)) {
       const modSector = mod.id === 'hr' ? 'rh' : mod.id === 'quality' ? 'qualidade' : mod.id === 'stock' ? 'estoque' : mod.id === 'purchasing' ? 'compras' : mod.id === 'clinical' ? 'medica' : mod.id === 'finance' ? 'faturamento' : mod.id === 'reception' ? 'recepcao' : mod.id;
       if (user.allowedSectors.length > 0 && !user.allowedSectors.includes('all') && !user.allowedSectors.includes('admin')) {
-        if (userRole === 'rh') {
+        if (isRhRole) {
           return mod.id === 'hr' || mod.id === 'quality' || mod.id === 'maintenance';
         }
         return user.allowedSectors.includes(modSector);
       }
     }
 
-    if (userRole === 'rh') {
+    if (isRhRole) {
       return mod.id === 'hr' || mod.id === 'quality' || mod.id === 'maintenance';
     }
 
-    return Array.isArray(mod.allowedRoles) ? mod.allowedRoles.includes(userRole) : true;
+    return Array.isArray(mod.allowedRoles) ? (mod.allowedRoles.includes(userRole) || mod.allowedRoles.includes(normalizedUserRole)) : true;
   });
 
   const filteredModules = visibleModules.filter((mod) => {
@@ -206,7 +209,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
   const roleLabel = userProfileConfig?.name || (
     userRole === 'admin' 
       ? 'Administrador Geral' 
-      : userRole === 'rh' 
+      : isRhRole 
       ? 'Recursos Humanos' 
       : userRole === 'financial' 
       ? 'Gestão Financeira' 

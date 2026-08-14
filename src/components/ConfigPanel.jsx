@@ -188,10 +188,11 @@ export default function ConfigPanel() {
   const handleOpenUserEdit = (user) => {
     setEditingUser(user);
     setTempPasswordMessage('');
+    const matchedRole = (user.role === 'rh') ? 'hr' : (user.role || 'reception');
     setUserForm({
       name: user.name || '',
       email: user.email || '',
-      role: user.role || 'reception',
+      role: matchedRole,
       employeeId: user.employeeId || '',
       status: user.status || 'active'
     });
@@ -671,7 +672,8 @@ export default function ConfigPanel() {
                   <tbody>
                     {usersList.map((user) => {
                       const emp = employees.find(e => e.id === user.employeeId);
-                      const profile = profiles.find(p => p.id === user.role);
+                      const userRoleKey = (user.role === 'rh') ? 'hr' : user.role;
+                      const profile = profiles.find(p => p.id === user.role || p.id === userRoleKey || (user.role === 'hr' && p.id === 'rh'));
 
                       return (
                         <tr key={user.uid}>
@@ -686,7 +688,7 @@ export default function ConfigPanel() {
                               backgroundColor: user.role === 'admin' ? '#fee2e2' : '#f1f5f9',
                               color: user.role === 'admin' ? '#991b1b' : '#475569'
                             }}>
-                              {profile ? profile.name : user.role}
+                              {profile ? profile.name : (user.role === 'rh' || user.role === 'hr' ? 'Recursos Humanos (RH)' : user.role)}
                             </span>
                           </td>
                           <td>{emp ? emp.name : <span style={{ color: 'var(--text-muted)' }}>Nenhum</span>}</td>

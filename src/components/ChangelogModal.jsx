@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.70',
+      date: '14/08/2026',
+      title: 'Módulo de TI - Gestão Flexível de Perfis de Usuários',
+      description: 'Remoção de regras fixas de perfis, permitindo que o Administrador altere e mantenha qualquer perfil livremente.',
+      changes: [
+        { type: 'Módulo de TI', text: 'Removidas sobreposições fixas em código para perfis de usuários (anacg@nexa.com, jsoares@nexa.com, etc.).' },
+        { type: 'Módulo de TI', text: 'Alterações de perfil salvas pelo Administrador agora persistem de forma 100% dinâmica no banco Firestore.' },
+        { type: 'Módulo de TI', text: 'Usuárias anacg e jsoares definidas no perfil de Recursos Humanos com liberdade para alteração a qualquer momento.' }
+      ]
+    },
+    {
       version: 'v3.3.69',
       date: '14/08/2026',
       title: 'Módulo SESMT - Correção de Estilização no Dashboard',

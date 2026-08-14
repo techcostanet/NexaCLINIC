@@ -1,3 +1,11 @@
+## [v3.3.70] - 14 de Agosto, 2026
+### Módulo de TI - Desvinculação de Regras Fixas de Perfis & Flexibilidade Total
+- **Remoção Definitiva de Sobrescrevimento de Papéis:** Eliminadas regras hardcoded que forçavam papéis fixos para usuárias (`anacg@nexa.com`, `jsoares@nexa.com`, etc.).
+- **Persistência Total no Firestore:** As alterações de perfil de qualquer usuário realizadas pelo Administrador no Módulo de T.I. / Configurações agora são gravadas e mantidas de forma permanente e dinâmica na nuvem, sem reversão automática no login ou carregamento da lista.
+- **Configuração Inicial das Usuárias:** Usuárias `anacg@nexa.com` e `jsoares@nexa.com` configuradas no perfil de Recursos Humanos (RH) como ponto de partida, com total liberdade para futuras edições.
+
+---
+
 ## [v3.3.69] - 14 de Agosto, 2026
 ### Módulo SESMT - Correção de Estilização no Dashboard
 - **Correção de Erro de Execução (`ReferenceError: styles is not defined`):** Restaurada a definição completa de estilos e funções auxiliares no `SesmtDashboard.jsx`, garantindo carregamento fluido de todas as 6 abas do módulo SESMT.
