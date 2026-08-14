@@ -99,3 +99,42 @@ export const saveFireHydrantInspection = async (item) => {
         throw e;
     }
 };
+
+export const deleteEpiInspection = async (id) => {
+    if (USE_MOCK && mockFirestore.deleteEpiInspection) return mockFirestore.deleteEpiInspection(id);
+    try {
+        const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+        const db = getFirestore(app);
+        await deleteDoc(doc(db, 'sesmt_epi_inspections', id));
+        return true;
+    } catch (e) {
+        console.error('Erro Firestore deleteEpiInspection =', e);
+        throw e;
+    }
+};
+
+export const deleteFireExtinguisherInspection = async (id) => {
+    if (USE_MOCK && mockFirestore.deleteFireExtinguisherInspection) return mockFirestore.deleteFireExtinguisherInspection(id);
+    try {
+        const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+        const db = getFirestore(app);
+        await deleteDoc(doc(db, 'sesmt_extinguisher_inspections', id));
+        return true;
+    } catch (e) {
+        console.error('Erro Firestore deleteFireExtinguisherInspection =', e);
+        throw e;
+    }
+};
+
+export const deleteFireHydrantInspection = async (id) => {
+    if (USE_MOCK && mockFirestore.deleteFireHydrantInspection) return mockFirestore.deleteFireHydrantInspection(id);
+    try {
+        const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+        const db = getFirestore(app);
+        await deleteDoc(doc(db, 'sesmt_hydrant_inspections', id));
+        return true;
+    } catch (e) {
+        console.error('Erro Firestore deleteFireHydrantInspection =', e);
+        throw e;
+    }
+};

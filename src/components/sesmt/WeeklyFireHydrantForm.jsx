@@ -10,7 +10,7 @@ const CRITERIA = [
   { id: 'estado_fisico', label: 'Estado Físico' }
 ];
 
-export default function WeeklyFireHydrantForm() {
+export default function WeeklyFireHydrantForm({ onSuccess }) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     inspectorName: '',
@@ -57,6 +57,7 @@ export default function WeeklyFireHydrantForm() {
         createdAt: new Date().toISOString()
       });
       setMessage('Inspeção de hidrantes salva com sucesso!');
+      if (onSuccess) onSuccess();
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error(error);

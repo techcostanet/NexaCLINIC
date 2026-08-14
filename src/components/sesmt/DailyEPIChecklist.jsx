@@ -26,7 +26,7 @@ const ITEMS = [
   { id: 'conservacao', label: 'Conservação e armazenamento de EPI' }
 ];
 
-export default function DailyEPIChecklist() {
+export default function DailyEPIChecklist({ onSuccess }) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     time: new Date().toTimeString().substring(0, 5),
@@ -71,6 +71,7 @@ export default function DailyEPIChecklist() {
         createdAt: new Date().toISOString()
       });
       setMessage('Checklist salvo com sucesso!');
+      if (onSuccess) onSuccess();
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error(error);

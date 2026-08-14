@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.67',
+      date: '14/08/2026',
+      title: 'Módulo SESMT - Histórico de Registros & Seletor de Período no Dashboard',
+      description: 'Nova aba de Histórico de Auditorias com visualização detalhada e filtros de período no Dashboard.',
+      changes: [
+        { type: 'Módulo SESMT', text: 'Desenvolvida a aba "Histórico de Registros" com listagem de checklists de EPI, Extintores e Hidrantes, busca, filtros e modal com a inspeção completa.' },
+        { type: 'Módulo SESMT', text: 'Adicionado seletor de períodos no Dashboard (Hoje, 7 dias, Mês Atual, Mês Anterior, Ano e Personalizado) com filtros de setor e turno.' }
+      ]
+    },
+    {
       version: 'v3.3.66',
       date: '14/08/2026',
       title: 'Módulo SESMT - Permissões Cloud Firestore',

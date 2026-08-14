@@ -1,44 +1,146 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../../firebase';
-import { ShieldAlert, ShieldCheck, Activity, AlertTriangle, FileText, CheckCircle2, Shield } from 'lucide-react';
+import { 
+  ShieldAlert, 
+  ShieldCheck, 
+  Activity, 
+  AlertTriangle, 
+  FileText, 
+  CheckCircle2, 
+  Shield, 
+  Calendar, 
+  Filter, 
+  ClipboardList, 
+  RotateCcw,
+  Clock,
+  Building2
+} from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import DailyEPIChecklist from './DailyEPIChecklist';
 import WeeklyFireExtinguisherForm from './WeeklyFireExtinguisherForm';
 import WeeklyFireHydrantForm from './WeeklyFireHydrantForm';
+import SesmtHistory from './SesmtHistory';
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444'];
+
+const SECTOR_OPTIONS = [
+  'TODOS',
+  'Salão-1', 
+  'Salão-2', 
+  'Salão-3', 
+  'Diálise Peritoneal', 
+  'Hemodiálise Externa', 
+  'Bloco Cirúrgico', 
+  'Reuso', 
+  'Sala Amarela'
+];
+
+const SHIFT_OPTIONS = [
+  'TODOS',
+  '1º Turno (Manhã)',
+  '2º Turno (Tarde)',
+  '3º Turno (Noite)'
+];
 
 export default function SesmtDashboard({ currentUser }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [epiData, setEpiData] = useState([]);
   const [extinguisherData, setExtinguisherData] = useState([]);
+  const [hydrantData, setHydrantData] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Filtros de Período do Dashboard
+  const [periodPreset, setPeriodPreset] = useState('MES_ATUAL');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [selectedSector, setSelectedSector] = useState('TODOS');
+  const [selectedShift, setSelectedShift] = useState('TODOS');
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [epis, extinguishers, hydrants] = await Promise.all([
+        dbService.getEpiInspections(),
+        dbService.getFireExtinguisherInspections(),
+        dbService.getFireHydrantInspections()
+      ]);
+      
+      setEpiData(epis || []);
+      setExtinguisherData(extinguishers || []);
+      setHydrantData(hydrants || []);
+    } catch (err) {
+      console.error('Failed to fetch SESMT data', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const epis = await dbService.getEpiInspections();
-        const extinguishers = await dbService.getFireExtinguisherInspections();
-        
-        setEpiData(epis || []);
-        setExtinguisherData(extinguishers || []);
-      } catch (err) {
-        console.error('Failed to fetch SESMT data', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
-  // Compute Metrics
-  // 1. EPI Compliance Rate
+  // Lógica de verificação de período de datas
+  const isDateInPeriod = (dateStr) => {
+    if (!dateStr) return false;
+    if (periodPreset === 'TUDO') return true;
+
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const currentYear = today.getFullYear().toString();
+    const currentMonth = today.toISOString().substring(0, 7); // YYYY-MM
+    
+    // Mês Anterior
+    const prevMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const prevMonth = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+
+    if (periodPreset === 'HOJE') {
+      return dateStr === todayStr;
+    }
+    if (periodPreset === '7D') {
+      const d7 = new Date();
+      d7.setDate(today.getDate() - 7);
+      const d7Str = d7.toISOString().split('T')[0];
+      return dateStr >= d7Str && dateStr <= todayStr;
+    }
+    if (periodPreset === '30D') {
+      const d30 = new Date();
+      d30.setDate(today.getDate() - 30);
+      const d30Str = d30.toISOString().split('T')[0];
+      return dateStr >= d30Str && dateStr <= todayStr;
+    }
+    if (periodPreset === 'MES_ATUAL') {
+      return dateStr.startsWith(currentMonth);
+    }
+    if (periodPreset === 'MES_ANTERIOR') {
+      return dateStr.startsWith(prevMonth);
+    }
+    if (periodPreset === 'ANO_ATUAL') {
+      return dateStr.startsWith(currentYear);
+    }
+    if (periodPreset === 'CUSTOM') {
+      if (customStartDate && dateStr < customStartDate) return false;
+      if (customEndDate && dateStr > customEndDate) return false;
+      return true;
+    }
+    return true;
+  };
+
+  // Dados filtrados conforme período e seletores
+  const filteredEpiData = epiData.filter(item => {
+    if (!isDateInPeriod(item.date)) return false;
+    if (selectedSector !== 'TODOS' && item.sector !== selectedSector) return false;
+    if (selectedShift !== 'TODOS' && item.shift !== selectedShift) return false;
+    return true;
+  });
+
+  const filteredExtinguisherData = extinguisherData.filter(item => isDateInPeriod(item.date));
+
+  // 1. Taxa de Conformidade EPI
   let totalEvaluations = 0;
   let conformEvaluations = 0;
   let sectorNC = {};
   
-  epiData.forEach(inspection => {
+  filteredEpiData.forEach(inspection => {
     Object.values(inspection.evaluations || {}).forEach(evalData => {
       if (evalData.status !== 'NA') totalEvaluations++;
       if (evalData.status === 'C') conformEvaluations++;
@@ -48,18 +150,20 @@ export default function SesmtDashboard({ currentUser }) {
     });
   });
 
-  const complianceRate = totalEvaluations > 0 ? Math.round((conformEvaluations / totalEvaluations) * 100) : 0;
+  const complianceRate = totalEvaluations > 0 ? Math.round((conformEvaluations / totalEvaluations) * 100) : 100;
   
   const sectorData = Object.keys(sectorNC).map(sector => ({
     name: sector,
     'Não Conforme': sectorNC[sector]
   })).sort((a, b) => b['Não Conforme'] - a['Não Conforme']);
 
-  const displaySectorData = sectorData.length > 0 ? sectorData : [
-    { name: 'Bloco Cirúrgico', 'Não Conforme': 4 },
-    { name: 'Reuso', 'Não Conforme': 3 },
-    { name: 'Salão-1', 'Não Conforme': 1 }
-  ];
+  const displaySectorData = sectorData.length > 0 ? sectorData : (
+    filteredEpiData.length > 0 ? [] : [
+      { name: 'Bloco Cirúrgico', 'Não Conforme': 0 },
+      { name: 'Salão-1', 'Não Conforme': 0 },
+      { name: 'Reuso', 'Não Conforme': 0 }
+    ]
+  );
 
   // 2. Extinguisher Status
   let extValid = 0;
@@ -70,7 +174,10 @@ export default function SesmtDashboard({ currentUser }) {
   const nextMonth = new Date();
   nextMonth.setDate(today.getDate() + 30);
 
-  extinguisherData.forEach(inspection => {
+  // Pega a inspeção mais recente ou as do período
+  const extinguishersToEvaluate = filteredExtinguisherData.length > 0 ? filteredExtinguisherData : extinguisherData;
+
+  extinguishersToEvaluate.forEach(inspection => {
     (inspection.items || []).forEach(item => {
       if (item.validity) {
         const vDate = new Date(item.validity);
@@ -96,7 +203,7 @@ export default function SesmtDashboard({ currentUser }) {
           </div>
           <div>
             <h1 style={styles.title}>SESMT - Segurança do Trabalho</h1>
-            <p style={styles.subtitle}>Gestão de EPIs, Prevenção de Incêndios e Indicadores</p>
+            <p style={styles.subtitle}>Gestão de EPIs, Prevenção de Incêndios, Auditorias e Indicadores</p>
           </div>
         </div>
       </div>
@@ -126,10 +233,132 @@ export default function SesmtDashboard({ currentUser }) {
         >
           <FileText size={16} /> Hidrantes
         </button>
+        <button 
+          style={{ ...styles.tabButton, ...(activeTab === 'historico' ? styles.tabActive : {}) }}
+          onClick={() => setActiveTab('historico')}
+        >
+          <ClipboardList size={16} /> Histórico de Registros
+        </button>
       </div>
 
       {activeTab === 'dashboard' && (
         <>
+          {/* Barra de Filtros de Período e Escopo */}
+          <div style={styles.filterCard}>
+            <div style={styles.filterRow}>
+              <div style={styles.filterLabelGroup}>
+                <Calendar size={16} color="#0891b2" />
+                <span style={styles.filterTitle}>Período de Análise:</span>
+              </div>
+              <div style={styles.presetGroup}>
+                <button 
+                  style={{ ...styles.presetBtn, ...(periodPreset === 'MES_ATUAL' ? styles.presetBtnActive : {}) }}
+                  onClick={() => setPeriodPreset('MES_ATUAL')}
+                >
+                  Mês Atual
+                </button>
+                <button 
+                  style={{ ...styles.presetBtn, ...(periodPreset === 'HOJE' ? styles.presetBtnActive : {}) }}
+                  onClick={() => setPeriodPreset('HOJE')}
+                >
+                  Hoje
+                </button>
+                <button 
+                  style={{ ...styles.presetBtn, ...(periodPreset === '7D' ? styles.presetBtnActive : {}) }}
+                  onClick={() => setPeriodPreset('7D')}
+                >
+                  Últimos 7 dias
+                </button>
+                <button 
+                  style={{ ...styles.presetBtn, ...(periodPreset === 'MES_ANTERIOR' ? styles.presetBtnActive : {}) }}
+                  onClick={() => setPeriodPreset('MES_ANTERIOR')}
+                >
+                  Mês Anterior
+                </button>
+                <button 
+                  style={{ ...styles.presetBtn, ...(periodPreset === 'ANO_ATUAL' ? styles.presetBtnActive : {}) }}
+                  onClick={() => setPeriodPreset('ANO_ATUAL')}
+                >
+                  Ano Atual
+                </button>
+                <button 
+                  style={{ ...styles.presetBtn, ...(periodPreset === 'TUDO' ? styles.presetBtnActive : {}) }}
+                  onClick={() => setPeriodPreset('TUDO')}
+                >
+                  Todos
+                </button>
+                <button 
+                  style={{ ...styles.presetBtn, ...(periodPreset === 'CUSTOM' ? styles.presetBtnActive : {}) }}
+                  onClick={() => setPeriodPreset('CUSTOM')}
+                >
+                  Personalizado
+                </button>
+              </div>
+            </div>
+
+            {/* Linha de Filtros Adicionais */}
+            <div style={styles.secondaryFilterRow}>
+              {periodPreset === 'CUSTOM' && (
+                <div style={styles.customDateBox}>
+                  <div style={styles.filterField}>
+                    <span style={styles.fieldLabel}>De:</span>
+                    <input 
+                      type="date" 
+                      value={customStartDate} 
+                      onChange={(e) => setCustomStartDate(e.target.value)} 
+                      style={styles.fieldInput} 
+                    />
+                  </div>
+                  <div style={styles.filterField}>
+                    <span style={styles.fieldLabel}>Até:</span>
+                    <input 
+                      type="date" 
+                      value={customEndDate} 
+                      onChange={(e) => setCustomEndDate(e.target.value)} 
+                      style={styles.fieldInput} 
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div style={styles.filterField}>
+                <Building2 size={15} color="#64748b" />
+                <span style={styles.fieldLabel}>Setor:</span>
+                <select 
+                  value={selectedSector} 
+                  onChange={(e) => setSelectedSector(e.target.value)}
+                  style={styles.fieldSelect}
+                >
+                  {SECTOROR_LIST(SECTOR_OPTIONS)}
+                </select>
+              </div>
+
+              <div style={styles.filterField}>
+                <Clock size={15} color="#64748b" />
+                <span style={styles.fieldLabel}>Turno:</span>
+                <select 
+                  value={selectedShift} 
+                  onChange={(e) => setSelectedShift(e.target.value)}
+                  style={styles.fieldSelect}
+                >
+                  {SHIFT_OPTIONS.map(sh => (
+                    <option key={sh} value={sh}>{sh === 'TODOS' ? 'Todos os Turnos' : sh}</option>
+                  ))}
+                </select>
+              </div>
+
+              {(selectedSector !== 'TODOS' || selectedShift !== 'TODOS' || periodPreset !== 'MES_ATUAL') && (
+                <button 
+                  onClick={() => { setPeriodPreset('MES_ATUAL'); setSelectedSector('TODOS'); setSelectedShift('TODOS'); setCustomStartDate(''); setCustomEndDate(''); }}
+                  style={styles.resetFilterBtn}
+                  title="Redefinir Filtros"
+                >
+                  <RotateCcw size={13} /> Limpar Filtros
+                </button>
+              )}
+            </div>
+          </div>
+
           <div style={styles.kpiGrid}>
             <div style={{...styles.kpiCard, borderLeft: '4px solid #10b981'}}>
               <div style={styles.kpiHeader}>
@@ -137,7 +366,7 @@ export default function SesmtDashboard({ currentUser }) {
                 <ShieldCheck size={18} color="#10b981" />
               </div>
               <div style={styles.kpiValue}>{complianceRate}%</div>
-              <span style={styles.kpiSub}>Das avaliações registradas</span>
+              <span style={styles.kpiSub}>No período selecionado</span>
             </div>
             
             <div style={{...styles.kpiCard, borderLeft: '4px solid #3b82f6'}}>
@@ -145,8 +374,8 @@ export default function SesmtDashboard({ currentUser }) {
                 <span style={styles.kpiLabel}>Inspeções Realizadas (EPI)</span>
                 <Activity size={18} color="#3b82f6" />
               </div>
-              <div style={styles.kpiValue}>{epiData.length}</div>
-              <span style={styles.kpiSub}>Total de formulários preenchidos</span>
+              <div style={styles.kpiValue}>{filteredEpiData.length}</div>
+              <span style={styles.kpiSub}>Formulários no período</span>
             </div>
 
             <div style={{...styles.kpiCard, borderLeft: '4px solid #f59e0b'}}>
@@ -170,18 +399,33 @@ export default function SesmtDashboard({ currentUser }) {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
             <div style={styles.kpiCard}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '1rem', color: '#0f172a' }}>Inconformidades de EPI por Setor</h3>
-              <div style={{ height: '300px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={displaySectorData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" width={120} tick={{fontSize: 12}} />
-                    <Tooltip />
-                    <Bar dataKey="Não Conforme" fill="#ef4444" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#0f172a', margin: 0 }}>Inconformidades de EPI por Setor</h3>
+                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '500' }}>({filteredEpiData.length} inspeções)</span>
               </div>
+              {filteredEpiData.length === 0 ? (
+                <div style={styles.emptyChartBox}>
+                  <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.85rem' }}>Nenhum checklist registrado no período selecionado.</p>
+                </div>
+              ) : displaySectorData.length === 0 ? (
+                <div style={styles.emptyChartBox}>
+                  <CheckCircle2 size={32} color="#10b981" style={{ marginBottom: '0.5rem' }} />
+                  <p style={{ margin: 0, color: '#15803d', fontWeight: '600', fontSize: '0.9rem' }}>100% de Conformidade!</p>
+                  <span style={{ color: '#64748b', fontSize: '0.75rem' }}>Nenhuma não-conformidade registrada no período.</span>
+                </div>
+              ) : (
+                <div style={{ height: '300px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={displaySectorData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                      <XAxis type="number" />
+                      <YAxis dataKey="name" type="category" width={120} tick={{fontSize: 12}} />
+                      <Tooltip />
+                      <Bar dataKey="Não Conforme" fill="#ef4444" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
 
             <div style={styles.kpiCard}>
@@ -212,11 +456,25 @@ export default function SesmtDashboard({ currentUser }) {
         </>
       )}
 
-      {activeTab === 'epi' && <DailyEPIChecklist />}
-      {activeTab === 'extintores' && <WeeklyFireExtinguisherForm />}
-      {activeTab === 'hidrantes' && <WeeklyFireHydrantForm />}
+      {activeTab === 'epi' && <DailyEPIChecklist onSuccess={fetchData} />}
+      {activeTab === 'extintores' && <WeeklyFireExtinguisherForm onSuccess={fetchData} />}
+      {activeTab === 'hidrantes' && <WeeklyFireHydrantForm onSuccess={fetchData} />}
+      {activeTab === 'historico' && (
+        <SesmtHistory 
+          epiData={epiData} 
+          extinguisherData={extinguisherData} 
+          hydrantData={hydrantData} 
+          onRefresh={fetchData} 
+        />
+      )}
     </div>
   );
+}
+
+function SECTOROR_LIST(options) {
+  return options.map(sec => (
+    <option key={sec} value={sec}>{sec === 'TODOS' ? 'Todos os Setores' : sec}</option>
+  ));
 }
 
 const styles = {
@@ -286,6 +544,107 @@ const styles = {
     color: '#0891b2',
     borderBottom: '2px solid #0891b2'
   },
+  filterCard: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '1rem 1.25rem',
+    marginBottom: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+  },
+  filterRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    flexWrap: 'wrap'
+  },
+  filterLabelGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem'
+  },
+  filterTitle: {
+    fontSize: '0.85rem',
+    fontWeight: '700',
+    color: '#334155'
+  },
+  presetGroup: {
+    display: 'flex',
+    gap: '0.4rem',
+    flexWrap: 'wrap'
+  },
+  presetBtn: {
+    padding: '0.35rem 0.75rem',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: '#ffffff',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    color: '#475569',
+    cursor: 'pointer',
+    transition: 'all 0.15s'
+  },
+  presetBtnActive: {
+    backgroundColor: '#0891b2',
+    color: '#ffffff',
+    borderColor: '#0891b2'
+  },
+  secondaryFilterRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    flexWrap: 'wrap',
+    paddingTop: '0.5rem',
+    borderTop: '1px solid #f1f5f9'
+  },
+  customDateBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem'
+  },
+  filterField: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.35rem'
+  },
+  fieldLabel: {
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    color: '#64748b'
+  },
+  fieldInput: {
+    padding: '0.35rem 0.5rem',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.8rem',
+    color: '#0f172a',
+    backgroundColor: '#ffffff'
+  },
+  fieldSelect: {
+    padding: '0.35rem 0.6rem',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.8rem',
+    color: '#0f172a',
+    backgroundColor: '#ffffff',
+    cursor: 'pointer'
+  },
+  resetFilterBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    padding: '0.35rem 0.7rem',
+    borderRadius: '6px',
+    border: '1px solid #fecaca',
+    backgroundColor: '#fef2f2',
+    color: '#dc2626',
+    fontSize: '0.78rem',
+    fontWeight: '600',
+    cursor: 'pointer'
+  },
   kpiGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
@@ -320,5 +679,14 @@ const styles = {
   kpiSub: {
     fontSize: '0.75rem',
     color: '#94a3b8'
+  },
+  emptyChartBox: {
+    height: '250px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center'
   }
 };
+

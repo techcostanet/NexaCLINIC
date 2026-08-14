@@ -1,3 +1,10 @@
+## [v3.3.67] - 14 de Agosto, 2026
+### Módulo SESMT - Histórico de Registros & Seletor de Período no Dashboard
+- **Aba Histórico de Registros:** Nova aba completa para consulta e gestão de todas as inspeções salvas (EPI, Extintores e Hidrantes) com filtros por tipo, busca por texto, intervalo de datas, filtro por turno, botão de visualização detalhada em modal e opção de exclusão.
+- **Seletor de Períodos no Dashboard:** Adicionada barra superior com filtros inteligentes de data (Mês Atual, Hoje, Últimos 7 dias, Mês Anterior, Ano Atual, Todos e Personalizado com datas de/até), além de filtros por Setor e Turno, recalculando dinamicamente a taxa de conformidade e todos os gráficos e KPIs.
+
+---
+
 ## [v3.3.66] - 14 de Agosto, 2026
 ### Módulo SESMT - Permissões Cloud Firestore
 - **Regras de Segurança Cloud:** Liberadas e aplicadas as permissões de leitura e gravação no Firestore para as coleções do módulo SESMT (`sesmt_epi_inspections`, `sesmt_extinguisher_inspections` e `sesmt_hydrant_inspections`), resolvendo a falha de permissão ao salvar checklists.
