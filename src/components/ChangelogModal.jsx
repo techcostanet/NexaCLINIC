@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.68',
+      date: '14/08/2026',
+      title: 'Módulo SESMT - Cadastro Dinâmico de Equipamentos & Monitoramento de Validades',
+      description: 'Gestão patrimonial completa de extintores e hidrantes com automação de validades.',
+      changes: [
+        { type: 'Módulo SESMT', text: 'Criada aba "Cadastro de Equipamentos" para adicionar, editar, inativar e excluir extintores e hidrantes com controle de setor, tipo, capacidade e validades.' },
+        { type: 'Módulo SESMT', text: 'Formulários semanais dinâmicos: equipamentos ativos carregam automaticamente com tipo e localização, sem necessidade de digitar validade toda semana.' },
+        { type: 'Módulo SESMT', text: 'Monitoramento inteligente de validades no Dashboard cruzando dados cadastrais com alertas de recarga e vencimento.' }
+      ]
+    },
+    {
       version: 'v3.3.67',
       date: '14/08/2026',
       title: 'Módulo SESMT - Histórico de Registros & Seletor de Período no Dashboard',

@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { dbService } from '../../firebase';
-import { Save } from 'lucide-react';
+import { Save, Flame, RefreshCw } from 'lucide-react';
 
-const NUM_EXTINGUISHERS = 21;
 const CRITERIA = [
   { id: 'acesso', label: 'Acesso e Visib.' },
   { id: 'sinalizacao', label: 'Sinalização' },
@@ -18,17 +17,50 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     inspectorName: '',
-    items: Array.from({ length: NUM_EXTINGUISHERS }).map((_, i) => ({
-      extinguisherNum: i + 1,
-      type: '',
-      validity: '',
-      signature: '',
-      evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
-    }))
+    items: []
   });
 
   const [loading, setLoading] = useState(false);
+  const [loadingEquip, setLoadingEquip] = useState(true);
   const [message, setMessage] = useState('');
+
+  const loadExtinguishers = async () => {
+    setLoadingEquip(true);
+    try {
+      const data = await dbService.getEquipment('EXTINGUISHER');
+      const activeList = (data || []).filter(item => item.status === 'ATIVO');
+      
+      const initialItems = activeList.length > 0 ? activeList.map((ext, i) => ({
+        extinguisherNum: i + 1,
+        equipmentId: ext.id,
+        code: ext.code || `EXT-${String(i + 1).padStart(2, '0')}`,
+        sector: ext.sector || 'Geral',
+        type: ext.type || 'PQS',
+        signature: '',
+        evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
+      })) : Array.from({ length: 21 }).map((_, i) => ({
+        extinguisherNum: i + 1,
+        code: `EXT-${String(i + 1).padStart(2, '0')}`,
+        sector: 'Setor Geral',
+        type: 'PQS',
+        signature: '',
+        evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
+      }));
+
+      setFormData(prev => ({
+        ...prev,
+        items: initialItems
+      }));
+    } catch (err) {
+      console.error('Erro ao carregar extintores para formulário', err);
+    } finally {
+      setLoadingEquip(false);
+    }
+  };
+
+  useEffect(() => {
+    loadExtinguishers();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,7 +94,7 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
         items: formData.items,
         createdAt: new Date().toISOString()
       });
-      setMessage('Inspeção salva com sucesso!');
+      setMessage('Inspeção semanal de extintores salva com sucesso!');
       if (onSuccess) onSuccess();
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -75,7 +107,22 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
 
   return (
     <div style={styles.card}>
-      <h2 style={styles.cardTitle}>Inspeção Semanal de Extintores de Incêndio</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div>
+          <h2 style={styles.cardTitle}>Inspeção Semanal de Extintores de Incêndio</h2>
+          <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>
+            Checklist técnico dos {formData.items.length} extintores ativos cadastrados na clínica.
+          </p>
+        </div>
+        <button 
+          type="button" 
+          onClick={loadExtinguishers} 
+          style={styles.refreshBtn}
+          title="Recarregar lista de extintores cadastrados"
+        >
+          <RefreshCw size={14} className={loadingEquip ? 'animate-spin' : ''} /> Atualizar Equipamentos
+        </button>
+      </div>
       
       {message && (
         <div style={{ ...styles.alert, backgroundColor: message.includes('Erro') ? '#fef2f2' : '#f0fdf4', color: message.includes('Erro') ? '#991b1b' : '#166534', border: `1px solid ${message.includes('Erro') ? '#f87171' : '#4ade80'}` }}>
@@ -97,14 +144,14 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
             />
           </div>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Nome do Inspetor</label>
+            <label style={styles.label}>Nome do Inspetor / Responsável</label>
             <input 
               type="text" 
               name="inspectorName"
               value={formData.inspectorName}
               onChange={handleChange}
               style={styles.input}
-              placeholder="Assinatura/Nome"
+              placeholder="Nome do técnico ou responsável pela vistoria"
               required 
             />
           </div>
@@ -114,30 +161,26 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
           <table style={styles.table}>
             <thead style={styles.tableHead}>
               <tr>
-                <th style={styles.th}>N° Extintor</th>
-                <th style={styles.th}>Tipo</th>
+                <th style={{ ...styles.th, width: '70px' }}>N° / Cód.</th>
+                <th style={{ ...styles.th, textAlign: 'left', minWidth: '150px' }}>Localização / Setor</th>
+                <th style={{ ...styles.th, minWidth: '110px' }}>Tipo</th>
                 {CRITERIA.map(c => (
                   <th key={c.id} style={{...styles.th, textAlign: 'center'}}>{c.label}</th>
                 ))}
-                <th style={{...styles.th, textAlign: 'center'}}>Validade</th>
-                <th style={{...styles.th, textAlign: 'center'}}>Assinatura</th>
+                <th style={{...styles.th, textAlign: 'center', minWidth: '120px'}}>Assinatura / Rubrica</th>
               </tr>
             </thead>
             <tbody>
               {formData.items.map((item, index) => (
-                <tr key={item.extinguisherNum} style={styles.tr}>
-                  <td style={{...styles.td, fontWeight: 'bold', textAlign: 'center'}}>{item.extinguisherNum}</td>
+                <tr key={item.code || item.extinguisherNum} style={styles.tr}>
+                  <td style={{...styles.td, fontWeight: '700', textAlign: 'center', color: '#0f172a'}}>
+                    {item.code || `#${item.extinguisherNum}`}
+                  </td>
                   <td style={styles.td}>
-                    <select
-                      value={item.type}
-                      onChange={(e) => handleItemChange(index, 'type', e.target.value)}
-                      style={styles.selectSmall}
-                    >
-                      <option value="">Selecione</option>
-                      <option value="AP">Água Press.</option>
-                      <option value="PQS">Pó Químico</option>
-                      <option value="CO2">CO2</option>
-                    </select>
+                    <span style={{ fontWeight: '600', color: '#334155' }}>{item.sector}</span>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'center' }}>
+                    <span style={styles.typeBadge}>{item.type}</span>
                   </td>
                   {CRITERIA.map(c => {
                     const isC = item.evaluations[c.id] === 'C';
@@ -164,18 +207,10 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
                   })}
                   <td style={styles.td}>
                     <input 
-                      type="date"
-                      value={item.validity}
-                      onChange={(e) => handleItemChange(index, 'validity', e.target.value)}
-                      style={styles.inputSmall}
-                    />
-                  </td>
-                  <td style={styles.td}>
-                    <input 
-                      type="text"
+                      type="text" 
                       value={item.signature || ''}
                       onChange={(e) => handleItemChange(index, 'signature', e.target.value)}
-                      placeholder="Assinatura"
+                      placeholder="Rubrica"
                       style={styles.inputSmall}
                     />
                   </td>
@@ -212,7 +247,21 @@ const styles = {
     fontSize: '1.25rem',
     fontWeight: '700',
     color: '#0f172a',
-    marginBottom: '1.5rem',
+    margin: 0,
+    marginBottom: '0.25rem'
+  },
+  refreshBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.4rem 0.8rem',
+    backgroundColor: '#f1f5f9',
+    border: '1px solid #cbd5e1',
+    borderRadius: '6px',
+    fontSize: '0.78rem',
+    fontWeight: '600',
+    color: '#475569',
+    cursor: 'pointer'
   },
   alert: {
     padding: '1rem',
@@ -264,6 +313,14 @@ const styles = {
     width: '100%',
     boxSizing: 'border-box',
     cursor: 'pointer'
+  },
+  typeBadge: {
+    backgroundColor: '#f1f5f9',
+    color: '#0f172a',
+    padding: '0.15rem 0.4rem',
+    borderRadius: '4px',
+    fontSize: '0.72rem',
+    fontWeight: '700'
   },
   tableContainer: {
     border: '1px solid #e2e8f0',

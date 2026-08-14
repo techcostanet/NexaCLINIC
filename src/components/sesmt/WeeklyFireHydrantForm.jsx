@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { dbService } from '../../firebase';
-import { Save } from 'lucide-react';
+import { Save, Droplet, RefreshCw } from 'lucide-react';
 
-const NUM_HYDRANTS = 6;
 const CRITERIA = [
+  { id: 'acesso', label: 'Acesso e Visib.' },
+  { id: 'sinalizacao', label: 'Sinalização' },
+  { id: 'caixa', label: 'Caixa / Abrigo' },
   { id: 'mangueira', label: 'Mangueira' },
-  { id: 'bicos', label: 'Bicos' },
-  { id: 'chaves', label: 'Chaves' },
+  { id: 'esguicho', label: 'Esguicho' },
+  { id: 'chave', label: 'Chave Storz' },
+  { id: 'registro', label: 'Registro / Válvula' },
   { id: 'estado_fisico', label: 'Estado Físico' }
 ];
 
@@ -14,15 +17,50 @@ export default function WeeklyFireHydrantForm({ onSuccess }) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     inspectorName: '',
-    items: Array.from({ length: NUM_HYDRANTS }).map((_, i) => ({
-      hydrantNum: i + 1,
-      validity: '',
-      evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
-    }))
+    items: []
   });
 
   const [loading, setLoading] = useState(false);
+  const [loadingEquip, setLoadingEquip] = useState(true);
   const [message, setMessage] = useState('');
+
+  const loadHydrants = async () => {
+    setLoadingEquip(true);
+    try {
+      const data = await dbService.getEquipment('HYDRANT');
+      const activeList = (data || []).filter(item => item.status === 'ATIVO');
+
+      const initialItems = activeList.length > 0 ? activeList.map((hyd, i) => ({
+        hydrantNum: i + 1,
+        equipmentId: hyd.id,
+        code: hyd.code || `HID-${String(i + 1).padStart(2, '0')}`,
+        sector: hyd.sector || 'Geral',
+        type: hyd.type || 'Hidrante de Parede',
+        signature: '',
+        evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
+      })) : Array.from({ length: 6 }).map((_, i) => ({
+        hydrantNum: i + 1,
+        code: `HID-${String(i + 1).padStart(2, '0')}`,
+        sector: 'Setor Geral',
+        type: 'Hidrante de Parede',
+        signature: '',
+        evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
+      }));
+
+      setFormData(prev => ({
+        ...prev,
+        items: initialItems
+      }));
+    } catch (err) {
+      console.error('Erro ao carregar hidrantes para formulário', err);
+    } finally {
+      setLoadingEquip(false);
+    }
+  };
+
+  useEffect(() => {
+    loadHydrants();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,7 +107,22 @@ export default function WeeklyFireHydrantForm({ onSuccess }) {
 
   return (
     <div style={styles.card}>
-      <h2 style={styles.cardTitle}>Inspeção Semanal de Hidrantes de Incêndio</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div>
+          <h2 style={styles.cardTitle}>Inspeção Semanal de Hidrantes de Incêndio</h2>
+          <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>
+            Checklist técnico dos {formData.items.length} hidrantes ativos cadastrados na clínica.
+          </p>
+        </div>
+        <button 
+          type="button" 
+          onClick={loadHydrants} 
+          style={styles.refreshBtn}
+          title="Recarregar lista de hidrantes cadastrados"
+        >
+          <RefreshCw size={14} className={loadingEquip ? 'animate-spin' : ''} /> Atualizar Equipamentos
+        </button>
+      </div>
       
       {message && (
         <div style={{ ...styles.alert, backgroundColor: message.includes('Erro') ? '#fef2f2' : '#f0fdf4', color: message.includes('Erro') ? '#991b1b' : '#166534', border: `1px solid ${message.includes('Erro') ? '#f87171' : '#4ade80'}` }}>
@@ -91,14 +144,14 @@ export default function WeeklyFireHydrantForm({ onSuccess }) {
             />
           </div>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Nome do Inspetor</label>
+            <label style={styles.label}>Nome do Inspetor / Responsável</label>
             <input 
               type="text" 
               name="inspectorName"
               value={formData.inspectorName}
               onChange={handleChange}
               style={styles.input}
-              placeholder="Assinatura/Nome"
+              placeholder="Nome do técnico ou responsável pela vistoria"
               required 
             />
           </div>
@@ -108,69 +161,59 @@ export default function WeeklyFireHydrantForm({ onSuccess }) {
           <table style={styles.table}>
             <thead style={styles.tableHead}>
               <tr>
-                <th style={styles.th}>N° Hidrante</th>
-                {CRITERIA.slice(0, 1).map(c => (
+                <th style={{ ...styles.th, width: '70px' }}>N° / Cód.</th>
+                <th style={{ ...styles.th, textAlign: 'left', minWidth: '150px' }}>Localização / Setor</th>
+                <th style={{ ...styles.th, minWidth: '130px' }}>Tipo</th>
+                {CRITERIA.map(c => (
                   <th key={c.id} style={{...styles.th, textAlign: 'center'}}>{c.label}</th>
                 ))}
-                <th style={styles.th}>Validade (Mangueira)</th>
-                {CRITERIA.slice(1).map(c => (
-                  <th key={c.id} style={{...styles.th, textAlign: 'center'}}>{c.label}</th>
-                ))}
+                <th style={{...styles.th, textAlign: 'center', minWidth: '120px'}}>Assinatura / Rubrica</th>
               </tr>
             </thead>
             <tbody>
               {formData.items.map((item, index) => (
-                <tr key={item.hydrantNum} style={styles.tr}>
-                  <td style={{...styles.td, fontWeight: 'bold', textAlign: 'center'}}>{item.hydrantNum}</td>
-                  
-                  <td style={{...styles.td, textAlign: 'center'}}>
-                    <select
-                      value={item.evaluations['mangueira']}
-                      onChange={(e) => handleEvaluationChange(index, 'mangueira', e.target.value)}
-                      style={{
-                        ...styles.selectSmall,
-                        backgroundColor: item.evaluations['mangueira'] === 'C' ? '#f0fdf4' : '#fef2f2',
-                        color: item.evaluations['mangueira'] === 'C' ? '#15803d' : '#b91c1c',
-                        borderColor: item.evaluations['mangueira'] === 'C' ? '#bbf7d0' : '#fecaca',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        padding: '0.4rem'
-                      }}
-                    >
-                      <option value="C">C</option>
-                      <option value="NC">NC</option>
-                    </select>
+                <tr key={item.code || item.hydrantNum} style={styles.tr}>
+                  <td style={{...styles.td, fontWeight: '700', textAlign: 'center', color: '#0f172a'}}>
+                    {item.code || `#${item.hydrantNum}`}
                   </td>
-
+                  <td style={styles.td}>
+                    <span style={{ fontWeight: '600', color: '#334155' }}>{item.sector}</span>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'center' }}>
+                    <span style={styles.typeBadge}>{item.type}</span>
+                  </td>
+                  {CRITERIA.map(c => {
+                    const isC = item.evaluations[c.id] === 'C';
+                    return (
+                      <td key={c.id} style={{...styles.td, textAlign: 'center'}}>
+                        <select
+                          value={item.evaluations[c.id]}
+                          onChange={(e) => handleEvaluationChange(index, c.id, e.target.value)}
+                          style={{
+                            ...styles.selectSmall,
+                            backgroundColor: isC ? '#f0fdf4' : '#fef2f2',
+                            color: isC ? '#15803d' : '#b91c1c',
+                            borderColor: isC ? '#bbf7d0' : '#fecaca',
+                            fontWeight: 'bold',
+                            textAlign: 'center',
+                            padding: '0.2rem'
+                          }}
+                        >
+                          <option value="C">C</option>
+                          <option value="NC">NC</option>
+                        </select>
+                      </td>
+                    );
+                  })}
                   <td style={styles.td}>
                     <input 
-                      type="date"
-                      value={item.validity}
-                      onChange={(e) => handleItemChange(index, 'validity', e.target.value)}
+                      type="text" 
+                      value={item.signature || ''}
+                      onChange={(e) => handleItemChange(index, 'signature', e.target.value)}
+                      placeholder="Rubrica"
                       style={styles.inputSmall}
                     />
                   </td>
-
-                  {CRITERIA.slice(1).map(c => (
-                    <td key={c.id} style={{...styles.td, textAlign: 'center'}}>
-                      <select
-                        value={item.evaluations[c.id]}
-                        onChange={(e) => handleEvaluationChange(index, c.id, e.target.value)}
-                        style={{
-                          ...styles.selectSmall,
-                          backgroundColor: item.evaluations[c.id] === 'C' ? '#f0fdf4' : '#fef2f2',
-                          color: item.evaluations[c.id] === 'C' ? '#15803d' : '#b91c1c',
-                          borderColor: item.evaluations[c.id] === 'C' ? '#bbf7d0' : '#fecaca',
-                          fontWeight: 'bold',
-                          textAlign: 'center',
-                          padding: '0.4rem'
-                        }}
-                      >
-                        <option value="C">C</option>
-                        <option value="NC">NC</option>
-                      </select>
-                    </td>
-                  ))}
                 </tr>
               ))}
             </tbody>
@@ -204,7 +247,21 @@ const styles = {
     fontSize: '1.25rem',
     fontWeight: '700',
     color: '#0f172a',
-    marginBottom: '1.5rem',
+    margin: 0,
+    marginBottom: '0.25rem'
+  },
+  refreshBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.4rem 0.8rem',
+    backgroundColor: '#f1f5f9',
+    border: '1px solid #cbd5e1',
+    borderRadius: '6px',
+    fontSize: '0.78rem',
+    fontWeight: '600',
+    color: '#475569',
+    cursor: 'pointer'
   },
   alert: {
     padding: '1rem',
@@ -241,21 +298,29 @@ const styles = {
     boxSizing: 'border-box'
   },
   inputSmall: {
-    padding: '0.4rem',
+    padding: '0.3rem',
     borderRadius: '4px',
     border: '1px solid #cbd5e1',
-    fontSize: '0.85rem',
+    fontSize: '0.75rem',
     width: '100%',
     boxSizing: 'border-box'
   },
   selectSmall: {
-    padding: '0.4rem',
+    padding: '0.3rem',
     borderRadius: '4px',
     border: '1px solid #cbd5e1',
-    fontSize: '0.85rem',
+    fontSize: '0.75rem',
     width: '100%',
     boxSizing: 'border-box',
     cursor: 'pointer'
+  },
+  typeBadge: {
+    backgroundColor: '#f1f5f9',
+    color: '#0f172a',
+    padding: '0.15rem 0.4rem',
+    borderRadius: '4px',
+    fontSize: '0.72rem',
+    fontWeight: '700'
   },
   tableContainer: {
     border: '1px solid #e2e8f0',
@@ -265,27 +330,30 @@ const styles = {
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    minWidth: '600px'
+    minWidth: '800px'
   },
   tableHead: {
-    backgroundColor: '#115e59',
+    backgroundColor: '#154c79',
   },
   th: {
-    backgroundColor: '#115e59',
-    padding: '0.75rem 1rem',
-    textAlign: 'left',
-    fontSize: '0.85rem',
+    backgroundColor: '#154c79',
+    padding: '0.75rem 0.5rem',
+    textAlign: 'center',
+    fontSize: '0.78rem',
     fontWeight: '700',
     color: '#ffffff',
-    borderBottom: '1px solid #e2e8f0',
+    borderRight: '1px solid rgba(255, 255, 255, 0.2)',
+    borderBottom: '1px solid #0f3d64',
+    whiteSpace: 'nowrap'
   },
   tr: {
     borderBottom: '1px solid #f1f5f9',
   },
   td: {
-    padding: '0.75rem 1rem',
+    padding: '0.5rem',
     fontSize: '0.85rem',
     color: '#334155',
+    borderRight: '1px solid #f1f5f9',
   },
   actions: {
     display: 'flex',
@@ -296,7 +364,7 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
-    backgroundColor: '#115e59',
+    backgroundColor: '#0f766e',
     color: '#ffffff',
     padding: '0.6rem 1.25rem',
     borderRadius: '8px',

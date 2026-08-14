@@ -414,11 +414,12 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
               {/* Conteúdo de Extintores */}
               {selectedItem.recordType === 'EXTINGUISHER' && (
                 <div style={{ marginTop: '1.5rem', overflowX: 'auto' }}>
-                  <h4 style={styles.sectionTitle}>Inspeção dos 21 Extintores de Incêndio</h4>
+                  <h4 style={styles.sectionTitle}>Inspeção de Extintores de Incêndio</h4>
                   <table style={styles.innerTable}>
                     <thead>
                       <tr>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>N°</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>N° / Cód.</th>
+                        <th style={styles.innerTh}>Localização / Setor</th>
                         <th style={styles.innerTh}>Tipo</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Acesso</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Sinaliz.</th>
@@ -428,14 +429,14 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Mangueira</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Bico</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Físico</th>
-                        <th style={styles.innerTh}>Validade</th>
                         <th style={styles.innerTh}>Assinatura</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {(selectedItem.items || []).map((item) => (
-                        <tr key={item.extinguisherNum} style={styles.innerTr}>
-                          <td style={{ ...styles.innerTd, textAlign: 'center', fontWeight: 'bold' }}>{item.extinguisherNum}</td>
+                      {(selectedItem.items || []).map((item, idx) => (
+                        <tr key={item.code || item.extinguisherNum || idx} style={styles.innerTr}>
+                          <td style={{ ...styles.innerTd, textAlign: 'center', fontWeight: 'bold' }}>{item.code || item.extinguisherNum}</td>
+                          <td style={styles.innerTd}>{item.sector || '-'}</td>
                           <td style={styles.innerTd}>{item.type || '-'}</td>
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.acesso || 'C'}</td>
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.sinalizacao || 'C'}</td>
@@ -445,7 +446,6 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.mangueira || 'C'}</td>
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.bico || 'C'}</td>
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.estado_fisico || 'C'}</td>
-                          <td style={styles.innerTd}>{item.validity ? item.validity.split('-').reverse().join('/') : '-'}</td>
                           <td style={styles.innerTd}>{item.signature || '-'}</td>
                         </tr>
                       ))}
@@ -457,27 +457,39 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
               {/* Conteúdo de Hidrantes */}
               {selectedItem.recordType === 'HYDRANT' && (
                 <div style={{ marginTop: '1.5rem', overflowX: 'auto' }}>
-                  <h4 style={styles.sectionTitle}>Inspeção dos 6 Hidrantes de Incêndio</h4>
+                  <h4 style={styles.sectionTitle}>Inspeção de Hidrantes de Incêndio</h4>
                   <table style={styles.innerTable}>
                     <thead>
                       <tr>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>N° Hidrante</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>N° / Cód.</th>
+                        <th style={styles.innerTh}>Localização / Setor</th>
+                        <th style={styles.innerTh}>Tipo</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Acesso</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Sinaliz.</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Caixa</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Mangueira</th>
-                        <th style={styles.innerTh}>Validade (Mangueira)</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Bicos</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Chaves</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Estado Físico</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Esguicho</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Chave</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Registro</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Físico</th>
+                        <th style={styles.innerTh}>Assinatura</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {(selectedItem.items || []).map((item) => (
-                        <tr key={item.hydrantNum} style={styles.innerTr}>
-                          <td style={{ ...styles.innerTd, textAlign: 'center', fontWeight: 'bold' }}>{item.hydrantNum}</td>
+                      {(selectedItem.items || []).map((item, idx) => (
+                        <tr key={item.code || item.hydrantNum || idx} style={styles.innerTr}>
+                          <td style={{ ...styles.innerTd, textAlign: 'center', fontWeight: 'bold' }}>{item.code || item.hydrantNum}</td>
+                          <td style={styles.innerTd}>{item.sector || '-'}</td>
+                          <td style={styles.innerTd}>{item.type || '-'}</td>
+                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.acesso || item.evaluations?.mangueira || 'C'}</td>
+                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.sinalizacao || 'C'}</td>
+                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.caixa || 'C'}</td>
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.mangueira || 'C'}</td>
-                          <td style={styles.innerTd}>{item.validity ? item.validity.split('-').reverse().join('/') : '-'}</td>
-                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.bicos || 'C'}</td>
-                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.chaves || 'C'}</td>
+                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.esguicho || item.evaluations?.bicos || 'C'}</td>
+                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.chave || item.evaluations?.chaves || 'C'}</td>
+                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.registro || 'C'}</td>
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.estado_fisico || 'C'}</td>
+                          <td style={styles.innerTd}>{item.signature || '-'}</td>
                         </tr>
                       ))}
                     </tbody>

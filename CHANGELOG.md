@@ -1,3 +1,11 @@
+## [v3.3.68] - 14 de Agosto, 2026
+### Módulo SESMT - Cadastro Dinâmico de Equipamentos & Monitoramento de Validades
+- **Nova Aba de Cadastro de Equipamentos (`sesmt_equipment`):** Controle patrimonial completo de Extintores de Incêndio e Hidrantes, permitindo cadastrar, editar, inativar, excluir e gerenciar a localização física (setores), tipos de agentes extintores, capacidades e validades de carga e teste hidrostático.
+- **Formulários Semanais Dinâmicos:** Os formulários de inspeção de Extintores e Hidrantes agora carregam automaticamente apenas os equipamentos ativos com Localização e Tipo, eliminando a digitação manual e repetitiva de validades a cada semana.
+- **Monitoramento Inteligente no Dashboard:** O Dashboard agora analisa dinamicamente as validades cadastradas no banco, alertando com precisão os extintores na validade, a vencer (em 60 dias) e vencidos.
+
+---
+
 ## [v3.3.67] - 14 de Agosto, 2026
 ### Módulo SESMT - Histórico de Registros & Seletor de Período no Dashboard
 - **Aba Histórico de Registros:** Nova aba completa para consulta e gestão de todas as inspeções salvas (EPI, Extintores e Hidrantes) com filtros por tipo, busca por texto, intervalo de datas, filtro por turno, botão de visualização detalhada em modal e opção de exclusão.

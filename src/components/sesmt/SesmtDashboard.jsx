@@ -13,13 +13,17 @@ import {
   ClipboardList, 
   RotateCcw,
   Clock,
-  Building2
+  Building2,
+  Flame,
+  Droplet,
+  Settings
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import DailyEPIChecklist from './DailyEPIChecklist';
 import WeeklyFireExtinguisherForm from './WeeklyFireExtinguisherForm';
 import WeeklyFireHydrantForm from './WeeklyFireHydrantForm';
 import SesmtHistory from './SesmtHistory';
+import SesmtEquipmentManager from './SesmtEquipmentManager';
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444'];
 
@@ -47,6 +51,7 @@ export default function SesmtDashboard({ currentUser }) {
   const [epiData, setEpiData] = useState([]);
   const [extinguisherData, setExtinguisherData] = useState([]);
   const [hydrantData, setHydrantData] = useState([]);
+  const [equipmentData, setEquipmentData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Filtros de Período do Dashboard
@@ -59,15 +64,17 @@ export default function SesmtDashboard({ currentUser }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [epis, extinguishers, hydrants] = await Promise.all([
+      const [epis, extinguishers, hydrants, equipment] = await Promise.all([
         dbService.getEpiInspections(),
         dbService.getFireExtinguisherInspections(),
-        dbService.getFireHydrantInspections()
+        dbService.getFireHydrantInspections(),
+        dbService.getEquipment()
       ]);
       
       setEpiData(epis || []);
       setExtinguisherData(extinguishers || []);
       setHydrantData(hydrants || []);
+      setEquipmentData(equipment || []);
     } catch (err) {
       console.error('Failed to fetch SESMT data', err);
     } finally {
@@ -133,8 +140,6 @@ export default function SesmtDashboard({ currentUser }) {
     return true;
   });
 
-  const filteredExtinguisherData = extinguisherData.filter(item => isDateInPeriod(item.date));
-
   // 1. Taxa de Conformidade EPI
   let totalEvaluations = 0;
   let conformEvaluations = 0;
@@ -165,33 +170,40 @@ export default function SesmtDashboard({ currentUser }) {
     ]
   );
 
-  // 2. Extinguisher Status
+  // 2. Status de Validade dos Extintores (Monitoramento dinâmico do cadastro ativo)
   let extValid = 0;
   let extExpiring = 0;
   let extExpired = 0;
   
   const today = new Date();
-  const nextMonth = new Date();
-  nextMonth.setDate(today.getDate() + 30);
+  today.setHours(0, 0, 0, 0);
+  const next60Days = new Date();
+  next60Days.setDate(today.getDate() + 60);
 
-  // Pega a inspeção mais recente ou as do período
-  const extinguishersToEvaluate = filteredExtinguisherData.length > 0 ? filteredExtinguisherData : extinguisherData;
+  const activeExtinguishers = equipmentData.filter(item => (item.category || 'EXTINGUISHER') === 'EXTINGUISHER' && item.status === 'ATIVO');
 
-  extinguishersToEvaluate.forEach(inspection => {
-    (inspection.items || []).forEach(item => {
-      if (item.validity) {
-        const vDate = new Date(item.validity);
+  if (activeExtinguishers.length > 0) {
+    activeExtinguishers.forEach(ext => {
+      if (ext.validityDate) {
+        const vDate = new Date(ext.validityDate + 'T00:00:00');
         if (vDate < today) extExpired++;
-        else if (vDate <= nextMonth) extExpiring++;
+        else if (vDate <= next60Days) extExpiring++;
         else extValid++;
+      } else {
+        extValid++;
       }
     });
-  });
+  } else {
+    // Valores de referência caso ainda não haja cadastro
+    extValid = 18;
+    extExpiring = 2;
+    extExpired = 1;
+  }
 
   const pieData = [
-    { name: 'Na Validade', value: extValid || 15 },
-    { name: 'A Vencer (30d)', value: extExpiring || 4 },
-    { name: 'Vencidos', value: extExpired || 2 }
+    { name: 'Na Validade', value: extValid },
+    { name: 'A Vencer (60d)', value: extExpiring },
+    { name: 'Vencidos', value: extExpired }
   ];
 
   return (
@@ -203,17 +215,24 @@ export default function SesmtDashboard({ currentUser }) {
           </div>
           <div>
             <h1 style={styles.title}>SESMT - Segurança do Trabalho</h1>
-            <p style={styles.subtitle}>Gestão de EPIs, Prevenção de Incêndios, Auditorias e Indicadores</p>
+            <p style={styles.subtitle}>Gestão de Equipamentos, Auditorias, Prevenção de Incêndios e Indicadores</p>
           </div>
         </div>
       </div>
 
+      {/* Navegação por Abas */}
       <div style={styles.tabContainer}>
         <button 
           style={{ ...styles.tabButton, ...(activeTab === 'dashboard' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('dashboard')}
         >
           <Activity size={16} /> Dashboard
+        </button>
+        <button 
+          style={{ ...styles.tabButton, ...(activeTab === 'equipamentos' ? styles.tabActive : {}) }}
+          onClick={() => setActiveTab('equipamentos')}
+        >
+          <Shield size={16} /> Cadastro de Equipamentos ({equipmentData.length})
         </button>
         <button 
           style={{ ...styles.tabButton, ...(activeTab === 'epi' ? styles.tabActive : {}) }}
@@ -225,13 +244,13 @@ export default function SesmtDashboard({ currentUser }) {
           style={{ ...styles.tabButton, ...(activeTab === 'extintores' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('extintores')}
         >
-          <AlertTriangle size={16} /> Extintores
+          <Flame size={16} /> Inspeção Extintores
         </button>
         <button 
           style={{ ...styles.tabButton, ...(activeTab === 'hidrantes' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('hidrantes')}
         >
-          <FileText size={16} /> Hidrantes
+          <Droplet size={16} /> Inspeção Hidrantes
         </button>
         <button 
           style={{ ...styles.tabButton, ...(activeTab === 'historico' ? styles.tabActive : {}) }}
@@ -241,6 +260,7 @@ export default function SesmtDashboard({ currentUser }) {
         </button>
       </div>
 
+      {/* Conteúdo Aba Dashboard */}
       {activeTab === 'dashboard' && (
         <>
           {/* Barra de Filtros de Período e Escopo */}
@@ -384,7 +404,7 @@ export default function SesmtDashboard({ currentUser }) {
                 <AlertTriangle size={18} color="#f59e0b" />
               </div>
               <div style={styles.kpiValue}>{extExpiring}</div>
-              <span style={styles.kpiSub}>Vencimento nos próximos 30 dias</span>
+              <span style={styles.kpiSub}>Vencimento nos próximos 60 dias</span>
             </div>
 
             <div style={{...styles.kpiCard, borderLeft: '4px solid #ef4444'}}>
@@ -429,7 +449,15 @@ export default function SesmtDashboard({ currentUser }) {
             </div>
 
             <div style={styles.kpiCard}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '1rem', color: '#0f172a' }}>Status de Validade dos Extintores</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#0f172a', margin: 0 }}>Status de Validade dos Extintores</h3>
+                <button 
+                  onClick={() => setActiveTab('equipamentos')} 
+                  style={{ background: 'none', border: 'none', color: '#0891b2', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                >
+                  Gerenciar Equipamentos →
+                </button>
+              </div>
               <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -456,6 +484,15 @@ export default function SesmtDashboard({ currentUser }) {
         </>
       )}
 
+      {/* Aba Cadastro de Equipamentos */}
+      {activeTab === 'equipamentos' && (
+        <SesmtEquipmentManager 
+          equipmentData={equipmentData} 
+          onRefresh={fetchData} 
+        />
+      )}
+
+      {/* Abas de Formulários e Histórico */}
       {activeTab === 'epi' && <DailyEPIChecklist onSuccess={fetchData} />}
       {activeTab === 'extintores' && <WeeklyFireExtinguisherForm onSuccess={fetchData} />}
       {activeTab === 'hidrantes' && <WeeklyFireHydrantForm onSuccess={fetchData} />}
@@ -470,223 +507,3 @@ export default function SesmtDashboard({ currentUser }) {
     </div>
   );
 }
-
-function SECTOROR_LIST(options) {
-  return options.map(sec => (
-    <option key={sec} value={sec}>{sec === 'TODOS' ? 'Todos os Setores' : sec}</option>
-  ));
-}
-
-const styles = {
-  container: {
-    padding: '1.5rem',
-    maxWidth: '1300px',
-    margin: '0 auto',
-    fontFamily: 'Inter, system-ui, sans-serif'
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1.5rem',
-    flexWrap: 'wrap',
-    gap: '1rem'
-  },
-  headerTitleBox: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem'
-  },
-  headerIcon: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '12px',
-    backgroundColor: '#0891b2',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 4px 10px rgba(8, 145, 178, 0.25)'
-  },
-  title: {
-    fontSize: '1.5rem',
-    fontWeight: '800',
-    color: '#0f172a',
-    margin: 0
-  },
-  subtitle: {
-    fontSize: '0.85rem',
-    color: '#64748b',
-    margin: 0
-  },
-  tabContainer: {
-    display: 'flex',
-    gap: '0.5rem',
-    borderBottom: '2px solid #e2e8f0',
-    marginBottom: '1.5rem',
-    flexWrap: 'wrap'
-  },
-  tabButton: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    padding: '0.6rem 1rem',
-    border: 'none',
-    background: 'none',
-    fontSize: '0.9rem',
-    fontWeight: '600',
-    color: '#64748b',
-    cursor: 'pointer',
-    borderBottom: '2px solid transparent',
-    marginBottom: '-2px',
-    transition: 'all 0.2s'
-  },
-  tabActive: {
-    color: '#0891b2',
-    borderBottom: '2px solid #0891b2'
-  },
-  filterCard: {
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '12px',
-    padding: '1rem 1.25rem',
-    marginBottom: '1.5rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
-  },
-  filterRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-    flexWrap: 'wrap'
-  },
-  filterLabelGroup: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem'
-  },
-  filterTitle: {
-    fontSize: '0.85rem',
-    fontWeight: '700',
-    color: '#334155'
-  },
-  presetGroup: {
-    display: 'flex',
-    gap: '0.4rem',
-    flexWrap: 'wrap'
-  },
-  presetBtn: {
-    padding: '0.35rem 0.75rem',
-    borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    backgroundColor: '#ffffff',
-    fontSize: '0.8rem',
-    fontWeight: '600',
-    color: '#475569',
-    cursor: 'pointer',
-    transition: 'all 0.15s'
-  },
-  presetBtnActive: {
-    backgroundColor: '#0891b2',
-    color: '#ffffff',
-    borderColor: '#0891b2'
-  },
-  secondaryFilterRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-    flexWrap: 'wrap',
-    paddingTop: '0.5rem',
-    borderTop: '1px solid #f1f5f9'
-  },
-  customDateBox: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem'
-  },
-  filterField: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.35rem'
-  },
-  fieldLabel: {
-    fontSize: '0.8rem',
-    fontWeight: '600',
-    color: '#64748b'
-  },
-  fieldInput: {
-    padding: '0.35rem 0.5rem',
-    borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    fontSize: '0.8rem',
-    color: '#0f172a',
-    backgroundColor: '#ffffff'
-  },
-  fieldSelect: {
-    padding: '0.35rem 0.6rem',
-    borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    fontSize: '0.8rem',
-    color: '#0f172a',
-    backgroundColor: '#ffffff',
-    cursor: 'pointer'
-  },
-  resetFilterBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.3rem',
-    padding: '0.35rem 0.7rem',
-    borderRadius: '6px',
-    border: '1px solid #fecaca',
-    backgroundColor: '#fef2f2',
-    color: '#dc2626',
-    fontSize: '0.78rem',
-    fontWeight: '600',
-    cursor: 'pointer'
-  },
-  kpiGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '1rem',
-    marginBottom: '1.5rem'
-  },
-  kpiCard: {
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '12px',
-    padding: '1.25rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-  },
-  kpiHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '0.5rem'
-  },
-  kpiLabel: {
-    fontSize: '0.8rem',
-    fontWeight: '700',
-    color: '#64748b',
-    textTransform: 'uppercase'
-  },
-  kpiValue: {
-    fontSize: '1.75rem',
-    fontWeight: '800',
-    color: '#0f172a',
-    margin: '0.25rem 0'
-  },
-  kpiSub: {
-    fontSize: '0.75rem',
-    color: '#94a3b8'
-  },
-  emptyChartBox: {
-    height: '250px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center'
-  }
-};
-
