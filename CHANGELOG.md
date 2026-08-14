@@ -1,3 +1,9 @@
+## [v3.3.66] - 14 de Agosto, 2026
+### Módulo SESMT - Permissões Cloud Firestore
+- **Regras de Segurança Cloud:** Liberadas e aplicadas as permissões de leitura e gravação no Firestore para as coleções do módulo SESMT (`sesmt_epi_inspections`, `sesmt_extinguisher_inspections` e `sesmt_hydrant_inspections`), resolvendo a falha de permissão ao salvar checklists.
+
+---
+
 ## [v3.3.65] - 14 de Agosto, 2026
 ### Módulo SESMT - Seleção de Turno de Trabalho no Checklist de EPI
 - **Turno de Trabalho:** Adicionada a seleção de turno (`1º Turno (Manhã)`, `2º Turno (Tarde)` e `3º Turno (Noite)`) no formulário de Verificação Diária de EPI e Segurança, permitindo o registro separado das auditorias realizadas pela manhã e à tarde.

@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.66',
+      date: '14/08/2026',
+      title: 'Módulo SESMT - Permissões Cloud Firestore',
+      description: 'Liberação de regras de gravação para as inspeções do SESMT.',
+      changes: [
+        { type: 'Módulo SESMT', text: 'Configuração e deploy das regras de segurança no Firestore para permitir salvar e consultar inspeções de EPI, Extintores e Hidrantes.' }
+      ]
+    },
+    {
       version: 'v3.3.65',
       date: '14/08/2026',
       title: 'Módulo SESMT - Seleção de Turno de Trabalho no Checklist de EPI',

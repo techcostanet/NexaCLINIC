@@ -123,5 +123,10 @@ service cloud.firestore {
     // Additional HR Collections
     match /transport_vouchers/{id} { allow read, write: if isAuthenticated(); }
     match /hr_warnings/{id} { allow read, write: if isAuthenticated(); }
+
+    // SESMT & Segurança do Trabalho Collections
+    match /sesmt_epi_inspections/{id} { allow read, write: if isAuthenticated(); }
+    match /sesmt_extinguisher_inspections/{id} { allow read, write: if isAuthenticated(); }
+    match /sesmt_hydrant_inspections/{id} { allow read, write: if isAuthenticated(); }
   }
 }
