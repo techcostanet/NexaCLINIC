@@ -3,7 +3,7 @@ import {
   Calendar as CalendarIcon, Clock, User, HeartPulse, Building2, Plus, 
   ChevronLeft, ChevronRight, CheckCircle2, AlertTriangle, MessageSquare, Check, X,
   Search, RefreshCw, Phone, Edit2, Trash2, ArrowRight, UserCheck, ShieldAlert, Sparkles,
-  Send, Users, Eye, Filter
+  Send, Users, Eye, Filter, Zap, Cake, HelpCircle
 } from 'lucide-react';
 import { dbService } from '../firebase';
 
@@ -36,22 +36,26 @@ export default function CalendarPanel({ currentUser }) {
     patientName: '',
     patientPhone: '',
     patientCpf: '',
+    patientBirthDate: '',
     doctorId: '',
     date: new Date().toISOString().substring(0, 10),
     time: '09:00',
-    type: 'Consulta Médica',
-    room: 'Consultório 1',
+    endTime: '09:30',
+    type: 'Consulta Nefrologia',
+    room: 'Nenhum',
     status: 'Agendado',
+    isEncaixe: false,
     notes: ''
   });
 
-  const timeSlots = [
+  const defaultTimeSlots = [
     '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
     '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
     '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'
   ];
 
   const availableRooms = [
+    'Nenhum',
     'Consultório 1',
     'Consultório 2',
     'Consultório 3',
@@ -60,6 +64,33 @@ export default function CalendarPanel({ currentUser }) {
     'Sala Ultrassom',
     'Sala de Pequenos Procedimentos'
   ];
+
+  // Helper to calculate age from birthDate (YYYY-MM-DD)
+  const calculateAge = (birthDateStr) => {
+    if (!birthDateStr) return null;
+    const parts = birthDateStr.split('-');
+    if (parts.length !== 3) return null;
+    const birth = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    if (isNaN(birth.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age >= 0 ? `${age} anos` : null;
+  };
+
+  // Helper to add minutes to HH:mm string
+  const addMinutesToTime = (timeStr, mins = 30) => {
+    if (!timeStr || !timeStr.includes(':')) return '';
+    const [h, m] = timeStr.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return '';
+    const totalMins = h * 60 + m + mins;
+    const newH = Math.floor(totalMins / 60) % 24;
+    const newM = totalMins % 60;
+    return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     fetchData();
@@ -95,12 +126,15 @@ export default function CalendarPanel({ currentUser }) {
             patientName: patList[0]?.name || 'ADAIR PRAXEDES MORENO',
             patientPhone: patList[0]?.phone || '31988887777',
             patientCpf: patList[0]?.cpf || '123.456.789-00',
+            patientBirthDate: patList[0]?.birthDate || '1968-07-21',
             doctorId: docList[0]?.uid || 'doc-1',
             doctorName: docList[0]?.name || 'Dr. Carlos (Nefrologista)',
             date: todayStr,
             time: '08:30',
+            endTime: '09:00',
             type: 'Consulta Nefrologia',
-            room: 'Consultório 1',
+            room: 'Nenhum',
+            isEncaixe: false,
             status: 'Confirmado',
             whatsappStatus: 'Enviado',
             notes: 'Acompanhamento trimestral de creatinina'
@@ -110,15 +144,18 @@ export default function CalendarPanel({ currentUser }) {
             patientName: patList[1]?.name || 'ADAO LUCIANO DIAS',
             patientPhone: patList[1]?.phone || '31977776666',
             patientCpf: patList[1]?.cpf || '987.654.321-11',
+            patientBirthDate: patList[1]?.birthDate || '1972-07-18',
             doctorId: docList[0]?.uid || 'doc-1',
             doctorName: docList[0]?.name || 'Dr. Carlos (Nefrologista)',
             date: todayStr,
-            time: '10:00',
-            type: 'Sessão de Diálise',
-            room: 'Salão 1 (Diálise)',
+            time: '08:30',
+            endTime: '09:00',
+            type: 'Consulta Nefrologia',
+            room: 'Nenhum',
+            isEncaixe: true,
             status: 'Aguardando',
             whatsappStatus: 'Confirmado',
-            notes: 'Ajuste de peso seco'
+            notes: 'Encaixe de urgência para laudo'
           }
         ];
         const createdList = [];
@@ -163,17 +200,21 @@ export default function CalendarPanel({ currentUser }) {
     setEditingApt(null);
     setPatientSearchInModal('');
     const todayStr = currentDate.toISOString().substring(0, 10);
+    const initialTime = initialSlot?.time || '09:00';
     setAptForm({
       patientId: '',
       patientName: '',
       patientPhone: '',
       patientCpf: '',
+      patientBirthDate: '',
       doctorId: doctors[0]?.uid || '',
       date: initialSlot?.date || todayStr,
-      time: initialSlot?.time || '09:00',
+      time: initialTime,
+      endTime: initialSlot?.endTime || addMinutesToTime(initialTime, 30),
       type: 'Consulta Nefrologia',
-      room: initialSlot?.room || 'Consultório 1',
+      room: initialSlot?.room || 'Nenhum',
       status: 'Agendado',
+      isEncaixe: Boolean(initialSlot?.isEncaixe),
       notes: ''
     });
     setShowModal(true);
@@ -188,16 +229,31 @@ export default function CalendarPanel({ currentUser }) {
       patientName: apt.patientName || '',
       patientPhone: apt.patientPhone || '',
       patientCpf: apt.patientCpf || '',
+      patientBirthDate: apt.patientBirthDate || '',
       doctorId: apt.doctorId || '',
       date: apt.date || '',
       time: apt.time || '09:00',
+      endTime: apt.endTime || addMinutesToTime(apt.time || '09:00', 30),
       type: apt.type || 'Consulta Nefrologia',
-      room: apt.room || 'Consultório 1',
+      room: apt.room || 'Nenhum',
       status: apt.status || 'Agendado',
+      isEncaixe: Boolean(apt.isEncaixe),
       notes: apt.notes || ''
     });
     setShowModal(true);
   };
+
+  // Conflict / Multiple Patients Check in real time
+  const conflictingAppointments = useMemo(() => {
+    if (!aptForm.doctorId || !aptForm.date || !aptForm.time) return [];
+    return appointments.filter(apt => 
+      apt.id !== editingApt?.id &&
+      apt.doctorId === aptForm.doctorId && 
+      apt.date === aptForm.date && 
+      apt.time === aptForm.time &&
+      apt.status !== 'Cancelado'
+    );
+  }, [appointments, editingApt, aptForm.doctorId, aptForm.date, aptForm.time]);
 
   // Save Appointment (Create or Edit)
   const handleSaveAppointment = async (e) => {
@@ -213,22 +269,10 @@ export default function CalendarPanel({ currentUser }) {
     const docFound = doctors.find(d => d.uid === aptForm.doctorId);
     const docName = docFound ? docFound.name : 'Profissional Clínico';
 
-    // Conflict Check: Check if doctor already has an active appointment in this date and time (ignoring itself if editing)
-    const hasConflict = appointments.some(apt => 
-      apt.id !== editingApt?.id &&
-      apt.doctorId === aptForm.doctorId && 
-      apt.date === aptForm.date && 
-      apt.time === aptForm.time &&
-      apt.status !== 'Cancelado'
-    );
-
-    if (hasConflict) {
-      return showAlert(`O profissional "${docName}" já possui atendimento marcado em ${aptForm.date.split('-').reverse().join('/')} às ${aptForm.time}!`, 'danger');
-    }
-
     let patName = aptForm.patientName;
     let patPhone = aptForm.patientPhone;
     let patCpf = aptForm.patientCpf;
+    let patBirthDate = aptForm.patientBirthDate;
 
     if (aptForm.patientId) {
       const p = patients.find(pat => pat.id === aptForm.patientId);
@@ -236,21 +280,28 @@ export default function CalendarPanel({ currentUser }) {
         patName = p.name;
         patPhone = p.phone || patPhone;
         patCpf = p.cpf || patCpf;
+        patBirthDate = p.birthDate || patBirthDate;
       }
     }
+
+    // Auto-flag as Encaixe if conflicting with another appointment at same doctor + date + time
+    const finalIsEncaixe = Boolean(aptForm.isEncaixe || conflictingAppointments.length > 0);
 
     const appointmentPayload = {
       patientId: aptForm.patientId || 'avulso',
       patientName: patName,
       patientPhone: patPhone,
       patientCpf: patCpf,
+      patientBirthDate: patBirthDate || '',
       doctorId: aptForm.doctorId,
       doctorName: docName,
       date: aptForm.date,
       time: aptForm.time,
+      endTime: aptForm.endTime || addMinutesToTime(aptForm.time, 30),
       type: aptForm.type,
-      room: aptForm.room,
+      room: aptForm.room || 'Nenhum',
       status: aptForm.status || 'Agendado',
+      isEncaixe: finalIsEncaixe,
       whatsappStatus: editingApt?.whatsappStatus || 'Pendente',
       notes: aptForm.notes || '',
       updatedAt: new Date().toISOString()
@@ -266,7 +317,8 @@ export default function CalendarPanel({ currentUser }) {
       } else {
         const created = await dbService.createAppointment(appointmentPayload);
         setAppointments(prev => [...prev, created]);
-        showAlert(`Consulta de "${patName}" agendada com sucesso para ${aptForm.date.split('-').reverse().join('/')} às ${aptForm.time}!`);
+        const encaixeText = finalIsEncaixe ? ' (Encaixe registrado)' : '';
+        showAlert(`Consulta de "${patName}" agendada com sucesso para ${aptForm.date.split('-').reverse().join('/')} às ${aptForm.time}${encaixeText}!`);
       }
       setShowModal(false);
     } catch (err) {
@@ -304,7 +356,10 @@ export default function CalendarPanel({ currentUser }) {
   const handleSendWhatsApp = async (apt) => {
     const rawPhone = (apt.patientPhone || '').replace(/\D/g, '');
     const dateFormatted = apt.date ? apt.date.split('-').reverse().join('/') : '';
-    const textMsg = `Olá *${apt.patientName}*! 👋\nConfirmamos seu agendamento de *${apt.type}* com *${apt.doctorName}* na clínica *NexAi* para o dia *${dateFormatted}* às *${apt.time}* (${apt.room}).\n\nPor favor, responda *SIM* para confirmar ou nos avise se precisar reagendar.`;
+    const roomInfo = apt.room && apt.room !== 'Nenhum' ? ` no local *${apt.room}*` : '';
+    const timeRange = apt.endTime ? `${apt.time} às ${apt.endTime}` : apt.time;
+    const encaixeText = apt.isEncaixe ? ' *(Encaixe)*' : '';
+    const textMsg = `Olá *${apt.patientName}*! 👋\nConfirmamos seu agendamento${encaixeText} de *${apt.type}* com *${apt.doctorName}* na clínica *NexAi* para o dia *${dateFormatted}* das *${timeRange}*${roomInfo}.\n\nPor favor, responda *SIM* para confirmar ou nos avise se precisar reagendar.`;
     
     // Open WhatsApp Web/API
     const waUrl = rawPhone.length >= 10 
@@ -319,22 +374,6 @@ export default function CalendarPanel({ currentUser }) {
       setAppointments(prev => prev.map(a => a.id === apt.id ? { ...a, whatsappStatus: 'Enviado' } : a));
     } catch (e) {
       console.error(e);
-    }
-  };
-
-  // Simulate WhatsApp Confirmation / Recusal
-  const handleSimulateWhatsAppResponse = async (aptId, response) => {
-    const newAptStatus = response === 'Confirmado' ? 'Confirmado' : 'Cancelado';
-    setAppointments(prev => prev.map(a => a.id === aptId ? { ...a, whatsappStatus: response, status: newAptStatus } : a));
-    try {
-      await dbService.updateAppointment(aptId, { 
-        whatsappStatus: response,
-        status: newAptStatus
-      });
-      showAlert(`WhatsApp: Paciente registrou "${response.toUpperCase()}"`, 'success');
-    } catch (err) {
-      console.error(err);
-      fetchData();
     }
   };
 
@@ -364,9 +403,15 @@ export default function CalendarPanel({ currentUser }) {
       // Doctor filter
       if (selectedDoctorId !== 'all' && apt.doctorId !== selectedDoctorId) return false;
       // Room filter
-      if (selectedRoom !== 'all' && apt.room !== selectedRoom) return false;
+      if (selectedRoom !== 'all' && (apt.room || 'Nenhum') !== selectedRoom) return false;
       // Status filter
-      if (selectedStatusFilter !== 'all' && apt.status !== selectedStatusFilter) return false;
+      if (selectedStatusFilter !== 'all') {
+        if (selectedStatusFilter === 'Encaixe') {
+          if (!apt.isEncaixe) return false;
+        } else if (apt.status !== selectedStatusFilter) {
+          return false;
+        }
+      }
       // Search term
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase();
@@ -392,9 +437,16 @@ export default function CalendarPanel({ currentUser }) {
     const inProgress = dayAppointments.filter(a => a.status === 'Em Consulta').length;
     const finished = dayAppointments.filter(a => a.status === 'Finalizado').length;
     const confirmed = dayAppointments.filter(a => a.status === 'Confirmado').length;
-    const canceled = dayAppointments.filter(a => a.status === 'Cancelado').length;
-    return { total, waiting, inProgress, finished, confirmed, canceled };
+    const encaixes = dayAppointments.filter(a => a.isEncaixe).length;
+    return { total, waiting, inProgress, finished, confirmed, encaixes };
   }, [dayAppointments]);
+
+  // Dynamic Time Slots for Day View (Includes standard slots + any custom appointment times)
+  const dynamicTimeSlots = useMemo(() => {
+    const aptTimes = dayAppointments.map(a => a.time).filter(Boolean);
+    const combined = Array.from(new Set([...defaultTimeSlots, ...aptTimes])).sort();
+    return combined;
+  }, [dayAppointments, defaultTimeSlots]);
 
   // Filtered Patients inside modal search
   const modalFilteredPatients = useMemo(() => {
@@ -407,56 +459,136 @@ export default function CalendarPanel({ currentUser }) {
     ).slice(0, 30);
   }, [patients, patientSearchInModal]);
 
+  // Calculated Age for Modal Display
+  const currentModalPatientAge = useMemo(() => {
+    return calculateAge(aptForm.patientBirthDate);
+  }, [aptForm.patientBirthDate]);
+
   // ----------------------------------------------------
   // RENDER VIEWS
   // ----------------------------------------------------
 
-  // 1. Daily Timeline View
+  // 1. Daily Timeline View (Support for Multi-Patient and Encaixes at same slot)
   const renderDayView = () => {
     return (
       <div style={styles.gridContainer}>
         <table style={styles.calendarTable}>
           <thead>
             <tr>
-              <th style={{ width: '90px', textAlign: 'center' }}>Horário</th>
-              <th style={{ width: '28%' }}>Paciente & Contato</th>
+              <th style={{ width: '100px', textAlign: 'center' }}>Horário</th>
+              <th style={{ width: '32%' }}>Paciente & Idade</th>
               <th style={{ width: '22%' }}>Profissional & Sala</th>
-              <th style={{ width: '16%' }}>WhatsApp</th>
+              <th style={{ width: '14%' }}>WhatsApp</th>
               <th style={{ width: '14%' }}>Status</th>
-              <th style={{ width: '20%', textAlign: 'center' }}>Ações de Recepção</th>
+              <th style={{ width: '18%', textAlign: 'center' }}>Ações de Recepção</th>
             </tr>
           </thead>
           <tbody>
-            {timeSlots.map(time => {
+            {dynamicTimeSlots.map(time => {
               const aptsAtThisTime = dayAppointments.filter(a => a.time === time);
-              return (
-                <tr key={time} style={{ borderBottom: '1px solid #f1f5f9', minHeight: '52px' }}>
-                  <td style={{ fontWeight: '800', color: '#0891b2', textAlign: 'center', backgroundColor: '#fafbfc' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.2rem' }}>
-                      <Clock size={13} />
-                      <span>{time}</span>
-                    </div>
-                  </td>
-                  
-                  {aptsAtThisTime.length === 0 ? (
-                    <td colSpan="5" style={{ padding: '0.4rem 0.75rem' }}>
+
+              if (aptsAtThisTime.length === 0) {
+                return (
+                  <tr key={time} style={{ borderBottom: '1px solid #f1f5f9', minHeight: '48px' }}>
+                    <td style={{ fontWeight: '800', color: '#0891b2', textAlign: 'center', backgroundColor: '#fafbfc' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
+                        <Clock size={13} />
+                        <span>{time}</span>
+                      </div>
+                    </td>
+                    <td colSpan="5" style={{ padding: '0.35rem 0.75rem' }}>
                       <button 
                         onClick={() => handleOpenAddModal({ time, date: formattedCurrentDate })} 
                         style={styles.emptySlotBtn}
                       >
-                        <Plus size={14} /> Horário Livre — Clique para Agendar
+                        <Plus size={13} /> Horário Livre — Clique para Agendar
                       </button>
                     </td>
-                  ) : (
-                    aptsAtThisTime.map(apt => (
-                      <React.Fragment key={apt.id}>
+                  </tr>
+                );
+              }
+
+              return (
+                <React.Fragment key={time}>
+                  {aptsAtThisTime.map((apt, idx) => {
+                    const patAge = apt.patientBirthDate ? calculateAge(apt.patientBirthDate) : null;
+                    const isMultiple = aptsAtThisTime.length > 1;
+
+                    return (
+                      <tr 
+                        key={apt.id} 
+                        style={{ 
+                          borderBottom: idx === aptsAtThisTime.length - 1 ? '2px solid #e2e8f0' : '1px dashed #e2e8f0',
+                          backgroundColor: apt.isEncaixe ? '#fffbeb' : '#ffffff'
+                        }}
+                      >
+                        {idx === 0 ? (
+                          <td 
+                            rowSpan={aptsAtThisTime.length}
+                            style={{ 
+                              fontWeight: '800', 
+                              color: '#0891b2', 
+                              textAlign: 'center', 
+                              backgroundColor: '#fafbfc',
+                              borderRight: '1px solid #e2e8f0',
+                              verticalAlign: 'top',
+                              paddingTop: '0.75rem'
+                            }}
+                          >
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                <Clock size={14} />
+                                <span style={{ fontSize: '0.95rem' }}>{time}</span>
+                              </div>
+                              {apt.endTime && (
+                                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>até {apt.endTime}</span>
+                              )}
+                              {isMultiple && (
+                                <span style={{ 
+                                  fontSize: '0.65rem', 
+                                  backgroundColor: '#ea580c', 
+                                  color: '#fff', 
+                                  padding: '0.1rem 0.4rem', 
+                                  borderRadius: '9999px', 
+                                  fontWeight: '800',
+                                  marginTop: '0.2rem'
+                                }}>
+                                  {aptsAtThisTime.length} pacientes
+                                </span>
+                              )}
+                              <button 
+                                onClick={() => handleOpenAddModal({ time, date: formattedCurrentDate, isEncaixe: true })}
+                                style={{ ...styles.addEncaixeBtn, marginTop: '0.4rem' }}
+                                title="Adicionar Encaixe neste horário"
+                              >
+                                <Zap size={10} /> + Encaixe
+                              </button>
+                            </div>
+                          </td>
+                        ) : null}
+
+                        {/* Paciente Info */}
                         <td style={{ padding: '0.6rem 0.75rem' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                            <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{apt.patientName}</strong>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#64748b' }}>
-                              <span>{apt.type}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                              <strong style={{ fontSize: '0.92rem', color: '#0f172a' }}>{apt.patientName}</strong>
+                              {apt.isEncaixe && (
+                                <span style={styles.encaixeBadge}>
+                                  <Zap size={11} /> ENCAIXE
+                                </span>
+                              )}
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#64748b', flexWrap: 'wrap' }}>
+                              <span style={{ fontWeight: '600', color: '#0891b2' }}>{apt.type}</span>
+                              {patAge && (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', color: '#475569', backgroundColor: '#f1f5f9', padding: '0.1rem 0.35rem', borderRadius: '4px' }}>
+                                  <Cake size={11} color="#64748b" /> {patAge}
+                                </span>
+                              )}
                               {apt.patientPhone && <span>• 📞 {apt.patientPhone}</span>}
                             </div>
+                            
                             {apt.notes && (
                               <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontStyle: 'italic' }}>
                                 Obs: {apt.notes}
@@ -465,15 +597,17 @@ export default function CalendarPanel({ currentUser }) {
                           </div>
                         </td>
 
+                        {/* Médico & Sala */}
                         <td style={{ padding: '0.6rem 0.75rem' }}>
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontWeight: '700', fontSize: '0.85rem', color: '#334155' }}>{apt.doctorName}</span>
-                            <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
-                              <Building2 size={12} /> {apt.room}
+                            <span style={{ fontSize: '0.75rem', color: apt.room === 'Nenhum' ? '#94a3b8' : '#64748b', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                              <Building2 size={12} /> {apt.room === 'Nenhum' ? 'Sem sala definida' : apt.room}
                             </span>
                           </div>
                         </td>
 
+                        {/* WhatsApp */}
                         <td style={{ padding: '0.6rem 0.75rem' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                             <span style={{
@@ -489,13 +623,14 @@ export default function CalendarPanel({ currentUser }) {
                             <button 
                               onClick={() => handleSendWhatsApp(apt)} 
                               style={styles.waActionBtn}
-                              title="Enviar confirmação via WhatsApp Web"
+                              title="Enviar confirmação via WhatsApp"
                             >
-                              <Send size={12} /> Lembrete
+                              <Send size={11} /> Lembrete
                             </button>
                           </div>
                         </td>
 
+                        {/* Status */}
                         <td style={{ padding: '0.6rem 0.75rem' }}>
                           <span style={{
                             padding: '0.25rem 0.6rem',
@@ -518,6 +653,7 @@ export default function CalendarPanel({ currentUser }) {
                           </span>
                         </td>
 
+                        {/* Actions */}
                         <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
                             {apt.status !== 'Finalizado' && apt.status !== 'Cancelado' && (
@@ -553,10 +689,10 @@ export default function CalendarPanel({ currentUser }) {
                             </button>
                           </div>
                         </td>
-                      </React.Fragment>
-                    ))
-                  )}
-                </tr>
+                      </tr>
+                    );
+                  })}
+                </React.Fragment>
               );
             })}
           </tbody>
@@ -570,12 +706,12 @@ export default function CalendarPanel({ currentUser }) {
     return (
       <div style={styles.roomsContainer}>
         {availableRooms.map(roomName => {
-          const roomApts = dayAppointments.filter(a => a.room === roomName).sort((a,b) => a.time.localeCompare(b.time));
+          const roomApts = dayAppointments.filter(a => (a.room || 'Nenhum') === roomName).sort((a,b) => a.time.localeCompare(b.time));
           return (
             <div key={roomName} style={styles.roomCard}>
               <div style={styles.roomCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Building2 size={16} color="#0891b2" />
+                  <Building2 size={16} color={roomName === 'Nenhum' ? '#94a3b8' : '#0891b2'} />
                   <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{roomName}</strong>
                 </div>
                 <span style={styles.roomCountBadge}>{roomApts.length}</span>
@@ -584,19 +720,22 @@ export default function CalendarPanel({ currentUser }) {
               <div style={styles.roomCardBody}>
                 {roomApts.length === 0 ? (
                   <div style={styles.emptyRoomState}>
-                    <span>Nenhum atendimento marcado para esta sala hoje.</span>
+                    <span>Nenhum atendimento nesta sala hoje.</span>
                     <button 
                       onClick={() => handleOpenAddModal({ room: roomName, date: formattedCurrentDate })} 
                       style={styles.addSmallBtn}
                     >
-                      <Plus size={12} /> Agendar Sala
+                      <Plus size={12} /> Agendar
                     </button>
                   </div>
                 ) : (
                   roomApts.map(apt => (
-                    <div key={apt.id} style={styles.roomAptItem}>
+                    <div key={apt.id} style={{ ...styles.roomAptItem, ...(apt.isEncaixe ? { borderLeft: '3px solid #f97316', backgroundColor: '#fffbeb' } : {}) }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong style={{ color: '#0891b2', fontSize: '0.85rem' }}>{apt.time}</strong>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <strong style={{ color: '#0891b2', fontSize: '0.85rem' }}>{apt.time}{apt.endTime ? ` - ${apt.endTime}` : ''}</strong>
+                          {apt.isEncaixe && <span style={styles.encaixeBadgeSmall}>⚡ Encaixe</span>}
+                        </div>
                         <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#64748b' }}>{apt.status}</span>
                       </div>
                       <span style={{ fontWeight: '700', fontSize: '0.85rem', color: '#1e293b' }}>{apt.patientName}</span>
@@ -653,10 +792,19 @@ export default function CalendarPanel({ currentUser }) {
                   <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', marginTop: '1.5rem' }}>Sem consultas</span>
                 ) : (
                   dayApts.map(apt => (
-                    <div key={apt.id} onClick={() => handleOpenEditModal(apt)} style={styles.weekAptCard} title="Clique para editar">
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div 
+                      key={apt.id} 
+                      onClick={() => handleOpenEditModal(apt)} 
+                      style={{ 
+                        ...styles.weekAptCard, 
+                        ...(apt.isEncaixe ? { borderLeft: '3px solid #f97316', backgroundColor: '#fffbeb' } : {}) 
+                      }} 
+                      title="Clique para editar"
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#0891b2' }}>{apt.time}</span>
-                        <span style={{ fontSize: '0.65rem', fontWeight: '700', color: '#64748b' }}>{apt.room}</span>
+                        {apt.isEncaixe && <span style={styles.encaixeBadgeSmall}>⚡ Encaixe</span>}
+                        <span style={{ fontSize: '0.65rem', fontWeight: '700', color: '#64748b' }}>{apt.room || 'Nenhum'}</span>
                       </div>
                       <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#0f172a', margin: '0.1rem 0' }}>{apt.patientName}</div>
                       <div style={{ fontSize: '0.7rem', color: '#475569' }}>{apt.doctorName}</div>
@@ -693,6 +841,7 @@ export default function CalendarPanel({ currentUser }) {
 
           const formatted = cell.toISOString().substring(0, 10);
           const dayApts = filteredAppointments.filter(a => a.date === formatted);
+          const encaixesCount = dayApts.filter(a => a.isEncaixe).length;
           const isToday = new Date().toDateString() === cell.toDateString();
 
           return (
@@ -708,8 +857,15 @@ export default function CalendarPanel({ currentUser }) {
                 {cell.getDate()}
               </span>
               {dayApts.length > 0 && (
-                <div style={styles.monthAptBadge}>
-                  {dayApts.length} {dayApts.length === 1 ? 'consulta' : 'consultas'}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                  <div style={styles.monthAptBadge}>
+                    {dayApts.length} {dayApts.length === 1 ? 'consulta' : 'consultas'}
+                  </div>
+                  {encaixesCount > 0 && (
+                    <div style={{ ...styles.monthAptBadge, backgroundColor: '#ffedd5', color: '#c2410c' }}>
+                      ⚡ {encaixesCount} encaixe{encaixesCount > 1 ? 's' : ''}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -729,7 +885,7 @@ export default function CalendarPanel({ currentUser }) {
           </div>
           <div>
             <h1 style={styles.title}>NexaCAL — Gestão de Agenda & Consultas</h1>
-            <p style={styles.subtitle}>Painel multissala de agendamento em tempo real com confirmação WhatsApp e recepção ágil.</p>
+            <p style={styles.subtitle}>Painel multissala em tempo real com gestão de múltiplos pacientes, encaixes, horários flexíveis e WhatsApp.</p>
           </div>
         </div>
 
@@ -792,7 +948,7 @@ export default function CalendarPanel({ currentUser }) {
             <Clock size={18} color="#d97706" />
           </div>
           <div style={{ ...styles.kpiValue, color: '#d97706' }}>{kpis.waiting}</div>
-          <div style={styles.kpiSub}>Na sala de espera</div>
+          <div style={styles.kpiSub}>Na recepção</div>
         </div>
 
         <div 
@@ -804,7 +960,19 @@ export default function CalendarPanel({ currentUser }) {
             <HeartPulse size={18} color="#7c3aed" />
           </div>
           <div style={{ ...styles.kpiValue, color: '#7c3aed' }}>{kpis.inProgress}</div>
-          <div style={styles.kpiSub}>No consultório / salão</div>
+          <div style={styles.kpiSub}>Em consultório</div>
+        </div>
+
+        <div 
+          onClick={() => setSelectedStatusFilter('Encaixe')}
+          style={{ ...styles.kpiCard, borderColor: selectedStatusFilter === 'Encaixe' ? '#ea580c' : '#e2e8f0', cursor: 'pointer', backgroundColor: '#fff7ed' }}
+        >
+          <div style={styles.kpiHeader}>
+            <span style={{ ...styles.kpiLabel, color: '#c2410c' }}>Encaixes ⚡</span>
+            <Zap size={18} color="#ea580c" />
+          </div>
+          <div style={{ ...styles.kpiValue, color: '#ea580c' }}>{kpis.encaixes}</div>
+          <div style={styles.kpiSub}>Simultâneos / Extras</div>
         </div>
 
         <div 
@@ -816,7 +984,41 @@ export default function CalendarPanel({ currentUser }) {
             <UserCheck size={18} color="#16a34a" />
           </div>
           <div style={{ ...styles.kpiValue, color: '#16a34a' }}>{kpis.finished}</div>
-          <div style={styles.kpiSub}>Finalizados com sucesso</div>
+          <div style={styles.kpiSub}>Finalizados hoje</div>
+        </div>
+      </div>
+
+      {/* 🏷️ Legenda Explicativa de Cores & Status */}
+      <div style={styles.legendContainer}>
+        <div style={styles.legendHeader}>
+          <Filter size={13} color="#0891b2" />
+          <span style={{ fontWeight: '700', fontSize: '0.8rem', color: '#334155' }}>Legenda de Cores & Status:</span>
+        </div>
+        <div style={styles.legendBadges}>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.legendDot, backgroundColor: '#0284c7' }} />
+            <span>Agendado (Azul)</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.legendDot, backgroundColor: '#16a34a' }} />
+            <span>Confirmado (Verde)</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.legendDot, backgroundColor: '#d97706' }} />
+            <span>Aguardando Recepção (Amarelo)</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.legendDot, backgroundColor: '#7c3aed' }} />
+            <span>Em Consulta (Roxo)</span>
+          </div>
+          <div style={{ ...styles.legendItem, backgroundColor: '#ffedd5', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
+            <span style={{ ...styles.legendDot, backgroundColor: '#ea580c' }} />
+            <span style={{ fontWeight: '800', color: '#c2410c' }}>⚡ Encaixe (Laranja / Âmbar)</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.legendDot, backgroundColor: '#dc2626' }} />
+            <span>Cancelado (Vermelho)</span>
+          </div>
         </div>
       </div>
 
@@ -847,7 +1049,7 @@ export default function CalendarPanel({ currentUser }) {
           <Search size={16} color="#64748b" />
           <input 
             type="text" 
-            placeholder="Buscar por paciente, CPF, médico ou nota..." 
+            placeholder="Buscar paciente, CPF, médico..." 
             value={searchTerm} 
             onChange={e => setSearchTerm(e.target.value)}
             style={styles.searchInput}
@@ -888,6 +1090,7 @@ export default function CalendarPanel({ currentUser }) {
             <option value="Confirmado">Confirmado</option>
             <option value="Aguardando">Aguardando (Recepção)</option>
             <option value="Em Consulta">Em Consulta</option>
+            <option value="Encaixe">⚡ Apenas Encaixes</option>
             <option value="Finalizado">Finalizado</option>
             <option value="Cancelado">Cancelado</option>
           </select>
@@ -966,7 +1169,8 @@ export default function CalendarPanel({ currentUser }) {
                       patientId: selectedId,
                       patientName: pat ? pat.name : f.patientName,
                       patientPhone: pat ? (pat.phone || f.patientPhone) : f.patientPhone,
-                      patientCpf: pat ? (pat.cpf || f.patientCpf) : f.patientCpf
+                      patientCpf: pat ? (pat.cpf || f.patientCpf) : f.patientCpf,
+                      patientBirthDate: pat ? (pat.birthDate || f.patientBirthDate) : f.patientBirthDate
                     }));
                     if (pat) setPatientSearchInModal(pat.name);
                   }}
@@ -979,8 +1183,8 @@ export default function CalendarPanel({ currentUser }) {
                 </select>
               </div>
 
-              {/* Paciente Avulso / Telefone */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.75rem' }}>
+              {/* Paciente Avulso / Nome & Nascimento & Idade */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '0.75rem' }}>
                 <div>
                   <label style={styles.inputLabel}>Nome do Paciente *</label>
                   <input 
@@ -994,6 +1198,22 @@ export default function CalendarPanel({ currentUser }) {
                   />
                 </div>
                 <div>
+                  <label style={styles.inputLabel}>
+                    Data de Nasc. {currentModalPatientAge && <span style={styles.ageBadge}>({currentModalPatientAge})</span>}
+                  </label>
+                  <input 
+                    type="date" 
+                    className="form-control" 
+                    value={aptForm.patientBirthDate} 
+                    onChange={e => setAptForm({ ...aptForm, patientBirthDate: e.target.value })} 
+                    style={styles.textInput}
+                  />
+                </div>
+              </div>
+
+              {/* Telefone e CPF */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
                   <label style={styles.inputLabel}>Telefone / WhatsApp</label>
                   <input 
                     type="text" 
@@ -1001,6 +1221,17 @@ export default function CalendarPanel({ currentUser }) {
                     placeholder="(31) 98888-7777"
                     value={aptForm.patientPhone} 
                     onChange={e => setAptForm({ ...aptForm, patientPhone: e.target.value })} 
+                    style={styles.textInput}
+                  />
+                </div>
+                <div>
+                  <label style={styles.inputLabel}>CPF (Opcional)</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="000.000.000-00"
+                    value={aptForm.patientCpf} 
+                    onChange={e => setAptForm({ ...aptForm, patientCpf: e.target.value })} 
                     style={styles.textInput}
                   />
                 </div>
@@ -1041,8 +1272,8 @@ export default function CalendarPanel({ currentUser }) {
                 </div>
               </div>
 
-              {/* Data, Horário e Sala */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.2fr', gap: '0.75rem' }}>
+              {/* Data, Horário Inicial, Horário Final e Sala */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.2fr', gap: '0.75rem' }}>
                 <div>
                   <label style={styles.inputLabel}>Data *</label>
                   <input 
@@ -1055,18 +1286,32 @@ export default function CalendarPanel({ currentUser }) {
                   />
                 </div>
                 <div>
-                  <label style={styles.inputLabel}>Horário *</label>
-                  <select 
-                    className="form-control" 
+                  <label style={styles.inputLabel}>Início *</label>
+                  <input 
+                    type="time" 
                     required 
+                    className="form-control" 
                     value={aptForm.time} 
-                    onChange={e => setAptForm({ ...aptForm, time: e.target.value })}
+                    onChange={e => {
+                      const newTime = e.target.value;
+                      setAptForm(f => ({
+                        ...f,
+                        time: newTime,
+                        endTime: addMinutesToTime(newTime, 30)
+                      }));
+                    }}
                     style={styles.textInput}
-                  >
-                    {timeSlots.map(t => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
+                  />
+                </div>
+                <div>
+                  <label style={styles.inputLabel}>Fim</label>
+                  <input 
+                    type="time" 
+                    className="form-control" 
+                    value={aptForm.endTime} 
+                    onChange={e => setAptForm({ ...aptForm, endTime: e.target.value })} 
+                    style={styles.textInput}
+                  />
                 </div>
                 <div>
                   <label style={styles.inputLabel}>Consultório / Sala</label>
@@ -1082,6 +1327,44 @@ export default function CalendarPanel({ currentUser }) {
                   </select>
                 </div>
               </div>
+
+              {/* ⚠️ ALERTA DE HORÁRIO CONFLITANTE / ENCAIXE */}
+              {conflictingAppointments.length > 0 && (
+                <div style={styles.conflictBox}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#c2410c', fontWeight: '700', fontSize: '0.85rem' }}>
+                    <AlertTriangle size={17} color="#ea580c" />
+                    <span>Atenção: Horário já possui {conflictingAppointments.length} agendamento(s) com este profissional!</span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#7c2d12', marginTop: '0.25rem', paddingLeft: '1.4rem' }}>
+                    <strong>Paciente(s) neste horário:</strong> {conflictingAppointments.map(c => `${c.patientName} (${c.type})`).join(', ')}
+                  </div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginTop: '0.5rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: '700', color: '#9a3412' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={aptForm.isEncaixe} 
+                      onChange={e => setAptForm(f => ({ ...f, isEncaixe: e.target.checked }))}
+                      style={{ width: '16px', height: '16px', accentColor: '#ea580c' }}
+                    />
+                    <span>⚡ Confirmar e registrar como ENCAIXE</span>
+                  </label>
+                </div>
+              )}
+
+              {/* Flag de Encaixe manual (se não houver conflito detectado) */}
+              {conflictingAppointments.length === 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.6rem', backgroundColor: '#fffbeb', borderRadius: '6px', border: '1px solid #fef3c7' }}>
+                  <input 
+                    type="checkbox" 
+                    id="isEncaixeCheckbox"
+                    checked={aptForm.isEncaixe} 
+                    onChange={e => setAptForm(f => ({ ...f, isEncaixe: e.target.checked }))}
+                    style={{ width: '16px', height: '16px', accentColor: '#ea580c' }}
+                  />
+                  <label htmlFor="isEncaixeCheckbox" style={{ fontSize: '0.8rem', fontWeight: '700', color: '#b45309', cursor: 'pointer', margin: 0 }}>
+                    ⚡ Marcar este agendamento como Encaixe / Extra
+                  </label>
+                </div>
+              )}
 
               {/* Status e Observações */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '0.75rem' }}>
@@ -1178,11 +1461,11 @@ const styles = {
     gap: '0.4rem',
     padding: '0.55rem 0.9rem',
     borderRadius: '8px',
+    backgroundColor: '#f1f5f9',
+    color: '#334155',
     border: '1px solid #cbd5e1',
-    backgroundColor: '#ffffff',
-    fontSize: '0.85rem',
     fontWeight: '600',
-    color: '#475569',
+    fontSize: '0.85rem',
     cursor: 'pointer'
   },
   newAptBtn: {
@@ -1194,33 +1477,33 @@ const styles = {
     backgroundColor: '#0891b2',
     color: '#ffffff',
     border: 'none',
-    fontSize: '0.85rem',
     fontWeight: '700',
-    cursor: 'pointer',
-    boxShadow: '0 2px 6px rgba(8, 145, 178, 0.3)'
+    fontSize: '0.85rem',
+    boxShadow: '0 2px 6px rgba(8, 145, 178, 0.3)',
+    cursor: 'pointer'
   },
   alert: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
     padding: '0.75rem 1rem',
     borderRadius: '8px',
     border: '1px solid',
     marginBottom: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
     fontSize: '0.85rem',
     fontWeight: '600'
   },
   kpiGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-    gap: '0.85rem',
-    marginBottom: '1.25rem'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+    gap: '0.75rem',
+    marginBottom: '1rem'
   },
   kpiCard: {
     backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
+    padding: '0.85rem',
     borderRadius: '10px',
-    padding: '1rem 1.15rem',
+    border: '1px solid #e2e8f0',
     boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
     transition: 'all 0.15s ease'
   },
@@ -1233,31 +1516,64 @@ const styles = {
   kpiLabel: {
     fontSize: '0.75rem',
     fontWeight: '700',
-    color: '#64748b',
-    textTransform: 'uppercase'
+    color: '#64748b'
   },
   kpiValue: {
-    fontSize: '1.65rem',
+    fontSize: '1.5rem',
     fontWeight: '800',
-    color: '#0f172a',
-    margin: '0.1rem 0'
+    color: '#0f172a'
   },
   kpiSub: {
-    fontSize: '0.72rem',
+    fontSize: '0.7rem',
     color: '#94a3b8'
+  },
+  legendContainer: {
+    backgroundColor: '#f8fafc',
+    padding: '0.6rem 0.85rem',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    marginBottom: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    flexWrap: 'wrap'
+  },
+  legendHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.3rem'
+  },
+  legendBadges: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.85rem',
+    flexWrap: 'wrap'
+  },
+  legendItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    fontSize: '0.75rem',
+    color: '#475569',
+    fontWeight: '600'
+  },
+  legendDot: {
+    width: '10px',
+    height: '10px',
+    borderRadius: '9999px',
+    display: 'inline-block'
   },
   toolbar: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: '0.75rem',
     backgroundColor: '#ffffff',
     padding: '0.75rem 1rem',
     borderRadius: '10px',
     border: '1px solid #e2e8f0',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-    flexWrap: 'wrap',
-    gap: '0.75rem',
-    marginBottom: '0.75rem'
+    marginBottom: '0.75rem',
+    flexWrap: 'wrap'
   },
   viewModeGroup: {
     display: 'flex',
@@ -1267,19 +1583,19 @@ const styles = {
     borderRadius: '8px'
   },
   viewBtn: {
-    background: 'none',
+    padding: '0.4rem 0.75rem',
+    borderRadius: '6px',
     border: 'none',
-    padding: '0.35rem 0.85rem',
+    backgroundColor: 'transparent',
+    color: '#64748b',
     fontSize: '0.8rem',
     fontWeight: '600',
-    color: '#64748b',
-    cursor: 'pointer',
-    borderRadius: '6px',
-    transition: 'all 0.15s'
+    cursor: 'pointer'
   },
   viewBtnActive: {
     backgroundColor: '#ffffff',
     color: '#0891b2',
+    fontWeight: '800',
     boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
   },
   dateNavigator: {
@@ -1288,31 +1604,30 @@ const styles = {
     gap: '0.5rem'
   },
   navArrowBtn: {
-    border: '1px solid #cbd5e1',
-    background: '#ffffff',
-    borderRadius: '50%',
-    width: '28px',
-    height: '28px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    color: '#475569'
-  },
-  todayBtn: {
-    padding: '0.25rem 0.65rem',
+    padding: '0.35rem',
     borderRadius: '6px',
     border: '1px solid #cbd5e1',
     backgroundColor: '#ffffff',
-    fontSize: '0.75rem',
-    fontWeight: '700',
+    color: '#475569',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  todayBtn: {
+    padding: '0.35rem 0.65rem',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: '#ffffff',
     color: '#0891b2',
+    fontWeight: '700',
+    fontSize: '0.8rem',
     cursor: 'pointer'
   },
   currentDateLabel: {
-    fontSize: '0.95rem',
+    fontSize: '0.9rem',
     color: '#0f172a',
-    minWidth: '220px',
+    minWidth: '180px',
     textAlign: 'center'
   },
   searchBox: {
@@ -1320,38 +1635,35 @@ const styles = {
     alignItems: 'center',
     gap: '0.4rem',
     padding: '0.4rem 0.75rem',
-    backgroundColor: '#f8fafc',
-    border: '1px solid #cbd5e1',
     borderRadius: '8px',
-    flex: '1',
-    maxWidth: '360px',
-    minWidth: '220px'
+    border: '1px solid #cbd5e1',
+    backgroundColor: '#f8fafc',
+    minWidth: '240px'
   },
   searchInput: {
     border: 'none',
     outline: 'none',
     backgroundColor: 'transparent',
-    fontSize: '0.8rem',
+    fontSize: '0.82rem',
     width: '100%',
     color: '#0f172a'
   },
   clearSearchBtn: {
     background: 'none',
     border: 'none',
-    color: '#94a3b8',
     cursor: 'pointer',
-    padding: 0
+    color: '#94a3b8'
   },
   filterBar: {
     display: 'flex',
-    gap: '1rem',
+    gap: '0.75rem',
     alignItems: 'center',
+    marginBottom: '1rem',
+    flexWrap: 'wrap',
     backgroundColor: '#ffffff',
-    padding: '0.65rem 1rem',
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0',
-    marginBottom: '1.25rem',
-    flexWrap: 'wrap'
+    padding: '0.6rem 1rem',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0'
   },
   filterGroup: {
     display: 'flex',
@@ -1368,66 +1680,103 @@ const styles = {
     borderRadius: '6px',
     border: '1px solid #cbd5e1',
     fontSize: '0.8rem',
-    color: '#0f172a',
-    backgroundColor: '#ffffff',
-    cursor: 'pointer'
+    color: '#1e293b',
+    backgroundColor: '#f8fafc'
   },
   resetFiltersBtn: {
-    padding: '0.35rem 0.7rem',
+    padding: '0.35rem 0.75rem',
     borderRadius: '6px',
-    border: '1px solid #fecaca',
+    border: '1px solid #fca5a5',
     backgroundColor: '#fef2f2',
-    color: '#dc2626',
+    color: '#991b1b',
     fontSize: '0.75rem',
-    fontWeight: '600',
+    fontWeight: '700',
     cursor: 'pointer'
   },
   gridContainer: {
     backgroundColor: '#ffffff',
     borderRadius: '10px',
     border: '1px solid #e2e8f0',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-    overflowX: 'auto'
+    overflowX: 'auto',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
   },
   calendarTable: {
     width: '100%',
     borderCollapse: 'collapse',
-    fontSize: '0.85rem'
+    fontSize: '0.82rem'
   },
   emptySlotBtn: {
-    border: '1px dashed #cbd5e1',
-    background: '#fafbfc',
-    color: '#94a3b8',
     width: '100%',
-    padding: '0.45rem',
+    padding: '0.4rem',
+    border: '1px dashed #cbd5e1',
     borderRadius: '6px',
-    textAlign: 'left',
-    cursor: 'pointer',
+    backgroundColor: '#ffffff',
+    color: '#94a3b8',
     fontSize: '0.75rem',
     fontWeight: '600',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: '0.3rem',
-    transition: 'all 0.15s ease'
+    cursor: 'pointer'
+  },
+  addEncaixeBtn: {
+    padding: '0.2rem 0.4rem',
+    borderRadius: '4px',
+    border: '1px solid #fed7aa',
+    backgroundColor: '#fff7ed',
+    color: '#ea580c',
+    fontSize: '0.65rem',
+    fontWeight: '800',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.2rem'
+  },
+  encaixeBadge: {
+    padding: '0.15rem 0.45rem',
+    borderRadius: '4px',
+    fontSize: '0.68rem',
+    fontWeight: '800',
+    backgroundColor: '#ffedd5',
+    color: '#c2410c',
+    border: '1px solid #fed7aa',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.2rem'
+  },
+  encaixeBadgeSmall: {
+    padding: '0.1rem 0.35rem',
+    borderRadius: '3px',
+    fontSize: '0.62rem',
+    fontWeight: '800',
+    backgroundColor: '#ffedd5',
+    color: '#c2410c'
+  },
+  ageBadge: {
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    color: '#0891b2',
+    marginLeft: '0.3rem'
   },
   waActionBtn: {
+    padding: '0.2rem 0.45rem',
+    borderRadius: '4px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: '#f8fafc',
+    color: '#166534',
+    fontSize: '0.7rem',
+    fontWeight: '700',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.25rem',
-    padding: '0.2rem 0.45rem',
-    backgroundColor: '#f0fdf4',
-    color: '#16a34a',
-    border: '1px solid #bbf7d0',
-    borderRadius: '4px',
-    fontSize: '0.7rem',
-    fontWeight: '700',
     cursor: 'pointer'
   },
   statusBtn: {
+    padding: '0.25rem 0.5rem',
+    borderRadius: '4px',
     border: 'none',
     color: '#ffffff',
-    padding: '0.25rem 0.55rem',
-    borderRadius: '4px',
     fontSize: '0.7rem',
     fontWeight: '700',
     cursor: 'pointer',
@@ -1436,10 +1785,10 @@ const styles = {
     gap: '0.2rem'
   },
   iconBtn: {
-    padding: '0.25rem 0.4rem',
-    border: '1px solid #e2e8f0',
-    backgroundColor: '#f8fafc',
+    padding: '0.3rem',
     borderRadius: '4px',
+    border: '1px solid #e2e8f0',
+    backgroundColor: '#ffffff',
     cursor: 'pointer',
     display: 'inline-flex',
     alignItems: 'center',
@@ -1447,7 +1796,7 @@ const styles = {
   },
   roomsContainer: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
     gap: '1rem'
   },
   roomCard: {
@@ -1458,45 +1807,41 @@ const styles = {
     overflow: 'hidden'
   },
   roomCardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     padding: '0.75rem 1rem',
     backgroundColor: '#f8fafc',
-    borderBottom: '1px solid #e2e8f0'
+    borderBottom: '1px solid #e2e8f0',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
   },
   roomCountBadge: {
-    padding: '0.15rem 0.45rem',
-    borderRadius: '9999px',
+    fontSize: '0.75rem',
+    fontWeight: '800',
     backgroundColor: '#e0f2fe',
     color: '#0369a1',
-    fontSize: '0.7rem',
-    fontWeight: '800'
+    padding: '0.15rem 0.5rem',
+    borderRadius: '9999px'
   },
   roomCardBody: {
     padding: '0.75rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem',
-    minHeight: '220px'
+    gap: '0.6rem',
+    minHeight: '200px'
   },
   emptyRoomState: {
+    padding: '2rem 1rem',
+    textAlign: 'center',
+    color: '#94a3b8',
+    fontSize: '0.8rem',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: '1.5rem 0.5rem',
-    color: '#94a3b8',
-    fontSize: '0.75rem',
-    textAlign: 'center',
     gap: '0.5rem'
   },
   addSmallBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.2rem',
-    padding: '0.25rem 0.5rem',
-    borderRadius: '4px',
+    padding: '0.35rem 0.75rem',
+    borderRadius: '6px',
     border: '1px solid #cbd5e1',
     backgroundColor: '#ffffff',
     color: '#0891b2',
@@ -1603,7 +1948,7 @@ const styles = {
     backgroundColor: '#ffffff',
     borderRadius: '12px',
     width: '100%',
-    maxWidth: '650px',
+    maxWidth: '680px',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
     overflow: 'hidden'
   },
@@ -1665,6 +2010,12 @@ const styles = {
     border: '1px solid #cbd5e1',
     fontSize: '0.8rem',
     backgroundColor: '#ffffff'
+  },
+  conflictBox: {
+    padding: '0.75rem',
+    borderRadius: '8px',
+    backgroundColor: '#fff7ed',
+    border: '1px solid #ffedd5'
   },
   inputLabel: {
     display: 'block',

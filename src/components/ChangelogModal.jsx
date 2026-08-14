@@ -6,6 +6,21 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.73',
+      date: '14/08/2026',
+      title: 'Módulo Agenda (NexaCAL) - Encaixes, Horários Flexíveis, Idade Automática e Legenda',
+      description: 'Aprimoramentos de agendamento clínico com suporte a múltiplos pacientes no mesmo horário, alerta de encaixe e cálculo de idade.',
+      changes: [
+        { type: 'Agenda & Recepção', text: 'Consultório padrão definido como "Nenhum" ao criar novos agendamentos.' },
+        { type: 'Agenda & Recepção', text: 'Campos de Horário Inicial e Final livres (tipo time) para agendamento em qualquer horário.' },
+        { type: 'Agenda & Recepção', text: 'Suporte a múltiplos pacientes no mesmo horário para acomodar encaixes clínicos.' },
+        { type: 'Agenda & Recepção', text: 'Alerta inteligente de conflito de horário no modal com opção de confirmar como Encaixe ⚡.' },
+        { type: 'Agenda & Recepção', text: 'Data de nascimento no formulário com cálculo automático e dinâmico da idade do paciente.' },
+        { type: 'Agenda & Recepção', text: 'Destaque visual exclusivo para atendimentos de Encaixe com badge e cor âmbar.' },
+        { type: 'Agenda & Recepção', text: 'Barra de Legenda Explicativa de Cores & Status no topo do painel da agenda.' }
+      ]
+    },
+    {
       version: 'v3.3.71',
       date: '14/08/2026',
       title: 'Módulo NexaCAL (Agenda) - Ativação e Novas Experiências',

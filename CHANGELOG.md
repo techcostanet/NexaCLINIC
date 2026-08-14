@@ -1,3 +1,15 @@
+## [v3.3.73] - 14 de Agosto, 2026
+### Módulo NexaCAL (Agenda Clínica) - Encaixes, Horários Flexíveis, Idade Automática & Legenda
+- **Consultório Padrão "Nenhum":** Ao criar novos agendamentos, o campo Consultório/Sala agora inicia por padrão como "Nenhum", permitindo agendar sem sala fixa.
+- **Horário Inicial e Final Livres:** Substituição do seletor fixo por inputs do tipo `time` que permitem agendar em qualquer minuto (ex: 08:15 às 08:45), sugerindo término automático em +30min.
+- **Múltiplos Pacientes no Mesmo Horário (Encaixes):** Suporte nativo para acomodar vários pacientes no mesmo horário e médico, com visualização organizada na grade diária.
+- **Alerta de Conflito & Confirmação de Encaixe:** Detecção em tempo real de horários concorrentes no modal com aviso visual e botão para registrar como "Encaixe ⚡".
+- **Data de Nascimento & Cálculo Automático de Idade:** Preenchimento automático da data de nascimento para pacientes cadastrados e campo editável para pacientes avulsos, calculando dinamicamente a idade na tela.
+- **Destaque Visual para Encaixes:** Badge e estilização exclusiva em tom âmbar/laranja para fácil identificação de encaixes em todas as visões (Dia, Salas, Semana e Mês).
+- **Legenda Explicativa de Cores:** Barra superior informativa no painel detalhando o significado de cada cor de status e encaixes.
+
+---
+
 ## [v3.3.71] - 14 de Agosto, 2026
 ### Módulo NexaCAL (Agenda Clínica) - Ativação Multiusuário & 5 Melhorias de Experiência
 - **Painel de Indicadores de Recepção do Dia (KPIs):** Contadores em tempo real para Total Agendados, Confirmados, Aguardando na Recepção (Sala de Espera), Em Atendimento e Concluídos, com filtro rápido por status.
