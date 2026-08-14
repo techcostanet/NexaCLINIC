@@ -507,3 +507,222 @@ export default function SesmtDashboard({ currentUser }) {
     </div>
   );
 }
+
+function SECTOROR_LIST(options) {
+  return options.map(sec => (
+    <option key={sec} value={sec}>{sec === 'TODOS' ? 'Todos os Setores' : sec}</option>
+  ));
+}
+
+const styles = {
+  container: {
+    padding: '1.5rem',
+    maxWidth: '1300px',
+    margin: '0 auto',
+    fontFamily: 'Inter, system-ui, sans-serif'
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1.5rem',
+    flexWrap: 'wrap',
+    gap: '1rem'
+  },
+  headerTitleBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem'
+  },
+  headerIcon: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '12px',
+    backgroundColor: '#0891b2',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 4px 10px rgba(8, 145, 178, 0.25)'
+  },
+  title: {
+    fontSize: '1.5rem',
+    fontWeight: '800',
+    color: '#0f172a',
+    margin: 0
+  },
+  subtitle: {
+    fontSize: '0.85rem',
+    color: '#64748b',
+    margin: 0
+  },
+  tabContainer: {
+    display: 'flex',
+    gap: '0.5rem',
+    borderBottom: '2px solid #e2e8f0',
+    marginBottom: '1.5rem',
+    flexWrap: 'wrap'
+  },
+  tabButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.6rem 1rem',
+    border: 'none',
+    background: 'none',
+    fontSize: '0.9rem',
+    fontWeight: '600',
+    color: '#64748b',
+    cursor: 'pointer',
+    borderBottom: '2px solid transparent',
+    marginBottom: '-2px',
+    transition: 'all 0.2s'
+  },
+  tabActive: {
+    color: '#0891b2',
+    borderBottom: '2px solid #0891b2'
+  },
+  filterCard: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '1rem 1.25rem',
+    marginBottom: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+  },
+  filterRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    flexWrap: 'wrap'
+  },
+  filterLabelGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem'
+  },
+  filterTitle: {
+    fontSize: '0.85rem',
+    fontWeight: '700',
+    color: '#334155'
+  },
+  presetGroup: {
+    display: 'flex',
+    gap: '0.4rem',
+    flexWrap: 'wrap'
+  },
+  presetBtn: {
+    padding: '0.35rem 0.75rem',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: '#ffffff',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    color: '#475569',
+    cursor: 'pointer',
+    transition: 'all 0.15s'
+  },
+  presetBtnActive: {
+    backgroundColor: '#0891b2',
+    color: '#ffffff',
+    borderColor: '#0891b2'
+  },
+  secondaryFilterRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    flexWrap: 'wrap',
+    paddingTop: '0.5rem',
+    borderTop: '1px solid #f1f5f9'
+  },
+  customDateBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem'
+  },
+  filterField: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.35rem'
+  },
+  fieldLabel: {
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    color: '#64748b'
+  },
+  fieldInput: {
+    padding: '0.35rem 0.5rem',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.8rem',
+    color: '#0f172a',
+    backgroundColor: '#ffffff'
+  },
+  fieldSelect: {
+    padding: '0.35rem 0.6rem',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.8rem',
+    color: '#0f172a',
+    backgroundColor: '#ffffff',
+    cursor: 'pointer'
+  },
+  resetFilterBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    padding: '0.35rem 0.7rem',
+    borderRadius: '6px',
+    border: '1px solid #fecaca',
+    backgroundColor: '#fef2f2',
+    color: '#dc2626',
+    fontSize: '0.78rem',
+    fontWeight: '600',
+    cursor: 'pointer'
+  },
+  kpiGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '1rem',
+    marginBottom: '1.5rem'
+  },
+  kpiCard: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '1.25rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+  },
+  kpiHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '0.5rem'
+  },
+  kpiLabel: {
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    color: '#64748b',
+    textTransform: 'uppercase'
+  },
+  kpiValue: {
+    fontSize: '1.75rem',
+    fontWeight: '800',
+    color: '#0f172a',
+    margin: '0.25rem 0'
+  },
+  kpiSub: {
+    fontSize: '0.75rem',
+    color: '#94a3b8'
+  },
+  emptyChartBox: {
+    height: '250px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center'
+  }
+};

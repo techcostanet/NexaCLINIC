@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.69',
+      date: '14/08/2026',
+      title: 'Módulo SESMT - Correção de Estilização no Dashboard',
+      description: 'Correção do erro ReferenceError: styles is not defined ao acessar o painel do SESMT.',
+      changes: [
+        { type: 'Módulo SESMT', text: 'Restaurados os estilos e seletores de setor no Dashboard do SESMT, normalizando o acesso a todas as abas.' }
+      ]
+    },
+    {
       version: 'v3.3.68',
       date: '14/08/2026',
       title: 'Módulo SESMT - Cadastro Dinâmico de Equipamentos & Monitoramento de Validades',

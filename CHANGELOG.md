@@ -1,3 +1,9 @@
+## [v3.3.69] - 14 de Agosto, 2026
+### Módulo SESMT - Correção de Estilização no Dashboard
+- **Correção de Erro de Execução (`ReferenceError: styles is not defined`):** Restaurada a definição completa de estilos e funções auxiliares no `SesmtDashboard.jsx`, garantindo carregamento fluido de todas as 6 abas do módulo SESMT.
+
+---
+
 ## [v3.3.68] - 14 de Agosto, 2026
 ### Módulo SESMT - Cadastro Dinâmico de Equipamentos & Monitoramento de Validades
 - **Nova Aba de Cadastro de Equipamentos (`sesmt_equipment`):** Controle patrimonial completo de Extintores de Incêndio e Hidrantes, permitindo cadastrar, editar, inativar, excluir e gerenciar a localização física (setores), tipos de agentes extintores, capacidades e validades de carga e teste hidrostático.
