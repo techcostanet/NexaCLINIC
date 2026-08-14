@@ -1,3 +1,9 @@
+## [v3.3.65] - 14 de Agosto, 2026
+### Módulo SESMT - Seleção de Turno de Trabalho no Checklist de EPI
+- **Turno de Trabalho:** Adicionada a seleção de turno (`1º Turno (Manhã)`, `2º Turno (Tarde)` e `3º Turno (Noite)`) no formulário de Verificação Diária de EPI e Segurança, permitindo o registro separado das auditorias realizadas pela manhã e à tarde.
+
+---
+
 ## [v3.3.64] - 14 de Agosto, 2026
 ### Módulo SESMT - Correção de Contraste e Exibição dos Cabeçalhos
 - **Visibilidade dos Cabeçalhos:** Corrigida a sobreposição do estilo global CSS nas tags `<th>`, garantindo que os nomes das colunas da tabela de extintores e hidrantes apareçam claramente com fundo azul navy (`#154c79`) e texto branco em negrito.

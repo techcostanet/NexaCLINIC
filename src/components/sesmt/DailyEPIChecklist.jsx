@@ -13,6 +13,12 @@ const SECTORS = [
   'Sala Amarela'
 ];
 
+const SHIFTS = [
+  '1º Turno (Manhã)',
+  '2º Turno (Tarde)',
+  '3º Turno (Noite)'
+];
+
 const ITEMS = [
   { id: 'uso_epi', label: 'Uso adequado do EPI' },
   { id: 'higienizacao', label: 'Higienização das mãos' },
@@ -24,6 +30,7 @@ export default function DailyEPIChecklist() {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     time: new Date().toTimeString().substring(0, 5),
+    shift: SHIFTS[0],
     sector: SECTORS[0],
     enfermeiro: '',
     tecnicoSeguranca: '',
@@ -84,7 +91,7 @@ export default function DailyEPIChecklist() {
       )}
 
       <form onSubmit={handleSubmit} style={styles.form}>
-        <div style={styles.grid3}>
+        <div style={styles.grid4}>
           <div style={styles.formGroup}>
             <label style={styles.label}>Data</label>
             <input 
@@ -106,6 +113,19 @@ export default function DailyEPIChecklist() {
               style={styles.input}
               required 
             />
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Turno de Trabalho</label>
+            <select 
+              name="shift"
+              value={formData.shift}
+              onChange={handleChange}
+              style={styles.input}
+            >
+              {SHIFTS.map(shift => (
+                <option key={shift} value={shift}>{shift}</option>
+              ))}
+            </select>
           </div>
           <div style={styles.formGroup}>
             <label style={styles.label}>Setor</label>
@@ -252,6 +272,11 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1.5rem',
+  },
+  grid4: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '1rem',
   },
   grid3: {
     display: 'grid',

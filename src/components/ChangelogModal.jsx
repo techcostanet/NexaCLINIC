@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.65',
+      date: '14/08/2026',
+      title: 'Módulo SESMT - Seleção de Turno de Trabalho no Checklist de EPI',
+      description: 'Opção para selecionar o turno de trabalho (Manhã / Tarde / Noite) nas inspeções diárias.',
+      changes: [
+        { type: 'Módulo SESMT', text: 'Inclusão do seletor de Turno de Trabalho (1º Turno - Manhã, 2º Turno - Tarde, 3º Turno - Noite) no cabeçalho do formulário diário de EPI.' }
+      ]
+    },
+    {
       version: 'v3.3.64',
       date: '14/08/2026',
       title: 'Módulo SESMT - Correção de Exibição dos Cabeçalhos',
