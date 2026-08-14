@@ -594,3 +594,18 @@ export const updateAppointment = async (id, appointmentData) => {
     return { id, ...appointmentData };
   };
 
+export const deleteAppointment = async (id) => {
+    if (USE_MOCK) {
+      const data = localStorage.getItem('sistema_indicadores_appointments');
+      let list = data ? JSON.parse(data) : [];
+      list = list.filter(item => item.id !== id);
+      localStorage.setItem('sistema_indicadores_appointments', JSON.stringify(list));
+      return true;
+    }
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'appointments', id));
+    return true;
+  };
+
+

@@ -1,3 +1,14 @@
+## [v3.3.71] - 14 de Agosto, 2026
+### Módulo NexaCAL (Agenda Clínica) - Ativação Multiusuário & 5 Melhorias de Experiência
+- **Painel de Indicadores de Recepção do Dia (KPIs):** Contadores em tempo real para Total Agendados, Confirmados, Aguardando na Recepção (Sala de Espera), Em Atendimento e Concluídos, com filtro rápido por status.
+- **Disparo Real de Lembretes WhatsApp:** Integração direta com WhatsApp Web enviando mensagens personalizadas de confirmação de agendamento em 1 clique.
+- **Busca Inteligente & Auto-Complete de Pacientes:** Barra de busca em tempo real na agenda e campo com auto-complete por Nome, CPF ou Telefone no modal de agendamento.
+- **Reagendamento & Edição Completa:** Modal intuitivo para alterar data, horário, médico, procedimento ou sala, com validação inteligente de conflitos de horário.
+- **Visualização Multissalas & Atalho "Hoje":** Data dinâmica (data atual do sistema), atalho rápido para hoje e novo modo de exibição por salas/consultórios lado a lado.
+- **Segurança e Nuvem:** Regras de persistência em nuvem ativadas no `firestore.rules` com sincronização ultrarrápida para operação concorrente de múltiplos atendentes.
+
+---
+
 ## [v3.3.70] - 14 de Agosto, 2026
 ### Módulo de TI - Desvinculação de Regras Fixas de Perfis & Flexibilidade Total
 - **Remoção Definitiva de Sobrescrevimento de Papéis:** Eliminadas regras hardcoded que forçavam papéis fixos para usuárias (`anacg@nexa.com`, `jsoares@nexa.com`, etc.).

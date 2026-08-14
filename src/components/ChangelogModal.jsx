@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.71',
+      date: '14/08/2026',
+      title: 'Módulo NexaCAL (Agenda) - Ativação e Novas Experiências',
+      description: 'Upgrade completo da agenda clínica para operação simultânea de múltiplos atendentes com persistência rápida na nuvem.',
+      changes: [
+        { type: 'Agenda & Recepção', text: 'Cards de KPIs do dia (Total, Confirmados, Aguardando Recepção, Em Consulta e Concluídos).' },
+        { type: 'Agenda & Recepção', text: 'Disparo real de confirmações por WhatsApp Web em 1 clique.' },
+        { type: 'Agenda & Recepção', text: 'Busca inteligente de pacientes por Nome, CPF e Telefone com auto-complete no modal.' },
+        { type: 'Agenda & Recepção', text: 'Modal completo de edição e reagendamento com bloqueio inteligente de conflitos.' },
+        { type: 'Agenda & Recepção', text: 'Visualização por salas/consultórios lado a lado e atalho rápido para o dia de Hoje.' }
+      ]
+    },
+    {
       version: 'v3.3.70',
       date: '14/08/2026',
       title: 'Módulo de TI - Gestão Flexível de Perfis de Usuários',
