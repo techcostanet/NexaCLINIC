@@ -1,4 +1,4 @@
-## [v3.3.62] - 14 de Agosto, 2026
+## [v3.3.63] - 14 de Agosto, 2026
 ### Módulo SESMT - Ajuste de Colunas de Extintores
 - **Tabela de Extintores:** Atualizados os nomes e cabeçalhos de todas as colunas da inspeção de extintores (`N° Extintor`, `Tipo`, `Acesso e Visib.`, `Sinalização`, `Pino`, `Lacre / anel`, `Pressurização`, `Mangueira`, `Bico`, `Estado Físico`, `Validade` e `Assinatura`), com inclusão do campo de assinatura individual por extintor e novo visual com contraste navy blue.
 

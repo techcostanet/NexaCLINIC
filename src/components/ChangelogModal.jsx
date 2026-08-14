@@ -6,7 +6,7 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v3.3.62',
+      version: 'v3.3.63',
       date: '14/08/2026',
       title: 'Módulo SESMT - Ajuste de Colunas de Extintores',
       description: 'Padronização de todas as colunas da tabela de extintores e inclusão do campo de assinatura.',
