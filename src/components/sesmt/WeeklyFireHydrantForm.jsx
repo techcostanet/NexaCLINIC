@@ -270,6 +270,7 @@ const styles = {
     backgroundColor: '#115e59',
   },
   th: {
+    backgroundColor: '#115e59',
     padding: '0.75rem 1rem',
     textAlign: 'left',
     fontSize: '0.85rem',

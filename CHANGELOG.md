@@ -1,3 +1,9 @@
+## [v3.3.64] - 14 de Agosto, 2026
+### Módulo SESMT - Correção de Contraste e Exibição dos Cabeçalhos
+- **Visibilidade dos Cabeçalhos:** Corrigida a sobreposição do estilo global CSS nas tags `<th>`, garantindo que os nomes das colunas da tabela de extintores e hidrantes apareçam claramente com fundo azul navy (`#154c79`) e texto branco em negrito.
+
+---
+
 ## [v3.3.63] - 14 de Agosto, 2026
 ### Módulo SESMT - Ajuste de Colunas de Extintores
 - **Tabela de Extintores:** Atualizados os nomes e cabeçalhos de todas as colunas da inspeção de extintores (`N° Extintor`, `Tipo`, `Acesso e Visib.`, `Sinalização`, `Pino`, `Lacre / anel`, `Pressurização`, `Mangueira`, `Bico`, `Estado Físico`, `Validade` e `Assinatura`), com inclusão do campo de assinatura individual por extintor e novo visual com contraste navy blue.

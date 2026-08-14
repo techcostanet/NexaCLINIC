@@ -278,13 +278,14 @@ const styles = {
     backgroundColor: '#154c79',
   },
   th: {
+    backgroundColor: '#154c79',
     padding: '0.75rem 0.5rem',
     textAlign: 'center',
-    fontSize: '0.75rem',
+    fontSize: '0.78rem',
     fontWeight: '700',
     color: '#ffffff',
     borderRight: '1px solid rgba(255, 255, 255, 0.2)',
-    borderBottom: '1px solid #cbd5e1',
+    borderBottom: '1px solid #0f3d64',
     whiteSpace: 'nowrap'
   },
   tr: {

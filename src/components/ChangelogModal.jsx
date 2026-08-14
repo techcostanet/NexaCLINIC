@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.64',
+      date: '14/08/2026',
+      title: 'Módulo SESMT - Correção de Exibição dos Cabeçalhos',
+      description: 'Correção de estilo para visualização nítida dos nomes das colunas.',
+      changes: [
+        { type: 'Módulo SESMT', text: 'Correção da sobreposição do CSS global nos cabeçalhos das tabelas de extintores e hidrantes, garantindo texto branco nítido sobre fundo navy blue.' }
+      ]
+    },
+    {
       version: 'v3.3.63',
       date: '14/08/2026',
       title: 'Módulo SESMT - Ajuste de Colunas de Extintores',
