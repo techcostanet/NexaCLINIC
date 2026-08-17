@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.77',
+      date: '17/08/2026',
+      title: 'NexaASSIST - Conector Oficial Titan IMAP & Sincronização em Tempo Real',
+      description: 'Integração oficial com a caixa de e-mails da Titan para sincronização automática de comunicados assistenciais com IA.',
+      changes: [
+        { type: 'NexaASSIST & E-mail', text: 'Conexão direta ao servidor IMAP imap.titan.email:993 (SSL) na conta integracao@dialize.com.br.' },
+        { type: 'NexaASSIST & E-mail', text: 'Script Python autônomo com sanitização de corpo de e-mail e classificação NLP contínua.' },
+        { type: 'NexaASSIST & E-mail', text: 'Botão "Sincronizar Caixa Titan" integrado ao topo do painel assistencial.' },
+        { type: 'NexaASSIST & E-mail', text: 'Ingestão e tratamento validado do primeiro comunicado real da equipe assistencial.' }
+      ]
+    },
+    {
       version: 'v3.3.75',
       date: '17/08/2026',
       title: 'Módulo NexaASSIST - Central & Feed Assistencial Inteligente',

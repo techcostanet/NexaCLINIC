@@ -35,3 +35,6 @@ dist-ssr
 *.mp4
 *.m4a
 assistencia_transcricao.txt
+scratch/
+__pycache__/
+*.pyc

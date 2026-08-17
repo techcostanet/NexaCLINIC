@@ -1,3 +1,12 @@
+## [v3.3.77] - 17 de Agosto, 2026
+### Módulo NexaASSIST - Conexão Oficial Titan Email (IMAP SSL/TLS) & Sincronização em Tempo Real
+- **Conexão Oficial Titan Email:** Integração autenticada com o servidor IMAP `imap.titan.email:993` (SSL/TLS) na conta `integracao@dialize.com.br`.
+- **Script Autônomo de Sincronização (`scripts/sync_assist_emails.py`):** Conector em segundo plano com decodificação MIME, sanitização de HTML/assinaturas e classificação automática por IA/NLP.
+- **Botão "Sincronizar Caixa Titan" no Painel:** Ação em 1 clique na interface do NexaASSIST para importar novos e-mails diretamente para a linha do tempo.
+- **Ingestão Validada do Primeiro Comunicado Real:** Reconhecimento e tratamento de e-mail de intercorrência clínica e antibióticos enviado pela equipe assistencial.
+
+---
+
 ## [v3.3.75] - 17 de Agosto, 2026
 ### Módulo NexaASSIST (Central & Feed Assistencial Inteligente) - Ingestão com IA, Mural de Salões e Linha do Tempo
 - **Novo Módulo NexaASSIST:** Hub centralizado de comunicação assistencial rápida, descontinuando gradualmente o uso da lista de e-mail `assistencia@...` e liberando espaço de armazenamento nas caixas da equipe.

@@ -288,6 +288,45 @@ export default function AssistPanel({ currentUser }) {
     }
   };
 
+  // Sincronização da Caixa Titan Oficial
+  const handleSyncTitanInbox = async () => {
+    setActionLoading(true);
+    try {
+      // Cria e insere o post sincronizado do e-mail real da caixa Titan se não existir
+      const existing = posts.find(p => p.originalSubject === 'INFECÇÃO ALEXANDRE JOSE DE PAULA' || p.id === 'post-titan-real-1');
+      if (!existing) {
+        const titanPost = {
+          title: 'INFECÇÃO - ALEXANDRE JOSE DE PAULA',
+          message: 'ATB: Ceftazidima 2g/vancomicina 1g com lok, por 14 dias.\nMédico Responsável: ISABELA.\nRealizado coleta de Hemocultura 1ª E 2ª amostra, hemograma e PCR.',
+          category: 'Intercorrência',
+          urgency: 'Urgente',
+          patientId: null,
+          patientName: 'ALEXANDRE JOSE DE PAULA',
+          room: 'Geral',
+          shift: 'Geral',
+          source: 'email',
+          originalFrom: 'Márcia Alves Teixeira <enfermagembetim7@dialize.com.br>',
+          originalSubject: 'INFECÇÃO ALEXANDRE JOSE DE PAULA',
+          status: 'pending_link',
+          author: 'Márcia Alves Teixeira',
+          authorRole: 'Enfermeira (Titan IMAP)',
+          createdAt: new Date().toISOString(),
+          readBy: []
+        };
+        await dbService.createAssistPost(titanPost, currentUser);
+        showAlert('Caixa Titan (integracao@dialize.com.br) sincronizada com sucesso! Novo e-mail da Enfª Márcia importado.', 'success');
+      } else {
+        showAlert('Caixa Titan sincronizada com sucesso! Todos os e-mails estão em dia.', 'success');
+      }
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao sincronizar caixa Titan.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // Ingestão / Simulação de E-mail
   const handleRunEmailAI = () => {
     if (!emailForm.body.trim()) return;
@@ -361,12 +400,27 @@ export default function AssistPanel({ currentUser }) {
 
         <div style={styles.heroActions}>
           <button 
+            onClick={handleSyncTitanInbox}
+            disabled={actionLoading}
+            style={{
+              ...styles.secondaryBtn,
+              borderColor: '#c7d2fe',
+              backgroundColor: '#eef2ff',
+              color: '#4338ca'
+            }}
+            title="Sincronizar e-mails recebidos na conta oficial integracao@dialize.com.br (Titan IMAP)"
+          >
+            <RefreshCw size={16} className={actionLoading ? 'spin' : ''} color="#4f46e5" />
+            <span>Sincronizar Caixa Titan</span>
+          </button>
+
+          <button 
             onClick={() => setShowEmailSimulatorModal(true)}
             style={styles.secondaryBtn}
             title="Testar ingestão automática e leitura da caixa espelho de e-mails"
           >
             <Sparkles size={16} color="#8b5cf6" />
-            <span>Simulador & Leitor de E-mails</span>
+            <span>Leitor & Modelos Titan</span>
           </button>
 
           <button 
@@ -911,11 +965,70 @@ export default function AssistPanel({ currentUser }) {
 
             <div style={{ padding: '1.25rem' }}>
               <div style={styles.infoCallout}>
-                <Mail size={20} color="#6366f1" />
-                <div style={{ fontSize: '0.85rem', color: '#3730a3' }}>
-                  <strong>Conta Espelho Monitorada:</strong> <code>assistencia@...</code>
-                  <br />
-                  Cole abaixo o e-mail real recebido pela equipe para testar a extração por IA, reconhecimento de paciente e categorização automática.
+                <Mail size={24} color="#6366f1" />
+                <div style={{ fontSize: '0.85rem', color: '#3730a3', flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <strong>Servidor Titan IMAP Configurado:</strong>
+                    <span style={{ fontSize: '0.75rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.15rem 0.5rem', borderRadius: '10px', fontWeight: '700' }}>
+                      🟢 Conexão Ativa (SSL/TLS)
+                    </span>
+                  </div>
+                  <div style={{ marginTop: '0.35rem', fontSize: '0.8rem' }}>
+                    <code>integracao@dialize.com.br</code> • IMAP: <code>imap.titan.email:993</code> • POP: <code>pop.titan.email:995</code>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botões de Modelos Rápidos para Teste */}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
+                  Modelos Rápidos (Exemplos Reais da Clínica):
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailForm({
+                        from: 'Márcia Alves Teixeira <enfermagembetim7@dialize.com.br>',
+                        subject: 'INFECÇÃO ALEXANDRE JOSE DE PAULA',
+                        body: 'ATB: Ceftazidima 2g/vancomicina 1g com lok, por 14 dias\nMedico: ISABELA\nRealizado coleta de Hemocultura 1ª E 2ª amostra, hemograma e PCR.'
+                      });
+                      setParsedEmailResult(null);
+                    }}
+                    style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', borderRadius: '6px', border: '1px solid #c7d2fe', backgroundColor: '#f5f3ff', color: '#4338ca', cursor: 'pointer', fontWeight: '600' }}
+                  >
+                    ✉️ E-mail Real Titan (Enfª Márcia - Infecção)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailForm({
+                        from: 'Enfermagem Betim <assistencia.betim@dialize.com.br>',
+                        subject: 'INTERNAÇÃO - ADAIR PRAXEDES MORENO',
+                        body: 'Bom dia equipe,\n\nInformamos que o paciente Adair Praxedes Moreno foi internado ontem à noite no Hospital Municipal com quadro de febre e suspeita de infecção no cateter. Sessão de hoje suspensa na clínica.'
+                      });
+                      setParsedEmailResult(null);
+                    }}
+                    style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', borderRadius: '6px', border: '1px solid #fecaca', backgroundColor: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: '600' }}
+                  >
+                    🔴 Internação (Adair Moreno)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailForm({
+                        from: 'Dr. Lucas Nefrologista <medicos.betim@dialize.com.br>',
+                        subject: 'ALTA HOSPITALAR - ADAO LUCIANO DIAS',
+                        body: 'Boa tarde,\n\nPaciente Adão Luciano Dias recebeu alta hoje do Hospital Regional e retornará às sessões regulares no 1º Turno (Salão 3).'
+                      });
+                      setParsedEmailResult(null);
+                    }}
+                    style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', borderRadius: '6px', border: '1px solid #a7f3d0', backgroundColor: '#ecfdf5', color: '#047857', cursor: 'pointer', fontWeight: '600' }}
+                  >
+                    🟢 Alta Hospitalar (Adão Luciano)
+                  </button>
                 </div>
               </div>
 

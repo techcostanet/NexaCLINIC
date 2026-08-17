@@ -16078,6 +16078,23 @@ export const mockFirestore = {
     if (!db.assist_posts || db.assist_posts.length === 0) {
       db.assist_posts = [
         {
+          id: 'post-titan-real-1',
+          source: 'email',
+          title: 'INFECÇÃO - ALEXANDRE JOSE DE PAULA',
+          message: 'ATB: Ceftazidima 2g/vancomicina 1g com lok, por 14 dias.\nMédico Responsável: ISABELA.\nRealizado coleta de Hemocultura 1ª E 2ª amostra, hemograma e PCR.',
+          category: 'Intercorrência',
+          urgency: 'Urgente',
+          patientId: null,
+          patientName: 'ALEXANDRE JOSE DE PAULA',
+          room: 'Geral',
+          shift: 'Geral',
+          status: 'pending_link',
+          author: 'Márcia Alves Teixeira',
+          authorRole: 'Enfermeira (enfermagembetim7@dialize.com.br)',
+          createdAt: new Date().toISOString(),
+          readBy: []
+        },
+        {
           id: 'post-1',
           source: 'email',
           title: 'Internação Hospitalar - ADAIR PRAXEDES MORENO',

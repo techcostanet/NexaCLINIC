@@ -1,0 +1,23 @@
+[
+  {
+    "id": "email-2-1786975773",
+    "source": "email",
+    "originalFrom": "Mércia Alves Teixeira <enfermagembetim7@dialize.com.br>",
+    "originalSubject": "INFECÇÃO ALEXANDRE JOSE DE PAULA ",
+    "title": "INFECÇÃO ALEXANDRE JOSE DE PAULA ",
+    "message": "BOM DIA!\nInformo infecção\nData: 17/08/26\nAcesso: PERMCATH\nTAX: 37\nPaciente:  ALEXANDRE JOSE DE PAULA\nEsquema: 1º turno S/Q/S salaõ 03\nHigiene do paciente : paciente higienico\nMotivo: tremor, calafrio\nATB: Ceftazidima 2g/vancomicina 1g com lok, por  14 dias\nMedico: ISABELA\nRealizado coleta de Hemocultura 1ª E 2ª amostra , hemograma e PCR .\nMércia Alves Teixeira",
+    "category": "Intercorrência",
+    "urgency": "Urgente",
+    "patientId": null,
+    "patientName": null,
+    "room": "Geral",
+    "shift": "Geral",
+    "matchConfidence": 0.0,
+    "matchType": "none",
+    "status": "pending_link",
+    "author": "Mércia Alves Teixeira",
+    "authorRole": "Equipe Assistencial (E-mail Titan)",
+    "createdAt": "2026-08-17T11:09:33.816611",
+    "readBy": []
+  }
+]
