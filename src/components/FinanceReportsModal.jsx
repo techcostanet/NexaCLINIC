@@ -160,10 +160,11 @@ export default function FinanceReportsModal({
         break;
       }
       case 'DRE': {
-        const rec = receivableList.filter(r => filterByDateRange(r, 'dueDate') && filterByUnit(r) && r.status === 'Pago');
-        const des = payableList.filter(p => filterByDateRange(p, 'dueDate') && filterByUnit(p) && p.status === 'Pago');
-        const totRec = rec.reduce((acc, r) => acc + (parseFloat(r.amountPaid) || 0), 0);
-        const totDes = des.reduce((acc, p) => acc + (parseFloat(p.amountPaid) || 0), 0);
+        const isPaid = (item) => String(item?.status || '').toLowerCase() === 'pago' || String(item?.status || '').toLowerCase() === 'recebido' || ((parseFloat(item?.amountPaid) || 0) >= (parseFloat(item?.amount) || 0) && (parseFloat(item?.amount) || 0) > 0);
+        const rec = receivableList.filter(r => filterByDateRange(r, 'dueDate') && filterByUnit(r) && isPaid(r));
+        const des = payableList.filter(p => filterByDateRange(p, 'dueDate') && filterByUnit(p) && isPaid(p));
+        const totRec = rec.reduce((acc, r) => acc + (parseFloat(r.amountPaid || r.amount) || 0), 0);
+        const totDes = des.reduce((acc, p) => acc + (parseFloat(p.amountPaid || p.amount) || 0), 0);
         
         data = [
           { item: '1. Receita Bruta Realizada', valor: totRec },
@@ -206,8 +207,9 @@ export default function FinanceReportsModal({
         const d60 = new Date(); d60.setDate(d60.getDate() + 60); const str60 = d60.toISOString().substring(0, 10);
         const d90 = new Date(); d90.setDate(d90.getDate() + 90); const str90 = d90.toISOString().substring(0, 10);
         
-        let recs = receivableList.filter(r => r.dueDate >= todayStr && filterByUnit(r) && r.status !== 'Pago');
-        let pags = payableList.filter(p => p.dueDate >= todayStr && filterByUnit(p) && p.status !== 'Pago');
+        const isPaid = (item) => String(item?.status || '').toLowerCase() === 'pago' || String(item?.status || '').toLowerCase() === 'recebido' || ((parseFloat(item?.amountPaid) || 0) >= (parseFloat(item?.amount) || 0) && (parseFloat(item?.amount) || 0) > 0);
+        let recs = receivableList.filter(r => r.dueDate >= todayStr && filterByUnit(r) && !isPaid(r));
+        let pags = payableList.filter(p => p.dueDate >= todayStr && filterByUnit(p) && !isPaid(p));
         
         const calcPeriod = (start, end) => {
           const e = recs.filter(r => r.dueDate > start && r.dueDate <= end).reduce((a,c) => a + (parseFloat(c.amount)-parseFloat(c.amountPaid||0)), 0);
@@ -232,11 +234,12 @@ export default function FinanceReportsModal({
         break;
       }
       case 'TITULOS_PAGOS': {
+        const isPaid = (item) => String(item?.status || '').toLowerCase() === 'pago' || ((parseFloat(item?.amountPaid) || 0) >= (parseFloat(item?.amount) || 0) && (parseFloat(item?.amount) || 0) > 0);
         data = payableList
-          .filter(p => filterByDateRange(p, 'dueDate') && filterByUnit(p) && p.status === 'Pago')
+          .filter(p => filterByDateRange(p, 'dueDate') && filterByUnit(p) && isPaid(p))
           .map(p => ({
-            vencimento: p.dueDate, fornecedor: p.supplier, metodo: p.paymentMethod || 'PIX', valor: parseFloat(p.amountPaid)||0
-          })).sort((a,b) => a.vencimento.localeCompare(b.vencimento));
+            vencimento: p.dueDate, fornecedor: p.supplier, metodo: p.paymentMethod || 'PIX', valor: parseFloat(p.amountPaid || p.amount) || 0
+          })).sort((a,b) => (a.vencimento || '').localeCompare(b.vencimento || ''));
         cols = [
           { header: 'Vencimento', key: 'vencimento' },
           { header: 'Fornecedor', key: 'fornecedor' },

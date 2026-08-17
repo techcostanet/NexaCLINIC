@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.83',
+      date: '17/08/2026',
+      title: 'Módulo Financeiro - Normalização de Status de Pagamentos e Blindagem Case-Insensitive',
+      description: 'Correção e blindagem completa da leitura de status de contas a pagar/receber para tratar variações de caixa alta/baixa e refletir corretamente baixas bancárias.',
+      changes: [
+        { type: 'Financeiro', text: 'Normalização no Firestore: 124 lançamentos de débitos atualizados para o status padronizado "Pago".' },
+        { type: 'Financeiro', text: 'Blindagem de Cálculos: Implementada função helper isItemPaid insensível a maiúsculas/minúsculas para todos os quadros e relatórios.' },
+        { type: 'Painel Operacional', text: 'Correção de Títulos em Atraso e Próximos 7 Dias: Contas e débitos quitados não são mais classificados indevidamente como pendências.' },
+        { type: 'Relatórios Contábeis', text: 'DRE, Fluxo Diário e Previsão de Caixa alinhados com o extrato bancário realizado.' }
+      ]
+    },
+    {
       version: 'v3.3.81',
       date: '17/08/2026',
       title: 'Módulo Financeiro - Limpeza Integral da Base de Dados na Nuvem (Reset Geral)',

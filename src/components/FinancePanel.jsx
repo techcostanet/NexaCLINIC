@@ -849,13 +849,22 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     }
   };
 
+  // Helper function to check if item is paid/received (case-insensitive and amount-aware)
+  const isItemPaid = (item) => {
+    if (!item) return false;
+    const s = String(item.status || '').trim().toLowerCase();
+    const amt = parseFloat(item.amount) || 0;
+    const paid = parseFloat(item.amountPaid) || 0;
+    return s === 'pago' || s === 'recebido' || (amt > 0 && paid >= amt);
+  };
+
   // Calculate Metrics
-  const totalReceivables = receivableList.reduce((acc, curr) => acc + curr.amount, 0);
-  const receivedAmount = receivableList.filter(r => r.status === 'Pago').reduce((acc, curr) => acc + curr.amount, 0);
+  const totalReceivables = receivableList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const receivedAmount = receivableList.filter(r => isItemPaid(r)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
   const pendingReceivables = totalReceivables - receivedAmount;
 
-  const totalPayables = payableList.reduce((acc, curr) => acc + curr.amount, 0);
-  const paidAmount = payableList.filter(p => p.status === 'Pago').reduce((acc, curr) => acc + curr.amount, 0);
+  const totalPayables = payableList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const paidAmount = payableList.filter(p => isItemPaid(p)).reduce((acc, curr) => acc + (parseFloat(p.amountPaid || p.amount) || 0), 0);
   const pendingPayables = totalPayables - paidAmount;
 
   const ebitda = receivedAmount - paidAmount; // Operacional líquido realizado
@@ -864,7 +873,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   // Categorized expenses
   const categories = {};
   payableList.forEach(p => {
-    categories[p.category] = (categories[p.category] || 0) + p.amount;
+    categories[p.category] = (categories[p.category] || 0) + (parseFloat(p.amount) || 0);
   });
 
   // Operational Dashboard Calculations (Today & Overdue)
@@ -889,15 +898,15 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   });
   const totalPayablesSelectedMonth = payablesSelectedMonthList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   const paidPayablesSelectedMonth = payablesSelectedMonthList
-    .filter(p => p.status === 'Pago' || (parseFloat(p.amountPaid) || 0) >= (parseFloat(p.amount) || 0))
-    .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+    .filter(p => isItemPaid(p))
+    .reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
   const pendingPayablesSelectedMonth = totalPayablesSelectedMonth - paidPayablesSelectedMonth;
 
   // 2. Vencidos do Mês Anterior
   const overduePrevMonthList = payableList.filter(p => {
     const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
     const matchMonth = p.dueDate && p.dueDate.startsWith(prevMonthPrefix);
-    const isPaid = p.status === 'Pago' || ((parseFloat(p.amountPaid) || 0) >= (parseFloat(p.amount) || 0) && (parseFloat(p.amount) || 0) > 0);
+    const isPaid = isItemPaid(p);
     return matchUnit && matchMonth && !isPaid;
   });
   const totalOverduePrevMonth = overduePrevMonthList.reduce((acc, curr) => {
@@ -910,7 +919,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const overdueSelectedMonthList = payableList.filter(p => {
     const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
     const matchMonth = p.dueDate && p.dueDate.startsWith(selectedMonthPrefix);
-    const isPaid = p.status === 'Pago' || ((parseFloat(p.amountPaid) || 0) >= (parseFloat(p.amount) || 0) && (parseFloat(p.amount) || 0) > 0);
+    const isPaid = isItemPaid(p);
     const isOverdue = p.dueDate && p.dueDate < todayStr;
     return matchUnit && matchMonth && !isPaid && isOverdue;
   });
@@ -920,19 +929,19 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     return acc + Math.max(0, amt - paid);
   }, 0);
 
-  const payablesTodayOrOverdue = payableList.filter(p => p.status !== 'Pago' && (p.dueDate || '') <= todayStr);
+  const payablesTodayOrOverdue = payableList.filter(p => !isItemPaid(p) && (p.dueDate || '') <= todayStr);
   const totalPayablesTodayOrOverdue = payablesTodayOrOverdue.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   const receivablesToday = receivableList.filter(r => (r.dueDate || '') === todayStr);
   const totalReceivablesToday = receivablesToday.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
-  const receivedToday = receivablesToday.filter(r => r.status === 'Pago').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const receivedToday = receivablesToday.filter(r => isItemPaid(r)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
 
-  const totalReceivedRealized = receivableList.filter(r => r.status === 'Pago').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
-  const totalPaidRealized = payableList.filter(p => p.status === 'Pago').reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const totalReceivedRealized = receivableList.filter(r => isItemPaid(r)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
+  const totalPaidRealized = payableList.filter(p => isItemPaid(p)).reduce((acc, curr) => acc + (parseFloat(p.amountPaid || p.amount) || 0), 0);
   const realizedBalance = totalReceivedRealized - totalPaidRealized;
 
-  const overduePayables = payableList.filter(p => p.status !== 'Pago' && (p.dueDate || '') < todayStr);
-  const overdueReceivables = receivableList.filter(r => r.status !== 'Pago' && (r.dueDate || '') < todayStr);
+  const overduePayables = payableList.filter(p => !isItemPaid(p) && (p.dueDate || '') < todayStr);
+  const overdueReceivables = receivableList.filter(r => !isItemPaid(r) && (r.dueDate || '') < todayStr);
   const totalOverdueAmount = overduePayables.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0) + overdueReceivables.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
 
   // 7 Days & 15 Days Payables Calculations
@@ -947,10 +956,10 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   date15Days.setDate(date15Days.getDate() + 15);
   const date15DaysStr = date15Days.toISOString().substring(0, 10);
 
-  const payables7DaysList = payableList.filter(p => p.status !== 'Pago' && (p.dueDate || '') >= todayStr && (p.dueDate || '') <= date7DaysStr);
+  const payables7DaysList = payableList.filter(p => !isItemPaid(p) && (p.dueDate || '') >= todayStr && (p.dueDate || '') <= date7DaysStr);
   const totalPayables7Days = payables7DaysList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
-  const payables15DaysList = payableList.filter(p => p.status !== 'Pago' && (p.dueDate || '') >= todayStr && (p.dueDate || '') <= date15DaysStr);
+  const payables15DaysList = payableList.filter(p => !isItemPaid(p) && (p.dueDate || '') >= todayStr && (p.dueDate || '') <= date15DaysStr);
   const totalPayables15Days = payables15DaysList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   // Simulated APAC alert list
@@ -1612,14 +1621,14 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                                 <td style={{ ...styles.td, fontWeight: '700' }}>R$ {(parseFloat(p.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                                 <td style={styles.td}>
                                   <span style={{
-                                    backgroundColor: p.status === 'Pago' ? '#dcfce7' : (p.dueDate < todayStr ? '#fee2e2' : '#e0f2fe'),
-                                    color: p.status === 'Pago' ? '#166534' : (p.dueDate < todayStr ? '#991b1b' : '#0369a1'),
+                                    backgroundColor: isItemPaid(p) ? '#dcfce7' : (p.dueDate < todayStr ? '#fee2e2' : '#e0f2fe'),
+                                    color: isItemPaid(p) ? '#166534' : (p.dueDate < todayStr ? '#991b1b' : '#0369a1'),
                                     padding: '0.2rem 0.5rem',
                                     borderRadius: '4px',
                                     fontSize: '0.75rem',
                                     fontWeight: '700'
                                   }}>
-                                    {p.status === 'Pago' ? '✓ Pago' : (p.dueDate < todayStr ? '⚠️ Vencido' : '⏳ A Vencer')}
+                                    {isItemPaid(p) ? '✓ Pago' : (p.dueDate < todayStr ? '⚠️ Vencido' : '⏳ A Vencer')}
                                   </span>
                                 </td>
                               </tr>
@@ -1864,8 +1873,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                                 <td style={styles.td}>{r.invoiceNumber || '-'}</td>
                                 <td style={{ ...styles.td, fontWeight: '700' }}>R$ {(parseFloat(r.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                                 <td style={styles.td}>
-                                  <span style={{ backgroundColor: r.status === 'Pago' ? '#dcfce7' : '#fee2e2', color: r.status === 'Pago' ? '#166534' : '#991b1b', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
-                                    {r.status === 'Pago' ? '✓ Recebido' : '⏳ Pendente'}
+                                  <span style={{ backgroundColor: isItemPaid(r) ? '#dcfce7' : '#fee2e2', color: isItemPaid(r) ? '#166534' : '#991b1b', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
+                                    {isItemPaid(r) ? '✓ Recebido' : '⏳ Pendente'}
                                   </span>
                                 </td>
                               </tr>
@@ -1885,7 +1894,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                         <div>
                           <h4 style={{ margin: '0 0 0.5rem 0', color: '#166534' }}>🟢 Entradas Quitadas (Recebidas)</h4>
                           <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem' }}>
-                            {receivableList.filter(r => r.status === 'Pago').slice(0, 10).map(r => (
+                            {receivableList.filter(r => isItemPaid(r)).slice(0, 10).map(r => (
                               <li key={r.id} style={{ padding: '0.35rem 0', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
                                 <span>{r.client}</span>
                                 <strong>R$ {r.amount.toLocaleString('pt-BR')}</strong>
@@ -1896,7 +1905,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                         <div>
                           <h4 style={{ margin: '0 0 0.5rem 0', color: '#991b1b' }}>🔴 Saídas Quitadas (Pagas)</h4>
                           <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem' }}>
-                            {payableList.filter(p => p.status === 'Pago').slice(0, 10).map(p => (
+                            {payableList.filter(p => isItemPaid(p)).slice(0, 10).map(p => (
                               <li key={p.id} style={{ padding: '0.35rem 0', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
                                 <span>{p.supplier}</span>
                                 <strong>R$ {p.amount.toLocaleString('pt-BR')}</strong>
@@ -2239,7 +2248,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 {sortList(
                   payableList.filter(p => {
                     const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
-                    const matchFilter = payableFilter === 'Todos' || p.status === payableFilter || (payableFilter === 'Pendente' && p.status !== 'Pago');
+                    const isPaid = isItemPaid(p);
+                    const matchFilter = payableFilter === 'Todos' || (payableFilter === 'Pago' && isPaid) || (payableFilter === 'Pendente' && !isPaid) || p.status === payableFilter;
                     
                     let matchMonth = true;
                     if (payableMonthFilter && p.dueDate) {
@@ -2262,7 +2272,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   let statusColor = '#991b1b';
                   let statusLabel = p.status || 'ATRASADO';
 
-                  if (p.status === 'Pago' || dueBalance <= 0) {
+                  if (isItemPaid(p) || dueBalance <= 0) {
                     statusBg = '#d1fae5';
                     statusColor = '#065f46';
                     statusLabel = '✓ PAGO';
@@ -2270,7 +2280,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                     statusBg = '#fef3c7';
                     statusColor = '#92400e';
                     statusLabel = `PARCIAL (R$ ${paid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`;
-                  } else if (p.status === 'A_VENCER') {
+                  } else if (p.status === 'A_VENCER' || (p.dueDate && p.dueDate >= todayStr)) {
                     statusBg = '#e0f2fe';
                     statusColor = '#0369a1';
                     statusLabel = '⏳ A VENCER';
@@ -3351,7 +3361,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               </div>
               <h3 style={{ margin: '0.4rem 0 0 0', color: '#10b981', fontSize: '1.3rem', fontWeight: '800' }}>
                 R$ {payableList
-                  .filter(p => (selectedUnit === 'Todas' || p.unit === selectedUnit) && p.status === 'Pago')
+                  .filter(p => (selectedUnit === 'Todas' || p.unit === selectedUnit) && isItemPaid(p))
                   .reduce((acc, p) => acc + (parseFloat(p.amountPaid || p.amount) || 0), 0)
                   .toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </h3>
@@ -3499,7 +3509,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   const payablesCC = payableList.filter(p => (selectedUnit === 'Todas' || p.unit === selectedUnit) && p.costCenterId === cc.id);
                   const due = payablesCC.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
                   const realized = payablesCC
-                    .filter(p => p.status === 'Pago')
+                    .filter(p => isItemPaid(p))
                     .reduce((acc, p) => acc + (parseFloat(p.amountPaid || p.amount) || 0), 0);
 
                   const devio = realized - planned;

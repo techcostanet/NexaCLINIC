@@ -1,3 +1,14 @@
+## [v3.3.83] - 17 de Agosto, 2026
+### Módulo Financeiro - Normalização de Status de Pagamentos e Blindagem Case-Insensitive
+- **Normalização no Firestore:** Atualização de todos os 124 registros importados de débitos em `accounts_payable` para o status padronizado `'Pago'`.
+- **Blindagem Case-Insensitive:** Refatoração de todos os cálculos de KPIs operacionais, cards de vencimento e relatórios contábeis para verificação resiliente a maiúsculas/minúsculas (`isItemPaid`).
+- **Resolução de Indicadores Operacionais:**
+  - Card "Títulos em Atraso" e "Pagar Hoje": Contas quitadas e débitos passados não constam mais incorretamente como pendências/atrasos.
+  - Card "A Pagar (Próximos 7 Dias)": Desconsidera débitos já liquidados no dia da operação.
+- **Relatórios Contábeis Alinhados:** DRE, Fluxo de Caixa Diário e Previsão de Caixa agora reconhecem com exatidão todas as baixas bancárias efetuadas.
+
+---
+
 ## [v3.3.81] - 17 de Agosto, 2026
 ### Módulo Financeiro - Limpeza Integral da Base de Dados na Nuvem (Reset Geral)
 - **Limpeza em Nuvem no Firestore:** Exclusão em lote de 985 documentos legados das coleções `accounts_payable`, `accounts_receivable`, `debts`, `bank_statements`, `budget_plans` e `agreements`.
