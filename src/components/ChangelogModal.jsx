@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.0.4',
+      date: '17/08/2026',
+      title: 'Módulo Agenda (NexaCAL) - Feriados Nacionais do Brasil, Bloqueio de Ausências e Gestão de Grade & Cotas por Médico',
+      description: 'Implementação de feriados nacionais dinâmicos, fechamento de dias para ausências médicas e configuração completa de cotas mensais de Primeira Consulta e Retorno, dias da semana e turnos de atendimento por profissional.',
+      changes: [
+        { type: 'Feriados Nacionais', text: 'Cálculo Dinâmico de Feriados: Integração automática de feriados fixos e móveis brasileiros (Carnaval, Páscoa, Corpus Christi, Tiradentes, Consciência Negra, Natal, etc.) com badges em todas as 4 visões da agenda e alertas no agendamento.' },
+        { type: 'Bloqueio de Agenda', text: 'Fechamento de Dias e Ausências: Recurso para bloquear horários ou dias completos de médicos (férias, congressos, folgas, atestados) com verificação em tempo real de consultas já marcadas para remanejamento.' },
+        { type: 'Grade & Cotas', text: 'Configuração Individual por Médico: Definição de limites mensais de Primeira Consulta, Retorno e Procedimentos com barra de progresso, dias da semana ativos, turnos de atendimento, tempo médio de consulta e limite de encaixes.' },
+        { type: 'Validação Inteligente', text: 'Alertas Preventivos: Avisos automáticos no agendamento ao ultrapassar cotas mensais, agendar em feriados ou selecionar horários fora da grade do médico.' }
+      ]
+    },
+    {
       version: 'v4.0.2',
       date: '17/08/2026',
       title: 'Módulo Financeiro - Padrão de Rótulos Concisos (1 Palavra) e Vinculação Direta de Centro de Custo',

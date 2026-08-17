@@ -1,3 +1,21 @@
+## [v4.0.4] - 17 de Agosto, 2026
+### Módulo Agenda (NexaCAL) - Feriados Nacionais do Brasil, Bloqueio de Ausências e Gestão de Grade & Cotas por Médico
+- **Feriados Nacionais do Brasil Integrados:**
+  - Inclusão do motor de cálculo dinâmico para feriados fixos e móveis nacionais (Carnaval, Quarta-feira de Cinzas, Sexta-feira Santa, Páscoa, Tiradentes, Dia do Trabalho, Corpus Christi, Independência, N. Sra. Aparecida, Finados, Proclamação da República, Consciência Negra e Natal).
+  - Destaque visual em todas as visualizações (Diária com banner, Semanal com badges, Mensal com chips comemorativos).
+  - Alerta inteligente no modal de agendamento ao selecionar uma data de feriado nacional.
+- **Bloqueio de Agenda & Ausências Médicas:**
+  - Ferramenta para fechamento de dias ou períodos por solicitação do médico, férias, congressos, folgas ou atestados.
+  - Verificação em tempo real de pacientes com consultas marcadas no período bloqueado para remanejamento preventivo.
+  - Sinalização de slots bloqueados com cadeado na grade e botão direto para gerenciamento e desbloqueio.
+- **Configuração de Grade & Cotas por Médico:**
+  - Painel com definição de cotas mensais para Primeira Consulta, Retorno e Procedimentos com barra de progresso em tempo real.
+  - Grade semanal com ativação de dias da semana (Segunda a Domingo) e horários de atendimento da Manhã e Tarde.
+  - Parâmetros operacionais: tempo médio/duração da consulta (15m a 60m), limite de encaixes diários e consultório preferencial.
+  - Validações inteligentes: alertas automáticos no agendamento se a cota do mês foi atingida, se o médico não atende naquele dia da semana ou se possui bloqueio ativo.
+
+---
+
 ## [v4.0.2] - 17 de Agosto, 2026
 ### Módulo Financeiro - Padrão de Rótulos Concisos (1 Palavra) e Vinculação Direta de Centro de Custo
 - **Padrão de Rótulos de 1 Palavra / Termo Direto:**

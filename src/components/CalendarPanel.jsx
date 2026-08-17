@@ -3,9 +3,12 @@ import {
   Calendar as CalendarIcon, Clock, User, HeartPulse, Building2, Plus, 
   ChevronLeft, ChevronRight, CheckCircle2, AlertTriangle, MessageSquare, Check, X,
   Search, RefreshCw, Phone, Edit2, Trash2, ArrowRight, UserCheck, ShieldAlert, Sparkles,
-  Send, Users, Eye, Filter, Zap, Cake, HelpCircle
+  Send, Users, Eye, Filter, Zap, Cake, HelpCircle, Lock, Award, Sliders
 } from 'lucide-react';
 import { dbService } from '../firebase';
+import { isBrazilianHoliday, getBrazilianHolidays } from '../utils/brazilHolidays';
+import DoctorScheduleModal from './calendar/DoctorScheduleModal';
+import ScheduleBlockModal from './calendar/ScheduleBlockModal';
 
 export default function CalendarPanel({ currentUser }) {
   // Navigation & View Mode
@@ -16,6 +19,8 @@ export default function CalendarPanel({ currentUser }) {
   const [appointments, setAppointments] = useState([]);
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
+  const [doctorSchedules, setDoctorSchedules] = useState([]);
+  const [scheduleBlocks, setScheduleBlocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -26,8 +31,10 @@ export default function CalendarPanel({ currentUser }) {
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Modal State for Create & Edit
+  // Modals
   const [showModal, setShowModal] = useState(false);
+  const [showDoctorScheduleModal, setShowDoctorScheduleModal] = useState(false);
+  const [showScheduleBlockModal, setShowScheduleBlockModal] = useState(false);
   const [editingApt, setEditingApt] = useState(null);
   const [patientSearchInModal, setPatientSearchInModal] = useState('');
   
@@ -41,8 +48,8 @@ export default function CalendarPanel({ currentUser }) {
     date: new Date().toISOString().substring(0, 10),
     time: '09:00',
     endTime: '09:30',
-    type: 'Consulta Nefrologia',
-    room: 'Nenhum',
+    type: 'Primeira Consulta',
+    room: 'Consultório 1',
     status: 'Agendado',
     isEncaixe: false,
     notes: ''
@@ -55,7 +62,6 @@ export default function CalendarPanel({ currentUser }) {
   ];
 
   const availableRooms = [
-    'Nenhum',
     'Consultório 1',
     'Consultório 2',
     'Consultório 3',
@@ -99,14 +105,18 @@ export default function CalendarPanel({ currentUser }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [aptList, patList, userList] = await Promise.all([
+      const [aptList, patList, userList, schedList, blockList] = await Promise.all([
         dbService.getAppointments(),
         dbService.getPatients(),
-        dbService.getUsers()
+        dbService.getUsers(),
+        dbService.getDoctorSchedules(),
+        dbService.getScheduleBlocks()
       ]);
 
       setAppointments(aptList || []);
       setPatients(patList || []);
+      setDoctorSchedules(schedList || []);
+      setScheduleBlocks(blockList || []);
 
       // Filter clinical professionals / doctors
       const docList = (userList || []).filter(u => 
@@ -115,7 +125,8 @@ export default function CalendarPanel({ currentUser }) {
         u.role === 'clinical' || 
         (u.allowedSectors && u.allowedSectors.includes('medica'))
       );
-      setDoctors(docList.length > 0 ? docList : userList || []);
+      const finalDocs = docList.length > 0 ? docList : userList || [];
+      setDoctors(finalDocs);
 
       // Seed mock sample appointments if DB is brand new
       if ((!aptList || aptList.length === 0) && patList && patList.length > 0) {
@@ -127,13 +138,13 @@ export default function CalendarPanel({ currentUser }) {
             patientPhone: patList[0]?.phone || '31988887777',
             patientCpf: patList[0]?.cpf || '123.456.789-00',
             patientBirthDate: patList[0]?.birthDate || '1968-07-21',
-            doctorId: docList[0]?.uid || 'doc-1',
-            doctorName: docList[0]?.name || 'Dr. Carlos (Nefrologista)',
+            doctorId: finalDocs[0]?.uid || 'doc-1',
+            doctorName: finalDocs[0]?.name || 'Dr. Carlos (Nefrologista)',
             date: todayStr,
             time: '08:30',
             endTime: '09:00',
-            type: 'Consulta Nefrologia',
-            room: 'Nenhum',
+            type: 'Primeira Consulta',
+            room: 'Consultório 1',
             isEncaixe: false,
             status: 'Confirmado',
             whatsappStatus: 'Enviado',
@@ -145,17 +156,17 @@ export default function CalendarPanel({ currentUser }) {
             patientPhone: patList[1]?.phone || '31977776666',
             patientCpf: patList[1]?.cpf || '987.654.321-11',
             patientBirthDate: patList[1]?.birthDate || '1972-07-18',
-            doctorId: docList[0]?.uid || 'doc-1',
-            doctorName: docList[0]?.name || 'Dr. Carlos (Nefrologista)',
+            doctorId: finalDocs[0]?.uid || 'doc-1',
+            doctorName: finalDocs[0]?.name || 'Dr. Carlos (Nefrologista)',
             date: todayStr,
-            time: '08:30',
-            endTime: '09:00',
-            type: 'Consulta Nefrologia',
-            room: 'Nenhum',
-            isEncaixe: true,
+            time: '09:30',
+            endTime: '10:00',
+            type: 'Retorno',
+            room: 'Consultório 1',
+            isEncaixe: false,
             status: 'Aguardando',
             whatsappStatus: 'Confirmado',
-            notes: 'Encaixe de urgência para laudo'
+            notes: 'Reavaliação de exames pós-hemodiálise'
           }
         ];
         const createdList = [];
@@ -195,24 +206,33 @@ export default function CalendarPanel({ currentUser }) {
     setCurrentDate(new Date());
   };
 
+  // Helper to get doctor schedule duration
+  const getDoctorDuration = (docId) => {
+    const s = doctorSchedules.find(sc => sc.doctorId === docId);
+    return s?.slotDuration || 30;
+  };
+
   // Open Add Modal
   const handleOpenAddModal = (initialSlot = null) => {
     setEditingApt(null);
     setPatientSearchInModal('');
     const todayStr = currentDate.toISOString().substring(0, 10);
+    const initialDocId = initialSlot?.doctorId || (selectedDoctorId !== 'all' ? selectedDoctorId : doctors[0]?.uid || '');
+    const duration = getDoctorDuration(initialDocId);
     const initialTime = initialSlot?.time || '09:00';
+
     setAptForm({
       patientId: '',
       patientName: '',
       patientPhone: '',
       patientCpf: '',
       patientBirthDate: '',
-      doctorId: doctors[0]?.uid || '',
+      doctorId: initialDocId,
       date: initialSlot?.date || todayStr,
       time: initialTime,
-      endTime: initialSlot?.endTime || addMinutesToTime(initialTime, 30),
-      type: 'Consulta Nefrologia',
-      room: initialSlot?.room || 'Nenhum',
+      endTime: initialSlot?.endTime || addMinutesToTime(initialTime, duration),
+      type: 'Primeira Consulta',
+      room: initialSlot?.room || 'Consultório 1',
       status: 'Agendado',
       isEncaixe: Boolean(initialSlot?.isEncaixe),
       notes: ''
@@ -224,6 +244,8 @@ export default function CalendarPanel({ currentUser }) {
   const handleOpenEditModal = (apt) => {
     setEditingApt(apt);
     setPatientSearchInModal(apt.patientName || '');
+    const duration = getDoctorDuration(apt.doctorId);
+
     setAptForm({
       patientId: apt.patientId || '',
       patientName: apt.patientName || '',
@@ -233,9 +255,9 @@ export default function CalendarPanel({ currentUser }) {
       doctorId: apt.doctorId || '',
       date: apt.date || '',
       time: apt.time || '09:00',
-      endTime: apt.endTime || addMinutesToTime(apt.time || '09:00', 30),
-      type: apt.type || 'Consulta Nefrologia',
-      room: apt.room || 'Nenhum',
+      endTime: apt.endTime || addMinutesToTime(apt.time || '09:00', duration),
+      type: apt.type || 'Primeira Consulta',
+      room: apt.room || 'Consultório 1',
       status: apt.status || 'Agendado',
       isEncaixe: Boolean(apt.isEncaixe),
       notes: apt.notes || ''
@@ -254,6 +276,70 @@ export default function CalendarPanel({ currentUser }) {
       apt.status !== 'Cancelado'
     );
   }, [appointments, editingApt, aptForm.doctorId, aptForm.date, aptForm.time]);
+
+  // Check if chosen modal date is holiday
+  const modalDateHoliday = useMemo(() => {
+    return isBrazilianHoliday(aptForm.date);
+  }, [aptForm.date]);
+
+  // Check if chosen doctor is blocked on modal date
+  const modalDoctorBlock = useMemo(() => {
+    if (!aptForm.doctorId || !aptForm.date) return null;
+    return scheduleBlocks.find(b => 
+      (b.doctorId === 'all' || b.doctorId === aptForm.doctorId) &&
+      aptForm.date >= b.startDate && aptForm.date <= b.endDate
+    );
+  }, [scheduleBlocks, aptForm.doctorId, aptForm.date]);
+
+  // Check if doctor attends on that day of the week
+  const modalDoctorDayConfig = useMemo(() => {
+    if (!aptForm.doctorId || !aptForm.date) return null;
+    const sched = doctorSchedules.find(s => s.doctorId === aptForm.doctorId);
+    if (!sched) return null;
+
+    const parts = aptForm.date.split('-');
+    if (parts.length !== 3) return null;
+    const dayOfWeek = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getDay();
+    const isDayActive = (sched.availableDays || [1, 2, 3, 4, 5]).includes(dayOfWeek);
+
+    return {
+      isDayActive,
+      dayOfWeek,
+      schedule: sched
+    };
+  }, [doctorSchedules, aptForm.doctorId, aptForm.date]);
+
+  // Check doctor's monthly quotas
+  const modalDoctorQuotaCheck = useMemo(() => {
+    if (!aptForm.doctorId || !aptForm.date) return null;
+    const sched = doctorSchedules.find(s => s.doctorId === aptForm.doctorId);
+    const monthPrefix = aptForm.date.substring(0, 7);
+
+    const docMonthApts = appointments.filter(a => 
+      a.id !== editingApt?.id &&
+      a.doctorId === aptForm.doctorId && 
+      a.date && a.date.startsWith(monthPrefix) &&
+      a.status !== 'Cancelado'
+    );
+
+    const isFirstConsult = (aptForm.type || '').toLowerCase().includes('primeira');
+    const isReturn = (aptForm.type || '').toLowerCase().includes('retorno');
+
+    const firstCount = docMonthApts.filter(a => (a.type || '').toLowerCase().includes('primeira')).length;
+    const returnCount = docMonthApts.filter(a => (a.type || '').toLowerCase().includes('retorno')).length;
+
+    const firstLimit = sched?.monthlyFirstConsultLimit ?? 30;
+    const returnLimit = sched?.monthlyReturnLimit ?? 50;
+
+    return {
+      firstCount,
+      firstLimit,
+      firstExceeded: isFirstConsult && firstCount >= firstLimit,
+      returnCount,
+      returnLimit,
+      returnExceeded: isReturn && returnCount >= returnLimit
+    };
+  }, [doctorSchedules, appointments, editingApt, aptForm.doctorId, aptForm.date, aptForm.type]);
 
   // Save Appointment (Create or Edit)
   const handleSaveAppointment = async (e) => {
@@ -297,9 +383,9 @@ export default function CalendarPanel({ currentUser }) {
       doctorName: docName,
       date: aptForm.date,
       time: aptForm.time,
-      endTime: aptForm.endTime || addMinutesToTime(aptForm.time, 30),
+      endTime: aptForm.endTime || addMinutesToTime(aptForm.time, getDoctorDuration(aptForm.doctorId)),
       type: aptForm.type,
-      room: aptForm.room || 'Nenhum',
+      room: aptForm.room || 'Consultório 1',
       status: aptForm.status || 'Agendado',
       isEncaixe: finalIsEncaixe,
       whatsappStatus: editingApt?.whatsappStatus || 'Pendente',
@@ -310,7 +396,6 @@ export default function CalendarPanel({ currentUser }) {
     setActionLoading(true);
     try {
       if (editingApt) {
-        // Optimistic update
         setAppointments(prev => prev.map(a => a.id === editingApt.id ? { ...a, ...appointmentPayload } : a));
         await dbService.updateAppointment(editingApt.id, appointmentPayload);
         showAlert(`Agendamento de "${patName}" atualizado com sucesso!`);
@@ -332,12 +417,11 @@ export default function CalendarPanel({ currentUser }) {
 
   // Quick Status Update
   const handleUpdateStatus = async (aptId, newStatus) => {
-    // Optimistic UI update
     setAppointments(prev => prev.map(a => a.id === aptId ? { ...a, status: newStatus } : a));
     try {
       await dbService.updateAppointment(aptId, { status: newStatus });
       if (newStatus === 'Aguardando') {
-        showAlert('Paciente registrado na Sala de Espera / Recepção!', 'success');
+        showAlert('Paciente registrado na Recepção!', 'success');
       } else if (newStatus === 'Em Consulta') {
         showAlert('Atendimento clínico iniciado!', 'success');
       } else if (newStatus === 'Finalizado') {
@@ -361,14 +445,12 @@ export default function CalendarPanel({ currentUser }) {
     const encaixeText = apt.isEncaixe ? ' *(Encaixe)*' : '';
     const textMsg = `Olá *${apt.patientName}*! 👋\nConfirmamos seu agendamento${encaixeText} de *${apt.type}* com *${apt.doctorName}* na clínica *NexAi* para o dia *${dateFormatted}* das *${timeRange}*${roomInfo}.\n\nPor favor, responda *SIM* para confirmar ou nos avise se precisar reagendar.`;
     
-    // Open WhatsApp Web/API
     const waUrl = rawPhone.length >= 10 
       ? `https://wa.me/55${rawPhone}?text=${encodeURIComponent(textMsg)}`
       : `https://wa.me/?text=${encodeURIComponent(textMsg)}`;
     
     window.open(waUrl, '_blank');
 
-    // Update status to 'Enviado' in Firestore
     try {
       await dbService.updateAppointment(apt.id, { whatsappStatus: 'Enviado' });
       setAppointments(prev => prev.map(a => a.id === apt.id ? { ...a, whatsappStatus: 'Enviado' } : a));
@@ -398,13 +480,24 @@ export default function CalendarPanel({ currentUser }) {
     return currentDate.toISOString().substring(0, 10);
   }, [currentDate]);
 
+  // Brazilian holiday for current date
+  const currentHoliday = useMemo(() => {
+    return isBrazilianHoliday(formattedCurrentDate);
+  }, [formattedCurrentDate]);
+
+  // Active blocks for current date and current doctor filter
+  const currentDayBlocks = useMemo(() => {
+    return scheduleBlocks.filter(b => 
+      formattedCurrentDate >= b.startDate && 
+      formattedCurrentDate <= b.endDate &&
+      (selectedDoctorId === 'all' || b.doctorId === 'all' || b.doctorId === selectedDoctorId)
+    );
+  }, [scheduleBlocks, formattedCurrentDate, selectedDoctorId]);
+
   const filteredAppointments = useMemo(() => {
     return appointments.filter(apt => {
-      // Doctor filter
       if (selectedDoctorId !== 'all' && apt.doctorId !== selectedDoctorId) return false;
-      // Room filter
       if (selectedRoom !== 'all' && (apt.room || 'Nenhum') !== selectedRoom) return false;
-      // Status filter
       if (selectedStatusFilter !== 'all') {
         if (selectedStatusFilter === 'Encaixe') {
           if (!apt.isEncaixe) return false;
@@ -412,7 +505,6 @@ export default function CalendarPanel({ currentUser }) {
           return false;
         }
       }
-      // Search term
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase();
         const matchName = (apt.patientName || '').toLowerCase().includes(term);
@@ -441,68 +533,89 @@ export default function CalendarPanel({ currentUser }) {
     return { total, waiting, inProgress, finished, confirmed, encaixes };
   }, [dayAppointments]);
 
-  // Dynamic Time Slots for Day View (Includes standard slots + any custom appointment times)
+  // Dynamic Time Slots for Day View
   const dynamicTimeSlots = useMemo(() => {
     const aptTimes = dayAppointments.map(a => a.time).filter(Boolean);
-    const combined = Array.from(new Set([...defaultTimeSlots, ...aptTimes])).sort();
-    return combined;
+    return Array.from(new Set([...defaultTimeSlots, ...aptTimes])).sort();
   }, [dayAppointments, defaultTimeSlots]);
 
-  // Filtered Patients inside modal search
+  // Filtered patients for autocomplete modal
   const modalFilteredPatients = useMemo(() => {
-    if (!patientSearchInModal.trim()) return patients.slice(0, 30);
+    if (!patientSearchInModal.trim()) return [];
     const term = patientSearchInModal.toLowerCase();
     return patients.filter(p => 
-      (p.name || '').toLowerCase().includes(term) ||
+      (p.name || '').toLowerCase().includes(term) || 
       (p.cpf || '').includes(term) ||
       (p.phone || '').includes(term)
-    ).slice(0, 30);
+    ).slice(0, 6);
   }, [patients, patientSearchInModal]);
 
-  // Calculated Age for Modal Display
   const currentModalPatientAge = useMemo(() => {
     return calculateAge(aptForm.patientBirthDate);
   }, [aptForm.patientBirthDate]);
 
-  // ----------------------------------------------------
-  // RENDER VIEWS
-  // ----------------------------------------------------
+  // =========================================================================
+  // VIEW RENDERERS
+  // =========================================================================
 
-  // 1. Daily Timeline View (Support for Multi-Patient and Encaixes at same slot)
+  // 1. Day View (Timeline Table)
   const renderDayView = () => {
     return (
-      <div style={styles.gridContainer}>
-        <table style={styles.calendarTable}>
+      <div style={styles.tableWrapper}>
+        <table style={styles.table}>
           <thead>
             <tr>
-              <th style={{ width: '100px', textAlign: 'center' }}>Horário</th>
-              <th style={{ width: '32%' }}>Paciente & Idade</th>
-              <th style={{ width: '22%' }}>Profissional & Sala</th>
-              <th style={{ width: '14%' }}>WhatsApp</th>
-              <th style={{ width: '14%' }}>Status</th>
-              <th style={{ width: '18%', textAlign: 'center' }}>Ações de Recepção</th>
+              <th style={{ ...styles.th, width: '130px', textAlign: 'center' }}>Horário</th>
+              <th style={styles.th}>Paciente</th>
+              <th style={styles.th}>Médico</th>
+              <th style={styles.th}>WhatsApp</th>
+              <th style={styles.th}>Status</th>
+              <th style={{ ...styles.th, width: '170px', textAlign: 'center' }}>Ações</th>
             </tr>
           </thead>
           <tbody>
             {dynamicTimeSlots.map(time => {
               const aptsAtThisTime = dayAppointments.filter(a => a.time === time);
+              
+              // Check if this time slot falls into any block
+              const isSlotBlocked = currentDayBlocks.some(b => {
+                if (b.period === 'Dia Inteiro') return true;
+                if (b.period === 'Manhã') return time < '12:00';
+                if (b.period === 'Tarde') return time >= '12:00';
+                if (b.period === 'Horário') return time >= (b.startTime || '00:00') && time <= (b.endTime || '23:59');
+                return false;
+              });
 
               if (aptsAtThisTime.length === 0) {
                 return (
-                  <tr key={time} style={{ borderBottom: '1px solid #f1f5f9', minHeight: '48px' }}>
-                    <td style={{ fontWeight: '800', color: '#0891b2', textAlign: 'center', backgroundColor: '#fafbfc' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
-                        <Clock size={13} />
-                        <span>{time}</span>
+                  <tr key={time} style={{ ...styles.trEmpty, backgroundColor: isSlotBlocked ? '#fef2f2' : '#ffffff' }}>
+                    <td style={styles.tdTime}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.2rem' }}>
+                        <Clock size={13} color={isSlotBlocked ? '#dc2626' : '#94a3b8'} />
+                        <span style={{ fontWeight: '700', fontSize: '0.88rem', color: isSlotBlocked ? '#dc2626' : '#64748b' }}>{time}</span>
                       </div>
                     </td>
-                    <td colSpan="5" style={{ padding: '0.35rem 0.75rem' }}>
-                      <button 
-                        onClick={() => handleOpenAddModal({ time, date: formattedCurrentDate })} 
-                        style={styles.emptySlotBtn}
-                      >
-                        <Plus size={13} /> Horário Livre — Clique para Agendar
-                      </button>
+                    <td colSpan={5} style={styles.tdEmptySlot}>
+                      {isSlotBlocked ? (
+                        <div style={styles.blockedSlotBanner}>
+                          <Lock size={13} color="#dc2626" />
+                          <span>Horário Bloqueado / Indisponível</span>
+                          <button 
+                            type="button"
+                            onClick={() => setShowScheduleBlockModal(true)} 
+                            style={styles.manageBlockSmallBtn}
+                          >
+                            Gerenciar
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => handleOpenAddModal({ time, date: formattedCurrentDate })} 
+                          style={styles.emptySlotBtn}
+                        >
+                          <Plus size={13} /> Horário Livre — Clique para Agendar
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -544,15 +657,7 @@ export default function CalendarPanel({ currentUser }) {
                                 <span style={{ fontSize: '0.7rem', color: '#64748b' }}>até {apt.endTime}</span>
                               )}
                               {isMultiple && (
-                                <span style={{ 
-                                  fontSize: '0.65rem', 
-                                  backgroundColor: '#ea580c', 
-                                  color: '#fff', 
-                                  padding: '0.1rem 0.4rem', 
-                                  borderRadius: '9999px', 
-                                  fontWeight: '800',
-                                  marginTop: '0.2rem'
-                                }}>
+                                <span style={styles.multipleBadge}>
                                   {aptsAtThisTime.length} pacientes
                                 </span>
                               )}
@@ -580,7 +685,9 @@ export default function CalendarPanel({ currentUser }) {
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#64748b', flexWrap: 'wrap' }}>
-                              <span style={{ fontWeight: '600', color: '#0891b2' }}>{apt.type}</span>
+                              <span style={{ fontWeight: '700', color: apt.type?.includes('Primeira') ? '#0891b2' : '#10b981' }}>
+                                {apt.type}
+                              </span>
                               {patAge && (
                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', color: '#475569', backgroundColor: '#f1f5f9', padding: '0.1rem 0.35rem', borderRadius: '4px' }}>
                                   <Cake size={11} color="#64748b" /> {patAge}
@@ -602,7 +709,7 @@ export default function CalendarPanel({ currentUser }) {
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontWeight: '700', fontSize: '0.85rem', color: '#334155' }}>{apt.doctorName}</span>
                             <span style={{ fontSize: '0.75rem', color: apt.room === 'Nenhum' ? '#94a3b8' : '#64748b', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
-                              <Building2 size={12} /> {apt.room === 'Nenhum' ? 'Sem sala definida' : apt.room}
+                              <Building2 size={12} /> {apt.room}
                             </span>
                           </div>
                         </td>
@@ -706,12 +813,12 @@ export default function CalendarPanel({ currentUser }) {
     return (
       <div style={styles.roomsContainer}>
         {availableRooms.map(roomName => {
-          const roomApts = dayAppointments.filter(a => (a.room || 'Nenhum') === roomName).sort((a,b) => a.time.localeCompare(b.time));
+          const roomApts = dayAppointments.filter(a => (a.room || 'Consultório 1') === roomName).sort((a,b) => a.time.localeCompare(b.time));
           return (
             <div key={roomName} style={styles.roomCard}>
               <div style={styles.roomCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Building2 size={16} color={roomName === 'Nenhum' ? '#94a3b8' : '#0891b2'} />
+                  <Building2 size={16} color="#0891b2" />
                   <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{roomName}</strong>
                 </div>
                 <span style={styles.roomCountBadge}>{roomApts.length}</span>
@@ -762,39 +869,53 @@ export default function CalendarPanel({ currentUser }) {
   // 3. Weekly Grid View
   const renderWeekView = () => {
     const startOfWeek = new Date(currentDate);
-    const dayOfWeek = startOfWeek.getDay();
-    startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+    const dayIndex = startOfWeek.getDay();
+    startOfWeek.setDate(startOfWeek.getDate() - dayIndex);
 
-    const days = [];
+    const weekDays = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(startOfWeek);
       d.setDate(d.getDate() + i);
-      days.push(d);
+      weekDays.push(d);
     }
 
     return (
-      <div style={styles.weekGrid}>
-        {days.map(day => {
-          const formatted = day.toISOString().substring(0, 10);
+      <div style={styles.weekContainer}>
+        {weekDays.map(dayObj => {
+          const formatted = dayObj.toISOString().substring(0, 10);
           const dayApts = filteredAppointments.filter(a => a.date === formatted).sort((a,b) => a.time.localeCompare(b.time));
-          const isToday = new Date().toDateString() === day.toDateString();
+          const isToday = new Date().toDateString() === dayObj.toDateString();
+          const dayHoliday = isBrazilianHoliday(formatted);
 
           return (
-            <div key={formatted} style={{ ...styles.weekColumn, backgroundColor: isToday ? '#f0fdfa' : '#ffffff' }}>
-              <div style={{ ...styles.weekHeader, backgroundColor: isToday ? '#ccfbf1' : '#f8fafc', borderBottomColor: isToday ? '#0891b2' : '#e2e8f0' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: isToday ? '#0f766e' : '#64748b' }}>
-                  {day.toLocaleDateString('pt-BR', { weekday: 'short' })}
+            <div key={formatted} style={{ ...styles.weekColumn, backgroundColor: isToday ? '#f0fdfa' : '#ffffff', borderColor: isToday ? '#0891b2' : '#e2e8f0' }}>
+              <div style={{ ...styles.weekColHeader, backgroundColor: isToday ? '#e0f2fe' : '#f8fafc' }}>
+                <strong style={{ fontSize: '0.85rem', color: '#0f172a' }}>
+                  {dayObj.toLocaleDateString('pt-BR', { weekday: 'short' })}
+                </strong>
+                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '700' }}>
+                  {dayObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                 </span>
-                <strong style={{ fontSize: '1.25rem', display: 'block', color: '#0f172a' }}>{day.getDate()}</strong>
+                {dayHoliday.isHoliday && (
+                  <span style={styles.holidayBadgeMini} title={`Feriado: ${dayHoliday.name}`}>
+                    🇧🇷 {dayHoliday.name}
+                  </span>
+                )}
+                <span style={styles.weekCountBadge}>{dayApts.length}</span>
               </div>
-              <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', minHeight: '380px' }}>
+
+              <div style={styles.weekColBody}>
                 {dayApts.length === 0 ? (
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', marginTop: '1.5rem' }}>Sem consultas</span>
+                  <div style={styles.emptyWeekState}>
+                    <button onClick={() => handleOpenAddModal({ date: formatted })} style={styles.addSmallBtn}>
+                      <Plus size={11} /> Agendar
+                    </button>
+                  </div>
                 ) : (
                   dayApts.map(apt => (
                     <div 
                       key={apt.id} 
-                      onClick={() => handleOpenEditModal(apt)} 
+                      onClick={() => handleOpenEditModal(apt)}
                       style={{ 
                         ...styles.weekAptCard, 
                         ...(apt.isEncaixe ? { borderLeft: '3px solid #f97316', backgroundColor: '#fffbeb' } : {}) 
@@ -804,7 +925,7 @@ export default function CalendarPanel({ currentUser }) {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#0891b2' }}>{apt.time}</span>
                         {apt.isEncaixe && <span style={styles.encaixeBadgeSmall}>⚡ Encaixe</span>}
-                        <span style={{ fontSize: '0.65rem', fontWeight: '700', color: '#64748b' }}>{apt.room || 'Nenhum'}</span>
+                        <span style={{ fontSize: '0.65rem', fontWeight: '700', color: '#64748b' }}>{apt.room}</span>
                       </div>
                       <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#0f172a', margin: '0.1rem 0' }}>{apt.patientName}</div>
                       <div style={{ fontSize: '0.7rem', color: '#475569' }}>{apt.doctorName}</div>
@@ -843,6 +964,7 @@ export default function CalendarPanel({ currentUser }) {
           const dayApts = filteredAppointments.filter(a => a.date === formatted);
           const encaixesCount = dayApts.filter(a => a.isEncaixe).length;
           const isToday = new Date().toDateString() === cell.toDateString();
+          const dayHoliday = isBrazilianHoliday(formatted);
 
           return (
             <div 
@@ -851,13 +973,31 @@ export default function CalendarPanel({ currentUser }) {
                 setCurrentDate(cell);
                 setViewMode('day');
               }}
-              style={{ ...styles.monthCell, backgroundColor: isToday ? '#f0fdfa' : '#ffffff', borderColor: isToday ? '#0891b2' : '#e2e8f0' }}
+              style={{ 
+                ...styles.monthCell, 
+                backgroundColor: isToday ? '#f0fdfa' : dayHoliday.isHoliday ? '#fefce8' : '#ffffff', 
+                borderColor: isToday ? '#0891b2' : dayHoliday.isHoliday ? '#fef08a' : '#e2e8f0' 
+              }}
             >
-              <span style={{ fontSize: '0.85rem', fontWeight: '800', color: isToday ? '#0891b2' : '#334155' }}>
-                {cell.getDate()}
-              </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: '800', color: isToday ? '#0891b2' : '#334155' }}>
+                  {cell.getDate()}
+                </span>
+                {dayHoliday.isHoliday && (
+                  <span style={styles.holidayBadgeMicro} title={dayHoliday.name}>
+                    🇧🇷
+                  </span>
+                )}
+              </div>
+
+              {dayHoliday.isHoliday && (
+                <div style={styles.monthHolidayName} title={dayHoliday.name}>
+                  {dayHoliday.name}
+                </div>
+              )}
+
               {dayApts.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.25rem' }}>
                   <div style={styles.monthAptBadge}>
                     {dayApts.length} {dayApts.length === 1 ? 'consulta' : 'consultas'}
                   </div>
@@ -885,11 +1025,29 @@ export default function CalendarPanel({ currentUser }) {
           </div>
           <div>
             <h1 style={styles.title}>NexaCAL — Gestão de Agenda & Consultas</h1>
-            <p style={styles.subtitle}>Painel multissala em tempo real com gestão de múltiplos pacientes, encaixes, horários flexíveis e WhatsApp.</p>
+            <p style={styles.subtitle}>Painel multissala com feriados nacionais, bloqueio de ausências, WhatsApp e cotas por médico.</p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button 
+            onClick={() => setShowDoctorScheduleModal(true)} 
+            className="btn btn-secondary" 
+            style={styles.configBtn} 
+            title="Configurar cotas mensais e grade de cada médico"
+          >
+            <Sliders size={15} />
+            <span>Configurar Grade</span>
+          </button>
+          <button 
+            onClick={() => setShowScheduleBlockModal(true)} 
+            className="btn btn-secondary" 
+            style={styles.blockBtn} 
+            title="Bloquear dia ou período para ausências / congressos / férias"
+          >
+            <Lock size={15} />
+            <span>Bloquear Dia</span>
+          </button>
           <button onClick={fetchData} className="btn btn-secondary" style={styles.refreshBtn} title="Atualizar dados na nuvem">
             <RefreshCw size={15} className={loading ? 'spin' : ''} />
             <span>Atualizar</span>
@@ -910,6 +1068,47 @@ export default function CalendarPanel({ currentUser }) {
         }}>
           {message.type === 'danger' ? <AlertTriangle size={18} /> : <CheckCircle2 size={18} />}
           <span>{message.text}</span>
+        </div>
+      )}
+
+      {/* 🇧🇷 BANNER DE FERIADO NACIONAL (se o dia atual for feriado) */}
+      {currentHoliday.isHoliday && (
+        <div style={styles.holidayBanner}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '1.3rem' }}>🇧🇷</span>
+            <div>
+              <strong style={{ fontSize: '0.9rem', color: '#854d0e' }}>
+                Feriado Nacional: {currentHoliday.name}
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: '#a16207', marginLeft: '0.5rem' }}>
+                ({currentHoliday.type})
+              </span>
+            </div>
+          </div>
+          <span style={styles.holidayTag}>Data Comemorativa</span>
+        </div>
+      )}
+
+      {/* 🔒 BANNER DE BLOQUEIO DE MÉDICO (se houver bloqueio no dia selecionado) */}
+      {currentDayBlocks.length > 0 && (
+        <div style={styles.doctorBlockBanner}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Lock size={18} color="#dc2626" />
+            <div>
+              <strong style={{ fontSize: '0.88rem', color: '#991b1b' }}>
+                Bloqueio de Agenda Ativo ({currentDayBlocks.length}):
+              </strong>
+              <span style={{ fontSize: '0.78rem', color: '#7f1d1d', marginLeft: '0.4rem' }}>
+                {currentDayBlocks.map(b => `${b.doctorName} (${b.reason} - ${b.period})`).join(' | ')}
+              </span>
+            </div>
+          </div>
+          <button 
+            onClick={() => setShowScheduleBlockModal(true)} 
+            style={styles.manageBlockBtn}
+          >
+            Gerenciar Bloqueios
+          </button>
         </div>
       )}
 
@@ -1034,13 +1233,20 @@ export default function CalendarPanel({ currentUser }) {
         <div style={styles.dateNavigator}>
           <button onClick={() => handleNavigateDate(-1)} style={styles.navArrowBtn}><ChevronLeft size={16} /></button>
           <button onClick={handleGoToToday} style={styles.todayBtn}>Hoje</button>
-          <strong style={styles.currentDateLabel}>
-            {viewMode === 'day' || viewMode === 'rooms' 
-              ? currentDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' })
-              : viewMode === 'week'
-              ? `Semana de ${currentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}`
-              : currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-          </strong>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <strong style={styles.currentDateLabel}>
+              {viewMode === 'day' || viewMode === 'rooms' 
+                ? currentDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' })
+                : viewMode === 'week'
+                ? `Semana de ${currentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}`
+                : currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+            </strong>
+            {currentHoliday.isHoliday && (
+              <span style={styles.holidayBadgeInline} title={currentHoliday.name}>
+                🇧🇷 Feriado
+              </span>
+            )}
+          </div>
           <button onClick={() => handleNavigateDate(1)} style={styles.navArrowBtn}><ChevronRight size={16} /></button>
         </div>
 
@@ -1063,7 +1269,7 @@ export default function CalendarPanel({ currentUser }) {
       {/* Secondary Filters Bar */}
       <div style={styles.filterBar}>
         <div style={styles.filterGroup}>
-          <label style={styles.filterLabel}>Filtrar Médico:</label>
+          <label style={styles.filterLabel}>Médico:</label>
           <select value={selectedDoctorId} onChange={e => setSelectedDoctorId(e.target.value)} style={styles.selectFilter}>
             <option value="all">Todos os Profissionais</option>
             {doctors.map(d => (
@@ -1073,7 +1279,7 @@ export default function CalendarPanel({ currentUser }) {
         </div>
 
         <div style={styles.filterGroup}>
-          <label style={styles.filterLabel}>Filtrar Sala:</label>
+          <label style={styles.filterLabel}>Sala:</label>
           <select value={selectedRoom} onChange={e => setSelectedRoom(e.target.value)} style={styles.selectFilter}>
             <option value="all">Todas as Salas</option>
             {availableRooms.map(r => (
@@ -1083,7 +1289,7 @@ export default function CalendarPanel({ currentUser }) {
         </div>
 
         <div style={styles.filterGroup}>
-          <label style={styles.filterLabel}>Filtrar Status:</label>
+          <label style={styles.filterLabel}>Status:</label>
           <select value={selectedStatusFilter} onChange={e => setSelectedStatusFilter(e.target.value)} style={styles.selectFilter}>
             <option value="all">Todos os Status</option>
             <option value="Agendado">Agendado</option>
@@ -1104,102 +1310,169 @@ export default function CalendarPanel({ currentUser }) {
               setSelectedStatusFilter('all');
               setSearchTerm('');
             }}
-            style={styles.resetFiltersBtn}
+            style={styles.clearFiltersBtn}
           >
             Limpar Filtros
           </button>
         )}
       </div>
 
-      {/* Main View Area */}
-      {loading ? (
-        <div style={styles.loadingContainer}>
-          <RefreshCw size={28} className="spin" color="#0891b2" />
-          <p style={{ marginTop: '0.75rem', color: '#64748b', fontWeight: '600' }}>Carregando agenda em tempo real...</p>
-        </div>
-      ) : (
-        <>
-          {viewMode === 'day' && renderDayView()}
-          {viewMode === 'rooms' && renderRoomsView()}
-          {viewMode === 'week' && renderWeekView()}
-          {viewMode === 'month' && renderMonthView()}
-        </>
-      )}
+      {/* View Content */}
+      <div style={{ marginTop: '0.75rem' }}>
+        {loading ? (
+          <div style={styles.loadingBox}>
+            <RefreshCw size={24} className="spin" color="#0891b2" />
+            <span>Sincronizando agenda e horários com a nuvem...</span>
+          </div>
+        ) : (
+          <>
+            {viewMode === 'day' && renderDayView()}
+            {viewMode === 'rooms' && renderRoomsView()}
+            {viewMode === 'week' && renderWeekView()}
+            {viewMode === 'month' && renderMonthView()}
+          </>
+        )}
+      </div>
 
-      {/* Modal de Agendamento / Edição */}
+      {/* MODAL: CONFIGURAÇÃO DE GRADE & COTAS POR MÉDICO */}
+      <DoctorScheduleModal
+        isOpen={showDoctorScheduleModal}
+        onClose={() => setShowDoctorScheduleModal(false)}
+        doctors={doctors}
+        selectedDoctorId={selectedDoctorId !== 'all' ? selectedDoctorId : doctors[0]?.uid}
+        appointments={appointments}
+        onSaved={() => {
+          fetchData();
+          showAlert('Configuração de grade atualizada com sucesso!');
+        }}
+      />
+
+      {/* MODAL: BLOQUEIO DE DIAS & AUSÊNCIAS */}
+      <ScheduleBlockModal
+        isOpen={showScheduleBlockModal}
+        onClose={() => setShowScheduleBlockModal(false)}
+        doctors={doctors}
+        appointments={appointments}
+        existingBlocks={scheduleBlocks}
+        onBlockSaved={() => {
+          fetchData();
+          showAlert('Bloqueio de agenda criado com sucesso!');
+        }}
+        onBlockDeleted={() => {
+          fetchData();
+          showAlert('Bloqueio removido e horários liberados com sucesso!');
+        }}
+      />
+
+      {/* MODAL: NOVO / EDITAR AGENDAMENTO */}
       {showModal && (
-        <div style={styles.modalOverlay} onClick={() => setShowModal(false)}>
-          <div style={styles.modalCard} onClick={e => e.stopPropagation()}>
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            {/* Modal Header */}
             <div style={styles.modalHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <CalendarIcon size={20} color="#0891b2" />
-                <h2 style={styles.modalTitle}>{editingApt ? 'Editar / Reagendar Consulta' : 'Novo Agendamento Clínico'}</h2>
+                <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#0f172a', fontWeight: '800' }}>
+                  {editingApt ? 'Editar Agendamento' : 'Novo Agendamento Clínico'}
+                </h3>
               </div>
-              <button onClick={() => setShowModal(false)} style={styles.closeModalBtn}><X size={20} /></button>
+              <button onClick={() => setShowModal(false)} style={styles.closeBtn}>
+                <X size={20} />
+              </button>
             </div>
 
-            <form onSubmit={handleSaveAppointment} style={styles.modalForm}>
-              {/* Paciente Selection with Instant Search */}
-              <div style={styles.formSection}>
-                <label style={styles.inputLabel}>Localizar Paciente Cadastrado</label>
-                <div style={styles.patientSearchBox}>
-                  <Search size={15} color="#64748b" />
-                  <input 
-                    type="text" 
-                    placeholder="Digite o nome, CPF ou telefone do paciente..."
-                    value={patientSearchInModal}
-                    onChange={e => {
-                      setPatientSearchInModal(e.target.value);
-                      if (!aptForm.patientId) {
-                        setAptForm(f => ({ ...f, patientName: e.target.value }));
-                      }
-                    }}
-                    style={styles.patientSearchInput}
-                  />
+            {/* Modal Form */}
+            <form onSubmit={handleSaveAppointment} style={styles.modalBody}>
+              
+              {/* 🇧🇷 ALERTA DE FERIADO NO AGENDAMENTO */}
+              {modalDateHoliday.isHoliday && (
+                <div style={styles.modalHolidayAlert}>
+                  <span style={{ fontSize: '1.1rem' }}>🇧🇷</span>
+                  <div style={{ fontSize: '0.8rem', color: '#854d0e', fontWeight: '700' }}>
+                    Atenção: A data selecionada ({aptForm.date.split('-').reverse().join('/')}) é Feriado Nacional ({modalDateHoliday.name}).
+                  </div>
                 </div>
+              )}
 
-                <select 
+              {/* 🔒 ALERTA DE BLOQUEIO DE MÉDICO */}
+              {modalDoctorBlock && (
+                <div style={styles.modalBlockAlert}>
+                  <Lock size={16} color="#dc2626" />
+                  <div style={{ fontSize: '0.8rem', color: '#991b1b', fontWeight: '700' }}>
+                    Aviso: O profissional selecionado possui bloqueio de agenda nesta data ({modalDoctorBlock.reason} - {modalDoctorBlock.period}).
+                  </div>
+                </div>
+              )}
+
+              {/* ⚠️ ALERTA DE DIA DE ATENDIMENTO NÃO CONFIGURADO */}
+              {modalDoctorDayConfig && !modalDoctorDayConfig.isDayActive && (
+                <div style={styles.modalDayAlert}>
+                  <AlertTriangle size={16} color="#d97706" />
+                  <div style={{ fontSize: '0.8rem', color: '#92400e', fontWeight: '700' }}>
+                    Aviso: O médico não possui atendimento previsto para este dia da semana na grade cadastrada.
+                  </div>
+                </div>
+              )}
+
+              {/* 📊 AVISO DE COTA MENSAL ATINGIDA */}
+              {modalDoctorQuotaCheck && (modalDoctorQuotaCheck.firstExceeded || modalDoctorQuotaCheck.returnExceeded) && (
+                <div style={styles.modalQuotaAlert}>
+                  <Award size={16} color="#c2410c" />
+                  <div style={{ fontSize: '0.8rem', color: '#9a3412', fontWeight: '700' }}>
+                    {modalDoctorQuotaCheck.firstExceeded && `Cota de Primeira Consulta atingida (${modalDoctorQuotaCheck.firstCount}/${modalDoctorQuotaCheck.firstLimit} no mês)!`}
+                    {modalDoctorQuotaCheck.returnExceeded && `Cota de Retorno atingida (${modalDoctorQuotaCheck.returnCount}/${modalDoctorQuotaCheck.returnLimit} no mês)!`}
+                  </div>
+                </div>
+              )}
+
+              {/* Paciente Autocomplete / Nome */}
+              <div style={{ position: 'relative' }}>
+                <label style={styles.inputLabel}>Paciente *</label>
+                <input 
+                  type="text" 
                   className="form-control" 
-                  value={aptForm.patientId} 
+                  required 
+                  placeholder="Digite para buscar paciente por nome ou CPF..."
+                  value={patientSearchInModal || aptForm.patientName} 
                   onChange={e => {
-                    const selectedId = e.target.value;
-                    const pat = patients.find(p => p.id === selectedId);
-                    setAptForm(f => ({
-                      ...f,
-                      patientId: selectedId,
-                      patientName: pat ? pat.name : f.patientName,
-                      patientPhone: pat ? (pat.phone || f.patientPhone) : f.patientPhone,
-                      patientCpf: pat ? (pat.cpf || f.patientCpf) : f.patientCpf,
-                      patientBirthDate: pat ? (pat.birthDate || f.patientBirthDate) : f.patientBirthDate
-                    }));
-                    if (pat) setPatientSearchInModal(pat.name);
-                  }}
-                  style={styles.patientSelect}
-                >
-                  <option value="">-- Ou selecione na lista de pacientes ({modalFilteredPatients.length}) --</option>
-                  {modalFilteredPatients.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} {p.cpf ? `(CPF: ${p.cpf})` : ''}</option>
-                  ))}
-                </select>
+                    setPatientSearchInModal(e.target.value);
+                    setAptForm(f => ({ ...f, patientName: e.target.value, patientId: '' }));
+                  }} 
+                  style={styles.textInput}
+                />
+
+                {/* Dropdown Autocomplete */}
+                {modalFilteredPatients.length > 0 && (
+                  <div style={styles.autocompleteDropdown}>
+                    {modalFilteredPatients.map(p => (
+                      <div 
+                        key={p.id} 
+                        onClick={() => {
+                          setAptForm(f => ({
+                            ...f,
+                            patientId: p.id,
+                            patientName: p.name,
+                            patientPhone: p.phone || '',
+                            patientCpf: p.cpf || '',
+                            patientBirthDate: p.birthDate || ''
+                          }));
+                          setPatientSearchInModal(p.name);
+                        }}
+                        style={styles.autocompleteItem}
+                      >
+                        <strong style={{ color: '#0f172a' }}>{p.name}</strong>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>CPF: {p.cpf || 'Não informado'} | Tel: {p.phone || 'S/ Tel'}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Paciente Avulso / Nome & Nascimento & Idade */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '0.75rem' }}>
-                <div>
-                  <label style={styles.inputLabel}>Nome do Paciente *</label>
-                  <input 
-                    type="text" 
-                    required 
-                    className="form-control" 
-                    placeholder="Nome completo do paciente"
-                    value={aptForm.patientName} 
-                    onChange={e => setAptForm({ ...aptForm, patientName: e.target.value })} 
-                    style={styles.textInput}
-                  />
-                </div>
+              {/* Data de Nascimento */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
                   <label style={styles.inputLabel}>
-                    Data de Nasc. {currentModalPatientAge && <span style={styles.ageBadge}>({currentModalPatientAge})</span>}
+                    Nascimento {currentModalPatientAge && <span style={styles.ageBadge}>({currentModalPatientAge})</span>}
                   </label>
                   <input 
                     type="date" 
@@ -1209,12 +1482,8 @@ export default function CalendarPanel({ currentUser }) {
                     style={styles.textInput}
                   />
                 </div>
-              </div>
-
-              {/* Telefone e CPF */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
-                  <label style={styles.inputLabel}>Telefone / WhatsApp</label>
+                  <label style={styles.inputLabel}>Telefone</label>
                   <input 
                     type="text" 
                     className="form-control" 
@@ -1224,50 +1493,49 @@ export default function CalendarPanel({ currentUser }) {
                     style={styles.textInput}
                   />
                 </div>
-                <div>
-                  <label style={styles.inputLabel}>CPF (Opcional)</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="000.000.000-00"
-                    value={aptForm.patientCpf} 
-                    onChange={e => setAptForm({ ...aptForm, patientCpf: e.target.value })} 
-                    style={styles.textInput}
-                  />
-                </div>
               </div>
 
-              {/* Médico e Procedimento */}
+              {/* Médico e Tipo */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
-                  <label style={styles.inputLabel}>Profissional de Saúde *</label>
+                  <label style={styles.inputLabel}>Médico *</label>
                   <select 
                     className="form-control" 
                     required 
                     value={aptForm.doctorId} 
-                    onChange={e => setAptForm({ ...aptForm, doctorId: e.target.value })}
+                    onChange={e => {
+                      const newDocId = e.target.value;
+                      const duration = getDoctorDuration(newDocId);
+                      setAptForm(f => ({
+                        ...f,
+                        doctorId: newDocId,
+                        endTime: addMinutesToTime(f.time, duration)
+                      }));
+                    }}
                     style={styles.textInput}
                   >
-                    <option value="">-- Selecione o Médico --</option>
+                    <option value="">Selecione o Médico</option>
                     {doctors.map(d => (
                       <option key={d.uid} value={d.uid}>{d.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label style={styles.inputLabel}>Tipo de Atendimento / Procedimento</label>
+                  <label style={styles.inputLabel}>Tipo</label>
                   <select 
                     className="form-control" 
                     value={aptForm.type} 
                     onChange={e => setAptForm({ ...aptForm, type: e.target.value })}
                     style={styles.textInput}
                   >
-                    <option value="Consulta Nefrologia">Consulta Nefrologia</option>
+                    <option value="Primeira Consulta">Primeira Consulta (Cota)</option>
+                    <option value="Retorno">Retorno (Cota)</option>
+                    <option value="Consulta Nefrologia">Consulta Especializada</option>
                     <option value="Avaliação Nutricional">Avaliação Nutricional</option>
                     <option value="Acompanhamento Psicológico">Acompanhamento Psicológico</option>
+                    <option value="Procedimento Clínico">Pequeno Procedimento</option>
                     <option value="Sessão de Diálise">Sessão de Diálise</option>
-                    <option value="Exame Ultrassom">Exame Ultrassom / Doppler</option>
-                    <option value="Curativo Acesso Vascular">Curativo Acesso Vascular</option>
+                    <option value="Exame Ultrassom">Exame Ultrassom</option>
                   </select>
                 </div>
               </div>
@@ -1294,10 +1562,11 @@ export default function CalendarPanel({ currentUser }) {
                     value={aptForm.time} 
                     onChange={e => {
                       const newTime = e.target.value;
+                      const duration = getDoctorDuration(aptForm.doctorId);
                       setAptForm(f => ({
                         ...f,
                         time: newTime,
-                        endTime: addMinutesToTime(newTime, 30)
+                        endTime: addMinutesToTime(newTime, duration)
                       }));
                     }}
                     style={styles.textInput}
@@ -1314,7 +1583,7 @@ export default function CalendarPanel({ currentUser }) {
                   />
                 </div>
                 <div>
-                  <label style={styles.inputLabel}>Consultório / Sala</label>
+                  <label style={styles.inputLabel}>Consultório</label>
                   <select 
                     className="form-control" 
                     value={aptForm.room} 
@@ -1350,7 +1619,7 @@ export default function CalendarPanel({ currentUser }) {
                 </div>
               )}
 
-              {/* Flag de Encaixe manual (se não houver conflito detectado) */}
+              {/* Flag de Encaixe manual */}
               {conflictingAppointments.length === 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.6rem', backgroundColor: '#fffbeb', borderRadius: '6px', border: '1px solid #fef3c7' }}>
                   <input 
@@ -1369,7 +1638,7 @@ export default function CalendarPanel({ currentUser }) {
               {/* Status e Observações */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '0.75rem' }}>
                 <div>
-                  <label style={styles.inputLabel}>Status Atual</label>
+                  <label style={styles.inputLabel}>Status</label>
                   <select 
                     className="form-control" 
                     value={aptForm.status} 
@@ -1378,18 +1647,18 @@ export default function CalendarPanel({ currentUser }) {
                   >
                     <option value="Agendado">Agendado</option>
                     <option value="Confirmado">Confirmado</option>
-                    <option value="Aguardando">Aguardando (Na Recepção)</option>
+                    <option value="Aguardando">Aguardando (Recepção)</option>
                     <option value="Em Consulta">Em Consulta</option>
                     <option value="Finalizado">Finalizado</option>
                     <option value="Cancelado">Cancelado</option>
                   </select>
                 </div>
                 <div>
-                  <label style={styles.inputLabel}>Recomendações / Notas</label>
+                  <label style={styles.inputLabel}>Observações</label>
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="Ex: Jejum 8h, trazer exames anteriores..." 
+                    placeholder="Ex: Jejum 8h, trazer exames..." 
                     value={aptForm.notes} 
                     onChange={e => setAptForm({ ...aptForm, notes: e.target.value })} 
                     style={styles.textInput}
@@ -1455,6 +1724,32 @@ const styles = {
     color: '#64748b',
     margin: 0
   },
+  configBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.55rem 0.9rem',
+    borderRadius: '8px',
+    backgroundColor: '#ecfdf5',
+    color: '#065f46',
+    border: '1px solid #a7f3d0',
+    fontWeight: '700',
+    fontSize: '0.85rem',
+    cursor: 'pointer'
+  },
+  blockBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.55rem 0.9rem',
+    borderRadius: '8px',
+    backgroundColor: '#fef2f2',
+    color: '#991b1b',
+    border: '1px solid #fecaca',
+    fontWeight: '700',
+    fontSize: '0.85rem',
+    cursor: 'pointer'
+  },
   refreshBtn: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -1492,6 +1787,44 @@ const styles = {
     gap: '0.5rem',
     fontSize: '0.85rem',
     fontWeight: '600'
+  },
+  holidayBanner: {
+    backgroundColor: '#fefce8',
+    border: '1px solid #fef08a',
+    borderRadius: '10px',
+    padding: '0.65rem 1rem',
+    marginBottom: '1rem',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  holidayTag: {
+    backgroundColor: '#fef08a',
+    color: '#713f12',
+    fontSize: '0.72rem',
+    fontWeight: '800',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '6px'
+  },
+  doctorBlockBanner: {
+    backgroundColor: '#fef2f2',
+    border: '1px solid #fecaca',
+    borderRadius: '10px',
+    padding: '0.65rem 1rem',
+    marginBottom: '1rem',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  manageBlockBtn: {
+    backgroundColor: '#fee2e2',
+    border: '1px solid #fca5a5',
+    color: '#991b1b',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    padding: '0.3rem 0.6rem',
+    borderRadius: '6px',
+    cursor: 'pointer'
   },
   kpiGrid: {
     display: 'grid',
@@ -1604,66 +1937,71 @@ const styles = {
     gap: '0.5rem'
   },
   navArrowBtn: {
-    padding: '0.35rem',
-    borderRadius: '6px',
+    background: 'none',
     border: '1px solid #cbd5e1',
-    backgroundColor: '#ffffff',
-    color: '#475569',
+    borderRadius: '6px',
+    padding: '0.35rem',
     cursor: 'pointer',
+    color: '#334155',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
+    alignItems: 'center'
   },
   todayBtn: {
-    padding: '0.35rem 0.65rem',
-    borderRadius: '6px',
+    backgroundColor: '#f1f5f9',
     border: '1px solid #cbd5e1',
-    backgroundColor: '#ffffff',
-    color: '#0891b2',
-    fontWeight: '700',
+    borderRadius: '6px',
+    padding: '0.35rem 0.7rem',
     fontSize: '0.8rem',
-    cursor: 'pointer'
+    fontWeight: '700',
+    cursor: 'pointer',
+    color: '#334155'
   },
   currentDateLabel: {
-    fontSize: '0.9rem',
+    fontSize: '0.92rem',
     color: '#0f172a',
-    minWidth: '180px',
-    textAlign: 'center'
+    textTransform: 'capitalize'
+  },
+  holidayBadgeInline: {
+    fontSize: '0.68rem',
+    fontWeight: '800',
+    backgroundColor: '#fef08a',
+    color: '#854d0e',
+    padding: '0.1rem 0.4rem',
+    borderRadius: '4px'
   },
   searchBox: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.4rem',
-    padding: '0.4rem 0.75rem',
-    borderRadius: '8px',
-    border: '1px solid #cbd5e1',
     backgroundColor: '#f8fafc',
-    minWidth: '240px'
+    border: '1px solid #cbd5e1',
+    borderRadius: '8px',
+    padding: '0.35rem 0.65rem'
   },
   searchInput: {
     border: 'none',
-    outline: 'none',
     backgroundColor: 'transparent',
+    outline: 'none',
     fontSize: '0.82rem',
-    width: '100%',
-    color: '#0f172a'
+    color: '#0f172a',
+    width: '180px'
   },
   clearSearchBtn: {
-    background: 'none',
     border: 'none',
+    background: 'none',
     cursor: 'pointer',
-    color: '#94a3b8'
+    color: '#94a3b8',
+    padding: 0
   },
   filterBar: {
     display: 'flex',
-    gap: '0.75rem',
     alignItems: 'center',
-    marginBottom: '1rem',
-    flexWrap: 'wrap',
+    gap: '1rem',
     backgroundColor: '#ffffff',
-    padding: '0.6rem 1rem',
-    borderRadius: '8px',
-    border: '1px solid #e2e8f0'
+    padding: '0.65rem 1rem',
+    borderRadius: '10px',
+    border: '1px solid #e2e8f0',
+    flexWrap: 'wrap'
   },
   filterGroup: {
     display: 'flex',
@@ -1671,110 +2009,167 @@ const styles = {
     gap: '0.4rem'
   },
   filterLabel: {
-    fontSize: '0.75rem',
+    fontSize: '0.78rem',
     fontWeight: '700',
-    color: '#64748b'
+    color: '#475569'
   },
   selectFilter: {
     padding: '0.35rem 0.6rem',
     borderRadius: '6px',
     border: '1px solid #cbd5e1',
     fontSize: '0.8rem',
-    color: '#1e293b',
-    backgroundColor: '#f8fafc'
+    color: '#0f172a',
+    backgroundColor: '#ffffff'
   },
-  resetFiltersBtn: {
-    padding: '0.35rem 0.75rem',
-    borderRadius: '6px',
-    border: '1px solid #fca5a5',
-    backgroundColor: '#fef2f2',
+  clearFiltersBtn: {
+    backgroundColor: '#fee2e2',
+    border: 'none',
     color: '#991b1b',
     fontSize: '0.75rem',
     fontWeight: '700',
+    padding: '0.35rem 0.65rem',
+    borderRadius: '6px',
     cursor: 'pointer'
   },
-  gridContainer: {
+  loadingBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.75rem',
+    padding: '4rem',
+    color: '#64748b',
+    fontSize: '0.9rem'
+  },
+  tableWrapper: {
     backgroundColor: '#ffffff',
     borderRadius: '10px',
     border: '1px solid #e2e8f0',
-    overflowX: 'auto',
+    overflow: 'hidden',
     boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
   },
-  calendarTable: {
+  table: {
     width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '0.82rem'
+    borderCollapse: 'collapse'
+  },
+  th: {
+    backgroundColor: '#f8fafc',
+    padding: '0.65rem 0.85rem',
+    fontSize: '0.75rem',
+    fontWeight: '800',
+    color: '#475569',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    borderBottom: '1px solid #e2e8f0'
+  },
+  trEmpty: {
+    borderBottom: '1px solid #f1f5f9'
+  },
+  tdTime: {
+    padding: '0.6rem 0.75rem',
+    textAlign: 'center',
+    backgroundColor: '#fafbfc',
+    borderRight: '1px solid #e2e8f0'
+  },
+  tdEmptySlot: {
+    padding: '0.4rem 0.75rem'
   },
   emptySlotBtn: {
     width: '100%',
-    padding: '0.4rem',
-    border: '1px dashed #cbd5e1',
+    padding: '0.45rem',
     borderRadius: '6px',
-    backgroundColor: '#ffffff',
+    border: '1px dashed #cbd5e1',
+    backgroundColor: 'transparent',
     color: '#94a3b8',
-    fontSize: '0.75rem',
+    fontSize: '0.8rem',
     fontWeight: '600',
+    cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.3rem',
+    transition: 'all 0.15s ease'
+  },
+  blockedSlotBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.5rem',
+    padding: '0.45rem',
+    borderRadius: '6px',
+    backgroundColor: '#fef2f2',
+    border: '1px solid #fecaca',
+    color: '#991b1b',
+    fontSize: '0.78rem',
+    fontWeight: '700'
+  },
+  manageBlockSmallBtn: {
+    backgroundColor: '#fee2e2',
+    border: '1px solid #fca5a5',
+    color: '#991b1b',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    padding: '0.15rem 0.45rem',
+    borderRadius: '4px',
     cursor: 'pointer'
   },
+  multipleBadge: {
+    fontSize: '0.65rem',
+    backgroundColor: '#ea580c',
+    color: '#ffffff',
+    padding: '0.1rem 0.4rem',
+    borderRadius: '9999px',
+    fontWeight: '800',
+    marginTop: '0.2rem'
+  },
   addEncaixeBtn: {
-    padding: '0.2rem 0.4rem',
-    borderRadius: '4px',
     border: '1px solid #fed7aa',
     backgroundColor: '#fff7ed',
-    color: '#ea580c',
-    fontSize: '0.65rem',
+    color: '#c2410c',
+    fontSize: '0.68rem',
     fontWeight: '800',
+    padding: '0.15rem 0.45rem',
+    borderRadius: '4px',
     cursor: 'pointer',
-    display: 'inline-flex',
+    display: 'flex',
     alignItems: 'center',
     gap: '0.2rem'
   },
   encaixeBadge: {
-    padding: '0.15rem 0.45rem',
-    borderRadius: '4px',
-    fontSize: '0.68rem',
+    fontSize: '0.65rem',
     fontWeight: '800',
     backgroundColor: '#ffedd5',
     color: '#c2410c',
-    border: '1px solid #fed7aa',
+    padding: '0.1rem 0.4rem',
+    borderRadius: '4px',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.2rem'
   },
   encaixeBadgeSmall: {
-    padding: '0.1rem 0.35rem',
-    borderRadius: '3px',
-    fontSize: '0.62rem',
+    fontSize: '0.65rem',
     fontWeight: '800',
     backgroundColor: '#ffedd5',
-    color: '#c2410c'
-  },
-  ageBadge: {
-    fontSize: '0.72rem',
-    fontWeight: '700',
-    color: '#0891b2',
-    marginLeft: '0.3rem'
+    color: '#c2410c',
+    padding: '0.05rem 0.35rem',
+    borderRadius: '3px'
   },
   waActionBtn: {
-    padding: '0.2rem 0.45rem',
-    borderRadius: '4px',
-    border: '1px solid #cbd5e1',
-    backgroundColor: '#f8fafc',
-    color: '#166534',
-    fontSize: '0.7rem',
-    fontWeight: '700',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.25rem',
+    backgroundColor: '#dcfce7',
+    color: '#166534',
+    border: '1px solid #86efac',
+    borderRadius: '5px',
+    padding: '0.2rem 0.45rem',
+    fontSize: '0.7rem',
+    fontWeight: '700',
     cursor: 'pointer'
   },
   statusBtn: {
     padding: '0.25rem 0.5rem',
-    borderRadius: '4px',
+    borderRadius: '5px',
     border: 'none',
     color: '#ffffff',
     fontSize: '0.7rem',
@@ -1786,11 +2181,11 @@ const styles = {
   },
   iconBtn: {
     padding: '0.3rem',
-    borderRadius: '4px',
-    border: '1px solid #e2e8f0',
+    borderRadius: '5px',
+    border: '1px solid #cbd5e1',
     backgroundColor: '#ffffff',
     cursor: 'pointer',
-    display: 'inline-flex',
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -1801,14 +2196,14 @@ const styles = {
   },
   roomCard: {
     backgroundColor: '#ffffff',
-    borderRadius: '10px',
     border: '1px solid #e2e8f0',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-    overflow: 'hidden'
+    borderRadius: '10px',
+    overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
   },
   roomCardHeader: {
-    padding: '0.75rem 1rem',
     backgroundColor: '#f8fafc',
+    padding: '0.75rem 1rem',
     borderBottom: '1px solid #e2e8f0',
     display: 'flex',
     justifyContent: 'space-between',
@@ -1817,8 +2212,8 @@ const styles = {
   roomCountBadge: {
     fontSize: '0.75rem',
     fontWeight: '800',
-    backgroundColor: '#e0f2fe',
-    color: '#0369a1',
+    backgroundColor: '#0891b2',
+    color: '#ffffff',
     padding: '0.15rem 0.5rem',
     borderRadius: '9999px'
   },
@@ -1826,240 +2221,240 @@ const styles = {
     padding: '0.75rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.6rem',
+    gap: '0.5rem',
     minHeight: '200px'
   },
   emptyRoomState: {
-    padding: '2rem 1rem',
-    textAlign: 'center',
-    color: '#94a3b8',
-    fontSize: '0.8rem',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '0.5rem'
+    justifyContent: 'center',
+    gap: '0.5rem',
+    padding: '2rem',
+    color: '#94a3b8',
+    fontSize: '0.8rem',
+    textAlign: 'center',
+    flex: 1
   },
   addSmallBtn: {
-    padding: '0.35rem 0.75rem',
-    borderRadius: '6px',
+    backgroundColor: '#f1f5f9',
     border: '1px solid #cbd5e1',
-    backgroundColor: '#ffffff',
-    color: '#0891b2',
-    fontSize: '0.7rem',
+    borderRadius: '6px',
+    padding: '0.25rem 0.6rem',
+    fontSize: '0.75rem',
     fontWeight: '700',
-    cursor: 'pointer'
+    color: '#334155',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.2rem'
   },
   roomAptItem: {
-    padding: '0.6rem',
-    borderRadius: '8px',
     backgroundColor: '#f8fafc',
     border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    padding: '0.6rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.2rem'
   },
-  weekGrid: {
+  weekContainer: {
     display: 'grid',
     gridTemplateColumns: 'repeat(7, 1fr)',
     gap: '0.5rem',
-    overflowX: 'auto'
+    minHeight: '500px'
   },
   weekColumn: {
-    borderRadius: '8px',
     border: '1px solid #e2e8f0',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+    borderRadius: '8px',
+    display: 'flex',
+    flexDirection: 'column',
     overflow: 'hidden'
   },
-  weekHeader: {
-    padding: '0.75rem',
+  weekColHeader: {
+    padding: '0.5rem',
     textAlign: 'center',
-    borderBottom: '2px solid transparent'
+    borderBottom: '1px solid #e2e8f0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.15rem'
+  },
+  holidayBadgeMini: {
+    fontSize: '0.62rem',
+    fontWeight: '800',
+    backgroundColor: '#fef08a',
+    color: '#854d0e',
+    padding: '0.05rem 0.25rem',
+    borderRadius: '3px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap'
+  },
+  holidayBadgeMicro: {
+    fontSize: '0.7rem'
+  },
+  monthHolidayName: {
+    fontSize: '0.62rem',
+    fontWeight: '800',
+    color: '#854d0e',
+    backgroundColor: '#fef08a',
+    padding: '0.05rem 0.25rem',
+    borderRadius: '3px',
+    marginTop: '0.15rem',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap'
+  },
+  weekCountBadge: {
+    fontSize: '0.68rem',
+    fontWeight: '800',
+    backgroundColor: '#0891b2',
+    color: '#ffffff',
+    padding: '0.05rem 0.35rem',
+    borderRadius: '9999px',
+    alignSelf: 'center',
+    marginTop: '0.2rem'
+  },
+  weekColBody: {
+    padding: '0.4rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
+    flex: 1,
+    overflowY: 'auto'
+  },
+  emptyWeekState: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    padding: '1rem'
   },
   weekAptCard: {
-    padding: '0.5rem',
-    borderRadius: '6px',
     backgroundColor: '#ffffff',
     border: '1px solid #e2e8f0',
-    borderLeft: '3px solid #0891b2',
+    borderRadius: '6px',
+    padding: '0.4rem',
     cursor: 'pointer',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
-    transition: 'transform 0.1s'
+    boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
   },
   monthCalendarGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(7, 1fr)',
-    gap: '4px',
-    backgroundColor: '#e2e8f0',
-    padding: '4px',
-    borderRadius: '10px'
+    gap: '0.4rem'
   },
   monthDayName: {
-    backgroundColor: '#f8fafc',
-    padding: '0.5rem',
     textAlign: 'center',
-    fontWeight: '700',
-    fontSize: '0.8rem',
-    color: '#475569'
-  },
-  monthCell: {
-    minHeight: '85px',
     padding: '0.5rem',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    cursor: 'pointer',
-    borderRadius: '4px',
-    border: '1px solid transparent'
+    fontSize: '0.75rem',
+    fontWeight: '800',
+    color: '#64748b',
+    backgroundColor: '#f8fafc',
+    borderRadius: '6px'
   },
   monthCellEmpty: {
-    backgroundColor: '#f1f5f9'
+    backgroundColor: '#f8fafc',
+    borderRadius: '6px',
+    opacity: 0.5,
+    minHeight: '85px'
+  },
+  monthCell: {
+    border: '1px solid',
+    borderRadius: '8px',
+    padding: '0.4rem',
+    minHeight: '85px',
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
+    transition: 'all 0.15s ease'
   },
   monthAptBadge: {
+    fontSize: '0.68rem',
+    fontWeight: '700',
     backgroundColor: '#e0f2fe',
     color: '#0369a1',
-    fontSize: '0.65rem',
-    fontWeight: '800',
-    padding: '0.15rem 0.35rem',
+    padding: '0.1rem 0.35rem',
     borderRadius: '4px',
     textAlign: 'center'
   },
-  loadingContainer: {
-    padding: '3rem',
-    textAlign: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0'
-  },
   modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    backdropFilter: 'blur(4px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1050,
-    padding: '1rem'
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    display: 'flex', justifyContent: 'center', alignItems: 'center',
+    zIndex: 99999, padding: '1rem'
   },
-  modalCard: {
+  modalContent: {
     backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    width: '100%',
-    maxWidth: '680px',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    borderRadius: '14px',
+    width: '100%', maxWidth: '700px',
+    maxHeight: '90vh',
+    display: 'flex', flexDirection: 'column',
+    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
     overflow: 'hidden'
   },
   modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     padding: '1rem 1.25rem',
     borderBottom: '1px solid #e2e8f0',
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     backgroundColor: '#f8fafc'
   },
-  modalTitle: {
-    fontSize: '1.1rem',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: 0
+  closeBtn: {
+    background: 'none', border: 'none', cursor: 'pointer', color: '#64748b'
   },
-  closeModalBtn: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: '#64748b'
-  },
-  modalForm: {
+  modalBody: {
     padding: '1.25rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.85rem',
-    maxHeight: '80vh',
+    display: 'flex', flexDirection: 'column', gap: '0.85rem',
     overflowY: 'auto'
   },
-  formSection: {
-    backgroundColor: '#f8fafc',
-    padding: '0.75rem',
-    borderRadius: '8px',
-    border: '1px solid #e2e8f0'
+  modalHolidayAlert: {
+    backgroundColor: '#fefce8', border: '1px solid #fef08a', borderRadius: '8px',
+    padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem'
   },
-  patientSearchBox: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    padding: '0.4rem 0.6rem',
-    backgroundColor: '#ffffff',
-    border: '1px solid #cbd5e1',
-    borderRadius: '6px',
-    marginBottom: '0.5rem'
+  modalBlockAlert: {
+    backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px',
+    padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem'
   },
-  patientSearchInput: {
-    border: 'none',
-    outline: 'none',
-    width: '100%',
-    fontSize: '0.8rem',
-    color: '#0f172a'
+  modalDayAlert: {
+    backgroundColor: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '8px',
+    padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem'
   },
-  patientSelect: {
-    width: '100%',
-    padding: '0.45rem',
-    borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    fontSize: '0.8rem',
-    backgroundColor: '#ffffff'
-  },
-  conflictBox: {
-    padding: '0.75rem',
-    borderRadius: '8px',
-    backgroundColor: '#fff7ed',
-    border: '1px solid #ffedd5'
+  modalQuotaAlert: {
+    backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px',
+    padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem'
   },
   inputLabel: {
-    display: 'block',
-    fontSize: '0.75rem',
-    fontWeight: '700',
-    color: '#334155',
-    marginBottom: '0.25rem'
+    fontSize: '0.75rem', fontWeight: '700', color: '#475569', marginBottom: '0.25rem', display: 'block'
   },
   textInput: {
-    width: '100%',
-    padding: '0.45rem 0.65rem',
-    borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    fontSize: '0.82rem',
-    backgroundColor: '#ffffff',
-    color: '#0f172a'
+    padding: '0.5rem 0.65rem', borderRadius: '6px', border: '1px solid #cbd5e1',
+    fontSize: '0.85rem', color: '#0f172a', width: '100%', outline: 'none'
+  },
+  ageBadge: {
+    fontSize: '0.7rem', color: '#0891b2', fontWeight: '800'
+  },
+  autocompleteDropdown: {
+    position: 'absolute', top: '100%', left: 0, right: 0,
+    backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px',
+    marginTop: '2px', zIndex: 100, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+    maxHeight: '180px', overflowY: 'auto'
+  },
+  autocompleteItem: {
+    padding: '0.5rem 0.75rem', borderBottom: '1px solid #f1f5f9', cursor: 'pointer',
+    display: 'flex', flexDirection: 'column'
+  },
+  conflictBox: {
+    backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px',
+    padding: '0.65rem', display: 'flex', flexDirection: 'column'
   },
   modalFooter: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '0.5rem',
-    marginTop: '0.5rem',
-    paddingTop: '0.75rem',
-    borderTop: '1px solid #e2e8f0'
+    display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '0.5rem'
   },
   cancelBtn: {
-    padding: '0.5rem 1rem',
-    borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    backgroundColor: '#ffffff',
-    color: '#475569',
-    fontWeight: '600',
-    fontSize: '0.85rem',
-    cursor: 'pointer'
+    padding: '0.55rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1',
+    backgroundColor: '#ffffff', color: '#475569', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer'
   },
   confirmSaveBtn: {
-    padding: '0.5rem 1.25rem',
-    borderRadius: '6px',
-    backgroundColor: '#0891b2',
-    color: '#ffffff',
-    border: 'none',
-    fontWeight: '700',
-    fontSize: '0.85rem',
-    cursor: 'pointer',
-    boxShadow: '0 2px 5px rgba(8, 145, 178, 0.25)'
+    padding: '0.55rem 1.25rem', borderRadius: '8px', border: 'none',
+    backgroundColor: '#0891b2', color: '#ffffff', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer'
   }
 };

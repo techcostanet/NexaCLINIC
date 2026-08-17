@@ -608,4 +608,134 @@ export const deleteAppointment = async (id) => {
     return true;
   };
 
+// ==========================================
+// 👨‍⚕️ DOCTOR SCHEDULES (Grade & Cotas)
+// ==========================================
+export const getDoctorSchedules = async () => {
+    if (USE_MOCK) {
+      const data = localStorage.getItem('sistema_indicadores_doctor_schedules');
+      return data ? JSON.parse(data) : [];
+    }
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'doctor_schedules'));
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (err) {
+      console.warn('Fallback para local doctor_schedules:', err);
+      const data = localStorage.getItem('sistema_indicadores_doctor_schedules');
+      return data ? JSON.parse(data) : [];
+    }
+  };
+
+export const saveDoctorSchedule = async (doctorId, scheduleData) => {
+    if (USE_MOCK) {
+      const data = localStorage.getItem('sistema_indicadores_doctor_schedules');
+      let list = data ? JSON.parse(data) : [];
+      const existingIdx = list.findIndex(s => s.doctorId === doctorId);
+      const updated = { id: `sched_${doctorId}`, doctorId, ...scheduleData, updatedAt: new Date().toISOString() };
+      if (existingIdx >= 0) {
+        list[existingIdx] = updated;
+      } else {
+        list.push(updated);
+      }
+      localStorage.setItem('sistema_indicadores_doctor_schedules', JSON.stringify(list));
+      return updated;
+    }
+    try {
+      const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const docRef = doc(db, 'doctor_schedules', `sched_${doctorId}`);
+      const payload = {
+        doctorId,
+        ...scheduleData,
+        updatedAt: new Date().toISOString()
+      };
+      await setDoc(docRef, payload, { merge: true });
+      return { id: `sched_${doctorId}`, ...payload };
+    } catch (err) {
+      console.error('Erro salvando doctor_schedules no Firestore, fallback local:', err);
+      const data = localStorage.getItem('sistema_indicadores_doctor_schedules');
+      let list = data ? JSON.parse(data) : [];
+      const existingIdx = list.findIndex(s => s.doctorId === doctorId);
+      const updated = { id: `sched_${doctorId}`, doctorId, ...scheduleData, updatedAt: new Date().toISOString() };
+      if (existingIdx >= 0) list[existingIdx] = updated;
+      else list.push(updated);
+      localStorage.setItem('sistema_indicadores_doctor_schedules', JSON.stringify(list));
+      return updated;
+    }
+  };
+
+// ==========================================
+// 🔒 SCHEDULE BLOCKS (Bloqueio de Agenda)
+// ==========================================
+export const getScheduleBlocks = async () => {
+    if (USE_MOCK) {
+      const data = localStorage.getItem('sistema_indicadores_schedule_blocks');
+      return data ? JSON.parse(data) : [];
+    }
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'schedule_blocks'));
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (err) {
+      console.warn('Fallback para local schedule_blocks:', err);
+      const data = localStorage.getItem('sistema_indicadores_schedule_blocks');
+      return data ? JSON.parse(data) : [];
+    }
+  };
+
+export const createScheduleBlock = async (blockData) => {
+    if (USE_MOCK) {
+      const data = localStorage.getItem('sistema_indicadores_schedule_blocks');
+      const list = data ? JSON.parse(data) : [];
+      const newBlock = { id: 'block_' + Math.random().toString(36).substr(2, 9), ...blockData, createdAt: new Date().toISOString() };
+      list.push(newBlock);
+      localStorage.setItem('sistema_indicadores_schedule_blocks', JSON.stringify(list));
+      return newBlock;
+    }
+    try {
+      const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const docRef = await addDoc(collection(db, 'schedule_blocks'), {
+        ...blockData,
+        createdAt: new Date().toISOString()
+      });
+      return { id: docRef.id, ...blockData };
+    } catch (err) {
+      console.error('Erro ao criar schedule_block no Firestore, fallback local:', err);
+      const data = localStorage.getItem('sistema_indicadores_schedule_blocks');
+      const list = data ? JSON.parse(data) : [];
+      const newBlock = { id: 'block_' + Math.random().toString(36).substr(2, 9), ...blockData, createdAt: new Date().toISOString() };
+      list.push(newBlock);
+      localStorage.setItem('sistema_indicadores_schedule_blocks', JSON.stringify(list));
+      return newBlock;
+    }
+  };
+
+export const deleteScheduleBlock = async (id) => {
+    if (USE_MOCK) {
+      const data = localStorage.getItem('sistema_indicadores_schedule_blocks');
+      let list = data ? JSON.parse(data) : [];
+      list = list.filter(item => item.id !== id);
+      localStorage.setItem('sistema_indicadores_schedule_blocks', JSON.stringify(list));
+      return true;
+    }
+    try {
+      const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      await deleteDoc(doc(db, 'schedule_blocks', id));
+      return true;
+    } catch (err) {
+      console.error('Erro ao deletar schedule_block no Firestore, fallback local:', err);
+      const data = localStorage.getItem('sistema_indicadores_schedule_blocks');
+      let list = data ? JSON.parse(data) : [];
+      list = list.filter(item => item.id !== id);
+      localStorage.setItem('sistema_indicadores_schedule_blocks', JSON.stringify(list));
+      return true;
+    }
+  };
+
+
 
