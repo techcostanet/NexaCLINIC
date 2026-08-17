@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, 
   Settings, ShoppingCart, Calendar, ClipboardList, FileText, Wrench, ShieldCheck,
-  LayoutGrid, List, LayoutList, Columns, ArrowRight, Search 
+  LayoutGrid, List, LayoutList, Columns, ArrowRight, Search, Megaphone
 } from 'lucide-react';
 import { authService } from '../firebase';
 
@@ -19,6 +19,15 @@ export default function ModuleSelector({ user, onSelectModule }) {
   };
 
   const modules = [
+    {
+      id: 'assist',
+      title: 'Feed Assistencial & Alertas',
+      subtitle: 'NexaASSIST - Comunicação IA',
+      description: 'Mural de comunicados rápidos, altas hospitalares, internações por salão/turno e leitor de e-mails com IA.',
+      icon: Megaphone,
+      color: '#ec4899', // pink-500
+      allowedRoles: ['admin', 'professional', 'receptionist', 'rh', 'sesmt']
+    },
     {
       id: 'reception',
       title: 'Recepção & Cadastro',

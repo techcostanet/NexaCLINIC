@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.75',
+      date: '17/08/2026',
+      title: 'Módulo NexaASSIST - Central & Feed Assistencial Inteligente',
+      description: 'Lançamento do hub de comunicação rápida com mural de salões, ingestão de e-mails via IA e linha do tempo no prontuário.',
+      changes: [
+        { type: 'NexaASSIST', text: 'Novo módulo centralizado para comunicados rápidos, internações, altas e intercorrências.' },
+        { type: 'NexaASSIST', text: 'Mural de notícias em linha do tempo com filtros inteligentes por Salão (1, 2, 3, DP), Turno e Categoria.' },
+        { type: 'NexaASSIST', text: 'Motor de Inteligência Artificial para leitura e estruturação automática da conta espelho de e-mails.' },
+        { type: 'NexaASSIST', text: 'Controle de leitura interativo ("Dar Ciente") com histórico de visualizações por profissional.' },
+        { type: 'NexaASSIST', text: 'Integração direta com o Prontuário Médico exibindo a Linha do Tempo Assistencial do paciente.' },
+        { type: 'NexaASSIST', text: 'Substituição gradual da lista de e-mail assistencia@... para eliminação de sobrecarga nas caixas de 10GB.' }
+      ]
+    },
+    {
       version: 'v3.3.73',
       date: '14/08/2026',
       title: 'Módulo Agenda (NexaCAL) - Encaixes, Horários Flexíveis, Idade Automática e Legenda',

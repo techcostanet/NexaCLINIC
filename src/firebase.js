@@ -9,6 +9,7 @@ import * as clinicalFunctions from './services/firebase/clinicalService';
 import * as systemFunctions from './services/firebase/systemService';
 import * as maintenanceFunctions from './services/firebase/maintenanceService';
 import * as sesmtFunctions from './services/firebase/sesmtService';
+import * as assistFunctions from './services/firebase/assistService';
 
 // Standard exports for the rest of the application
 export const authService = {
@@ -25,4 +26,5 @@ export const dbService = {
   ...systemFunctions,
   ...maintenanceFunctions,
   ...sesmtFunctions,
+  ...assistFunctions,
 };

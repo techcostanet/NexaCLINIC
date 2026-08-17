@@ -16069,5 +16069,152 @@ export const mockFirestore = {
     }
     setDB(db);
     return { success: true };
+  },
+
+  // NexaASSIST - Feed Assistencial
+  getAssistPosts: async () => {
+    await new Promise(resolve => setTimeout(resolve, 150));
+    const db = getDB();
+    if (!db.assist_posts || db.assist_posts.length === 0) {
+      db.assist_posts = [
+        {
+          id: 'post-1',
+          source: 'email',
+          title: 'Internação Hospitalar - ADAIR PRAXEDES MORENO',
+          message: 'Informamos que o paciente Adair Praxedes Moreno foi internado ontem à noite no Hospital Municipal com quadro de febre e suspeita de infecção no cateter. Sessão de hoje suspensa na clínica.',
+          category: 'Internação',
+          urgency: 'Urgente',
+          patientId: 'pat-1',
+          patientName: 'ADAIR PRAXEDES MORENO',
+          room: 'Salão 1',
+          shift: '2º Turno',
+          status: 'published',
+          author: 'Enfª. Juliana Mendes',
+          authorRole: 'Enfermagem (E-mail)',
+          createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+          readBy: [
+            { userId: 'user-admin', name: 'Dr. Lucas (Nefro)', role: 'Médico', readAt: new Date(Date.now() - 3600000 * 2).toISOString() }
+          ]
+        },
+        {
+          id: 'post-2',
+          source: 'native',
+          title: 'Alta Hospitalar e Retorno às Sessões',
+          message: 'Paciente Adão Luciano Dias recebeu alta hospitalar do Hospital Regional. Retorna para as sessões regulares de hemodiálise amanhã no 1º Turno (Salão 3). Acesso FAV íntegro.',
+          category: 'Alta',
+          urgency: 'Atenção',
+          patientId: 'pat-2',
+          patientName: 'ADAO LUCIANO DIAS',
+          room: 'Salão 3',
+          shift: '1º Turno',
+          status: 'published',
+          author: 'Dr. Lucas (Nefrologista)',
+          authorRole: 'Corpo Médico',
+          createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
+          readBy: []
+        },
+        {
+          id: 'post-3',
+          source: 'native',
+          title: 'Ajuste de Dieta e Suplementação Hiperproteica',
+          message: 'Realizada avaliação nutricional do paciente Adcelio Barbosa. Iniciada prescrição de suplemento hiperproteico específico para hemodiálise e reforçada a orientação de restrição hídrica para 800ml/dia.',
+          category: 'Nutrição',
+          urgency: 'Informativo',
+          patientId: 'pat-3',
+          patientName: 'ADCELIO BARBOSA DE OLIVEIRA',
+          room: 'Salão 1',
+          shift: '3º Turno',
+          status: 'published',
+          author: 'Dra. Camila Santos',
+          authorRole: 'Nutrição Clínica',
+          createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+          readBy: []
+        },
+        {
+          id: 'post-4',
+          source: 'email',
+          title: 'Acolhimento Familiar e Encaminhamento de Transporte',
+          message: 'Realizado atendimento social com a família da paciente. Foi solicitado apoio para transporte sanitário municipal (TFD) para os dias de terça, quinta e sábado.',
+          category: 'Serviço Social',
+          urgency: 'Informativo',
+          patientId: null,
+          patientName: null,
+          room: 'Geral',
+          shift: 'Geral',
+          status: 'pending_link',
+          author: 'Assistente Social Mariana',
+          authorRole: 'Serviço Social (E-mail)',
+          createdAt: new Date(Date.now() - 3600000 * 30).toISOString(),
+          readBy: []
+        }
+      ];
+      setDB(db);
+    }
+    return db.assist_posts;
+  },
+
+  createAssistPost: async (postData) => {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const db = getDB();
+    if (!db.assist_posts) db.assist_posts = [];
+    const newPost = {
+      ...postData,
+      id: 'post-' + Date.now(),
+      createdAt: postData.createdAt || new Date().toISOString(),
+      readBy: postData.readBy || []
+    };
+    db.assist_posts.unshift(newPost);
+    setDB(db);
+    return newPost;
+  },
+
+  updateAssistPost: async (id, postData) => {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const db = getDB();
+    if (db.assist_posts) {
+      const idx = db.assist_posts.findIndex(p => p.id === id);
+      if (idx > -1) {
+        db.assist_posts[idx] = { ...db.assist_posts[idx], ...postData, updatedAt: new Date().toISOString() };
+        setDB(db);
+        return db.assist_posts[idx];
+      }
+    }
+    return { id, ...postData };
+  },
+
+  deleteAssistPost: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const db = getDB();
+    if (db.assist_posts) {
+      db.assist_posts = db.assist_posts.filter(p => p.id !== id);
+      setDB(db);
+    }
+    return { success: true };
+  },
+
+  toggleAssistPostRead: async (postId, user) => {
+    await new Promise(resolve => setTimeout(resolve, 150));
+    const db = getDB();
+    if (!db.assist_posts) return null;
+    const post = db.assist_posts.find(p => p.id === postId);
+    if (!post) return null;
+
+    if (!Array.isArray(post.readBy)) post.readBy = [];
+    const userId = user.id || user.uid || user.email || 'user';
+    const userName = user.name || user.email || 'Profissional';
+    const idx = post.readBy.findIndex(r => r.userId === userId || r.name === userName);
+
+    if (idx > -1) {
+      post.readBy.splice(idx, 1);
+    } else {
+      post.readBy.push({
+        userId,
+        name: userName,
+        role: user.role || 'Profissional',
+        readAt: new Date().toISOString()
+      });
+    }
+    setDB(db);
+    return post.readBy;
   }
 };

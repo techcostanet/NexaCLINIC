@@ -18,6 +18,7 @@ import TechnicianPanel from './components/TechnicianPanel';
 import ApacBillingPanel from './components/ApacBillingPanel';
 import MaintenancePanel from './components/MaintenancePanel';
 import SesmtDashboard from './components/sesmt/SesmtDashboard';
+import AssistPanel from './components/AssistPanel';
 import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
@@ -105,6 +106,8 @@ export default function App() {
   // Simple Router based on state
   const renderContent = () => {
     switch (currentModule) {
+      case 'assist':
+        return <ErrorBoundary><AssistPanel currentUser={user} /></ErrorBoundary>;
       case 'reception':
         return <ErrorBoundary><ReceptionPanel currentUser={user} /></ErrorBoundary>;
       case 'clinical':

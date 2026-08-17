@@ -3,18 +3,24 @@ import { dbService } from '../firebase';
 import { 
   HeartPulse, ClipboardList, Activity, Plus, Search, Edit2, 
   Trash2, User, Clock, Check, X, AlertTriangle, MessageSquare, 
-  TrendingUp, Pill, Settings, Thermometer
+  TrendingUp, Pill, Settings, Thermometer, Megaphone, Sparkles, Mail
 } from 'lucide-react';
 
 export default function ClinicalPanel() {
-  const [activeTab, setActiveTab] = useState('prescriptions'); // 'prescriptions' | 'monitoring' | 'evolutions'
+  const [activeTab, setActiveTab] = useState('prescriptions'); // 'prescriptions' | 'monitoring' | 'evolutions' | 'timeline'
   const [patients, setPatients] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
   const [sessionsLogs, setSessionsLogs] = useState([]);
   const [clinicalNotes, setClinicalNotes] = useState([]);
+  const [assistPosts, setAssistPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+
+  // Quick assist notice form in patient chart
+  const [quickAssistText, setQuickAssistText] = useState('');
+  const [quickAssistCategory, setQuickAssistCategory] = useState('Internação');
+  const [quickAssistUrgency, setQuickAssistUrgency] = useState('Urgente');
 
   // Common Selection states
   const [selectedPatientId, setSelectedPatientId] = useState('');
@@ -55,11 +61,12 @@ export default function ClinicalPanel() {
   const fetchClinicalData = async () => {
     setLoading(true);
     try {
-      const [pList, pRecs, sLogs, cNotes] = await Promise.all([
+      const [pList, pRecs, sLogs, cNotes, aPosts] = await Promise.all([
         dbService.getPatients(),
         dbService.getPrescriptions(),
         dbService.getSessionsLogs(),
-        dbService.getClinicalNotes()
+        dbService.getClinicalNotes(),
+        dbService.getAssistPosts ? dbService.getAssistPosts() : []
       ]);
 
       const activePatients = pList.filter(p => p.treatmentStatus === 'Ativo');
@@ -67,6 +74,7 @@ export default function ClinicalPanel() {
       setPrescriptions(pRecs);
       setSessionsLogs(sLogs);
       setClinicalNotes(cNotes);
+      setAssistPosts(aPosts || []);
 
       if (activePatients.length > 0 && !selectedPatientId) {
         setSelectedPatientId(activePatients[0].id);
@@ -271,15 +279,55 @@ export default function ClinicalPanel() {
     }
   };
 
+  const handleSaveQuickAssistPost = async (e) => {
+    e.preventDefault();
+    const activePat = getSelectedPatient();
+    if (!activePat || !quickAssistText.trim()) return;
+
+    setActionLoading(true);
+    try {
+      await dbService.createAssistPost({
+        title: `${quickAssistCategory} - ${activePat.name}`,
+        message: quickAssistText.trim(),
+        category: quickAssistCategory,
+        urgency: quickAssistUrgency,
+        patientId: activePat.id,
+        patientName: activePat.name,
+        room: activePat.room || 'Salão 1',
+        shift: activePat.shift || '1º Turno',
+        source: 'native',
+        status: 'published',
+        author: 'Equipe Clínica (Prontuário)',
+        authorRole: 'Clínico / Assistencial',
+        createdAt: new Date().toISOString()
+      });
+
+      setQuickAssistText('');
+      showAlert('Comunicado assistencial salvo e publicado no feed geral!', 'success');
+      fetchClinicalData();
+    } catch (err) {
+      showAlert('Erro ao gravar comunicado assistencial.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const getFilteredNotes = () => {
     return clinicalNotes
       .filter(n => n.patientId === selectedPatientId)
       .sort((a, b) => b.date.localeCompare(a.date));
   };
 
+  const getFilteredAssistPosts = () => {
+    return assistPosts
+      .filter(p => p.patientId === selectedPatientId)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  };
+
   const activePatient = getSelectedPatient();
   const activePresc = getPrescriptionForSelected();
   const activeNotes = getFilteredNotes();
+  const activeAssistPosts = getFilteredAssistPosts();
 
   const getTodayWeekday = () => {
     const day = new Date().getDay();
@@ -322,6 +370,18 @@ export default function ClinicalPanel() {
         >
           <MessageSquare size={16} /> Evoluções Multidisciplinares
         </button>
+        <button 
+          onClick={() => setActiveTab('timeline')} 
+          style={{ 
+            ...styles.tabBtn, 
+            ...(activeTab === 'timeline' ? styles.tabBtnActive : {}),
+            backgroundColor: activeTab === 'timeline' ? '#ec4899' : undefined,
+            color: activeTab === 'timeline' ? '#fff' : undefined,
+            borderColor: activeTab === 'timeline' ? '#ec4899' : undefined
+          }}
+        >
+          <Megaphone size={16} /> Feed & Comunicados ({activeAssistPosts.length})
+        </button>
       </div>
 
       {/* Message feedback */}
@@ -336,8 +396,8 @@ export default function ClinicalPanel() {
         <div style={styles.loadingBox}>Carregando dados assistenciais...</div>
       ) : (
         <>
-          {/* TAB 1 & TAB 3: Require Patient Selector */}
-          {(activeTab === 'prescriptions' || activeTab === 'evolutions') && (
+          {/* TAB 1, 3 & 4: Require Patient Selector */}
+          {(activeTab === 'prescriptions' || activeTab === 'evolutions' || activeTab === 'timeline') && (
             <div style={styles.selectionLayout}>
               {/* Left Column: Select Patient */}
               <div style={styles.sidebar}>
@@ -354,21 +414,31 @@ export default function ClinicalPanel() {
                 <div style={styles.sidebarList}>
                   {patients
                     .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                    .map(p => (
-                      <div 
-                        key={p.id}
-                        onClick={() => setSelectedPatientId(p.id)}
-                        style={{
-                          ...styles.patientItem,
-                          ...(p.id === selectedPatientId ? styles.patientItemActive : {})
-                        }}
-                      >
-                        <span style={styles.sidebarPatName}>{p.name}</span>
-                        <div style={styles.sidebarPatSub}>
-                          <span>Poltrona #{p.chairNumber}</span> • <span>{p.shift}</span>
+                    .map(p => {
+                      const pCount = assistPosts.filter(ap => ap.patientId === p.id).length;
+                      return (
+                        <div 
+                          key={p.id}
+                          onClick={() => setSelectedPatientId(p.id)}
+                          style={{
+                            ...styles.patientItem,
+                            ...(p.id === selectedPatientId ? styles.patientItemActive : {})
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={styles.sidebarPatName}>{p.name}</span>
+                            {pCount > 0 && (
+                              <span style={{ fontSize: '0.65rem', backgroundColor: '#fdf2f8', color: '#db2777', padding: '0.1rem 0.35rem', borderRadius: '8px', fontWeight: '700', border: '1px solid #fbcfe8' }}>
+                                {pCount}
+                              </span>
+                            )}
+                          </div>
+                          <div style={styles.sidebarPatSub}>
+                            <span>{p.room || 'Sem salão'}</span> • <span>{p.shift}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </div>
               </div>
 
@@ -450,100 +520,104 @@ export default function ClinicalPanel() {
                                 onChange={e => setPrescForm({ ...prescForm, heparinType: e.target.value })}
                               >
                                 <option value="Intermitente">Intermitente</option>
-                                <option value="Contínua">Contínua (Bomba de infusão)</option>
-                                <option value="Sem Heparina">Sem Heparina (Lavagens frequentes)</option>
+                                <option value="Contínua">Bomba Contínua</option>
+                                <option value="Sem Heparina">Sem Heparina (Lavagem SF 0.9%)</option>
                               </select>
                             </div>
                             <div className="form-group">
-                              <label>Dose de Heparina</label>
+                              <label>Dose Total Heparina (UI) *</label>
                               <input 
                                 type="text" className="form-control" placeholder="Ex: 5000 UI"
-                                value={prescForm.heparinDose} onChange={e => setPrescForm({ ...prescForm, heparinDose: e.target.value })}
+                                value={prescForm.heparinDose} onChange={e => setPrescForm({ ...prescForm, heparinDose: e.target.value })} required
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Bicarbonato *</label>
+                              <input 
+                                type="text" className="form-control" placeholder="Ex: 32 mEq/L"
+                                value={prescForm.bicarbonate} onChange={e => setPrescForm({ ...prescForm, bicarbonate: e.target.value })} required
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Sódio Prescrito *</label>
+                              <input 
+                                type="text" className="form-control" placeholder="Ex: 138 mEq/L"
+                                value={prescForm.sodium} onChange={e => setPrescForm({ ...prescForm, sodium: e.target.value })} required
                               />
                             </div>
                             <div className="form-group">
                               <label>Peso Seco Alvo (kg) *</label>
                               <input 
-                                type="number" step="0.1" className="form-control" required
-                                value={prescForm.dryWeight} onChange={e => setPrescForm({ ...prescForm, dryWeight: e.target.value })}
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>Nível de Bicarbonato prescrito</label>
-                              <input 
-                                type="text" className="form-control" placeholder="Ex: 32 mEq/L"
-                                value={prescForm.bicarbonate} onChange={e => setPrescForm({ ...prescForm, bicarbonate: e.target.value })}
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>Nível de Sódio prescrito</label>
-                              <input 
-                                type="text" className="form-control" placeholder="Ex: 138 mEq/L"
-                                value={prescForm.sodium} onChange={e => setPrescForm({ ...prescForm, sodium: e.target.value })}
+                                type="number" step="0.1" className="form-control" placeholder="Ex: 68.5"
+                                value={prescForm.dryWeight} onChange={e => setPrescForm({ ...prescForm, dryWeight: e.target.value })} required
                               />
                             </div>
                           </div>
-                          <div style={styles.formFooter}>
-                            <button type="button" onClick={() => setShowPrescForm(false)} className="btn btn-secondary">Cancelar</button>
-                            <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: '#8b5cf6' }}>
-                              {actionLoading ? 'Salvando...' : 'Gravar Prescrição'}
+                          <div style={styles.formActions}>
+                            <button type="button" onClick={() => setShowPrescForm(false)} className="btn btn-secondary">
+                              Cancelar
+                            </button>
+                            <button type="submit" disabled={actionLoading} className="btn btn-primary">
+                              {actionLoading ? 'Gravando...' : 'Salvar Prescrição'}
                             </button>
                           </div>
                         </form>
                       ) : activePresc ? (
-                        /* Prescription Details Display */
-                        <div style={styles.prescDetails}>
-                          <div style={styles.prescGrid}>
-                            <div style={styles.detailBox}>
-                              <span style={styles.detailLabel}>Terapia</span>
+                        /* Prescription Details Summary View */
+                        <div style={styles.prescView}>
+                          <div style={styles.detailsGrid}>
+                            <div style={styles.detailItem}>
+                              <span style={styles.detailLabel}>Modalidade</span>
                               <span style={styles.detailValue}>{activePresc.type}</span>
                             </div>
-                            <div style={styles.detailBox}>
-                              <span style={styles.detailLabel}>Dialisador (Capilar)</span>
+                            <div style={styles.detailItem}>
+                              <span style={styles.detailLabel}>Capilar (Dialisador)</span>
                               <span style={styles.detailValue}>{activePresc.dialyzerModel}</span>
                             </div>
-                            <div style={styles.detailBox}>
-                              <span style={styles.detailLabel}>Tempo Prescrito</span>
-                              <span style={styles.detailValue}>{activePresc.sessionTime}h</span>
+                            <div style={styles.detailItem}>
+                              <span style={styles.detailLabel}>Tempo de Sessão</span>
+                              <span style={styles.detailValue}>{activePresc.sessionTime} Horas</span>
                             </div>
-                            <div style={styles.detailBox}>
-                              <span style={styles.detailLabel}>Fluxo de Sangue (QB)</span>
+                            <div style={styles.detailItem}>
+                              <span style={styles.detailLabel}>Fluxo Sangue (QB)</span>
                               <span style={styles.detailValue}>{activePresc.bloodFlow} mL/min</span>
                             </div>
-                            <div style={styles.detailBox}>
-                              <span style={styles.detailLabel}>Fluxo de Dialisato (QD)</span>
+                            <div style={styles.detailItem}>
+                              <span style={styles.detailLabel}>Fluxo Dialisato (QD)</span>
                               <span style={styles.detailValue}>{activePresc.dialysateFlow} mL/min</span>
                             </div>
-                            <div style={styles.detailBox}>
+                            <div style={styles.detailItem}>
+                              <span style={styles.detailLabel}>Heparina</span>
+                              <span style={styles.detailValue}>{activePresc.heparinType} ({activePresc.heparinDose})</span>
+                            </div>
+                            <div style={styles.detailItem}>
+                              <span style={styles.detailLabel}>Bicarbonato</span>
+                              <span style={styles.detailValue}>{activePresc.bicarbonate}</span>
+                            </div>
+                            <div style={styles.detailItem}>
+                              <span style={styles.detailLabel}>Sódio</span>
+                              <span style={styles.detailValue}>{activePresc.sodium}</span>
+                            </div>
+                            <div style={styles.detailItem}>
                               <span style={styles.detailLabel}>Peso Seco Alvo</span>
                               <span style={styles.detailValue}>{activePresc.dryWeight} kg</span>
                             </div>
-                            <div style={styles.detailBox}>
-                              <span style={styles.detailLabel}>Esquema de Heparina</span>
-                              <span style={styles.detailValue}>{activePresc.heparinType} ({activePresc.heparinDose})</span>
-                            </div>
-                            <div style={styles.detailBox}>
-                              <span style={styles.detailLabel}>Bicarbonato / Sódio</span>
-                              <span style={styles.detailValue}>{activePresc.bicarbonate} / {activePresc.sodium}</span>
-                            </div>
                           </div>
-                          
-                          <div style={styles.prescMetaBox}>
-                            <ShieldCheck size={16} />
-                            <span>Prescrição registrada e homologada eletronicamente. Última atualização em: {new Date(activePresc.updatedAt).toLocaleString('pt-BR')}</span>
+
+                          <div style={styles.prescFooter}>
+                            <span>Última atualização da prescrição: {new Date(activePresc.updatedAt).toLocaleDateString('pt-BR')}</span>
                           </div>
                         </div>
                       ) : (
-                        <div style={styles.noDataBox}>
-                          <AlertTriangle size={36} color="var(--text-muted)" />
-                          <p style={{ marginTop: '1rem' }}>Este paciente ainda não possui uma receita de diálise cadastrada.</p>
-                          <button onClick={handleOpenPrescForm} className="btn btn-primary" style={{ marginTop: '1rem', backgroundColor: '#8b5cf6' }}>
-                            Cadastrar Primeira Prescrição
+                        <div style={styles.noDataState}>
+                          <p>Nenhuma prescrição cadastrada para este paciente.</p>
+                          <button onClick={handleOpenPrescForm} className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
+                            Cadastrar Prescrição Agora
                           </button>
                         </div>
                       )}
                     </div>
-                  ) : (
+                  ) : activeTab === 'evolutions' ? (
                     /* SUB-TAB: EVOLUTIONS */
                     <div style={styles.contentCard}>
                       <h2>Evolução Multiprofissional</h2>
@@ -610,6 +684,122 @@ export default function ClinicalPanel() {
                               </div>
                             </div>
                           ))
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    /* SUB-TAB 4: LINHA DO TEMPO ASSISTENCIAL (NexaASSIST) */
+                    <div style={styles.contentCard}>
+                      <div style={styles.contentHeader}>
+                        <div style={styles.patientBanner}>
+                          <Megaphone size={24} color="#ec4899" />
+                          <div>
+                            <h2>Linha do Tempo Assistencial: {activePatient.name}</h2>
+                            <p>Comunicados rápidos, altas, internações e intercorrências registradas no plantão.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Formulário Rápido de Comunicado Assistencial */}
+                      <form onSubmit={handleSaveQuickAssistPost} style={{ padding: '1.25rem', borderRadius: '12px', borderLeft: '4px solid #ec4899', backgroundColor: '#fdf2f8', marginBottom: '1.5rem', border: '1px solid #fbcfe8' }}>
+                        <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                          <div style={{ flex: 1, minWidth: '160px' }}>
+                            <label style={{ fontSize: '0.8rem', fontWeight: '600', display: 'block', marginBottom: '0.25rem' }}>Tipo de Notícia / Evento</label>
+                            <select 
+                              className="form-control" 
+                              value={quickAssistCategory} 
+                              onChange={e => {
+                                setQuickAssistCategory(e.target.value);
+                                setQuickAssistUrgency(e.target.value === 'Internação' || e.target.value === 'Intercorrência' || e.target.value === 'Óbito' ? 'Urgente' : 'Informativo');
+                              }}
+                            >
+                              <option value="Internação">🔴 Internação Hospitalar</option>
+                              <option value="Alta">🟢 Alta / Retorno</option>
+                              <option value="Transferência">🔵 Transferência</option>
+                              <option value="Intercorrência">🟡 Intercorrência no Plantão</option>
+                              <option value="Nutrição">🥗 Nutrição / Dieta</option>
+                              <option value="Psicologia">🧠 Psicologia</option>
+                              <option value="Serviço Social">🤝 Serviço Social / Transporte</option>
+                              <option value="Óbito">⚫ Óbito</option>
+                              <option value="Geral">ℹ️ Aviso Geral</option>
+                            </select>
+                          </div>
+                          <div style={{ flex: 1, minWidth: '140px' }}>
+                            <label style={{ fontSize: '0.8rem', fontWeight: '600', display: 'block', marginBottom: '0.25rem' }}>Nível de Urgência</label>
+                            <select 
+                              className="form-control" 
+                              value={quickAssistUrgency} 
+                              onChange={e => setQuickAssistUrgency(e.target.value)}
+                            >
+                              <option value="Informativo">ℹ️ Informativo</option>
+                              <option value="Atenção">🟡 Atenção</option>
+                              <option value="Urgente">🔴 Urgente</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="form-group">
+                          <textarea 
+                            rows={3} 
+                            className="form-control" 
+                            placeholder={`Descreva a ocorrência sobre ${activePatient.name} (ex: internado no Hospital X, alta confirmada, etc)...`}
+                            value={quickAssistText}
+                            onChange={e => setQuickAssistText(e.target.value)}
+                            required
+                            style={{ resize: 'vertical', backgroundColor: '#fff' }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                          <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: '#ec4899', borderColor: '#db2777' }}>
+                            {actionLoading ? 'Publicando...' : 'Publicar Comunicado'}
+                          </button>
+                        </div>
+                      </form>
+
+                      {/* Lista Cronológica do Paciente */}
+                      <div style={styles.timeline}>
+                        <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                          Ocorrências Registradas ({activeAssistPosts.length})
+                        </h3>
+                        {activeAssistPosts.length === 0 ? (
+                          <div style={styles.noNotes}>
+                            Nenhum comunicado assistencial ou internação registrada para {activePatient.name}.
+                          </div>
+                        ) : (
+                          activeAssistPosts.map(post => {
+                            const isUrgent = post.urgency === 'Urgente';
+                            const badgeColor = post.category === 'Internação' ? '#ef4444' : post.category === 'Alta' ? '#10b981' : post.category === 'Intercorrência' ? '#f59e0b' : '#8b5cf6';
+                            return (
+                              <div key={post.id} style={{ ...styles.timelineItem, borderLeft: `4px solid ${badgeColor}` }}>
+                                <div style={{ ...styles.timelineBadge, backgroundColor: badgeColor, color: '#fff' }}>
+                                  {post.category.substring(0, 3).toUpperCase()}
+                                </div>
+                                <div style={styles.timelineContent}>
+                                  <div style={styles.timelineHeader}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                      <span style={styles.timelineAuthor}>{post.author}</span>
+                                      <span style={{ fontSize: '0.75rem', backgroundColor: '#f3f4f6', padding: '0.15rem 0.4rem', borderRadius: '4px', color: '#4b5563' }}>
+                                        {post.source === 'email' ? '✉️ Via E-mail' : '💻 NexaCLINIC'}
+                                      </span>
+                                      {isUrgent && (
+                                        <span style={{ fontSize: '0.7rem', backgroundColor: '#fee2e2', color: '#b91c1c', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
+                                          URGENTE
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span style={styles.timelineDate}>
+                                      {new Date(post.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                  <p style={{ ...styles.timelineText, whiteSpace: 'pre-line' }}>{post.message}</p>
+                                  {Array.isArray(post.readBy) && post.readBy.length > 0 && (
+                                    <div style={{ fontSize: '0.75rem', color: '#059669', marginTop: '0.5rem', fontWeight: '500' }}>
+                                      ✓ {post.readBy.length} {post.readBy.length === 1 ? 'profissional deu ciente' : 'profissionais deram ciente'}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
                         )}
                       </div>
                     </div>

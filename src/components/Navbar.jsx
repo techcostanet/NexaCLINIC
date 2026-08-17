@@ -53,7 +53,9 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
     setMobileMenuOpen(false);
   };
 
-  const portalName = currentModule === 'reception' 
+  const portalName = currentModule === 'assist'
+    ? 'NexaASSIST - Feed Assistencial'
+    : currentModule === 'reception' 
     ? 'NexaCLINIC - Recepção' 
     : currentModule === 'clinical'
     ? 'NexaCLINIC - Clínico'
@@ -75,6 +77,8 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
     ? 'NexaCONFIG'
     : currentModule === 'requisitions'
     ? 'NexaREQ - Salão'
+    : currentModule === 'sesmt'
+    ? 'NexaSAFE - SESMT'
     : 'NexaINDEX';
 
   return (

@@ -1,3 +1,15 @@
+## [v3.3.75] - 17 de Agosto, 2026
+### Módulo NexaASSIST (Central & Feed Assistencial Inteligente) - Ingestão com IA, Mural de Salões e Linha do Tempo
+- **Novo Módulo NexaASSIST:** Hub centralizado de comunicação assistencial rápida, descontinuando gradualmente o uso da lista de e-mail `assistencia@...` e liberando espaço de armazenamento nas caixas da equipe.
+- **Mural / Feed em Linha do Tempo:** Visualização em tempo real de comunicados com categorização por cores (Internações, Altas, Transferências, Intercorrências, Nutrição, Psicologia, Serviço Social e Avisos Gerais).
+- **Filtros Inteligentes por Salão e Turno:** Segmentação instantânea por Salão 1, Salão 2, Salão 3, DP e Geral, além de turnos e status de leitura.
+- **Motor de IA para Leitura de E-mails (Conta Espelho):** Parser NLP com algoritmo de correspondência fuzzy para identificar automaticamente o paciente, categoria clínica, nível de urgência e gerar resumo limpo.
+- **Confirmação de Leitura ("Dar Ciente"):** Botão interativo que registra o ciente de cada profissional com data/hora e permite auditar quem da equipe já tomou conhecimento do comunicado.
+- **Integração Completa ao Prontuário do Paciente:** Nova aba "Feed & Comunicados" no painel clínico (`ClinicalPanel`) exibindo a linha do tempo exclusiva de ocorrências do paciente e atalho para criar comunicados rápidos.
+- **Vínculo Manual de Pacientes Pendentes:** Interface ágil para associar comunicados que vieram de e-mails informais com ambiguidade de nomes.
+
+---
+
 ## [v3.3.73] - 14 de Agosto, 2026
 ### Módulo NexaCAL (Agenda Clínica) - Encaixes, Horários Flexíveis, Idade Automática & Legenda
 - **Consultório Padrão "Nenhum":** Ao criar novos agendamentos, o campo Consultório/Sala agora inicia por padrão como "Nenhum", permitindo agendar sem sala fixa.
