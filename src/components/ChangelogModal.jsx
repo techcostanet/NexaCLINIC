@@ -6,11 +6,12 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v3.3.83',
+      version: 'v3.3.84',
       date: '17/08/2026',
-      title: 'Módulo Financeiro - Normalização de Status de Pagamentos e Blindagem Case-Insensitive',
-      description: 'Correção e blindagem completa da leitura de status de contas a pagar/receber para tratar variações de caixa alta/baixa e refletir corretamente baixas bancárias.',
+      title: 'Módulo Financeiro - Correção de Escopo em Acumuladores e Blindagem Case-Insensitive',
+      description: 'Correção de ReferenceError em acumuladores de totais pagos e blindagem completa da leitura de status de pagamentos.',
       changes: [
+        { type: 'Correção Crítica', text: 'Correção de escopo de variável nos acumuladores de redução do FinancePanel (paidAmount e totalPaidRealized).' },
         { type: 'Financeiro', text: 'Normalização no Firestore: 124 lançamentos de débitos atualizados para o status padronizado "Pago".' },
         { type: 'Financeiro', text: 'Blindagem de Cálculos: Implementada função helper isItemPaid insensível a maiúsculas/minúsculas para todos os quadros e relatórios.' },
         { type: 'Painel Operacional', text: 'Correção de Títulos em Atraso e Próximos 7 Dias: Contas e débitos quitados não são mais classificados indevidamente como pendências.' },

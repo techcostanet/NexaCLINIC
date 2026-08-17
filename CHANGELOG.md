@@ -1,5 +1,6 @@
-## [v3.3.83] - 17 de Agosto, 2026
-### Módulo Financeiro - Normalização de Status de Pagamentos e Blindagem Case-Insensitive
+## [v3.3.84] - 17 de Agosto, 2026
+### Módulo Financeiro - Correção de Escopo em Acumuladores e Blindagem Case-Insensitive
+- **Correção de ReferenceError (`p is not defined`):** Ajustado o parâmetro de iteração nos acumuladores de redução de totais pagos (`paidAmount` e `totalPaidRealized`) no painel operacional.
 - **Normalização no Firestore:** Atualização de todos os 124 registros importados de débitos em `accounts_payable` para o status padronizado `'Pago'`.
 - **Blindagem Case-Insensitive:** Refatoração de todos os cálculos de KPIs operacionais, cards de vencimento e relatórios contábeis para verificação resiliente a maiúsculas/minúsculas (`isItemPaid`).
 - **Resolução de Indicadores Operacionais:**

@@ -864,7 +864,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const pendingReceivables = totalReceivables - receivedAmount;
 
   const totalPayables = payableList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
-  const paidAmount = payableList.filter(p => isItemPaid(p)).reduce((acc, curr) => acc + (parseFloat(p.amountPaid || p.amount) || 0), 0);
+  const paidAmount = payableList.filter(p => isItemPaid(p)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
   const pendingPayables = totalPayables - paidAmount;
 
   const ebitda = receivedAmount - paidAmount; // Operacional líquido realizado
@@ -937,7 +937,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const receivedToday = receivablesToday.filter(r => isItemPaid(r)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
 
   const totalReceivedRealized = receivableList.filter(r => isItemPaid(r)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
-  const totalPaidRealized = payableList.filter(p => isItemPaid(p)).reduce((acc, curr) => acc + (parseFloat(p.amountPaid || p.amount) || 0), 0);
+  const totalPaidRealized = payableList.filter(p => isItemPaid(p)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
   const realizedBalance = totalReceivedRealized - totalPaidRealized;
 
   const overduePayables = payableList.filter(p => !isItemPaid(p) && (p.dueDate || '') < todayStr);
