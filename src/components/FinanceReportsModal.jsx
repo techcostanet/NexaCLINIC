@@ -435,7 +435,7 @@ export default function FinanceReportsModal({
                   <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={styles.input} />
                 </div>
                 <div style={styles.filterGroup}>
-                  <label style={styles.label}>Filial / Unidade</label>
+                  <label style={styles.label}>Unidade</label>
                   <select value={unitFilter} onChange={e => setUnitFilter(e.target.value)} style={styles.input}>
                     <option value="Todas">Todas as Unidades</option>
                     <option value="Matriz">Matriz</option>

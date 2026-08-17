@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.0.2',
+      date: '17/08/2026',
+      title: 'Módulo Financeiro - Padrão de Rótulos Concisos (1 Palavra) e Vinculação Direta de Centro de Custo',
+      description: 'Padronização de todas as tabelas e formulários com rótulos de 1 palavra/termo direto e inclusão do seletor de Centro de Custo (31 centros) no formulário de inclusão/edição de despesas.',
+      changes: [
+        { type: 'Padrão UI/UX', text: 'Rótulos Concisos de 1 Palavra: Simplificação de todos os cabeçalhos de tabelas e labels de formulários (Fornecedor, Nota Fiscal, Parcela, Centro de Custo, Devido, Pago, Ações, Macroárea, Orçado, Realizado, etc.), eliminando conectivos redundantes e prevenindo truncamento visual.' },
+        { type: 'Módulo Financeiro', text: 'Centro de Custo no Contas a Pagar: Inclusão do dropdown de seleção dos 31 Centros de Custo Hospitalares no formulário de Nova/Edição de Despesa, vinculando os lançamentos diretamente à matriz de Orçamento x Realizado.' },
+        { type: 'Diretriz de Desenvolvimento', text: 'Regra Fixada no AGENTS.md: Estabelecido o padrão obrigatório de 1 palavra/termo direto para todas as novas interfaces e formulários do sistema.' }
+      ]
+    },
+    {
       version: 'v4.0.1',
       date: '17/08/2026',
       title: 'Módulo Financeiro v4 - Coluna de Ações Sticky, Ocultação de Baixa em Títulos Pagos, Categorias Médicas e Centros de Custo Hospitalares',

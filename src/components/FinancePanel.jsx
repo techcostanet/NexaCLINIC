@@ -207,7 +207,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     description: '',
     amount: '',
     dueDate: '',
-    category: 'Insumo Clínico',
+    category: 'Material Médico-Hospitalar (MatMed)',
+    costCenterId: '1.1',
     invoiceNumber: '',
     paymentMethod: 'PIX',
     bankAccount: 'Itaú Unibanco (PJ)',
@@ -773,8 +774,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         description: '',
         amount: '',
         dueDate: '',
-        category: 'Insumo Clínico',
-        invoiceNumber: ''
+        category: 'Material Médico-Hospitalar (MatMed)',
+        costCenterId: '1.1',
+        invoiceNumber: '',
+        paymentMethod: 'PIX',
+        bankAccount: 'Itaú Unibanco (PJ)',
+        natureType: 'Custo Variável / Operacional'
       });
       loadData();
     } catch (err) {
@@ -2122,12 +2127,13 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                       if (editingPayable) setEditingPayable({ ...editingPayable, supplier: e.target.value });
                       else setNewPayable({ ...newPayable, supplier: e.target.value });
                     }} 
+                    placeholder="Nome do fornecedor / credor"
                     style={styles.input} 
                     required 
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Valor (R$)</label>
+                  <label style={styles.label}>Valor</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -2136,6 +2142,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                       if (editingPayable) setEditingPayable({ ...editingPayable, amount: e.target.value });
                       else setNewPayable({ ...newPayable, amount: e.target.value });
                     }} 
+                    placeholder="0,00"
                     style={styles.input} 
                     required 
                   />
@@ -2169,7 +2176,22 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Nº Nota Fiscal / Documento</label>
+                  <label style={styles.label}>Centro de Custo</label>
+                  <select 
+                    value={editingPayable ? (editingPayable.costCenterId || '1.1') : (newPayable.costCenterId || '1.1')} 
+                    onChange={e => {
+                      if (editingPayable) setEditingPayable({ ...editingPayable, costCenterId: e.target.value });
+                      else setNewPayable({ ...newPayable, costCenterId: e.target.value });
+                    }} 
+                    style={styles.input}
+                  >
+                    {costCenters.map(cc => (
+                      <option key={cc.id} value={cc.id}>{cc.code} - {cc.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Nota Fiscal</label>
                   <input 
                     type="text" 
                     value={editingPayable ? (editingPayable.invoiceNumber || '') : newPayable.invoiceNumber} 
@@ -2177,12 +2199,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                       if (editingPayable) setEditingPayable({ ...editingPayable, invoiceNumber: e.target.value });
                       else setNewPayable({ ...newPayable, invoiceNumber: e.target.value });
                     }} 
-                    placeholder="Ex: NF-98421 / Aut. 8831"
+                    placeholder="Ex: NF-98421"
                     style={styles.input} 
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Meio / Forma de Pagamento</label>
+                  <label style={styles.label}>Pagamento</label>
                   <select 
                     value={editingPayable ? (editingPayable.paymentMethod || 'PIX') : newPayable.paymentMethod} 
                     onChange={e => {
@@ -2192,15 +2214,15 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                     style={styles.input}
                   >
                     <option value="PIX">PIX</option>
-                    <option value="Boleto Bancário">Boleto Bancário</option>
+                    <option value="Boleto Bancário">Boleto</option>
                     <option value="Cartão de Crédito">Cartão de Crédito</option>
                     <option value="Cartão de Débito">Cartão de Débito</option>
-                    <option value="Transferência (TED/DOC)">Transferência (TED/DOC)</option>
-                    <option value="Dinheiro">Dinheiro / Espécie</option>
+                    <option value="Transferência">Transferência (TED)</option>
+                    <option value="Dinheiro">Dinheiro</option>
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Banco / Conta</label>
+                  <label style={styles.label}>Banco</label>
                   <select 
                     value={editingPayable ? (editingPayable.bankAccount || 'Itaú Unibanco (PJ)') : newPayable.bankAccount} 
                     onChange={e => {
@@ -2209,16 +2231,16 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                     }} 
                     style={styles.input}
                   >
-                    <option value="Itaú Unibanco (PJ)">Itaú Unibanco (PJ)</option>
+                    <option value="Itaú Unibanco (PJ)">Itaú Unibanco</option>
                     <option value="Banco do Brasil">Banco do Brasil</option>
                     <option value="Bradesco">Bradesco</option>
                     <option value="Caixa Econômica">Caixa Econômica</option>
-                    <option value="Stone">Stone Pagamentos</option>
+                    <option value="Stone">Stone</option>
                     <option value="Outro">Outro</option>
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Classificação de Custo</label>
+                  <label style={styles.label}>Tipo</label>
                   <select 
                     value={editingPayable ? (editingPayable.natureType || 'Custo Variável / Operacional') : newPayable.natureType} 
                     onChange={e => {
@@ -2227,8 +2249,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                     }} 
                     style={styles.input}
                   >
-                    <option value="Custo Variável / Operacional">Custo Variável / Operacional (Insumos, Materiais)</option>
-                    <option value="Custo Fixo Recorrente">Custo Fixo Recorrente (Aluguel, Folha, Softwares)</option>
+                    <option value="Custo Variável / Operacional">Variável (Insumos/Materiais)</option>
+                    <option value="Custo Fixo Recorrente">Fixo (Aluguel/Folha/TI)</option>
                   </select>
                 </div>
               </div>
@@ -2256,16 +2278,16 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <table style={styles.table}>
               <thead>
                 <tr>
-                  {renderSortableHeader('Fornecedor / Descrição', 'supplier', payableSort, setPayableSort)}
-                  {renderSortableHeader('Número da Nota', 'invoiceNumber', payableSort, setPayableSort)}
-                  {renderSortableHeader('Parc.', 'installmentInfo', payableSort, setPayableSort)}
-                  {renderSortableHeader('Centro de Custos & Modalidade', 'costCenterId', payableSort, setPayableSort)}
+                  {renderSortableHeader('Fornecedor', 'supplier', payableSort, setPayableSort)}
+                  {renderSortableHeader('Nota Fiscal', 'invoiceNumber', payableSort, setPayableSort)}
+                  {renderSortableHeader('Parcela', 'installmentInfo', payableSort, setPayableSort)}
+                  {renderSortableHeader('Centro de Custo', 'costCenterId', payableSort, setPayableSort)}
                   {renderSortableHeader('Vencimento', 'dueDate', payableSort, setPayableSort)}
-                  {renderSortableHeader('Devido (R$)', 'amount', payableSort, setPayableSort)}
-                  {renderSortableHeader('Pago / Saldo', 'amountPaid', payableSort, setPayableSort)}
+                  {renderSortableHeader('Devido', 'amount', payableSort, setPayableSort)}
+                  {renderSortableHeader('Pago', 'amountPaid', payableSort, setPayableSort)}
                   {renderSortableHeader('Status', 'status', payableSort, setPayableSort)}
                   <th style={{ ...styles.th, padding: payableRowDensity === 'compacta' ? '0.45rem 0.5rem' : '0.75rem 1rem', position: 'sticky', right: 0, top: 0, backgroundColor: '#f8fafc', zIndex: 10, boxShadow: '-3px 0 6px rgba(0,0,0,0.05)' }}>
-                    Ações & Baixa
+                    Ações
                   </th>
                 </tr>
               </thead>
@@ -2367,10 +2389,10 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                       <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
                         {p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}
                       </td>
-                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, fontWeight: '700', whiteSpace: 'nowrap' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, fontWeight: '700', whiteSpace: 'nowrap', minWidth: '95px' }}>
                         R$ {amt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </td>
-                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap', minWidth: '100px' }}>
                         {isCompact ? (
                           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}>
                             {paid > 0 && (
@@ -2645,11 +2667,11 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <table style={styles.table}>
               <thead>
                 <tr>
-                  {renderSortableHeader('Cliente / Fonte Pagadora', 'client', receivableSort, setReceivableSort)}
+                  {renderSortableHeader('Cliente', 'client', receivableSort, setReceivableSort)}
                   {renderSortableHeader('Categoria', 'category', receivableSort, setReceivableSort)}
-                  {renderSortableHeader('Nº Guia / Lote', 'invoiceNumber', receivableSort, setReceivableSort)}
+                  {renderSortableHeader('Guia', 'invoiceNumber', receivableSort, setReceivableSort)}
                   {renderSortableHeader('Vencimento', 'dueDate', receivableSort, setReceivableSort)}
-                  {renderSortableHeader('Valor (R$)', 'amount', receivableSort, setReceivableSort)}
+                  {renderSortableHeader('Valor', 'amount', receivableSort, setReceivableSort)}
                   {renderSortableHeader('Status', 'status', receivableSort, setReceivableSort)}
                   <th style={styles.th}>Ações</th>
                 </tr>
@@ -2859,12 +2881,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <table style={styles.table}>
               <thead>
                 <tr>
-                  {renderSortableHeader('Credor / Instituição', 'creditor', debtSort, setDebtSort)}
+                  {renderSortableHeader('Credor', 'creditor', debtSort, setDebtSort)}
                   {renderSortableHeader('Categoria', 'category', debtSort, setDebtSort)}
-                  {renderSortableHeader('Valor Total', 'totalAmount', debtSort, setDebtSort)}
+                  {renderSortableHeader('Total', 'totalAmount', debtSort, setDebtSort)}
                   {renderSortableHeader('Parcelas', 'installmentCount', debtSort, setDebtSort)}
-                  {renderSortableHeader('Valor Mensal', 'installmentAmount', debtSort, setDebtSort)}
-                  {renderSortableHeader('1ª Parcela', 'firstDueDate', debtSort, setDebtSort)}
+                  {renderSortableHeader('Parcela', 'installmentAmount', debtSort, setDebtSort)}
+                  {renderSortableHeader('Vencimento', 'firstDueDate', debtSort, setDebtSort)}
                   {renderSortableHeader('Status', 'status', debtSort, setDebtSort)}
                   <th style={styles.th}>Ações</th>
                 </tr>
@@ -3097,13 +3119,13 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <table style={styles.table}>
               <thead>
                 <tr>
-                  {renderSortableHeader('Data Extrato', 'date', reconciliationSort, setReconciliationSort)}
+                  {renderSortableHeader('Data', 'date', reconciliationSort, setReconciliationSort)}
                   {renderSortableHeader('Banco', 'bankName', reconciliationSort, setReconciliationSort)}
-                  {renderSortableHeader('Descrição no Banco', 'description', reconciliationSort, setReconciliationSort)}
+                  {renderSortableHeader('Descrição', 'description', reconciliationSort, setReconciliationSort)}
                   {renderSortableHeader('Tipo', 'type', reconciliationSort, setReconciliationSort)}
-                  {renderSortableHeader('Valor Extrato', 'amount', reconciliationSort, setReconciliationSort)}
-                  {renderSortableHeader('Status Conciliação', 'status', reconciliationSort, setReconciliationSort)}
-                  <th style={styles.th}>Observação / Diagnóstico</th>
+                  {renderSortableHeader('Valor', 'amount', reconciliationSort, setReconciliationSort)}
+                  {renderSortableHeader('Status', 'status', reconciliationSort, setReconciliationSort)}
+                  <th style={styles.th}>Diagnóstico</th>
                   <th style={styles.th}>Ações</th>
                 </tr>
               </thead>
@@ -3529,14 +3551,14 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <table style={styles.table}>
               <thead>
                 <tr style={{ backgroundColor: '#f8fafc' }}>
-                  {renderSortableHeader('Código & Centro de Custo', 'code', budgetSort, setBudgetSort)}
-                  {renderSortableHeader('Categoria Pai', 'parentName', budgetSort, setBudgetSort)}
-                  {renderSortableHeader('Meta Orçada (R$)', 'planned', budgetSort, setBudgetSort)}
-                  {renderSortableHeader('Realizado / Pago (R$)', 'realized', budgetSort, setBudgetSort)}
-                  {renderSortableHeader('Devido / Cadastrado (R$)', 'due', budgetSort, setBudgetSort)}
-                  {renderSortableHeader('Desvio (R$)', 'devio', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Centro de Custo', 'code', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Macroárea', 'parentName', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Orçado', 'planned', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Realizado', 'realized', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Cadastrado', 'due', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Desvio', 'devio', budgetSort, setBudgetSort)}
                   {renderSortableHeader('Execução', 'pctExecution', budgetSort, setBudgetSort)}
-                  {renderSortableHeader('Status Variância', 'statusText', budgetSort, setBudgetSort)}
+                  {renderSortableHeader('Status', 'statusText', budgetSort, setBudgetSort)}
                   <th style={styles.th}>Ações</th>
                 </tr>
               </thead>
@@ -3730,12 +3752,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <table style={styles.table}>
               <thead>
                 <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                  {renderSortableHeader('Mês Competência', 'monthIndex', projectionSort, setProjectionSort)}
-                  {renderSortableHeader('Situação Predominante', 'status', projectionSort, setProjectionSort)}
-                  {renderSortableHeader('Total Devido no Mês (R$)', 'devido', projectionSort, setProjectionSort)}
-                  {renderSortableHeader('Total Pago no Mês (R$)', 'pago', projectionSort, setProjectionSort)}
-                  {renderSortableHeader('Saldo do Mês (R$)', 'saldo', projectionSort, setProjectionSort)}
-                  {renderSortableHeader('Saldo Fluxo Acumulado (R$)', 'fluxo', projectionSort, setProjectionSort)}
+                  {renderSortableHeader('Competência', 'monthIndex', projectionSort, setProjectionSort)}
+                  {renderSortableHeader('Situação', 'status', projectionSort, setProjectionSort)}
+                  {renderSortableHeader('Devido', 'devido', projectionSort, setProjectionSort)}
+                  {renderSortableHeader('Pago', 'pago', projectionSort, setProjectionSort)}
+                  {renderSortableHeader('Saldo', 'saldo', projectionSort, setProjectionSort)}
+                  {renderSortableHeader('Acumulado', 'fluxo', projectionSort, setProjectionSort)}
                 </tr>
               </thead>
               <tbody>
@@ -3883,11 +3905,11 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <table style={styles.table}>
               <thead>
                 <tr style={{ backgroundColor: '#f8fafc' }}>
-                  {renderSortableHeader('Fornecedor / Credor', 'supplier', agreementSort, setAgreementSort)}
-                  {renderSortableHeader('Filial', 'unit', agreementSort, setAgreementSort)}
-                  {renderSortableHeader('Total Renegociado', 'totalAmount', agreementSort, setAgreementSort)}
-                  {renderSortableHeader('Parcelamento', 'installmentCount', agreementSort, setAgreementSort)}
-                  {renderSortableHeader('Valor Parcela', 'installmentAmount', agreementSort, setAgreementSort)}
+                  {renderSortableHeader('Fornecedor', 'supplier', agreementSort, setAgreementSort)}
+                  {renderSortableHeader('Unidade', 'unit', agreementSort, setAgreementSort)}
+                  {renderSortableHeader('Total', 'totalAmount', agreementSort, setAgreementSort)}
+                  {renderSortableHeader('Parcelas', 'installmentCount', agreementSort, setAgreementSort)}
+                  {renderSortableHeader('Parcela', 'installmentAmount', agreementSort, setAgreementSort)}
                   {renderSortableHeader('Progresso', 'paidInstallments', agreementSort, setAgreementSort)}
                   {renderSortableHeader('Status', 'status', agreementSort, setAgreementSort)}
                   <th style={styles.th}>Ações</th>

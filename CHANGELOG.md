@@ -1,3 +1,15 @@
+## [v4.0.2] - 17 de Agosto, 2026
+### Módulo Financeiro - Padrão de Rótulos Concisos (1 Palavra) e Vinculação Direta de Centro de Custo
+- **Padrão de Rótulos de 1 Palavra / Termo Direto:**
+  - Simplificação integral de cabeçalhos de tabela: `Fornecedor`, `Nota Fiscal`, `Parcela`, `Centro de Custo`, `Vencimento`, `Devido`, `Pago`, `Ações`, `Macroárea`, `Orçado`, `Realizado`, `Cadastrado`, `Desvio`, `Execução`, `Competência`, `Situação`, `Saldo`, `Acumulado`, `Cliente`, `Guia`, `Credor`, `Total`.
+  - Eliminação de barras e conectivos redundantes que causavam sobreposição e truncamento visual de colunas como `DEVIDO`.
+- **Centro de Custo no Formulário de Contas a Pagar:**
+  - Adicionado o dropdown com os 31 Centros de Custo Hospitalares no formulário de inclusão e edição de despesas (`costCenterId`), permitindo associação imediata e correta de cada título à matriz de Orçamento x Realizado.
+- **Diretriz de Design Registrada (`.agents/AGENTS.md`):**
+  - Estabelecida como regra mandatória de desenvolvimento a aplicação de termos únicos/concisos em rótulos e colunas.
+
+---
+
 ## [v4.0.1] - 17 de Agosto, 2026
 ### Módulo Financeiro v4 - Coluna de Ações Sticky, Ocultação de Baixa em Títulos Pagos, Categorias Médicas e Centros de Custo Hospitalares
 - **Coluna de Ações Fixa (Sticky Right):** A coluna "Ações & Baixa" agora permanece fixada à direita da tabela em visualização Normal ou Compacta, com sombra de profundidade (`box-shadow`), eliminando a necessidade de rolar até o fim da página para realizar ações.
