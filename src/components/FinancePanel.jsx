@@ -43,6 +43,32 @@ import {
 import { dbService } from '../firebase';
 import FinanceReportsModal from './FinanceReportsModal';
 
+export const EXPENSE_CATEGORIES = [
+  'Material Médico-Hospitalar (MatMed)',
+  'Medicamentos & Farmácia Clínica',
+  'Concentrados & Soluções para Diálise',
+  'Dialisadores & Linhas de Sangue',
+  'Laboratórios & Exames Especializados',
+  'Gases Medicinais (Oxigênio/Ar)',
+  'Tratamento de Água & Osmose Reversa',
+  'Engenharia Clínica & Manutenção de Equipamentos',
+  'Lavanderia & Higienização Hospitalar',
+  'Gestão de Resíduos de Saúde (Lixo Infectante/RSS)',
+  'Nutrição, Dietética & Copa de Pacientes',
+  'Serviços Médicos & Honorários PJ',
+  'Folha de Pagamento & Encargos Sociais',
+  'Infraestrutura, Aluguel & Predial',
+  'TI, Telecom & Softwares de Saúde',
+  'Jurídico, Contabilidade & Taxas Regulatórias',
+  'Despesas Gerais & Administrativas',
+  'Insumo Clínico',
+  'Concentrado',
+  'Medicamento',
+  'Serviço/Utilidades',
+  'Equipamento',
+  'Outros'
+];
+
 export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'payable' | 'receivable' | 'budget' | 'cashflow_projection' | 'agreements' | 'installments' | 'reconciliation'
   const [payableList, setPayableList] = useState([]);
@@ -2137,12 +2163,9 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                     }} 
                     style={styles.input}
                   >
-                    <option value="Insumo Clínico">Insumo Clínico</option>
-                    <option value="Concentrado">Concentrado</option>
-                    <option value="Medicamento">Medicamento</option>
-                    <option value="Serviço/Utilidades">Serviço/Utilidades</option>
-                    <option value="Equipamento">Equipamento</option>
-                    <option value="Outros">Outros</option>
+                    {EXPENSE_CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
@@ -2241,7 +2264,9 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   {renderSortableHeader('Devido (R$)', 'amount', payableSort, setPayableSort)}
                   {renderSortableHeader('Pago / Saldo', 'amountPaid', payableSort, setPayableSort)}
                   {renderSortableHeader('Status', 'status', payableSort, setPayableSort)}
-                  <th style={{ ...styles.th, padding: payableRowDensity === 'compacta' ? '0.45rem 0.5rem' : '0.75rem 1rem' }}>Ações & Baixa</th>
+                  <th style={{ ...styles.th, padding: payableRowDensity === 'compacta' ? '0.45rem 0.5rem' : '0.75rem 1rem', position: 'sticky', right: 0, top: 0, backgroundColor: '#f8fafc', zIndex: 10, boxShadow: '-3px 0 6px rgba(0,0,0,0.05)' }}>
+                    Ações & Baixa
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -2263,6 +2288,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   const amt = parseFloat(p.amount) || 0;
                   const paid = parseFloat(p.amountPaid) || 0;
                   const dueBalance = amt - paid;
+                  const isPaid = isItemPaid(p) || dueBalance <= 0;
                   const cc = costCenters.find(c => c.id === p.costCenterId);
                   const isCompact = payableRowDensity === 'compacta';
                   const cellPadding = isCompact ? '0.22rem 0.35rem' : '0.75rem 1rem';
@@ -2272,7 +2298,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   let statusColor = '#991b1b';
                   let statusLabel = p.status || 'ATRASADO';
 
-                  if (isItemPaid(p) || dueBalance <= 0) {
+                  if (isPaid) {
                     statusBg = '#d1fae5';
                     statusColor = '#065f46';
                     statusLabel = '✓ PAGO';
@@ -2379,19 +2405,33 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                           {statusLabel}
                         </span>
                       </td>
-                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'flex', gap: '0.2rem' }}>
-                          <button 
-                            onClick={() => {
-                              setPartialItem(p);
-                              setPartialAmountPaid(dueBalance > 0 ? dueBalance : amt);
-                            }}
-                            style={{ padding: isCompact ? '0.15rem 0.35rem' : '0.3rem 0.5rem', borderRadius: '4px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857', fontSize: '0.72rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.15rem' }}
-                            title="Dar baixa parcial ou total neste título"
-                          >
-                            <DollarSign size={12} />
-                            <span>Baixar</span>
-                          </button>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap', position: 'sticky', right: 0, backgroundColor: 'var(--bg-card)', zIndex: 3, boxShadow: '-3px 0 6px rgba(0,0,0,0.05)' }}>
+                        <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                          {!isPaid && dueBalance > 0 && (
+                            <button 
+                              onClick={() => {
+                                setPartialItem(p);
+                                setPartialAmountPaid(dueBalance > 0 ? dueBalance : amt);
+                              }}
+                              style={{ 
+                                padding: isCompact ? '0.15rem 0.35rem' : '0.3rem 0.55rem', 
+                                borderRadius: '4px', 
+                                backgroundColor: '#ecfdf5', 
+                                border: '1px solid #a7f3d0', 
+                                color: '#047857', 
+                                fontSize: '0.72rem', 
+                                fontWeight: '700', 
+                                cursor: 'pointer', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '0.2rem' 
+                              }}
+                              title={paid > 0 ? `Baixar saldo restante de R$ ${dueBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : "Dar baixa neste título"}
+                            >
+                              <DollarSign size={12} />
+                              <span>{paid > 0 ? 'Baixar Saldo' : 'Baixar'}</span>
+                            </button>
+                          )}
                           <button 
                             onClick={() => {
                               setEditingPayable({ ...p, amount: String(p.amount) });
@@ -4230,12 +4270,22 @@ const styles = {
   },
   tableWrapper: {
     overflowX: 'auto',
+    overflowY: 'auto',
+    maxHeight: 'calc(100vh - 270px)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '8px',
+    position: 'relative',
+    backgroundColor: 'var(--bg-card)',
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
   },
   th: {
+    position: 'sticky',
+    top: 0,
+    backgroundColor: '#f8fafc',
+    zIndex: 2,
     textAlign: 'left',
     padding: '0.75rem 1rem',
     borderBottom: '1px solid #e2e8f0',
@@ -4244,6 +4294,7 @@ const styles = {
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
+    whiteSpace: 'nowrap',
   },
   tr: {
     borderBottom: '1px solid #f1f5f9',

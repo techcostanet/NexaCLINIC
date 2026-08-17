@@ -1,3 +1,15 @@
+## [v4.0.1] - 17 de Agosto, 2026
+### Módulo Financeiro v4 - Coluna de Ações Sticky, Ocultação de Baixa em Títulos Pagos, Categorias Médicas e Centros de Custo Hospitalares
+- **Coluna de Ações Fixa (Sticky Right):** A coluna "Ações & Baixa" agora permanece fixada à direita da tabela em visualização Normal ou Compacta, com sombra de profundidade (`box-shadow`), eliminando a necessidade de rolar até o fim da página para realizar ações.
+- **Cabeçalho Fixo e Scroll Interno Otimizado:** Implementado `position: sticky; top: 0` nos cabeçalhos da tabela e container de rolagem suave com barra horizontal sempre no campo de visão imediato do operador.
+- **Baixa Inteligente de Títulos:**
+  - Ocultação automática do botão "Baixar" em títulos 100% quitados (`isPaid === true` ou saldo devedor zerado), prevenindo duplicidade de baixa.
+  - Exibição de botão dinâmico "Baixar Saldo" para pagamentos parciais pendentes.
+- **Catálogo Especializado de Categorias Médicas & Hospitalares:** Inclusão de 17 categorias padronizadas para hospitais e clínicas de hemodiálise (MatMed, Medicamentos Clínicos, Concentrados, Dialisadores, Osmose Reversa, Gases Medicinais, Engenharia Clínica, RSS/Lixo Infectante, Honorários Médicos PJ, etc.).
+- **Estruturação de 31 Centros de Custo Hospitalares:** População e persistência no Firestore de 31 centros de custo estruturados hierarquicamente em 5 macro áreas (Clínico/Assistencial, Infraestrutura/Hotelaria, Recursos Humanos, Governança/TI e Fiscal/Logística).
+
+---
+
 ## [v3.3.84] - 17 de Agosto, 2026
 ### Módulo Financeiro - Correção de Escopo em Acumuladores e Blindagem Case-Insensitive
 - **Correção de ReferenceError (`p is not defined`):** Ajustado o parâmetro de iteração nos acumuladores de redução de totais pagos (`paidAmount` e `totalPaidRealized`) no painel operacional.

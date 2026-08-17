@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.0.1',
+      date: '17/08/2026',
+      title: 'Módulo Financeiro v4 - Coluna de Ações Sticky, Ocultação de Baixa em Títulos Pagos, Categorias Médicas e Centros de Custo Hospitalares',
+      description: 'Grande reformulação de usabilidade e infraestrutura financeira para clínicas especializadas e hospitais: fixação de coluna de ações, categorias médicas especializadas e 31 centros de custo hospitalares estruturados.',
+      changes: [
+        { type: 'Usabilidade & UX', text: 'Coluna de Ações Fixa (Sticky Right): A coluna "Ações & Baixa" permanece permanentemente visível e fixada à direita da tabela com sombra suave, sem exigir rolagem horizontal até o fim.' },
+        { type: 'Usabilidade & UX', text: 'Cabeçalho e Scroll Otimizados: Cabeçalho com fixação superior (Sticky Header) e container com rolagem interna suave e barra visível no campo de visão.' },
+        { type: 'Regra de Negócio', text: 'Baixa Inteligente: O botão "Baixar" é automaticamente ocultado para títulos 100% quitados, exibindo "Baixar Saldo" apenas quando houver saldo pendente remanescente.' },
+        { type: 'Categorias Médicas', text: 'Catálogo Especializado: Cadastro de 17 novas categorias médicas e hospitalares (MatMed, Medicamentos Clínicos, Concentrados, Dialisadores, Osmose Reversa, Gases Medicinais, Engenharia Clínica, RSS, etc.).' },
+        { type: 'Centros de Custo', text: 'Estruturação Hospitalar Completa: 31 centros de custo cadastrados e distribuídos hierarquicamente nas 5 macro áreas (Clínico/Assistencial, Infraestrutura/Hotelaria, RH, Governança/TI e Fiscal/Logística).' }
+      ]
+    },
+    {
       version: 'v3.3.84',
       date: '17/08/2026',
       title: 'Módulo Financeiro - Correção de Escopo em Acumuladores e Blindagem Case-Insensitive',
