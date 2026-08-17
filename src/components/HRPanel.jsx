@@ -5,7 +5,7 @@ import {
   Search, FileText, UploadCloud, Download, Calendar, ShieldAlert,
   CheckCircle2, AlertTriangle, Eye, Award, Check, UserCheck, HelpCircle,
   Gift, Bus, ArrowUp, ArrowDown, ArrowUpDown, Move, Settings, Save, 
-  RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2
+  RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Trophy, Printer
 } from 'lucide-react';
 
 const DEFAULT_DASHBOARD_LAYOUT = [
@@ -23,6 +23,7 @@ const DEFAULT_DASHBOARD_LAYOUT = [
 ];
 
 import { useHRLogic } from './HR/hooks/useHRLogic';
+import AwardReportModal from './HR/AwardReportModal';
 
 export const formatDateBR = (dateVal) => {
   if (!dateVal) return '-';
@@ -117,6 +118,11 @@ export default function HRPanel({ currentUser }) {
     setVoucherForm,
     awardValue,
     setAwardValue,
+    awardPeriod,
+    setAwardPeriod,
+    showAwardReportModal,
+    setShowAwardReportModal,
+    handleExportAwardReportCSV,
     fetchData,
     showAlert,
     logAuditAction,
@@ -484,33 +490,67 @@ export default function HRPanel({ currentUser }) {
                       )}
 
                       {card.id === 'presenca_premiada' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
-                            <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                              🏆 Presença Premiada
-                            </h3>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                              <span style={{ fontSize: '0.7rem', fontWeight: '600' }}>Prêmio: R$</span>
-                              <input 
-                                type="number" 
-                                value={awardValue} 
-                                onChange={e => setAwardValue(Math.max(0, parseFloat(e.target.value) || 0))}
-                                style={{ width: '55px', padding: '0.1rem 0.2rem', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}
-                              />
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.25rem' }}>
+                              <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '700' }}>
+                                <Trophy size={16} color="#10b981" /> Presença Premiada
+                              </h3>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                <span style={{ fontSize: '0.7rem', fontWeight: '600' }}>Prêmio: R$</span>
+                                <input 
+                                  type="number" 
+                                  value={awardValue} 
+                                  onChange={e => setAwardValue(Math.max(0, parseFloat(e.target.value) || 0))}
+                                  style={{ width: '55px', padding: '0.1rem 0.2rem', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                                />
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.4rem', backgroundColor: '#f8fafc', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>
+                              <span style={{ color: '#10b981', fontWeight: '700' }}>🏆 Ganhadores: {presencaPremiada.eligible.length}</span>
+                              <span style={{ color: '#ef4444', fontWeight: '700' }}>🚫 Excluídos: {presencaPremiada.disqualified.length}</span>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxHeight: '100px', overflowY: 'auto' }}>
+                              {presencaPremiada.eligible.length === 0 ? (
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.5rem 0' }}>
+                                  Nenhum colaborador elegível (&gt;90d CLT sem faltas).
+                                </div>
+                              ) : (
+                                presencaPremiada.eligible.slice(0, 4).map(emp => (
+                                  <div key={emp.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', padding: '0.2rem 0.4rem', borderRadius: '4px', backgroundColor: 'rgba(16,185,129,0.06)' }}>
+                                    <span onClick={() => handleOpenEmpEdit(emp)} style={{ fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>
+                                      {emp.name}
+                                    </span>
+                                    <span style={{ fontWeight: '700', color: '#10b981' }}>+R$ {awardValue.toFixed(2)}</span>
+                                  </div>
+                                ))
+                              )}
                             </div>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                            <span style={{ color: '#10b981', fontWeight: '700' }}>Elegíveis: {presencaPremiada.eligible.length}</span>
-                            <span style={{ color: '#ef4444', fontWeight: '700' }}>Excluídos: {presencaPremiada.disqualified.length}</span>
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', maxHeight: '120px', overflowY: 'auto' }}>
-                            {presencaPremiada.eligible.slice(0, 4).map(emp => (
-                              <div key={emp.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', padding: '0.2rem 0.4rem', borderRadius: '4px', backgroundColor: 'rgba(16,185,129,0.05)' }}>
-                                <span onClick={() => handleOpenEmpEdit(emp)} style={{ fontWeight: '600', color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }}>{emp.name}</span>
-                                <span style={{ fontWeight: '700', color: '#10b981' }}>+R$ {awardValue.toFixed(2)}</span>
-                              </div>
-                            ))}
-                          </div>
+
+                          <button
+                            onClick={() => setShowAwardReportModal(true)}
+                            style={{
+                              marginTop: '0.5rem',
+                              padding: '0.35rem 0.6rem',
+                              fontSize: '0.75rem',
+                              fontWeight: '700',
+                              backgroundColor: '#10b981',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.35rem',
+                              transition: 'filter 0.15s ease'
+                            }}
+                          >
+                            <Printer size={13} /> Relatório & Impressão de Ganhadores
+                          </button>
                         </div>
                       )}
 
@@ -867,6 +907,9 @@ export default function HRPanel({ currentUser }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   <button onClick={handleExportFullCadaster} style={styles.downloadReportBtn}>
                     <Download size={16} /> Cadastro Geral de Funcionários
+                  </button>
+                  <button onClick={() => setShowAwardReportModal(true)} style={{ ...styles.downloadReportBtn, backgroundColor: '#f0fdf4', color: '#15803d', borderColor: '#bbf7d0', fontWeight: '700' }}>
+                    <Trophy size={16} color="#15803d" /> Ganhadores da Presença Premiada (PDF / Impressão / CSV)
                   </button>
                   <button onClick={handleExportBirthdays} style={styles.downloadReportBtn}>
                     <Download size={16} /> Aniversariantes do Mês
@@ -1626,6 +1669,20 @@ export default function HRPanel({ currentUser }) {
           </div>
         </div>
       )}
+
+      {/* Award Report Modal (Presença Premiada) */}
+      <AwardReportModal
+        isOpen={showAwardReportModal}
+        onClose={() => setShowAwardReportModal(false)}
+        awardData={presencaPremiada}
+        awardPeriod={awardPeriod}
+        setAwardPeriod={setAwardPeriod}
+        awardValue={awardValue}
+        setAwardValue={setAwardValue}
+        sectors={sectors}
+        currentUser={currentUser}
+        onExportCSV={handleExportAwardReportCSV}
+      />
 
     </div>
   );

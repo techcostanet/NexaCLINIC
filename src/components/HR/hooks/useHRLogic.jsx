@@ -131,6 +131,8 @@ export function useHRLogic(currentUser) {
     discountPercent: '6'
   });
   const [awardValue, setAwardValue] = useState(100);
+  const [awardPeriod, setAwardPeriod] = useState('2026-08');
+  const [showAwardReportModal, setShowAwardReportModal] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -1088,53 +1090,133 @@ export function useHRLogic(currentUser) {
     }).sort((a, b) => a.expTargetDate - b.expTargetDate);
   };
 
-  const getPresencaPremiadaData = () => {
-    const year = 2026;
-    const month = 6; // Julho
-    const startDate = new Date(year, month, 1);
+  const getPresencaPremiadaData = (periodOverride) => {
+    const periodToUse = periodOverride || awardPeriod || '2026-08';
+    const [yStr, mStr] = periodToUse.split('-');
+    const year = parseInt(yStr, 10) || 2026;
+    const month = (parseInt(mStr, 10) || 8) - 1; // 0-indexed month
+    const startDate = new Date(year, month, 1, 0, 0, 0);
     const endDate = new Date(year, month + 1, 0, 23, 59, 59);
 
     const eligible = [];
     const disqualified = [];
 
-    employees.filter(e => e.status !== 'Inativo').forEach(emp => {
-      let hasAbsence = false;
-      let absenceReason = '';
-      if (emp.absences) {
-        const monthAbsences = emp.absences.filter(abs => {
-          const absDate = new Date(abs.date);
-          return absDate >= startDate && absDate <= endDate;
-        });
-        if (monthAbsences.length > 0) {
-          hasAbsence = true;
-          absenceReason = `${monthAbsences.length} ausência(s) (${monthAbsences.map(a => a.type).join(', ')})`;
+    employees.forEach(emp => {
+      // Ignorar desligados antes do período
+      if (emp.status === 'Inativo' && emp.terminationDate) {
+        const term = new Date(emp.terminationDate);
+        if (term < startDate) return;
+      }
+
+      const reasons = [];
+      let daysOfContract = 0;
+
+      // 1. Vínculo Empregatício: apenas CLT
+      const contractType = (emp.contractType || '').trim().toUpperCase();
+      if (contractType !== 'CLT') {
+        reasons.push(`Contrato não-CLT (${emp.contractType || 'Não informado'})`);
+      }
+
+      // 2. Data de Admissão e Período de Experiência (> 90 dias)
+      if (!emp.admissionDate) {
+        reasons.push('Data de admissão não cadastrada');
+      } else {
+        const admDate = new Date(emp.admissionDate);
+        if (isNaN(admDate.getTime())) {
+          reasons.push('Data de admissão inválida');
+        } else if (admDate > endDate) {
+          reasons.push(`Admitido após o período (${emp.admissionDate})`);
+        } else {
+          // Diferença em dias até o encerramento do mês apurado
+          daysOfContract = Math.floor((endDate.getTime() - admDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysOfContract <= 90) {
+            reasons.push(`Em período de experiência (${daysOfContract} dias de contrato - carência mínima > 90 dias)`);
+          }
         }
       }
 
-      let hasWarning = false;
-      let warningReason = '';
-      if (emp.warnings) {
+      // 3. Status do Colaborador
+      if (emp.status === 'Inativo') {
+        reasons.push('Colaborador inativo / desligado');
+      }
+
+      // 4. Advertências Disciplinares: qualquer advertência no mês desclassifica
+      if (emp.warnings && Array.isArray(emp.warnings)) {
         const monthWarnings = emp.warnings.filter(w => {
+          if (!w.date) return false;
           const wDate = new Date(w.date);
           return wDate >= startDate && wDate <= endDate;
         });
         if (monthWarnings.length > 0) {
-          hasWarning = true;
-          warningReason = `${monthWarnings.length} advertência(s)`;
+          const warnDetails = monthWarnings.map(w => `${w.motive || 'Advertência'}${w.date ? ` (${w.date})` : ''}`).join(', ');
+          reasons.push(`${monthWarnings.length} advertência(s) disciplinar(es): ${warnDetails}`);
         }
       }
 
-      if (hasAbsence || hasWarning) {
+      // 5. Ausências / Faltas no mês
+      if (emp.absences && Array.isArray(emp.absences)) {
+        const monthAbsences = emp.absences.filter(abs => {
+          if (!abs.date) return false;
+          const absDate = new Date(abs.date);
+          return absDate >= startDate && absDate <= endDate;
+        });
+        if (monthAbsences.length > 0) {
+          const absDetails = monthAbsences.map(a => `${a.type || 'Ausência'}${a.date ? ` (${a.date})` : ''}`).join(', ');
+          reasons.push(`${monthAbsences.length} ausência(s)/falta(s): ${absDetails}`);
+        }
+      }
+
+      if (reasons.length > 0) {
         disqualified.push({
           employee: emp,
-          reason: [absenceReason, warningReason].filter(Boolean).join(' e ')
+          reasons,
+          reason: reasons.join(' • '),
+          daysOfContract
         });
       } else {
-        eligible.push(emp);
+        eligible.push({
+          ...emp,
+          daysOfContract
+        });
       }
     });
 
-    return { eligible, disqualified };
+    return { 
+      eligible, 
+      disqualified, 
+      period: periodToUse, 
+      awardValue,
+      totalAwardCost: eligible.length * awardValue 
+    };
+  };
+
+  const handleExportAwardReportCSV = (periodOverride) => {
+    const data = getPresencaPremiadaData(periodOverride);
+    const p = data.period;
+    let csvContent = `RELATORIO DE PRESENCA PREMIADA - COMPETENCIA: ${p}\n`;
+    csvContent += `VALOR POR COLABORADOR: R$ ${awardValue.toFixed(2)};TOTAL CONTEMPLADOS: ${data.eligible.length};CUSTO TOTAL: R$ ${(data.eligible.length * awardValue).toFixed(2)}\n\n`;
+    
+    csvContent += "STATUS;NUMERO;NOME_COLABORADOR;CPF;CARGO;SETOR;DATA_ADMISSAO;DIAS_CONTRATO;VALOR_PREMIO;MOTIVOS\n";
+
+    data.eligible.forEach((emp, idx) => {
+      const sectorName = sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId || 'Geral';
+      csvContent += `"ELEGIVEL";${idx + 1};"${emp.name}";"${emp.cpf || ''}";"${emp.role || ''}";"${sectorName}";"${emp.admissionDate || ''}";${emp.daysOfContract};${awardValue.toFixed(2)};"Elegível (CLT > 90d, Sem advertências/faltas)"\n`;
+    });
+
+    data.disqualified.forEach((item, idx) => {
+      const emp = item.employee;
+      const sectorName = sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId || 'Geral';
+      csvContent += `"EXCLUIDO";${idx + 1};"${emp.name}";"${emp.cpf || ''}";"${emp.role || ''}";"${sectorName}";"${emp.admissionDate || ''}";${item.daysOfContract};0.00;"${item.reason.replace(/"/g, '""')}"\n`;
+    });
+
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Relatorio_Presenca_Premiada_${p}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const calculateCurrentMonthMetrics = () => {
@@ -1359,6 +1441,11 @@ export function useHRLogic(currentUser) {
     recentWarnings,
     upcomingVaccines,
     expiringContracts,
+    awardPeriod,
+    setAwardPeriod,
+    showAwardReportModal,
+    setShowAwardReportModal,
+    handleExportAwardReportCSV,
     presencaPremiada,
     turnover,
     absenteeism,

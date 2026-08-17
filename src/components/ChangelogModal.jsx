@@ -6,6 +6,22 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.79',
+      date: '17/08/2026',
+      title: 'Módulo NexaHR - Regras Estritas de Presença Premiada & Relatório de Ganhadores com Impressão',
+      description: 'Implementação das novas regras de elegibilidade (apenas CLT > 90 dias de contrato e sem advertências/ausências) e emissão de relatório oficial com recibo de assinatura.',
+      changes: [
+        { type: 'Recursos Humanos', text: 'Regra de Vínculo CLT: Apenas colaboradores contratados sob regime CLT são considerados elegíveis para o bônus.' },
+        { type: 'Recursos Humanos', text: 'Carência Contratual (>90 dias): Exclusão automática de colaboradores em período de experiência (até 90 dias de admissão).' },
+        { type: 'Recursos Humanos', text: 'Desclassificação por Advertências: Qualquer advertência disciplinar registrada no mês de competência desclassifica o colaborador.' },
+        { type: 'Recursos Humanos', text: 'Desclassificação por Faltas: Ausências ou faltas não justificadas no período eliminam a elegibilidade ao prêmio.' },
+        { type: 'Recursos Humanos', text: 'Novo Relatório Oficial de Ganhadores: Modal completo com resumo executivo, valor total do investimento e listagem detalhada de contemplados.' },
+        { type: 'Recursos Humanos', text: 'Folha de Impressão A4 com Assinaturas: Formatação padronizada para impressão com campo de assinatura para recibo do colaborador e aprovação da gestão.' },
+        { type: 'Recursos Humanos', text: 'Exportação em PDF e CSV: Download estruturado via jsPDF e arquivo CSV para integração contábil e de folha de pagamento.' },
+        { type: 'Recursos Humanos', text: 'Auditoria de Excluídos: Painel com detalhamento e justificativas transparentes de todas as desclassificações apuradas no mês.' }
+      ]
+    },
+    {
       version: 'v3.3.77',
       date: '17/08/2026',
       title: 'NexaASSIST - Conector Oficial Titan IMAP & Sincronização em Tempo Real',

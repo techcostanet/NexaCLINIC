@@ -1,3 +1,16 @@
+## [v3.3.79] - 17 de Agosto, 2026
+### Módulo NexaHR (Recursos Humanos) - Regras Estritas de Presença Premiada & Relatório Oficial de Ganhadores com Impressão
+- **Regra de Vínculo Empregatício CLT:** A apuração da Presença Premiada passa a contemplar exclusivamente colaboradores contratados sob regime CLT (`contractType === 'CLT'`).
+- **Carência Pós-Experiência (>90 dias):** Exclusão automática de colaboradores em período de experiência contratual (admissão com menos de 90 dias até o encerramento do mês de apuração).
+- **Desclassificação por Advertências Disciplinares:** Qualquer advertência registrada na ficha funcional do colaborador no mês de competência resulta em desclassificação imediata do prêmio.
+- **Desclassificação por Ausências/Faltas:** Ocorrência de faltas ou ausências no período apurado desclassifica o colaborador da bonificação de assiduidade.
+- **Novo Relatório Oficial de Ganhadores:** Modal completo acessível pelo card de Presença Premiada e pela aba de Relatórios do NexaHR, com totalizadores de investimento, seletor de competência e valor customizável do prêmio.
+- **Folha de Impressão A4 Padronizada:** Layout formatado para impressão (`window.print()` e estilos `@media print`) contendo dados do colaborador, tempo de casa, valor do bônus e campo de assinatura para recibo e auditoria.
+- **Exportação em PDF e CSV:** Geração de documento PDF profissional com tabelas zebradas e cabeçalho institucional via jsPDF, além de exportação em planilha CSV para a contabilidade.
+- **Auditoria Transparente de Excluídos:** Aba de acompanhamento com detalhamento individualizado de todos os motivos de desclassificação no mês.
+
+---
+
 ## [v3.3.77] - 17 de Agosto, 2026
 ### Módulo NexaASSIST - Conexão Oficial Titan Email (IMAP SSL/TLS) & Sincronização em Tempo Real
 - **Conexão Oficial Titan Email:** Integração autenticada com o servidor IMAP `imap.titan.email:993` (SSL/TLS) na conta `integracao@dialize.com.br`.

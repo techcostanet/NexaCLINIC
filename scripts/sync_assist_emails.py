@@ -14,6 +14,16 @@ import sys
 from html import unescape
 from datetime import datetime
 
+# Garante compatibilidade UTF-8 no Windows Console e flush imediato de logs
+import functools
+print = functools.partial(print, flush=True)
+
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 TITAN_CONFIG = {
     'imap_server': 'imap.titan.email',
     'imap_port': 993,
@@ -196,10 +206,29 @@ def classify_content(subject, body):
 
     return category, urgency
 
+PROCESSED_IDS_FILE = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'processed_email_ids.json')
+
+def load_processed_ids():
+    if os.path.exists(PROCESSED_IDS_FILE):
+        try:
+            with open(PROCESSED_IDS_FILE, 'r', encoding='utf-8') as f:
+                return set(json.load(f))
+        except Exception:
+            return set()
+    return set()
+
+def save_processed_ids(ids_set):
+    try:
+        with open(PROCESSED_IDS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(list(ids_set), f, indent=2)
+    except Exception as e:
+        print(f"Aviso ao salvar IDs processados: {e}")
+
 def sync_inbox():
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Iniciando sincronização IMAP com Titan ({TITAN_CONFIG['email']})...")
+    now_str = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+    print(f"[{now_str}] Verificando caixa Titan ({TITAN_CONFIG['email']})...")
     patients = load_patients()
-    print(f"Carregados {len(patients)} pacientes para matching.")
+    processed_ids = load_processed_ids()
 
     try:
         mail = imaplib.IMAP4_SSL(TITAN_CONFIG['imap_server'], TITAN_CONFIG['imap_port'])
@@ -208,10 +237,15 @@ def sync_inbox():
 
         status, msg_ids = mail.search(None, 'ALL')
         ids = msg_ids[0].split()
-        print(f"Total de e-mails encontrados na caixa: {len(ids)}")
+        
+        new_posts = []
+        new_ids_found = 0
 
-        synced_posts = []
         for msg_id in ids:
+            id_str = msg_id.decode()
+            if id_str in processed_ids:
+                continue
+
             res, msg_data = mail.fetch(msg_id, '(RFC822)')
             if not msg_data or not isinstance(msg_data[0], tuple):
                 continue
@@ -222,8 +256,9 @@ def sync_inbox():
             date_str = msg.get('Date', '')
             body = get_body(msg)
 
-            # Ignora e-mails automáticos do próprio sistema Titan Tips
+            # Ignora e-mails automáticos da Titan
             if 'titan-tips@titan.email' in sender.lower():
+                processed_ids.add(id_str)
                 continue
 
             matched_pat, conf, m_type = match_patient(f"{subject} {body}", patients)
@@ -233,7 +268,7 @@ def sync_inbox():
             is_linked = matched_pat and conf >= 0.75
 
             post = {
-                'id': f"email-{msg_id.decode()}-{int(datetime.now().timestamp())}",
+                'id': f"email-titan-{id_str}",
                 'source': 'email',
                 'originalFrom': sender,
                 'originalSubject': subject,
@@ -242,35 +277,70 @@ def sync_inbox():
                 'category': category,
                 'urgency': urgency,
                 'patientId': matched_pat.get('id') if is_linked else None,
-                'patientName': matched_pat.get('name') if is_linked else None,
+                'patientName': matched_pat.get('name') if is_linked else (subject.split('-')[-1].strip() if '-' in subject else None),
                 'room': matched_pat.get('room', 'Geral') if is_linked else 'Geral',
                 'shift': matched_pat.get('shift', 'Geral') if is_linked else 'Geral',
                 'matchConfidence': conf,
                 'matchType': m_type,
                 'status': 'published' if is_linked else 'pending_link',
-                'author': clean_author or 'Enfermagem / Assistência',
-                'authorRole': 'Equipe Assistencial (E-mail Titan)',
-                'createdAt': datetime.now().toISOString() if hasattr(datetime.now(), 'toISOString') else datetime.now().isoformat(),
+                'author': clean_author or 'Equipe Assistencial',
+                'authorRole': 'Enfermagem / Assistência (Titan)',
+                'createdAt': datetime.now().isoformat(),
                 'readBy': []
             }
 
-            synced_posts.append(post)
-            print(f" -> E-mail ID {msg_id.decode()}: Assunto='{subject}' | Paciente='{post['patientName']}' (Conf: {conf*100:.0f}%) | Categoria='{category}' | Urgência='{urgency}'")
+            new_posts.append(post)
+            processed_ids.add(id_str)
+            new_ids_found += 1
+            print(f" -> NOVO E-MAIL [{id_str}]: Assunto='{subject}' | Paciente='{post['patientName']}' | Categoria='{category}' | Urgência='{urgency}'")
 
         mail.close()
         mail.logout()
 
-        # Salva o resultado sincronizado em src/data/synced_assist_emails.json
-        output_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'synced_assist_emails.json')
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(synced_posts, f, ensure_ascii=False, indent=2)
+        save_processed_ids(processed_ids)
 
-        print(f"Sucesso! {len(synced_posts)} comunicados salvos em {output_path}.")
-        return synced_posts
+        if new_posts:
+            # Atualiza o arquivo synced_assist_emails.json
+            output_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'synced_assist_emails.json')
+            existing_posts = []
+            if os.path.exists(output_path):
+                try:
+                    with open(output_path, 'r', encoding='utf-8') as f:
+                        existing_posts = json.load(f)
+                except Exception:
+                    existing_posts = []
+            
+            all_posts = new_posts + existing_posts
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(all_posts, f, ensure_ascii=False, indent=2)
+
+            print(f"[{now_str}] {len(new_posts)} novo(s) e-mail(s) sincronizado(s) e salvo(s)!")
+        else:
+            print(f"[{now_str}] Caixa verificada. Nenhum e-mail novo (Total processados: {len(processed_ids)}).")
+
+        return new_posts
 
     except Exception as e:
-        print(f"Erro durante a sincronização IMAP: {e}")
+        print(f"[{now_str}] Erro ao conectar/sincronizar IMAP Titan: {e}")
         return []
 
+def main():
+    import time
+    interval = 60 # 60 segundos
+    if '--loop' in sys.argv or '--daemon' in sys.argv:
+        print(f"==================================================")
+        print(f"[ROBO NexaASSIST] Monitoramento Continuo Ativo")
+        print(f"Conta: {TITAN_CONFIG['email']}")
+        print(f"Intervalo de Verificacao: {interval} segundos")
+        print(f"==================================================")
+        while True:
+            try:
+                sync_inbox()
+            except Exception as ex:
+                print(f"Exceção no ciclo do robô: {ex}")
+            time.sleep(interval)
+    else:
+        sync_inbox()
+
 if __name__ == '__main__':
-    sync_inbox()
+    main()
