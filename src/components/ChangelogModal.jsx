@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v3.3.81',
+      date: '17/08/2026',
+      title: 'Módulo Financeiro - Limpeza Integral da Base de Dados na Nuvem (Reset Geral)',
+      description: 'Executada a exclusão em lote de todos os registros legados e fictícios do módulo financeiro no Firestore para início de operação oficial do zero.',
+      changes: [
+        { type: 'Financeiro', text: 'Limpeza em Nuvem: Exclusão de 985 documentos legados das coleções accounts_payable, accounts_receivable, debts, bank_statements, budget_plans e agreements.' },
+        { type: 'Financeiro', text: 'Permissões do Firestore: Atualizadas regras de segurança do Firestore (firestore.rules) para todas as coleções financeiras.' },
+        { type: 'Financeiro', text: 'Eliminação de Auto-seeding: Removidos dados fictícios de fallback do mockFirebase para garantir abertura limpa com zero registros.' },
+        { type: 'Financeiro', text: 'Saldo Inicial de Caixa: Redefinido padrão de saldo inicial para R$ 0,00 na projeção de fluxo de caixa.' },
+        { type: 'Financeiro', text: 'Otimização de Bundle: Removido import de dados estáticos legados, reduzindo o tamanho do pacote em mais de 200 kB.' }
+      ]
+    },
+    {
       version: 'v3.3.79',
       date: '17/08/2026',
       title: 'Módulo NexaHR - Regras Estritas de Presença Premiada & Relatório de Ganhadores com Impressão',

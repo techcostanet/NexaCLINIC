@@ -120,6 +120,10 @@ service cloud.firestore {
     match /accounts_receivable/{id} { allow read, write: if isAuthenticated(); }
     match /bank_statements/{id} { allow read, write: if isAuthenticated(); }
     match /debts/{id} { allow read, write: if isAuthenticated(); }
+    match /budget_plans/{id} { allow read, write: if isAuthenticated(); }
+    match /agreements/{id} { allow read, write: if isAuthenticated(); }
+    match /xml_imports/{id} { allow read, write: if isAuthenticated(); }
+    match /cost_centers/{id} { allow read, write: if isAuthenticated(); }
 
     // Additional HR Collections
     match /transport_vouchers/{id} { allow read, write: if isAuthenticated(); }

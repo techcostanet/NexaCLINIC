@@ -1,5 +1,26 @@
 [
   {
+    "id": "email-titan-5",
+    "source": "email",
+    "originalFrom": "Graziella Santos - Enfermeira Diálise Peritoneal <enfermagembetim11@dialize.com.br>",
+    "originalSubject": "Alta hospitalar Celso Gonçalves Matos",
+    "title": "Alta hospitalar Celso Gonçalves Matos",
+    "message": "Boa tarde!\nInformo alta hospitalar do paciente Celso Gonçalves Matos do HPRB em 14/08/26.\nModalidade: APD.\nAtte,\nGraziella Santos Xavier",
+    "category": "Internação",
+    "urgency": "Urgente",
+    "patientId": null,
+    "patientName": null,
+    "room": "Geral",
+    "shift": "Geral",
+    "matchConfidence": 0.0,
+    "matchType": "none",
+    "status": "pending_link",
+    "author": "Graziella Santos - Enfermeira Diálise Peritoneal",
+    "authorRole": "Enfermagem / Assistência (Titan)",
+    "createdAt": "2026-08-17T16:38:33.540085",
+    "readBy": []
+  },
+  {
     "id": "email-titan-4",
     "source": "email",
     "originalFrom": "Graziella Santos - Enfermeira Diálise Peritoneal <enfermagembetim11@dialize.com.br>",

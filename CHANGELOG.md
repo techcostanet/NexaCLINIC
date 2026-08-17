@@ -1,3 +1,13 @@
+## [v3.3.81] - 17 de Agosto, 2026
+### Módulo Financeiro - Limpeza Integral da Base de Dados na Nuvem (Reset Geral)
+- **Limpeza em Nuvem no Firestore:** Exclusão em lote de 985 documentos legados das coleções `accounts_payable`, `accounts_receivable`, `debts`, `bank_statements`, `budget_plans` e `agreements`.
+- **Regras de Permissão Atualizadas (`firestore.rules`):** Regras de segurança publicadas e ativas para todas as coleções financeiras no Firestore.
+- **Eliminação de Auto-seeding de Mock:** Desativação de dados mock de fallback para que todas as abas financeiras iniciem vazias e operem exclusivamente com registros reais.
+- **Fluxo de Caixa Padrão Zerado:** Redefinição do saldo inicial de caixa padrão para R$ 0,00 na projeção financeira.
+- **Redução de Bundle em ~200 kB:** Eliminação de JSONs estáticos legados do bundle de produção.
+
+---
+
 ## [v3.3.79] - 17 de Agosto, 2026
 ### Módulo NexaHR (Recursos Humanos) - Regras Estritas de Presença Premiada & Relatório Oficial de Ganhadores com Impressão
 - **Regra de Vínculo Empregatício CLT:** A apuração da Presença Premiada passa a contemplar exclusivamente colaboradores contratados sob regime CLT (`contractType === 'CLT'`).

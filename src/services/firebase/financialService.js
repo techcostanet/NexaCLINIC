@@ -264,10 +264,11 @@ export const getBudgetPlans = async () => {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'budget_plans'));
-      if (snap.empty) return mockFirestore.getBudgetPlans();
+      if (snap.empty) return [];
       return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
-      return mockFirestore.getBudgetPlans();
+      console.error('Erro ao ler budget_plans do Firestore:', e);
+      return [];
     }
   };
 
@@ -289,10 +290,11 @@ export const getAgreements = async () => {
       const { getFirestore, collection, getDocs } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'agreements'));
-      if (snap.empty) return mockFirestore.getAgreements();
+      if (snap.empty) return [];
       return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
-      return mockFirestore.getAgreements();
+      console.error('Erro ao ler agreements do Firestore:', e);
+      return [];
     }
   };
 
@@ -332,5 +334,25 @@ export const deleteBankStatement = async (id) => {
     return { success: true };
   };
 
-
-
+export const clearAllFinanceData = async () => {
+    if (USE_MOCK) return { success: true };
+    const { getFirestore, collection, getDocs, writeBatch, doc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const cols = ['accounts_payable', 'accounts_receivable', 'debts', 'bank_statements', 'budget_plans', 'agreements', 'xml_imports'];
+    
+    for (const colName of cols) {
+      const snap = await getDocs(collection(db, colName));
+      if (snap.docs.length > 0) {
+        const chunkSize = 400;
+        for (let i = 0; i < snap.docs.length; i += chunkSize) {
+          const chunk = snap.docs.slice(i, i + chunkSize);
+          const batch = writeBatch(db);
+          for (const d of chunk) {
+            batch.delete(doc(db, colName, d.id));
+          }
+          await batch.commit();
+        }
+      }
+    }
+    return { success: true };
+  };

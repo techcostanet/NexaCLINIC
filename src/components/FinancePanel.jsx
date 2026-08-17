@@ -41,7 +41,6 @@ import {
 } from 'lucide-react';
 
 import { dbService } from '../firebase';
-import import2026Data from '../data/import_2026.json';
 import FinanceReportsModal from './FinanceReportsModal';
 
 export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
@@ -78,9 +77,9 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const [initialCashBalance, setInitialCashBalance] = useState(() => {
     try {
       const saved = localStorage.getItem('sistema_indicadores_initial_cash_balance');
-      return saved !== null ? parseFloat(saved) : 150000;
+      return saved !== null ? parseFloat(saved) : 0;
     } catch {
-      return 150000;
+      return 0;
     }
   });
   const [showEditCashBalance, setShowEditCashBalance] = useState(false);
