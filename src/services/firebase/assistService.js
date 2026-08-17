@@ -85,16 +85,19 @@ export const matchPatientInText = (text, patientsList = []) => {
 export const classifyEmailContent = (subject = '', body = '') => {
   const fullText = normalizeText(`${subject} ${body}`);
 
-  // Categoria
+  // Categoria e Urgência com prioridade clínica
   let category = 'Geral';
   let urgency = 'Informativo';
 
-  if (fullText.includes('internad') || fullText.includes('internacao') || fullText.includes('cti') || fullText.includes('uti') || fullText.includes('hospitalizado')) {
-    category = 'Internação';
+  if (fullText.includes('infeccao') || fullText.includes('infecc') || fullText.includes('atb') || fullText.includes('permcath') || fullText.includes('vancomicina') || fullText.includes('ceftazidima') || fullText.includes('hemocultura')) {
+    category = 'Intercorrência';
     urgency = 'Urgente';
-  } else if (fullText.includes('alta') || fullText.includes('retorno') || fullText.includes('desospitalizado')) {
+  } else if (fullText.includes('alta') || fullText.includes('desospitaliz')) {
     category = 'Alta';
     urgency = 'Atenção';
+  } else if (fullText.includes('admissao') || fullText.includes('admitid') || fullText.includes('internad') || fullText.includes('internacao') || fullText.includes('cti') || fullText.includes('uti') || fullText.includes('hospitalizad') || fullText.includes('hospitalizacao')) {
+    category = 'Internação';
+    urgency = 'Urgente';
   } else if (fullText.includes('transfer') || fullText.includes('transferencia') || fullText.includes('vaga')) {
     category = 'Transferência';
     urgency = 'Atenção';
@@ -176,6 +179,36 @@ export const parseIncomingEmail = (emailData, patientsList = []) => {
     createdAt: date || new Date().toISOString(),
     readBy: []
   };
+};
+
+/**
+ * Executa varredura e vinculação automática inteligente em comunicados pendentes de paciente
+ */
+export const autoLinkAssistPosts = (posts = [], patientsList = []) => {
+  if (!posts || !Array.isArray(posts) || posts.length === 0) return posts || [];
+  if (!patientsList || !Array.isArray(patientsList) || patientsList.length === 0) return posts;
+
+  return posts.map(post => {
+    // Se o comunicado já possui paciente vinculado, mantém sem alterar
+    if (post.patientId && post.status === 'published') return post;
+
+    const searchBlob = `${post.title || ''} ${post.message || ''} ${post.patientName || ''} ${post.originalSubject || ''}`;
+    const { matchedPatient, confidence, matchType } = matchPatientInText(searchBlob, patientsList);
+
+    if (matchedPatient && confidence >= 0.70) {
+      return {
+        ...post,
+        patientId: matchedPatient.id,
+        patientName: matchedPatient.name,
+        room: matchedPatient.room || post.room || 'Geral',
+        shift: matchedPatient.shift || post.shift || 'Geral',
+        matchConfidence: confidence,
+        matchType: matchType,
+        status: 'published'
+      };
+    }
+    return post;
+  });
 };
 
 /**

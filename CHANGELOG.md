@@ -1,3 +1,17 @@
+## [v4.0.5] - 17 de Agosto, 2026
+### Módulo NexaASSIST - Ingestão Inteligente em Background, Auto-Vínculo de Pacientes e Limpeza de Interface
+- **Vínculo Automático de Pacientes (Fuzzy Matching):**
+  - Implementação da função `autoLinkAssistPosts` para rastreamento e vínculo automático de pacientes cadastrados (ex: ALEXANDRE JOSE DE PAULA, RAQUEL TABITA, CELSO GONÇALVES MATOS, FLAVIO FERREIRA, ESTER GUIMARÃES) no carregamento dos comunicados.
+  - Associação automática de Salão de Diálise, Turno, CPF e identificador do paciente sem exigir intervenção manual.
+- **Processamento de E-mails Reais da Caixa Titan (`integracao@dialize.com.br`):**
+  - Ingestão contínua em segundo plano dos comunicados de Admissão, Alta Hospitalar e Hospitalização recebidos na caixa assistencial oficial.
+- **Classificação Clínica Aprimorada:**
+  - Reconhecimento automático de prioridades clínicas para infecções (Ceftazidima/Vancomicina/Permcath/Hemocultura), admissões hospitalares e altas.
+- **Simplificação Visual do Cabeçalho:**
+  - Remoção dos botões manuais de sincronização e simulação, mantendo a leitura 100% automatizada e o foco no botão de Novo Comunicado.
+
+---
+
 ## [v4.0.4] - 17 de Agosto, 2026
 ### Módulo Agenda (NexaCAL) - Feriados Nacionais do Brasil, Bloqueio de Ausências e Gestão de Grade & Cotas por Médico
 - **Feriados Nacionais do Brasil Integrados:**

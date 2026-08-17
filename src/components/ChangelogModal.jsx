@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.0.5',
+      date: '17/08/2026',
+      title: 'NexaASSIST - Leitura Inteligente em Background, Auto-Vínculo de Pacientes e Limpeza da Interface',
+      description: 'Automatização completa do processamento de e-mails assistenciais da caixa Titan (integracao@dialize.com.br), auto-vínculo de pacientes cadastrados por inteligência textual e remoção de botões manuais do cabeçalho.',
+      changes: [
+        { type: 'Auto-Vínculo de Pacientes', text: 'Vínculo Inteligente Sem Ação Manual: Identificação automática de pacientes no texto do e-mail (ex: ALEXANDRE JOSE DE PAULA, RAQUEL TABITA, CELSO GONÇALVES MATOS, FLAVIO FERREIRA) com associação direta de Salão, Turno e CPF.' },
+        { type: 'Ingestão de E-mails Titan', text: 'Leitura em Background: Processamento contínuo dos comunicados de Admissão, Alta Hospitalar e Intercorrências recebidos na conta oficial da clínica.' },
+        { type: 'Classificação Clínica', text: 'Categorização Automática: Classificação inteligente de urgência e categoria para infecções, tratamentos com antibióticos, admissões e hospitalizações.' },
+        { type: 'Interface Limpa', text: 'Remoção de Botões Manuais: Cabeçalho simplificado sem botões redundantes de sincronização, operando 100% no fluxo automático.' }
+      ]
+    },
+    {
       version: 'v4.0.4',
       date: '17/08/2026',
       title: 'Módulo Agenda (NexaCAL) - Feriados Nacionais do Brasil, Bloqueio de Ausências e Gestão de Grade & Cotas por Médico',

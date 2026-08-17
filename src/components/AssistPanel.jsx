@@ -63,8 +63,10 @@ export default function AssistPanel({ currentUser }) {
         dbService.getAssistPosts(),
         dbService.getPatients()
       ]);
-      setPosts(postList || []);
-      setPatients(patientList || []);
+      const resolvedPatients = patientList || [];
+      const autoLinkedPosts = dbService.autoLinkAssistPosts ? dbService.autoLinkAssistPosts(postList || [], resolvedPatients) : (postList || []);
+      setPosts(autoLinkedPosts);
+      setPatients(resolvedPatients);
     } catch (err) {
       console.error(err);
       showAlert('Erro ao carregar dados do Feed Assistencial.', 'danger');
@@ -399,30 +401,6 @@ export default function AssistPanel({ currentUser }) {
         </div>
 
         <div style={styles.heroActions}>
-          <button 
-            onClick={handleSyncTitanInbox}
-            disabled={actionLoading}
-            style={{
-              ...styles.secondaryBtn,
-              borderColor: '#c7d2fe',
-              backgroundColor: '#eef2ff',
-              color: '#4338ca'
-            }}
-            title="Sincronizar e-mails recebidos na conta oficial integracao@dialize.com.br (Titan IMAP)"
-          >
-            <RefreshCw size={16} className={actionLoading ? 'spin' : ''} color="#4f46e5" />
-            <span>Sincronizar Caixa Titan</span>
-          </button>
-
-          <button 
-            onClick={() => setShowEmailSimulatorModal(true)}
-            style={styles.secondaryBtn}
-            title="Testar ingestão automática e leitura da caixa espelho de e-mails"
-          >
-            <Sparkles size={16} color="#8b5cf6" />
-            <span>Leitor & Modelos Titan</span>
-          </button>
-
           <button 
             onClick={() => handleOpenCreateModal()}
             style={styles.primaryBtn}
