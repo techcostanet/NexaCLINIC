@@ -48,6 +48,13 @@ export default function FinanceReportsModal({
     { id: 'AUDITORIA', name: '15. Auditoria de Lançamentos', icon: FileText }
   ];
 
+  const formatDateBR = (dateStr) => {
+    if (!dateStr) return '-';
+    const parts = String(dateStr).split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return String(dateStr);
+  };
+
   useEffect(() => {
     generateReport();
   }, [selectedReport, startDate, endDate, unitFilter, payableList, receivableList]);
@@ -67,50 +74,56 @@ export default function FinanceReportsModal({
         const r_extrato = receivableList.filter(r => filterByDateRange(r, 'dueDate') && filterByUnit(r));
         const p_extrato = payableList.filter(p => filterByDateRange(p, 'dueDate') && filterByUnit(p));
         data = [
-          ...r_extrato.map(r => ({ data: r.dueDate, tipo: 'Entrada', descricao: r.client || r.description, categoria: r.category, valor: parseFloat(r.amount)||0 })),
-          ...p_extrato.map(p => ({ data: p.dueDate, tipo: 'Saída', descricao: p.supplier || p.description, categoria: p.category, valor: parseFloat(p.amount)||0 }))
-        ].sort((a,b) => a.data.localeCompare(b.data));
+          ...r_extrato.map(r => ({ rawDate: r.dueDate, data: formatDateBR(r.dueDate), tipo: 'Entrada', descricao: r.client || r.description || '-', categoria: r.category || 'Geral', valor: parseFloat(r.amount) || 0 })),
+          ...p_extrato.map(p => ({ rawDate: p.dueDate, data: formatDateBR(p.dueDate), tipo: 'Saída', descricao: p.supplier || p.description || '-', categoria: p.category || 'Geral', valor: parseFloat(p.amount) || 0 }))
+        ].sort((a,b) => (a.rawDate || '').localeCompare(b.rawDate || ''));
 
         cols = [
           { header: 'Data', key: 'data' },
           { header: 'Tipo', key: 'tipo' },
           { header: 'Descrição', key: 'descricao' },
           { header: 'Categoria', key: 'categoria' },
-          { header: 'Valor (R$)', key: 'valor', format: 'currency' }
+          { header: 'Valor', key: 'valor', format: 'currency' }
         ];
         break;
       }
       case 'CONTAS_PAGAR': {
         data = payableList
           .filter(p => filterByDateRange(p, 'dueDate') && filterByUnit(p))
+          .sort((a,b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
           .map(p => ({
-            vencimento: p.dueDate, fornecedor: p.supplier, unidade: p.unit || 'Matriz',
-            status: p.status, valor: parseFloat(p.amount)||0
-          }))
-          .sort((a,b) => a.vencimento.localeCompare(b.vencimento));
+            vencimento: formatDateBR(p.dueDate),
+            fornecedor: p.supplier || '-',
+            unidade: p.unit || 'Matriz',
+            status: p.status || 'Pendente',
+            valor: parseFloat(p.amount) || 0
+          }));
         cols = [
           { header: 'Vencimento', key: 'vencimento' },
           { header: 'Fornecedor', key: 'fornecedor' },
           { header: 'Unidade', key: 'unidade' },
           { header: 'Status', key: 'status' },
-          { header: 'Valor (R$)', key: 'valor', format: 'currency' }
+          { header: 'Valor', key: 'valor', format: 'currency' }
         ];
         break;
       }
       case 'CONTAS_RECEBER': {
         data = receivableList
           .filter(r => filterByDateRange(r, 'dueDate') && filterByUnit(r))
+          .sort((a,b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
           .map(r => ({
-            vencimento: r.dueDate, cliente: r.client, unidade: r.unit || 'Matriz',
-            status: r.status, valor: parseFloat(r.amount)||0
-          }))
-          .sort((a,b) => a.vencimento.localeCompare(b.vencimento));
+            vencimento: formatDateBR(r.dueDate),
+            cliente: r.client || '-',
+            unidade: r.unit || 'Matriz',
+            status: r.status || 'Pendente',
+            valor: parseFloat(r.amount) || 0
+          }));
         cols = [
           { header: 'Vencimento', key: 'vencimento' },
           { header: 'Cliente', key: 'cliente' },
           { header: 'Unidade', key: 'unidade' },
           { header: 'Status', key: 'status' },
-          { header: 'Valor (R$)', key: 'valor', format: 'currency' }
+          { header: 'Valor', key: 'valor', format: 'currency' }
         ];
         break;
       }
@@ -119,15 +132,17 @@ export default function FinanceReportsModal({
         data = receivableList
           .filter(r => r.dueDate < todayStr && r.status !== 'Pago' && filterByUnit(r))
           .map(r => ({
-            vencimento: r.dueDate, cliente: r.client, dias_atraso: Math.floor((new Date(todayStr) - new Date(r.dueDate)) / (1000 * 60 * 60 * 24)),
-            valor: parseFloat(r.amount)||0
+            vencimento: formatDateBR(r.dueDate),
+            cliente: r.client || '-',
+            dias_atraso: Math.floor((new Date(todayStr) - new Date(r.dueDate)) / (1000 * 60 * 60 * 24)),
+            valor: parseFloat(r.amount) || 0
           }))
           .sort((a,b) => b.dias_atraso - a.dias_atraso);
         cols = [
           { header: 'Vencimento', key: 'vencimento' },
           { header: 'Cliente', key: 'cliente' },
-          { header: 'Atraso (Dias)', key: 'dias_atraso' },
-          { header: 'Valor (R$)', key: 'valor', format: 'currency' }
+          { header: 'Atraso', key: 'dias_atraso' },
+          { header: 'Valor', key: 'valor', format: 'currency' }
         ];
         break;
       }
@@ -140,8 +155,8 @@ export default function FinanceReportsModal({
         });
         data = Object.keys(agg).map(cc => ({ centro: cc, valor: agg[cc] })).sort((a,b) => b.valor - a.valor);
         cols = [
-          { header: 'Centro de Custo', key: 'centro' },
-          { header: 'Valor Total (R$)', key: 'valor', format: 'currency' }
+          { header: 'Centro', key: 'centro' },
+          { header: 'Valor', key: 'valor', format: 'currency' }
         ];
         break;
       }
@@ -154,8 +169,8 @@ export default function FinanceReportsModal({
         });
         data = Object.keys(aggCat).map(cat => ({ categoria: cat, valor: aggCat[cat] })).sort((a,b) => b.valor - a.valor);
         cols = [
-          { header: 'Categoria de Receita', key: 'categoria' },
-          { header: 'Valor Total (R$)', key: 'valor', format: 'currency' }
+          { header: 'Categoria', key: 'categoria' },
+          { header: 'Valor', key: 'valor', format: 'currency' }
         ];
         break;
       }
@@ -169,11 +184,11 @@ export default function FinanceReportsModal({
         data = [
           { item: '1. Receita Bruta Realizada', valor: totRec },
           { item: '2. Despesas Realizadas', valor: totDes },
-          { item: '3. Resultado Líquido (Lucro/Prejuízo)', valor: totRec - totDes }
+          { item: '3. Resultado Líquido', valor: totRec - totDes }
         ];
         cols = [
-          { header: 'DRE (Regime de Caixa)', key: 'item' },
-          { header: 'Valor (R$)', key: 'valor', format: 'currency' }
+          { header: 'Demonstrativo', key: 'item' },
+          { header: 'Valor', key: 'valor', format: 'currency' }
         ];
         break;
       }
@@ -190,14 +205,16 @@ export default function FinanceReportsModal({
           mapDias[p.dueDate].saidas += parseFloat(p.amount) || 0;
         });
         data = Object.keys(mapDias).sort().map(dia => ({
-          data: dia, entradas: mapDias[dia].entradas, saidas: mapDias[dia].saidas, 
+          data: formatDateBR(dia),
+          entradas: mapDias[dia].entradas,
+          saidas: mapDias[dia].saidas, 
           saldo: mapDias[dia].entradas - mapDias[dia].saidas
         }));
         cols = [
           { header: 'Data', key: 'data' },
-          { header: 'Entradas (R$)', key: 'entradas', format: 'currency' },
-          { header: 'Saídas (R$)', key: 'saidas', format: 'currency' },
-          { header: 'Saldo do Dia (R$)', key: 'saldo', format: 'currency' }
+          { header: 'Entradas', key: 'entradas', format: 'currency' },
+          { header: 'Saídas', key: 'saidas', format: 'currency' },
+          { header: 'Saldo', key: 'saldo', format: 'currency' }
         ];
         break;
       }
@@ -227,9 +244,9 @@ export default function FinanceReportsModal({
         ];
         cols = [
           { header: 'Período', key: 'periodo' },
-          { header: 'Receitas Previstas (R$)', key: 'entradas', format: 'currency' },
-          { header: 'Despesas Previstas (R$)', key: 'saidas', format: 'currency' },
-          { header: 'Resultado Projetado (R$)', key: 'saldo', format: 'currency' }
+          { header: 'Receitas', key: 'entradas', format: 'currency' },
+          { header: 'Despesas', key: 'saidas', format: 'currency' },
+          { header: 'Resultado', key: 'saldo', format: 'currency' }
         ];
         break;
       }
@@ -237,14 +254,18 @@ export default function FinanceReportsModal({
         const isPaid = (item) => String(item?.status || '').toLowerCase() === 'pago' || ((parseFloat(item?.amountPaid) || 0) >= (parseFloat(item?.amount) || 0) && (parseFloat(item?.amount) || 0) > 0);
         data = payableList
           .filter(p => filterByDateRange(p, 'dueDate') && filterByUnit(p) && isPaid(p))
+          .sort((a,b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
           .map(p => ({
-            vencimento: p.dueDate, fornecedor: p.supplier, metodo: p.paymentMethod || 'PIX', valor: parseFloat(p.amountPaid || p.amount) || 0
-          })).sort((a,b) => (a.vencimento || '').localeCompare(b.vencimento || ''));
+            vencimento: formatDateBR(p.dueDate),
+            fornecedor: p.supplier || '-',
+            metodo: p.paymentMethod || 'PIX',
+            valor: parseFloat(p.amountPaid || p.amount) || 0
+          }));
         cols = [
           { header: 'Vencimento', key: 'vencimento' },
           { header: 'Fornecedor', key: 'fornecedor' },
-          { header: 'Meio de Pgto', key: 'metodo' },
-          { header: 'Valor Pago (R$)', key: 'valor', format: 'currency' }
+          { header: 'Pagamento', key: 'metodo' },
+          { header: 'Pago', key: 'valor', format: 'currency' }
         ];
         break;
       }
@@ -260,8 +281,8 @@ export default function FinanceReportsModal({
           { natureza: 'Custos Variáveis / Operacionais', valor: aggNature['Variável'] }
         ];
         cols = [
-          { header: 'Natureza da Despesa', key: 'natureza' },
-          { header: 'Valor Total (R$)', key: 'valor', format: 'currency' }
+          { header: 'Natureza', key: 'natureza' },
+          { header: 'Valor', key: 'valor', format: 'currency' }
         ];
         break;
       }
@@ -274,8 +295,8 @@ export default function FinanceReportsModal({
         });
         data = Object.keys(aggMet).map(m => ({ metodo: m, valor: aggMet[m] })).sort((a,b) => b.valor - a.valor);
         cols = [
-          { header: 'Meio de Pagamento', key: 'metodo' },
-          { header: 'Total Recebido (R$)', key: 'valor', format: 'currency' }
+          { header: 'Pagamento', key: 'metodo' },
+          { header: 'Recebido', key: 'valor', format: 'currency' }
         ];
         break;
       }
@@ -289,7 +310,7 @@ export default function FinanceReportsModal({
         data = Object.keys(aggForn).map(f => ({ fornecedor: f, valor: aggForn[f] })).sort((a,b) => b.valor - a.valor);
         cols = [
           { header: 'Fornecedor', key: 'fornecedor' },
-          { header: 'Volume Devido (R$)', key: 'valor', format: 'currency' }
+          { header: 'Devido', key: 'valor', format: 'currency' }
         ];
         break;
       }
@@ -302,23 +323,22 @@ export default function FinanceReportsModal({
         });
         data = Object.keys(aggU).map(u => ({ unidade: u, valor: aggU[u] })).sort((a,b) => b.valor - a.valor);
         cols = [
-          { header: 'Filial / Unidade', key: 'unidade' },
-          { header: 'Faturamento Total (R$)', key: 'valor', format: 'currency' }
+          { header: 'Unidade', key: 'unidade' },
+          { header: 'Faturamento', key: 'valor', format: 'currency' }
         ];
         break;
       }
       case 'AUDITORIA': {
-        // Just the latest 50 records sorted by ID (which acts as a timestamp in this mock)
         data = payableList.slice(-25).map(p => ({
-          tipo: 'Despesa', descricao: p.supplier, data: p.dueDate, status: p.status
+          tipo: 'Despesa', descricao: p.supplier || '-', data: formatDateBR(p.dueDate), rawDate: p.dueDate, status: p.status
         })).concat(receivableList.slice(-25).map(r => ({
-          tipo: 'Receita', descricao: r.client, data: r.dueDate, status: r.status
-        }))).sort((a,b) => b.data.localeCompare(a.data)); // Descending by dueDate
+          tipo: 'Receita', descricao: r.client || '-', data: formatDateBR(r.dueDate), rawDate: r.dueDate, status: r.status
+        }))).sort((a,b) => (b.rawDate || '').localeCompare(a.rawDate || ''));
         cols = [
           { header: 'Tipo', key: 'tipo' },
           { header: 'Descrição', key: 'descricao' },
           { header: 'Competência', key: 'data' },
-          { header: 'Status Final', key: 'status' }
+          { header: 'Status', key: 'status' }
         ];
         break;
       }
@@ -340,14 +360,18 @@ export default function FinanceReportsModal({
     doc.setFontSize(10);
     doc.text(`CNPJ: ${tenantSettings.cnpj}`, 14, 22);
     doc.text(`Relatório: ${title}`, 14, 28);
-    doc.text(`Período: ${startDate.split('-').reverse().join('/')} a ${endDate.split('-').reverse().join('/')} | Filial: ${unitFilter}`, 14, 34);
+    doc.text(`Período: ${formatDateBR(startDate)} a ${formatDateBR(endDate)} | Filial: ${unitFilter}`, 14, 34);
 
     const tableColumn = reportColumns.map(c => c.header);
     const tableRows = reportData.map(row => 
       reportColumns.map(col => {
         let val = row[col.key];
-        if (col.format === 'currency') return `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-        return val;
+        if (col.format === 'currency') {
+          return typeof val === 'number'
+            ? val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : val;
+        }
+        return val ?? '-';
       })
     );
 
@@ -368,7 +392,10 @@ export default function FinanceReportsModal({
       const newRow = {};
       reportColumns.forEach(col => {
         let val = row[col.key];
-        if (col.format === 'currency') val = `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        if (col.format === 'currency') {
+          // Export pure float number so Excel can do calculations without text R$
+          val = typeof val === 'number' ? Number(val.toFixed(2)) : (parseFloat(val) || 0);
+        }
         newRow[col.header] = val;
       });
       return newRow;
@@ -471,7 +498,9 @@ export default function FinanceReportsModal({
                       {reportColumns.map(col => {
                         let val = row[col.key];
                         if (col.format === 'currency') {
-                          val = `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                          val = typeof val === 'number' 
+                            ? val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+                            : val;
                         }
                         if (val === undefined || val === null) val = '-';
                         return <td key={col.key} style={styles.td}>{val}</td>

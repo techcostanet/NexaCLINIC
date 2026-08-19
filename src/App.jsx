@@ -20,6 +20,7 @@ import MaintenancePanel from './components/MaintenancePanel';
 import SesmtDashboard from './components/sesmt/SesmtDashboard';
 import AssistPanel from './components/AssistPanel';
 import ErrorBoundary from './components/ErrorBoundary';
+import ModuleGuideModal from './components/common/ModuleGuideModal';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -27,6 +28,7 @@ export default function App() {
   const [currentModule, setCurrentModule] = useState('selector'); // 'selector' | 'quality' | 'reception'
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [isReportsOpen, setIsReportsOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -165,12 +167,21 @@ export default function App() {
         currentModule={currentModule}
         setCurrentModule={setCurrentModule}
         setIsReportsOpen={setIsReportsOpen}
+        setIsGuideOpen={setIsGuideOpen}
       />
 
       {/* Main body content area */}
       <main className="main-content">
         {renderContent()}
       </main>
+
+      {/* Module Guide Modal */}
+      {isGuideOpen && (
+        <ModuleGuideModal 
+          moduleId={currentModule} 
+          onClose={() => setIsGuideOpen(false)} 
+        />
+      )}
 
       {/* Footer copyright */}
       <footer style={styles.footer}>

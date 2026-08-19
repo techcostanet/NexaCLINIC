@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { authService, dbService } from '../firebase';
-import { Activity, LogOut, Menu, X, BarChart3, UploadCloud, Users, HeartPulse, FileText, LayoutGrid, Megaphone, ShoppingCart } from 'lucide-react';
+import { Activity, LogOut, Menu, X, BarChart3, UploadCloud, Users, HeartPulse, FileText, LayoutGrid, Megaphone, ShoppingCart, BookOpen } from 'lucide-react';
 import ChangelogModal from './ChangelogModal';
 
-export default function Navbar({ user, currentPage, setCurrentPage, currentModule, setCurrentModule, setIsReportsOpen }) {
+export default function Navbar({ user, currentPage, setCurrentPage, currentModule, setCurrentModule, setIsReportsOpen, setIsGuideOpen }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [tenantSettings, setTenantSettings] = useState({ name: 'Nexa Nefrologia', logo: '' });
@@ -104,6 +104,18 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
             >
               <FileText size={16} />
               <span className="desktop-only">Relatórios</span>
+            </button>
+          )}
+
+          {/* Module Guide / Manual Button */}
+          {currentModule !== 'selector' && setIsGuideOpen && (
+            <button 
+              onClick={() => setIsGuideOpen(true)} 
+              style={{ ...styles.backSelectorBtn, backgroundColor: '#f0f9ff', color: '#0369a1', border: '1px solid #38bdf8' }}
+              title="Abrir Manual e Instruções do Módulo"
+            >
+              <BookOpen size={16} />
+              <span className="desktop-only">Manual</span>
             </button>
           )}
 

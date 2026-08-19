@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.0',
+      date: '19/08/2026',
+      title: 'Central de Manuais e Guias Interativos dos Módulos & Padronização de Relatórios Brasileiros',
+      description: 'Lançamento da Central de Manuais e Guias Interativos nativos em cada módulo (Recursos, Tutorial passo a passo e Dúvidas Frequentes), conversão total dos relatórios para datas DD/MM/AAAA e exportação de valores numéricos puros para Excel sem R$.',
+      changes: [
+        { type: 'Manual dos Módulos', text: 'Central de Auto-capacitação: Novo botão "Manual" no topo de cada módulo com abas de Recursos, Tutorial prático e Dúvidas frequentes (FAQ).' },
+        { type: 'Base de Conhecimento', text: 'Instruções Operacionais: Conteúdo direto e objetivo para Financeiro, RH, Agenda, Estoque, Compras, Requisições, SESMT e Feed Assistencial.' },
+        { type: 'Regra de Projeto', text: 'Documentação Contínua: Nova diretriz obrigatória de projeto que exige atualização dos manuais a cada nova funcionalidade desenvolvida.' },
+        { type: 'Relatórios Brasileiros', text: 'Datas em Padrão Nacional: Conversão automática de datas para DD/MM/AAAA e preservação da ordenação cronológica nos 15 relatórios.' },
+        { type: 'Excel Dinâmico', text: 'Células Numéricas Puras: Remoção do prefixo "R$" em exportações XLS para permitir fórmulas, somas e tabelas dinâmicas nativas.' }
+      ]
+    },
+    {
       version: 'v4.1.1',
       date: '19/08/2026',
       title: 'Módulo Estoque & Farmácia - Zeração de Estoque Mínimo e Etapa Financeira Dedicada no Importador de NF-e',

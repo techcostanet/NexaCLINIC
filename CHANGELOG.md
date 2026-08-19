@@ -1,3 +1,21 @@
+## [v4.7.0] - 19 de Agosto, 2026
+### Central de Manuais e Guias Interativos dos Módulos & Padronização de Relatórios Brasileiros
+- **Central de Manuais e Guias Interativos dos Módulos (`ModuleGuideModal`):**
+  - Implementação de modal nativo acessível pelo botão **"Manual"** no topo de cada módulo.
+  - Estrutura organizada em abas de termo único: **`Recursos`** (funcionalidades disponíveis), **`Tutorial`** (passos práticos numerados) e **`Dúvidas`** (FAQ rápida).
+  - Barra de busca dinâmica em tempo real para localização instantânea de procedimentos.
+- **Base de Conhecimento Operacional Completa (`src/data/moduleGuidesData.js`):**
+  - Conteúdo prático, direto e com linguagem clínica para os 8 módulos centrais:
+    - *Financeiro (NexaFINANCE)*, *RH & Benefícios (NexaHR)*, *Agenda (NexaCAL)*, *Estoque & Farmácia (NexaSTOCK)*, *Compras (NexaPROCURE)*, *Requisições (NexaREQ)*, *SESMT (NexaSAFE)* e *Feed Assistencial (NexaASSIST)*.
+- **Regra Obrigatória de Governança de Projeto ([`.agents/AGENTS.md`](file:///c:/Nexa/NexAi-CLINIC/.agents/AGENTS.md)):**
+  - Nova diretriz obrigando a atualização da base de manuais a cada nova funcionalidade adicionada no sistema.
+- **Padronização de Relatórios Financeiros para o Padrão Brasileiro:**
+  - Conversão de todas as colunas de data para o padrão nacional `DD/MM/AAAA`.
+  - Exportação de valores no Excel (.xlsx) como números puros (floats), viabilizando fórmulas matemáticas (`=SOMA()`) sem a interferência do texto `"R$"`.
+  - Cabeçalhos de tabelas e relatórios simplificados para 1 palavra concisa.
+
+---
+
 ## [v4.1.1] - 19 de Agosto, 2026
 ### Módulo Estoque & Farmácia - Zeração de Estoque Mínimo e Etapa Financeira Dedicada no Importador de NF-e
 - **Zeração de Estoque Mínimo de Todos os Produtos (1.221 Itens):**
