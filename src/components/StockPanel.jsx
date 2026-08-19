@@ -209,7 +209,7 @@ export default function StockPanel({ currentUser }) {
           onClick={() => setActiveTab('invoices')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'invoices' ? styles.tabBtnActive : {}) }}
         >
-          <FileText size={16} /> Entrada de Notas & XML ({(invoices || []).length})
+          <FileText size={16} /> Entrada de Notas (XML / PDF) ({(invoices || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('transactions')} 
@@ -295,7 +295,7 @@ export default function StockPanel({ currentUser }) {
           )}
           {activeTab === 'invoices' && (
             <button onClick={() => setShowXmlWizard(true)} style={styles.addBtn}>
-              <UploadCloud size={16} /> Importar XML de NF-e
+              <UploadCloud size={16} /> Importar XML / PDF de NF-e
             </button>
           )}
           {activeTab === 'suppliers' && (
@@ -993,8 +993,8 @@ export default function StockPanel({ currentUser }) {
               <button onClick={() => setShowFulfillModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
 
-            <div style={{ padding: '1rem 0' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', backgroundColor: '#f9fafb', padding: '0.85rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem' }}>
+            <div style={styles.modalForm}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', backgroundColor: '#f9fafb', padding: '0.85rem', borderRadius: '8px', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
                 <div><strong>Solicitante:</strong> {fulfillingReq.requestedBy}</div>
                 <div><strong>Destino:</strong> {fulfillingReq.patientName || 'Uso Geral'}</div>
                 <div><strong>Data:</strong> {new Date(fulfillingReq.createdAt).toLocaleString('pt-BR')}</div>
@@ -1002,12 +1002,12 @@ export default function StockPanel({ currentUser }) {
               </div>
 
               {fulfillingReq.notes && (
-                <div style={{ fontSize: '0.85rem', fontStyle: 'italic', marginBottom: '1rem', color: '#4b5563' }}>
+                <div style={{ fontSize: '0.85rem', fontStyle: 'italic', marginBottom: '0.5rem', color: '#4b5563' }}>
                   Obs. Técnica: "{fulfillingReq.notes}"
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
                 <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700' }}>Itens Solicitados & Quantidade Entregue:</h4>
                 <button 
                   type="button" 
@@ -1018,7 +1018,7 @@ export default function StockPanel({ currentUser }) {
                 </button>
               </div>
 
-              <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden', marginBottom: '1rem' }}>
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                   <thead style={{ backgroundColor: '#f3f4f6', textAlign: 'left' }}>
                     <tr>
@@ -1047,7 +1047,7 @@ export default function StockPanel({ currentUser }) {
                 </table>
               </div>
 
-              <div style={{ marginBottom: '1rem' }}>
+              <div>
                 <label style={{ fontSize: '0.85rem', fontWeight: '600', display: 'block', marginBottom: '0.25rem' }}>Observações da Farmácia:</label>
                 <textarea 
                   value={fulfillmentNotes} 
@@ -1056,34 +1056,34 @@ export default function StockPanel({ currentUser }) {
                   style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.85rem', height: '50px' }}
                 />
               </div>
+            </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+            <div style={styles.modalFooter}>
+              <button 
+                type="button" 
+                onClick={() => handleProcessFulfillment('Cancelado')}
+                style={{ padding: '0.5rem 0.85rem', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fef2f2', color: '#991b1b', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
+                disabled={actionLoading}
+              >
+                Recusar Pedido
+              </button>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button 
                   type="button" 
-                  onClick={() => handleProcessFulfillment('Cancelado')}
-                  style={{ padding: '0.5rem 0.85rem', borderRadius: '6px', border: '1px solid #fca5a5', backgroundColor: '#fef2f2', color: '#991b1b', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}
+                  onClick={() => setShowFulfillModal(false)}
+                  style={{ padding: '0.5rem 0.85rem', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#f3f4f6', fontSize: '0.85rem', fontWeight: '600', color: '#374151', cursor: 'pointer' }}
+                >
+                  Fechar
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => handleProcessFulfillment('AUTO')}
+                  style={{ padding: '0.5rem 1.2rem', borderRadius: '6px', border: 'none', backgroundColor: '#10b981', color: '#ffffff', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' }}
                   disabled={actionLoading}
                 >
-                  Recusar / Cancelar Pedido
+                  {actionLoading ? 'Processando...' : 'Confirmar & Baixar'}
                 </button>
-
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowFulfillModal(false)}
-                    style={{ padding: '0.5rem 0.85rem', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#f3f4f6', fontSize: '0.85rem', fontWeight: '600', color: '#374151', cursor: 'pointer' }}
-                  >
-                    Fechar
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => handleProcessFulfillment('AUTO')}
-                    style={{ padding: '0.5rem 1.2rem', borderRadius: '6px', border: 'none', backgroundColor: '#10b981', color: '#ffffff', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' }}
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? 'Processando...' : 'Confirmar Atendimento & Baixar Estoque'}
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -1098,65 +1098,69 @@ export default function StockPanel({ currentUser }) {
               <h2>{editingItem ? 'Editar Produto' : 'Cadastrar Novo Insumo'}</h2>
               <button onClick={() => setShowItemModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
-            <form onSubmit={handleSaveItem} style={styles.modalForm}>
-              <div className="form-group">
-                <label>Nome do Insumo *</label>
-                <input 
-                  type="text" className="form-control" placeholder="Ex: Capilar HF80" required
-                  value={itemForm.name} onChange={e => setItemForm({ ...itemForm, name: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Categoria *</label>
-                <select 
-                  className="form-control" value={itemForm.category}
-                  onChange={e => setItemForm({ ...itemForm, category: e.target.value })}
-                >
-                  <option value="Insumo Clínico">Insumo Clínico</option>
-                  <option value="Medicamento">Medicamento</option>
-                  <option value="Concentrado">Concentrado</option>
-                  <option value="Outros">Outros</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Almoxarifado/Setor Padrão</label>
-                <select 
-                  className="form-control" value={itemForm.defaultSectorId}
-                  onChange={e => setItemForm({ ...itemForm, defaultSectorId: e.target.value })}
-                >
-                  {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <form onSubmit={handleSaveItem} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+              <div style={styles.modalForm}>
                 <div className="form-group">
-                  <label>Estoque Inicial</label>
+                  <label>Nome do Insumo *</label>
                   <input 
-                    type="number" className="form-control" disabled={editingItem !== null}
-                    value={itemForm.currentStock} onChange={e => setItemForm({ ...itemForm, currentStock: e.target.value })}
+                    type="text" className="form-control" placeholder="Ex: Capilar HF80" required
+                    value={itemForm.name} onChange={e => setItemForm({ ...itemForm, name: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Estoque Mínimo *</label>
-                  <input 
-                    type="number" className="form-control" required
-                    value={itemForm.minStock} onChange={e => setItemForm({ ...itemForm, minStock: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <label>Unidade de Medida</label>
-                  <input 
-                    type="text" className="form-control" placeholder="Ex: unidades, frascos"
-                    value={itemForm.unit} onChange={e => setItemForm({ ...itemForm, unit: e.target.value })}
-                  />
+                  <label>Categoria *</label>
+                  <select 
+                    className="form-control" value={itemForm.category}
+                    onChange={e => setItemForm({ ...itemForm, category: e.target.value })}
+                  >
+                    <option value="Insumo Clínico / MatMed">Insumo Clínico / MatMed</option>
+                    <option value="Medicamento">Medicamento</option>
+                    <option value="Concentrado">Concentrado</option>
+                    <option value="OPME">OPME</option>
+                    <option value="Descartáveis">Descartáveis</option>
+                    <option value="Outros">Outros</option>
+                  </select>
                 </div>
                 <div className="form-group">
-                  <label>Preço Unitário (R$)</label>
-                  <input 
-                    type="text" className="form-control" placeholder="0.00"
-                    value={itemForm.price} onChange={e => setItemForm({ ...itemForm, price: e.target.value })}
-                  />
+                  <label>Almoxarifado/Setor Padrão</label>
+                  <select 
+                    className="form-control" value={itemForm.defaultSectorId}
+                    onChange={e => setItemForm({ ...itemForm, defaultSectorId: e.target.value })}
+                  >
+                    {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label>Estoque Inicial</label>
+                    <input 
+                      type="number" className="form-control" disabled={editingItem !== null}
+                      value={itemForm.currentStock} onChange={e => setItemForm({ ...itemForm, currentStock: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Estoque Mínimo *</label>
+                    <input 
+                      type="number" className="form-control" required
+                      value={itemForm.minStock} onChange={e => setItemForm({ ...itemForm, minStock: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label>Unidade de Medida</label>
+                    <input 
+                      type="text" className="form-control" placeholder="Ex: unidades, frascos"
+                      value={itemForm.unit} onChange={e => setItemForm({ ...itemForm, unit: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Preço Unitário (R$)</label>
+                    <input 
+                      type="text" className="form-control" placeholder="0.00"
+                      value={itemForm.price} onChange={e => setItemForm({ ...itemForm, price: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
               <div style={styles.modalFooter}>
@@ -1178,42 +1182,44 @@ export default function StockPanel({ currentUser }) {
               <h2>{editingSupplier ? 'Editar Fornecedor' : 'Cadastrar Novo Fornecedor'}</h2>
               <button onClick={() => setShowSupplierModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
-            <form onSubmit={handleSaveSupplier} style={styles.modalForm}>
-              <div className="form-group">
-                <label>Razão Social / Nome *</label>
-                <input 
-                  type="text" className="form-control" placeholder="Ex: Baxter Hospitalar Ltda" required
-                  value={supplierForm.name} onChange={e => setSupplierForm({ ...supplierForm, name: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>CNPJ</label>
-                <input 
-                  type="text" className="form-control" placeholder="00.000.000/0000-00"
-                  value={supplierForm.cnpj} onChange={e => setSupplierForm({ ...supplierForm, cnpj: formatCnpj(e.target.value) })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Pessoa de Contato</label>
-                <input 
-                  type="text" className="form-control" placeholder="Ex: Carlos Silva"
-                  value={supplierForm.contact} onChange={e => setSupplierForm({ ...supplierForm, contact: e.target.value })}
-                />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <form onSubmit={handleSaveSupplier} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+              <div style={styles.modalForm}>
                 <div className="form-group">
-                  <label>Telefone</label>
+                  <label>Razão Social / Nome *</label>
                   <input 
-                    type="text" className="form-control" placeholder="(00) 0000-0000"
-                    value={supplierForm.phone} onChange={e => setSupplierForm({ ...supplierForm, phone: e.target.value })}
+                    type="text" className="form-control" placeholder="Ex: Baxter Hospitalar Ltda" required
+                    value={supplierForm.name} onChange={e => setSupplierForm({ ...supplierForm, name: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Email</label>
+                  <label>CNPJ</label>
                   <input 
-                    type="email" className="form-control" placeholder="vendas@fornecedor.com"
-                    value={supplierForm.email} onChange={e => setSupplierForm({ ...supplierForm, email: e.target.value })}
+                    type="text" className="form-control" placeholder="00.000.000/0000-00"
+                    value={supplierForm.cnpj} onChange={e => setSupplierForm({ ...supplierForm, cnpj: formatCnpj(e.target.value) })}
                   />
+                </div>
+                <div className="form-group">
+                  <label>Pessoa de Contato</label>
+                  <input 
+                    type="text" className="form-control" placeholder="Ex: Carlos Silva"
+                    value={supplierForm.contact} onChange={e => setSupplierForm({ ...supplierForm, contact: e.target.value })}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label>Telefone</label>
+                    <input 
+                      type="text" className="form-control" placeholder="(00) 0000-0000"
+                      value={supplierForm.phone} onChange={e => setSupplierForm({ ...supplierForm, phone: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input 
+                      type="email" className="form-control" placeholder="vendas@fornecedor.com"
+                      value={supplierForm.email} onChange={e => setSupplierForm({ ...supplierForm, email: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
               <div style={styles.modalFooter}>
@@ -1235,20 +1241,22 @@ export default function StockPanel({ currentUser }) {
               <h2>{editingSector ? 'Editar Setor de Estoque' : 'Cadastrar Novo Setor de Estoque'}</h2>
               <button onClick={() => setShowSectorModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
-            <form onSubmit={handleSaveSector} style={styles.modalForm}>
-              <div className="form-group">
-                <label>Nome do Setor Físico *</label>
-                <input 
-                  type="text" className="form-control" placeholder="Ex: Almoxarifado Central" required
-                  value={sectorForm.name} onChange={e => setSectorForm({ ...sectorForm, name: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Descrição / Finalidade</label>
-                <input 
-                  type="text" className="form-control" placeholder="Depósito principal de insumos e medicamentos"
-                  value={sectorForm.description} onChange={e => setSectorForm({ ...sectorForm, description: e.target.value })}
-                />
+            <form onSubmit={handleSaveSector} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+              <div style={styles.modalForm}>
+                <div className="form-group">
+                  <label>Nome do Setor Físico *</label>
+                  <input 
+                    type="text" className="form-control" placeholder="Ex: Almoxarifado Central" required
+                    value={sectorForm.name} onChange={e => setSectorForm({ ...sectorForm, name: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Descrição / Finalidade</label>
+                  <input 
+                    type="text" className="form-control" placeholder="Depósito principal de insumos e medicamentos"
+                    value={sectorForm.description} onChange={e => setSectorForm({ ...sectorForm, description: e.target.value })}
+                  />
+                </div>
               </div>
               <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setShowSectorModal(false)} className="btn btn-secondary">Cancelar</button>
@@ -1269,73 +1277,75 @@ export default function StockPanel({ currentUser }) {
               <h2>Lançar Movimentação Manual</h2>
               <button onClick={() => setShowTxForm(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
-            <form onSubmit={handleSaveTransaction} style={styles.modalForm}>
-              <div className="form-group">
-                <label>Item de Estoque *</label>
-                <select 
-                  className="form-control" value={txForm.itemId}
-                  onChange={e => setTxForm({ ...txForm, itemId: e.target.value })}
-                >
-                  {items.map(i => <option key={i.id} value={i.id}>{i.name} (Saldo: {i.currentStock} {i.unit})</option>)}
-                </select>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <form onSubmit={handleSaveTransaction} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+              <div style={styles.modalForm}>
                 <div className="form-group">
-                  <label>Tipo de Operação *</label>
+                  <label>Item de Estoque *</label>
                   <select 
-                    className="form-control" value={txForm.type}
-                    onChange={e => setTxForm({ ...txForm, type: e.target.value })}
+                    className="form-control" value={txForm.itemId}
+                    onChange={e => setTxForm({ ...txForm, itemId: e.target.value })}
                   >
-                    <option value="Entrada">Entrada (Abastecimento)</option>
-                    <option value="Saída">Saída (Consumo/Dispensação)</option>
+                    {items.map(i => <option key={i.id} value={i.id}>{i.name} (Saldo: {i.currentStock} {i.unit})</option>)}
                   </select>
                 </div>
-                <div className="form-group">
-                  <label>Quantidade *</label>
-                  <input 
-                    type="number" step="0.01" className="form-control" required placeholder="0"
-                    value={txForm.quantity} onChange={e => setTxForm({ ...txForm, quantity: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Setor Destino/Origem *</label>
-                <select 
-                  className="form-control" value={txForm.sectorId}
-                  onChange={e => setTxForm({ ...txForm, sectorId: e.target.value })}
-                >
-                  {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <label>Lote (se Entrada)</label>
-                  <input 
-                    type="text" className="form-control" placeholder="L-X100"
-                    value={txForm.batch} onChange={e => setTxForm({ ...txForm, batch: e.target.value })}
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label>Tipo de Operação *</label>
+                    <select 
+                      className="form-control" value={txForm.type}
+                      onChange={e => setTxForm({ ...txForm, type: e.target.value })}
+                    >
+                      <option value="Entrada">Entrada (Abastecimento)</option>
+                      <option value="Saída">Saída (Consumo/Dispensação)</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Quantidade *</label>
+                    <input 
+                      type="number" step="0.01" className="form-control" required placeholder="0"
+                      value={txForm.quantity} onChange={e => setTxForm({ ...txForm, quantity: e.target.value })}
+                    />
+                  </div>
                 </div>
                 <div className="form-group">
-                  <label>Validade (se Entrada)</label>
+                  <label>Setor Destino/Origem *</label>
+                  <select 
+                    className="form-control" value={txForm.sectorId}
+                    onChange={e => setTxForm({ ...txForm, sectorId: e.target.value })}
+                  >
+                    {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label>Lote (se Entrada)</label>
+                    <input 
+                      type="text" className="form-control" placeholder="L-X100"
+                      value={txForm.batch} onChange={e => setTxForm({ ...txForm, batch: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Validade (se Entrada)</label>
+                    <input 
+                      type="date" className="form-control"
+                      value={txForm.expiryDate} onChange={e => setTxForm({ ...txForm, expiryDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Operador Responsável *</label>
                   <input 
-                    type="date" className="form-control"
-                    value={txForm.expiryDate} onChange={e => setTxForm({ ...txForm, expiryDate: e.target.value })}
+                    type="text" className="form-control" required
+                    value={txForm.operator} onChange={e => setTxForm({ ...txForm, operator: e.target.value })}
                   />
                 </div>
-              </div>
-              <div className="form-group">
-                <label>Operador Responsável *</label>
-                <input 
-                  type="text" className="form-control" required
-                  value={txForm.operator} onChange={e => setTxForm({ ...txForm, operator: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Observação / Justificativa</label>
-                <input 
-                  type="text" className="form-control" placeholder="Ex: Dispensação para Sala 2"
-                  value={txForm.notes} onChange={e => setTxForm({ ...txForm, notes: e.target.value })}
-                />
+                <div className="form-group">
+                  <label>Observação / Justificativa</label>
+                  <input 
+                    type="text" className="form-control" placeholder="Ex: Dispensação para Sala 2"
+                    value={txForm.notes} onChange={e => setTxForm({ ...txForm, notes: e.target.value })}
+                  />
+                </div>
               </div>
               <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setShowTxForm(false)} className="btn btn-secondary">Cancelar</button>
@@ -1348,39 +1358,43 @@ export default function StockPanel({ currentUser }) {
         </div>
       )}
 
-      {/* XML IMPORT WIZARD */}
+      {/* XML & PDF (DANFE) IMPORT WIZARD */}
       {showXmlWizard && (
         <div style={styles.modalOverlay}>
           <div style={{ ...styles.modalCard, maxWidth: '800px', width: '90%' }}>
             <div style={styles.modalHeader}>
-              <h2>Importar Nota Fiscal Eletrônica (XML NFe)</h2>
+              <h2>Importar Nota Fiscal Eletrônica (XML / PDF DANFE)</h2>
               <button onClick={() => setShowXmlWizard(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
             
             <div style={styles.wizardStepsBar}>
-              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 1 ? styles.wizardStepActive : {}) }}>1. XML</div>
+              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 1 ? styles.wizardStepActive : {}) }}>1. Arquivo</div>
               <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 2 ? styles.wizardStepActive : {}) }}>2. Fornecedor</div>
               <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 3 ? styles.wizardStepActive : {}) }}>3. Mapear Itens</div>
               <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 4 ? styles.wizardStepActive : {}) }}>4. Finalizar</div>
             </div>
 
-            <div style={{ padding: '1.5rem', maxHeight: '60vh', overflowY: 'auto' }}>
-              {/* STEP 1: Upload XML File */}
+            <div style={{ padding: '1.25rem 1.5rem', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
+              {/* STEP 1: Upload XML or PDF File */}
               {xmlWizardStep === 1 && (
                 <div style={styles.xmlUploadArea}>
                   <UploadCloud size={48} color="#f59e0b" style={{ marginBottom: '1rem' }} />
-                  <p style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Arraste ou clique para selecionar o arquivo .xml da NF-e</p>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Compatível com formato padrão da SEFAZ</p>
+                  <p style={{ fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>
+                    Arraste ou clique para selecionar o arquivo XML (.xml) ou DANFE em PDF (.pdf)
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                    Compatível com XML padrão SEFAZ e DANFE em formato PDF
+                  </p>
                   
                   <input 
                     type="file" 
-                    accept=".xml" 
+                    accept=".xml,.pdf,application/pdf,text/xml" 
                     onChange={handleXmlUpload} 
                     id="xml-file-upload-input" 
                     style={{ display: 'none' }} 
                   />
-                  <label htmlFor="xml-file-upload-input" className="btn btn-primary" style={{ backgroundColor: '#f59e0b', cursor: 'pointer' }}>
-                    Escolher Arquivo XML
+                  <label htmlFor="xml-file-upload-input" className="btn btn-primary" style={{ backgroundColor: '#f59e0b', cursor: 'pointer', padding: '0.6rem 1.5rem' }}>
+                    {actionLoading ? 'Processando Arquivo...' : 'Escolher Arquivo (XML ou PDF)'}
                   </label>
 
                   {xmlError && (
@@ -1396,26 +1410,26 @@ export default function StockPanel({ currentUser }) {
               {xmlWizardStep === 2 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={styles.infoSummaryBox}>
-                    <h4>Dados da Nota Lida</h4>
+                    <h4>Dados da Nota Lida ({xmlData?.sourceType || 'XML'})</h4>
                     <p>Número: <strong>{xmlData?.number}</strong></p>
-                    <p>Chave: <strong>{xmlData?.accessKey}</strong></p>
+                    <p>Chave: <strong>{xmlData?.accessKey || 'Não identificada no arquivo'}</strong></p>
                     <p>Valor Total: <strong>R$ {xmlData?.totalValue?.toFixed(2)}</strong></p>
                   </div>
                   
                   <div style={styles.mappingCard}>
                     <h3>Emitente da Nota (Fornecedor)</h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Nome no XML: <strong>{xmlData?.supplierName}</strong></p>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>CNPJ no XML: <strong>{formatCnpj(xmlData?.supplierCnpj)}</strong></p>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Nome no Documento: <strong>{xmlData?.supplierName}</strong></p>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>CNPJ: <strong>{formatCnpj(xmlData?.supplierCnpj)}</strong></p>
                     
                     {supplierMapping.exists ? (
                       <div style={{ ...styles.alert, backgroundColor: 'var(--success-light)', color: 'var(--success-color)', border: '1px solid var(--success-color)', marginTop: '0.75rem' }}>
                         <CheckCircle2 size={18} />
-                        <span>Fornecedor já cadastrado e vinculado automaticamente: <strong>{supplierMapping.name}</strong></span>
+                        <span>Fornecedor vinculado: <strong>{supplierMapping.name}</strong></span>
                       </div>
                     ) : (
                       <div style={{ marginTop: '1rem', border: '1px solid #f59e0b', padding: '1rem', borderRadius: 'var(--border-radius-sm)', backgroundColor: 'rgba(245, 158, 11, 0.03)' }}>
-                        <h4 style={{ color: '#f59e0b', marginBottom: '0.5rem' }}>Fornecedor Não Encontrado</h4>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>O fornecedor deste XML não está cadastrado. Confirme os dados abaixo para cadastrá-lo automaticamente:</p>
+                        <h4 style={{ color: '#f59e0b', marginBottom: '0.5rem' }}>Fornecedor Novo</h4>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>O fornecedor não está cadastrado. Confirme os dados abaixo para cadastrá-lo automaticamente:</p>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                           <div className="form-group">
                             <label>Nome / Razão Social</label>
@@ -1450,22 +1464,22 @@ export default function StockPanel({ currentUser }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={styles.warningBanner}>
                     <AlertTriangle size={16} />
-                    <span>Mapeie cada item do XML para um item do catálogo. Selecione "[Criar como novo]" para criar o produto no estoque.</span>
+                    <span>Mapeie cada item da nota para um produto do catálogo. Selecione "[Criar como novo]" para incluí-lo automaticamente.</span>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {itemMappings.map((m, idx) => (
-                      <div key={m.xmlCode} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-sm)', padding: '1rem', backgroundColor: '#fafafa' }}>
+                      <div key={m.xmlCode + '-' + idx} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-sm)', padding: '1rem', backgroundColor: '#fafafa' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '1rem', marginBottom: '0.75rem' }}>
                           <div>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Nome original no XML (Cód: {m.xmlCode})</span>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Descrição na Nota (Cód: {m.xmlCode})</span>
                             <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{m.xmlName}</span>
                             <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                              Quant: <strong>{m.quantity}</strong> | Preço XML: <strong>R$ {m.price?.toFixed(2)}</strong>
+                              Quant: <strong>{m.quantity}</strong> | Preço: <strong>R$ {m.price?.toFixed(2)}</strong>
                             </span>
                           </div>
                           <div className="form-group">
-                            <label>Associar a Produto no Catálogo *</label>
+                            <label>Produto no Catálogo *</label>
                             <select 
                               className="form-control"
                               value={m.mappedItemId}
@@ -1509,20 +1523,32 @@ export default function StockPanel({ currentUser }) {
               {/* STEP 4: Review and Finish */}
               {xmlWizardStep === 4 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <h3>Revisão de Importação da NF-e</h3>
+                  <h3>Revisão de Entrada da Nota Fiscal</h3>
                   
                   <div style={styles.infoSummaryBox}>
-                    <p>Nota Fiscal: <strong>{xmlData?.number}</strong></p>
+                    <p>Nota Fiscal: <strong>{xmlData?.number}</strong> ({xmlData?.sourceType || 'XML'})</p>
                     <p>Fornecedor: <strong>{supplierMapping.name}</strong> ({supplierMapping.cnpj})</p>
-                    <p>Valor da Nota: <strong>R$ {xmlData?.totalValue?.toFixed(2)}</strong></p>
+                    <p>Valor Total da Nota: <strong>R$ {xmlData?.totalValue?.toFixed(2)}</strong></p>
+                    {xmlData?.installments && xmlData.installments.length > 0 && (
+                      <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #cbd5e1' }}>
+                        <span style={{ fontWeight: '700', fontSize: '0.8rem', color: '#0369a1', display: 'block', marginBottom: '0.25rem' }}>
+                          📅 Contas a Pagar a Gerar no Financeiro ({xmlData.installments.length} parcela(s)):
+                        </span>
+                        {xmlData.installments.map((inst, i) => (
+                          <div key={i} style={{ fontSize: '0.75rem', color: '#334155' }}>
+                            • Parcela <strong>{inst.installmentNumber}</strong>: Vencimento em <strong>{inst.dueDate ? inst.dueDate.split('-').reverse().join('/') : '30 dias'}</strong> — <strong>R$ {parseFloat(inst.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div>
-                    <h4 style={{ marginBottom: '0.5rem' }}>Itens a serem abastecidos:</h4>
+                    <h4 style={{ marginBottom: '0.5rem' }}>Itens a serem abastecidos no estoque:</h4>
                     <table style={styles.table}>
                       <thead>
                         <tr>
-                          <th>Produto Catalogo</th>
+                          <th>Produto Catálogo</th>
                           <th>Quantidade</th>
                           <th>Preço Un.</th>
                           <th>Subtotal</th>
@@ -1559,6 +1585,7 @@ export default function StockPanel({ currentUser }) {
           </div>
         </div>
       )}
+
       {/* Loan Modal (Empréstimos de Produtos / Medicamentos) */}
       {showLoanModal && (
         <div style={styles.modalOverlay}>
@@ -1567,109 +1594,111 @@ export default function StockPanel({ currentUser }) {
               <h2>{editingLoan ? 'Editar Empréstimo' : 'Cadastrar Empréstimo de Produto / Medicamento'}</h2>
               <button onClick={() => setShowLoanModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
-            <form onSubmit={handleSaveLoan} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-              <div className="form-group">
-                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Tipo de Empréstimo *</label>
-                <select 
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                  value={loanForm.type}
-                  onChange={e => setLoanForm({ ...loanForm, type: e.target.value })}
-                >
-                  <option value="Concedido">📤 Concedido (Estoque Próprio Emprestado para Terceiros)</option>
-                  <option value="Recebido">📥 Recebido (Empréstimo Recebido de Outra Clínica / Hospital)</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Produto / Medicamento Emprestado *</label>
-                <input 
-                  type="text"
-                  list="product-suggestions"
-                  placeholder="Ex: Erythropoietin 4000UI / Dialisador Capilar"
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                  value={loanForm.productName}
-                  onChange={e => setLoanForm({ ...loanForm, productName: e.target.value })}
-                  required
-                />
-                <datalist id="product-suggestions">
-                  {items.map(i => <option key={i.id} value={i.name} />)}
-                </datalist>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <form onSubmit={handleSaveLoan} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+              <div style={styles.modalForm}>
                 <div className="form-group">
-                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Quantidade *</label>
-                  <input 
-                    type="number"
-                    min="1"
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                    value={loanForm.quantity}
-                    onChange={e => setLoanForm({ ...loanForm, quantity: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Unidade de Medida</label>
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Tipo de Empréstimo *</label>
                   <select 
                     style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                    value={loanForm.unit}
-                    onChange={e => setLoanForm({ ...loanForm, unit: e.target.value })}
+                    value={loanForm.type}
+                    onChange={e => setLoanForm({ ...loanForm, type: e.target.value })}
                   >
-                    <option value="Caixa(s)">Caixa(s)</option>
-                    <option value="Unidade(s)">Unidade(s)</option>
-                    <option value="Ampola(s)">Ampola(s)</option>
-                    <option value="Frasco(s)">Frasco(s)</option>
-                    <option value="Kit(s)">Kit(s)</option>
+                    <option value="Concedido">📤 Concedido (Estoque Próprio Emprestado para Terceiros)</option>
+                    <option value="Recebido">📥 Recebido (Empréstimo Recebido de Outra Clínica / Hospital)</option>
                   </select>
                 </div>
-              </div>
 
-              <div className="form-group">
-                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Instituição / Clínica Parceira *</label>
-                <input 
-                  type="text"
-                  placeholder="Ex: Hospital São Lucas / Clínica NefroVida"
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                  value={loanForm.partnerName}
-                  onChange={e => setLoanForm({ ...loanForm, partnerName: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Data do Empréstimo</label>
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Produto / Medicamento Emprestado *</label>
                   <input 
-                    type="date"
+                    type="text"
+                    list="product-suggestions"
+                    placeholder="Ex: Erythropoietin 4000UI / Dialisador Capilar"
                     style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                    value={loanForm.loanDate}
-                    onChange={e => setLoanForm({ ...loanForm, loanDate: e.target.value })}
+                    value={loanForm.productName}
+                    onChange={e => setLoanForm({ ...loanForm, productName: e.target.value })}
+                    required
+                  />
+                  <datalist id="product-suggestions">
+                    {items.map(i => <option key={i.id} value={i.name} />)}
+                  </datalist>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Quantidade *</label>
+                    <input 
+                      type="number"
+                      min="1"
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                      value={loanForm.quantity}
+                      onChange={e => setLoanForm({ ...loanForm, quantity: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Unidade de Medida</label>
+                    <select 
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                      value={loanForm.unit}
+                      onChange={e => setLoanForm({ ...loanForm, unit: e.target.value })}
+                    >
+                      <option value="Caixa(s)">Caixa(s)</option>
+                      <option value="Unidade(s)">Unidade(s)</option>
+                      <option value="Ampola(s)">Ampola(s)</option>
+                      <option value="Frasco(s)">Frasco(s)</option>
+                      <option value="Kit(s)">Kit(s)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Instituição / Clínica Parceira *</label>
+                  <input 
+                    type="text"
+                    placeholder="Ex: Hospital São Lucas / Clínica NefroVida"
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={loanForm.partnerName}
+                    onChange={e => setLoanForm({ ...loanForm, partnerName: e.target.value })}
                     required
                   />
                 </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Data do Empréstimo</label>
+                    <input 
+                      type="date"
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                      value={loanForm.loanDate}
+                      onChange={e => setLoanForm({ ...loanForm, loanDate: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Previsão de Devolução</label>
+                    <input 
+                      type="date"
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                      value={loanForm.expectedReturnDate}
+                      onChange={e => setLoanForm({ ...loanForm, expectedReturnDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+
                 <div className="form-group">
-                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Previsão de Devolução</label>
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Observações / Termo de Acordo</label>
                   <input 
-                    type="date"
+                    type="text"
+                    placeholder="Ex: Empréstimo emergencial autorizado pelo almoxarifado central"
                     style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                    value={loanForm.expectedReturnDate}
-                    onChange={e => setLoanForm({ ...loanForm, expectedReturnDate: e.target.value })}
+                    value={loanForm.notes}
+                    onChange={e => setLoanForm({ ...loanForm, notes: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Observações / Termo de Acordo</label>
-                <input 
-                  type="text"
-                  placeholder="Ex: Empréstimo emergencial autorizado pelo almoxarifado central"
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                  value={loanForm.notes}
-                  onChange={e => setLoanForm({ ...loanForm, notes: e.target.value })}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+              <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setShowLoanModal(false)} className="btn btn-secondary">Cancelar</button>
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: 'var(--primary-color)' }}>
                   {actionLoading ? 'Salvando...' : (editingLoan ? 'Salvar Alterações' : 'Cadastrar Empréstimo')}
@@ -1688,45 +1717,47 @@ export default function StockPanel({ currentUser }) {
               <h2>Abrir Novo Inventário Físico</h2>
               <button onClick={() => setShowInventoryModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
-            <form onSubmit={handleSaveInventory} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-              <div className="form-group">
-                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Título do Inventário *</label>
-                <input 
-                  type="text"
-                  required
-                  placeholder="Ex: Inventário Mensal - Farmácia da Diálise - Julho/2026"
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                  value={inventoryForm.title}
-                  onChange={e => setInventoryForm({ ...inventoryForm, title: e.target.value })}
-                />
+            <form onSubmit={handleSaveInventory} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+              <div style={styles.modalForm}>
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Título do Inventário *</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="Ex: Inventário Mensal - Farmácia da Diálise - Julho/2026"
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={inventoryForm.title}
+                    onChange={e => setInventoryForm({ ...inventoryForm, title: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Local de Estoque Auditado *</label>
+                  <select
+                    required
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={inventoryForm.locationId}
+                    onChange={e => setInventoryForm({ ...inventoryForm, locationId: e.target.value })}
+                  >
+                    {stockLocations.map(loc => (
+                      <option key={loc.id} value={loc.id}>{loc.name} ({loc.responsible || 'Sem responsável'})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Observações do Auditor</label>
+                  <textarea 
+                    rows="2"
+                    placeholder="Observações ou instruções da auditoria física..."
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                    value={inventoryForm.notes}
+                    onChange={e => setInventoryForm({ ...inventoryForm, notes: e.target.value })}
+                  />
+                </div>
               </div>
 
-              <div className="form-group">
-                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Local de Estoque Auditado *</label>
-                <select
-                  required
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                  value={inventoryForm.locationId}
-                  onChange={e => setInventoryForm({ ...inventoryForm, locationId: e.target.value })}
-                >
-                  {stockLocations.map(loc => (
-                    <option key={loc.id} value={loc.id}>{loc.name} ({loc.responsible || 'Sem responsável'})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Observações do Auditor</label>
-                <textarea 
-                  rows="2"
-                  placeholder="Observações ou instruções da auditoria física..."
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                  value={inventoryForm.notes}
-                  onChange={e => setInventoryForm({ ...inventoryForm, notes: e.target.value })}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+              <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setShowInventoryModal(false)} className="btn btn-secondary">Cancelar</button>
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: 'var(--primary-color)' }}>
                   {actionLoading ? 'Criando...' : 'Iniciar Contagem'}
@@ -1740,7 +1771,7 @@ export default function StockPanel({ currentUser }) {
       {/* Physical Count & Divergence Modal */}
       {showCountModal && countingInventory && (
         <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalCard, maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ ...styles.modalCard, maxWidth: '900px' }}>
             <div style={styles.modalHeader}>
               <div>
                 <h2 style={{ margin: 0 }}>📋 {countingInventory.title}</h2>
@@ -1751,7 +1782,7 @@ export default function StockPanel({ currentUser }) {
               <button onClick={() => setShowCountModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
 
-            <div style={{ padding: '1.25rem' }}>
+            <div style={{ padding: '1.25rem 1.5rem', overflowY: 'auto', flex: 1 }}>
               <div style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)' }}>📊 Relatório de Divergências & Contagem Física</h4>
@@ -1831,6 +1862,10 @@ export default function StockPanel({ currentUser }) {
                 </table>
               </div>
             </div>
+            
+            <div style={styles.modalFooter}>
+              <button type="button" onClick={() => setShowCountModal(false)} className="btn btn-secondary">Fechar</button>
+            </div>
           </div>
         </div>
       )}
@@ -1843,95 +1878,97 @@ export default function StockPanel({ currentUser }) {
               <h2>🔄 Nova Transferência Entre Locais de Estoque</h2>
               <button onClick={() => setShowTransferModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
-            <form onSubmit={handleSaveTransfer} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <form onSubmit={handleSaveTransfer} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+              <div style={styles.modalForm}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Local de Origem (Saída) *</label>
+                    <select 
+                      required
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                      value={transferForm.originLocationId}
+                      onChange={e => setTransferForm({ ...transferForm, originLocationId: e.target.value })}
+                    >
+                      {stockLocations.map(loc => (
+                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Local de Destino (Entrada) *</label>
+                    <select 
+                      required
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                      value={transferForm.destinationLocationId}
+                      onChange={e => setTransferForm({ ...transferForm, destinationLocationId: e.target.value })}
+                    >
+                      {stockLocations.map(loc => (
+                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 <div className="form-group">
-                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Local de Origem (Saída) *</label>
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Produto / Insumo *</label>
                   <select 
                     required
                     style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                    value={transferForm.originLocationId}
-                    onChange={e => setTransferForm({ ...transferForm, originLocationId: e.target.value })}
+                    value={transferForm.itemId}
+                    onChange={e => setTransferForm({ ...transferForm, itemId: e.target.value })}
                   >
-                    {stockLocations.map(loc => (
-                      <option key={loc.id} value={loc.id}>{loc.name}</option>
+                    {items.map(i => (
+                      <option key={i.id} value={i.id}>{i.name} (Saldo Atual: {i.currentStock} {i.unit})</option>
                     ))}
                   </select>
                 </div>
-                <div className="form-group">
-                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Local de Destino (Entrada) *</label>
-                  <select 
-                    required
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                    value={transferForm.destinationLocationId}
-                    onChange={e => setTransferForm({ ...transferForm, destinationLocationId: e.target.value })}
-                  >
-                    {stockLocations.map(loc => (
-                      <option key={loc.id} value={loc.id}>{loc.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
 
-              <div className="form-group">
-                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Produto / Insumo *</label>
-                <select 
-                  required
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                  value={transferForm.itemId}
-                  onChange={e => setTransferForm({ ...transferForm, itemId: e.target.value })}
-                >
-                  {items.map(i => (
-                    <option key={i.id} value={i.id}>{i.name} (Saldo Atual: {i.currentStock} {i.unit})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Quantidade *</label>
-                  <input 
-                    type="number"
-                    min="1"
-                    required
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                    value={transferForm.quantity}
-                    onChange={e => setTransferForm({ ...transferForm, quantity: e.target.value })}
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Quantidade *</label>
+                    <input 
+                      type="number"
+                      min="1"
+                      required
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                      value={transferForm.quantity}
+                      onChange={e => setTransferForm({ ...transferForm, quantity: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Lote</label>
+                    <input 
+                      type="text"
+                      placeholder="Lote do produto"
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                      value={transferForm.batch}
+                      onChange={e => setTransferForm({ ...transferForm, batch: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Validade</label>
+                    <input 
+                      type="date"
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                      value={transferForm.expiryDate}
+                      onChange={e => setTransferForm({ ...transferForm, expiryDate: e.target.value })}
+                    />
+                  </div>
                 </div>
+
                 <div className="form-group">
-                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Lote</label>
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Observações da Transferência</label>
                   <input 
                     type="text"
-                    placeholder="Lote do produto"
+                    placeholder="Ex: Abastecimento de materiais da Farmácia da Diálise para o turno da manhã"
                     style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                    value={transferForm.batch}
-                    onChange={e => setTransferForm({ ...transferForm, batch: e.target.value })}
-                  />
-                </div>
-                <div className="form-group">
-                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Validade</label>
-                  <input 
-                    type="date"
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                    value={transferForm.expiryDate}
-                    onChange={e => setTransferForm({ ...transferForm, expiryDate: e.target.value })}
+                    value={transferForm.notes}
+                    onChange={e => setTransferForm({ ...transferForm, notes: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Observações da Transferência</label>
-                <input 
-                  type="text"
-                  placeholder="Ex: Abastecimento de materiais da Farmácia da Diálise para o turno da manhã"
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                  value={transferForm.notes}
-                  onChange={e => setTransferForm({ ...transferForm, notes: e.target.value })}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+              <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setShowTransferModal(false)} className="btn btn-secondary">Cancelar</button>
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: 'var(--primary-color)' }}>
                   {actionLoading ? 'Transferindo...' : 'Efetuar Transferência'}
@@ -2170,10 +2207,12 @@ const styles = {
     backgroundColor: '#fff',
     borderRadius: 'var(--border-radius-lg)',
     width: '100%',
-    maxWidth: '480px',
+    maxWidth: '520px',
+    maxHeight: '88vh',
     boxShadow: 'var(--shadow-lg)',
     display: 'flex',
     flexDirection: 'column',
+    overflow: 'hidden',
   },
   modalHeader: {
     display: 'flex',
@@ -2181,6 +2220,8 @@ const styles = {
     alignItems: 'center',
     padding: '1.25rem 1.5rem',
     borderBottom: '1px solid var(--border-color)',
+    flexShrink: 0,
+    backgroundColor: '#fff',
   },
   modalCloseBtn: {
     background: 'none',
@@ -2189,18 +2230,25 @@ const styles = {
     color: 'var(--text-secondary)',
   },
   modalForm: {
-    padding: '1.5rem',
+    padding: '1.25rem 1.5rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem',
+    gap: '1rem',
+    overflowY: 'auto',
+    flex: 1,
   },
   modalFooter: {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '0.5rem',
     borderTop: '1px solid var(--border-color)',
-    paddingTop: '1.25rem',
-    marginTop: '1rem',
+    padding: '1rem 1.5rem',
+    marginTop: 'auto',
+    backgroundColor: '#fff',
+    position: 'sticky',
+    bottom: 0,
+    zIndex: 10,
+    flexShrink: 0,
   },
   // Wizard elements
   wizardStepsBar: {

@@ -191,7 +191,7 @@ export const getPurchaseInvoices = async () => {
 
 export const createPurchaseInvoice = async (invoiceData) => {
     if (USE_MOCK) return mockFirestore.createPurchaseInvoice(invoiceData);
-    const { getFirestore, collection, doc, writeBatch } = await import('firebase/firestore');
+    const { getFirestore, collection, doc, writeBatch, getDoc, updateDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
     const batch = writeBatch(db);
     
@@ -206,6 +206,7 @@ export const createPurchaseInvoice = async (invoiceData) => {
     batch.set(invoiceRef, invoiceRecord);
 
     for (const item of (invoiceData.items || [])) {
+      if (!item.itemId) continue;
       const txRef = doc(collection(db, 'stock_transactions'));
       batch.set(txRef, {
         id: txRef.id,
@@ -213,14 +214,31 @@ export const createPurchaseInvoice = async (invoiceData) => {
         itemName: item.name,
         quantity: parseFloat(item.quantity) || 0,
         type: 'Entrada',
-        batch: item.batch || 'XML-IMPORT',
+        batch: item.batch || 'NF-IMPORT',
         expiryDate: item.expiryDate || '',
-        operator: 'Importador XML',
+        operator: 'Importador de Notas',
         date: new Date().toISOString(),
         notes: `Entrada via NF-e ${invoiceData.number}`
       });
     }
     await batch.commit();
+
+    // Abastece efetivamente o estoque dos produtos no Firestore
+    for (const item of (invoiceData.items || [])) {
+      if (!item.itemId) continue;
+      try {
+        const itemRef = doc(db, 'inventory_items', item.itemId);
+        const itemSnap = await getDoc(itemRef);
+        if (itemSnap.exists()) {
+          const current = parseFloat(itemSnap.data().currentStock) || 0;
+          const added = parseFloat(item.quantity) || 0;
+          await updateDoc(itemRef, { currentStock: current + added });
+        }
+      } catch (err) {
+        console.error(`Erro ao atualizar saldo de ${item.itemId}:`, err);
+      }
+    }
+
     return invoiceRecord;
   };
 

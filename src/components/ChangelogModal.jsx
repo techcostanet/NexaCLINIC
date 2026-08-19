@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.1.0',
+      date: '19/08/2026',
+      title: 'Módulo Estoque & Farmácia - Zeração de Saldos, Limpeza de Histórico, Importador XML & PDF (DANFE) e Modais 100% Responsivos',
+      description: 'Zeração completa dos saldos dos 1.221 produtos, exclusão do histórico de movimentações, suporte à importação de NF-e por XML e PDF DANFE com extração de faturas para o Contas a Pagar, e ajuste de todos os modais para visualização a 100% de zoom com rodapé fixo e corpo rolável.',
+      changes: [
+        { type: 'Zeração de Estoque', text: 'Saldo Inicial Zerado: Todos os 1.221 produtos do catálogo e do banco Firestore foram redefinidos para quantidade 0 (currentStock: 0).' },
+        { type: 'Limpeza de Histórico', text: 'Histórico Limpo: Exclusão de todas as movimentações anteriores na coleção stock_transactions, preparando o ambiente para contagem física real.' },
+        { type: 'Importador XML & PDF DANFE', text: 'Suporte a PDF e XML: Novo mecanismo inteligente com pdfjs-dist que lê DANFEs em PDF e XMLs SEFAZ, extraindo produtos, emitente, chaves e faturas/duplicatas.' },
+        { type: 'Integração Financeira', text: 'Contas a Pagar Automático: Ao importar uma nota com parcelas/duplicatas, cada parcela é automaticamente lançada no Contas a Pagar com seu vencimento real e abastece o estoque.' },
+        { type: 'Visual & Usabilidade', text: 'Modais com 100% de Zoom: Todos os formulários e modais (Produto, Fornecedor, Setor, Movimentação, Transferência, Empréstimos e Inventários) ganharam corpo rolável com botões de ação e cancelamento fixos e visíveis sem corte.' }
+      ]
+    },
+    {
       version: 'v4.0.9',
       date: '19/08/2026',
       title: 'Módulo Financeiro - Saldo Pendente no Card Contas a Pagar e Remoção de Card Duplicado',

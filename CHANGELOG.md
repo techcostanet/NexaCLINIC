@@ -1,3 +1,20 @@
+## [v4.1.0] - 19 de Agosto, 2026
+### Módulo Estoque & Farmácia - Zeração de Saldos, Limpeza de Histórico, Importador XML & PDF (DANFE) e Modais 100% Responsivos
+- **Zeração Completa de Saldos de Produtos (1.221 Itens):**
+  - Todos os 1.221 insumos e medicamentos cadastrados no catálogo local e no Firestore (`inventory_items`) foram redefinidos para quantidade inicial 0 (`currentStock: 0`), preparando o ambiente para contagem física real.
+- **Exclusão de Histórico de Movimentações Anteriores:**
+  - Limpeza total dos registros prévios da coleção `stock_transactions` no Firestore.
+- **Importador de Notas Fiscais via XML e PDF (DANFE):**
+  - Implementação de parser inteligente de PDF DANFE (`pdfjs-dist`) e XML SEFAZ, extraindo automaticamente Emitente/Fornecedor, Número da NF, Chave de Acesso, Valor Total, Itens/Produtos com quantidades e Duplicatas/Parcelas.
+  - Wizard em 4 etapas permitindo upload de `.xml` e `.pdf`, conferência de dados, mapeamento/criação de produtos no catálogo e conferência final.
+- **Integração Financeira Direta (Estoque + Contas a Pagar):**
+  - Ao concluir a importação de uma NF-e, o estoque é abastecido atomicamente e cada parcela/duplicata identificada no documento é lançada automaticamente no Contas a Pagar (`accounts_payable`) com seu respectivo valor e data de vencimento real.
+- **Modais 100% Responsivos e Ajustados para Zoom Normal:**
+  - Correção de todos os modais do módulo (Cadastro/Edição de Insumo, Fornecedor, Setor, Movimentação Manual, Transferências entre Locais, Empréstimos, Atendimento de Requisições, Inventário e Contagem Física).
+  - Estrutura com corpo rolável (`overflow-y: auto`) e rodapé fixo (`sticky footer`), assegurando que botões de confirmação e cancelamento estejam sempre visíveis sem corte em 100% de zoom.
+
+---
+
 ## [v4.0.9] - 19 de Agosto, 2026
 ### Módulo Financeiro - Saldo Pendente no Card Contas a Pagar do Mês e Remoção de Card Duplicado
 - **Card "Contas a Pagar do Mês" Focado em Saldo Pendente:**

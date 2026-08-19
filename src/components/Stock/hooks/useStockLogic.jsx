@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../../../firebase';
+import { parseDanfePdf } from '../../../utils/danfePdfParser';
 import { 
   Package, Boxes, Clock, Calendar, Plus, Search, 
   X, FileText, UploadCloud, Briefcase, Warehouse,
@@ -973,13 +974,89 @@ export function useStockLogic(currentUser) {
   };
 
   // ----------------------------------------------------
-  // XML Import Methods (Parser)
+  // XML & PDF (DANFE) Import Methods (Parser)
   // ----------------------------------------------------
-  const handleXmlUpload = (e) => {
+  const handleXmlUpload = async (e) => {
     setXmlError('');
     const file = e.target.files[0];
     if (!file) return;
 
+    const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+
+    if (isPdf) {
+      setActionLoading(true);
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const parsed = await parseDanfePdf(arrayBuffer);
+
+        setXmlData({
+          number: parsed.number,
+          accessKey: parsed.accessKey,
+          issueDate: parsed.issueDate,
+          totalValue: parsed.totalValue,
+          supplierName: parsed.supplierName,
+          supplierCnpj: parsed.supplierCnpj,
+          items: parsed.items,
+          installments: parsed.installments,
+          sourceType: 'PDF'
+        });
+
+        // Step 2 Setup: Check if supplier exists
+        const formattedCnpj = formatCnpj(parsed.supplierCnpj);
+        const existingSupplier = suppliers.find(s => cleanCnpj(s.cnpj) === cleanCnpj(parsed.supplierCnpj));
+
+        if (existingSupplier) {
+          setSupplierMapping({
+            exists: true,
+            id: existingSupplier.id,
+            name: existingSupplier.name,
+            cnpj: existingSupplier.cnpj,
+            contact: existingSupplier.contact || '',
+            phone: existingSupplier.phone || '',
+            email: existingSupplier.email || ''
+          });
+        } else {
+          setSupplierMapping({
+            exists: false,
+            id: '',
+            name: parsed.supplierName,
+            cnpj: formattedCnpj,
+            contact: 'Contato DANFE PDF',
+            phone: '',
+            email: ''
+          });
+        }
+
+        // Step 3 Setup: Build item mappings
+        const mappings = parsed.items.map(pi => {
+          const matchedItem = items.find(item => 
+            item.name.toLowerCase().includes(pi.xmlName.toLowerCase()) || 
+            pi.xmlName.toLowerCase().includes(item.name.toLowerCase())
+          );
+
+          return {
+            xmlCode: pi.xmlCode,
+            xmlName: pi.xmlName,
+            quantity: pi.quantity,
+            price: pi.price,
+            batch: pi.batch || '',
+            expiryDate: pi.expiryDate || '',
+            mappedItemId: matchedItem ? matchedItem.id : 'CREATE_NEW'
+          };
+        });
+
+        setItemMappings(mappings);
+        setXmlWizardStep(2);
+      } catch (err) {
+        console.error(err);
+        setXmlError(err.message || 'Erro ao processar o arquivo PDF da DANFE.');
+      } finally {
+        setActionLoading(false);
+      }
+      return;
+    }
+
+    // XML parsing
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
@@ -1029,15 +1106,42 @@ export function useStockLogic(currentUser) {
           });
         }
 
+        // Extract installments / duplicatas (<cobr><dup>)
+        const dupNodes = xmlDoc.getElementsByTagName('dup');
+        const installments = [];
+        if (dupNodes.length > 0) {
+          for (let i = 0; i < dupNodes.length; i++) {
+            const dup = dupNodes[i];
+            const nDup = dup.querySelector('nDup')?.textContent || `${i + 1}/${dupNodes.length}`;
+            const dVenc = dup.querySelector('dVenc')?.textContent || '';
+            const vDup = parseFloat(dup.querySelector('vDup')?.textContent || 0);
+            if (vDup > 0) {
+              installments.push({
+                installmentNumber: nDup,
+                dueDate: dVenc,
+                amount: vDup
+              });
+            }
+          }
+        }
+
+        const issueDate = (dhEmi || '').substring(0, 10) || new Date().toISOString().substring(0, 10);
+
         // Save parsed XML state
         setXmlData({
           number: nNF,
           accessKey: chNFe,
-          issueDate: dhEmi.substring(0, 10),
+          issueDate: issueDate,
           totalValue: vNF,
           supplierName: emitName,
           supplierCnpj: emitCnpj,
-          items: parsedItems
+          items: parsedItems,
+          installments: installments.length > 0 ? installments : [{
+            installmentNumber: '1/1',
+            dueDate: issueDate,
+            amount: vNF
+          }],
+          sourceType: 'XML'
         });
 
         // Step 2 Setup: Check if supplier exists
@@ -1144,7 +1248,7 @@ export function useStockLogic(currentUser) {
           // Auto create in inventory catalog
           const newCat = await dbService.createInventoryItem({
             name: name,
-            category: 'Insumo Clínico',
+            category: 'Insumo Clínico / MatMed',
             currentStock: 0,
             minStock: 10,
             unit: 'unidades',
@@ -1166,7 +1270,7 @@ export function useStockLogic(currentUser) {
         });
       }
 
-      // Step 2: Record Invoice
+      // Step 2: Record Invoice & Abastece Estoque
       await dbService.createPurchaseInvoice({
         number: xmlData.number,
         accessKey: xmlData.accessKey,
@@ -1177,23 +1281,46 @@ export function useStockLogic(currentUser) {
         items: finalItemsList
       });
 
-      // Step 3: Automate Payable Account creation in Finance
+      // Step 3: Automate Payable Account creation in Finance for every installment/duplicata
       if (dbService.saveAccountsPayable) {
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 30);
-        await dbService.saveAccountsPayable({
-          supplier: supplierMapping.name,
-          cnpj: supplierMapping.cnpj || '00.000.000/0001-00',
-          description: `Entrada NF-e Nº ${xmlData.number} (Importação de Estoque)`,
-          amount: parseFloat(xmlData.totalValue) || 0,
-          dueDate: dueDate.toISOString().substring(0, 10),
-          category: 'Insumo Clínico',
-          invoiceNumber: xmlData.number,
-          status: 'Pendente'
-        });
+        const instList = (xmlData.installments && xmlData.installments.length > 0) 
+          ? xmlData.installments 
+          : [{ installmentNumber: '1/1', dueDate: xmlData.issueDate || new Date().toISOString().substring(0, 10), amount: xmlData.totalValue }];
+
+        for (const inst of instList) {
+          const defaultDueDate = new Date();
+          defaultDueDate.setDate(defaultDueDate.getDate() + 30);
+          const finalDueDate = inst.dueDate || defaultDueDate.toISOString().substring(0, 10);
+
+          await dbService.saveAccountsPayable({
+            supplier: supplierMapping.name,
+            cnpj: supplierMapping.cnpj || '00.000.000/0001-00',
+            description: `Entrada NF-e Nº ${xmlData.number} (Parcela ${inst.installmentNumber})`,
+            amount: parseFloat(inst.amount) || parseFloat(xmlData.totalValue) || 0,
+            dueDate: finalDueDate,
+            category: 'Insumo Clínico',
+            invoiceNumber: xmlData.number,
+            accessKey: xmlData.accessKey || '',
+            status: 'Pendente'
+          });
+        }
       }
 
-      showAlert(`Nota Fiscal Nº ${xmlData.number} processada, estoque abastecido e conta a pagar lançada no Financeiro!`, 'success');
+      // Atualiza o saldo local dos produtos imediatamente
+      setItems(prevItems => {
+        return prevItems.map(item => {
+          const matchedEntry = finalItemsList.find(fi => fi.itemId === item.id);
+          if (matchedEntry) {
+            return {
+              ...item,
+              currentStock: (parseFloat(item.currentStock) || 0) + (parseFloat(matchedEntry.quantity) || 0)
+            };
+          }
+          return item;
+        });
+      });
+
+      showAlert(`Nota Fiscal Nº ${xmlData.number} processada! Estoque abastecido e ${(xmlData.installments || []).length || 1} conta(s) a pagar lançada(s) no Financeiro.`, 'success');
       setShowXmlWizard(false);
       fetchData();
     } catch (err) {
