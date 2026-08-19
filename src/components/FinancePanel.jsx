@@ -132,7 +132,6 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     { id: 'payables_month', name: '📅 Contas a Pagar do Mês', size: 'small', visible: true },
     { id: 'overdue_current_month', name: '🔴 Vencidos do Mês', size: 'small', visible: true },
     { id: 'overdue_prev_month', name: '⚠️ Vencidos do Mês Anterior', size: 'small', visible: true },
-    { id: 'payables_today', name: '🚨 Pagar Hoje & Atrasados', size: 'small', visible: true },
     { id: 'payables_7days', name: '🗓️ Contas a Pagar (Próximos 7 Dias)', size: 'small', visible: true },
     { id: 'payables_15days', name: '🗓️ Contas a Pagar (Próximos 15 Dias)', size: 'small', visible: true },
     { id: 'receivables_today', name: '🟢 Contas a Receber Hoje', size: 'small', visible: true },
@@ -148,13 +147,15 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     try {
       const saved = localStorage.getItem('sistema_indicadores_finance_dashboard_layout');
       if (!saved) return DEFAULT_FINANCE_LAYOUT;
-      const parsed = JSON.parse(saved);
-      const existingIds = new Set(parsed.map(c => c.id));
+      const parsed = JSON.parse(saved).filter(c => c.id !== 'payables_today');
+      const validCardIds = new Set(DEFAULT_FINANCE_LAYOUT.map(c => c.id));
+      const filteredSaved = parsed.filter(c => validCardIds.has(c.id));
+      const existingIds = new Set(filteredSaved.map(c => c.id));
       const missingCards = DEFAULT_FINANCE_LAYOUT.filter(c => !existingIds.has(c.id));
       if (missingCards.length > 0) {
-        return [...missingCards, ...parsed];
+        return [...missingCards, ...filteredSaved];
       }
-      return parsed;
+      return filteredSaved;
     } catch {
       return DEFAULT_FINANCE_LAYOUT;
     }
@@ -921,17 +922,22 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   let prevYearVal = selectedDashboardMonth === 0 ? (now.getMonth() === 0 ? selectedDashboardYear - 1 : selectedDashboardYear) : (selectedDashboardMonth === 1 ? selectedDashboardYear - 1 : selectedDashboardYear);
   const prevMonthPrefix = `${prevYearVal}-${String(prevMonthVal).padStart(2, '0')}`;
 
-  // 1. Contas a pagar do Mês
+  // 1. Contas a pagar do Mês (Saldo Pendente)
   const payablesSelectedMonthList = payableList.filter(p => {
     const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
     const matchMonth = p.dueDate && p.dueDate.startsWith(selectedMonthPrefix);
     return matchUnit && matchMonth;
   });
+  const pendingPayablesSelectedMonthList = payablesSelectedMonthList.filter(p => !isItemPaid(p));
   const totalPayablesSelectedMonth = payablesSelectedMonthList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   const paidPayablesSelectedMonth = payablesSelectedMonthList
     .filter(p => isItemPaid(p))
     .reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
-  const pendingPayablesSelectedMonth = totalPayablesSelectedMonth - paidPayablesSelectedMonth;
+  const pendingPayablesSelectedMonth = pendingPayablesSelectedMonthList.reduce((acc, curr) => {
+    const amt = parseFloat(curr.amount) || 0;
+    const paid = parseFloat(curr.amountPaid) || 0;
+    return acc + Math.max(0, amt - paid);
+  }, 0);
 
   // 2. Vencidos do Mês Anterior
   const overduePrevMonthList = payableList.filter(p => {
@@ -959,9 +965,6 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     const paid = parseFloat(curr.amountPaid) || 0;
     return acc + Math.max(0, amt - paid);
   }, 0);
-
-  const payablesTodayOrOverdue = payableList.filter(p => !isItemPaid(p) && (p.dueDate || '') <= todayStr);
-  const totalPayablesTodayOrOverdue = payablesTodayOrOverdue.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   const receivablesToday = receivableList.filter(r => (r.dueDate || '') === todayStr);
   const totalReceivablesToday = receivablesToday.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
@@ -1335,11 +1338,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                           <Calendar size={18} color="#3b82f6" />
                         </div>
                         <span style={{ ...styles.kpiValue, color: '#3b82f6' }}>
-                          R$ {totalPayablesSelectedMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          R$ {pendingPayablesSelectedMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
-                        <div style={styles.kpiFooter}>
-                          Pago: R$ {paidPayablesSelectedMonth.toLocaleString('pt-BR')} | Pendente: R$ {pendingPayablesSelectedMonth.toLocaleString('pt-BR')} ({payablesSelectedMonthList.length} contas)
-                        </div>
                       </div>
                     )}
 
@@ -1369,21 +1369,6 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                         </span>
                         <div style={styles.kpiFooter}>
                           {overduePrevMonthList.length} conta(s) pendente(s) do mês anterior
-                        </div>
-                      </div>
-                    )}
-
-                    {card.id === 'payables_today' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-                        <div style={styles.kpiHeader}>
-                          <span style={styles.kpiLabel}>Pagar Hoje / Atrasados</span>
-                          <AlertCircle size={18} color="#ef4444" />
-                        </div>
-                        <span style={{ ...styles.kpiValue, color: payablesTodayOrOverdue.length > 0 ? '#ef4444' : '#10b981' }}>
-                          R$ {totalPayablesTodayOrOverdue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </span>
-                        <div style={styles.kpiFooter}>
-                          {payablesTodayOrOverdue.length} conta(s) pendente(s) de quitação
                         </div>
                       </div>
                     )}
@@ -1629,7 +1614,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   {selectedDashboardDetail.id === 'payables_month' && (
                     <div>
                       <div style={{ padding: '0.75rem 1rem', backgroundColor: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', marginBottom: '1rem', color: '#1e40af', fontSize: '0.875rem' }}>
-                        <strong>Resumo do Mês ({selectedDashboardMonth > 0 ? MONTH_NAMES[selectedDashboardMonth - 1].full : 'Ano Todo'}/{selectedDashboardYear}):</strong> Total de <strong>R$ {totalPayablesSelectedMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> em {payablesSelectedMonthList.length} conta(s). (Quitados: R$ {paidPayablesSelectedMonth.toLocaleString('pt-BR')} | Saldo Pendente: R$ {pendingPayablesSelectedMonth.toLocaleString('pt-BR')})
+                        <strong>Contas Pendentes do Mês ({selectedDashboardMonth > 0 ? MONTH_NAMES[selectedDashboardMonth - 1].full : 'Ano Todo'}/{selectedDashboardYear}):</strong> Total de <strong>R$ {pendingPayablesSelectedMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> em {pendingPayablesSelectedMonthList.length} conta(s) em aberto.
                       </div>
                       <table style={styles.table}>
                         <thead>
@@ -1637,33 +1622,52 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                             <th style={styles.th}>Fornecedor</th>
                             <th style={styles.th}>Categoria</th>
                             <th style={styles.th}>Vencimento</th>
-                            <th style={styles.th}>Valor (R$)</th>
+                            <th style={styles.th}>Valor</th>
                             <th style={styles.th}>Status</th>
+                            <th style={styles.th}>Ação</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {payablesSelectedMonthList
+                          {pendingPayablesSelectedMonthList
                             .filter(p => p.supplier.toLowerCase().includes(detailFilter.toLowerCase()) || p.category.toLowerCase().includes(detailFilter.toLowerCase()))
-                            .map(p => (
-                              <tr key={p.id} style={styles.tr}>
-                                <td style={styles.td}><strong>{p.supplier}</strong></td>
-                                <td style={styles.td}>{p.category}</td>
-                                <td style={styles.td}>{p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}</td>
-                                <td style={{ ...styles.td, fontWeight: '700' }}>R$ {(parseFloat(p.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                                <td style={styles.td}>
-                                  <span style={{
-                                    backgroundColor: isItemPaid(p) ? '#dcfce7' : (p.dueDate < todayStr ? '#fee2e2' : '#e0f2fe'),
-                                    color: isItemPaid(p) ? '#166534' : (p.dueDate < todayStr ? '#991b1b' : '#0369a1'),
-                                    padding: '0.2rem 0.5rem',
-                                    borderRadius: '4px',
-                                    fontSize: '0.75rem',
-                                    fontWeight: '700'
-                                  }}>
-                                    {isItemPaid(p) ? '✓ Pago' : (p.dueDate < todayStr ? '⚠️ Vencido' : '⏳ A Vencer')}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
+                            .map(p => {
+                              const amt = parseFloat(p.amount) || 0;
+                              const paid = parseFloat(p.amountPaid) || 0;
+                              const due = Math.max(0, amt - paid);
+                              return (
+                                <tr key={p.id} style={styles.tr}>
+                                  <td style={styles.td}><strong>{p.supplier}</strong></td>
+                                  <td style={styles.td}>{p.category}</td>
+                                  <td style={styles.td}>{p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'}</td>
+                                  <td style={{ ...styles.td, fontWeight: '700' }}>R$ {due.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                  <td style={styles.td}>
+                                    <span style={{
+                                      backgroundColor: p.dueDate < todayStr ? '#fee2e2' : '#e0f2fe',
+                                      color: p.dueDate < todayStr ? '#991b1b' : '#0369a1',
+                                      padding: '0.2rem 0.5rem',
+                                      borderRadius: '4px',
+                                      fontSize: '0.75rem',
+                                      fontWeight: '700'
+                                    }}>
+                                      {p.dueDate < todayStr ? '⚠️ Vencido' : '⏳ A Vencer'}
+                                    </span>
+                                  </td>
+                                  <td style={styles.td}>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedDashboardDetail(null);
+                                        setActiveTab('payable');
+                                        setPartialItem(p);
+                                        setPartialAmountPaid(due);
+                                      }}
+                                      style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                                    >
+                                      Baixar
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                         </tbody>
                       </table>
                     </div>
@@ -1680,7 +1684,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                           <tr style={{ backgroundColor: '#f8fafc' }}>
                             <th style={styles.th}>Fornecedor</th>
                             <th style={styles.th}>Vencimento</th>
-                            <th style={styles.th}>Valor Devido (R$)</th>
+                            <th style={styles.th}>Valor</th>
                             <th style={styles.th}>Ação</th>
                           </tr>
                         </thead>
@@ -1706,7 +1710,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                                       }}
                                       style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
                                     >
-                                      Baixar Título
+                                      Baixar
                                     </button>
                                   </td>
                                 </tr>
@@ -1728,7 +1732,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                           <tr style={{ backgroundColor: '#f8fafc' }}>
                             <th style={styles.th}>Fornecedor</th>
                             <th style={styles.th}>Vencimento</th>
-                            <th style={styles.th}>Valor Devido (R$)</th>
+                            <th style={styles.th}>Valor</th>
                             <th style={styles.th}>Ação</th>
                           </tr>
                         </thead>
@@ -1754,51 +1758,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                                       }}
                                       style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
                                     >
-                                      Baixar Título
+                                      Baixar
                                     </button>
                                   </td>
                                 </tr>
                               );
                             })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-
-                  {/* CARD: payables_today */}
-                  {selectedDashboardDetail.id === 'payables_today' && (
-                    <div>
-                      <div style={{ padding: '0.75rem 1rem', backgroundColor: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca', marginBottom: '1rem', color: '#991b1b', fontSize: '0.875rem' }}>
-                        <strong>Resumo:</strong> {payablesTodayOrOverdue.length} conta(s) com vencimento para HOJE ou já VENCIDAS, totalizando <strong>R$ {totalPayablesTodayOrOverdue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>.
-                      </div>
-                      <table style={styles.table}>
-                        <thead>
-                          <tr style={{ backgroundColor: '#f8fafc' }}>
-                            <th style={styles.th}>Fornecedor</th>
-                            <th style={styles.th}>Categoria</th>
-                            <th style={styles.th}>Data Vencimento</th>
-                            <th style={styles.th}>Valor (R$)</th>
-                            <th style={styles.th}>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {payablesTodayOrOverdue
-                            .filter(p => p.supplier.toLowerCase().includes(detailFilter.toLowerCase()) || p.category.toLowerCase().includes(detailFilter.toLowerCase()))
-                            .map(p => (
-                              <tr key={p.id} style={styles.tr}>
-                                <td style={styles.td}><strong>{p.supplier}</strong></td>
-                                <td style={styles.td}>{p.category}</td>
-                                <td style={{ ...styles.td, fontWeight: '700', color: p.dueDate < todayStr ? '#ef4444' : '#b45309' }}>
-                                  {p.dueDate ? p.dueDate.split('-').reverse().join('/') : '-'} {p.dueDate < todayStr ? '(Vencido)' : '(Hoje)'}
-                                </td>
-                                <td style={{ ...styles.td, fontWeight: '700' }}>R$ {(parseFloat(p.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                                <td style={styles.td}>
-                                  <span style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
-                                    {p.status}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
                         </tbody>
                       </table>
                     </div>

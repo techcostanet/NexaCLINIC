@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.0.9',
+      date: '19/08/2026',
+      title: 'Módulo Financeiro - Saldo Pendente no Card Contas a Pagar e Remoção de Card Duplicado',
+      description: 'Ajuste de foco no card Contas a Pagar do Mês para exibição exclusiva do saldo pendente a quitar, listagem de detalhamento filtrada apenas com títulos não pagos e remoção do card redundante Pagar Hoje & Atrasados.',
+      changes: [
+        { type: 'Saldo Pendente', text: 'Valor em Destaque: O card principal passa a exibir exclusivamente o saldo em aberto que falta pagar no mês selecionado.' },
+        { type: 'Visual Limpo', text: 'Remoção de Textos Redundantes: Eliminação de legendas explicativas poluídas no rodapé do card.' },
+        { type: 'Detalhamento Focado', text: 'Modal sem Títulos Pagos: Listagem filtrada trazendo apenas contas pendentes com botão de baixa direta.' },
+        { type: 'Otimização de Cards', text: 'Exclusão de Card Duplicado: Removido o card Pagar Hoje & Atrasados para eliminar redundância com o card de Vencidos do Mês.' }
+      ]
+    },
+    {
       version: 'v4.0.8',
       date: '19/08/2026',
       title: 'NexaASSIST - Sincronização em Nuvem (1 Minuto), Persistência no Firestore e Tempo Real',

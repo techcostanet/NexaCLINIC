@@ -1,3 +1,17 @@
+## [v4.0.9] - 19 de Agosto, 2026
+### Módulo Financeiro - Saldo Pendente no Card Contas a Pagar do Mês e Remoção de Card Duplicado
+- **Card "Contas a Pagar do Mês" Focado em Saldo Pendente:**
+  - O valor em destaque do card agora exibe exclusivamente o saldo que falta pagar no mês (títulos pendentes e saldo devedor), sem poluição visual.
+  - Remoção de textos explicativos redundantes no rodapé do card.
+- **Detalhamento Filtrado Somente com Contas Pendentes:**
+  - O modal aberto ao clicar no card agora lista exclusivamente as contas pendentes/não pagas (eliminando registros já quitados da listagem), com botão direto para "Baixar".
+- **Eliminação de Card Redundante ("Pagar Hoje & Atrasados"):**
+  - Removido o card "Pagar Hoje & Atrasados" para evitar duplicação de informações com o card "Vencidos do Mês", mantendo o layout limpo e direto.
+- **Padrão de Rótulos Concisos (1 Palavra):**
+  - Padronização de todas as colunas do modal (`Fornecedor`, `Categoria`, `Vencimento`, `Valor`, `Status`, `Ação`).
+
+---
+
 ## [v4.0.8] - 19 de Agosto, 2026
 ### Módulo NexaASSIST - Sincronização em Nuvem (Loop 1 Minuto), Persistência no Firestore e Atualização em Tempo Real
 - **Sincronização em Nuvem Contínua (Intervalo de 1 Minuto):**
