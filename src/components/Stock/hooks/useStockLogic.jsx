@@ -1222,7 +1222,48 @@ export function useStockLogic(currentUser) {
         setActionLoading(false);
       }
     }
+    // Avanca para a Etapa 3: Financeiro
     setXmlWizardStep(3);
+  };
+
+  const handleUpdateInstallment = (index, field, value) => {
+    setXmlData(prev => {
+      if (!prev || !prev.installments) return prev;
+      const updated = [...prev.installments];
+      updated[index] = {
+        ...updated[index],
+        [field]: field === 'amount' ? (parseFloat(value) || 0) : value
+      };
+      return { ...prev, installments: updated };
+    });
+  };
+
+  const handleAddInstallment = () => {
+    setXmlData(prev => {
+      if (!prev) return prev;
+      const currentList = prev.installments || [];
+      const nextNum = currentList.length + 1;
+      const defaultDueDate = new Date();
+      defaultDueDate.setDate(defaultDueDate.getDate() + (30 * nextNum));
+      
+      const updated = [
+        ...currentList,
+        {
+          installmentNumber: `${nextNum}/${nextNum}`,
+          dueDate: defaultDueDate.toISOString().substring(0, 10),
+          amount: 0
+        }
+      ];
+      return { ...prev, installments: updated };
+    });
+  };
+
+  const handleRemoveInstallment = (index) => {
+    setXmlData(prev => {
+      if (!prev || !prev.installments) return prev;
+      const updated = prev.installments.filter((_, idx) => idx !== index);
+      return { ...prev, installments: updated };
+    });
   };
 
   const handleMappingItemChange = (xmlCode, itemId) => {
@@ -1543,6 +1584,9 @@ export function useStockLogic(currentUser) {
     handleProcessFulfillment,
     handleXmlUpload,
     handleConfirmSupplierMapping,
+    handleUpdateInstallment,
+    handleAddInstallment,
+    handleRemoveInstallment,
     handleMappingItemChange,
     handleMappingFieldChange,
     handleFinishXmlWizard,

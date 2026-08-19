@@ -162,6 +162,9 @@ export default function StockPanel({ currentUser }) {
     handleProcessFulfillment,
     handleXmlUpload,
     handleConfirmSupplierMapping,
+    handleUpdateInstallment,
+    handleAddInstallment,
+    handleRemoveInstallment,
     handleMappingItemChange,
     handleMappingFieldChange,
     handleFinishXmlWizard,
@@ -1361,7 +1364,7 @@ export default function StockPanel({ currentUser }) {
       {/* XML & PDF (DANFE) IMPORT WIZARD */}
       {showXmlWizard && (
         <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalCard, maxWidth: '800px', width: '90%' }}>
+          <div style={{ ...styles.modalCard, maxWidth: '820px', width: '92%' }}>
             <div style={styles.modalHeader}>
               <h2>Importar Nota Fiscal Eletrônica (XML / PDF DANFE)</h2>
               <button onClick={() => setShowXmlWizard(false)} style={styles.modalCloseBtn}><X size={20} /></button>
@@ -1370,8 +1373,9 @@ export default function StockPanel({ currentUser }) {
             <div style={styles.wizardStepsBar}>
               <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 1 ? styles.wizardStepActive : {}) }}>1. Arquivo</div>
               <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 2 ? styles.wizardStepActive : {}) }}>2. Fornecedor</div>
-              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 3 ? styles.wizardStepActive : {}) }}>3. Mapear Itens</div>
-              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 4 ? styles.wizardStepActive : {}) }}>4. Finalizar</div>
+              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 3 ? styles.wizardStepActive : {}) }}>3. Financeiro</div>
+              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 4 ? styles.wizardStepActive : {}) }}>4. Mapear Itens</div>
+              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 5 ? styles.wizardStepActive : {}) }}>5. Finalizar</div>
             </div>
 
             <div style={{ padding: '1.25rem 1.5rem', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -1410,10 +1414,10 @@ export default function StockPanel({ currentUser }) {
               {xmlWizardStep === 2 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={styles.infoSummaryBox}>
-                    <h4>Dados da Nota Lida ({xmlData?.sourceType || 'XML'})</h4>
-                    <p>Número: <strong>{xmlData?.number}</strong></p>
+                    <h4>Dados do Documento ({xmlData?.sourceType || 'XML'})</h4>
+                    <p>Nota Fiscal: <strong>{xmlData?.number}</strong></p>
                     <p>Chave: <strong>{xmlData?.accessKey || 'Não identificada no arquivo'}</strong></p>
-                    <p>Valor Total: <strong>R$ {xmlData?.totalValue?.toFixed(2)}</strong></p>
+                    <p>Valor Total: <strong>R$ {xmlData?.totalValue ? parseFloat(xmlData.totalValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00'}</strong></p>
                   </div>
                   
                   <div style={styles.mappingCard}>
@@ -1453,14 +1457,165 @@ export default function StockPanel({ currentUser }) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
                     <button type="button" onClick={() => setXmlWizardStep(1)} className="btn btn-secondary">Voltar</button>
                     <button type="button" onClick={handleConfirmSupplierMapping} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
-                      Avançar
+                      Avançar para Financeiro
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* STEP 3: Mapeamento de Itens */}
-              {xmlWizardStep === 3 && (
+              {/* STEP 3: Financial Review & Installments */}
+              {xmlWizardStep === 3 && (() => {
+                const installmentsList = xmlData?.installments || [];
+                const sumInstallments = installmentsList.reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
+                const totalInvoice = parseFloat(xmlData?.totalValue) || 0;
+                const isDifference = Math.abs(sumInstallments - totalInvoice) > 0.05;
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={styles.infoSummaryBox}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Nota Fiscal</span>
+                          <strong>Nº {xmlData?.number || 'S/N'}</strong>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Emissão</span>
+                          <strong>{xmlData?.issueDate ? xmlData.issueDate.split('-').reverse().join('/') : 'Hoje'}</strong>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Fornecedor</span>
+                          <strong>{supplierMapping.name}</strong>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Valor Total da Nota</span>
+                          <strong style={{ color: '#0369a1', fontSize: '1.05rem' }}>
+                            R$ {totalInvoice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-md)', padding: '1rem', backgroundColor: '#fff' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                            Faturas & Duplicatas (Contas a Pagar)
+                          </h4>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            Confira ou edite as parcelas identificadas no arquivo que serão lançadas automaticamente no financeiro.
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleAddInstallment}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.65rem', borderRadius: '6px', border: '1px solid #0284c7', backgroundColor: '#f0f9ff', color: '#0284c7', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                        >
+                          <Plus size={14} /> Adicionar Parcela
+                        </button>
+                      </div>
+
+                      <div style={{ overflowX: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px', marginBottom: '0.75rem' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                          <thead style={{ backgroundColor: '#f8fafc', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
+                            <tr>
+                              <th style={{ padding: '0.5rem 0.75rem', width: '120px' }}>Parcela</th>
+                              <th style={{ padding: '0.5rem 0.75rem', width: '180px' }}>Vencimento</th>
+                              <th style={{ padding: '0.5rem 0.75rem' }}>Valor (R$)</th>
+                              <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', width: '70px' }}>Ações</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {installmentsList.length === 0 ? (
+                              <tr>
+                                <td colSpan="4" style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                  Nenhuma parcela configurada. Clique em "+ Adicionar Parcela".
+                                </td>
+                              </tr>
+                            ) : (
+                              installmentsList.map((inst, idx) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                  <td style={{ padding: '0.4rem 0.75rem' }}>
+                                    <input 
+                                      type="text" 
+                                      className="form-control"
+                                      style={{ padding: '0.3rem 0.5rem', fontSize: '0.85rem', fontWeight: '600' }}
+                                      value={inst.installmentNumber}
+                                      onChange={e => handleUpdateInstallment(idx, 'installmentNumber', e.target.value)}
+                                      placeholder="Ex: 1/2"
+                                    />
+                                  </td>
+                                  <td style={{ padding: '0.4rem 0.75rem' }}>
+                                    <input 
+                                      type="date" 
+                                      className="form-control"
+                                      style={{ padding: '0.3rem 0.5rem', fontSize: '0.85rem' }}
+                                      value={inst.dueDate}
+                                      onChange={e => handleUpdateInstallment(idx, 'dueDate', e.target.value)}
+                                    />
+                                  </td>
+                                  <td style={{ padding: '0.4rem 0.75rem' }}>
+                                    <input 
+                                      type="number" 
+                                      step="0.01"
+                                      className="form-control"
+                                      style={{ padding: '0.3rem 0.5rem', fontSize: '0.85rem', fontWeight: '700' }}
+                                      value={inst.amount}
+                                      onChange={e => handleUpdateInstallment(idx, 'amount', e.target.value)}
+                                    />
+                                  </td>
+                                  <td style={{ padding: '0.4rem 0.75rem', textAlign: 'center' }}>
+                                    {installmentsList.length > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveInstallment(idx)}
+                                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.2rem' }}
+                                        title="Remover parcela"
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Totalization feedback banner */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '0.6rem 0.85rem', borderRadius: '6px', fontSize: '0.85rem' }}>
+                        <div>
+                          <span>Soma das Parcelas: </span>
+                          <strong style={{ fontSize: '0.95rem' }}>
+                            R$ {sumInstallments.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </strong>
+                        </div>
+                        <div>
+                          {!isDifference ? (
+                            <span style={{ color: '#166534', fontWeight: '700', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <CheckCircle2 size={16} color="#166534" /> Total confere com o valor da nota
+                            </span>
+                          ) : (
+                            <span style={{ color: '#b45309', fontWeight: '700', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <AlertTriangle size={16} color="#b45309" /> Diferença de R$ {Math.abs(sumInstallments - totalInvoice).toFixed(2)} em relação ao total da NF
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+                      <button type="button" onClick={() => setXmlWizardStep(2)} className="btn btn-secondary">Voltar</button>
+                      <button type="button" onClick={() => setXmlWizardStep(4)} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
+                        Avançar para Mapear Itens
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* STEP 4: Mapeamento de Itens */}
+              {xmlWizardStep === 4 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={styles.warningBanner}>
                     <AlertTriangle size={16} />
@@ -1512,23 +1667,23 @@ export default function StockPanel({ currentUser }) {
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
-                    <button type="button" onClick={() => setXmlWizardStep(2)} className="btn btn-secondary">Voltar</button>
-                    <button type="button" onClick={() => setXmlWizardStep(4)} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
+                    <button type="button" onClick={() => setXmlWizardStep(3)} className="btn btn-secondary">Voltar</button>
+                    <button type="button" onClick={() => setXmlWizardStep(5)} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
                       Revisar e Finalizar
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* STEP 4: Review and Finish */}
-              {xmlWizardStep === 4 && (
+              {/* STEP 5: Review and Finish */}
+              {xmlWizardStep === 5 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <h3>Revisão de Entrada da Nota Fiscal</h3>
+                  <h3>Revisão Geral de Entrada da Nota Fiscal</h3>
                   
                   <div style={styles.infoSummaryBox}>
                     <p>Nota Fiscal: <strong>{xmlData?.number}</strong> ({xmlData?.sourceType || 'XML'})</p>
                     <p>Fornecedor: <strong>{supplierMapping.name}</strong> ({supplierMapping.cnpj})</p>
-                    <p>Valor Total da Nota: <strong>R$ {xmlData?.totalValue?.toFixed(2)}</strong></p>
+                    <p>Valor Total da Nota: <strong>R$ {xmlData?.totalValue ? parseFloat(xmlData.totalValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00'}</strong></p>
                     {xmlData?.installments && xmlData.installments.length > 0 && (
                       <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #cbd5e1' }}>
                         <span style={{ fontWeight: '700', fontSize: '0.8rem', color: '#0369a1', display: 'block', marginBottom: '0.25rem' }}>
@@ -1574,7 +1729,7 @@ export default function StockPanel({ currentUser }) {
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
-                    <button type="button" onClick={() => setXmlWizardStep(3)} className="btn btn-secondary">Voltar</button>
+                    <button type="button" onClick={() => setXmlWizardStep(4)} className="btn btn-secondary">Voltar</button>
                     <button type="button" onClick={handleFinishXmlWizard} disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: 'var(--success-color)' }}>
                       {actionLoading ? 'Abastecendo Estoque...' : 'Confirmar e Processar Entrada'}
                     </button>

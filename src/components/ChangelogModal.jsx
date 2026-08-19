@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.1.1',
+      date: '19/08/2026',
+      title: 'Módulo Estoque & Farmácia - Zeração de Estoque Mínimo e Etapa Financeira Dedicada no Importador de NF-e',
+      description: 'Zeração de estoque mínimo (minStock: 0) para todos os 1.221 produtos e inclusão da Etapa 3 (Financeiro) no assistente de importação de XML/PDF com conferência interativa, edição e inclusão de parcelas antes do lançamento no Contas a Pagar.',
+      changes: [
+        { type: 'Estoque Mínimo Zerado', text: 'Zeração de Estoque de Segurança: Todos os 1.221 produtos do catálogo e do banco Firestore tiveram o minStock redefinido para 0, eliminando alertas espúrios.' },
+        { type: 'Etapa Financeira no Importador', text: 'Conferência de Duplicatas: Nova etapa no Wizard que exibe o valor total da nota, data de emissão e tabela editável de parcelas lidas do XML ou PDF DANFE.' },
+        { type: 'Edição de Parcelas', text: 'Flexibilidade de Lançamento: Possibilidade de alterar vencimentos, valores, adicionar novas parcelas ou remover duplicatas com cálculo de validação em tempo real.' },
+        { type: 'Fluxo em 5 Etapas', text: 'Processo Guiado: 1. Arquivo -> 2. Fornecedor -> 3. Financeiro -> 4. Mapear Itens -> 5. Finalizar, assegurando total precisão antes de gravar no estoque e financeiro.' }
+      ]
+    },
+    {
       version: 'v4.1.0',
       date: '19/08/2026',
       title: 'Módulo Estoque & Farmácia - Zeração de Saldos, Limpeza de Histórico, Importador XML & PDF (DANFE) e Modais 100% Responsivos',

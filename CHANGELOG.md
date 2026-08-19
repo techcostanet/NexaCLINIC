@@ -1,3 +1,17 @@
+## [v4.1.1] - 19 de Agosto, 2026
+### Módulo Estoque & Farmácia - Zeração de Estoque Mínimo e Etapa Financeira Dedicada no Importador de NF-e
+- **Zeração de Estoque Mínimo de Todos os Produtos (1.221 Itens):**
+  - Todos os 1.221 insumos e medicamentos cadastrados no catálogo e no Firestore (`inventory_items`) tiveram seu `minStock` redefinido para `0`.
+- **Nova Etapa Financeira Dedicada no Assistente de Importação:**
+  - Inclusão da Etapa 3 (*Financeiro*) no fluxo de importação de XML e PDF DANFE, permitindo conferir a Data de Emissão, Valor Total e a tabela de parcelas/faturas identificadas.
+- **Edição e Ajuste Dinâmico de Parcelas para Contas a Pagar:**
+  - Possibilidade de editar o identificador da parcela, data de vencimento e valor de cada duplicata, bem como adicionar novas parcelas ou excluir itens desnecessários.
+  - Validador em tempo real informando se a soma das parcelas bate perfeitamente com o total da nota fiscal.
+- **Fluxo Estruturado em 5 Etapas:**
+  - 1. Arquivo -> 2. Fornecedor -> 3. Financeiro -> 4. Mapear Itens -> 5. Finalizar.
+
+---
+
 ## [v4.1.0] - 19 de Agosto, 2026
 ### Módulo Estoque & Farmácia - Zeração de Saldos, Limpeza de Histórico, Importador XML & PDF (DANFE) e Modais 100% Responsivos
 - **Zeração Completa de Saldos de Produtos (1.221 Itens):**
