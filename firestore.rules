@@ -136,5 +136,8 @@ service cloud.firestore {
     match /sesmt_extinguisher_inspections/{id} { allow read, write: if isAuthenticated(); }
     match /sesmt_hydrant_inspections/{id} { allow read, write: if isAuthenticated(); }
     match /sesmt_equipment/{id} { allow read, write: if isAuthenticated(); }
+
+    // NexaASSIST Collections
+    match /assist_posts/{id} { allow read, write: if isAuthenticated(); }
   }
 }

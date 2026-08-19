@@ -51,10 +51,28 @@ export default function AssistPanel({ currentUser }) {
   });
   const [parsedEmailResult, setParsedEmailResult] = useState(null);
 
-  // Carregar dados
+  // Carregar dados e escutar em tempo real
   useEffect(() => {
+    let unsubscribe = () => {};
     fetchData();
-  }, []);
+
+    if (dbService.subscribeToAssistPosts) {
+      unsubscribe = dbService.subscribeToAssistPosts((livePosts) => {
+        if (livePosts && Array.isArray(livePosts)) {
+          setPosts(prev => {
+            const pList = patients && patients.length > 0 ? patients : [];
+            return dbService.autoLinkAssistPosts ? dbService.autoLinkAssistPosts(livePosts, pList) : livePosts;
+          });
+        }
+      });
+    }
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [patients]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -285,45 +303,6 @@ export default function AssistPanel({ currentUser }) {
     } catch (err) {
       console.error(err);
       showAlert('Erro ao vincular paciente.', 'danger');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Sincronização da Caixa Titan Oficial
-  const handleSyncTitanInbox = async () => {
-    setActionLoading(true);
-    try {
-      // Cria e insere o post sincronizado do e-mail real da caixa Titan se não existir
-      const existing = posts.find(p => p.originalSubject === 'INFECÇÃO ALEXANDRE JOSE DE PAULA' || p.id === 'post-titan-real-1');
-      if (!existing) {
-        const titanPost = {
-          title: 'INFECÇÃO - ALEXANDRE JOSE DE PAULA',
-          message: 'ATB: Ceftazidima 2g/vancomicina 1g com lok, por 14 dias.\nMédico Responsável: ISABELA.\nRealizado coleta de Hemocultura 1ª E 2ª amostra, hemograma e PCR.',
-          category: 'Intercorrência',
-          urgency: 'Urgente',
-          patientId: null,
-          patientName: 'ALEXANDRE JOSE DE PAULA',
-          room: 'Geral',
-          shift: 'Geral',
-          source: 'email',
-          originalFrom: 'Márcia Alves Teixeira <enfermagembetim7@dialize.com.br>',
-          originalSubject: 'INFECÇÃO ALEXANDRE JOSE DE PAULA',
-          status: 'pending_link',
-          author: 'Márcia Alves Teixeira',
-          authorRole: 'Enfermeira (Titan IMAP)',
-          createdAt: new Date().toISOString(),
-          readBy: []
-        };
-        await dbService.createAssistPost(titanPost, currentUser);
-        showAlert('Caixa Titan (integracao@dialize.com.br) sincronizada com sucesso! Novo e-mail da Enfª Márcia importado.', 'success');
-      } else {
-        showAlert('Caixa Titan sincronizada com sucesso! Todos os e-mails estão em dia.', 'success');
-      }
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      showAlert('Erro ao sincronizar caixa Titan.', 'danger');
     } finally {
       setActionLoading(false);
     }

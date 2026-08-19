@@ -246,6 +246,50 @@ export const getAssistPosts = async () => {
     }
   }
 };
+/**
+ * Listener em tempo real para os comunicados assistenciais no Firestore
+ */
+export const subscribeToAssistPosts = (callback) => {
+  if (USE_MOCK) {
+    if (mockFirestore.getAssistPosts) {
+      mockFirestore.getAssistPosts().then(callback);
+    }
+    return () => {};
+  }
+
+  let unsubscribe = () => {};
+  import('firebase/firestore').then(({ getFirestore, collection, onSnapshot, query, orderBy }) => {
+    const db = getFirestore(app);
+    const q = query(collection(db, 'assist_posts'), orderBy('createdAt', 'desc'));
+    
+    unsubscribe = onSnapshot(q, (snap) => {
+      if (!snap.empty) {
+        const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        callback(items);
+      } else {
+        getAssistPosts().then(callback);
+      }
+    }, (err) => {
+      console.warn("Aviso no listener real-time de assist_posts (tentando fallback sem order):", err);
+      // Fallback sem orderBy
+      import('firebase/firestore').then(({ collection: col, onSnapshot: onSnap }) => {
+        unsubscribe = onSnap(col(db, 'assist_posts'), (snap2) => {
+          const items = snap2.docs.map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+          callback(items);
+        }, (err2) => {
+          console.error("Erro no listener assist_posts:", err2);
+          getAssistPosts().then(callback);
+        });
+      });
+    });
+  }).catch(err => {
+    console.error("Erro ao inicializar listener assist_posts:", err);
+    getAssistPosts().then(callback);
+  });
+
+  return () => unsubscribe();
+};
 
 /**
  * Cria um novo comunicado assistencial

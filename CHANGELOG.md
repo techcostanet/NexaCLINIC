@@ -1,3 +1,18 @@
+## [v4.0.8] - 19 de Agosto, 2026
+### Módulo NexaASSIST - Sincronização em Nuvem (Loop 1 Minuto), Persistência no Firestore e Atualização em Tempo Real
+- **Sincronização em Nuvem Contínua (Intervalo de 1 Minuto):**
+  - Automação completa do processamento da caixa Titan (`integracao@dialize.com.br`) sem necessidade de manter computador ligado, com workflow em nuvem no GitHub Actions e daemon com intervalo de 60 segundos.
+- **Persistência Direta no Firestore (`assist_posts`):**
+  - Gravação direta de todos os comunicados assistenciais no Firestore (`assist_posts`), incluindo importação de todos os 18 e-mails dos dias 18 e 19/08 (altas, internações, perdas de acesso, retiradas de CDL e antibioticoterapia).
+- **Atualização em Tempo Real (`onSnapshot`):**
+  - Conexão em tempo real no feed assistencial, atualizando instantaneamente os cards e KPIs na tela dos profissionais à medida que novos e-mails chegam, sem necessidade de recarregar a página.
+- **Liberação das Regras de Segurança do Firestore:**
+  - Inclusão das regras de segurança de leitura e escrita para a coleção `assist_posts` em `firestore.rules`.
+- **Fuzzy Match com Base Completa de 624 Pacientes:**
+  - Correção do motor de busca para cruzar os comunicados com o banco integral de 624 pacientes reais, associando instantaneamente Salão de Diálise, Turno e dados cadastrais.
+
+---
+
 ## [v4.0.5] - 17 de Agosto, 2026
 ### Módulo NexaASSIST - Ingestão Inteligente em Background, Auto-Vínculo de Pacientes e Limpeza de Interface
 - **Vínculo Automático de Pacientes (Fuzzy Matching):**

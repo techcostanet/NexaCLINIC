@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.0.8',
+      date: '19/08/2026',
+      title: 'NexaASSIST - Sincronização em Nuvem (1 Minuto), Persistência no Firestore e Tempo Real',
+      description: 'Ingestão e processamento 100% em nuvem a cada 1 minuto da caixa Titan (integracao@dialize.com.br), sincronização direta na coleção assist_posts do Firestore, escuta em tempo real (onSnapshot) e auto-vínculo com a base integral de 624 pacientes.',
+      changes: [
+        { type: 'Nuvem Contínua', text: 'Sincronização em Nuvem a cada 1 Min: Automação completa sem necessidade de computador ligado, com background daemon e workflow GitHub Actions rodando periodicamente.' },
+        { type: 'Banco Firestore', text: 'Persistência Direta no Firestore: Todos os 18 comunicados de e-mails recebidos (incluindo 18 e 19/08) foram gravados e organizados na coleção assist_posts.' },
+        { type: 'Tempo Real', text: 'Atualização Instantânea: Listener Firestore onSnapshot que atualiza o Feed Assistencial automaticamente sem exigir reload da página.' },
+        { type: 'Fuzzy Matching 624 Pacientes', text: 'Vínculo Inteligente: Reconhecimento preciso de pacientes (Rafael Geraldo, Ronivon, Nilva, Estanislau, etc.) e preenchimento de Salão e Turno.' },
+        { type: 'Regras de Segurança', text: 'Permissões do Firestore: Liberação de acesso autenticado à coleção assist_posts no firestore.rules.' }
+      ]
+    },
+    {
       version: 'v4.0.5',
       date: '17/08/2026',
       title: 'NexaASSIST - Leitura Inteligente em Background, Auto-Vínculo de Pacientes e Limpeza da Interface',

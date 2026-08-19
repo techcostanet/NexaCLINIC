@@ -38,3 +38,4 @@ assistencia_transcricao.txt
 scratch/
 __pycache__/
 *.pyc
+.github/
