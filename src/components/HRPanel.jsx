@@ -24,6 +24,7 @@ const DEFAULT_DASHBOARD_LAYOUT = [
 
 import { useHRLogic } from './HR/hooks/useHRLogic';
 import AwardReportModal from './HR/AwardReportModal';
+import HRReportsModal from './HRReportsModal';
 
 export const formatDateBR = (dateVal) => {
   if (!dateVal) return '-';
@@ -39,7 +40,7 @@ export const formatDateBR = (dateVal) => {
   return d.toLocaleDateString('pt-BR');
 };
 
-export default function HRPanel({ currentUser }) {
+export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const logic = useHRLogic(currentUser);
   const {
     activeTab,
@@ -184,10 +185,33 @@ export default function HRPanel({ currentUser }) {
 
   return (
     <div style={styles.container}>
-      <div style={styles.cardHeader}>
-        <div>
-          <h1 style={styles.title}>NexaHR - Recursos Humanos & Governança</h1>
-          <p style={styles.subtitle}>Gerenciamento completo de equipe, controle de permissões de usuários, central de arquivos e logs de auditoria.</p>
+      {/* Header / Hero Section (Assist style) */}
+      <div style={styles.heroSection}>
+        <div style={styles.heroLeft}>
+          <div style={styles.heroIconBadge}>
+            <Users size={28} color="#fff" />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <h1 style={styles.heroTitle}>NexaHR</h1>
+              <span style={styles.liveBadge}>
+                <span style={styles.pulseDot}></span> Em Tempo Real
+              </span>
+            </div>
+            <p style={styles.heroSubtitle}>
+              Gestão estratégica de pessoas, controle de vale-transporte, advertências disciplinares, aniversariantes e conformidade trabalhista.
+            </p>
+          </div>
+        </div>
+
+        <div style={styles.heroActions}>
+          <button 
+            onClick={handleOpenEmpAdd}
+            style={styles.primaryHeroBtn}
+          >
+            <UserPlus size={18} />
+            <span>Novo Funcionário</span>
+          </button>
         </div>
       </div>
 
@@ -201,9 +225,6 @@ export default function HRPanel({ currentUser }) {
         </button>
         <button onClick={() => setActiveTab('transport')} style={{ ...styles.tabBtn, ...(activeTab === 'transport' ? styles.tabBtnActive : {}) }}>
           <Bus size={16} /> Vale-Transporte
-        </button>
-        <button onClick={() => setActiveTab('reports')} style={{ ...styles.tabBtn, ...(activeTab === 'reports' ? styles.tabBtnActive : {}) }}>
-          <FileText size={16} /> Relatórios & Importação
         </button>
         <button onClick={() => setActiveTab('audit')} style={{ ...styles.tabBtn, ...(activeTab === 'audit' ? styles.tabBtnActive : {}) }}>
           Auditoria & Logs
@@ -898,73 +919,7 @@ export default function HRPanel({ currentUser }) {
             </div>
           )}
 
-          {/* TAB 4: Reports & Import */}
-          {activeTab === 'reports' && (
-            <div style={styles.reportsGrid}>
-              <div style={styles.kpiSection}>
-                <h3>⬇️ Exportar Relatórios do RH</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Baixe as listagens operacionais em formato compatível com o Excel (CSV).</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <button onClick={handleExportFullCadaster} style={styles.downloadReportBtn}>
-                    <Download size={16} /> Cadastro Geral de Funcionários
-                  </button>
-                  <button onClick={() => setShowAwardReportModal(true)} style={{ ...styles.downloadReportBtn, backgroundColor: '#f0fdf4', color: '#15803d', borderColor: '#bbf7d0', fontWeight: '700' }}>
-                    <Trophy size={16} color="#15803d" /> Ganhadores da Presença Premiada (PDF / Impressão / CSV)
-                  </button>
-                  <button onClick={handleExportBirthdays} style={styles.downloadReportBtn}>
-                    <Download size={16} /> Aniversariantes do Mês
-                  </button>
-                  <button onClick={handleExportWarnings} style={styles.downloadReportBtn}>
-                    <Download size={16} /> Histórico de Advertências Disciplinares
-                  </button>
-                </div>
-              </div>
-
-              <div style={styles.kpiSection}>
-                <h3>⬆️ Importador em Lote (CSV)</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Importe fichas de funcionários em lote. Faça o download do modelo abaixo antes do envio.</p>
-                
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                  <button onClick={handleDownloadTemplate} style={{ ...styles.txBtn, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <Download size={16} /> Baixar Modelo CSV
-                  </button>
-                  
-                  <input type="file" accept=".csv" onChange={handleCsvUpload} id="csv-upload-input" style={{ display: 'none' }} />
-                  <label htmlFor="csv-upload-input" className="btn btn-primary" style={{ backgroundColor: '#ec4899', cursor: 'pointer', margin: 0 }}>
-                    <UploadCloud size={16} /> Enviar CSV
-                  </label>
-                </div>
-
-                {showImportPreview && (
-                  <div style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-sm)', padding: '1rem', backgroundColor: '#fafafa' }}>
-                    <h4>Preview de Importação ({csvData.length} linhas detectadas)</h4>
-                    {csvErrors.length > 0 ? (
-                      <div style={styles.warningBanner}>
-                        <AlertTriangle size={18} />
-                        <span>Erros de validação encontrados:</span>
-                        <ul style={{ fontSize: '0.8rem', paddingLeft: '1.25rem' }}>
-                          {csvErrors.map((err, idx) => <li key={idx}>Linha {err.line} ({err.item}): {err.message}</li>)}
-                        </ul>
-                      </div>
-                    ) : (
-                      <div style={{ ...styles.alert, backgroundColor: 'var(--success-light)', color: 'var(--success-color)', border: '1px solid var(--success-color)' }}>
-                        <CheckCircle2 size={18} />
-                        <span>Tudo pronto! Nenhuma falha detectada. Pronto para importar.</span>
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
-                      <button onClick={() => setShowImportPreview(false)} className="btn btn-secondary">Cancelar</button>
-                      <button onClick={handleConfirmCsvImport} disabled={csvErrors.length > 0} className="btn btn-primary" style={{ backgroundColor: 'var(--success-color)' }}>
-                        Confirmar Carga
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 5: Audit Logs */}
+          {/* TAB 4: Audit Logs */}
           {activeTab === 'audit' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1703,6 +1658,19 @@ export default function HRPanel({ currentUser }) {
         onExportCSV={handleExportAwardReportCSV}
       />
 
+      {/* 15 HR Reports Modal */}
+      {isReportsOpen && (
+        <HRReportsModal
+          onClose={() => setIsReportsOpen && setIsReportsOpen(false)}
+          employees={employees}
+          sectors={sectors}
+          transportVouchers={transportVouchers}
+          auditLogs={auditLogs}
+          awardValue={awardValue}
+          selectedVtPeriod={selectedVtPeriod}
+        />
+      )}
+
     </div>
   );
 }
@@ -1712,6 +1680,85 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1.5rem',
+  },
+  heroSection: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '1.5rem',
+    backgroundColor: '#fff',
+    padding: '1.5rem 2rem',
+    borderRadius: '16px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    border: '1px solid var(--border-color)',
+    marginBottom: '0.5rem'
+  },
+  heroLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1.25rem'
+  },
+  heroIconBadge: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '14px',
+    background: 'linear-gradient(135deg, #ec4899 0%, #a855f7 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 8px 16px rgba(236, 72, 153, 0.25)',
+    flexShrink: 0
+  },
+  heroTitle: {
+    fontSize: '1.6rem',
+    fontWeight: '800',
+    color: 'var(--text-primary)',
+    margin: 0
+  },
+  heroSubtitle: {
+    fontSize: '0.9rem',
+    color: 'var(--text-secondary)',
+    margin: '0.35rem 0 0 0',
+    maxWidth: '550px'
+  },
+  liveBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    color: '#059669',
+    backgroundColor: '#ecfdf5',
+    padding: '0.2rem 0.6rem',
+    borderRadius: '12px',
+    border: '1px solid #a7f3d0'
+  },
+  pulseDot: {
+    width: '6px',
+    height: '6px',
+    borderRadius: '50%',
+    backgroundColor: '#10b981'
+  },
+  heroActions: {
+    display: 'flex',
+    gap: '0.75rem',
+    alignItems: 'center',
+    flexWrap: 'wrap'
+  },
+  primaryHeroBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    backgroundColor: '#ec4899',
+    color: '#fff',
+    border: 'none',
+    padding: '0.75rem 1.25rem',
+    borderRadius: '10px',
+    fontWeight: '600',
+    fontSize: '0.9rem',
+    cursor: 'pointer',
+    boxShadow: '0 4px 10px rgba(236, 72, 153, 0.2)'
   },
   cardHeader: {
     display: 'flex',

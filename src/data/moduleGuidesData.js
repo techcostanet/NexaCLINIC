@@ -93,68 +93,71 @@ export const MODULE_GUIDES = {
 
   hr: {
     id: 'hr',
-    name: 'Recursos Humanos & Benefícios',
-    subtitle: 'NexaHR — Gestão de Pessoal & Plantões',
+    name: 'Recursos Humanos & Gestão de Pessoas',
+    subtitle: 'NexaHR — Gestão Estratégica & Benefícios',
     color: '#ec4899',
     recursos: [
       {
-        title: 'Quadro de Colaboradores',
-        desc: 'Cadastro completo de funcionários, setor, cargo, modalidade de contrato (CLT/PJ), salário e status de atividade.'
+        title: 'Central de 15 Relatórios Estratégicos',
+        desc: 'Relatórios completos em PDF e Excel (Cadastro Geral, VT, Presença Premiada, Aniversariantes, Advertências, Absenteísmo, Turnover, Experiência, Vacinas, Dependentes, Folha Sintética, Dados Bancários/PIX, Documentos/CNH, Efetivo e Auditoria LGPD).'
       },
       {
-        title: 'Controle de Passagens & Vale Transporte',
-        desc: 'Gestão de linhas de ônibus, quantidade de vales diários e apuração de custos mensais por colaborador e unidade.'
+        title: 'Quadro de Colaboradores & Ficha Completa',
+        desc: 'Cadastro geral de funcionários, setor, cargo, modalidade (CLT/PJ), salário base, dados bancários, dependentes e gestão de documentos.'
       },
       {
-        title: 'Gestão de Ausências & Atestados',
-        desc: 'Registro de faltas justificadas, atestados médicos e licenças com cálculo de impacto na folha.'
+        title: 'Controle de Vale-Transporte & Saldo',
+        desc: 'Gestão de linhas/rotas urbanas, tarifas diárias (ida/volta), cálculo de recargas e histórico consolidado mês a mês.'
       },
       {
-        title: 'Prêmio Assiduidade',
-        desc: 'Apuração automatizada de elegibilidade a bonificações baseada na ausência de faltas e atrasos no mês.'
+        title: 'Presença Premiada & Assiduidade',
+        desc: 'Apuração automatizada de bonificação financeira para colaboradores 100% assíduos sem faltas ou advertências.'
       },
       {
-        title: 'Escalas de Plantão & Setores',
-        desc: 'Visualização da distribuição da equipe por setor (Enfermagem, Médica, Administrativo, Recepção e Higiene).'
+        title: 'Saúde Ocupacional & Imunização',
+        desc: 'Acompanhamento de doses vacinais (Hepatite B, dT, Gripe), validades de reforço e alertas preventivos.'
       }
     ],
     tutorial: [
       {
+        title: 'Como Acessar e Exportar os 15 Relatórios',
+        steps: [
+          'Clique no botão verde "Relatórios" no topo superior da tela.',
+          'Navegue pela lista dos 15 relatórios no menu lateral esquerdo.',
+          'Filtre por Período de Datas, Setor, Status do Colaborador, Mês de Aniversário ou Competência de VT.',
+          'Clique em "Exportar PDF" para download do documento formatado ou "Exportar Excel" para planilha com dados numéricos para cálculos.'
+        ]
+      },
+      {
         title: 'Como Cadastrar um Novo Colaborador',
         steps: [
-          'No painel de RH, clique no botão "+ Novo Funcionário".',
-          'Preencha Nome Completo, CPF, Cargo, Setor, Unidade de Lotação e Data de Admissão.',
-          'Informe os dados de transporte (linhas de ônibus e valor diário de VT) se aplicável.',
-          'Clique em "Salvar". O colaborador já estará disponível nas escalas e controles de presença.'
+          'No topo do módulo NexaHR, clique em "Novo Funcionário".',
+          'Preencha a ficha com Dados Pessoais, Contato, Contrato, Dados Bancários, Dependentes e Vacinas.',
+          'Clique em "Salvar Funcionário" para registrar na base operacional.'
         ]
       },
       {
-        title: 'Como Registrar Atestado ou Falta',
+        title: 'Como Fechar a Recarga de Vale-Transporte',
         steps: [
-          'Acesse a aba "Ausências & Faltas".',
-          'Selecione o colaborador, o tipo de ocorrência (Atestado Médico, Falta Justificada, Falta Não Justificada) e as datas.',
-          'Anexe o documento ou CID se necessário e confirme.',
-          'O sistema recalcula a elegibilidade ao prêmio assiduidade automaticamente.'
-        ]
-      },
-      {
-        title: 'Como Gerar o Fechamento de Vales-Transporte',
-        steps: [
-          'Acesse a aba "Vale Transporte".',
-          'Selecione o mês de competência e a unidade.',
-          'O sistema calcula a quantidade de dias úteis x valor da passagem de cada linha cadastrada.',
-          'Clique em "Exportar Relatório de Recarga" para envio à operadora de transporte.'
+          'Acesse a aba "Vale-Transporte".',
+          'Selecione a competência mensal no seletor de período.',
+          'Verifique as tarifas diárias e os saldos remanescentes informados.',
+          'Utilize a Central de Relatórios (Relatório 2) para emitir o demonstrativo de recargas para o financeiro.'
         ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'Como inativar um colaborador desligado?',
-        resposta: 'Basta editar o cadastro do funcionário e alterar o status para "Inativo" ou "Desligado", informando a data de rescisão.'
+        pergunta: 'Onde encontro a lista de aniversariantes e advertências?',
+        resposta: 'Todos os relatórios operacionais e analíticos agora estão centralizados no botão "Relatórios" no topo da navbar, com opções completas de PDF e Excel.'
       },
       {
-        pergunta: 'O cálculo de VT desconta faltas do colaborador?',
-        resposta: 'Sim. Se houver faltas registradas no módulo de ausências, o sistema deduz os dias correspondentes na recarga seguinte.'
+        pergunta: 'Como funciona a elegibilidade da Presença Premiada?',
+        resposta: 'O sistema avalia automaticamente o período de competência: colaboradores ativos com 0 faltas injustificadas e 0 advertências são classificados como elegíveis ao valor configurado.'
+      },
+      {
+        pergunta: 'Como funciona a exportação para Excel dos relatórios?',
+        resposta: 'As planilhas são geradas com cabeçalhos limpos e campos monetários gravados como números decimais puros para permitir uso de fórmulas e somatórias no Excel.'
       }
     ]
   },

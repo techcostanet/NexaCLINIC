@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.12',
+      date: '21/08/2026',
+      title: 'Módulo RH - Central de 15 Relatórios Completos, Padronização Visual NexaASSIST e Otimização de Abas',
+      description: 'Lançamento da Central de 15 Relatórios de RH com exportação PDF e Excel (XLSX), integração com o botão superior "Relatórios", padronização do banner hero no estilo NexaASSIST ("Em Tempo Real") e remoção da aba redundante de relatórios/importação.',
+      changes: [
+        { type: '15 Relatórios RH', text: 'Cadastro Geral, Vale-Transporte Consolidado, Presença Premiada, Aniversariantes, Advertências, Absenteísmo/Faltas, Turnover, Contratos de Experiência, Vacinas, Dependentes, Folha Sintética, Dados Bancários/PIX, Vencimentos de CNH/Documentos, Efetivo por Setor e Auditoria LGPD.' },
+        { type: 'Exportação PDF & XLS', text: 'Geração com 1 clique de relatórios em PDF formatado corporativo e planilhas Excel nativas prontas para cálculos.' },
+        { type: 'Design NexaASSIST', text: 'Hero banner padronizado com ícone gradiente, título com badge "• Em Tempo Real" e botão de ação rápida de cadastro.' },
+        { type: 'Interface Limpa', text: 'Remoção da antiga aba de relatórios e importador CSV, centralizando todas as consultas na barra de navegação superior.' }
+      ]
+    },
+    {
       version: 'v4.7.10',
       date: '21/08/2026',
       title: 'Módulo RH - Gestão Histórica de Vale-Transporte (VT) & Sincronização por Período',

@@ -119,7 +119,7 @@ export default function App() {
       case 'maintenance':
         return <ErrorBoundary><MaintenancePanel currentUser={user} /></ErrorBoundary>;
       case 'hr':
-        return <ErrorBoundary><HRPanel currentUser={user} /></ErrorBoundary>;
+        return <ErrorBoundary><HRPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'finance':
         return <ErrorBoundary><FinancePanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'purchasing':

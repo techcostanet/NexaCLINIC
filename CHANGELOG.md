@@ -1,3 +1,32 @@
+## [v4.7.12] - 21 de Agosto, 2026
+### Módulo RH - Central de 15 Relatórios Completos, Padronização Visual NexaASSIST e Otimização de Abas
+- **Central de 15 Relatórios do RH (`HRReportsModal`):**
+  - Integração direta com o botão superior "Relatórios" da Navbar principal.
+  - Exportação em **PDF** corporativo formatado com cabeçalho institucional, dados de filiais e status.
+  - Exportação em **Excel (.xlsx)** com células numéricas puras para fórmulas e totalizações.
+  - 15 Relatórios completos cobrindo:
+    1. *Cadastro Geral & Ficha Funcional*
+    2. *Vale-Transporte Consolidado (com recarga e situação)*
+    3. *Presença Premiada & Assiduidade (elegibilidade e PIX)*
+    4. *Aniversariantes do Mês & Período*
+    5. *Advertências Disciplinares & Ocorrências*
+    6. *Absenteísmo & Histórico de Faltas*
+    7. *Turnover & Movimentação de Pessoal*
+    8. *Contratos de Experiência (45 / 90 Dias)*
+    9. *Controle Vacinal & Imunização*
+    10. *Quadro de Dependentes & Benefícios Familiares*
+    11. *Folha de Pagamento Sintética por Setor*
+    12. *Dados Bancários & Contas para PIX*
+    13. *Documentos Ocupacionais & Vencimentos de CNH/ASO*
+    14. *Distribuição do Efetivo por Setor & Cargo*
+    15. *Auditoria de Governança & LGPD*
+- **Padronização Visual no Estilo NexaASSIST:**
+  - Inclusão do header hero com ícone em gradiente, título com badge "• Em Tempo Real" e botão de ação rápida "Novo Funcionário".
+- **Otimização e Limpeza de Abas:**
+  - Remoção da aba redundante "Relatórios & Importação", centralizando todos os relatórios e consultas no botão superior.
+
+---
+
 ## [v4.7.10] - 21 de Agosto, 2026
 ### Módulo RH - Gestão Histórica de Vale-Transporte (VT) & Sincronização por Período
 - **Histórico & Sincronização em Produção:**
