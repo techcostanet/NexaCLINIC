@@ -36,6 +36,9 @@ export default function StockPanel({ currentUser }) {
     setInventories,
     transfers,
     setTransfers,
+    productBatches,
+    setProductBatches,
+    handleDeleteBatch,
     showFulfillModal,
     setShowFulfillModal,
     fulfillingReq,
@@ -158,8 +161,16 @@ export default function StockPanel({ currentUser }) {
     handleSaveTransaction,
     handleOpenFulfillModal,
     handleFulfillQuantityChange,
+    handleFulfillBatchChange,
+    handleFulfillManualBatchChange,
     handleFillAllRequestedQuantity,
     handleProcessFulfillment,
+    traceabilitySearchTerm,
+    setTraceabilitySearchTerm,
+    traceabilityResult,
+    setTraceabilityResult,
+    traceabilityLoading,
+    handleSearchTraceability,
     handleXmlUpload,
     handleConfirmSupplierMapping,
     handleUpdateInstallment,
@@ -224,7 +235,7 @@ export default function StockPanel({ currentUser }) {
           onClick={() => setActiveTab('expiry')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'expiry' ? styles.tabBtnActive : {}) }}
         >
-          <Calendar size={16} /> Controle de Validade
+          <Calendar size={16} /> Controle de Validade ({(productBatches || []).length > 0 ? (productBatches || []).length : (expiryList || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('loans')} 
@@ -238,6 +249,12 @@ export default function StockPanel({ currentUser }) {
         >
           <Send size={16} /> Atendimento de Requisições ({(requisitions || []).filter(r => r && (r.status === 'Pendente' || r.status === 'Parcial')).length > 0 ? `${(requisitions || []).filter(r => r && (r.status === 'Pendente' || r.status === 'Parcial')).length} Pendente(s)` : (requisitions || []).length})
         </button>
+        <button 
+          onClick={() => { setActiveTab('traceability'); if (traceabilitySearchTerm) handleSearchTraceability(); }} 
+          style={{ ...styles.tabBtn, ...(activeTab === 'traceability' ? styles.tabBtnActive : {}) }}
+        >
+          <Search size={16} /> Rastreabilidade & Recall
+        </button>
       </div>
 
       {/* Message feedback */}
@@ -248,82 +265,81 @@ export default function StockPanel({ currentUser }) {
         </div>
       )}
 
-      {/* Warning Alert Banner */}
-      {activeTab === 'inventory' && lowStockItems.length > 0 && (
-        <div style={styles.warningBanner}>
-          <AlertTriangle size={18} />
-          <span>Alerta de Logística: <strong>{lowStockItems.length} itens</strong> estão com estoque abaixo do mínimo de segurança!</span>
+      {/* Filters and Search */}
+      {activeTab !== 'physical_inventory' && activeTab !== 'transfers' && activeTab !== 'requisitions' && (
+        <div style={styles.filtersBar}>
+          <div style={styles.searchWrapper}>
+            <Search size={18} style={styles.searchIcon} />
+            <input 
+              type="text" 
+              placeholder={activeTab === 'invoices' ? "Buscar por número da NF, fornecedor ou chave..." : activeTab === 'suppliers' ? "Buscar fornecedor..." : activeTab === 'sectors' ? "Buscar setor..." : activeTab === 'loans' ? "Buscar por produto, parceiro..." : activeTab === 'expiry' ? "Buscar por insumo ou lote..." : "Buscar insumo por nome..."} 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)} 
+              style={styles.searchInput}
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', right: '0.75rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          <div style={styles.selectsWrapper}>
+            {activeTab === 'inventory' && (
+              <select 
+                value={filterCategory} 
+                onChange={e => setFilterCategory(e.target.value)}
+                style={styles.filterSelect}
+              >
+                <option value="">Todas as Categorias</option>
+                {categoriesList.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+              </select>
+            )}
+
+            {activeTab === 'inventory' && (
+              <button onClick={handleOpenAddModal} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f59e0b' }}>
+                <Plus size={16} /> Cadastrar Insumo
+              </button>
+            )}
+
+            {activeTab === 'suppliers' && (
+              <button onClick={handleOpenSupplierAdd} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f59e0b' }}>
+                <Plus size={16} /> Novo Fornecedor
+              </button>
+            )}
+
+            {activeTab === 'sectors' && (
+              <button onClick={handleOpenSectorAdd} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f59e0b' }}>
+                <Plus size={16} /> Novo Setor
+              </button>
+            )}
+
+            {activeTab === 'loans' && (
+              <button onClick={handleOpenLoanAdd} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#0284c7' }}>
+                <Plus size={16} /> Novo Empréstimo
+              </button>
+            )}
+
+            {activeTab === 'transactions' && (
+              <button onClick={handleOpenTxForm} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f59e0b' }}>
+                <Plus size={16} /> Nova Movimentação
+              </button>
+            )}
+
+            {activeTab === 'invoices' && (
+              <button onClick={() => { setXmlWizardStep(1); setShowXmlWizard(true); }} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f59e0b' }}>
+                <UploadCloud size={16} /> Importar NF-e (XML / PDF)
+              </button>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Dynamic Actions Bar */}
-      <div style={styles.filtersBar}>
-        <div style={styles.searchWrapper}>
-          <Search size={18} style={styles.searchIcon} />
-          <input 
-            type="text" 
-            placeholder="Pesquisar..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            style={styles.searchInput}
-          />
-        </div>
-        <div style={styles.selectsWrapper}>
-          {activeTab === 'inventory' && (
-            <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={styles.filterSelect}>
-              <option value="">Todas as Categorias</option>
-              {categoriesList.map(c => (
-                <option key={c?.id || Math.random()} value={c?.name}>{c?.name}</option>
-              ))}
-            </select>
-          )}
-        </div>
-        
-        {/* Dynamic Buttons depending on Tab */}
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {activeTab === 'inventory' && (
-            <button onClick={handleOpenAddModal} style={styles.addBtn}>
-              <Plus size={16} /> Novo Insumo
-            </button>
-          )}
-          {activeTab === 'physical_inventory' && (
-            <button onClick={handleOpenInventoryAdd} style={styles.addBtn}>
-              <Plus size={16} /> Abrir Novo Inventário Físico
-            </button>
-          )}
-          {activeTab === 'transfers' && (
-            <button onClick={handleOpenTransferModal} style={styles.addBtn}>
-              <Repeat size={16} /> Nova Transferência de Estoque
-            </button>
-          )}
-          {activeTab === 'invoices' && (
-            <button onClick={() => setShowXmlWizard(true)} style={styles.addBtn}>
-              <UploadCloud size={16} /> Importar XML / PDF de NF-e
-            </button>
-          )}
-          {activeTab === 'suppliers' && (
-            <button onClick={handleOpenSupplierAdd} style={styles.addBtn}>
-              <Plus size={16} /> Novo Fornecedor
-            </button>
-          )}
-          {activeTab === 'sectors' && (
-            <button onClick={handleOpenSectorAdd} style={styles.addBtn}>
-              <Warehouse size={16} /> Novo Setor Físico
-            </button>
-          )}
-          {activeTab === 'loans' && (
-            <button onClick={handleOpenLoanAdd} style={styles.addBtn}>
-              <Plus size={16} /> Novo Empréstimo
-            </button>
-          )}
-          <button onClick={handleOpenTxForm} style={styles.txBtn}>
-            Lançar Movimentação Manual
-          </button>
-        </div>
-      </div>
-
       {loading ? (
-        <div style={styles.loadingBox}>Carregando dados...</div>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+          <RefreshCw size={28} className="spin" style={{ marginBottom: '0.5rem' }} />
+          <p>Carregando dados do estoque...</p>
+        </div>
       ) : (
         <>
           {/* TAB 1: Inventory Catalogue */}
@@ -334,6 +350,7 @@ export default function StockPanel({ currentUser }) {
                   <tr>
                     {renderSortHeader('Item de Insumo', 'name', inventorySort, setInventorySort)}
                     {renderSortHeader('Categoria', 'category', inventorySort, setInventorySort)}
+                    <th style={styles.th}>Rastreável</th>
                     {renderSortHeader('Estoque Atual', 'currentStock', inventorySort, setInventorySort)}
                     {renderSortHeader('Setor Padrão', 'defaultSectorId', inventorySort, setInventorySort)}
                     {renderSortHeader('Mínimo', 'minStock', inventorySort, setInventorySort)}
@@ -345,7 +362,7 @@ export default function StockPanel({ currentUser }) {
                 <tbody>
                   {filteredItems.length === 0 ? (
                     <tr>
-                      <td colSpan="8" style={styles.noDataCell}>Nenhum insumo no catálogo.</td>
+                      <td colSpan="9" style={styles.noDataCell}>Nenhum insumo no catálogo.</td>
                     </tr>
                   ) : (
                     sortData(filteredItems, inventorySort).map((item, idx) => {
@@ -354,10 +371,20 @@ export default function StockPanel({ currentUser }) {
                       const isLow = currentVal <= minVal;
                       const sectorName = sectors.find(s => s?.id === item?.defaultSectorId)?.name || 'Almoxarifado Central';
                       const itemPrice = parseFloat(item?.price) || 0;
+                      const hasLote = !!item?.hasBatchControl;
                       return (
                         <tr key={item?.id || idx} style={isLow ? styles.rowWarning : {}}>
                           <td style={{ fontWeight: '600' }}>{item?.name || 'Insumo Sem Nome'}</td>
                           <td><span style={styles.categoryBadge}>{item?.category || 'Geral'}</span></td>
+                          <td>
+                            {hasLote ? (
+                              <span style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                ✓ Lote
+                              </span>
+                            ) : (
+                              <span style={{ color: '#9ca3af', fontSize: '0.75rem' }}>Geral</span>
+                            )}
+                          </td>
                           <td style={{ fontWeight: '700', color: isLow ? 'var(--danger-color)' : 'var(--text-primary)' }}>
                             {currentVal} {item?.unit || 'unidades'}
                           </td>
@@ -712,42 +739,78 @@ export default function StockPanel({ currentUser }) {
             </div>
           )}
 
-          {/* TAB 6: Expiry Control */}
+          {/* TAB 6: Expiry & Batches Control */}
           {activeTab === 'expiry' && (
             <div style={styles.tableWrapper}>
+              <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)' }}>📦 Lotes & Rastreabilidade de Validade (FEFO)</h3>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Ordenado por proximidade de vencimento (Primeiro que Vence, Primeiro que Sai).
+                  </span>
+                </div>
+              </div>
+
               <table style={styles.table}>
                 <thead>
                   <tr>
                     <th>Item de Insumo</th>
                     <th>Lote</th>
-                    <th>Quantidade Inicial</th>
-                    <th>Data de Entrada</th>
-                    <th>Data de Validade</th>
-                    <th>Controle Validade</th>
-                    <th>Operador</th>
+                    <th>Saldo Atual</th>
+                    <th>Qtd Inicial</th>
+                    <th>Data Entrada</th>
+                    <th>Data Validade</th>
+                    <th>Status</th>
+                    <th>Origem / NF-e</th>
+                    <th style={styles.th}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {expiryList.length === 0 ? (
                     <tr>
-                      <td colSpan="7" style={styles.noDataCell}>Nenhum lote com validade registrada.</td>
+                      <td colSpan="9" style={styles.noDataCell}>Nenhum lote com validade registrada no momento.</td>
                     </tr>
                   ) : (
                     expiryList.map(tx => {
                       const expiryInfo = getExpiryStatus(tx?.expiryDate);
+                      const currentQty = parseFloat(tx?.quantity) || 0;
+                      const initialQty = parseFloat(tx?.initialQuantity) || currentQty;
+                      const isExhausted = currentQty <= 0;
+
                       return (
-                        <tr key={tx?.id || Math.random()}>
+                        <tr key={tx?.id || Math.random()} style={isExhausted ? { opacity: 0.6 } : {}}>
                           <td style={{ fontWeight: '600' }}>{tx?.itemName}</td>
-                          <td style={{ fontWeight: '700' }}>{tx?.batch || '-'}</td>
-                          <td>{tx?.quantity}</td>
-                          <td>{tx?.date && !isNaN(new Date(tx.date).getTime()) ? new Date(tx.date).toLocaleDateString('pt-BR') : '-'}</td>
-                          <td>{tx?.expiryDate && !isNaN(new Date(tx.expiryDate).getTime()) ? new Date(tx.expiryDate).toLocaleDateString('pt-BR') : '-'}</td>
-                          <td>
-                            <span style={{ ...styles.expiryLabel, color: expiryInfo.color }}>
-                              {expiryInfo.text}
-                            </span>
+                          <td style={{ fontWeight: '700', color: 'var(--primary-color)' }}>{tx?.batch || '-'}</td>
+                          <td style={{ fontWeight: '700', color: isExhausted ? '#9ca3af' : '#166534' }}>
+                            {currentQty}
                           </td>
-                          <td>{tx?.operator}</td>
+                          <td style={{ color: 'var(--text-muted)' }}>{initialQty}</td>
+                          <td>{tx?.date && !isNaN(new Date(tx.date).getTime()) ? new Date(tx.date).toLocaleDateString('pt-BR') : '-'}</td>
+                          <td style={{ fontWeight: '600' }}>{tx?.expiryDate && !isNaN(new Date(tx.expiryDate).getTime()) ? new Date(tx.expiryDate).toLocaleDateString('pt-BR') : '-'}</td>
+                          <td>
+                            {isExhausted ? (
+                              <span style={{ ...styles.badge, backgroundColor: '#f3f4f6', color: '#6b7280' }}>Esgotado</span>
+                            ) : (
+                              <span style={{ ...styles.expiryLabel, color: expiryInfo.color }}>
+                                {expiryInfo.text}
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ fontSize: '0.8rem' }}>
+                            {tx?.invoiceNumber && tx?.invoiceNumber !== 'MANUAL' ? `NF-e ${tx.invoiceNumber}` : 'Entrada Manual'}
+                            {tx?.supplierName && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{tx.supplierName}</div>}
+                          </td>
+                          <td>
+                            {tx?.id && handleDeleteBatch && (
+                              <button 
+                                onClick={() => handleDeleteBatch(tx.id)} 
+                                style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} 
+                                title="Excluir Registro de Lote"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       );
                     })
@@ -987,10 +1050,238 @@ export default function StockPanel({ currentUser }) {
         </div>
       )}
 
+      {/* TAB 9: Traceability & Reverse Batch Search (Recall) */}
+      {activeTab === 'traceability' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Search Card */}
+          <div style={{ ...styles.card, padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.15rem', fontWeight: '700', margin: '0 0 0.25rem 0', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Search size={20} color="var(--primary-color)" /> Rastreabilidade & Busca Reversa de Lotes (Recall)
+                </h2>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
+                  Consulte a cadeia completa de medicamentos e insumos: entrada por nota fiscal, fornecedor, estoque atual e histórico de todos os pacientes que receberam o lote.
+                </p>
+              </div>
+
+              {traceabilityResult.dispensations.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.85rem', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer' }}
+                >
+                  <FileText size={15} /> Imprimir Relatório de Recall
+                </button>
+              )}
+            </div>
+
+            <form 
+              onSubmit={(e) => { e.preventDefault(); handleSearchTraceability(); }}
+              style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+            >
+              <div style={{ position: 'relative', flex: 1 }}>
+                <Search size={18} style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  placeholder="Digite o Número do Lote, Nome do Medicamento/Insumo, Paciente ou NF-e..."
+                  value={traceabilitySearchTerm}
+                  onChange={(e) => setTraceabilitySearchTerm(e.target.value)}
+                  style={{ width: '100%', padding: '0.65rem 0.85rem 0.65rem 2.4rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem', outline: 'none' }}
+                />
+                {traceabilitySearchTerm && (
+                  <button 
+                    type="button" 
+                    onClick={() => { setTraceabilitySearchTerm(''); handleSearchTraceability(''); }}
+                    style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+              <button
+                type="submit"
+                disabled={traceabilityLoading}
+                className="btn btn-primary"
+                style={{ padding: '0.65rem 1.25rem', backgroundColor: '#0284c7', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                {traceabilityLoading ? <RefreshCw size={16} className="spin" /> : <Search size={16} />}
+                Rastrear Lote
+              </button>
+            </form>
+
+            {/* Quick Batch Suggestions */}
+            {(productBatches || []).length > 0 && (
+              <div style={{ marginTop: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)' }}>Lotes Recentes:</span>
+                {(productBatches || []).slice(0, 6).map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => {
+                      setTraceabilitySearchTerm(b.batchNumber);
+                      handleSearchTraceability(b.batchNumber);
+                    }}
+                    style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '0.2rem 0.6rem', fontSize: '0.75rem', cursor: 'pointer', color: '#334155' }}
+                  >
+                    🏷️ {b.itemName} — <strong>{b.batchNumber}</strong>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Results Section */}
+          {traceabilityLoading ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+              <RefreshCw size={32} className="spin" style={{ marginBottom: '0.5rem' }} />
+              <p>Rastreando dados do lote e histórico de pacientes...</p>
+            </div>
+          ) : (
+            <>
+              {/* Summary Stats */}
+              {(traceabilityResult.batches.length > 0 || traceabilityResult.dispensations.length > 0) && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div style={{ ...styles.card, padding: '1rem', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: '700', textTransform: 'uppercase' }}>Lotes Localizados</span>
+                    <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0369a1', marginTop: '0.25rem' }}>{traceabilityResult.batches.length}</div>
+                  </div>
+                  <div style={{ ...styles.card, padding: '1rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: '700', textTransform: 'uppercase' }}>Dispensações a Pacientes</span>
+                    <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#15803d', marginTop: '0.25rem' }}>{traceabilityResult.dispensations.length}</div>
+                  </div>
+                  <div style={{ ...styles.card, padding: '1rem', backgroundColor: '#fefce8', border: '1px solid #fef08a' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#a16207', fontWeight: '700', textTransform: 'uppercase' }}>Total Unidades Dispensadas</span>
+                    <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#a16207', marginTop: '0.25rem' }}>
+                      {traceabilityResult.dispensations.reduce((acc, d) => acc + (parseFloat(d.quantity) || 0), 0)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Batches Details Table */}
+              {traceabilityResult.batches.length > 0 && (
+                <div style={styles.tableWrapper}>
+                  <div style={{ padding: '0.75rem 1rem', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-color)', fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    📦 Dados de Origem do Lote (Entrada no Estoque)
+                  </div>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Item / Insumo</th>
+                        <th>Lote</th>
+                        <th>Saldo Atual</th>
+                        <th>Qtd Inicial</th>
+                        <th>Validade</th>
+                        <th>Status</th>
+                        <th>Fornecedor</th>
+                        <th>NF-e</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {traceabilityResult.batches.map(b => (
+                        <tr key={b.id}>
+                          <td style={{ fontWeight: '600' }}>{b.itemName}</td>
+                          <td style={{ fontWeight: '700', color: 'var(--primary-color)' }}>{b.batchNumber}</td>
+                          <td style={{ fontWeight: '700', color: (parseFloat(b.currentQuantity) || 0) <= 0 ? '#9ca3af' : '#166534' }}>
+                            {b.currentQuantity} {b.unit || 'un'}
+                          </td>
+                          <td style={{ color: 'var(--text-muted)' }}>{b.initialQuantity}</td>
+                          <td style={{ fontWeight: '600' }}>{b.expiryDate ? new Date(b.expiryDate).toLocaleDateString('pt-BR') : '-'}</td>
+                          <td>
+                            <span style={{
+                              padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700',
+                              backgroundColor: b.status === 'Ativo' ? '#dcfce7' : b.status === 'Vencido' ? '#fee2e2' : '#f3f4f6',
+                              color: b.status === 'Ativo' ? '#166534' : b.status === 'Vencido' ? '#991b1b' : '#6b7280'
+                            }}>
+                              {b.status || 'Ativo'}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '0.8rem' }}>{b.supplierName || 'Fornecedor Padrão'}</td>
+                          <td style={{ fontSize: '0.8rem' }}>{b.invoiceNumber || 'Manual'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Patient Dispensations Table */}
+              <div style={styles.tableWrapper}>
+                <div style={{ padding: '0.75rem 1rem', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    🏥 Histórico de Dispensações para Pacientes
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {traceabilityResult.dispensations.length} registro(s) encontrado(s)
+                  </span>
+                </div>
+
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Data / Hora</th>
+                      <th>Paciente</th>
+                      <th>Item / Insumo</th>
+                      <th>Lote</th>
+                      <th>Validade</th>
+                      <th>Qtd</th>
+                      <th>Solicitante</th>
+                      <th>Dispensado Por</th>
+                      <th>Requisição</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {traceabilityResult.dispensations.length === 0 ? (
+                      <tr>
+                        <td colSpan="9" style={styles.noDataCell}>
+                          {traceabilitySearchTerm 
+                            ? `Nenhuma dispensação de paciente encontrada para "${traceabilitySearchTerm}".`
+                            : 'Digite um número de lote ou selecione um lote recente acima para consultar a rastreabilidade.'}
+                        </td>
+                      </tr>
+                    ) : (
+                      traceabilityResult.dispensations.map((disp, dIdx) => (
+                        <tr key={disp.id || dIdx}>
+                          <td>
+                            <div>{disp.date ? new Date(disp.date).toLocaleDateString('pt-BR') : '-'}</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                              {disp.date ? new Date(disp.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </div>
+                          </td>
+                          <td style={{ fontWeight: '700', color: '#1e40af' }}>
+                            {disp.patientName || 'Uso Geral / Salão'}
+                          </td>
+                          <td style={{ fontWeight: '600' }}>{disp.itemName}</td>
+                          <td style={{ fontWeight: '700', color: 'var(--primary-color)' }}>
+                            {disp.batchNumber || '-'}
+                          </td>
+                          <td style={{ fontSize: '0.8rem' }}>
+                            {disp.expiryDate ? new Date(disp.expiryDate).toLocaleDateString('pt-BR') : '-'}
+                          </td>
+                          <td style={{ fontWeight: '700', color: '#047857' }}>
+                            {disp.quantity} {disp.unit || 'un'}
+                          </td>
+                          <td style={{ fontSize: '0.8rem' }}>{disp.requestedBy || 'Enfermagem'}</td>
+                          <td style={{ fontSize: '0.8rem' }}>{disp.fulfilledBy || 'Farmácia'}</td>
+                          <td style={{ fontSize: '0.8rem', fontWeight: '600' }}>
+                            {disp.requisitionCode || '-'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Requisition Fulfillment Modal */}
       {showFulfillModal && fulfillingReq && (
         <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalCard, maxWidth: '650px' }}>
+          <div style={{ ...styles.modalCard, maxWidth: '850px' }}>
             <div style={styles.modalHeader}>
               <h2>Atender Requisição: {fulfillingReq.requisitionCode}</h2>
               <button onClick={() => setShowFulfillModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
@@ -1011,7 +1302,7 @@ export default function StockPanel({ currentUser }) {
               )}
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700' }}>Itens Solicitados & Quantidade Entregue:</h4>
+                <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700' }}>Itens Solicitados & Lote a Dispensar:</h4>
                 <button 
                   type="button" 
                   onClick={handleFillAllRequestedQuantity}
@@ -1026,26 +1317,79 @@ export default function StockPanel({ currentUser }) {
                   <thead style={{ backgroundColor: '#f3f4f6', textAlign: 'left' }}>
                     <tr>
                       <th style={{ padding: '0.5rem 0.75rem' }}>Item / Material</th>
+                      <th style={{ padding: '0.5rem 0.75rem', width: '320px' }}>Lote & Validade (Sugestão FEFO)</th>
                       <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', width: '100px' }}>Qtd Pedida</th>
-                      <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', width: '120px' }}>Qtd Entregue *</th>
+                      <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', width: '110px' }}>Qtd Entregue *</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {fulfillItems.map((item, idx) => (
-                      <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                        <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600' }}>{item.itemName}</td>
-                        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>{item.requestedQuantity} {item.unit}</td>
-                        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                          <input 
-                            type="number" 
-                            min="0" 
-                            value={item.deliveredQuantity !== undefined ? item.deliveredQuantity : item.requestedQuantity}
-                            onChange={(e) => handleFulfillQuantityChange(idx, e.target.value)}
-                            style={{ width: '80px', padding: '0.35rem', textAlign: 'center', borderRadius: '4px', border: '1px solid var(--border-color)', fontWeight: '700' }}
-                          />
-                        </td>
-                      </tr>
-                    ))}
+                    {fulfillItems.map((item, idx) => {
+                      const stockCatalogItem = items.find(i => i.id === item.itemId || i.name.toLowerCase() === item.itemName?.toLowerCase());
+                      const hasLoteFlag = stockCatalogItem?.hasBatchControl;
+                      const matchingBatches = (productBatches || [])
+                        .filter(b => (b.itemId === item.itemId || b.itemName?.toLowerCase() === item.itemName?.toLowerCase()) && (parseFloat(b.currentQuantity) || 0) > 0)
+                        .sort((a, b) => new Date(a.expiryDate || '9999-12-31') - new Date(b.expiryDate || '9999-12-31'));
+
+                      return (
+                        <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                          <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600' }}>
+                            <div>{item.itemName}</div>
+                            {hasLoteFlag && (
+                              <span style={{ backgroundColor: '#e0f2fe', color: '#0369a1', fontSize: '0.7rem', padding: '0.1rem 0.35rem', borderRadius: '3px', fontWeight: '700' }}>
+                                ✓ Rastreável
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '0.5rem 0.75rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                              {matchingBatches.length > 0 ? (
+                                <select
+                                  value={item.batchId || ''}
+                                  onChange={(e) => handleFulfillBatchChange(idx, e.target.value)}
+                                  style={{ width: '100%', padding: '0.35rem 0.5rem', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: '#fff', fontWeight: '600' }}
+                                >
+                                  {matchingBatches.map((b, bIdx) => (
+                                    <option key={b.id} value={b.id}>
+                                      {b.batchNumber} (Val: {b.expiryDate ? new Date(b.expiryDate).toLocaleDateString('pt-BR') : 'S/D'} | Saldo: {b.currentQuantity}) {bIdx === 0 ? '⭐ FEFO' : ''}
+                                    </option>
+                                  ))}
+                                  <option value="">[Digitar outro lote manual]</option>
+                                </select>
+                              ) : null}
+
+                              {(!item.batchId || matchingBatches.length === 0) && (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.3rem' }}>
+                                  <input
+                                    type="text"
+                                    placeholder="Nº Lote"
+                                    value={item.batchNumber || ''}
+                                    onChange={(e) => handleFulfillManualBatchChange(idx, 'batchNumber', e.target.value)}
+                                    style={{ padding: '0.3rem 0.4rem', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                                  />
+                                  <input
+                                    type="date"
+                                    placeholder="Validade"
+                                    value={item.expiryDate || ''}
+                                    onChange={(e) => handleFulfillManualBatchChange(idx, 'expiryDate', e.target.value)}
+                                    style={{ padding: '0.3rem 0.4rem', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>{item.requestedQuantity} {item.unit}</td>
+                          <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
+                            <input 
+                              type="number" 
+                              min="0" 
+                              value={item.deliveredQuantity !== undefined ? item.deliveredQuantity : item.requestedQuantity}
+                              onChange={(e) => handleFulfillQuantityChange(idx, e.target.value)}
+                              style={{ width: '80px', padding: '0.35rem', textAlign: 'center', borderRadius: '4px', border: '1px solid var(--border-color)', fontWeight: '700' }}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1163,6 +1507,24 @@ export default function StockPanel({ currentUser }) {
                       type="text" className="form-control" placeholder="0.00"
                       value={itemForm.price} onChange={e => setItemForm({ ...itemForm, price: e.target.value })}
                     />
+                  </div>
+                </div>
+                
+                <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <input 
+                    type="checkbox" 
+                    id="item-batch-control-checkbox"
+                    checked={!!itemForm.hasBatchControl} 
+                    onChange={e => setItemForm({ ...itemForm, hasBatchControl: e.target.checked })}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#16a34a' }}
+                  />
+                  <div>
+                    <label htmlFor="item-batch-control-checkbox" style={{ fontWeight: '700', fontSize: '0.85rem', color: '#166534', cursor: 'pointer', margin: 0, display: 'block' }}>
+                      Controla Lote & Rastreabilidade
+                    </label>
+                    <span style={{ fontSize: '0.75rem', color: '#15803d', display: 'block' }}>
+                      Exige registro de número de lote e data de validade na entrada e rastreia o paciente na dispensação.
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1646,22 +2008,31 @@ export default function StockPanel({ currentUser }) {
                           </div>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                          <div className="form-group">
-                            <label>Lote</label>
-                            <input 
-                              type="text" className="form-control" placeholder="Lote do item" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem' }}
-                              value={m.batch} onChange={e => handleMappingFieldChange(m.xmlCode, 'batch', e.target.value)}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Validade</label>
-                            <input 
-                              type="date" className="form-control" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem' }}
-                              value={m.expiryDate} onChange={e => handleMappingFieldChange(m.xmlCode, 'expiryDate', e.target.value)}
-                            />
-                          </div>
-                        </div>
+                        {(() => {
+                          const isBatchTracked = m.mappedItemId === 'CREATE_NEW' || items.find(i => i.id === m.mappedItemId)?.hasBatchControl;
+                          return (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                              <div className="form-group">
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  Lote {isBatchTracked && <span style={{ color: '#0369a1', fontSize: '0.7rem', fontWeight: '700' }}>(Rastreável)</span>}
+                                </label>
+                                <input 
+                                  type="text" className="form-control" placeholder="Número do lote" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', borderColor: isBatchTracked && !m.batch ? '#f59e0b' : undefined }}
+                                  value={m.batch} onChange={e => handleMappingFieldChange(m.xmlCode, 'batch', e.target.value)}
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  Validade {isBatchTracked && <span style={{ color: '#0369a1', fontSize: '0.7rem', fontWeight: '700' }}>(Rastreável)</span>}
+                                </label>
+                                <input 
+                                  type="date" className="form-control" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', borderColor: isBatchTracked && !m.expiryDate ? '#f59e0b' : undefined }}
+                                  value={m.expiryDate} onChange={e => handleMappingFieldChange(m.xmlCode, 'expiryDate', e.target.value)}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     ))}
                   </div>

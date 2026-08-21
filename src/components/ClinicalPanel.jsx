@@ -13,6 +13,7 @@ export default function ClinicalPanel() {
   const [sessionsLogs, setSessionsLogs] = useState([]);
   const [clinicalNotes, setClinicalNotes] = useState([]);
   const [assistPosts, setAssistPosts] = useState([]);
+  const [patientDispensations, setPatientDispensations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -61,12 +62,13 @@ export default function ClinicalPanel() {
   const fetchClinicalData = async () => {
     setLoading(true);
     try {
-      const [pList, pRecs, sLogs, cNotes, aPosts] = await Promise.all([
+      const [pList, pRecs, sLogs, cNotes, aPosts, pDisps] = await Promise.all([
         dbService.getPatients(),
         dbService.getPrescriptions(),
         dbService.getSessionsLogs(),
         dbService.getClinicalNotes(),
-        dbService.getAssistPosts ? dbService.getAssistPosts() : []
+        dbService.getAssistPosts ? dbService.getAssistPosts() : [],
+        dbService.getPatientDispensations ? dbService.getPatientDispensations() : []
       ]);
 
       const activePatients = pList.filter(p => p.treatmentStatus === 'Ativo');
@@ -75,6 +77,7 @@ export default function ClinicalPanel() {
       setSessionsLogs(sLogs);
       setClinicalNotes(cNotes);
       setAssistPosts(aPosts || []);
+      setPatientDispensations(pDisps || []);
 
       if (activePatients.length > 0 && !selectedPatientId) {
         setSelectedPatientId(activePatients[0].id);
@@ -371,6 +374,12 @@ export default function ClinicalPanel() {
           <MessageSquare size={16} /> Evoluções Multidisciplinares
         </button>
         <button 
+          onClick={() => setActiveTab('dispensations')} 
+          style={{ ...styles.tabBtn, ...(activeTab === 'dispensations' ? styles.tabBtnActive : {}) }}
+        >
+          <Pill size={16} /> Medicamentos & Insumos ({(patientDispensations || []).filter(d => d.patientId === selectedPatientId).length})
+        </button>
+        <button 
           onClick={() => setActiveTab('timeline')} 
           style={{ 
             ...styles.tabBtn, 
@@ -396,8 +405,8 @@ export default function ClinicalPanel() {
         <div style={styles.loadingBox}>Carregando dados assistenciais...</div>
       ) : (
         <>
-          {/* TAB 1, 3 & 4: Require Patient Selector */}
-          {(activeTab === 'prescriptions' || activeTab === 'evolutions' || activeTab === 'timeline') && (
+          {/* TAB 1, 3, 4 & 5: Require Patient Selector */}
+          {(activeTab === 'prescriptions' || activeTab === 'evolutions' || activeTab === 'timeline' || activeTab === 'dispensations') && (
             <div style={styles.selectionLayout}>
               {/* Left Column: Select Patient */}
               <div style={styles.sidebar}>
@@ -686,6 +695,99 @@ export default function ClinicalPanel() {
                           ))
                         )}
                       </div>
+                    </div>
+                  ) : activeTab === 'dispensations' ? (
+                    /* SUB-TAB: DISPENSATIONS & TRACEABILITY */
+                    <div style={styles.contentCard}>
+                      <div style={styles.contentHeader}>
+                        <div style={styles.patientBanner}>
+                          <Pill size={24} color="#0284c7" />
+                          <div>
+                            <h2>Medicamentos & Insumos Dispensados: {activePatient.name}</h2>
+                            <p>Rastreabilidade completa de itens clínicos, doses, números de lote, datas de validade e profissionais responsáveis.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {(() => {
+                        const activeDisps = (patientDispensations || []).filter(d => 
+                          d.patientId === activePatient.id || 
+                          (d.patientName && activePatient.name && d.patientName.toLowerCase() === activePatient.name.toLowerCase())
+                        );
+
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {/* Quick Patient Dispensation Stats */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem' }}>
+                              <div style={{ padding: '0.75rem', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '8px' }}>
+                                <span style={{ fontSize: '0.7rem', color: '#0369a1', fontWeight: '700', textTransform: 'uppercase' }}>Total de Baixas</span>
+                                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0369a1' }}>{activeDisps.length}</div>
+                              </div>
+                              <div style={{ padding: '0.75rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px' }}>
+                                <span style={{ fontSize: '0.7rem', color: '#15803d', fontWeight: '700', textTransform: 'uppercase' }}>Itens Distintos</span>
+                                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#15803d' }}>
+                                  {new Set(activeDisps.map(d => d.itemName)).size}
+                                </div>
+                              </div>
+                              <div style={{ padding: '0.75rem', backgroundColor: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: '8px' }}>
+                                <span style={{ fontSize: '0.7rem', color: '#7e22ce', fontWeight: '700', textTransform: 'uppercase' }}>Última Dispensação</span>
+                                <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#7e22ce', marginTop: '0.2rem' }}>
+                                  {activeDisps.length > 0 && activeDisps[0].date ? new Date(activeDisps[0].date).toLocaleDateString('pt-BR') : 'Sem registros'}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Table of Dispensations */}
+                            <div style={styles.tableWrapper}>
+                              <table style={styles.table}>
+                                <thead>
+                                  <tr>
+                                    <th>Data / Hora</th>
+                                    <th>Medicamento / Insumo</th>
+                                    <th>Quantidade</th>
+                                    <th>Lote</th>
+                                    <th>Validade</th>
+                                    <th>Solicitante</th>
+                                    <th>Dispensado Por</th>
+                                    <th>Requisição</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {activeDisps.length === 0 ? (
+                                    <tr>
+                                      <td colSpan="8" style={styles.noDataCell}>Nenhum medicamento ou insumo dispensado para este paciente até o momento.</td>
+                                    </tr>
+                                  ) : (
+                                    activeDisps.map((disp, dIdx) => (
+                                      <tr key={disp.id || dIdx}>
+                                        <td>
+                                          <div>{disp.date ? new Date(disp.date).toLocaleDateString('pt-BR') : '-'}</div>
+                                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                                            {disp.date ? new Date(disp.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}
+                                          </div>
+                                        </td>
+                                        <td style={{ fontWeight: '600' }}>{disp.itemName}</td>
+                                        <td style={{ fontWeight: '700', color: '#047857' }}>
+                                          {disp.quantity} {disp.unit || 'un'}
+                                        </td>
+                                        <td style={{ fontWeight: '700', color: 'var(--primary-color)' }}>
+                                          {disp.batchNumber || '-'}
+                                        </td>
+                                        <td>
+                                          {disp.expiryDate ? new Date(disp.expiryDate).toLocaleDateString('pt-BR') : '-'}
+                                        </td>
+                                        <td>{disp.requestedBy || 'Enfermagem'}</td>
+                                        <td>{disp.fulfilledBy || 'Farmácia Central'}</td>
+                                        <td style={{ fontWeight: '600', fontSize: '0.8rem' }}>{disp.requisitionCode || '-'}</td>
+                                      </tr>
+                                    ))
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   ) : (
                     /* SUB-TAB 4: LINHA DO TEMPO ASSISTENCIAL (NexaASSIST) */

@@ -16020,6 +16020,107 @@ export const mockFirestore = {
     return { success: true };
   },
 
+  // Product Batches (Lotes e Rastreabilidade)
+  getProductBatches: async (itemId = null) => {
+    const db = getDB();
+    if (!db.product_batches) {
+      db.product_batches = [];
+      setDB(db);
+    }
+    let list = db.product_batches;
+    if (itemId) {
+      list = list.filter(b => b.itemId === itemId);
+    }
+    return list.sort((a, b) => {
+      if (!a.expiryDate) return 1;
+      if (!b.expiryDate) return -1;
+      return new Date(a.expiryDate) - new Date(b.expiryDate);
+    });
+  },
+
+  saveProductBatch: async (batchData) => {
+    await new Promise(resolve => setTimeout(resolve, 150));
+    const db = getDB();
+    if (!db.product_batches) db.product_batches = [];
+    
+    const currentQty = parseFloat(batchData.currentQuantity) || 0;
+    let status = 'Ativo';
+    if (currentQty <= 0) {
+      status = 'Esgotado';
+    } else if (batchData.expiryDate && new Date(batchData.expiryDate) < new Date()) {
+      status = 'Vencido';
+    } else if (batchData.status) {
+      status = batchData.status;
+    }
+
+    const payload = {
+      ...batchData,
+      id: batchData.id || 'batch-' + Date.now(),
+      currentQuantity: currentQty,
+      status,
+      updatedAt: new Date().toISOString()
+    };
+
+    const idx = db.product_batches.findIndex(b => b.id === payload.id);
+    if (idx > -1) {
+      db.product_batches[idx] = { ...db.product_batches[idx], ...payload };
+    } else {
+      payload.createdAt = new Date().toISOString();
+      db.product_batches.push(payload);
+    }
+    setDB(db);
+    return payload;
+  },
+
+  deleteProductBatch: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 150));
+    const db = getDB();
+    if (db.product_batches) {
+      db.product_batches = db.product_batches.filter(b => b.id !== id);
+    }
+    setDB(db);
+    return { success: true };
+  },
+
+  upsertProductBatchOnEntry: async (entryData) => {
+    const db = getDB();
+    if (!db.product_batches) db.product_batches = [];
+    const batchNumber = (entryData.batchNumber || '').trim();
+    const qty = parseFloat(entryData.quantity) || 0;
+    if (!batchNumber) return null;
+
+    const existing = db.product_batches.find(b => b.itemId === entryData.itemId && b.batchNumber === batchNumber);
+    if (existing) {
+      existing.currentQuantity = (parseFloat(existing.currentQuantity) || 0) + qty;
+      existing.initialQuantity = (parseFloat(existing.initialQuantity) || 0) + qty;
+      existing.status = (existing.expiryDate && new Date(existing.expiryDate) < new Date()) ? 'Vencido' : 'Ativo';
+      existing.updatedAt = new Date().toISOString();
+      setDB(db);
+      return existing;
+    } else {
+      const newBatch = {
+        id: 'batch-' + Date.now(),
+        itemId: entryData.itemId,
+        itemName: entryData.itemName || '',
+        batchNumber: batchNumber,
+        expiryDate: entryData.expiryDate || '',
+        initialQuantity: qty,
+        currentQuantity: qty,
+        unit: entryData.unit || 'unidades',
+        costPrice: parseFloat(entryData.costPrice) || 0,
+        supplierName: entryData.supplierName || '',
+        invoiceNumber: entryData.invoiceNumber || '',
+        status: (entryData.expiryDate && new Date(entryData.expiryDate) < new Date()) ? 'Vencido' : 'Ativo',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      db.product_batches.push(newBatch);
+      setDB(db);
+      return newBatch;
+    }
+  },
+
+
   // NexaASSIST - Feed Assistencial
   getAssistPosts: async () => {
     await new Promise(resolve => setTimeout(resolve, 150));
@@ -16241,5 +16342,102 @@ export const mockFirestore = {
     }
     setDB(db);
     return post.readBy;
+  },
+
+  getProductBatches: async (itemId = null) => {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const db = getDB();
+    if (!db.product_batches) db.product_batches = [];
+    if (itemId) {
+      return db.product_batches.filter(b => b.itemId === itemId);
+    }
+    return db.product_batches;
+  },
+
+  saveProductBatch: async (batchData) => {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const db = getDB();
+    if (!db.product_batches) db.product_batches = [];
+    if (batchData.id) {
+      const idx = db.product_batches.findIndex(b => b.id === batchData.id);
+      if (idx > -1) {
+        db.product_batches[idx] = { ...db.product_batches[idx], ...batchData, updatedAt: new Date().toISOString() };
+        setDB(db);
+        return db.product_batches[idx];
+      }
+    }
+    const newDoc = { id: `batch_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`, ...batchData, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    db.product_batches.push(newDoc);
+    setDB(db);
+    return newDoc;
+  },
+
+  deleteProductBatch: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const db = getDB();
+    if (db.product_batches) {
+      db.product_batches = db.product_batches.filter(b => b.id !== id);
+      setDB(db);
+    }
+    return { success: true };
+  },
+
+  deductProductBatch: async (batchId, quantity) => {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const db = getDB();
+    if (!db.product_batches) return null;
+    const batch = db.product_batches.find(b => b.id === batchId);
+    if (!batch) return null;
+    const qty = parseFloat(quantity) || 0;
+    batch.currentQuantity = Math.max(0, (parseFloat(batch.currentQuantity) || 0) - qty);
+    if (batch.currentQuantity <= 0) {
+      batch.status = 'Esgotado';
+    }
+    batch.updatedAt = new Date().toISOString();
+    setDB(db);
+    return batch;
+  },
+
+  getPatientDispensations: async (patientId = null) => {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const db = getDB();
+    if (!db.patient_dispensations) db.patient_dispensations = [];
+    if (patientId) {
+      return db.patient_dispensations.filter(d => d.patientId === patientId).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    }
+    return [...db.patient_dispensations].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  },
+
+  savePatientDispensation: async (dispData) => {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const db = getDB();
+    if (!db.patient_dispensations) db.patient_dispensations = [];
+    const newDoc = { id: `disp_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`, ...dispData, date: dispData.date || new Date().toISOString(), createdAt: new Date().toISOString() };
+    db.patient_dispensations.push(newDoc);
+    setDB(db);
+    return newDoc;
+  },
+
+  getBatchTraceability: async (searchTerm) => {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const db = getDB();
+    if (!searchTerm) return { batches: [], dispensations: [] };
+    const term = String(searchTerm).trim().toLowerCase();
+    const batches = (db.product_batches || []).filter(b => 
+      (b.batchNumber && b.batchNumber.toLowerCase().includes(term)) ||
+      (b.itemName && b.itemName.toLowerCase().includes(term)) ||
+      (b.invoiceNumber && b.invoiceNumber.toLowerCase().includes(term))
+    );
+    const batchNumbers = new Set(batches.map(b => (b.batchNumber || '').toLowerCase()).filter(Boolean));
+    const batchIds = new Set(batches.map(b => b.id));
+    const dispensations = (db.patient_dispensations || []).filter(d =>
+      (d.batchNumber && (batchNumbers.has(d.batchNumber.toLowerCase()) || d.batchNumber.toLowerCase().includes(term))) ||
+      (d.batchId && batchIds.has(d.batchId)) ||
+      (d.itemName && d.itemName.toLowerCase().includes(term)) ||
+      (d.patientName && d.patientName.toLowerCase().includes(term))
+    );
+    dispensations.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    return { batches, dispensations };
   }
 };
+

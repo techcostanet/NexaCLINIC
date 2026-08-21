@@ -231,62 +231,63 @@ export const MODULE_GUIDES = {
     color: '#f59e0b',
     recursos: [
       {
-        title: 'Controle Físico e Financeiro de Insumos',
-        desc: 'Saldo em tempo real de materiais médico-hospitalares, linhas de sangue, dialisadores e medicamentos.'
+        title: 'Controle de Lotes & Rastreabilidade',
+        desc: 'Gestão atômica de múltiplos lotes com saldos individuais, validade, fornecedor e nota fiscal de origem.'
       },
       {
-        title: 'Gestão de Lotes e Validades',
-        desc: 'Alertas visuais para lotes próximos do vencimento (30, 60 e 90 dias) e bloqueio de dispensação de itens vencidos.'
+        title: 'Dispensação com Sugestão FEFO',
+        desc: 'Atendimento de requisições com seleção de lote físico e recomendação automática do lote mais próximo do vencimento.'
       },
       {
-        title: 'Ponto de Reposição & Estoque Mínimo',
-        desc: 'Notificação automática quando o saldo de um insumo atinge a quantidade crítica de segurança.'
+        title: 'Painel de Busca Reversa (Recall)',
+        desc: 'Rastreabilidade completa de ponta a ponta: fornecedor, nota fiscal de compra e todos os pacientes que receberam o lote.'
       },
       {
-        title: 'Dispensação de Medicamentos por Paciente',
-        desc: 'Baixa rastreada de medicamentos com vinculação direta ao prontuário do paciente.'
+        title: 'Entrada por XML / PDF (DANFE) & Manual',
+        desc: 'Abastecimento automático de lotes diretamente na importação de notas fiscais ou em movimentações avulsas.'
       },
       {
-        title: 'Entrada por XML de Nota Fiscal',
-        desc: 'Importação automática de arquivos XML de NF-e para lançamento instantâneo de lotes e custos.'
+        title: 'Prontuário Integrado',
+        desc: 'Cada medicamento ou material dispensado é gravado imediatamente no histórico clínico do paciente.'
       }
     ],
     tutorial: [
       {
-        title: 'Como Dar Entrada de Itens no Estoque',
+        title: 'Como Atender Requisições com Lote (FEFO)',
         steps: [
-          'Clique no botão "+ Nova Entrada" ou utilize o botão "Importar XML de NF-e".',
-          'Selecione o produto, informe o Número do Lote, Data de Validade, Quantidade e Custo Unitário.',
-          'Selecione a Unidade de Armazenamento e clique em "Confirmar Entrada".',
-          'O estoque físico e o custo médio ponderado serão atualizados imediatamente.'
+          'Na aba "Atendimento de Requisições", clique no botão "Atender Requisição" do pedido pendente.',
+          'Para cada item, o sistema selecionará automaticamente o lote com vencimento mais próximo (⭐ FEFO).',
+          'Altere o lote pelo dropdown se desejar ou informe a quantidade entregue.',
+          'Clique em "Confirmar & Baixar". O sistema abaterá o saldo do lote e registrará no prontuário do paciente.'
         ]
       },
       {
-        title: 'Como Dispensar Medicamento para o Salão/Paciente',
+        title: 'Como Fazer Busca Reversa de Lote (Recall)',
         steps: [
-          'Acesse a aba "Dispensação".',
-          'Busque pelo nome do paciente ou selecione a requisição vinda da enfermagem.',
-          'Confira o item e a quantidade prescrita.',
-          'Clique em "Dispensar Item". O saldo será deduzido do estoque e registrado no histórico de consumo do paciente.'
+          'Acesse a aba "Rastreabilidade & Recall".',
+          'Digite o número do Lote, nome do medicamento ou selecione um dos lotes recentes.',
+          'Clique em "Rastrear Lote" para ver a nota de compra, fornecedor e a lista de pacientes que receberam as doses.',
+          'Utilize o botão "Imprimir Relatório de Recall" para auditoria sanitária ou ANVISA.'
         ]
       },
       {
-        title: 'Como Realizar Inventário / Ajuste de Saldo',
+        title: 'Como Dar Entrada de Lotes por Nota Fiscal',
         steps: [
-          'Acesse a aba "Inventário & Ajustes".',
-          'Localize o produto, insira a quantidade real contada fisicamente e o motivo da divergência (Avaria, Perda, Ajuste Contábil).',
-          'Clique em "Salvar Ajuste". O sistema gera o registro de auditoria com data e usuário.'
+          'Na aba "Entrada de Notas", clique em "Importar NF-e (XML / PDF)".',
+          'Envie o arquivo XML da SEFAZ ou o PDF da DANFE.',
+          'Na etapa de Mapeamento, confira o número do Lote e a Data de Validade de cada produto.',
+          'Na etapa Finalizar, confirme a entrada. O saldo geral e o lote específico serão abastecidos simultaneamente.'
         ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'Como vejo quais produtos estão perto do vencimento?',
-        resposta: 'Na aba "Lotes & Validades", você tem filtros rápidos para visualizar itens vencendo em até 30, 60 ou 90 dias com destaque em amarelo e vermelho.'
+        pergunta: 'Como sei quais pacientes tomaram determinado medicamento de um lote específico?',
+        resposta: 'Basta acessar a aba "Rastreabilidade & Recall", digitar o número do lote e o sistema listará instantaneamente todos os pacientes, datas, horários e responsáveis.'
       },
       {
-        pergunta: 'A entrada de estoque gera contas a pagar no financeiro?',
-        resposta: 'Sim. Ao importar um XML ou registrar uma compra com fatura, o sistema oferece a opção de gerar o título no módulo financeiro automaticamente.'
+        pergunta: 'Onde vejo no prontuário os remédios que o paciente já tomou?',
+        resposta: 'No módulo Clínico (NexaCLINIC), selecione o paciente e acesse a aba "Medicamentos & Insumos" para ver o histórico detalhado com lote e validade.'
       }
     ]
   },

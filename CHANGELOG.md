@@ -1,3 +1,20 @@
+## [v4.7.4] - 20 de Agosto, 2026
+### Rastreabilidade Hospitalar Completa de Medicamentos & Insumos, Dispensação com Sugestão FEFO e Painel de Recall (Fases 1, 2, 3 e 4)
+- **Fase 1 — Cadastro & Estrutura de Lotes com Validade:**
+  - Criação da coleção `product_batches` para controle atômico de saldos por lote, flag `Controla Lote` no cadastro de insumos/medicamentos, abastecimento automático na importação de NF-e (XML/PDF) e entradas manuais, e aba *Controle de Validade* com ordenação FEFO.
+- **Fase 2 — Dispensação na Farmácia com Escolha de Lote & Sugestão FEFO:**
+  - No modal de atendimento de requisições da enfermagem, a Farmácia conta agora com seleção inteligente do lote físico a ser entregue, sugerindo automaticamente o lote com vencimento mais próximo (⭐ FEFO) e saldo disponível.
+  - Baixa atômica simultânea no estoque geral e no saldo remanescente do lote específico.
+- **Fase 3 — Histórico de Rastreabilidade no Prontuário do Paciente:**
+  - Registro de cada dispensação na coleção `patient_dispensations` vinculando paciente, medicamento, dose/quantidade, número do lote, validade, técnica solicitante e operador da farmácia.
+  - Nova aba **"Medicamentos & Insumos"** no Painel Clínico (`ClinicalPanel`), permitindo auditar tudo o que foi administrado a cada paciente com rastreabilidade total.
+- **Fase 4 — Painel de Rastreabilidade & Busca Reversa de Lotes (Recall Sanitário):**
+  - Nova aba **"Rastreabilidade & Recall"** no módulo Estoque & Farmácia com busca reversa por Número de Lote, Medicamento, Paciente ou NF-e.
+  - Exibição cruzada completa: Dados de Origem da Compra (NF-e, fornecedor, quantidade inicial e saldo atual) + Lista de todos os pacientes que receberam o lote.
+  - Botão para impressão rápida de Relatório de Recall / Vigilância Sanitária (ANVISA).
+
+---
+
 ## [v4.7.0] - 19 de Agosto, 2026
 ### Central de Manuais e Guias Interativos dos Módulos & Padronização de Relatórios Brasileiros
 - **Central de Manuais e Guias Interativos dos Módulos (`ModuleGuideModal`):**

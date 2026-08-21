@@ -474,3 +474,272 @@ export const saveStockTransfer = async (transferData) => {
     return { id: ref.id, ...transferData };
   };
 
+export const getProductBatches = async (itemId = null) => {
+    if (USE_MOCK) return mockFirestore.getProductBatches ? mockFirestore.getProductBatches(itemId) : [];
+    try {
+      const { getFirestore, collection, getDocs, query, where } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      let q = collection(db, 'product_batches');
+      if (itemId) {
+        q = query(collection(db, 'product_batches'), where('itemId', '==', itemId));
+      }
+      const snap = await getDocs(q);
+      const batches = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Sort by expiry date (FEFO)
+      return batches.sort((a, b) => {
+        if (!a.expiryDate) return 1;
+        if (!b.expiryDate) return -1;
+        return new Date(a.expiryDate) - new Date(b.expiryDate);
+      });
+    } catch (e) {
+      console.error('Erro Firestore getProductBatches:', e);
+      return [];
+    }
+  };
+
+export const saveProductBatch = async (batchData) => {
+    if (USE_MOCK) return mockFirestore.saveProductBatch ? mockFirestore.saveProductBatch(batchData) : batchData;
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    
+    // Auto status determination
+    const currentQty = parseFloat(batchData.currentQuantity) || 0;
+    let status = 'Ativo';
+    if (currentQty <= 0) {
+      status = 'Esgotado';
+    } else if (batchData.expiryDate && new Date(batchData.expiryDate) < new Date()) {
+      status = 'Vencido';
+    } else if (batchData.status) {
+      status = batchData.status;
+    }
+
+    const payload = {
+      ...batchData,
+      currentQuantity: currentQty,
+      status,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (batchData.id) {
+      await setDoc(doc(db, 'product_batches', batchData.id), payload, { merge: true });
+      return { id: batchData.id, ...payload };
+    }
+    const ref = await addDoc(collection(db, 'product_batches'), {
+      ...payload,
+      createdAt: new Date().toISOString()
+    });
+    return { id: ref.id, ...payload };
+  };
+
+export const deleteProductBatch = async (id) => {
+    if (USE_MOCK) return mockFirestore.deleteProductBatch ? mockFirestore.deleteProductBatch(id) : { success: true };
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'product_batches', id));
+    return { success: true };
+  };
+
+export const upsertProductBatchOnEntry = async (entryData) => {
+    if (USE_MOCK) return mockFirestore.upsertProductBatchOnEntry ? mockFirestore.upsertProductBatchOnEntry(entryData) : entryData;
+    try {
+      const { getFirestore, collection, getDocs, query, where, addDoc, doc, updateDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const batchNumber = (entryData.batchNumber || '').trim();
+      const qty = parseFloat(entryData.quantity) || 0;
+
+      if (!batchNumber) {
+        return null;
+      }
+
+      // Check if this batch already exists for this itemId
+      const q = query(
+        collection(db, 'product_batches'),
+        where('itemId', '==', entryData.itemId),
+        where('batchNumber', '==', batchNumber)
+      );
+      const snap = await getDocs(q);
+
+      if (!snap.empty) {
+        const existingDoc = snap.docs[0];
+        const existingData = existingDoc.data();
+        const newCurrentQty = (parseFloat(existingData.currentQuantity) || 0) + qty;
+        const newInitialQty = (parseFloat(existingData.initialQuantity) || 0) + qty;
+        
+        let status = 'Ativo';
+        if (existingData.expiryDate && new Date(existingData.expiryDate) < new Date()) {
+          status = 'Vencido';
+        }
+
+        await updateDoc(doc(db, 'product_batches', existingDoc.id), {
+          currentQuantity: newCurrentQty,
+          initialQuantity: newInitialQty,
+          status,
+          updatedAt: new Date().toISOString()
+        });
+
+        return { id: existingDoc.id, ...existingData, currentQuantity: newCurrentQty, initialQuantity: newInitialQty, status };
+      } else {
+        // Create new batch doc
+        let status = 'Ativo';
+        if (entryData.expiryDate && new Date(entryData.expiryDate) < new Date()) {
+          status = 'Vencido';
+        }
+
+        const newBatch = {
+          itemId: entryData.itemId,
+          itemName: entryData.itemName || '',
+          batchNumber: batchNumber,
+          expiryDate: entryData.expiryDate || '',
+          initialQuantity: qty,
+          currentQuantity: qty,
+          unit: entryData.unit || 'unidades',
+          costPrice: parseFloat(entryData.costPrice) || 0,
+          supplierName: entryData.supplierName || '',
+          invoiceNumber: entryData.invoiceNumber || '',
+          status,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        const ref = await addDoc(collection(db, 'product_batches'), newBatch);
+        return { id: ref.id, ...newBatch };
+      }
+    } catch (e) {
+      console.error('Erro ao registrar lote no estoque:', e);
+      return null;
+    }
+  };
+
+export const deductProductBatch = async (batchId, quantityToDeduct) => {
+    if (!batchId) return null;
+    const qty = parseFloat(quantityToDeduct) || 0;
+    if (qty <= 0) return null;
+
+    if (USE_MOCK) return mockFirestore.deductProductBatch ? mockFirestore.deductProductBatch(batchId, qty) : null;
+
+    try {
+      const { getFirestore, doc, getDoc, updateDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const batchRef = doc(db, 'product_batches', batchId);
+      const snap = await getDoc(batchRef);
+      if (!snap.exists()) return null;
+
+      const data = snap.data();
+      const currentQty = parseFloat(data.currentQuantity) || 0;
+      const newQty = Math.max(0, currentQty - qty);
+
+      let status = 'Ativo';
+      if (newQty <= 0) {
+        status = 'Esgotado';
+      } else if (data.expiryDate && new Date(data.expiryDate) < new Date()) {
+        status = 'Vencido';
+      }
+
+      await updateDoc(batchRef, {
+        currentQuantity: newQty,
+        status,
+        updatedAt: new Date().toISOString()
+      });
+
+      return { id: batchId, ...data, currentQuantity: newQty, status };
+    } catch (e) {
+      console.error('Erro ao abater lote:', e);
+      return null;
+    }
+  };
+
+export const getPatientDispensations = async (patientId = null) => {
+    if (USE_MOCK) return mockFirestore.getPatientDispensations ? mockFirestore.getPatientDispensations(patientId) : [];
+    try {
+      const { getFirestore, collection, getDocs, query, where, orderBy } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      
+      let snap;
+      if (patientId) {
+        const q = query(
+          collection(db, 'patient_dispensations'),
+          where('patientId', '==', patientId)
+        );
+        snap = await getDocs(q);
+      } else {
+        snap = await getDocs(collection(db, 'patient_dispensations'));
+      }
+
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+      return list;
+    } catch (e) {
+      console.error('Erro ao buscar dispensações do paciente:', e);
+      return [];
+    }
+  };
+
+export const savePatientDispensation = async (dispData) => {
+    if (USE_MOCK) return mockFirestore.savePatientDispensation ? mockFirestore.savePatientDispensation(dispData) : dispData;
+    try {
+      const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      
+      const payload = {
+        ...dispData,
+        date: dispData.date || new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+
+      const ref = await addDoc(collection(db, 'patient_dispensations'), payload);
+      return { id: ref.id, ...payload };
+    } catch (e) {
+      console.error('Erro ao registrar dispensação do paciente:', e);
+      return null;
+    }
+  };
+
+export const getBatchTraceability = async (searchTerm) => {
+    if (!searchTerm) return { batches: [], dispensations: [] };
+    const term = String(searchTerm).trim().toLowerCase();
+
+    if (USE_MOCK) return mockFirestore.getBatchTraceability ? mockFirestore.getBatchTraceability(term) : { batches: [], dispensations: [] };
+
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+
+      // 1. Fetch batches
+      const batchSnap = await getDocs(collection(db, 'product_batches'));
+      const allBatches = batchSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      const matchingBatches = allBatches.filter(b => 
+        (b.batchNumber && b.batchNumber.toLowerCase().includes(term)) ||
+        (b.itemName && b.itemName.toLowerCase().includes(term)) ||
+        (b.invoiceNumber && b.invoiceNumber.toLowerCase().includes(term)) ||
+        (b.id && b.id.toLowerCase() === term)
+      );
+
+      const batchNumbers = new Set(matchingBatches.map(b => (b.batchNumber || '').toLowerCase()).filter(Boolean));
+      const batchIds = new Set(matchingBatches.map(b => b.id));
+
+      // 2. Fetch dispensations
+      const dispSnap = await getDocs(collection(db, 'patient_dispensations'));
+      const allDispensations = dispSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      const matchingDispensations = allDispensations.filter(d => 
+        (d.batchNumber && (batchNumbers.has(d.batchNumber.toLowerCase()) || d.batchNumber.toLowerCase().includes(term))) ||
+        (d.batchId && batchIds.has(d.batchId)) ||
+        (d.itemName && d.itemName.toLowerCase().includes(term)) ||
+        (d.patientName && d.patientName.toLowerCase().includes(term))
+      );
+
+      matchingDispensations.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+      return {
+        batches: matchingBatches,
+        dispensations: matchingDispensations
+      };
+    } catch (e) {
+      console.error('Erro ao buscar rastreabilidade de lote:', e);
+      return { batches: [], dispensations: [] };
+    }
+  };
+
+
+

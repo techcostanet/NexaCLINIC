@@ -29,6 +29,12 @@ export function useStockLogic(currentUser) {
   const [stockLocations, setStockLocations] = useState([]);
   const [inventories, setInventories] = useState([]);
   const [transfers, setTransfers] = useState([]);
+  const [productBatches, setProductBatches] = useState([]);
+  
+  // Traceability & Recall State
+  const [traceabilitySearchTerm, setTraceabilitySearchTerm] = useState('');
+  const [traceabilityResult, setTraceabilityResult] = useState({ batches: [], dispensations: [] });
+  const [traceabilityLoading, setTraceabilityLoading] = useState(false);
   
   // Requisition Fulfillment Modal State
   const [showFulfillModal, setShowFulfillModal] = useState(false);
@@ -82,11 +88,12 @@ export function useStockLogic(currentUser) {
   const [editingItem, setEditingItem] = useState(null);
   const [itemForm, setItemForm] = useState({
     name: '',
-    category: 'Insumo Clínico',
+    category: 'Insumo Clínico / MatMed',
     currentStock: '0',
     minStock: '10',
     unit: 'unidades',
     price: '0.00',
+    hasBatchControl: false,
     defaultSectorId: ''
   });
 
@@ -161,18 +168,20 @@ export function useStockLogic(currentUser) {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [itemList, supList, secList, catList, locList] = await Promise.all([
+      const [itemList, supList, secList, catList, locList, batchList] = await Promise.all([
         dbService.getInventoryItems ? dbService.getInventoryItems().catch(() => []) : [],
         dbService.getSuppliers ? dbService.getSuppliers().catch(() => []) : [],
         dbService.getStockSectors ? dbService.getStockSectors().catch(() => []) : [],
         dbService.getProductCategories ? dbService.getProductCategories().catch(() => []) : [],
-        dbService.getStockLocations ? dbService.getStockLocations().catch(() => []) : []
+        dbService.getStockLocations ? dbService.getStockLocations().catch(() => []) : [],
+        dbService.getProductBatches ? dbService.getProductBatches().catch(() => []) : []
       ]);
       
       setItems(safeArray(itemList));
       setSuppliers(safeArray(supList));
       setSectors(safeArray(secList));
       setStockLocations(safeArray(locList));
+      setProductBatches(safeArray(batchList));
       setCategoriesList((catList && safeArray(catList).length > 0) ? safeArray(catList) : [
         { id: 'c1', name: 'Insumo Clínico / MatMed' },
         { id: 'c2', name: 'Medicamento' },
@@ -243,6 +252,9 @@ export function useStockLogic(currentUser) {
       } else if (tab === 'loans' && loans.length === 0) {
         const loanList = await (dbService.getStockLoans ? dbService.getStockLoans().catch(() => []) : []);
         setLoans(safeArray(loanList));
+      } else if (tab === 'expiry') {
+        const bList = await (dbService.getProductBatches ? dbService.getProductBatches().catch(() => []) : []);
+        setProductBatches(safeArray(bList));
       }
     } catch (err) {
       console.error(`Erro ao carregar dados da aba ${tab}:`, err);
@@ -313,11 +325,12 @@ export function useStockLogic(currentUser) {
     setEditingItem(null);
     setItemForm({
       name: '',
-      category: 'Insumo Clínico',
+      category: 'Insumo Clínico / MatMed',
       currentStock: '0',
       minStock: '10',
       unit: 'unidades',
       price: '0.00',
+      hasBatchControl: false,
       defaultSectorId: sectors[0]?.id || ''
     });
     setShowItemModal(true);
@@ -332,6 +345,7 @@ export function useStockLogic(currentUser) {
       minStock: item.minStock.toString(),
       unit: item.unit || 'unidades',
       price: item.price ? item.price.toString() : '0.00',
+      hasBatchControl: !!item.hasBatchControl,
       defaultSectorId: item.defaultSectorId || (sectors[0]?.id || '')
     });
     setShowItemModal(true);
@@ -350,6 +364,7 @@ export function useStockLogic(currentUser) {
         minStock: parseFloat(itemForm.minStock) || 0,
         unit: itemForm.unit,
         price: parseFloat(itemForm.price) || 0,
+        hasBatchControl: !!itemForm.hasBatchControl,
         defaultSectorId: itemForm.defaultSectorId
       };
 
@@ -857,6 +872,21 @@ export function useStockLogic(currentUser) {
         sectorId: txForm.sectorId
       });
 
+      if (txForm.type === 'Entrada' && txForm.batch && dbService.upsertProductBatchOnEntry) {
+        await dbService.upsertProductBatchOnEntry({
+          itemId: txForm.itemId,
+          itemName: selectedItem.name,
+          batchNumber: txForm.batch,
+          expiryDate: txForm.expiryDate || '',
+          quantity: qty,
+          unit: selectedItem.unit || 'unidades',
+          costPrice: selectedItem.price || 0,
+          supplierName: 'Entrada Manual',
+          invoiceNumber: 'MANUAL',
+          sectorId: txForm.sectorId
+        });
+      }
+
       showAlert('Movimentação registrada com sucesso!', 'success');
       setShowTxForm(false);
       fetchData();
@@ -868,14 +898,26 @@ export function useStockLogic(currentUser) {
   };
 
   // ----------------------------------------------------
-  // Requisition Fulfillment Methods (Atendimento de Requisições)
+  // Requisition Fulfillment Methods (Atendimento de Requisições & Rastreabilidade)
   // ----------------------------------------------------
   const handleOpenFulfillModal = (req) => {
     setFulfillingReq(req);
-    const initialItems = req.items ? req.items.map(i => ({
-      ...i,
-      deliveredQuantity: i.deliveredQuantity > 0 ? i.deliveredQuantity : i.requestedQuantity
-    })) : [];
+    const initialItems = req.items ? req.items.map(i => {
+      // Find candidate batches for this item ordered by FEFO (expiryDate asc)
+      const itemBatches = (productBatches || [])
+        .filter(b => b.itemId === i.itemId && (parseFloat(b.currentQuantity) || 0) > 0)
+        .sort((a, b) => new Date(a.expiryDate || '9999-12-31') - new Date(b.expiryDate || '9999-12-31'));
+
+      const bestBatch = itemBatches.length > 0 ? itemBatches[0] : null;
+
+      return {
+        ...i,
+        deliveredQuantity: i.deliveredQuantity > 0 ? i.deliveredQuantity : i.requestedQuantity,
+        batchId: i.batchId || (bestBatch ? bestBatch.id : ''),
+        batchNumber: i.batchNumber || (bestBatch ? bestBatch.batchNumber : (i.batch || '')),
+        expiryDate: i.expiryDate || (bestBatch ? bestBatch.expiryDate : '')
+      };
+    }) : [];
     setFulfillItems(initialItems);
     setFulfillmentNotes(req.fulfillment?.notes || '');
     setShowFulfillModal(true);
@@ -885,6 +927,29 @@ export function useStockLogic(currentUser) {
     const qty = parseInt(val, 10);
     const updated = [...fulfillItems];
     updated[index].deliveredQuantity = isNaN(qty) || qty < 0 ? 0 : qty;
+    setFulfillItems(updated);
+  };
+
+  const handleFulfillBatchChange = (index, selectedBatchId) => {
+    const updated = [...fulfillItems];
+    if (!selectedBatchId) {
+      updated[index].batchId = '';
+      updated[index].batchNumber = '';
+      updated[index].expiryDate = '';
+    } else {
+      const foundBatch = (productBatches || []).find(b => b.id === selectedBatchId);
+      if (foundBatch) {
+        updated[index].batchId = foundBatch.id;
+        updated[index].batchNumber = foundBatch.batchNumber;
+        updated[index].expiryDate = foundBatch.expiryDate;
+      }
+    }
+    setFulfillItems(updated);
+  };
+
+  const handleFulfillManualBatchChange = (index, field, value) => {
+    const updated = [...fulfillItems];
+    updated[index][field] = value;
     setFulfillItems(updated);
   };
 
@@ -922,20 +987,50 @@ export function useStockLogic(currentUser) {
           if (delQty > 0) {
             const targetStockItem = items.find(i => i.id === fItem.itemId || i.name.toLowerCase() === fItem.itemName.toLowerCase());
             if (targetStockItem) {
+              // 1. Deduct general stock
               const newStock = Math.max(0, (parseFloat(targetStockItem.currentStock) || 0) - delQty);
               await dbService.updateInventoryItem(targetStockItem.id, {
                 ...targetStockItem,
                 currentStock: newStock
               });
 
+              // 2. Deduct specific batch if selected
+              if (fItem.batchId && dbService.deductProductBatch) {
+                await dbService.deductProductBatch(fItem.batchId, delQty);
+              }
+
+              // 3. Register transaction log
               await dbService.createStockTransaction({
                 itemId: targetStockItem.id,
                 itemName: targetStockItem.name,
                 quantity: delQty,
                 type: 'Saída',
+                batch: fItem.batchNumber || 'GERAL',
+                expiryDate: fItem.expiryDate || '',
                 operator: 'Farmácia Central',
                 notes: `Atendimento Requisição ${fulfillingReq.requisitionCode} (Destino: ${fulfillingReq.patientName || 'Salão'})`
               });
+
+              // 4. Record patient dispensation for complete traceability & chart history
+              if (dbService.savePatientDispensation) {
+                await dbService.savePatientDispensation({
+                  patientId: fulfillingReq.patientId || '',
+                  patientName: fulfillingReq.patientName || 'Uso Geral / Salão',
+                  requisitionId: fulfillingReq.id,
+                  requisitionCode: fulfillingReq.requisitionCode || '',
+                  requestedBy: fulfillingReq.requestedBy || 'Enfermagem',
+                  fulfilledBy: 'Farmácia Central',
+                  itemId: targetStockItem.id,
+                  itemName: targetStockItem.name,
+                  quantity: delQty,
+                  unit: fItem.unit || targetStockItem.unit || 'unidades',
+                  batchId: fItem.batchId || '',
+                  batchNumber: fItem.batchNumber || '',
+                  expiryDate: fItem.expiryDate || '',
+                  date: new Date().toISOString(),
+                  notes: fulfillmentNotes
+                });
+              }
             }
           }
         }
@@ -970,6 +1065,29 @@ export function useStockLogic(currentUser) {
       showAlert('Erro ao processar atendimento de requisição.', 'danger');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  // ----------------------------------------------------
+  // Traceability & Recall Search
+  // ----------------------------------------------------
+  const handleSearchTraceability = async (term = null) => {
+    const queryTerm = term !== null ? term : traceabilitySearchTerm;
+    if (!queryTerm || !queryTerm.trim()) {
+      setTraceabilityResult({ batches: [], dispensations: [] });
+      return;
+    }
+    setTraceabilityLoading(true);
+    try {
+      if (dbService.getBatchTraceability) {
+        const res = await dbService.getBatchTraceability(queryTerm);
+        setTraceabilityResult(res || { batches: [], dispensations: [] });
+      }
+    } catch (e) {
+      console.error('Erro ao buscar rastreabilidade:', e);
+      showAlert('Erro ao buscar rastreabilidade do lote.', 'danger');
+    } finally {
+      setTraceabilityLoading(false);
     }
   };
 
@@ -1294,6 +1412,7 @@ export function useStockLogic(currentUser) {
             minStock: 10,
             unit: 'unidades',
             price: m.price,
+            hasBatchControl: !!(m.batch || m.expiryDate),
             defaultSectorId: sectors[0]?.id || ''
           });
           itemId = newCat.id;
@@ -1308,6 +1427,33 @@ export function useStockLogic(currentUser) {
           total: m.quantity * m.price,
           batch: m.batch,
           expiryDate: m.expiryDate
+        });
+
+        // Register in product_batches if lot info exists
+        if (m.batch && dbService.upsertProductBatchOnEntry) {
+          await dbService.upsertProductBatchOnEntry({
+            itemId: itemId,
+            itemName: m.xmlName,
+            batchNumber: m.batch,
+            expiryDate: m.expiryDate || '',
+            quantity: m.quantity,
+            unit: 'unidades',
+            costPrice: m.price,
+            supplierName: supplierMapping.name,
+            invoiceNumber: xmlData.number
+          });
+        }
+
+        // Register in stock_transactions for audit trace
+        await dbService.createStockTransaction({
+          itemId: itemId,
+          itemName: m.xmlName,
+          quantity: m.quantity,
+          type: 'Entrada',
+          batch: m.batch || 'ENTRADA-NFE',
+          expiryDate: m.expiryDate || '',
+          operator: currentUser?.name || currentUser?.email || 'Farmácia Central',
+          notes: `Entrada NF-e Nº ${xmlData.number} (${supplierMapping.name})`
         });
       }
 
@@ -1372,6 +1518,21 @@ export function useStockLogic(currentUser) {
     }
   };
 
+  const handleDeleteBatch = async (id) => {
+    if (!window.confirm('Deseja realmente remover este lote do controle de estoque?')) return;
+    setActionLoading(true);
+    try {
+      await dbService.deleteProductBatch(id);
+      showAlert('Lote removido com sucesso!', 'success');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao remover lote.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // Helper CNPJ formatters
   const formatCnpj = (v) => {
     if (!v) return '';
@@ -1423,6 +1584,27 @@ export function useStockLogic(currentUser) {
   };
 
   const getExpiryTransactions = () => {
+    if (Array.isArray(productBatches) && productBatches.length > 0) {
+      return productBatches.map(b => ({
+        id: b.id,
+        itemId: b.itemId,
+        itemName: b.itemName,
+        batch: b.batchNumber,
+        quantity: b.currentQuantity !== undefined ? b.currentQuantity : b.initialQuantity,
+        initialQuantity: b.initialQuantity,
+        date: b.createdAt,
+        expiryDate: b.expiryDate,
+        status: b.status || 'Ativo',
+        invoiceNumber: b.invoiceNumber,
+        supplierName: b.supplierName,
+        operator: b.supplierName || 'Entrada NF-e'
+      })).sort((a, b) => {
+        if (!a.expiryDate) return 1;
+        if (!b.expiryDate) return -1;
+        return new Date(a.expiryDate) - new Date(b.expiryDate);
+      });
+    }
+
     if (!Array.isArray(transactions)) return [];
     return transactions
       .filter(t => t && t.type === 'Entrada' && t.expiryDate)
@@ -1458,6 +1640,9 @@ export function useStockLogic(currentUser) {
     setInventories,
     transfers,
     setTransfers,
+    productBatches,
+    setProductBatches,
+    handleDeleteBatch,
     showFulfillModal,
     setShowFulfillModal,
     fulfillingReq,
@@ -1580,8 +1765,17 @@ export function useStockLogic(currentUser) {
     handleSaveTransaction,
     handleOpenFulfillModal,
     handleFulfillQuantityChange,
+    handleFulfillBatchChange,
+    handleFulfillManualBatchChange,
     handleFillAllRequestedQuantity,
     handleProcessFulfillment,
+    traceabilitySearchTerm,
+    setTraceabilitySearchTerm,
+    traceabilityResult,
+    setTraceabilityResult,
+    traceabilityLoading,
+    setTraceabilityLoading,
+    handleSearchTraceability,
     handleXmlUpload,
     handleConfirmSupplierMapping,
     handleUpdateInstallment,

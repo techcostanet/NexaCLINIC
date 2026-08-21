@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.4',
+      date: '20/08/2026',
+      title: 'Rastreabilidade Hospitalar Completa de Medicamentos & Insumos, Sugestão FEFO e Painel de Recall',
+      description: 'Lançamento do sistema completo de rastreabilidade clínica (Fases 1, 2, 3 e 4): gestão de múltiplos lotes com saldos atômicos, seleção de lote na dispensação com recomendação FEFO, registro histórico no prontuário do paciente e painel de busca reversa para Recall Sanitário.',
+      changes: [
+        { type: 'Gestão de Lotes', text: 'Estrutura Atômica de Lotes: Cadastro de lotes, datas de validade, saldos atuais e flag "Controla Lote" no catálogo de insumos/medicamentos.' },
+        { type: 'Dispensação FEFO', text: 'Atendimento com Sugestão FEFO: A farmácia escolhe o lote a dispensar priorizando o vencimento mais próximo com baixa atômica de saldo.' },
+        { type: 'Prontuário & Histórico', text: 'Rastreabilidade no Paciente: Nova aba "Medicamentos & Insumos" no Painel Clínico com histórico de cada dose, lote, validade e profissionais envolvidos.' },
+        { type: 'Recall Sanitário', text: 'Busca Reversa: Nova aba no Estoque permitindo localizar instantaneamente fornecedor, nota fiscal de compra e todos os pacientes que receberam um lote investigado.' }
+      ]
+    },
+    {
       version: 'v4.7.0',
       date: '19/08/2026',
       title: 'Central de Manuais e Guias Interativos dos Módulos & Padronização de Relatórios Brasileiros',
