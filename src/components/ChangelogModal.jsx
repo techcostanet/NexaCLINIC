@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.23',
+      date: '21/08/2026',
+      title: 'Módulo de Requisições - Redesign Visual NexaREQ, 3 Modos de Visualização e Padronização Rigorosa de Rótulos Únicos',
+      description: 'Modernização completa da identidade visual do portal de requisições da enfermagem no padrão de design NexaCLINIC, implementação de 3 modos de visualização (Compacta [Padrão], Normal [Detalhada] e Cards), inclusão de filtro por salão físico e limpeza ativa de rótulos duplos/redundantes (Insumo, Quantidade, Salão, Destino, Observações).',
+      changes: [
+        { type: 'Identidade Visual NexaREQ', text: 'Cabeçalho hero moderno com gradiente teal (#14b8a6), badge de status ao vivo, botões de ação estilizados e cards KPI redesenhados.' },
+        { type: '3 Modos de Visualização', text: 'Seletor no toolbar com visualizações Compacta (padrão de alta velocidade), Normal (detalhada com badges) e Cards (grade visual de pedidos com itens e ações).' },
+        { type: 'Rótulos Diretos de 1 Palavra', text: 'Adequação rigorosa de todos os formulários e campos: "Insumo / Medicamento" alterado para "Insumo", "Salão de Destino" para "Salão", "Qtd Pedida" para "Quantidade", e "Observações / Justificativa" para "Observações".' },
+        { type: 'Filtro por Salão', text: 'Novo filtro no toolbar permitindo triagem instantânea das requisições por Salão 1, Salão 2, Salão 3 ou Consultório.' },
+        { type: 'Manual do Módulo', text: 'Atualização completa da base de conhecimento em moduleGuidesData.js com recursos, tutoriais e FAQs do NexaREQ.' }
+      ]
+    },
+    {
       version: 'v4.7.20',
       date: '21/08/2026',
       title: 'Módulo Estoque & Farmácia - Gestão de Kits de Produtos, Identificação de Medicamentos Controlados, Logística de Salões e Ocultação de Saldo para Enfermagem',

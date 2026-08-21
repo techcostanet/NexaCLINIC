@@ -435,41 +435,58 @@ export const MODULE_GUIDES = {
     color: '#14b8a6',
     recursos: [
       {
-        title: 'Pedidos Ágeis para os Salões',
-        desc: 'Solicitação rápida de kits dialíticos, dialisadores, linhas e heparina diretamente pelos técnicos de enfermagem.'
+        title: 'Múltiplos Modos de Visualização',
+        desc: '3 opções visuais completas: Compacta (padrão de alta velocidade), Normal (detalhada) e Cards (painel visual de solicitações com filtros rápidos).'
       },
       {
-        title: 'Vinculação Direta ao Turno e Paciente',
-        desc: 'Registro de insumos consumidos por turno (1º, 2º, 3º ou 4º turno) e salão físico (Salão 1 ou Salão 2).'
+        title: 'Inclusão Rápida de Kits de Produtos',
+        desc: 'Adição instantânea de todos os insumos padronizados de procedimentos dialíticos com apenas 1 clique.'
       },
       {
-        title: 'Atendimento Rápido pela Farmácia',
-        desc: 'Fila visual de separação de materiais na farmácia para entrega imediata ao salão.'
+        title: 'Sinalização de Medicamentos Controlados',
+        desc: 'Identificação visual e rastreabilidade rigorosa para medicamentos sujeitos à Portaria 344/ANVISA.'
+      },
+      {
+        title: 'Vinculação Obrigatória de Salão para Kits',
+        desc: 'Direcionamento logístico seguro para entrega direta no Salão 1, Salão 2, Salão 3 ou Consultório.'
+      },
+      {
+        title: 'Foco Clínico sem Exibição de Saldo',
+        desc: 'Busca inteligente de insumos por ordem alfabética sem expor saldos numéricos para manter o foco na necessidade assistencial.'
       }
     ],
     tutorial: [
       {
         title: 'Como Fazer uma Requisição para o Salão',
         steps: [
-          'No painel de requisições, clique em "+ Nova Requisição".',
-          'Selecione o Salão de Destino, o Turno e a Enfermagem Responsável.',
-          'Adicione os itens e quantidades necessárias (ex: 20 Kits de Diálise, 5 Frascos de Heparina).',
-          'Clique em "Enviar para Farmácia".'
+          'No painel de requisições, clique no botão "+ Nova Requisição".',
+          'Selecione o Salão e informe se o Destino é de Uso Geral ou Paciente específico.',
+          'Utilize os botões de "Kits" para carregar pacotes pré-montados ou selecione insumos individuais na busca.',
+          'Informe a quantidade desejada e clique em "Adicionar".',
+          'Insira observações clínicas se necessário e clique em "Enviar".'
         ]
       },
       {
-        title: 'Como a Farmácia Atende a Requisição',
+        title: 'Como Visualizar e Acompanhar o Atendimento',
         steps: [
-          'A farmácia visualiza o pedido com status "Pendente".',
-          'Ao separar os insumos, clica em "Atender / Separar Itens".',
-          'Os saldos são baixados automaticamente no estoque central.'
+          'Alterne entre as visões "Compacta", "Normal" ou "Cards" no seletor do topo.',
+          'Acompanhe o status do pedido: Pendente (amarelo), Parcial (laranja) ou Entregue (verde).',
+          'Clique no botão de visualização (ícone de olho) para conferir a conferência física e as notas da farmácia central.'
         ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'Posso solicitar itens urgentes durante a sessão de diálise?',
-        resposta: 'Sim. Ao marcar o pedido com a tag "Urgência de Sessão", o pedido sobe para o topo da fila da farmácia com aviso sonoro/visual.'
+        pergunta: 'Por que o saldo do estoque central não é exibido durante a requisição?',
+        resposta: 'Para garantir que a equipe de enfermagem solicite exatamente o que o procedimento e o paciente necessitam, sem influências ou restrições pelo nível atual do almoxarifado.'
+      },
+      {
+        pergunta: 'É obrigatório selecionar o Salão de Destino?',
+        resposta: 'Para requisições contendo Kits de produtos o campo Salão é obrigatório, pois a logística de entrega precisa saber em qual bancada física o kit deve ser depositado.'
+      },
+      {
+        pergunta: 'Posso editar ou cancelar uma requisição já enviada?',
+        resposta: 'Requisições com status "Pendente" podem ser editadas ou canceladas diretamente no painel. Pedidos que já estão em separação ou foram atendidos não podem ser alterados.'
       }
     ]
   },

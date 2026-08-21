@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../firebase';
 import { 
-  ClipboardList, Plus, Search, Filter, X, FileText, CheckCircle2, 
+  ClipboardList, Plus, Search, Filter, X, CheckCircle2, 
   AlertTriangle, Clock, Trash2, Edit, AlertCircle, User, Package, 
-  Send, ChevronRight, Eye, RefreshCw
+  Eye, RefreshCw, AlignJustify, Table, LayoutGrid, Layers, MapPin, Send
 } from 'lucide-react';
 
 export default function TechnicianPanel({ currentUser }) {
@@ -17,9 +17,13 @@ export default function TechnicianPanel({ currentUser }) {
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
+  // Visual View Mode: 'compact' (Padrão) | 'normal' | 'cards'
+  const [viewMode, setViewMode] = useState('compact');
+
   // Filters State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [salonFilter, setSalonFilter] = useState('all');
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -45,15 +49,15 @@ export default function TechnicianPanel({ currentUser }) {
   const [itemStockAlert, setItemStockAlert] = useState('');
 
   // Sorted items and patients A-Z
-  const sortedStockItems = React.useMemo(() => {
+  const sortedStockItems = useMemo(() => {
     return [...stockItems].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
   }, [stockItems]);
 
-  const sortedPatients = React.useMemo(() => {
+  const sortedPatients = useMemo(() => {
     return [...patients].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
   }, [patients]);
 
-  const filteredStockItems = React.useMemo(() => {
+  const filteredStockItems = useMemo(() => {
     if (!itemSearchText.trim()) return sortedStockItems;
     const term = itemSearchText.toLowerCase();
     return sortedStockItems.filter(item => 
@@ -212,7 +216,7 @@ export default function TechnicianPanel({ currentUser }) {
 
   const handleAddItemToReq = () => {
     if (!selectedItemId) {
-      showAlert('Selecione um item do estoque.', 'warning');
+      showAlert('Selecione um insumo.', 'warning');
       return;
     }
     const qtyNum = parseInt(requestedQty, 10);
@@ -229,7 +233,7 @@ export default function TechnicianPanel({ currentUser }) {
     if (isZeroStockBlocked) {
       const currentAvail = parseFloat(itemObj.currentStock) || 0;
       if (currentAvail <= 0) {
-        setItemStockAlert(`O item "${itemObj.name}" está com estoque ZERADO. A trava de T.I. impede a solicitação.`);
+        setItemStockAlert(`O insumo "${itemObj.name}" está com estoque ZERADO. A trava de T.I. impede a solicitação.`);
         return;
       }
       if (qtyNum > currentAvail) {
@@ -269,13 +273,13 @@ export default function TechnicianPanel({ currentUser }) {
   const handleSubmitRequisition = async (e) => {
     e.preventDefault();
     if (reqItemsList.length === 0) {
-      showAlert('Adicione pelo menos um item à requisição.', 'warning');
+      showAlert('Adicione pelo menos um insumo à requisição.', 'warning');
       return;
     }
 
-    // Item 3 rule: Salão is mandatory when requisition contains a kit
+    // Salão is mandatory when requisition contains a kit
     if (hasKit && !salonLocation) {
-      showAlert('O campo Salão de Destino é obrigatório para requisições de Kits.', 'warning');
+      showAlert('O campo Salão é obrigatório para requisições com Kits.', 'warning');
       return;
     }
 
@@ -290,7 +294,7 @@ export default function TechnicianPanel({ currentUser }) {
         requestedBy: operatorName,
         userId: currentUser?.uid || 'user-tech',
         patientId: isGeneralUse ? null : patientId,
-        patientName: isGeneralUse ? 'Uso Geral (Salão)' : patientName,
+        patientName: isGeneralUse ? 'Uso Geral' : patientName,
         salonLocation: salonLocation,
         hasKit: !!hasKit,
         kitId: selectedKitId || null,
@@ -308,7 +312,7 @@ export default function TechnicianPanel({ currentUser }) {
         showAlert(`Requisição ${savedReq.requisitionCode} atualizada com sucesso!`, 'success');
       } else {
         logAudit('Requisição Criada', `Requisição ${savedReq.requisitionCode} criada por ${operatorName} para ${reqPayload.patientName}. Total de itens: ${reqItemsList.length}`);
-        showAlert(`Requisição ${savedReq.requisitionCode} enviada à farmácia com sucesso!`, 'success');
+        showAlert(`Requisição ${savedReq.requisitionCode} enviada com sucesso!`, 'success');
       }
 
       setShowModal(false);
@@ -353,18 +357,22 @@ export default function TechnicianPanel({ currentUser }) {
   const deliveredCount = requisitions.filter(r => r.status === 'Entregue').length;
 
   // Filtered List
-  const filteredRequisitions = requisitions.filter(r => {
-    const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = 
-      !searchTerm ||
-      (r.requisitionCode && r.requisitionCode.toLowerCase().includes(searchLower)) ||
-      (r.patientName && r.patientName.toLowerCase().includes(searchLower)) ||
-      (r.requestedBy && r.requestedBy.toLowerCase().includes(searchLower)) ||
-      (r.items && r.items.some(i => i.itemName.toLowerCase().includes(searchLower)));
-    
-    return matchesStatus && matchesSearch;
-  });
+  const filteredRequisitions = useMemo(() => {
+    return requisitions.filter(r => {
+      const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
+      const matchesSalon = salonFilter === 'all' || r.salonLocation === salonFilter;
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = 
+        !searchTerm ||
+        (r.requisitionCode && r.requisitionCode.toLowerCase().includes(searchLower)) ||
+        (r.patientName && r.patientName.toLowerCase().includes(searchLower)) ||
+        (r.requestedBy && r.requestedBy.toLowerCase().includes(searchLower)) ||
+        (r.salonLocation && r.salonLocation.toLowerCase().includes(searchLower)) ||
+        (r.items && r.items.some(i => i.itemName && i.itemName.toLowerCase().includes(searchLower)));
+      
+      return matchesStatus && matchesSalon && matchesSearch;
+    });
+  }, [requisitions, statusFilter, salonFilter, searchTerm]);
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -383,28 +391,44 @@ export default function TechnicianPanel({ currentUser }) {
 
   return (
     <div style={styles.container}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div>
-          <div style={styles.badgePortal}>
-            <ClipboardList size={14} color="#0d9488" /> Portal de Requisições do Salão
+      {/* Header / Hero Section (Padrão Nexa) */}
+      <div style={styles.heroSection}>
+        <div style={styles.heroLeft}>
+          <div style={styles.heroIconBadge}>
+            <ClipboardList size={28} color="#fff" />
           </div>
-          <h1 style={styles.title}>Requisição de Insumos & Medicamentos</h1>
-          <p style={styles.subtitle}>
-            Solicitações diretas da hemodiálise para a farmácia/estoque central com rastreabilidade assistencial.
-          </p>
+          <div>
+            <div style={styles.liveBadge}>
+              <span style={styles.pulseDot}></span>
+              <span>Enfermagem & Salão</span>
+            </div>
+            <h1 style={styles.heroTitle}>NexaREQ — Requisições</h1>
+            <p style={styles.heroSubtitle}>
+              Solicitações ágeis de materiais e medicamentos para salões de hemodiálise, kits padronizados e dispensação central.
+            </p>
+          </div>
         </div>
-        <div style={styles.headerActions}>
-          <button style={styles.btnRefresh} onClick={fetchData} title="Atualizar dados">
+
+        <div style={styles.heroActions}>
+          <button 
+            style={styles.secondaryHeroBtn} 
+            onClick={fetchData} 
+            title="Atualizar registros"
+          >
             <RefreshCw size={16} className={loading ? 'spin' : ''} />
+            <span>Atualizar</span>
           </button>
-          <button style={styles.btnPrimary} onClick={handleOpenCreateModal}>
-            <Plus size={18} /> Nova Requisição
+          <button 
+            style={styles.primaryHeroBtn} 
+            onClick={handleOpenCreateModal}
+          >
+            <Plus size={18} />
+            <span>Nova Requisição</span>
           </button>
         </div>
       </div>
 
-      {/* Alert Messages */}
+      {/* Message feedback */}
       {message.text && (
         <div style={{
           ...styles.alert,
@@ -412,235 +436,519 @@ export default function TechnicianPanel({ currentUser }) {
           color: message.type === 'danger' ? '#991b1b' : message.type === 'warning' ? '#92400e' : '#065f46',
           borderLeft: `4px solid ${message.type === 'danger' ? '#ef4444' : message.type === 'warning' ? '#f59e0b' : '#10b981'}`
         }}>
-          {message.text}
+          <AlertCircle size={18} />
+          <span>{message.text}</span>
         </div>
       )}
 
-      {/* Stats KPI */}
+      {/* Stats KPI Grid */}
       <div style={styles.kpiGrid}>
-        <div style={styles.kpiCard}>
+        <div style={{ ...styles.kpiCard, borderTop: '4px solid #64748b' }}>
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiTitle}>Total de Pedidos</span>
-            <Package size={20} color="#6b7280" />
+            <span style={styles.kpiTitle}>Total</span>
+            <div style={{ ...styles.kpiIconWrapper, backgroundColor: '#f1f5f9' }}>
+              <Package size={18} color="#64748b" />
+            </div>
           </div>
           <div style={styles.kpiValue}>{totalCount}</div>
-          <div style={styles.kpiSub}>Histórico total de requisições</div>
+          <div style={styles.kpiSub}>Histórico de requisições</div>
         </div>
 
         <div style={{ ...styles.kpiCard, borderTop: '4px solid #f59e0b' }}>
           <div style={styles.kpiHeader}>
             <span style={styles.kpiTitle}>Pendentes</span>
-            <Clock size={20} color="#f59e0b" />
+            <div style={{ ...styles.kpiIconWrapper, backgroundColor: '#fef3c7' }}>
+              <Clock size={18} color="#d97706" />
+            </div>
           </div>
           <div style={{ ...styles.kpiValue, color: '#d97706' }}>{pendingCount}</div>
-          <div style={styles.kpiSub}>Aguardando separação na farmácia</div>
+          <div style={styles.kpiSub}>Aguardando separação</div>
         </div>
 
         <div style={{ ...styles.kpiCard, borderTop: '4px solid #ea580c' }}>
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiTitle}>Entregas Parciais</span>
-            <AlertTriangle size={20} color="#ea580c" />
+            <span style={styles.kpiTitle}>Parciais</span>
+            <div style={{ ...styles.kpiIconWrapper, backgroundColor: '#ffedd5' }}>
+              <AlertTriangle size={18} color="#ea580c" />
+            </div>
           </div>
           <div style={{ ...styles.kpiValue, color: '#ea580c' }}>{partialCount}</div>
-          <div style={styles.kpiSub}>Entregues parcialmente</div>
+          <div style={styles.kpiSub}>Atendidos parcialmente</div>
         </div>
 
         <div style={{ ...styles.kpiCard, borderTop: '4px solid #10b981' }}>
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiTitle}>Atendidos / Entregues</span>
-            <CheckCircle2 size={20} color="#10b981" />
+            <span style={styles.kpiTitle}>Entregues</span>
+            <div style={{ ...styles.kpiIconWrapper, backgroundColor: '#d1fae5' }}>
+              <CheckCircle2 size={18} color="#059669" />
+            </div>
           </div>
           <div style={{ ...styles.kpiValue, color: '#059669' }}>{deliveredCount}</div>
           <div style={styles.kpiSub}>Concluídos com sucesso</div>
         </div>
       </div>
 
-      {/* Filters bar */}
+      {/* Filters & View Switcher Bar */}
       <div style={styles.filterCard}>
         <div style={styles.searchBox}>
           <Search size={18} color="#9ca3af" />
           <input 
             type="text" 
-            placeholder="Buscar por Código, Paciente, Item ou Solicitante..." 
+            placeholder="Buscar por código, paciente, insumo ou solicitante..." 
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)} 
             style={styles.searchInput}
           />
           {searchTerm && (
-            <button onClick={() => setSearchTerm('')} style={styles.btnClearSearch}>
+            <button onClick={() => setSearchTerm('')} style={styles.btnClearSearch} title="Limpar busca">
               <X size={14} />
             </button>
           )}
         </div>
 
         <div style={styles.filterGroup}>
-          <Filter size={16} color="#6b7280" />
-          <select 
-            value={statusFilter} 
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={styles.selectFilter}
-          >
-            <option value="all">Todos os Status</option>
-            <option value="Pendente">Pendentes</option>
-            <option value="Parcial">Parciais</option>
-            <option value="Entregue">Entregues</option>
-            <option value="Cancelado">Cancelados</option>
-          </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Filter size={15} color="#6b7280" />
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={styles.selectFilter}
+            >
+              <option value="all">Status (Todos)</option>
+              <option value="Pendente">Pendentes</option>
+              <option value="Parcial">Parciais</option>
+              <option value="Entregue">Entregues</option>
+              <option value="Cancelado">Cancelados</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <MapPin size={15} color="#6b7280" />
+            <select 
+              value={salonFilter} 
+              onChange={(e) => setSalonFilter(e.target.value)}
+              style={styles.selectFilter}
+            >
+              <option value="all">Salão (Todos)</option>
+              <option value="Salão 1">Salão 1</option>
+              <option value="Salão 2">Salão 2</option>
+              <option value="Salão 3">Salão 3</option>
+              <option value="Consultório">Consultório</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+
+          {/* View Mode Switcher */}
+          <div style={styles.viewModeGroup}>
+            <button
+              onClick={() => setViewMode('compact')}
+              style={{
+                ...styles.viewModeBtn,
+                ...(viewMode === 'compact' ? styles.viewModeBtnActive : {})
+              }}
+              title="Visualização Compacta"
+            >
+              <AlignJustify size={15} />
+              <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>Compacta</span>
+            </button>
+            <button
+              onClick={() => setViewMode('normal')}
+              style={{
+                ...styles.viewModeBtn,
+                ...(viewMode === 'normal' ? styles.viewModeBtnActive : {})
+              }}
+              title="Visualização Detalhada"
+            >
+              <Table size={15} />
+              <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>Normal</span>
+            </button>
+            <button
+              onClick={() => setViewMode('cards')}
+              style={{
+                ...styles.viewModeBtn,
+                ...(viewMode === 'cards' ? styles.viewModeBtnActive : {})
+              }}
+              title="Visualização em Cards"
+            >
+              <LayoutGrid size={15} />
+              <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>Cards</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Table / List */}
-      <div style={styles.tableCard}>
+      {/* Main Content Area: Compact Table / Normal Table / Cards */}
+      <div style={styles.contentWrapper}>
         {loading ? (
           <div style={styles.loadingBox}>
-            <RefreshCw size={24} className="spin" color="var(--primary-color)" />
+            <RefreshCw size={28} className="spin" color="#14b8a6" />
             <span>Carregando requisições...</span>
           </div>
         ) : filteredRequisitions.length === 0 ? (
           <div style={styles.emptyBox}>
-            <ClipboardList size={40} color="#9ca3af" />
-            <p style={{ fontWeight: '600', color: 'var(--text-color)', marginTop: '0.75rem' }}>Nenhuma requisição encontrada</p>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              {searchTerm || statusFilter !== 'all' ? 'Tente ajustar seus filtros de busca.' : 'Clique em "Nova Requisição" para solicitar materiais à farmácia.'}
+            <div style={styles.emptyIconCircle}>
+              <ClipboardList size={36} color="#14b8a6" />
+            </div>
+            <p style={{ fontWeight: '700', color: 'var(--text-color)', marginTop: '0.75rem', fontSize: '1rem' }}>
+              Nenhuma requisição encontrada
             </p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '400px', margin: '0.25rem auto 1rem auto' }}>
+              {searchTerm || statusFilter !== 'all' || salonFilter !== 'all' 
+                ? 'Nenhum resultado corresponde aos filtros aplicados.' 
+                : 'Clique no botão "Nova Requisição" para solicitar insumos e kits à farmácia.'}
+            </p>
+            <button style={styles.primaryHeroBtn} onClick={handleOpenCreateModal}>
+              <Plus size={16} />
+              <span>Criar Nova Requisição</span>
+            </button>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th style={styles.th}>Código</th>
-                  <th style={styles.th}>Data</th>
-                  <th style={styles.th}>Destino</th>
-                  <th style={styles.th}>Itens</th>
-                  <th style={styles.th}>Solicitante</th>
-                  <th style={styles.th}>Status</th>
-                  <th style={{ ...styles.th, textAlign: 'right' }}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRequisitions.map((req) => (
-                  <tr key={req.id} style={styles.tr}>
-                    <td style={{ ...styles.td, fontWeight: '700', color: 'var(--primary-color)' }}>
-                      {req.requisitionCode}
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{ fontSize: '0.825rem', color: 'var(--text-color)' }}>
-                        {new Date(req.createdAt).toLocaleDateString('pt-BR')}
-                      </span>
-                      <br />
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        {new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <User size={14} color="#6b7280" />
-                          <span style={{ fontWeight: '600', fontSize: '0.875rem' }}>{req.patientName || 'Uso Geral'}</span>
-                        </div>
-                        {req.salonLocation && (
-                          <div>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.72rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
-                              📍 {req.salonLocation}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={{ fontSize: '0.825rem' }}>
-                        {req.items && req.items.length > 0 ? (
-                          <>
-                            <div>
-                              <strong>{req.items[0].itemName}</strong> ({req.items[0].requestedQuantity} {req.items[0].unit})
-                            </div>
-                            {req.items.length > 1 && (
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                + mais {req.items.length - 1} item(ns)
+          <>
+            {/* 1. VIEW MODE: COMPACT (PADRÃO) */}
+            {viewMode === 'compact' && (
+              <div style={styles.tableWrapper}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={{ ...styles.th, width: '100px' }}>Código</th>
+                      <th style={{ ...styles.th, width: '130px' }}>Data</th>
+                      <th style={styles.th}>Destino</th>
+                      <th style={styles.th}>Insumos</th>
+                      <th style={styles.th}>Solicitante</th>
+                      <th style={{ ...styles.th, width: '110px' }}>Status</th>
+                      <th style={{ ...styles.th, textAlign: 'right', width: '110px' }}>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRequisitions.map((req) => (
+                      <tr key={req.id} style={styles.trCompact}>
+                        <td style={{ ...styles.tdCompact, fontWeight: '700', color: '#0d9488' }}>
+                          {req.requisitionCode}
+                        </td>
+                        <td style={styles.tdCompact}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-color)', fontWeight: '500' }}>
+                            {new Date(req.createdAt).toLocaleDateString('pt-BR')} {new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </td>
+                        <td style={styles.tdCompact}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: '600', fontSize: '0.85rem' }}>{req.patientName || 'Uso Geral'}</span>
+                            {req.salonLocation && (
+                              <span style={styles.salonBadge}>
+                                📍 {req.salonLocation}
                               </span>
                             )}
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.25rem' }}>
-                              {req.hasKit && (
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.68rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.08rem 0.35rem', borderRadius: '3px', fontWeight: '700' }}>
-                                  📦 Kit
-                                </span>
+                          </div>
+                        </td>
+                        <td style={styles.tdCompact}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '0.825rem', fontWeight: '500' }}>
+                              {req.items && req.items.length > 0 ? (
+                                <>
+                                  <strong>{req.items[0].itemName}</strong> ({req.items[0].requestedQuantity} {req.items[0].unit})
+                                  {req.items.length > 1 && (
+                                    <span style={{ color: 'var(--text-muted)', marginLeft: '0.25rem' }}>
+                                      +{req.items.length - 1} item(ns)
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)' }}>Sem insumos</span>
                               )}
-                              {(req.hasControlledMedicine || req.items.some(i => i.isControlled || stockItems.find(it => it.id === i.itemId)?.isControlled)) && (
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.68rem', backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', padding: '0.08rem 0.35rem', borderRadius: '3px', fontWeight: '700' }}>
-                                  🔒 CONTROLADO
-                                </span>
-                              )}
+                            </span>
+                            {req.hasKit && (
+                              <span style={styles.kitBadge}>
+                                📦 Kit
+                              </span>
+                            )}
+                            {(req.hasControlledMedicine || (req.items && req.items.some(i => i.isControlled || stockItems.find(it => it.id === i.itemId)?.isControlled))) && (
+                              <span style={styles.controlledBadge}>
+                                🔒 Controlado
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ ...styles.tdCompact, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          {req.requestedBy}
+                        </td>
+                        <td style={styles.tdCompact}>
+                          {getStatusBadge(req.status)}
+                        </td>
+                        <td style={{ ...styles.tdCompact, textAlign: 'right' }}>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.3rem' }}>
+                            <button 
+                              style={styles.actionBtnView} 
+                              onClick={() => { setSelectedReqDetail(req); setShowDetailModal(true); }}
+                              title="Visualizar Detalhes"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            
+                            {req.status === 'Pendente' && (
+                              <>
+                                <button 
+                                  style={styles.actionBtnEdit} 
+                                  onClick={() => handleOpenEditModal(req)}
+                                  title="Editar"
+                                >
+                                  <Edit size={14} />
+                                </button>
+                                <button 
+                                  style={styles.actionBtnDelete} 
+                                  onClick={() => handleDeleteRequisition(req)}
+                                  title="Excluir"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* 2. VIEW MODE: NORMAL (DETALHADA) */}
+            {viewMode === 'normal' && (
+              <div style={styles.tableWrapper}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>Código</th>
+                      <th style={styles.th}>Data</th>
+                      <th style={styles.th}>Destino</th>
+                      <th style={styles.th}>Insumos Solicitados</th>
+                      <th style={styles.th}>Solicitante</th>
+                      <th style={styles.th}>Status</th>
+                      <th style={{ ...styles.th, textAlign: 'right' }}>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRequisitions.map((req) => (
+                      <tr key={req.id} style={styles.tr}>
+                        <td style={{ ...styles.td, fontWeight: '700', color: '#0d9488', fontSize: '0.95rem' }}>
+                          {req.requisitionCode}
+                        </td>
+                        <td style={styles.td}>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-color)', fontWeight: '600' }}>
+                            {new Date(req.createdAt).toLocaleDateString('pt-BR')}
+                          </span>
+                          <br />
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            {new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </td>
+                        <td style={styles.td}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                              <User size={15} color="#64748b" />
+                              <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{req.patientName || 'Uso Geral'}</span>
                             </div>
-                          </>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)' }}>Sem itens</span>
+                            {req.salonLocation && (
+                              <div>
+                                <span style={styles.salonBadge}>
+                                  📍 {req.salonLocation}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td style={styles.td}>
+                          <div style={{ fontSize: '0.85rem' }}>
+                            {req.items && req.items.length > 0 ? (
+                              <>
+                                <div>
+                                  <strong>{req.items[0].itemName}</strong> ({req.items[0].requestedQuantity} {req.items[0].unit})
+                                </div>
+                                {req.items.length > 1 && (
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                    + mais {req.items.length - 1} insumo(s)
+                                  </span>
+                                )}
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.35rem' }}>
+                                  {req.hasKit && (
+                                    <span style={styles.kitBadge}>
+                                      📦 Kit de Insumos
+                                    </span>
+                                  )}
+                                  {(req.hasControlledMedicine || (req.items && req.items.some(i => i.isControlled || stockItems.find(it => it.id === i.itemId)?.isControlled))) && (
+                                    <span style={styles.controlledBadge}>
+                                      🔒 CONTROLADO (Portaria 344)
+                                    </span>
+                                  )}
+                                </div>
+                              </>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)' }}>Sem insumos</span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ ...styles.td, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                          {req.requestedBy}
+                        </td>
+                        <td style={styles.td}>
+                          {getStatusBadge(req.status)}
+                        </td>
+                        <td style={{ ...styles.td, textAlign: 'right' }}>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.35rem' }}>
+                            <button 
+                              style={styles.actionBtnView} 
+                              onClick={() => { setSelectedReqDetail(req); setShowDetailModal(true); }}
+                              title="Visualizar Detalhes"
+                            >
+                              <Eye size={15} />
+                            </button>
+                            
+                            {req.status === 'Pendente' && (
+                              <>
+                                <button 
+                                  style={styles.actionBtnEdit} 
+                                  onClick={() => handleOpenEditModal(req)}
+                                  title="Editar"
+                                >
+                                  <Edit size={15} />
+                                </button>
+                                <button 
+                                  style={styles.actionBtnDelete} 
+                                  onClick={() => handleDeleteRequisition(req)}
+                                  title="Excluir"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* 3. VIEW MODE: CARDS */}
+            {viewMode === 'cards' && (
+              <div style={styles.cardsGrid}>
+                {filteredRequisitions.map((req) => (
+                  <div key={req.id} style={styles.reqCard}>
+                    <div style={styles.reqCardHeader}>
+                      <div>
+                        <span style={styles.reqCardCode}>{req.requisitionCode}</span>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                          {new Date(req.createdAt).toLocaleDateString('pt-BR')} às {new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                      <div>{getStatusBadge(req.status)}</div>
+                    </div>
+
+                    <div style={styles.reqCardBody}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
+                        <User size={16} color="#0d9488" />
+                        <span style={{ fontWeight: '700', fontSize: '0.95rem' }}>{req.patientName || 'Uso Geral'}</span>
+                      </div>
+
+                      {req.salonLocation && (
+                        <div style={{ marginBottom: '0.6rem' }}>
+                          <span style={styles.salonBadge}>
+                            📍 {req.salonLocation}
+                          </span>
+                        </div>
+                      )}
+
+                      <div style={{ backgroundColor: '#f8fafc', padding: '0.6rem', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '0.6rem' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', marginBottom: '0.3rem' }}>
+                          Insumos ({(req.items || []).length}):
+                        </div>
+                        <div style={{ maxHeight: '70px', overflowY: 'auto', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                          {(req.items || []).map((item, idx) => (
+                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span>• {item.itemName}</span>
+                              <strong style={{ color: '#0d9488' }}>{item.requestedQuantity} {item.unit}</strong>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                        {req.hasKit && <span style={styles.kitBadge}>📦 Kit</span>}
+                        {(req.hasControlledMedicine || (req.items && req.items.some(i => i.isControlled))) && (
+                          <span style={styles.controlledBadge}>🔒 Controlado</span>
                         )}
                       </div>
-                    </td>
-                    <td style={{ ...styles.td, fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-                      {req.requestedBy}
-                    </td>
-                    <td style={styles.td}>
-                      {getStatusBadge(req.status)}
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.35rem' }}>
+                    </div>
+
+                    <div style={styles.reqCardFooter}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        Por: {req.requestedBy}
+                      </span>
+                      <div style={{ display: 'flex', gap: '0.3rem' }}>
                         <button 
-                          style={styles.btnActionView} 
+                          style={styles.actionBtnView} 
                           onClick={() => { setSelectedReqDetail(req); setShowDetailModal(true); }}
-                          title="Ver Detalhes Completo"
+                          title="Visualizar Detalhes"
                         >
                           <Eye size={14} />
                         </button>
-                        
                         {req.status === 'Pendente' && (
                           <>
                             <button 
-                              style={styles.btnActionEdit} 
+                              style={styles.actionBtnEdit} 
                               onClick={() => handleOpenEditModal(req)}
-                              title="Editar Requisição"
+                              title="Editar"
                             >
                               <Edit size={14} />
                             </button>
                             <button 
-                              style={styles.btnActionDelete} 
+                              style={styles.actionBtnDelete} 
                               onClick={() => handleDeleteRequisition(req)}
-                              title="Excluir Requisição"
+                              title="Excluir"
                             >
                               <Trash2 size={14} />
                             </button>
                           </>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
       {/* Modal Nova / Editar Requisição */}
       {showModal && (
         <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+          <div style={styles.modalCard}>
             <div style={styles.modalHeader}>
-              <h2 style={styles.modalTitle}>
-                {editingReq ? `Editar Requisição (${editingReq.requisitionCode})` : 'Nova Requisição de Insumos (Salão)'}
-              </h2>
-              <button style={styles.btnClose} onClick={() => setShowModal(false)}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <div style={{ ...styles.kpiIconWrapper, backgroundColor: '#ccfbf1' }}>
+                  <ClipboardList size={20} color="#0d9488" />
+                </div>
+                <div>
+                  <h2 style={styles.modalTitle}>
+                    {editingReq ? `Editar Requisição (${editingReq.requisitionCode})` : 'Nova Requisição'}
+                  </h2>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {editingReq ? 'Atualize as informações do pedido pendente' : 'Solicitação ágil de insumos e kits para a farmácia'}
+                  </span>
+                </div>
+              </div>
+              <button style={styles.modalCloseBtn} onClick={() => setShowModal(false)}>
                 <X size={20} />
               </button>
             </div>
 
             <form onSubmit={handleSubmitRequisition} style={styles.modalForm}>
-              {/* Salão & Paciente selection */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '0.5rem' }}>
+              {/* Salão & Destino Selection */}
+              <div style={styles.formGrid2}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>
-                    Salão de Destino {hasKit && <span style={{ color: '#dc2626', fontWeight: '700' }}>* (Obrigatório p/ Kit)</span>}:
+                    Salão {hasKit && <span style={{ color: '#dc2626', fontWeight: '700' }}>* (Obrigatório p/ Kit)</span>}:
                   </label>
                   <select 
                     value={salonLocation} 
@@ -648,49 +956,50 @@ export default function TechnicianPanel({ currentUser }) {
                     style={{ ...styles.input, borderColor: hasKit && !salonLocation ? '#ef4444' : undefined }}
                     required={hasKit}
                   >
-                    <option value="">-- Selecione o Salão --</option>
+                    <option value="">Selecione o Salão</option>
                     <option value="Salão 1">Salão 1</option>
                     <option value="Salão 2">Salão 2</option>
                     <option value="Salão 3">Salão 3</option>
-                    <option value="Consultório / Outro">Consultório / Outro</option>
+                    <option value="Consultório">Consultório</option>
+                    <option value="Outro">Outro</option>
                   </select>
                 </div>
 
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Destino Assistencial:</label>
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', height: '38px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                  <label style={styles.label}>Destino:</label>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', height: '40px' }}>
+                    <label style={styles.radioLabel}>
                       <input 
                         type="radio" 
                         name="destType" 
                         checked={isGeneralUse} 
                         onChange={() => { setIsGeneralUse(true); setPatientId(''); setPatientName(''); }} 
                       />
-                      Uso Geral
+                      <span>Uso Geral</span>
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                    <label style={styles.radioLabel}>
                       <input 
                         type="radio" 
                         name="destType" 
                         checked={!isGeneralUse} 
                         onChange={() => setIsGeneralUse(false)} 
                       />
-                      Paciente
+                      <span>Paciente</span>
                     </label>
                   </div>
                 </div>
               </div>
 
               {!isGeneralUse && (
-                <div style={{ ...styles.formGroup, marginBottom: '0.75rem' }}>
-                  <label style={styles.label}>Paciente da Hemodiálise *:</label>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Paciente *:</label>
                   <select 
                     value={patientId} 
                     onChange={handlePatientSelect}
                     style={styles.input}
                     required={!isGeneralUse}
                   >
-                    <option value="">-- Selecione o Paciente --</option>
+                    <option value="">Selecione o Paciente</option>
                     {sortedPatients.map(p => (
                       <option key={p.id} value={p.id}>
                         {p.name} {p.shift ? `(${p.shift} - ${p.room || 'Salão'})` : ''}
@@ -700,14 +1009,14 @@ export default function TechnicianPanel({ currentUser }) {
                 </div>
               )}
 
-              {/* Seção Rápida de Kits de Produtos */}
+              {/* Seção Rápida de Kits de Insumos */}
               {productKits.length > 0 && (
-                <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a' }}>
+                <div style={styles.kitSelectionCard}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                     <label style={{ fontWeight: '700', fontSize: '0.825rem', color: '#92400e', margin: 0, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <Package size={16} /> Pacotes & Kits Padronizados:
+                      <Package size={16} /> Kits:
                     </label>
-                    <span style={{ fontSize: '0.7rem', color: '#b45309' }}>Adiciona todos os insumos com 1 clique</span>
+                    <span style={{ fontSize: '0.72rem', color: '#b45309', fontWeight: '500' }}>Adicione múltiplos insumos com 1 clique</span>
                   </div>
                   <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                     {productKits.map(kit => (
@@ -715,19 +1024,7 @@ export default function TechnicianPanel({ currentUser }) {
                         key={kit.id}
                         type="button"
                         onClick={() => handleApplyKit(kit.id)}
-                        style={{
-                          padding: '0.35rem 0.65rem',
-                          backgroundColor: '#fff',
-                          border: '1px solid #d97706',
-                          borderRadius: '6px',
-                          fontSize: '0.78rem',
-                          fontWeight: '600',
-                          color: '#b45309',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.3rem'
-                        }}
+                        style={styles.kitPillBtn}
                         title={`Clique para incluir os ${(kit.items || []).length} insumos deste kit`}
                       >
                         + {kit.name} ({(kit.items || []).length} itens)
@@ -737,23 +1034,27 @@ export default function TechnicianPanel({ currentUser }) {
                 </div>
               )}
 
-              {/* Items draft area */}
+              {/* Insumos Draft Area */}
               <div style={styles.itemsSection}>
-                <h3 style={styles.itemsSectionTitle}>Selecionar Insumos Individuais</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                  <h3 style={styles.itemsSectionTitle}>Insumos</h3>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Itens individuais</span>
+                </div>
                 
                 {itemStockAlert && (
                   <div style={styles.stockAlertBox}>
-                    <AlertCircle size={16} /> {itemStockAlert}
+                    <AlertCircle size={16} />
+                    <span>{itemStockAlert}</span>
                   </div>
                 )}
 
                 <div style={styles.addItemGrid}>
                   <div style={{ flex: 1, position: 'relative' }} id="product-search-container">
-                    <label style={{ ...styles.label, fontSize: '0.8rem' }}>Insumo / Medicamento (Ordem Alfabética):</label>
+                    <label style={{ ...styles.label, fontSize: '0.8rem' }}>Insumo:</label>
                     <div style={{ position: 'relative' }}>
                       <input 
                         type="text"
-                        placeholder="🔍 Digite o nome ou código para pesquisar..."
+                        placeholder="🔍 Digite para buscar insumo..."
                         value={itemSearchText}
                         onFocus={() => setIsProductDropdownOpen(true)}
                         onChange={(e) => {
@@ -777,18 +1078,7 @@ export default function TechnicianPanel({ currentUser }) {
                             setSelectedItemId('');
                             setIsProductDropdownOpen(true);
                           }}
-                          style={{
-                            position: 'absolute',
-                            right: '0.5rem',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: '#6b7280',
-                            fontSize: '0.9rem',
-                            padding: '0.2rem 0.4rem'
-                          }}
+                          style={styles.btnClearSearchBtn}
                           title="Limpar busca"
                         >
                           ✕
@@ -796,24 +1086,9 @@ export default function TechnicianPanel({ currentUser }) {
                       )}
                     </div>
 
-                    {/* Live Filtered Dropdown (SEM saldo em estoque, COM badge de controlado) */}
+                    {/* Live Filtered Dropdown */}
                     {isProductDropdownOpen && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '100%',
-                          left: 0,
-                          right: 0,
-                          maxHeight: '260px',
-                          overflowY: 'auto',
-                          backgroundColor: '#ffffff',
-                          border: '1px solid #cbd5e1',
-                          borderRadius: '0.375rem',
-                          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)',
-                          zIndex: 1000,
-                          marginTop: '4px'
-                        }}
-                      >
+                      <div style={styles.dropdownMenu}>
                         {filteredStockItems.length === 0 ? (
                           <div style={{ padding: '0.75rem', fontSize: '0.85rem', color: '#64748b', textAlign: 'center' }}>
                             Nenhum insumo encontrado para "{itemSearchText}"
@@ -831,14 +1106,8 @@ export default function TechnicianPanel({ currentUser }) {
                                   setItemStockAlert('');
                                 }}
                                 style={{
-                                  padding: '0.5rem 0.75rem',
-                                  cursor: 'pointer',
-                                  borderBottom: '1px solid #f1f5f9',
+                                  ...styles.dropdownItem,
                                   backgroundColor: isSelected ? '#ecfdf5' : '#ffffff',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  fontSize: '0.85rem'
                                 }}
                                 onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#f8fafc'; }}
                                 onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#ffffff'; }}
@@ -847,12 +1116,12 @@ export default function TechnicianPanel({ currentUser }) {
                                   <div style={{ fontWeight: 600, color: isSelected ? '#047857' : '#1e293b', display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                                     <span>{item.name}</span>
                                     {item.isControlled && (
-                                      <span style={{ backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '0.05rem 0.35rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: '700' }}>
+                                      <span style={styles.controlledBadge}>
                                         🔒 CONTROLADO (Portaria 344)
                                       </span>
                                     )}
                                   </div>
-                                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.1rem' }}>
                                     {item.category || 'Geral'} {item.code ? `• Cód: ${item.code}` : ''} • Unidade: {item.unit || 'un'}
                                   </div>
                                 </div>
@@ -869,8 +1138,8 @@ export default function TechnicianPanel({ currentUser }) {
                     )}
                   </div>
 
-                  <div style={{ width: '100px' }}>
-                    <label style={{ ...styles.label, fontSize: '0.8rem' }}>Qtd:</label>
+                  <div style={{ width: '110px' }}>
+                    <label style={{ ...styles.label, fontSize: '0.8rem' }}>Quantidade:</label>
                     <input 
                       type="number" 
                       min="1" 
@@ -886,51 +1155,55 @@ export default function TechnicianPanel({ currentUser }) {
                       onClick={handleAddItemToReq}
                       style={styles.btnAddItem}
                     >
-                      <Plus size={16} /> Adicionar
+                      <Plus size={16} />
+                      <span>Adicionar</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Draft Table */}
                 <div style={{ marginTop: '1rem' }}>
-                  <label style={{ ...styles.label, fontSize: '0.85rem' }}>Itens no Pedido ({reqItemsList.length}):</label>
+                  <label style={{ ...styles.label, fontSize: '0.85rem' }}>Itens ({reqItemsList.length}):</label>
                   {reqItemsList.length === 0 ? (
-                    <div style={{ padding: '1rem', backgroundColor: '#f9fafb', border: '1px dashed #d1d5db', borderRadius: '6px', textAlign: 'center', fontSize: '0.85rem', color: '#6b7280' }}>
-                      Nenhum item adicionado ainda. Escolha um produto acima ou adicione um Kit pré-montado.
+                    <div style={styles.emptyDraftBox}>
+                      Nenhum item adicionado ainda. Escolha um insumo acima ou adicione um Kit pré-montado.
                     </div>
                   ) : (
-                    <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
+                    <div style={styles.draftTableWrapper}>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                        <thead style={{ backgroundColor: '#f3f4f6', textAlign: 'left' }}>
+                        <thead style={{ backgroundColor: '#f8fafc', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
                           <tr>
-                            <th style={{ padding: '0.5rem' }}>Material</th>
-                            <th style={{ padding: '0.5rem', width: '90px' }}>Qtd Pedida</th>
-                            <th style={{ padding: '0.5rem', width: '50px', textAlign: 'center' }}>Remover</th>
+                            <th style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.75rem' }}>Insumo</th>
+                            <th style={{ padding: '0.5rem 0.75rem', width: '120px', fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.75rem' }}>Quantidade</th>
+                            <th style={{ padding: '0.5rem 0.75rem', width: '60px', textAlign: 'center', fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.75rem' }}>Ações</th>
                           </tr>
                         </thead>
                         <tbody>
                           {reqItemsList.map((item, idx) => {
                             const isCtrl = item.isControlled || stockItems.find(it => it.id === item.itemId)?.isControlled;
                             return (
-                              <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                                <td style={{ padding: '0.5rem', fontWeight: '500' }}>
+                              <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                                     <span>{item.itemName}</span>
                                     {isCtrl && (
-                                      <span style={{ fontSize: '0.65rem', backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '0.05rem 0.3rem', borderRadius: '3px', fontWeight: '700' }}>
+                                      <span style={styles.controlledBadge}>
                                         🔒 Controlado
                                       </span>
                                     )}
                                   </div>
                                 </td>
-                                <td style={{ padding: '0.5rem' }}>{item.requestedQuantity} {item.unit}</td>
-                                <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                                <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600', color: '#0d9488' }}>
+                                  {item.requestedQuantity} {item.unit}
+                                </td>
+                                <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
                                   <button 
                                     type="button" 
                                     onClick={() => handleRemoveItemFromReq(idx)}
-                                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
+                                    style={styles.btnRemoveDraft}
+                                    title="Remover insumo"
                                   >
-                                    <X size={14} />
+                                    <Trash2 size={14} />
                                   </button>
                                 </td>
                               </tr>
@@ -943,14 +1216,14 @@ export default function TechnicianPanel({ currentUser }) {
                 </div>
               </div>
 
-              {/* Notes */}
+              {/* Observações */}
               <div style={styles.formGroup}>
-                <label style={styles.label}>Observações / Justificativa (opcional):</label>
+                <label style={styles.label}>Observações:</label>
                 <textarea 
                   value={notes} 
                   onChange={(e) => setNotes(e.target.value)} 
-                  placeholder="Ex: Paciente com intercorrência no 2º turno, agulha substituída..."
-                  style={{ ...styles.input, height: '60px', resize: 'vertical' }}
+                  placeholder="Ex: Intercorrência no 2º turno, agulha substituída..."
+                  style={{ ...styles.input, height: '64px', resize: 'vertical' }}
                 />
               </div>
 
@@ -958,8 +1231,23 @@ export default function TechnicianPanel({ currentUser }) {
                 <button type="button" style={styles.btnSecondary} onClick={() => setShowModal(false)}>
                   Cancelar
                 </button>
-                <button type="submit" style={styles.btnPrimary} disabled={actionLoading}>
-                  {actionLoading ? 'Salvando...' : editingReq ? 'Atualizar Requisição' : 'Enviar à Farmácia'}
+                <button type="submit" style={styles.primaryHeroBtn} disabled={actionLoading}>
+                  {actionLoading ? (
+                    <>
+                      <RefreshCw size={16} className="spin" />
+                      <span>Salvando...</span>
+                    </>
+                  ) : editingReq ? (
+                    <>
+                      <CheckCircle2 size={16} />
+                      <span>Salvar</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={16} />
+                      <span>Enviar</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -967,39 +1255,51 @@ export default function TechnicianPanel({ currentUser }) {
         </div>
       )}
 
-      {/* Modal Ver Detalhes Completo */}
+      {/* Modal Ver Detalhes */}
       {showDetailModal && selectedReqDetail && (
         <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+          <div style={styles.modalCard}>
             <div style={styles.modalHeader}>
-              <h2 style={styles.modalTitle}>
-                Detalhes da Requisição: {selectedReqDetail.requisitionCode}
-              </h2>
-              <button style={styles.btnClose} onClick={() => setShowDetailModal(false)}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <div style={{ ...styles.kpiIconWrapper, backgroundColor: '#ccfbf1' }}>
+                  <Eye size={20} color="#0d9488" />
+                </div>
+                <div>
+                  <h2 style={styles.modalTitle}>
+                    Detalhes ({selectedReqDetail.requisitionCode})
+                  </h2>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Registro assistencial de dispensação hospitalar
+                  </span>
+                </div>
+              </div>
+              <button style={styles.modalCloseBtn} onClick={() => setShowDetailModal(false)}>
                 <X size={20} />
               </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', backgroundColor: '#f9fafb', padding: '1rem', borderRadius: '8px' }}>
+              <div style={styles.detailsGrid}>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Solicitante:</span>
-                  <div style={{ fontWeight: '600' }}>{selectedReqDetail.requestedBy}</div>
+                  <span style={styles.detailLabel}>Solicitante:</span>
+                  <div style={styles.detailValue}>{selectedReqDetail.requestedBy}</div>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Status:</span>
+                  <span style={styles.detailLabel}>Status:</span>
                   <div>{getStatusBadge(selectedReqDetail.status)}</div>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Data:</span>
-                  <div style={{ fontWeight: '500' }}>{new Date(selectedReqDetail.createdAt).toLocaleString('pt-BR')}</div>
+                  <span style={styles.detailLabel}>Data:</span>
+                  <div style={styles.detailValue}>
+                    {new Date(selectedReqDetail.createdAt).toLocaleString('pt-BR')}
+                  </div>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Destino:</span>
-                  <div style={{ fontWeight: '600' }}>
-                    {selectedReqDetail.patientName || 'Uso Geral'}
+                  <span style={styles.detailLabel}>Destino:</span>
+                  <div style={{ ...styles.detailValue, display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                    <span>{selectedReqDetail.patientName || 'Uso Geral'}</span>
                     {selectedReqDetail.salonLocation && (
-                      <span style={{ marginLeft: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.72rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
+                      <span style={styles.salonBadge}>
                         📍 {selectedReqDetail.salonLocation}
                       </span>
                     )}
@@ -1010,12 +1310,12 @@ export default function TechnicianPanel({ currentUser }) {
               {(selectedReqDetail.hasKit || selectedReqDetail.hasControlledMedicine) && (
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   {selectedReqDetail.hasKit && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>
-                      📦 Requisição de Kit de Produtos
+                    <span style={styles.kitBadge}>
+                      📦 Kit de Insumos
                     </span>
                   )}
                   {selectedReqDetail.hasControlledMedicine && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>
+                    <span style={styles.controlledBadge}>
                       🔒 CONTÉM MEDICAMENTO CONTROLADO (Portaria 344)
                     </span>
                   )}
@@ -1024,41 +1324,50 @@ export default function TechnicianPanel({ currentUser }) {
 
               {selectedReqDetail.notes && (
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Observações:</span>
-                  <div style={{ fontSize: '0.85rem', fontStyle: 'italic', backgroundColor: '#fffbe6', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ffe58f' }}>
+                  <span style={styles.detailLabel}>Observações:</span>
+                  <div style={styles.notesBox}>
                     "{selectedReqDetail.notes}"
                   </div>
                 </div>
               )}
 
               <div>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.5rem' }}>Itens Solicitados:</h4>
-                <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
+                <h4 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--text-color)' }}>
+                  Insumos Solicitados:
+                </h4>
+                <div style={styles.draftTableWrapper}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                    <thead style={{ backgroundColor: '#f3f4f6', textAlign: 'left' }}>
+                    <thead style={{ backgroundColor: '#f8fafc', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
                       <tr>
-                        <th style={{ padding: '0.5rem' }}>Material</th>
-                        <th style={{ padding: '0.5rem', textAlign: 'center' }}>Qtd Solicitada</th>
-                        <th style={{ padding: '0.5rem', textAlign: 'center' }}>Qtd Entregue</th>
+                        <th style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.75rem' }}>Insumo</th>
+                        <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.75rem' }}>Quantidade</th>
+                        <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.75rem' }}>Entregue</th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedReqDetail.items && selectedReqDetail.items.map((item, i) => {
                         const isCtrl = item.isControlled || stockItems.find(it => it.id === item.itemId)?.isControlled;
                         return (
-                          <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                            <td style={{ padding: '0.5rem', fontWeight: '500' }}>
+                          <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                                 <span>{item.itemName}</span>
                                 {isCtrl && (
-                                  <span style={{ fontSize: '0.65rem', backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '0.05rem 0.3rem', borderRadius: '3px', fontWeight: '700' }}>
+                                  <span style={styles.controlledBadge}>
                                     🔒 Controlado
                                   </span>
                                 )}
                               </div>
                             </td>
-                            <td style={{ padding: '0.5rem', textAlign: 'center', fontWeight: '600' }}>{item.requestedQuantity} {item.unit}</td>
-                            <td style={{ padding: '0.5rem', textAlign: 'center', fontWeight: '700', color: item.deliveredQuantity >= item.requestedQuantity ? '#059669' : item.deliveredQuantity > 0 ? '#d97706' : '#6b7280' }}>
+                            <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', fontWeight: '600' }}>
+                              {item.requestedQuantity} {item.unit}
+                            </td>
+                            <td style={{ 
+                              padding: '0.5rem 0.75rem', 
+                              textAlign: 'center', 
+                              fontWeight: '700', 
+                              color: item.deliveredQuantity >= item.requestedQuantity ? '#059669' : item.deliveredQuantity > 0 ? '#d97706' : '#64748b' 
+                            }}>
                               {item.deliveredQuantity || 0} {item.unit}
                             </td>
                           </tr>
@@ -1070,9 +1379,11 @@ export default function TechnicianPanel({ currentUser }) {
               </div>
 
               {selectedReqDetail.fulfillment && (
-                <div style={{ backgroundColor: '#ecfdf5', padding: '0.75rem', borderRadius: '6px', border: '1px solid #a7f3d0', fontSize: '0.8rem', color: '#065f46' }}>
+                <div style={styles.fulfillmentBox}>
                   <strong>Atendido por:</strong> {selectedReqDetail.fulfillment.fulfilledBy || 'Farmácia Central'} em {new Date(selectedReqDetail.fulfillment.fulfilledAt).toLocaleString('pt-BR')}
-                  {selectedReqDetail.fulfillment.notes && <div><strong>Notas da Farmácia:</strong> {selectedReqDetail.fulfillment.notes}</div>}
+                  {selectedReqDetail.fulfillment.notes && (
+                    <div style={{ marginTop: '0.3rem' }}><strong>Notas da Farmácia:</strong> {selectedReqDetail.fulfillment.notes}</div>
+                  )}
                 </div>
               )}
             </div>
@@ -1091,134 +1402,185 @@ export default function TechnicianPanel({ currentUser }) {
 
 const styles = {
   container: {
-    padding: '1.5rem',
-    maxWidth: 'var(--max-width)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem',
+    maxWidth: 'var(--max-width, 1400px)',
     margin: '0 auto',
+    padding: '0.5rem',
   },
-  header: {
+  heroSection: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '1.5rem',
+    alignItems: 'center',
     flexWrap: 'wrap',
-    gap: '1rem',
+    gap: '1.5rem',
+    backgroundColor: '#ffffff',
+    padding: '1.5rem 2rem',
+    borderRadius: '16px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    border: '1px solid var(--border-color, #e2e8f0)',
   },
-  badgePortal: {
+  heroLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1.25rem',
+  },
+  heroIconBadge: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '14px',
+    background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 8px 16px rgba(20, 184, 166, 0.25)',
+    flexShrink: 0,
+  },
+  liveBadge: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.35rem',
-    backgroundColor: '#ccfbf1',
-    color: '#0f766e',
     fontSize: '0.75rem',
     fontWeight: '700',
-    padding: '0.25rem 0.6rem',
-    borderRadius: '9999px',
-    marginBottom: '0.5rem',
-    border: '1px solid #99f6e4'
+    color: '#0f766e',
+    backgroundColor: '#ccfbf1',
+    padding: '0.15rem 0.55rem',
+    borderRadius: '12px',
+    border: '1px solid #99f6e4',
+    marginBottom: '0.3rem',
   },
-  title: {
-    fontSize: '1.5rem',
-    fontWeight: '700',
-    color: 'var(--text-color)',
+  pulseDot: {
+    width: '6px',
+    height: '6px',
+    borderRadius: '50%',
+    backgroundColor: '#0d9488',
+  },
+  heroTitle: {
+    fontSize: '1.6rem',
+    fontWeight: '800',
+    color: 'var(--text-color, #1e293b)',
     margin: 0,
+    letterSpacing: '-0.02em',
   },
-  subtitle: {
-    fontSize: '0.875rem',
-    color: 'var(--text-muted)',
-    marginTop: '0.25rem',
+  heroSubtitle: {
+    fontSize: '0.9rem',
+    color: 'var(--text-muted, #64748b)',
+    margin: '0.25rem 0 0 0',
+    maxWidth: '580px',
   },
-  headerActions: {
+  heroActions: {
     display: 'flex',
-    gap: '0.5rem',
+    gap: '0.75rem',
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
-  btnPrimary: {
-    backgroundColor: 'var(--primary-color)',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '8px',
-    padding: '0.6rem 1.2rem',
-    fontWeight: '600',
-    fontSize: '0.875rem',
+  primaryHeroBtn: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
+    backgroundColor: '#14b8a6',
+    color: '#ffffff',
+    border: 'none',
+    padding: '0.75rem 1.25rem',
+    borderRadius: '10px',
+    fontWeight: '600',
+    fontSize: '0.9rem',
     cursor: 'pointer',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    boxShadow: '0 4px 10px rgba(20, 184, 166, 0.25)',
+    transition: 'all 0.15s ease',
   },
-  btnRefresh: {
-    backgroundColor: '#ffffff',
-    border: '1px solid var(--border-color)',
-    borderRadius: '8px',
-    padding: '0.6rem',
-    color: 'var(--text-color)',
-    cursor: 'pointer',
-    display: 'flex',
+  secondaryHeroBtn: {
+    display: 'inline-flex',
     alignItems: 'center',
+    gap: '0.5rem',
+    backgroundColor: '#ffffff',
+    color: 'var(--text-color, #334155)',
+    border: '1px solid var(--border-color, #cbd5e1)',
+    padding: '0.75rem 1rem',
+    borderRadius: '10px',
+    fontWeight: '600',
+    fontSize: '0.9rem',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
   },
   alert: {
-    padding: '0.875rem 1rem',
-    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '0.875rem 1.25rem',
+    borderRadius: '10px',
     fontSize: '0.875rem',
-    marginBottom: '1.5rem',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   kpiGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
     gap: '1rem',
-    marginBottom: '1.5rem',
   },
   kpiCard: {
     backgroundColor: '#ffffff',
     padding: '1.25rem',
-    borderRadius: '10px',
-    border: '1px solid var(--border-color)',
+    borderRadius: '14px',
+    border: '1px solid var(--border-color, #e2e8f0)',
     boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
+    transition: 'transform 0.15s ease, box-shadow 0.15s ease',
   },
   kpiHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  kpiIconWrapper: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   kpiTitle: {
     fontSize: '0.8rem',
-    fontWeight: '600',
-    color: 'var(--text-muted)',
+    fontWeight: '700',
+    color: 'var(--text-muted, #64748b)',
     textTransform: 'uppercase',
+    letterSpacing: '0.04em',
   },
   kpiValue: {
-    fontSize: '1.8rem',
+    fontSize: '1.85rem',
     fontWeight: '800',
-    color: 'var(--text-color)',
-    margin: '0.5rem 0 0.25rem 0',
+    color: 'var(--text-color, #1e293b)',
+    margin: '0.2rem 0',
   },
   kpiSub: {
     fontSize: '0.75rem',
-    color: 'var(--text-muted)',
+    color: 'var(--text-muted, #94a3b8)',
   },
   filterCard: {
     backgroundColor: '#ffffff',
-    padding: '1rem',
-    borderRadius: '10px',
-    border: '1px solid var(--border-color)',
-    marginBottom: '1rem',
+    padding: '1rem 1.25rem',
+    borderRadius: '14px',
+    border: '1px solid var(--border-color, #e2e8f0)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: '1rem',
     flexWrap: 'wrap',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
   },
   searchBox: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    backgroundColor: 'var(--bg-color)',
-    border: '1px solid var(--border-color)',
-    borderRadius: '6px',
-    padding: '0.5rem 0.75rem',
+    backgroundColor: '#f8fafc',
+    border: '1px solid var(--border-color, #cbd5e1)',
+    borderRadius: '8px',
+    padding: '0.55rem 0.85rem',
     flex: 1,
-    minWidth: '260px',
+    minWidth: '280px',
   },
   searchInput: {
     border: 'none',
@@ -1226,33 +1588,63 @@ const styles = {
     outline: 'none',
     width: '100%',
     fontSize: '0.875rem',
-    color: 'var(--text-color)',
+    color: 'var(--text-color, #1e293b)',
   },
   btnClearSearch: {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    color: '#9ca3af',
+    color: '#94a3b8',
     padding: 0,
+    display: 'flex',
+    alignItems: 'center',
   },
   filterGroup: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '0.75rem',
+    flexWrap: 'wrap',
   },
   selectFilter: {
-    padding: '0.5rem 0.75rem',
-    borderRadius: '6px',
-    border: '1px solid var(--border-color)',
+    padding: '0.55rem 0.85rem',
+    borderRadius: '8px',
+    border: '1px solid var(--border-color, #cbd5e1)',
     backgroundColor: '#ffffff',
-    fontSize: '0.875rem',
+    fontSize: '0.85rem',
     outline: 'none',
-    color: 'var(--text-color)',
+    color: 'var(--text-color, #334155)',
+    fontWeight: '500',
+    cursor: 'pointer',
   },
-  tableCard: {
+  viewModeGroup: {
+    display: 'inline-flex',
+    backgroundColor: '#f1f5f9',
+    padding: '3px',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    gap: '2px',
+  },
+  viewModeBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '0.35rem 0.65rem',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: '#64748b',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+  },
+  viewModeBtnActive: {
     backgroundColor: '#ffffff',
-    borderRadius: '10px',
-    border: '1px solid var(--border-color)',
+    color: '#0d9488',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  contentWrapper: {
+    backgroundColor: '#ffffff',
+    borderRadius: '14px',
+    border: '1px solid var(--border-color, #e2e8f0)',
     boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
     overflow: 'hidden',
   },
@@ -1261,71 +1653,179 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '3rem',
-    gap: '0.75rem',
-    color: 'var(--text-muted)',
+    padding: '4rem 2rem',
+    gap: '0.85rem',
+    color: 'var(--text-muted, #64748b)',
   },
   emptyBox: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '3rem',
+    padding: '4rem 2rem',
     textAlign: 'center',
+  },
+  emptyIconCircle: {
+    width: '64px',
+    height: '64px',
+    borderRadius: '50%',
+    backgroundColor: '#ccfbf1',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '0.5rem',
+  },
+  tableWrapper: {
+    overflowX: 'auto',
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
     textAlign: 'left',
+    fontSize: '0.875rem',
   },
   th: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#f8fafc',
     padding: '0.75rem 1rem',
     fontSize: '0.75rem',
     fontWeight: '700',
-    color: 'var(--text-muted)',
+    color: 'var(--text-muted, #64748b)',
     textTransform: 'uppercase',
-    borderBottom: '1px solid var(--border-color)',
+    letterSpacing: '0.04em',
+    borderBottom: '1px solid var(--border-color, #e2e8f0)',
   },
   tr: {
-    borderBottom: '1px solid var(--border-color)',
+    borderBottom: '1px solid var(--border-color, #e2e8f0)',
+    transition: 'background-color 0.1s ease',
+  },
+  trCompact: {
+    borderBottom: '1px solid var(--border-color, #e2e8f0)',
+    height: '42px',
   },
   td: {
     padding: '0.875rem 1rem',
+    verticalAlign: 'middle',
+  },
+  tdCompact: {
+    padding: '0.45rem 1rem',
     verticalAlign: 'middle',
   },
   badge: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.25rem',
-    padding: '0.25rem 0.5rem',
+    padding: '0.2rem 0.55rem',
     borderRadius: '9999px',
     fontSize: '0.75rem',
     fontWeight: '600',
   },
-  btnActionView: {
-    backgroundColor: '#f3f4f6',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    padding: '0.35rem 0.5rem',
-    color: '#374151',
-    cursor: 'pointer',
+  salonBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
+    fontSize: '0.72rem',
+    backgroundColor: '#e0f2fe',
+    color: '#0369a1',
+    padding: '0.1rem 0.45rem',
+    borderRadius: '4px',
+    fontWeight: '700',
   },
-  btnActionEdit: {
+  kitBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
+    fontSize: '0.68rem',
+    backgroundColor: '#fef3c7',
+    color: '#b45309',
+    padding: '0.1rem 0.4rem',
+    borderRadius: '4px',
+    fontWeight: '700',
+    border: '1px solid #fde68a',
+  },
+  controlledBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
+    fontSize: '0.68rem',
+    backgroundColor: '#fee2e2',
+    color: '#dc2626',
+    border: '1px solid #fecaca',
+    padding: '0.1rem 0.4rem',
+    borderRadius: '4px',
+    fontWeight: '700',
+  },
+  actionBtnView: {
+    backgroundColor: '#f1f5f9',
+    border: '1px solid #cbd5e1',
+    borderRadius: '6px',
+    padding: '0.35rem 0.55rem',
+    color: '#334155',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    transition: 'all 0.15s ease',
+  },
+  actionBtnEdit: {
     backgroundColor: '#eff6ff',
     border: '1px solid #bfdbfe',
     borderRadius: '6px',
-    padding: '0.35rem 0.5rem',
+    padding: '0.35rem 0.55rem',
     color: '#1d4ed8',
     cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    transition: 'all 0.15s ease',
   },
-  btnActionDelete: {
+  actionBtnDelete: {
     backgroundColor: '#fef2f2',
     border: '1px solid #fecaca',
     borderRadius: '6px',
-    padding: '0.35rem 0.5rem',
+    padding: '0.35rem 0.55rem',
     color: '#dc2626',
     cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    transition: 'all 0.15s ease',
+  },
+  cardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+    gap: '1.25rem',
+    padding: '1.25rem',
+  },
+  reqCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    border: '1px solid var(--border-color, #e2e8f0)',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+  },
+  reqCardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    padding: '1rem',
+    borderBottom: '1px solid #f1f5f9',
+    backgroundColor: '#f8fafc',
+  },
+  reqCardCode: {
+    fontWeight: '800',
+    fontSize: '0.95rem',
+    color: '#0d9488',
+  },
+  reqCardBody: {
+    padding: '1rem',
+    flex: 1,
+  },
+  reqCardFooter: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '0.75rem 1rem',
+    borderTop: '1px solid #f1f5f9',
+    backgroundColor: '#ffffff',
   },
   modalOverlay: {
     position: 'fixed',
@@ -1333,47 +1833,57 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
     padding: '1rem',
+    backdropFilter: 'blur(4px)',
   },
-  modalContent: {
+  modalCard: {
     backgroundColor: '#ffffff',
-    borderRadius: '12px',
+    borderRadius: '16px',
     width: '100%',
-    maxWidth: '650px',
+    maxWidth: '680px',
     maxHeight: '90vh',
     overflowY: 'auto',
     padding: '1.5rem',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    display: 'flex',
+    flexDirection: 'column',
   },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottom: '1px solid var(--border-color)',
-    paddingBottom: '0.75rem',
+    borderBottom: '1px solid var(--border-color, #e2e8f0)',
+    paddingBottom: '1rem',
   },
   modalTitle: {
-    fontSize: '1.15rem',
+    fontSize: '1.2rem',
     fontWeight: '700',
-    color: 'var(--text-color)',
+    color: 'var(--text-color, #1e293b)',
     margin: 0,
   },
-  btnClose: {
+  modalCloseBtn: {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    color: '#9ca3af',
+    color: '#94a3b8',
+    display: 'flex',
+    alignItems: 'center',
   },
   modalForm: {
     display: 'flex',
     flexDirection: 'column',
+    gap: '1.25rem',
+    marginTop: '1.25rem',
+  },
+  formGrid2: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
     gap: '1rem',
-    marginTop: '1rem',
   },
   formGroup: {
     display: 'flex',
@@ -1383,74 +1893,207 @@ const styles = {
   label: {
     fontSize: '0.85rem',
     fontWeight: '600',
-    color: 'var(--text-color)',
+    color: 'var(--text-color, #1e293b)',
+  },
+  radioLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    fontSize: '0.85rem',
+    fontWeight: '500',
+    color: 'var(--text-color, #334155)',
+    cursor: 'pointer',
   },
   input: {
-    padding: '0.6rem',
-    borderRadius: '6px',
-    border: '1px solid var(--border-color)',
+    padding: '0.625rem 0.85rem',
+    borderRadius: '8px',
+    border: '1px solid var(--border-color, #cbd5e1)',
     fontSize: '0.875rem',
     outline: 'none',
     width: '100%',
+    backgroundColor: '#ffffff',
+    color: 'var(--text-color, #1e293b)',
+  },
+  kitSelectionCard: {
+    padding: '0.875rem',
+    backgroundColor: '#fef3c7',
+    borderRadius: '10px',
+    border: '1px solid #fde68a',
+  },
+  kitPillBtn: {
+    padding: '0.35rem 0.75rem',
+    backgroundColor: '#ffffff',
+    border: '1px solid #d97706',
+    borderRadius: '6px',
+    fontSize: '0.78rem',
+    fontWeight: '600',
+    color: '#b45309',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    transition: 'all 0.15s ease',
   },
   itemsSection: {
-    backgroundColor: '#f9fafb',
-    padding: '1rem',
-    borderRadius: '8px',
-    border: '1px solid var(--border-color)',
+    backgroundColor: '#f8fafc',
+    padding: '1.25rem',
+    borderRadius: '12px',
+    border: '1px solid var(--border-color, #e2e8f0)',
   },
   itemsSectionTitle: {
-    fontSize: '0.9rem',
+    fontSize: '0.95rem',
     fontWeight: '700',
-    margin: '0 0 0.75rem 0',
-    color: 'var(--text-color)',
+    margin: 0,
+    color: 'var(--text-color, #1e293b)',
   },
   stockAlertBox: {
     backgroundColor: '#fee2e2',
     color: '#991b1b',
-    padding: '0.5rem 0.75rem',
-    borderRadius: '6px',
-    fontSize: '0.8rem',
-    fontWeight: '500',
-    marginBottom: '0.75rem',
+    padding: '0.6rem 0.85rem',
+    borderRadius: '8px',
+    fontSize: '0.825rem',
+    fontWeight: '600',
+    marginBottom: '0.85rem',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.35rem',
+    gap: '0.45rem',
   },
   addItemGrid: {
     display: 'flex',
-    gap: '0.5rem',
+    gap: '0.75rem',
     alignItems: 'flex-end',
+    flexWrap: 'wrap',
+  },
+  btnClearSearchBtn: {
+    position: 'absolute',
+    right: '0.5rem',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: '#94a3b8',
+    fontSize: '0.9rem',
+    padding: '0.2rem 0.4rem',
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    maxHeight: '260px',
+    overflowY: 'auto',
+    backgroundColor: '#ffffff',
+    border: '1px solid #cbd5e1',
+    borderRadius: '8px',
+    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)',
+    zIndex: 1000,
+    marginTop: '4px',
+  },
+  dropdownItem: {
+    padding: '0.6rem 0.85rem',
+    cursor: 'pointer',
+    borderBottom: '1px solid #f1f5f9',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: '0.85rem',
+    transition: 'background-color 0.1s ease',
   },
   btnAddItem: {
-    backgroundColor: '#0d9488',
+    backgroundColor: '#14b8a6',
     color: '#ffffff',
     border: 'none',
-    borderRadius: '6px',
-    padding: '0.6rem 0.85rem',
-    fontSize: '0.8rem',
+    borderRadius: '8px',
+    padding: '0.625rem 1rem',
+    fontSize: '0.875rem',
     fontWeight: '600',
     cursor: 'pointer',
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.25rem',
+    gap: '0.35rem',
+    height: '38px',
+    boxShadow: '0 2px 4px rgba(20, 184, 166, 0.2)',
+  },
+  emptyDraftBox: {
+    padding: '1.25rem',
+    backgroundColor: '#ffffff',
+    border: '1px dashed #cbd5e1',
+    borderRadius: '8px',
+    textAlign: 'center',
+    fontSize: '0.85rem',
+    color: '#64748b',
+  },
+  draftTableWrapper: {
+    maxHeight: '200px',
+    overflowY: 'auto',
+    border: '1px solid var(--border-color, #e2e8f0)',
+    borderRadius: '8px',
+    backgroundColor: '#ffffff',
+  },
+  btnRemoveDraft: {
+    background: 'none',
+    border: 'none',
+    color: '#ef4444',
+    cursor: 'pointer',
+    padding: '0.2rem',
+    display: 'inline-flex',
+    alignItems: 'center',
   },
   modalFooter: {
     display: 'flex',
     justifyContent: 'flex-end',
-    gap: '0.5rem',
+    gap: '0.75rem',
     marginTop: '1rem',
-    borderTop: '1px solid var(--border-color)',
-    paddingTop: '1rem',
+    borderTop: '1px solid var(--border-color, #e2e8f0)',
+    paddingTop: '1.25rem',
   },
   btnSecondary: {
-    backgroundColor: '#f3f4f6',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    padding: '0.6rem 1rem',
+    backgroundColor: '#f1f5f9',
+    border: '1px solid #cbd5e1',
+    borderRadius: '8px',
+    padding: '0.625rem 1.25rem',
     fontSize: '0.875rem',
     fontWeight: '600',
-    color: '#374151',
+    color: '#334155',
     cursor: 'pointer',
+  },
+  detailsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '1rem',
+    backgroundColor: '#f8fafc',
+    padding: '1.25rem',
+    borderRadius: '10px',
+    border: '1px solid #e2e8f0',
+  },
+  detailLabel: {
+    fontSize: '0.75rem',
+    color: 'var(--text-muted, #64748b)',
+    fontWeight: '600',
+    display: 'block',
+    marginBottom: '0.2rem',
+  },
+  detailValue: {
+    fontWeight: '700',
+    fontSize: '0.9rem',
+    color: 'var(--text-color, #1e293b)',
+  },
+  notesBox: {
+    fontSize: '0.85rem',
+    fontStyle: 'italic',
+    backgroundColor: '#fffbe6',
+    padding: '0.75rem',
+    borderRadius: '8px',
+    border: '1px solid #ffe58f',
+    color: '#78350f',
+  },
+  fulfillmentBox: {
+    backgroundColor: '#ecfdf5',
+    padding: '0.875rem',
+    borderRadius: '8px',
+    border: '1px solid #a7f3d0',
+    fontSize: '0.825rem',
+    color: '#065f46',
   }
 };

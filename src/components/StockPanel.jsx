@@ -1513,11 +1513,11 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
             <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Total de Pedidos</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Total</span>
                 <Package size={20} color="#6b7280" />
               </div>
               <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--text-color)' }}>{requisitions.length}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Histórico total de requisições</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Histórico de requisições</div>
             </div>
 
             <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border-color)', borderTop: '4px solid #f59e0b', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1533,7 +1533,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
 
             <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border-color)', borderTop: '4px solid #ea580c', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Entregas Parciais</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Parciais</span>
                 <AlertTriangle size={20} color="#ea580c" />
               </div>
               <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#ea580c' }}>
@@ -1544,7 +1544,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
 
             <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border-color)', borderTop: '4px solid #10b981', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Atendidos / Entregues</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Entregues</span>
                 <CheckCircle2 size={20} color="#10b981" />
               </div>
               <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#059669' }}>

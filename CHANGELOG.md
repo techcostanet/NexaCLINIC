@@ -1,3 +1,32 @@
+## [v4.7.23] - 21 de Agosto, 2026
+### Módulo de Requisições - Redesign Visual NexaREQ, 3 Modos de Visualização e Padronização Rigorosa de Rótulos Únicos
+- **Identidade Visual Consolidada NexaREQ:**
+  - Banner hero superior no padrão oficial Nexa com badge temático gradiente em teal (`#14b8a6`), indicador ao vivo (*Enfermagem & Salão*), título *NexaREQ — Requisições*, subtítulo descritivo e botões de ação rápida (*Atualizar* e *Nova Requisição*).
+  - Cards de indicadores KPI estilizados com topo colorido, ícones temáticos e contadores em tempo real (*Total*, *Pendentes*, *Parciais*, *Entregues*).
+- **3 Modos de Visualização Operacional:**
+  - **Compacta (Padrão):** Visualização de alta densidade para operação ágil das técnicas no salão, com linhas compactas, badges de salão, kit e controle especial.
+  - **Normal (Detalhada):** Tabela completa com informações estruturadas de paciente, solicitante, data/hora e ações.
+  - **Cards:** Grade responsiva de cards com informações visuais resumidas, lista de insumos com quantidades e botões de ação rápida (*Visualizar*, *Editar*, *Excluir*).
+- **Padronização Rigorosa de Rótulos Únicos (Boy Scout Rule):**
+  - Ajuste de todos os rótulos de campos e botões para o padrão direto de 1 palavra:
+    - `Insumo / Medicamento (Ordem Alfabética)` ➡️ **`Insumo`**
+    - `Salão de Destino` ➡️ **`Salão`**
+    - `Destino Assistencial` ➡️ **`Destino`**
+    - `Paciente da Hemodiálise` ➡️ **`Paciente`**
+    - `Qtd:` / `Qtd Pedida` ➡️ **`Quantidade`**
+    - `Pacotes & Kits Padronizados` ➡️ **`Kits`**
+    - `Selecionar Insumos Individuais` ➡️ **`Insumos`**
+    - `Observações / Justificativa (opcional)` ➡️ **`Observações`**
+    - `Total de Pedidos` ➡️ **`Total`**
+    - `Entregas Parciais` ➡️ **`Parciais`**
+    - `Atendidos / Entregues` ➡️ **`Entregues`**
+- **Filtro de Triagem por Salão:**
+  - Novo seletor no toolbar para filtrar requisições por Salão 1, Salão 2, Salão 3 ou Consultório.
+- **Manual do Módulo Atualizado:**
+  - Atualização do guia do módulo em `src/data/moduleGuidesData.js` com tutoriais, recursos e FAQs.
+
+---
+
 ## [v4.7.20] - 21 de Agosto, 2026
 ### Módulo Estoque & Farmácia - Gestão de Kits de Produtos, Identificação de Medicamentos Controlados, Logística de Salões e Ocultação de Saldo para Enfermagem
 - **Gestão de Kits de Insumos & Procedimentos:**
