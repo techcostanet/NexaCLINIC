@@ -10,6 +10,7 @@ export default function TechnicianPanel({ currentUser }) {
   const [requisitions, setRequisitions] = useState([]);
   const [patients, setPatients] = useState([]);
   const [stockItems, setStockItems] = useState([]);
+  const [productKits, setProductKits] = useState([]);
   const [tenantSettings, setTenantSettings] = useState({ blockRequisitionZeroStock: false });
   
   const [loading, setLoading] = useState(true);
@@ -29,6 +30,9 @@ export default function TechnicianPanel({ currentUser }) {
   // Form State
   const [patientId, setPatientId] = useState('');
   const [patientName, setPatientName] = useState('');
+  const [salonLocation, setSalonLocation] = useState('');
+  const [hasKit, setHasKit] = useState(false);
+  const [selectedKitId, setSelectedKitId] = useState('');
   const [isGeneralUse, setIsGeneralUse] = useState(true);
   const [notes, setNotes] = useState('');
 
@@ -77,17 +81,19 @@ export default function TechnicianPanel({ currentUser }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [reqList, patList, itemList, settings] = await Promise.all([
+      const [reqList, patList, itemList, settings, kitList] = await Promise.all([
         dbService.getMaterialRequisitions ? dbService.getMaterialRequisitions() : [],
         dbService.getPatients ? dbService.getPatients() : [],
         dbService.getInventoryItems ? dbService.getInventoryItems() : [],
-        dbService.getTenantSettings ? dbService.getTenantSettings() : {}
+        dbService.getTenantSettings ? dbService.getTenantSettings() : {},
+        dbService.getProductKits ? dbService.getProductKits() : []
       ]);
 
       setRequisitions(reqList || []);
       setPatients(patList || []);
       setStockItems(itemList || []);
       setTenantSettings(settings || {});
+      setProductKits(kitList || []);
     } catch (err) {
       console.error('Erro ao carregar dados de requisições:', err);
       showAlert('Erro ao carregar dados do sistema.', 'danger');
@@ -118,6 +124,9 @@ export default function TechnicianPanel({ currentUser }) {
     setEditingReq(null);
     setPatientId('');
     setPatientName('');
+    setSalonLocation('');
+    setHasKit(false);
+    setSelectedKitId('');
     setIsGeneralUse(true);
     setNotes('');
     setReqItemsList([]);
@@ -138,6 +147,9 @@ export default function TechnicianPanel({ currentUser }) {
     setIsGeneralUse(!req.patientId);
     setPatientId(req.patientId || '');
     setPatientName(req.patientName || '');
+    setSalonLocation(req.salonLocation || '');
+    setHasKit(!!req.hasKit);
+    setSelectedKitId(req.kitId || '');
     setNotes(req.notes || '');
     setReqItemsList(req.items ? [...req.items] : []);
     setSelectedItemId('');
@@ -159,6 +171,43 @@ export default function TechnicianPanel({ currentUser }) {
       const found = patients.find(p => p.id === pId);
       setPatientName(found ? found.name : '');
     }
+  };
+
+  const handleApplyKit = (kitId) => {
+    if (!kitId) return;
+    const kit = productKits.find(k => k.id === kitId);
+    if (!kit) return;
+    
+    setSelectedKitId(kit.id);
+    setHasKit(true);
+    if (kit.suggestedLocation && !salonLocation) {
+      setSalonLocation(kit.suggestedLocation);
+    }
+
+    const newItems = [...reqItemsList];
+    (kit.items || []).forEach(kitItem => {
+      const existingIdx = newItems.findIndex(i => i.itemId === kitItem.itemId);
+      const qty = parseFloat(kitItem.quantity) || 1;
+      const itemObj = stockItems.find(i => i.id === kitItem.itemId);
+      const isControlled = itemObj?.isControlled || kitItem.isControlled;
+
+      if (existingIdx > -1) {
+        newItems[existingIdx].requestedQuantity += qty;
+        if (isControlled) newItems[existingIdx].isControlled = true;
+      } else {
+        newItems.push({
+          itemId: kitItem.itemId,
+          itemName: kitItem.itemName || itemObj?.name || 'Insumo',
+          unit: kitItem.unit || itemObj?.unit || 'unidades',
+          requestedQuantity: qty,
+          deliveredQuantity: 0,
+          isControlled: !!isControlled
+        });
+      }
+    });
+
+    setReqItemsList(newItems);
+    showAlert(`Kit "${kit.name}" adicionado à requisição (${(kit.items || []).length} itens)!`, 'success');
   };
 
   const handleAddItemToReq = () => {
@@ -196,6 +245,7 @@ export default function TechnicianPanel({ currentUser }) {
     if (existingIndex > -1) {
       const updatedList = [...reqItemsList];
       updatedList[existingIndex].requestedQuantity += qtyNum;
+      if (itemObj.isControlled) updatedList[existingIndex].isControlled = true;
       setReqItemsList(updatedList);
     } else {
       setReqItemsList([...reqItemsList, {
@@ -203,7 +253,8 @@ export default function TechnicianPanel({ currentUser }) {
         itemName: itemObj.name,
         unit: itemObj.unit || 'unidades',
         requestedQuantity: qtyNum,
-        deliveredQuantity: 0
+        deliveredQuantity: 0,
+        isControlled: !!itemObj.isControlled
       }]);
     }
 
@@ -222,10 +273,17 @@ export default function TechnicianPanel({ currentUser }) {
       return;
     }
 
+    // Item 3 rule: Salão is mandatory when requisition contains a kit
+    if (hasKit && !salonLocation) {
+      showAlert('O campo Salão de Destino é obrigatório para requisições de Kits.', 'warning');
+      return;
+    }
+
     setActionLoading(true);
     try {
       const operatorName = currentUser?.name || currentUser?.email || 'Técnica de Enfermagem';
-      
+      const hasControlled = reqItemsList.some(i => i.isControlled || stockItems.find(it => it.id === i.itemId)?.isControlled);
+
       const reqPayload = {
         id: editingReq ? editingReq.id : undefined,
         requisitionCode: editingReq ? editingReq.requisitionCode : undefined,
@@ -233,6 +291,10 @@ export default function TechnicianPanel({ currentUser }) {
         userId: currentUser?.uid || 'user-tech',
         patientId: isGeneralUse ? null : patientId,
         patientName: isGeneralUse ? 'Uso Geral (Salão)' : patientName,
+        salonLocation: salonLocation,
+        hasKit: !!hasKit,
+        kitId: selectedKitId || null,
+        hasControlledMedicine: hasControlled,
         status: editingReq ? editingReq.status : 'Pendente',
         notes: notes,
         items: reqItemsList,
@@ -448,9 +510,9 @@ export default function TechnicianPanel({ currentUser }) {
               <thead>
                 <tr>
                   <th style={styles.th}>Código</th>
-                  <th style={styles.th}>Data / Hora</th>
-                  <th style={styles.th}>Paciente / Destino</th>
-                  <th style={styles.th}>Itens Solicitados</th>
+                  <th style={styles.th}>Data</th>
+                  <th style={styles.th}>Destino</th>
+                  <th style={styles.th}>Itens</th>
                   <th style={styles.th}>Solicitante</th>
                   <th style={styles.th}>Status</th>
                   <th style={{ ...styles.th, textAlign: 'right' }}>Ações</th>
@@ -472,9 +534,18 @@ export default function TechnicianPanel({ currentUser }) {
                       </span>
                     </td>
                     <td style={styles.td}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <User size={14} color="#6b7280" />
-                        <span style={{ fontWeight: '600', fontSize: '0.875rem' }}>{req.patientName || 'Uso Geral'}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <User size={14} color="#6b7280" />
+                          <span style={{ fontWeight: '600', fontSize: '0.875rem' }}>{req.patientName || 'Uso Geral'}</span>
+                        </div>
+                        {req.salonLocation && (
+                          <div>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.72rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
+                              📍 {req.salonLocation}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td style={styles.td}>
@@ -489,6 +560,18 @@ export default function TechnicianPanel({ currentUser }) {
                                 + mais {req.items.length - 1} item(ns)
                               </span>
                             )}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.25rem' }}>
+                              {req.hasKit && (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.68rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.08rem 0.35rem', borderRadius: '3px', fontWeight: '700' }}>
+                                  📦 Kit
+                                </span>
+                              )}
+                              {(req.hasControlledMedicine || req.items.some(i => i.isControlled || stockItems.find(it => it.id === i.itemId)?.isControlled)) && (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.68rem', backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', padding: '0.08rem 0.35rem', borderRadius: '3px', fontWeight: '700' }}>
+                                  🔒 CONTROLADO
+                                </span>
+                              )}
+                            </div>
                           </>
                         ) : (
                           <span style={{ color: 'var(--text-muted)' }}>Sem itens</span>
@@ -553,31 +636,54 @@ export default function TechnicianPanel({ currentUser }) {
             </div>
 
             <form onSubmit={handleSubmitRequisition} style={styles.modalForm}>
-              {/* Paciente selection */}
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Destino / Paciente da Hemodiálise:</label>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', cursor: 'pointer' }}>
-                    <input 
-                      type="radio" 
-                      name="destType" 
-                      checked={isGeneralUse} 
-                      onChange={() => { setIsGeneralUse(true); setPatientId(''); setPatientName(''); }} 
-                    />
-                    Uso Geral do Salão / Bancada
+              {/* Salão & Paciente selection */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '0.5rem' }}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>
+                    Salão de Destino {hasKit && <span style={{ color: '#dc2626', fontWeight: '700' }}>* (Obrigatório p/ Kit)</span>}:
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', cursor: 'pointer' }}>
-                    <input 
-                      type="radio" 
-                      name="destType" 
-                      checked={!isGeneralUse} 
-                      onChange={() => setIsGeneralUse(false)} 
-                    />
-                    Vincular a Paciente Específico
-                  </label>
+                  <select 
+                    value={salonLocation} 
+                    onChange={e => setSalonLocation(e.target.value)}
+                    style={{ ...styles.input, borderColor: hasKit && !salonLocation ? '#ef4444' : undefined }}
+                    required={hasKit}
+                  >
+                    <option value="">-- Selecione o Salão --</option>
+                    <option value="Salão 1">Salão 1</option>
+                    <option value="Salão 2">Salão 2</option>
+                    <option value="Salão 3">Salão 3</option>
+                    <option value="Consultório / Outro">Consultório / Outro</option>
+                  </select>
                 </div>
 
-                {!isGeneralUse && (
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Destino Assistencial:</label>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', height: '38px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <input 
+                        type="radio" 
+                        name="destType" 
+                        checked={isGeneralUse} 
+                        onChange={() => { setIsGeneralUse(true); setPatientId(''); setPatientName(''); }} 
+                      />
+                      Uso Geral
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <input 
+                        type="radio" 
+                        name="destType" 
+                        checked={!isGeneralUse} 
+                        onChange={() => setIsGeneralUse(false)} 
+                      />
+                      Paciente
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {!isGeneralUse && (
+                <div style={{ ...styles.formGroup, marginBottom: '0.75rem' }}>
+                  <label style={styles.label}>Paciente da Hemodiálise *:</label>
                   <select 
                     value={patientId} 
                     onChange={handlePatientSelect}
@@ -591,12 +697,49 @@ export default function TechnicianPanel({ currentUser }) {
                       </option>
                     ))}
                   </select>
-                )}
-              </div>
+                </div>
+              )}
+
+              {/* Seção Rápida de Kits de Produtos */}
+              {productKits.length > 0 && (
+                <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <label style={{ fontWeight: '700', fontSize: '0.825rem', color: '#92400e', margin: 0, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Package size={16} /> Pacotes & Kits Padronizados:
+                    </label>
+                    <span style={{ fontSize: '0.7rem', color: '#b45309' }}>Adiciona todos os insumos com 1 clique</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    {productKits.map(kit => (
+                      <button
+                        key={kit.id}
+                        type="button"
+                        onClick={() => handleApplyKit(kit.id)}
+                        style={{
+                          padding: '0.35rem 0.65rem',
+                          backgroundColor: '#fff',
+                          border: '1px solid #d97706',
+                          borderRadius: '6px',
+                          fontSize: '0.78rem',
+                          fontWeight: '600',
+                          color: '#b45309',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem'
+                        }}
+                        title={`Clique para incluir os ${(kit.items || []).length} insumos deste kit`}
+                      >
+                        + {kit.name} ({(kit.items || []).length} itens)
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Items draft area */}
               <div style={styles.itemsSection}>
-                <h3 style={styles.itemsSectionTitle}>Selecionar Itens do Estoque</h3>
+                <h3 style={styles.itemsSectionTitle}>Selecionar Insumos Individuais</h3>
                 
                 {itemStockAlert && (
                   <div style={styles.stockAlertBox}>
@@ -606,11 +749,11 @@ export default function TechnicianPanel({ currentUser }) {
 
                 <div style={styles.addItemGrid}>
                   <div style={{ flex: 1, position: 'relative' }} id="product-search-container">
-                    <label style={{ ...styles.label, fontSize: '0.8rem' }}>Material / Medicamento (Ordem Alfabética):</label>
+                    <label style={{ ...styles.label, fontSize: '0.8rem' }}>Insumo / Medicamento (Ordem Alfabética):</label>
                     <div style={{ position: 'relative' }}>
                       <input 
                         type="text"
-                        placeholder="🔍 Digite o nome ou código para pesquisar produto..."
+                        placeholder="🔍 Digite o nome ou código para pesquisar..."
                         value={itemSearchText}
                         onFocus={() => setIsProductDropdownOpen(true)}
                         onChange={(e) => {
@@ -653,7 +796,7 @@ export default function TechnicianPanel({ currentUser }) {
                       )}
                     </div>
 
-                    {/* Live Filtered Dropdown */}
+                    {/* Live Filtered Dropdown (SEM saldo em estoque, COM badge de controlado) */}
                     {isProductDropdownOpen && (
                       <div
                         style={{
@@ -673,7 +816,7 @@ export default function TechnicianPanel({ currentUser }) {
                       >
                         {filteredStockItems.length === 0 ? (
                           <div style={{ padding: '0.75rem', fontSize: '0.85rem', color: '#64748b', textAlign: 'center' }}>
-                            Nenhum produto encontrado para "{itemSearchText}"
+                            Nenhum insumo encontrado para "{itemSearchText}"
                           </div>
                         ) : (
                           filteredStockItems.slice(0, 150).map(item => {
@@ -701,26 +844,17 @@ export default function TechnicianPanel({ currentUser }) {
                                 onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#ffffff'; }}
                               >
                                 <div>
-                                  <div style={{ fontWeight: 600, color: isSelected ? '#047857' : '#1e293b' }}>
-                                    {item.name}
+                                  <div style={{ fontWeight: 600, color: isSelected ? '#047857' : '#1e293b', display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                                    <span>{item.name}</span>
+                                    {item.isControlled && (
+                                      <span style={{ backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '0.05rem 0.35rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: '700' }}>
+                                        🔒 CONTROLADO (Portaria 344)
+                                      </span>
+                                    )}
                                   </div>
                                   <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                    {item.category || 'Geral'} {item.code ? `• Cód: ${item.code}` : ''}
+                                    {item.category || 'Geral'} {item.code ? `• Cód: ${item.code}` : ''} • Unidade: {item.unit || 'un'}
                                   </div>
-                                </div>
-                                <div style={{ textAlign: 'right', whiteSpace: 'nowrap', marginLeft: '0.5rem' }}>
-                                  <span
-                                    style={{
-                                      padding: '0.15rem 0.4rem',
-                                      borderRadius: '0.25rem',
-                                      fontSize: '0.75rem',
-                                      fontWeight: 600,
-                                      backgroundColor: (item.currentStock || 0) <= 0 ? '#fee2e2' : (item.currentStock || 0) <= (item.minStock || 10) ? '#fef3c7' : '#dcfce7',
-                                      color: (item.currentStock || 0) <= 0 ? '#991b1b' : (item.currentStock || 0) <= (item.minStock || 10) ? '#92400e' : '#166534'
-                                    }}
-                                  >
-                                    Saldo: {item.currentStock || 0} {item.unit || 'un'}
-                                  </span>
                                 </div>
                               </div>
                             );
@@ -728,7 +862,7 @@ export default function TechnicianPanel({ currentUser }) {
                         )}
                         {filteredStockItems.length > 150 && (
                           <div style={{ padding: '0.5rem', fontSize: '0.75rem', color: '#64748b', textAlign: 'center', backgroundColor: '#f8fafc', fontStyle: 'italic' }}>
-                            Mostrando 150 de {filteredStockItems.length} produtos. Digite para filtrar.
+                            Mostrando 150 de {filteredStockItems.length} insumos. Digite para filtrar.
                           </div>
                         )}
                       </div>
@@ -762,7 +896,7 @@ export default function TechnicianPanel({ currentUser }) {
                   <label style={{ ...styles.label, fontSize: '0.85rem' }}>Itens no Pedido ({reqItemsList.length}):</label>
                   {reqItemsList.length === 0 ? (
                     <div style={{ padding: '1rem', backgroundColor: '#f9fafb', border: '1px dashed #d1d5db', borderRadius: '6px', textAlign: 'center', fontSize: '0.85rem', color: '#6b7280' }}>
-                      Nenhum item adicionado ainda. Escolha um produto acima e clique em "Adicionar".
+                      Nenhum item adicionado ainda. Escolha um produto acima ou adicione um Kit pré-montado.
                     </div>
                   ) : (
                     <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
@@ -775,21 +909,33 @@ export default function TechnicianPanel({ currentUser }) {
                           </tr>
                         </thead>
                         <tbody>
-                          {reqItemsList.map((item, idx) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                              <td style={{ padding: '0.5rem', fontWeight: '500' }}>{item.itemName}</td>
-                              <td style={{ padding: '0.5rem' }}>{item.requestedQuantity} {item.unit}</td>
-                              <td style={{ padding: '0.5rem', textAlign: 'center' }}>
-                                <button 
-                                  type="button" 
-                                  onClick={() => handleRemoveItemFromReq(idx)}
-                                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
-                                >
-                                  <X size={14} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
+                          {reqItemsList.map((item, idx) => {
+                            const isCtrl = item.isControlled || stockItems.find(it => it.id === item.itemId)?.isControlled;
+                            return (
+                              <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                                <td style={{ padding: '0.5rem', fontWeight: '500' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                                    <span>{item.itemName}</span>
+                                    {isCtrl && (
+                                      <span style={{ fontSize: '0.65rem', backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '0.05rem 0.3rem', borderRadius: '3px', fontWeight: '700' }}>
+                                        🔒 Controlado
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td style={{ padding: '0.5rem' }}>{item.requestedQuantity} {item.unit}</td>
+                                <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                                  <button 
+                                    type="button" 
+                                    onClick={() => handleRemoveItemFromReq(idx)}
+                                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -841,18 +987,40 @@ export default function TechnicianPanel({ currentUser }) {
                   <div style={{ fontWeight: '600' }}>{selectedReqDetail.requestedBy}</div>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Status Atual:</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Status:</span>
                   <div>{getStatusBadge(selectedReqDetail.status)}</div>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Data e Hora:</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Data:</span>
                   <div style={{ fontWeight: '500' }}>{new Date(selectedReqDetail.createdAt).toLocaleString('pt-BR')}</div>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Destino / Paciente:</span>
-                  <div style={{ fontWeight: '600' }}>{selectedReqDetail.patientName || 'Uso Geral'}</div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Destino:</span>
+                  <div style={{ fontWeight: '600' }}>
+                    {selectedReqDetail.patientName || 'Uso Geral'}
+                    {selectedReqDetail.salonLocation && (
+                      <span style={{ marginLeft: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.72rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
+                        📍 {selectedReqDetail.salonLocation}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
+
+              {(selectedReqDetail.hasKit || selectedReqDetail.hasControlledMedicine) && (
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {selectedReqDetail.hasKit && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>
+                      📦 Requisição de Kit de Produtos
+                    </span>
+                  )}
+                  {selectedReqDetail.hasControlledMedicine && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>
+                      🔒 CONTÉM MEDICAMENTO CONTROLADO (Portaria 344)
+                    </span>
+                  )}
+                </div>
+              )}
 
               {selectedReqDetail.notes && (
                 <div>
@@ -864,26 +1032,38 @@ export default function TechnicianPanel({ currentUser }) {
               )}
 
               <div>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.5rem' }}>Itens Solicitados & Dispensados:</h4>
+                <h4 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.5rem' }}>Itens Solicitados:</h4>
                 <div style={{ border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                     <thead style={{ backgroundColor: '#f3f4f6', textAlign: 'left' }}>
                       <tr>
-                        <th style={{ padding: '0.5rem' }}>Item / Material</th>
+                        <th style={{ padding: '0.5rem' }}>Material</th>
                         <th style={{ padding: '0.5rem', textAlign: 'center' }}>Qtd Solicitada</th>
                         <th style={{ padding: '0.5rem', textAlign: 'center' }}>Qtd Entregue</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedReqDetail.items && selectedReqDetail.items.map((item, i) => (
-                        <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                          <td style={{ padding: '0.5rem', fontWeight: '500' }}>{item.itemName}</td>
-                          <td style={{ padding: '0.5rem', textAlign: 'center', fontWeight: '600' }}>{item.requestedQuantity} {item.unit}</td>
-                          <td style={{ padding: '0.5rem', textAlign: 'center', fontWeight: '700', color: item.deliveredQuantity >= item.requestedQuantity ? '#059669' : item.deliveredQuantity > 0 ? '#d97706' : '#6b7280' }}>
-                            {item.deliveredQuantity || 0} {item.unit}
-                          </td>
-                        </tr>
-                      ))}
+                      {selectedReqDetail.items && selectedReqDetail.items.map((item, i) => {
+                        const isCtrl = item.isControlled || stockItems.find(it => it.id === item.itemId)?.isControlled;
+                        return (
+                          <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                            <td style={{ padding: '0.5rem', fontWeight: '500' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                                <span>{item.itemName}</span>
+                                {isCtrl && (
+                                  <span style={{ fontSize: '0.65rem', backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '0.05rem 0.3rem', borderRadius: '3px', fontWeight: '700' }}>
+                                    🔒 Controlado
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td style={{ padding: '0.5rem', textAlign: 'center', fontWeight: '600' }}>{item.requestedQuantity} {item.unit}</td>
+                            <td style={{ padding: '0.5rem', textAlign: 'center', fontWeight: '700', color: item.deliveredQuantity >= item.requestedQuantity ? '#059669' : item.deliveredQuantity > 0 ? '#d97706' : '#6b7280' }}>
+                              {item.deliveredQuantity || 0} {item.unit}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

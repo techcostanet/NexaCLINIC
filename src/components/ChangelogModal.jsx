@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.20',
+      date: '21/08/2026',
+      title: 'Módulo Estoque & Farmácia - Gestão de Kits de Produtos, Identificação de Medicamentos Controlados, Logística de Salões e Ocultação de Saldo para Enfermagem',
+      description: 'Lançamento da aba de Kits de Insumos & Procedimentos no NexaSTOCK, sinalização visual de Medicamentos Controlados (Portaria 344/ANVISA) em todo o sistema, campo obrigatório de Salão (Salão 1, Salão 2, Salão 3) para kits nas requisições da enfermagem, exibição do salão na triagem da farmácia e ocultação de saldo de estoque para a equipe de enfermagem.',
+      changes: [
+        { type: 'Kits de Insumos & Procedimentos', text: 'Nova aba "Kits" em Estoque com cadastro de pacotes padronizados, vinculação de insumos, ajuste de quantidades e cálculo de custo total.' },
+        { type: 'Medicamentos Controlados (Portaria 344)', text: 'Opção no cadastro de produtos e sinalização visual destacada com badges de segurança vermelhos (🔒 Controlado / Portaria 344) em todo o sistema.' },
+        { type: 'Logística de Salões de Diálise', text: 'Campo Salão (Salão 1, Salão 2, Salão 3) com validação obrigatória ao requisitar kits, exibido na triagem e atendimento da farmácia para entrega correta.' },
+        { type: 'Ocultação de Saldo para Enfermagem', text: 'Remoção do indicador de saldo na busca de produtos da técnica, mantendo o pedido pautado unicamente na necessidade clínica do paciente.' },
+        { type: 'Padronização de Rótulos Diretos', text: 'Aplicação da regra de rótulos concisos de 1 palavra em formulários, tabelas e modais, eliminando termos duplos e redundantes.' }
+      ]
+    },
+    {
       version: 'v4.7.18',
       date: '21/08/2026',
       title: 'Módulo Estoque & Farmácia - Design Hero NexaSTOCK, 3 Modos de Visualização de Catálogo, Ações de Inventário/Transferência e Empréstimos com Parceiros Inteligentes',

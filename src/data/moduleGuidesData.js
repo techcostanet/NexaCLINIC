@@ -250,6 +250,18 @@ export const MODULE_GUIDES = {
         desc: '3 visualizações operacionais: Compacta (padrão de alta densidade), Normal (detalhada com nível e valor estocado) e Cards (grade visual de suprimentos com barras de nível e valor).'
       },
       {
+        title: 'Gestão de Kits de Insumos & Procedimentos',
+        desc: 'Cadastro e manutenção de kits clínicos padronizados (ex: Kit Conexão de Fístula, Kit Punção, Kit Curativo) com cálculo automático de custo e vinculação ao salão físico.'
+      },
+      {
+        title: 'Sinalização Visual de Medicamentos Controlados',
+        desc: 'Identificação visual imediata (Portaria 344/ANVISA) em vermelho de alerta em todo o catálogo, kits, requisições do salão e atendimento da farmácia.'
+      },
+      {
+        title: 'Logística de Salões de Diálise Integrada',
+        desc: 'Roteamento físico obrigatório de pedidos de kits para Salão 1, Salão 2 ou Salão 3, permitindo separação e entrega no posto correto.'
+      },
+      {
         title: 'Central de Relatórios (15 Tipos)',
         desc: 'Suíte completa com 15 relatórios analíticos: Curva ABC, Posição Geral, Itens Críticos, Validades FEFO, Recall e Kardex.'
       },
@@ -280,20 +292,38 @@ export const MODULE_GUIDES = {
     ],
     tutorial: [
       {
+        title: 'Como Cadastrar um Kit de Insumos',
+        steps: [
+          'Acesse a aba "Kits" no painel de Estoque.',
+          'Clique no botão "+ Novo Kit".',
+          'Preencha o Código (ex: KIT-HEMO-01), Nome do Kit, Categoria e Salão Padrão sugerido.',
+          'No seletor de composição, escolha os insumos e ajuste as quantidades necessárias.',
+          'Confira o custo estimado total do pacote e clique em "Salvar Kit".'
+        ]
+      },
+      {
+        title: 'Como Identificar e Cadastrar Medicamentos Controlados',
+        steps: [
+          'No cadastro de insumos ou edição de produto, marque a opção "🔒 Medicamento Controlado (Portaria 344)".',
+          'O sistema passará a exibir a tarja e o badge de segurança vermelho no catálogo, na lista de kits e nas requisições da enfermagem.',
+          'Itens controlados exigem atenção redobrada na dispensação e guarda em armário trancado.'
+        ]
+      },
+      {
         title: 'Como Alternar as Visualizações do Catálogo de Produtos',
         steps: [
-          'Acesse a aba "Catálogo de Produtos".',
+          'Acesse a aba "Catálogo".',
           'Na barra de ferramentas, clique em "Compacta" (padrão rápida), "Normal" (tabela detalhada com saldo financeiro) ou "Cards" (grade visual com status e nível de estoque).',
           'Os filtros de busca e categoria permanecem ativos em qualquer modo de exibição selecionado.'
         ]
       },
       {
-        title: 'Como Abrir um Novo Inventário Físico',
+        title: 'Como Atender Requisições Vindas dos Salões',
         steps: [
-          'Acesse a aba "Inventários Físicos".',
-          'Clique no botão "+ Novo Inventário" no canto superior da tabela.',
-          'Informe o título e selecione o local/almoxarifado que será auditado.',
-          'Em seguida, utilize "Digitar Contagem" para lançar as quantidades físicas conferidas.'
+          'Acesse a aba "Requisições".',
+          'Verifique na coluna "Destino" o Salão de destino (Salão 1, Salão 2, Salão 3) e o paciente.',
+          'Observe os alertas de "📦 Kit" e "🔒 CONTROLADO" nos itens solicitados.',
+          'Clique em "Atender Requisição", selecione os lotes físicos (sugestão FEFO) e confirme a entrega.'
         ]
       },
       {
@@ -301,45 +331,36 @@ export const MODULE_GUIDES = {
         steps: [
           'Acesse a aba "Transferências".',
           'Clique no botão "+ Nova Transferência" no cabeçalho da tabela.',
-          'Selecione o local de origem, o local de destino, o insumo, a quantidade e o lote correspondente.',
+          'Selecione a origem, o destino, o insumo, a quantidade e o lote correspondente.',
           'Confirme o lançamento para movimentar o saldo entre os locais instantaneamente.'
         ]
       },
       {
-        title: 'Como Cadastrar um Empréstimo com Clínica Parceira',
+        title: 'Como Cadastrar um Empréstimo com Parceiro',
         steps: [
           'Acesse a aba "Empréstimos".',
           'Clique em "+ Novo Empréstimo".',
-          'No campo "Instituição / Clínica Parceira", selecione uma clínica da lista de sugestões ou digite um novo nome.',
+          'No campo "Parceiro", selecione uma clínica da lista de sugestões ou digite um novo nome.',
           'O novo parceiro digitado passará a ser sugerido automaticamente nos próximos empréstimos.'
-        ]
-      },
-      {
-        title: 'Como Gerar e Exportar Relatórios de Estoque (PDF / XLS)',
-        steps: [
-          'No topo superior direito da barra de navegação, clique no botão "Relatórios".',
-          'Na barra lateral esquerda, escolha um dos 15 relatórios disponíveis (ex: Posição Geral, Curva ABC, Validades, Itens Críticos).',
-          'Defina o período (Data Inicial e Final), Categoria e Setor se desejar filtrar os dados.',
-          'Confira os registros na tabela de pré-visualização e clique em "Exportar PDF" ou "Exportar Excel".'
         ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'Qual o modo padrão de visualização do Catálogo de Produtos?',
+        pergunta: 'Por que o saldo em estoque não aparece para a equipe de enfermagem ao requisitar?',
+        resposta: 'Para garantir que as solicitações de materiais sejam estritamente pautadas pela necessidade clínica do paciente em diálise, sem interferência ou viés pelo nível de estoque da farmácia central.'
+      },
+      {
+        pergunta: 'Por que o campo Salão é obrigatório ao requisitar um Kit?',
+        resposta: 'Porque os kits de procedimentos são entregues fisicamente nas bancadas de cada salão de diálise. Informar o salão correto evita erros e atrasos na entrega.'
+      },
+      {
+        pergunta: 'Qual o modo padrão de visualização do Catálogo de Insumos?',
         resposta: 'O modo padrão é a "Visualização Compacta", configurada para agilidade operacional e máxima densidade de itens na tela.'
       },
       {
-        pergunta: 'As clínicas parceiras cadastradas em empréstimos ficam salvas?',
-        resposta: 'Sim. O sistema possui auto-sugestão dinâmica: toda clínica parceira utilizada em empréstimos anteriores fica salva e disponível para seleção com 1 clique.'
-      },
-      {
-        pergunta: 'Como exporto a Curva ABC ou a Posição Geral do estoque para o Excel?',
-        resposta: 'Abra a modal clicando no botão "Relatórios" na barra superior, selecione "2. Curva ABC de Insumos" ou "1. Posição Geral" e clique no botão verde "Exportar Excel".'
-      },
-      {
-        pergunta: 'Como sei quais pacientes tomaram determinado medicamento de um lote específico?',
-        resposta: 'Basta acessar a aba "Rastreabilidade & Recall" ou gerar o relatório "11. Dossiê de Recall Farmacêutico" para listar todos os pacientes e dados fiscais.'
+        pergunta: 'Como funciona a sinalização visual de medicamentos controlados?',
+        resposta: 'Todos os medicamentos sujeitos a controle especial pela Portaria 344/ANVISA recebem badges em vermelho de alto contraste (🔒 Controlado / Portaria 344) em todas as telas, alertas e relatórios.'
       }
     ]
   },

@@ -1,3 +1,21 @@
+## [v4.7.20] - 21 de Agosto, 2026
+### Módulo Estoque & Farmácia - Gestão de Kits de Produtos, Identificação de Medicamentos Controlados, Logística de Salões e Ocultação de Saldo para Enfermagem
+- **Gestão de Kits de Insumos & Procedimentos:**
+  - Nova aba `Kits` no painel *NexaSTOCK* permitindo cadastro, edição e exclusão de pacotes padronizados de diálise e enfermagem.
+  - Seleção de múltiplos insumos com ajuste dinâmico de quantidades, vinculação a salão sugerido e cálculo em tempo real do custo estimado do pacote.
+- **Identificação Visual de Medicamentos Controlados (Portaria 344/ANVISA):**
+  - Checkbox dedicado `🔒 Medicamento Controlado (Portaria 344)` no formulário de cadastro/edição de produtos.
+  - Sinalização visual imediata com tarjas e badges vermelhos de alto contraste (`🔒 Controlado` / `🔒 Portaria 344`) nos 3 modos de catálogo, lista de kits, requisições do salão e atendimento da farmácia.
+- **Logística de Salões de Diálise (Salão 1, Salão 2, Salão 3):**
+  - Campo `Salão` adicionado ao formulário de requisição das técnicas com validação de preenchimento obrigatório sempre que um Kit for requisitado.
+  - Exibição de badge do salão de destino (`📍 Salão 1`, `📍 Salão 2`, `📍 Salão 3`) na triagem e atendimento da farmácia para entrega direta no posto correto.
+- **Ocultação de Saldo de Estoque para a Enfermagem:**
+  - Ocultação do indicador `Saldo: X un` na busca de insumos do painel da técnica, garantindo prescrições e requisições baseadas estritamente na necessidade clínica do paciente.
+- **Padronização de Rótulos Diretos:**
+  - Aplicação rigorosa da regra de termos únicos concisos de 1 palavra nos cabeçalhos, formulários e tabelas.
+
+---
+
 ## [v4.7.18] - 21 de Agosto, 2026
 ### Módulo Estoque & Farmácia - Design Hero NexaSTOCK, 3 Modos de Visualização de Catálogo, Ações de Inventário/Transferência e Empréstimos com Parceiros Inteligentes
 - **Hero Header Padrão NexaSTOCK:**

@@ -18,9 +18,21 @@ Toda vez que um deploy for realizado, a seguinte sequência de ações deve ser 
 
 ## Padrões de Interface e UI/UX (Obrigatório)
 
-1. **Rótulos Concisos (Padrão de 1 Palavra / Termo Único):**
-   - Rótulos de campos de formulários (`<label>`), cabeçalhos de tabelas (`<th>`), filtros e colunas devem ser sempre simplificados, utilizando preferencialmente **apenas uma palavra** ou termo direto conciso (ex: `Fornecedor`, `Valor`, `Vencimento`, `Centro de Custo`, `Nota Fiscal`, `Ações`, `Pagamento`, `Banco`, `Status`, `Saldo`, `Devido`, `Pago`, `Realizado`, `Orçado`).
-   - **Proibido usar rótulos duplos com barras ou conectivos redundantes**, tais como *"Fornecedor / Descrição"*, *"Ações & Baixa"*, *"Centro de Custos & Modalidade"*, *"Banco / Conta"*, *"Meio / Forma de Pagamento"*, *"Realizado / Pago (R$)"*.
+1. **Rótulos Concisos (Padrão Rigoroso de 1 Palavra / Termo Único):**
+   - Rótulos de campos de formulários (`<label>`), cabeçalhos de tabelas (`<th>`), abas, filtros, botões, modais e títulos de cards devem ser **estritamente diretos**, utilizando preferencialmente **apenas uma palavra** ou termo único indispensável.
+   - **Terminantemente proibido usar termos duplos com barras (`/`) ou conectivos (`&`, `e`, `ou`) com a mesma finalidade**:
+     - ❌ *"Instituição / Clínica Parceira"* ➡️ ✅ **`Parceiro`** ou **`Instituição`**
+     - ❌ *"Produto / Medicamento"* ➡️ ✅ **`Insumo`** ou **`Produto`**
+     - ❌ *"Estoque Atual / Nível"* ➡️ ✅ **`Saldo`**
+     - ❌ *"Ações & Relatórios"* ou *"Ações & Baixa"* ➡️ ✅ **`Ações`**
+     - ❌ *"Origem (Local)"* / *"Destino (Local)"* ➡️ ✅ **`Origem`** / **`Destino`**
+     - ❌ *"Lote / Validade"* ➡️ ✅ **`Lote`** (e coluna separada **`Validade`**)
+     - ❌ *"Data / Hora"* ➡️ ✅ **`Data`**
+     - ❌ *"Fornecedor / Descrição"* ➡️ ✅ **`Fornecedor`**
+     - ❌ *"Banco / Conta"* ➡️ ✅ **`Banco`**
+     - ❌ *"Meio / Forma de Pagamento"* ➡️ ✅ **`Pagamento`**
+     - ❌ *"Realizado / Pago"* ➡️ ✅ **`Realizado`**
+   - **Regra de Limpeza Ativa (Boy Scout Rule):** Toda vez que qualquer arquivo ou componente for aberto ou alterado, é obrigatório varrer e remover quaisquer rótulos duplos ou redundantes encontrados.
 
 ## Regras de Documentação e Manuais dos Módulos (Obrigatório)
 

@@ -30,6 +30,7 @@ export function useStockLogic(currentUser) {
   const [inventories, setInventories] = useState([]);
   const [transfers, setTransfers] = useState([]);
   const [productBatches, setProductBatches] = useState([]);
+  const [productKits, setProductKits] = useState([]);
   
   // Traceability & Recall State
   const [traceabilitySearchTerm, setTraceabilitySearchTerm] = useState('');
@@ -67,6 +68,18 @@ export function useStockLogic(currentUser) {
     notes: ''
   });
 
+  // Product Kits Modal State (Kits de Insumos / Hemodiálise)
+  const [showKitModal, setShowKitModal] = useState(false);
+  const [editingKit, setEditingKit] = useState(null);
+  const [kitForm, setKitForm] = useState({
+    code: '',
+    name: '',
+    category: 'Hemodiálise',
+    description: '',
+    suggestedLocation: 'Salão 1',
+    items: []
+  });
+
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -82,6 +95,7 @@ export function useStockLogic(currentUser) {
   const [sectorSort, setSectorSort] = useState({ key: 'name', direction: 'asc' });
   const [invoiceSort, setInvoiceSort] = useState({ key: 'entryDate', direction: 'desc' });
   const [loanSort, setLoanSort] = useState({ key: 'loanDate', direction: 'desc' });
+  const [kitSort, setKitSort] = useState({ key: 'name', direction: 'asc' });
 
   // Modals States
   const [showItemModal, setShowItemModal] = useState(false);
@@ -94,6 +108,7 @@ export function useStockLogic(currentUser) {
     unit: 'unidades',
     price: '0.00',
     hasBatchControl: false,
+    isControlled: false,
     defaultSectorId: ''
   });
 
@@ -168,13 +183,14 @@ export function useStockLogic(currentUser) {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [itemList, supList, secList, catList, locList, batchList] = await Promise.all([
+      const [itemList, supList, secList, catList, locList, batchList, kitList] = await Promise.all([
         dbService.getInventoryItems ? dbService.getInventoryItems().catch(() => []) : [],
         dbService.getSuppliers ? dbService.getSuppliers().catch(() => []) : [],
         dbService.getStockSectors ? dbService.getStockSectors().catch(() => []) : [],
         dbService.getProductCategories ? dbService.getProductCategories().catch(() => []) : [],
         dbService.getStockLocations ? dbService.getStockLocations().catch(() => []) : [],
-        dbService.getProductBatches ? dbService.getProductBatches().catch(() => []) : []
+        dbService.getProductBatches ? dbService.getProductBatches().catch(() => []) : [],
+        dbService.getProductKits ? dbService.getProductKits().catch(() => []) : []
       ]);
       
       setItems(safeArray(itemList));
@@ -182,6 +198,7 @@ export function useStockLogic(currentUser) {
       setSectors(safeArray(secList));
       setStockLocations(safeArray(locList));
       setProductBatches(safeArray(batchList));
+      setProductKits(safeArray(kitList));
       setCategoriesList((catList && safeArray(catList).length > 0) ? safeArray(catList) : [
         { id: 'c1', name: 'Insumo Clínico / MatMed' },
         { id: 'c2', name: 'Medicamento' },
@@ -255,6 +272,9 @@ export function useStockLogic(currentUser) {
       } else if (tab === 'expiry') {
         const bList = await (dbService.getProductBatches ? dbService.getProductBatches().catch(() => []) : []);
         setProductBatches(safeArray(bList));
+      } else if (tab === 'kits' && productKits.length === 0) {
+        const kitList = await (dbService.getProductKits ? dbService.getProductKits().catch(() => []) : []);
+        setProductKits(safeArray(kitList));
       }
     } catch (err) {
       console.error(`Erro ao carregar dados da aba ${tab}:`, err);
@@ -331,6 +351,7 @@ export function useStockLogic(currentUser) {
       unit: 'unidades',
       price: '0.00',
       hasBatchControl: false,
+      isControlled: false,
       defaultSectorId: sectors[0]?.id || ''
     });
     setShowItemModal(true);
@@ -346,6 +367,7 @@ export function useStockLogic(currentUser) {
       unit: item.unit || 'unidades',
       price: item.price ? item.price.toString() : '0.00',
       hasBatchControl: !!item.hasBatchControl,
+      isControlled: !!item.isControlled,
       defaultSectorId: item.defaultSectorId || (sectors[0]?.id || '')
     });
     setShowItemModal(true);
@@ -365,6 +387,7 @@ export function useStockLogic(currentUser) {
         unit: itemForm.unit,
         price: parseFloat(itemForm.price) || 0,
         hasBatchControl: !!itemForm.hasBatchControl,
+        isControlled: !!itemForm.isControlled,
         defaultSectorId: itemForm.defaultSectorId
       };
 
@@ -533,6 +556,137 @@ export function useStockLogic(currentUser) {
       showAlert('Erro ao excluir setor.', 'danger');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  // ----------------------------------------------------
+  // Product Kit Methods (Kits de Insumos)
+  // ----------------------------------------------------
+  const handleOpenKitAdd = () => {
+    setEditingKit(null);
+    setKitForm({
+      code: `KIT-${String((productKits || []).length + 1).padStart(3, '0')}`,
+      name: '',
+      category: 'Hemodiálise',
+      description: '',
+      suggestedLocation: 'Salão 1',
+      items: []
+    });
+    setShowKitModal(true);
+  };
+
+  const handleOpenKitEdit = (kit) => {
+    setEditingKit(kit);
+    setKitForm({
+      code: kit.code || '',
+      name: kit.name || '',
+      category: kit.category || 'Hemodiálise',
+      description: kit.description || '',
+      suggestedLocation: kit.suggestedLocation || 'Salão 1',
+      items: kit.items ? [...kit.items] : []
+    });
+    setShowKitModal(true);
+  };
+
+  const handleKitItemAdd = (itemId, quantity = 1) => {
+    const itemObj = items.find(i => i.id === itemId);
+    if (!itemObj) return;
+    const existing = kitForm.items.find(i => i.itemId === itemId);
+    if (existing) {
+      setKitForm({
+        ...kitForm,
+        items: kitForm.items.map(i => i.itemId === itemId ? { ...i, quantity: i.quantity + quantity } : i)
+      });
+    } else {
+      setKitForm({
+        ...kitForm,
+        items: [
+          ...kitForm.items,
+          {
+            itemId: itemObj.id,
+            itemName: itemObj.name,
+            unit: itemObj.unit || 'unidades',
+            quantity: quantity,
+            price: parseFloat(itemObj.price) || 0,
+            isControlled: !!itemObj.isControlled
+          }
+        ]
+      });
+    }
+  };
+
+  const handleKitItemRemove = (itemId) => {
+    setKitForm({
+      ...kitForm,
+      items: kitForm.items.filter(i => i.itemId !== itemId)
+    });
+  };
+
+  const handleKitItemQtyChange = (itemId, newQty) => {
+    const qty = Math.max(1, parseFloat(newQty) || 1);
+    setKitForm({
+      ...kitForm,
+      items: kitForm.items.map(i => i.itemId === itemId ? { ...i, quantity: qty } : i)
+    });
+  };
+
+  const handleSaveKit = async (e) => {
+    e?.preventDefault();
+    if (!kitForm.name.trim()) {
+      showAlert('Nome do Kit é obrigatório.', 'warning');
+      return;
+    }
+    if (!kitForm.items || kitForm.items.length === 0) {
+      showAlert('Adicione pelo menos um insumo componente ao Kit.', 'warning');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const calculatedCost = kitForm.items.reduce((acc, it) => {
+        const itemObj = items.find(i => i.id === it.itemId);
+        const itemPrice = parseFloat(itemObj?.price) || (parseFloat(it.price) || 0);
+        return acc + (itemPrice * (parseFloat(it.quantity) || 1));
+      }, 0);
+
+      const hasControlled = kitForm.items.some(it => {
+        const itemObj = items.find(i => i.id === it.itemId);
+        return itemObj?.isControlled || it.isControlled;
+      });
+
+      const payload = {
+        ...kitForm,
+        id: editingKit ? editingKit.id : undefined,
+        totalCost: calculatedCost,
+        hasControlledMedicine: hasControlled
+      };
+
+      const saved = await dbService.saveProductKit(payload);
+      if (editingKit) {
+        setProductKits(prev => prev.map(k => k.id === saved.id ? saved : k));
+        showAlert(`Kit "${saved.name}" atualizado com sucesso!`, 'success');
+      } else {
+        setProductKits(prev => [saved, ...prev]);
+        showAlert(`Kit "${saved.name}" cadastrado com sucesso!`, 'success');
+      }
+      setShowKitModal(false);
+    } catch (err) {
+      console.error('Erro ao salvar kit:', err);
+      showAlert('Erro ao salvar kit de produtos.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteKit = async (kitId, kitName) => {
+    if (!window.confirm(`Deseja realmente excluir o kit "${kitName}"?`)) return;
+    try {
+      await dbService.deleteProductKit(kitId);
+      setProductKits(prev => prev.filter(k => k.id !== kitId));
+      showAlert(`Kit "${kitName}" removido com sucesso.`, 'success');
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao excluir kit de produtos.', 'danger');
     }
   };
 
@@ -1790,6 +1944,23 @@ export function useStockLogic(currentUser) {
     getFilteredItems,
     getLowStockItems,
     getExpiryTransactions,
+    productKits,
+    setProductKits,
+    kitSort,
+    setKitSort,
+    showKitModal,
+    setShowKitModal,
+    editingKit,
+    setEditingKit,
+    kitForm,
+    setKitForm,
+    handleOpenKitAdd,
+    handleOpenKitEdit,
+    handleKitItemAdd,
+    handleKitItemRemove,
+    handleKitItemQtyChange,
+    handleSaveKit,
+    handleDeleteKit,
     filteredItems,
     lowStockItems,
     expiryList

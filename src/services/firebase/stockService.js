@@ -305,6 +305,39 @@ export const deleteMaterialRequisition = async (id) => {
     return { success: true };
   };
 
+export const getProductKits = async () => {
+    if (USE_MOCK) return mockFirestore.getProductKits ? mockFirestore.getProductKits() : [];
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'product_kits'));
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.error('Erro Firestore getProductKits:', e);
+      return [];
+    }
+  };
+
+export const saveProductKit = async (kitData) => {
+    if (USE_MOCK) return mockFirestore.saveProductKit ? mockFirestore.saveProductKit(kitData) : kitData;
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (kitData.id) {
+      await setDoc(doc(db, 'product_kits', kitData.id), { ...kitData, updatedAt: new Date().toISOString() }, { merge: true });
+      return kitData;
+    }
+    const ref = await addDoc(collection(db, 'product_kits'), { ...kitData, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    return { id: ref.id, ...kitData };
+  };
+
+export const deleteProductKit = async (id) => {
+    if (USE_MOCK) return mockFirestore.deleteProductKit ? mockFirestore.deleteProductKit(id) : { success: true };
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'product_kits', id));
+    return { success: true };
+  };
+
 export const getStockLocations = async () => {
     if (USE_MOCK) return mockFirestore.getStockLocations ? mockFirestore.getStockLocations() : [];
     try {

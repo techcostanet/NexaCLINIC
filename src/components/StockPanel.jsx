@@ -50,6 +50,23 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
     setTransfers,
     productBatches,
     setProductBatches,
+    productKits,
+    setProductKits,
+    kitSort,
+    setKitSort,
+    showKitModal,
+    setShowKitModal,
+    editingKit,
+    setEditingKit,
+    kitForm,
+    setKitForm,
+    handleOpenKitAdd,
+    handleOpenKitEdit,
+    handleKitItemAdd,
+    handleKitItemRemove,
+    handleKitItemQtyChange,
+    handleSaveKit,
+    handleDeleteKit,
     handleDeleteBatch,
     showFulfillModal,
     setShowFulfillModal,
@@ -239,55 +256,61 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
           onClick={() => setActiveTab('inventory')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'inventory' ? styles.tabBtnActive : {}) }}
         >
-          <Boxes size={16} /> Catálogo de Produtos ({(items || []).length})
+          <Boxes size={16} /> Catálogo ({(items || []).length})
+        </button>
+        <button 
+          onClick={() => setActiveTab('kits')} 
+          style={{ ...styles.tabBtn, ...(activeTab === 'kits' ? styles.tabBtnActive : {}) }}
+        >
+          <Package size={16} /> Kits ({(productKits || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('physical_inventory')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'physical_inventory' ? styles.tabBtnActive : {}) }}
         >
-          <ClipboardList size={16} /> Inventários Físicos ({(inventories || []).length})
+          <ClipboardList size={16} /> Inventários ({(inventories || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('transfers')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'transfers' ? styles.tabBtnActive : {}) }}
         >
-          <Repeat size={16} /> Transferências de Estoque ({(transfers || []).length})
+          <Repeat size={16} /> Transferências ({(transfers || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('invoices')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'invoices' ? styles.tabBtnActive : {}) }}
         >
-          <FileText size={16} /> Entrada de Notas (XML / PDF) ({(invoices || []).length})
+          <FileText size={16} /> Entradas ({(invoices || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('transactions')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'transactions' ? styles.tabBtnActive : {}) }}
         >
-          <Clock size={16} /> Histórico de Movimentações
+          <Clock size={16} /> Movimentações
         </button>
         <button 
           onClick={() => setActiveTab('expiry')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'expiry' ? styles.tabBtnActive : {}) }}
         >
-          <Calendar size={16} /> Controle de Validade ({(productBatches || []).length > 0 ? (productBatches || []).length : (expiryList || []).length})
+          <Calendar size={16} /> Validade ({(productBatches || []).length > 0 ? (productBatches || []).length : (expiryList || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('loans')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'loans' ? styles.tabBtnActive : {}) }}
         >
-          <RefreshCw size={16} /> Empréstimos de Produtos ({(loans || []).length})
+          <RefreshCw size={16} /> Empréstimos ({(loans || []).length})
         </button>
         <button 
           onClick={() => setActiveTab('requisitions')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'requisitions' ? styles.tabBtnActive : {}) }}
         >
-          <Send size={16} /> Atendimento de Requisições ({(requisitions || []).filter(r => r && (r.status === 'Pendente' || r.status === 'Parcial')).length > 0 ? `${(requisitions || []).filter(r => r && (r.status === 'Pendente' || r.status === 'Parcial')).length} Pendente(s)` : (requisitions || []).length})
+          <Send size={16} /> Requisições ({(requisitions || []).filter(r => r && (r.status === 'Pendente' || r.status === 'Parcial')).length > 0 ? `${(requisitions || []).filter(r => r && (r.status === 'Pendente' || r.status === 'Parcial')).length} Pendente(s)` : (requisitions || []).length})
         </button>
         <button 
           onClick={() => { setActiveTab('traceability'); if (traceabilitySearchTerm) handleSearchTraceability(); }} 
           style={{ ...styles.tabBtn, ...(activeTab === 'traceability' ? styles.tabBtnActive : {}) }}
         >
-          <Search size={16} /> Rastreabilidade & Recall
+          <Search size={16} /> Rastreabilidade
         </button>
       </div>
 
@@ -306,7 +329,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
             <Search size={18} style={styles.searchIcon} />
             <input 
               type="text" 
-              placeholder={activeTab === 'invoices' ? "Buscar por número da NF, fornecedor ou chave..." : activeTab === 'suppliers' ? "Buscar fornecedor..." : activeTab === 'sectors' ? "Buscar setor..." : activeTab === 'loans' ? "Buscar por produto, parceiro..." : activeTab === 'expiry' ? "Buscar por insumo ou lote..." : "Buscar insumo por nome..."} 
+              placeholder={activeTab === 'invoices' ? "Buscar por número da NF, fornecedor..." : activeTab === 'kits' ? "Buscar kit por nome, código, composição..." : activeTab === 'suppliers' ? "Buscar fornecedor..." : activeTab === 'sectors' ? "Buscar setor..." : activeTab === 'loans' ? "Buscar por produto, parceiro..." : activeTab === 'expiry' ? "Buscar por insumo ou lote..." : "Buscar insumo por nome..."} 
               value={searchTerm} 
               onChange={e => setSearchTerm(e.target.value)} 
               style={styles.searchInput}
@@ -405,6 +428,12 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
               </button>
             )}
 
+            {activeTab === 'kits' && (
+              <button onClick={handleOpenKitAdd} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f59e0b' }}>
+                <Plus size={16} /> Novo Kit
+              </button>
+            )}
+
             {activeTab === 'suppliers' && (
               <button onClick={handleOpenSupplierAdd} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f59e0b' }}>
                 <Plus size={16} /> Novo Fornecedor
@@ -483,9 +512,14 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                             return (
                               <tr key={item?.id || idx} style={{ height: '36px', ...(isLow ? styles.rowWarning : {}) }}>
                                 <td onClick={() => handleOpenEditModal(item)} style={{ fontWeight: '700', color: isLow ? '#b91c1c' : 'var(--text-primary)', cursor: 'pointer', padding: '0.35rem 0.5rem' }} title="Clique para editar">
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                    <Package size={14} color="#f59e0b" />
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                    <Package size={14} color={item?.isControlled ? '#dc2626' : '#f59e0b'} />
                                     <span>{item?.name || 'Insumo Sem Nome'}</span>
+                                    {item?.isControlled && (
+                                      <span style={{ backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '0.05rem 0.35rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: '700' }}>
+                                        🔒 Controlado
+                                      </span>
+                                    )}
                                   </div>
                                 </td>
                                 <td style={{ padding: '0.35rem 0.5rem' }}>
@@ -549,7 +583,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                           {renderSortHeader('Item de Insumo', 'name', inventorySort, setInventorySort)}
                           {renderSortHeader('Categoria', 'category', inventorySort, setInventorySort)}
                           {renderSortHeader('Setor Padrão', 'defaultSectorId', inventorySort, setInventorySort)}
-                          {renderSortHeader('Estoque Atual / Nível', 'currentStock', inventorySort, setInventorySort)}
+                          {renderSortHeader('Saldo', 'currentStock', inventorySort, setInventorySort)}
                           {renderSortHeader('Mínimo', 'minStock', inventorySort, setInventorySort)}
                           {renderSortHeader('Preço Unitário', 'price', inventorySort, setInventorySort)}
                           <th>Total em Estoque</th>
@@ -578,11 +612,18 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                               <tr key={item?.id || idx} style={isLow ? styles.rowWarning : {}}>
                                 <td onClick={() => handleOpenEditModal(item)} style={{ cursor: 'pointer' }} title="Clique para editar insumo">
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.35rem 0' }}>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                      <Boxes size={16} color="#f59e0b" />
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: item?.isControlled ? 'rgba(220,38,38,0.1)' : 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                      <Boxes size={16} color={item?.isControlled ? '#dc2626' : '#f59e0b'} />
                                     </div>
                                     <div>
-                                      <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{item?.name || 'Insumo Sem Nome'}</div>
+                                      <div style={{ fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                        <span>{item?.name || 'Insumo Sem Nome'}</span>
+                                        {item?.isControlled && (
+                                          <span style={{ backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '0.08rem 0.35rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: '700' }}>
+                                            🔒 Controlado (Portaria 344)
+                                          </span>
+                                        )}
+                                      </div>
                                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Unidade: {item?.unit || 'un'}</div>
                                     </div>
                                   </div>
@@ -686,12 +727,16 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                             }}
                           >
                             {/* Card Top: Badges */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
                               <span style={styles.categoryBadge}>
                                 {item?.category || 'Geral'}
                               </span>
 
-                              {hasLote ? (
+                              {item?.isControlled ? (
+                                <span style={{ backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '0.15rem 0.45rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '700' }}>
+                                  🔒 Controlado
+                                </span>
+                              ) : hasLote ? (
                                 <span style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.45rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '700' }}>
                                   ✓ Rastreável FEFO
                                 </span>
@@ -708,13 +753,13 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                 width: '46px',
                                 height: '46px',
                                 borderRadius: '10px',
-                                backgroundColor: isLow ? '#fee2e2' : '#fef3c7',
+                                backgroundColor: item?.isControlled ? '#fee2e2' : isLow ? '#fee2e2' : '#fef3c7',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 flexShrink: 0
                               }}>
-                                <Boxes size={22} color={isLow ? '#dc2626' : '#d97706'} />
+                                <Boxes size={22} color={item?.isControlled ? '#dc2626' : isLow ? '#dc2626' : '#d97706'} />
                               </div>
 
                               <div style={{ overflow: 'hidden' }}>
@@ -731,15 +776,13 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                               </div>
                             </div>
 
-                            {/* Stock Level Progress */}
-                            <div style={{ backgroundColor: 'var(--bg-body)', padding: '0.5rem 0.65rem', borderRadius: '8px' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.3rem' }}>
-                                <span style={{ color: isLow ? '#dc2626' : '#16a34a', fontWeight: '700' }}>
-                                  {isLow ? '⚠️ Estoque Crítico' : '🟢 Estoque Regular'}
-                                </span>
-                                <span style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>
+                            {/* Stock Bar */}
+                            <div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>Saldo Atual:</span>
+                                <strong style={{ color: isLow ? 'var(--danger-color)' : 'var(--text-primary)' }}>
                                   {currentVal} / {minVal} {item?.unit || 'un'}
-                                </span>
+                                </strong>
                               </div>
                               <div style={{ width: '100%', height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
                                 <div style={{
@@ -827,6 +870,145 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                     )}
                   </div>
                 )}
+              </div>
+            );
+          })()}
+
+          {/* TAB 1.5: Kits de Produtos */}
+          {activeTab === 'kits' && (() => {
+            const sortedKits = sortData(productKits || [], kitSort);
+            const filteredKits = sortedKits.filter(k => {
+              if (!searchTerm) return true;
+              const term = searchTerm.toLowerCase();
+              return (
+                (k.name || '').toLowerCase().includes(term) ||
+                (k.code || '').toLowerCase().includes(term) ||
+                (k.category || '').toLowerCase().includes(term) ||
+                (k.suggestedLocation || '').toLowerCase().includes(term) ||
+                (k.items || []).some(it => (it.itemName || '').toLowerCase().includes(term))
+              );
+            });
+
+            return (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Package size={22} color="#f59e0b" /> Kits de Insumos & Procedimentos
+                    </h2>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>
+                      Pacotes padronizados para abertura de sessão de hemodiálise, curativos e punções.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={handleOpenKitAdd}
+                    className="btn btn-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f59e0b' }}
+                  >
+                    <Plus size={16} /> Novo Kit
+                  </button>
+                </div>
+
+                <div style={styles.tableWrapper}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        {renderSortHeader('Código', 'code', kitSort, setKitSort)}
+                        {renderSortHeader('Nome do Kit', 'name', kitSort, setKitSort)}
+                        {renderSortHeader('Categoria', 'category', kitSort, setKitSort)}
+                        <th>Salão Padrão</th>
+                        <th>Composição ({filteredKits.length > 0 ? 'Itens' : '0'})</th>
+                        {renderSortHeader('Custo Estimado', 'totalCost', kitSort, setKitSort)}
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredKits.length === 0 ? (
+                        <tr>
+                          <td colSpan="7" style={styles.noDataCell}>
+                            Nenhum kit de produtos cadastrado. Clique em "+ Novo Kit" para cadastrar o primeiro pacote.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredKits.map((kit, idx) => {
+                          const totalCost = parseFloat(kit.totalCost) || (kit.items || []).reduce((acc, it) => acc + ((parseFloat(it.price) || 0) * (parseFloat(it.quantity) || 1)), 0);
+                          const hasControlled = kit.hasControlledMedicine || (kit.items || []).some(i => i.isControlled || items.find(it => it.id === i.itemId)?.isControlled);
+
+                          return (
+                            <tr key={kit.id || idx}>
+                              <td style={{ fontWeight: '700', color: 'var(--primary-color)' }}>
+                                {kit.code || `KIT-${idx + 1}`}
+                              </td>
+                              <td>
+                                <div style={{ fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                  <span>{kit.name}</span>
+                                  {hasControlled && (
+                                    <span style={{ backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '0.08rem 0.35rem', borderRadius: '4px', fontSize: '0.68rem', fontWeight: '700' }}>
+                                      🔒 Contém Controlado
+                                    </span>
+                                  )}
+                                </div>
+                                {kit.description && (
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                                    {kit.description}
+                                  </div>
+                                )}
+                              </td>
+                              <td>
+                                <span style={styles.categoryBadge}>{kit.category || 'Hemodiálise'}</span>
+                              </td>
+                              <td>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.75rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: '700' }}>
+                                  📍 {kit.suggestedLocation || 'Salão 1'}
+                                </span>
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                  <span style={{ fontWeight: '600', fontSize: '0.8rem', color: '#334155' }}>
+                                    {(kit.items || []).length} insumo(s)
+                                  </span>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                                    {(kit.items || []).slice(0, 3).map((it, i) => (
+                                      <span key={i} style={{ fontSize: '0.7rem', backgroundColor: '#f1f5f9', color: '#475569', padding: '0.1rem 0.35rem', borderRadius: '4px' }}>
+                                        {it.quantity}x {it.itemName}
+                                      </span>
+                                    ))}
+                                    {(kit.items || []).length > 3 && (
+                                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', alignSelf: 'center' }}>
+                                        +{(kit.items || []).length - 3} mais
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                              <td style={{ fontWeight: '700', color: '#059669' }}>
+                                {formatCurrencyBR(totalCost)}
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                                  <button 
+                                    onClick={() => handleOpenKitEdit(kit)}
+                                    style={{ ...styles.actionEditBtn, padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                                    title="Editar Kit"
+                                  >
+                                    Editar
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteKit(kit.id, kit.name)}
+                                    style={{ ...styles.actionEditBtn, padding: '0.25rem 0.5rem', fontSize: '0.75rem', backgroundColor: '#fee2e2', color: '#991b1b' }}
+                                    title="Excluir Kit"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             );
           })()}
@@ -1406,12 +1588,12 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                   <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid var(--border-color)' }}>
                     <tr>
                       <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Código</th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Data / Hora</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Data</th>
                       <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Solicitante</th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Paciente / Destino</th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Itens Requisitados</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Destino</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Itens</th>
                       <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Status</th>
-                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', textAlign: 'right' }}>Ação</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', textAlign: 'right' }}>Ações</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1425,12 +1607,33 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{req?.createdAt && !isNaN(new Date(req.createdAt).getTime()) ? new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
                         </td>
                         <td style={{ padding: '0.875rem 1rem' }}>{req?.requestedBy}</td>
-                        <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>{req?.patientName || 'Uso Geral'}</td>
+                        <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>
+                          <div>{req?.patientName || 'Uso Geral'}</div>
+                          {req?.salonLocation && (
+                            <div style={{ marginTop: '0.25rem' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.75rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>
+                                📍 {req.salonLocation}
+                              </span>
+                            </div>
+                          )}
+                        </td>
                         <td style={{ padding: '0.875rem 1rem' }}>
                           {req?.items && req.items.length > 0 ? (
                             <div>
                               <div><strong>{req.items[0]?.itemName}</strong> ({req.items[0]?.requestedQuantity} {req.items[0]?.unit})</div>
                               {req.items.length > 1 && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>+ {req.items.length - 1} outro(s) item(ns)</div>}
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.25rem' }}>
+                                {req.hasKit && (
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
+                                    📦 Kit de Insumos
+                                  </span>
+                                )}
+                                {(req.hasControlledMedicine || req.items.some(i => i.isControlled || items.find(it => it.id === i.itemId)?.isControlled)) && (
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
+                                    🔒 CONTROLADO (Portaria 344)
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           ) : 'Sem itens'}
                         </td>
@@ -1942,17 +2145,231 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                     </span>
                   </div>
                 </div>
+
+                <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <input 
+                    type="checkbox" 
+                    id="item-controlled-checkbox"
+                    checked={!!itemForm.isControlled} 
+                    onChange={e => setItemForm({ ...itemForm, isControlled: e.target.checked })}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#dc2626' }}
+                  />
+                  <div>
+                    <label htmlFor="item-controlled-checkbox" style={{ fontWeight: '700', fontSize: '0.85rem', color: '#991b1b', cursor: 'pointer', margin: 0, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <span>🔒 Medicamento Controlado</span>
+                      <span style={{ fontSize: '0.7rem', backgroundColor: '#991b1b', color: '#fff', padding: '0.1rem 0.35rem', borderRadius: '4px' }}>Portaria 344</span>
+                    </label>
+                    <span style={{ fontSize: '0.75rem', color: '#b91c1c', display: 'block' }}>
+                      Exige retenção de receita especial, guarda trancada e sinalização visual destacada no sistema.
+                    </span>
+                  </div>
+                </div>
               </div>
               <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setShowItemModal(false)} className="btn btn-secondary">Cancelar</button>
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
-                  {actionLoading ? 'Salvando...' : 'Salvar Produto'}
+                  {actionLoading ? 'Salvando...' : 'Salvar Insumo'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Kit Modal (Cadastro / Edição de Kit de Produtos) */}
+      {showKitModal && (() => {
+        const currentTotalCost = (kitForm.items || []).reduce((acc, it) => {
+          const itemObj = items.find(i => i.id === it.itemId);
+          const itemPrice = parseFloat(itemObj?.price) || (parseFloat(it.price) || 0);
+          return acc + (itemPrice * (parseFloat(it.quantity) || 1));
+        }, 0);
+
+        return (
+          <div style={styles.modalOverlay}>
+            <div style={{ ...styles.modalCard, maxWidth: '780px', width: '92%' }}>
+              <div style={styles.modalHeader}>
+                <h2>{editingKit ? 'Editar Kit de Produtos' : 'Cadastrar Novo Kit de Produtos'}</h2>
+                <button onClick={() => setShowKitModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
+              </div>
+              <form onSubmit={handleSaveKit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                <div style={styles.modalForm}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+                    <div className="form-group">
+                      <label>Código do Kit *</label>
+                      <input 
+                        type="text" className="form-control" placeholder="KIT-HEMO-01" required
+                        value={kitForm.code} onChange={e => setKitForm({ ...kitForm, code: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Nome do Kit *</label>
+                      <input 
+                        type="text" className="form-control" placeholder="Ex: Kit Conexão Hemodiálise (Fístula AV)" required
+                        value={kitForm.name} onChange={e => setKitForm({ ...kitForm, name: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="form-group">
+                      <label>Categoria</label>
+                      <select 
+                        className="form-control"
+                        value={kitForm.category}
+                        onChange={e => setKitForm({ ...kitForm, category: e.target.value })}
+                      >
+                        <option value="Hemodiálise">Hemodiálise</option>
+                        <option value="Diálise Peritoneal">Diálise Peritoneal</option>
+                        <option value="Enfermagem & Curativos">Enfermagem</option>
+                        <option value="Emergência & UTI">Emergência</option>
+                        <option value="Geral">Geral</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Salão Padrão</label>
+                      <select 
+                        className="form-control"
+                        value={kitForm.suggestedLocation}
+                        onChange={e => setKitForm({ ...kitForm, suggestedLocation: e.target.value })}
+                      >
+                        <option value="Salão 1">Salão 1</option>
+                        <option value="Salão 2">Salão 2</option>
+                        <option value="Salão 3">Salão 3</option>
+                        <option value="Consultório / Outro">Consultório / Outro</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Descrição</label>
+                    <input 
+                      type="text" className="form-control" placeholder="Instruções de uso ou composição do kit..."
+                      value={kitForm.description} onChange={e => setKitForm({ ...kitForm, description: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Insumos Componentes do Kit */}
+                  <div style={{ marginTop: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.85rem', backgroundColor: '#f8fafc' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Package size={16} color="#f59e0b" /> Composição de Insumos do Kit
+                      </h4>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                        Total: <strong>{(kitForm.items || []).length}</strong> insumo(s)
+                      </span>
+                    </div>
+
+                    {/* Seletor rápido de insumos */}
+                    <div style={{ marginBottom: '0.6rem' }}>
+                      <select 
+                        id="kit-item-picker"
+                        className="form-control"
+                        defaultValue=""
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleKitItemAdd(e.target.value, 1);
+                            e.target.value = '';
+                          }
+                        }}
+                      >
+                        <option value="">+ Selecione um insumo para adicionar ao Kit...</option>
+                        {items.map(it => (
+                          <option key={it.id} value={it.id}>
+                            {it.isControlled ? '🔒 [CONTROLADO] ' : ''}{it.name} ({it.unit || 'un'}) - R$ {(parseFloat(it.price) || 0).toFixed(2)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Tabela de itens adicionados */}
+                    {(kitForm.items || []).length === 0 ? (
+                      <div style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.8rem', backgroundColor: '#fff', borderRadius: '6px', border: '1px dashed #cbd5e1' }}>
+                        Nenhum insumo adicionado ao kit ainda. Selecione no campo acima.
+                      </div>
+                    ) : (
+                      <div style={{ maxHeight: '180px', overflowY: 'auto', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
+                          <thead style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}>
+                            <tr>
+                              <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left' }}>Insumo</th>
+                              <th style={{ padding: '0.4rem 0.6rem', textAlign: 'center', width: '90px' }}>Qtd</th>
+                              <th style={{ padding: '0.4rem 0.6rem', textAlign: 'right', width: '90px' }}>Unitário</th>
+                              <th style={{ padding: '0.4rem 0.6rem', textAlign: 'right', width: '90px' }}>Subtotal</th>
+                              <th style={{ padding: '0.4rem 0.6rem', textAlign: 'center', width: '40px' }}></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {kitForm.items.map((it, idx) => {
+                              const itemObj = items.find(i => i.id === it.itemId);
+                              const unitPrice = parseFloat(itemObj?.price) || (parseFloat(it.price) || 0);
+                              const isCtrl = itemObj?.isControlled || it.isControlled;
+                              const sub = unitPrice * (parseFloat(it.quantity) || 1);
+
+                              return (
+                                <tr key={it.itemId || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                  <td style={{ padding: '0.4rem 0.6rem' }}>
+                                    <div style={{ fontWeight: '600', color: '#1e293b' }}>
+                                      {it.itemName}
+                                    </div>
+                                    {isCtrl && (
+                                      <span style={{ fontSize: '0.65rem', backgroundColor: '#fee2e2', color: '#991b1b', padding: '0.05rem 0.3rem', borderRadius: '3px', fontWeight: '700' }}>
+                                        🔒 Controlado
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '0.4rem 0.6rem', textAlign: 'center' }}>
+                                    <input 
+                                      type="number" 
+                                      min="1" 
+                                      value={it.quantity}
+                                      onChange={e => handleKitItemQtyChange(it.itemId, e.target.value)}
+                                      style={{ width: '60px', padding: '0.2rem 0.3rem', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                    />
+                                  </td>
+                                  <td style={{ padding: '0.4rem 0.6rem', textAlign: 'right' }}>
+                                    {formatCurrencyBR(unitPrice)}
+                                  </td>
+                                  <td style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontWeight: '600' }}>
+                                    {formatCurrencyBR(sub)}
+                                  </td>
+                                  <td style={{ padding: '0.4rem 0.6rem', textAlign: 'center' }}>
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleKitItemRemove(it.itemId)}
+                                      style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444', padding: '0.2rem' }}
+                                      title="Remover item do kit"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {/* Total do Kit */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.75rem', marginTop: '0.6rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#475569' }}>Custo Estimado do Kit:</span>
+                      <span style={{ fontSize: '1.05rem', fontWeight: '700', color: '#059669' }}>
+                        {formatCurrencyBR(currentTotalCost)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div style={styles.modalFooter}>
+                  <button type="button" onClick={() => setShowKitModal(false)} className="btn btn-secondary">Cancelar</button>
+                  <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
+                    {actionLoading ? 'Salvando...' : 'Salvar Kit'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Supplier Modal */}
       {showSupplierModal && (
