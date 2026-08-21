@@ -231,6 +231,14 @@ export const MODULE_GUIDES = {
     color: '#f59e0b',
     recursos: [
       {
+        title: 'Central de Relatórios (15 Tipos)',
+        desc: 'Suíte completa com 15 relatórios analíticos: Curva ABC, Posição Geral, Itens Críticos, Validades FEFO, Recall e Kardex.'
+      },
+      {
+        title: 'Exportação em PDF e Excel (.xlsx)',
+        desc: 'Geração imediata de relatórios em PDF formatado em paisagem e planilhas Excel prontas para fórmulas.'
+      },
+      {
         title: 'Controle de Lotes & Rastreabilidade',
         desc: 'Gestão atômica de múltiplos lotes com saldos individuais, validade, fornecedor e nota fiscal de origem.'
       },
@@ -245,13 +253,18 @@ export const MODULE_GUIDES = {
       {
         title: 'Entrada por XML / PDF (DANFE) & Manual',
         desc: 'Abastecimento automático de lotes diretamente na importação de notas fiscais ou em movimentações avulsas.'
-      },
-      {
-        title: 'Prontuário Integrado',
-        desc: 'Cada medicamento ou material dispensado é gravado imediatamente no histórico clínico do paciente.'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Gerar e Exportar Relatórios de Estoque (PDF / XLS)',
+        steps: [
+          'No topo do módulo Estoque, clique no botão azul "Relatórios (15)".',
+          'Na barra lateral esquerda, escolha um dos 15 relatórios disponíveis (ex: Posição Geral, Curva ABC, Validades, Itens Críticos).',
+          'Defina o período (Data Inicial e Final), Categoria e Setor se desejar filtrar os dados.',
+          'Confira os registros na tabela de pré-visualização e clique em "Exportar PDF" ou "Exportar Excel".'
+        ]
+      },
       {
         title: 'Como Atender Requisições com Lote (FEFO)',
         steps: [
@@ -282,8 +295,12 @@ export const MODULE_GUIDES = {
     ],
     duvidas: [
       {
+        pergunta: 'Como exporto a Curva ABC ou a Posição Geral do estoque para o Excel?',
+        resposta: 'Abra a modal clicando em "Relatórios (15)" no topo do painel, clique em "2. Curva ABC de Insumos" ou "1. Posição Geral" e clique no botão verde "Exportar Excel".'
+      },
+      {
         pergunta: 'Como sei quais pacientes tomaram determinado medicamento de um lote específico?',
-        resposta: 'Basta acessar a aba "Rastreabilidade & Recall", digitar o número do lote e o sistema listará instantaneamente todos os pacientes, datas, horários e responsáveis.'
+        resposta: 'Basta acessar a aba "Rastreabilidade & Recall" ou gerar o relatório "11. Dossiê de Recall Farmacêutico" para listar todos os pacientes e dados fiscais.'
       },
       {
         pergunta: 'Onde vejo no prontuário os remédios que o paciente já tomou?',

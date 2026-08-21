@@ -8,8 +8,10 @@ import {
 } from 'lucide-react';
 
 import { useStockLogic } from './Stock/hooks/useStockLogic';
+import StockReportsModal from './StockReportsModal';
 
 export default function StockPanel({ currentUser }) {
+  const [showReportsModal, setShowReportsModal] = useState(false);
   const stockLogic = useStockLogic(currentUser);
   const {
     activeTab,
@@ -196,6 +198,27 @@ export default function StockPanel({ currentUser }) {
         <div>
           <h1 style={styles.title}>NexaSTOCK - Estoque, Farmácia & Logística</h1>
           <p style={styles.subtitle}>Gestão de fornecedores, locais de armazenamento, importação de XML e notas fiscais de compra.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <button 
+            onClick={() => setShowReportsModal(true)} 
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.6rem 1.1rem',
+              backgroundColor: '#0284c7',
+              color: '#ffffff',
+              borderRadius: '8px',
+              border: 'none',
+              fontWeight: '700',
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              boxShadow: '0 2px 4px rgba(2, 132, 199, 0.2)'
+            }}
+          >
+            <FileText size={18} /> Relatórios (15)
+          </button>
         </div>
       </div>
 
@@ -2503,6 +2526,24 @@ export default function StockPanel({ currentUser }) {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Stock Reports Modal */}
+      {showReportsModal && (
+        <StockReportsModal
+          onClose={() => setShowReportsModal(false)}
+          items={items}
+          transactions={transactions}
+          suppliers={suppliers}
+          sectors={sectors}
+          invoices={invoices}
+          loans={loans}
+          requisitions={requisitions}
+          stockLocations={stockLocations}
+          inventories={inventories}
+          transfers={transfers}
+          productBatches={productBatches}
+        />
       )}
     </div>
   );

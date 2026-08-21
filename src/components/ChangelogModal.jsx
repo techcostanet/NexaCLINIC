@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.6',
+      date: '20/08/2026',
+      title: 'Central de Relatórios de Estoque & Farmácia (15 Relatórios Completos com PDF e XLS)',
+      description: 'Lançamento da Central de Relatórios de Estoque & Farmácia: 15 relatórios analíticos completos com filtros por período, categoria e setor, pré-visualização em tabela e exportação de PDF corporativo e Excel nativo.',
+      changes: [
+        { type: 'Relatórios Físicos', text: 'Posição Geral, Curva ABC, Itens Críticos e Validades FEFO com cálculo de dias restantes.' },
+        { type: 'Rastreabilidade', text: 'Consumo por Paciente, Dossiê de Recall Farmacêutico, Extrato Kardex e Requisições da Enfermagem.' },
+        { type: 'Logística & Compras', text: 'Entrada de Notas Fiscais (NF-e), Compras por Fornecedor, Transferências e Previsão de Demanda (30/60 dias).' },
+        { type: 'Exportação PDF/XLS', text: 'Exportação com um clique para PDF em modo paisagem e planilhas Excel formatadas para cálculos.' }
+      ]
+    },
+    {
       version: 'v4.7.4',
       date: '20/08/2026',
       title: 'Rastreabilidade Hospitalar Completa de Medicamentos & Insumos, Sugestão FEFO e Painel de Recall',

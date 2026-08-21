@@ -1,3 +1,28 @@
+## [v4.7.6] - 20 de Agosto, 2026
+### Central de Relatórios de Estoque & Farmácia (15 Relatórios Completos com Exportação PDF e XLS)
+- **Central de Relatórios Nativos (`StockReportsModal`):**
+  - Implementação de modal no mesmo padrão de excelência visual do módulo financeiro, acessível pelo botão **"Relatórios (15)"** no topo do painel.
+  - Exportação em **PDF** em modo paisagem via `jsPDF` com layout corporativo, cabeçalhos estilizados em azul clínica (`#0284c7`), data de emissão e CNPJ da unidade.
+  - Exportação em **Excel (.xlsx)** via `xlsx` com números e valores como floats puros, permitindo fórmulas matemáticas imediatas no Excel.
+- **Suíte Completa com 15 Relatórios:**
+  1. *1. Posição Geral de Estoque (Inventário Valorizado R$)*
+  2. *2. Curva ABC de Insumos & Medicamentos (Impacto Financeiro e % Acumulado)*
+  3. *3. Validades & Lotes (Critério FEFO / PVPS)*
+  4. *4. Itens Críticos & Ponto de Reposição (Abaixo do Mínimo com Sugestão de Compra)*
+  5. *5. Extrato de Movimentações (Kardex Completo por Período)*
+  6. *6. Consumo de Medicamentos por Paciente (Rastreabilidade Individual)*
+  7. *7. Consumo Agrupado por Setor / Salão de Hemodiálise*
+  8. *8. Requisições da Enfermagem (Status e Atendimento)*
+  9. *9. Entradas de Notas Fiscais de Compra (NF-e XML / PDF)*
+  10. *10. Compras por Fornecedor (Volume e Custo Total)*
+  11. *11. Dossiê de Recall Farmacêutico (Auditoria Sanitária & ANVISA)*
+  12. *12. Transferências entre Almoxarifados e Postos*
+  13. *13. Empréstimos Cedidos e Tomados com Parceiros*
+  14. *14. Acurácia e Divergências de Inventário Físico*
+  15. *15. Previsão de Consumo & Giro de Estoque (Projeção para 30 e 60 dias)*
+
+---
+
 ## [v4.7.4] - 20 de Agosto, 2026
 ### Rastreabilidade Hospitalar Completa de Medicamentos & Insumos, Dispensação com Sugestão FEFO e Painel de Recall (Fases 1, 2, 3 e 4)
 - **Fase 1 — Cadastro & Estrutura de Lotes com Validade:**
