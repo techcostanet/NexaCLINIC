@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.14',
+      date: '21/08/2026',
+      title: 'Módulo RH - Correção de Importação de Ícones (Clock) e Validação de Renderização',
+      description: 'Correção de referência do ícone Clock do pacote Lucide-React na caixa de Absenteísmo do Painel de Controle do RH e validação completa de renderização de todos os cards.',
+      changes: [
+        { type: 'Correção de Ícone', text: 'Inclusão do componente Clock nos imports de lucide-react em HRPanel.jsx eliminando a falha de ReferenceError.' },
+        { type: 'Estabilidade', text: 'Build e renderização do Painel de Controle validados e normalizados.' }
+      ]
+    },
+    {
       version: 'v4.7.13',
       date: '21/08/2026',
       title: 'Módulo RH - Organização Inteligente de Cards do Dashboard, 5 Opções de Tamanho e Ajuste Visual de Header',

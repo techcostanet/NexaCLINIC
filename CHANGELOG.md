@@ -1,3 +1,11 @@
+## [v4.7.14] - 21 de Agosto, 2026
+### Módulo RH - Correção de Importação de Ícone (Clock) e Estabilidade do Dashboard
+- **Correção de Referência Lucide-React:**
+  - Adicionada a importação do componente `Clock` em `HRPanel.jsx` para a caixa métrica de Absenteísmo.
+  - Validação e compilação do painel de controle concluídas com sucesso.
+
+---
+
 ## [v4.7.13] - 21 de Agosto, 2026
 ### Módulo RH - Organização Inteligente de Cards do Dashboard & 5 Opções de Tamanho
 - **Organização Proporcional por Densidade de Conteúdo:**

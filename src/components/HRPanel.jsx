@@ -5,7 +5,7 @@ import {
   Search, FileText, UploadCloud, Download, Calendar, ShieldAlert,
   CheckCircle2, AlertTriangle, Eye, Award, Check, UserCheck, HelpCircle,
   Gift, Bus, ArrowUp, ArrowDown, ArrowUpDown, Move, Settings, Save, 
-  RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Trophy, Printer
+  RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Trophy, Printer, Clock
 } from 'lucide-react';
 
 const DEFAULT_DASHBOARD_LAYOUT = [
