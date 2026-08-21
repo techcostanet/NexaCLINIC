@@ -1,3 +1,17 @@
+## [v4.7.9] - 21 de Agosto, 2026
+### Módulo RH - Gestão Histórica de Vale-Transporte (VT) & Sincronização por Período
+- **Histórico & Sincronização em Produção:**
+  - Carga e consolidação de 481 registros de concessões de Vale-Transporte abrangendo março, abril, maio, junho, julho e agosto de 2026 diretamente no Firestore.
+- **Persistência de Período & Imediação Visual:**
+  - Inclusão do campo explícito de período no cadastro e edição de concessões de VT.
+  - Correção na lógica de salvamento para persistir o mês de vigência (`period`) e sincronizar a seleção do filtro em tela para exibição imediata do registro recém-criado.
+- **Cálculo de Recargas & Saldo de Cartão:**
+  - Cálculo automatizado de valor bruto previsto (`diária * dias`), confronto com saldo existente do cartão e determinação do montante líquido de recarga necessária.
+- **Padronização de Rótulos de Interface (UI/UX):**
+  - Simplificação e conformidade de todos os rótulos de campos e cabeçalhos da tabela de VT para termos únicos e diretos (`Beneficiários`, `Previsto`, `Saldo`, `Recarga`, `Desconto`, `Cargo`, `Tarifa`, `Status`, `Ações`).
+
+---
+
 ## [v4.7.7] - 20 de Agosto, 2026
 ### Central de Relatórios de Estoque & Farmácia (15 Relatórios Completos com Exportação PDF e XLS)
 - **Central de Relatórios Nativos (`StockReportsModal`):**

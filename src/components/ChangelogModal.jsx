@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.9',
+      date: '21/08/2026',
+      title: 'Módulo RH - Gestão Histórica de Vale-Transporte (VT) & Sincronização por Período',
+      description: 'Sincronização integral do histórico de concessões de Vale-Transporte de março a agosto de 2026 no Firestore, com persistência automática de períodos, cálculo de recargas e atualização das concessões cadastradas.',
+      changes: [
+        { type: 'Histórico & Sincronização', text: 'Carga completa de todos os períodos anteriores (março a agosto/2026) diretamente na base de dados de produção.' },
+        { type: 'Período no Cadastro', text: 'Inclusão de seleção explícita de período no formulário de concessão e persistência garantida do mês de vigência.' },
+        { type: 'Cálculo de Recargas', text: 'Cálculo automático de valor previsto bruto, desconto legal de folha e recarga líquida necessária considerando saldo do cartão.' },
+        { type: 'Padrão Visual Conciso', text: 'Padronização dos rótulos de formulários e cabeçalhos de tabela para termos únicos e diretos conforme diretrizes do sistema.' }
+      ]
+    },
+    {
       version: 'v4.7.7',
       date: '20/08/2026',
       title: 'Central de Relatórios de Estoque & Farmácia (15 Relatórios Completos com PDF e XLS)',

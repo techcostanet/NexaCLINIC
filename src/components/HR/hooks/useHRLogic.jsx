@@ -381,6 +381,7 @@ export function useHRLogic(currentUser) {
     setEditingVoucher(null);
     setVoucherForm({
       employeeId: employees[0]?.id || '',
+      period: selectedVtPeriod || '2026-08',
       route: '',
       idaCost: '6.25',
       voltaCost: '6.25',
@@ -388,7 +389,7 @@ export function useHRLogic(currentUser) {
       daysCount: '22',
       workSchedule: 'SEGUNDA A SÁBADO',
       currentBalance: '0.00',
-      cardType: 'BHBus',
+      cardType: 'BetimCARD',
       cardNumber: '',
       discountPercent: '6'
     });
@@ -399,6 +400,7 @@ export function useHRLogic(currentUser) {
     setEditingVoucher(v);
     setVoucherForm({
       employeeId: v.employeeId,
+      period: v.period || selectedVtPeriod || '2026-08',
       route: v.route || '',
       idaCost: v.idaCost ? v.idaCost.toString() : '0',
       voltaCost: v.voltaCost ? v.voltaCost.toString() : '0',
@@ -406,7 +408,7 @@ export function useHRLogic(currentUser) {
       daysCount: v.daysCount ? v.daysCount.toString() : '0',
       workSchedule: v.workSchedule || 'SEGUNDA A SÁBADO',
       currentBalance: v.currentBalance ? v.currentBalance.toString() : '0',
-      cardType: v.cardType || 'BHBus',
+      cardType: v.cardType || 'BetimCARD',
       cardNumber: v.cardNumber || '',
       discountPercent: v.discountPercent ? v.discountPercent.toString() : '6'
     });
@@ -416,18 +418,46 @@ export function useHRLogic(currentUser) {
   const handleSaveVoucher = async (e) => {
     e.preventDefault();
     if (!voucherForm.employeeId || !voucherForm.route) {
-      return showAlert('Funcionário e Rota são obrigatórios.', 'warning');
+      return showAlert('Funcionário e Itinerário são obrigatórios.', 'warning');
     }
     setActionLoading(true);
     try {
+      const emp = employees.find(e => e.id === voucherForm.employeeId);
+      const ida = parseFloat(voucherForm.idaCost) || 0;
+      const volta = parseFloat(voucherForm.voltaCost) || 0;
+      const daily = parseFloat(voucherForm.dailyCost) || (ida + volta);
+      const days = parseInt(voucherForm.daysCount) || 22;
+      const expected = daily * days;
+      const currentBal = parseFloat(voucherForm.currentBalance) || 0;
+      const recharge = Math.max(0, expected - currentBal);
+      const period = voucherForm.period || selectedVtPeriod || '2026-08';
+
+      const payload = {
+        ...voucherForm,
+        period,
+        employeeName: emp?.name || '',
+        idaCost: ida.toFixed(2),
+        voltaCost: volta.toFixed(2),
+        dailyCost: daily.toFixed(2),
+        expectedValue: expected,
+        totalValue: expected,
+        currentBalance: currentBal,
+        rechargeNeeded: recharge,
+        rawRechargeNeeded: expected - currentBal
+      };
+
       if (editingVoucher) {
-        await dbService.updateTransportVoucher(editingVoucher.id, voucherForm);
+        await dbService.updateTransportVoucher(editingVoucher.id, payload);
         showAlert('Concessão de Vale-Transporte atualizada com sucesso!', 'success');
-        logAuditAction('Atualização de Vale-Transporte', `VT do funcionário ${employees.find(emp => emp.id === voucherForm.employeeId)?.name || voucherForm.employeeId} atualizado.`);
+        logAuditAction('Atualização de Vale-Transporte', `VT do funcionário ${emp?.name || voucherForm.employeeId} atualizado.`);
       } else {
-        await dbService.createTransportVoucher(voucherForm);
+        await dbService.createTransportVoucher(payload);
         showAlert('Concessão de Vale-Transporte cadastrada com sucesso!', 'success');
-        logAuditAction('Criação de Vale-Transporte', `Novo VT cadastrado para o funcionário ${employees.find(emp => emp.id === voucherForm.employeeId)?.name || voucherForm.employeeId}.`);
+        logAuditAction('Criação de Vale-Transporte', `Novo VT cadastrado para o funcionário ${emp?.name || voucherForm.employeeId}.`);
+      }
+
+      if (period && period !== selectedVtPeriod) {
+        setSelectedVtPeriod(period);
       }
       setShowVoucherModal(false);
       fetchData();

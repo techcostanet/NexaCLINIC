@@ -588,7 +588,7 @@ export default function HRPanel({ currentUser }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                     {/* Period Selector */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--bg-card)', padding: '0.4rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                      <label style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>Mês/Ano:</label>
+                      <label style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>Período:</label>
                       <select
                         value={selectedVtPeriod}
                         onChange={(e) => setSelectedVtPeriod(e.target.value)}
@@ -600,7 +600,7 @@ export default function HRPanel({ currentUser }) {
                           const val = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
                           const label = d.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
                           return <option key={val} value={val}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>;
-                        }).reverse()}
+                        })}
                       </select>
                     </div>
 
@@ -636,23 +636,23 @@ export default function HRPanel({ currentUser }) {
                 {/* VT Summary Cards */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
                   <div style={{ ...styles.kpiCard, borderLeftColor: '#ec4899', display: 'flex', flexDirection: 'column' }}>
-                    <span style={styles.kpiLabel}>Beneficiários no Mês</span>
+                    <span style={styles.kpiLabel}>Beneficiários</span>
                     <span style={styles.kpiVal}>{currentVtList.length}</span>
                   </div>
                   <div style={{ ...styles.kpiCard, borderLeftColor: '#3b82f6', display: 'flex', flexDirection: 'column' }}>
-                    <span style={styles.kpiLabel}>Custo Previsto Bruto</span>
+                    <span style={styles.kpiLabel}>Previsto</span>
                     <span style={styles.kpiVal}>R$ {totalPrevisto.toFixed(2)}</span>
                   </div>
                   <div style={{ ...styles.kpiCard, borderLeftColor: '#10b981', display: 'flex', flexDirection: 'column' }}>
-                    <span style={styles.kpiLabel}>Saldo em Cartões</span>
+                    <span style={styles.kpiLabel}>Saldo</span>
                     <span style={styles.kpiVal}>R$ {totalSaldo.toFixed(2)}</span>
                   </div>
                   <div style={{ ...styles.kpiCard, borderLeftColor: '#ef4444', display: 'flex', flexDirection: 'column' }}>
-                    <span style={styles.kpiLabel}>Recarga Necessária Total</span>
+                    <span style={styles.kpiLabel}>Recarga</span>
                     <span style={styles.kpiVal}>R$ {totalRecarga.toFixed(2)}</span>
                   </div>
                   <div style={{ ...styles.kpiCard, borderLeftColor: '#f59e0b', display: 'flex', flexDirection: 'column' }}>
-                    <span style={styles.kpiLabel}>Desconto Folha (6%)</span>
+                    <span style={styles.kpiLabel}>Desconto</span>
                     <span style={styles.kpiVal}>R$ {totalDescontoFolha.toFixed(2)}</span>
                   </div>
                 </div>
@@ -669,13 +669,13 @@ export default function HRPanel({ currentUser }) {
                     <thead>
                       <tr>
                         <th>Colaborador</th>
-                        <th>Cargo / Setor</th>
+                        <th>Cargo</th>
                         <th>Escala</th>
-                        <th>Valores Tarifa</th>
-                        <th>Previsto Mês</th>
-                        <th>Saldo Cartão</th>
-                        <th>Recarga Necessária</th>
-                        <th>Destaque / Status</th>
+                        <th>Tarifa</th>
+                        <th>Previsto</th>
+                        <th>Saldo</th>
+                        <th>Recarga</th>
+                        <th>Status</th>
                         <th>Ações</th>
                       </tr>
                     </thead>
@@ -1565,23 +1565,42 @@ export default function HRPanel({ currentUser }) {
               <button onClick={() => setShowVoucherModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
             <form onSubmit={handleSaveVoucher} style={{ ...styles.modalForm, maxHeight: '80vh', overflowY: 'auto' }}>
-              <div className="form-group">
-                <label>Funcionário *</label>
-                <select className="form-control" required value={voucherForm.employeeId} onChange={e => setVoucherForm({ ...voucherForm, employeeId: e.target.value })}>
-                  {employees.filter(emp => emp.status !== 'Inativo').map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.name} ({emp.role})</option>
-                  ))}
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                <div className="form-group">
+                  <label>Funcionário</label>
+                  <select className="form-control" required value={voucherForm.employeeId} onChange={e => setVoucherForm({ ...voucherForm, employeeId: e.target.value })}>
+                    {employees.filter(emp => emp.status !== 'Inativo').map(emp => (
+                      <option key={emp.id} value={emp.id}>{emp.name} ({emp.role})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Período</label>
+                  <select
+                    className="form-control"
+                    required
+                    value={voucherForm.period || selectedVtPeriod || '2026-08'}
+                    onChange={e => setVoucherForm({ ...voucherForm, period: e.target.value })}
+                  >
+                    {Array.from({ length: 24 }).map((_, i) => {
+                      const d = new Date(2026, 0);
+                      d.setMonth(d.getMonth() + i);
+                      const val = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                      const label = d.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+                      return <option key={val} value={val}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>;
+                    })}
+                  </select>
+                </div>
               </div>
 
               <div className="form-group">
-                <label>Itinerário / Rota de Ônibus *</label>
-                <input type="text" className="form-control" required placeholder="Ex: 302B - Industrial/Centro" value={voucherForm.route} onChange={e => setVoucherForm({ ...voucherForm, route: e.target.value })} />
+                <label>Itinerário</label>
+                <input type="text" className="form-control" required placeholder="Ex: Linha Urbana - Betim / BH" value={voucherForm.route} onChange={e => setVoucherForm({ ...voucherForm, route: e.target.value })} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                 <div className="form-group">
-                  <label>Custo Ida (R$)</label>
+                  <label>Ida</label>
                   <input type="number" step="0.05" className="form-control" value={voucherForm.idaCost} onChange={e => {
                     const ida = parseFloat(e.target.value) || 0;
                     const volta = parseFloat(voucherForm.voltaCost) || 0;
@@ -1589,7 +1608,7 @@ export default function HRPanel({ currentUser }) {
                   }} />
                 </div>
                 <div className="form-group">
-                  <label>Custo Volta (R$)</label>
+                  <label>Volta</label>
                   <input type="number" step="0.05" className="form-control" value={voucherForm.voltaCost} onChange={e => {
                     const ida = parseFloat(voucherForm.idaCost) || 0;
                     const volta = parseFloat(e.target.value) || 0;
@@ -1600,29 +1619,29 @@ export default function HRPanel({ currentUser }) {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                 <div className="form-group">
-                  <label>Escala de Trabalho *</label>
+                  <label>Escala</label>
                   <input type="text" className="form-control" required placeholder="Ex: SEGUNDA A SÁBADO" value={voucherForm.workSchedule} onChange={e => setVoucherForm({ ...voucherForm, workSchedule: e.target.value })} />
                 </div>
                 <div className="form-group">
-                  <label>Tarifa Diária (R$) *</label>
+                  <label>Diária</label>
                   <input type="number" step="0.05" className="form-control" required value={voucherForm.dailyCost} onChange={e => setVoucherForm({ ...voucherForm, dailyCost: e.target.value })} />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                 <div className="form-group">
-                  <label>Dias de Carga *</label>
+                  <label>Dias</label>
                   <input type="number" className="form-control" required value={voucherForm.daysCount} onChange={e => setVoucherForm({ ...voucherForm, daysCount: e.target.value })} />
                 </div>
                 <div className="form-group">
-                  <label>Saldo Atual (Cartão) R$</label>
+                  <label>Saldo</label>
                   <input type="number" step="0.05" className="form-control" value={voucherForm.currentBalance} onChange={e => setVoucherForm({ ...voucherForm, currentBalance: e.target.value })} />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                 <div className="form-group">
-                  <label>Tipo do Cartão</label>
+                  <label>Cartão</label>
                   <select className="form-control" value={voucherForm.cardType} onChange={e => setVoucherForm({ ...voucherForm, cardType: e.target.value })}>
                     <option value="BetimCARD">BetimCARD</option>
                     <option value="BHBus">BHBus</option>
@@ -1633,13 +1652,13 @@ export default function HRPanel({ currentUser }) {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Número do Cartão</label>
+                  <label>Número</label>
                   <input type="text" className="form-control" placeholder="00012345" value={voucherForm.cardNumber} onChange={e => setVoucherForm({ ...voucherForm, cardNumber: e.target.value })} />
                 </div>
               </div>
 
               <div className="form-group">
-                <label>Desconto Salarial (%)</label>
+                <label>Desconto</label>
                 <input type="number" className="form-control" value={voucherForm.discountPercent} onChange={e => setVoucherForm({ ...voucherForm, discountPercent: e.target.value })} />
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Desconto padrão de 6% sobre o salário base.</span>
               </div>
