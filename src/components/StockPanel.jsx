@@ -4,11 +4,22 @@ import {
   Package, Boxes, Clock, Calendar, Plus, Search, 
   X, FileText, UploadCloud, Briefcase, Warehouse,
   CheckCircle2, AlertTriangle, AlertCircle, ArrowUpRight, ArrowDownLeft, Trash2, Edit,
-  ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Send, ClipboardList, Repeat
+  ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Send, ClipboardList, Repeat,
+  AlignJustify, Table, LayoutGrid, Building2, ShoppingCart, Layers, DollarSign
 } from 'lucide-react';
 
 import { useStockLogic } from './Stock/hooks/useStockLogic';
 import StockReportsModal from './StockReportsModal';
+
+export const formatCurrencyBR = (val) => {
+  const num = parseFloat(val) || 0;
+  return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
+
+export const formatNumberBR = (val, decimals = 2) => {
+  const num = parseFloat(val) || 0;
+  return num.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+};
 
 export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const stockLogic = useStockLogic(currentUser);
@@ -191,12 +202,34 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
     expiryList
   } = stockLogic;
 
+  // View Mode: 'compact' (Padrão) | 'normal' | 'cards'
+  const [productViewMode, setProductViewMode] = useState('compact');
+
   return (
     <div style={styles.container}>
-      <div style={styles.cardHeader}>
-        <div>
-          <h1 style={styles.title}>NexaSTOCK - Estoque, Farmácia & Logística</h1>
-          <p style={styles.subtitle}>Gestão de fornecedores, locais de armazenamento, importação de XML e notas fiscais de compra.</p>
+      {/* Header / Hero Section (Design Padrão Nexa) */}
+      <div style={styles.heroSection}>
+        <div style={styles.heroLeft}>
+          <div style={styles.heroIconBadge}>
+            <Boxes size={28} color="#fff" />
+          </div>
+          <div>
+            <h1 style={styles.heroTitle}>NexaSTOCK — Estoque & Farmácia Hospitalar</h1>
+            <p style={styles.heroSubtitle}>
+              Gestão de suprimentos, lotes FEFO, dispensação clínica, transferências entre setores e controle de rastreabilidade.
+            </p>
+          </div>
+        </div>
+
+        <div style={styles.heroActions}>
+          <button 
+            onClick={handleOpenAddModal}
+            style={styles.primaryHeroBtn}
+            title="Cadastrar Novo Insumo"
+          >
+            <Plus size={18} />
+            <span>Cadastrar Insumo</span>
+          </button>
         </div>
       </div>
 
@@ -297,6 +330,75 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
               </select>
             )}
 
+            {/* View Mode Segmented Controls for Inventory */}
+            {activeTab === 'inventory' && (
+              <div style={{ display: 'inline-flex', alignItems: 'center', backgroundColor: 'var(--bg-body)', padding: '0.2rem', borderRadius: '8px', border: '1px solid var(--border-color)', gap: '0.2rem' }}>
+                <button 
+                  type="button"
+                  onClick={() => setProductViewMode('compact')} 
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: '0.35rem 0.65rem',
+                    borderRadius: '6px',
+                    fontSize: '0.78rem',
+                    fontWeight: '600',
+                    border: 'none',
+                    cursor: 'pointer',
+                    backgroundColor: productViewMode === 'compact' ? '#f59e0b' : 'transparent',
+                    color: productViewMode === 'compact' ? '#fff' : 'var(--text-secondary)',
+                    transition: 'all 0.15s ease'
+                  }}
+                  title="Visualização Compacta (Padrão)"
+                >
+                  <AlignJustify size={14} /> Compacta
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setProductViewMode('normal')} 
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: '0.35rem 0.65rem',
+                    borderRadius: '6px',
+                    fontSize: '0.78rem',
+                    fontWeight: '600',
+                    border: 'none',
+                    cursor: 'pointer',
+                    backgroundColor: productViewMode === 'normal' ? '#f59e0b' : 'transparent',
+                    color: productViewMode === 'normal' ? '#fff' : 'var(--text-secondary)',
+                    transition: 'all 0.15s ease'
+                  }}
+                  title="Visualização Normal / Detalhada"
+                >
+                  <Table size={14} /> Normal
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setProductViewMode('cards')} 
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: '0.35rem 0.65rem',
+                    borderRadius: '6px',
+                    fontSize: '0.78rem',
+                    fontWeight: '600',
+                    border: 'none',
+                    cursor: 'pointer',
+                    backgroundColor: productViewMode === 'cards' ? '#f59e0b' : 'transparent',
+                    color: productViewMode === 'cards' ? '#fff' : 'var(--text-secondary)',
+                    transition: 'all 0.15s ease'
+                  }}
+                  title="Visualização em Grade de Cards"
+                >
+                  <LayoutGrid size={14} /> Cards
+                </button>
+              </div>
+            )}
+
             {activeTab === 'inventory' && (
               <button onClick={handleOpenAddModal} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f59e0b' }}>
                 <Plus size={16} /> Cadastrar Insumo
@@ -344,95 +446,404 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
       ) : (
         <>
           {/* TAB 1: Inventory Catalogue */}
-          {activeTab === 'inventory' && (
-            <div style={styles.tableWrapper}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    {renderSortHeader('Item de Insumo', 'name', inventorySort, setInventorySort)}
-                    {renderSortHeader('Categoria', 'category', inventorySort, setInventorySort)}
-                    <th style={styles.th}>Rastreável</th>
-                    {renderSortHeader('Estoque Atual', 'currentStock', inventorySort, setInventorySort)}
-                    {renderSortHeader('Setor Padrão', 'defaultSectorId', inventorySort, setInventorySort)}
-                    {renderSortHeader('Mínimo', 'minStock', inventorySort, setInventorySort)}
-                    <th style={styles.th}>Status</th>
-                    {renderSortHeader('Preço Unitário', 'price', inventorySort, setInventorySort)}
-                    <th style={styles.th}>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredItems.length === 0 ? (
-                    <tr>
-                      <td colSpan="9" style={styles.noDataCell}>Nenhum insumo no catálogo.</td>
-                    </tr>
-                  ) : (
-                    sortData(filteredItems, inventorySort).map((item, idx) => {
-                      const currentVal = parseFloat(item?.currentStock) || 0;
-                      const minVal = parseFloat(item?.minStock) || 0;
-                      const isLow = currentVal <= minVal;
-                      const sectorName = sectors.find(s => s?.id === item?.defaultSectorId)?.name || 'Almoxarifado Central';
-                      const itemPrice = parseFloat(item?.price) || 0;
-                      const hasLote = !!item?.hasBatchControl;
-                      return (
-                        <tr key={item?.id || idx} style={isLow ? styles.rowWarning : {}}>
-                          <td style={{ fontWeight: '600' }}>{item?.name || 'Insumo Sem Nome'}</td>
-                          <td><span style={styles.categoryBadge}>{item?.category || 'Geral'}</span></td>
-                          <td>
-                            {hasLote ? (
-                              <span style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                                ✓ Lote
+          {activeTab === 'inventory' && (() => {
+            const sortedItems = sortData(filteredItems, inventorySort);
+
+            return (
+              <div>
+                {/* 1. VIEW MODE: COMPACTA (PADRÃO) */}
+                {productViewMode === 'compact' && (
+                  <div style={styles.tableWrapper}>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr>
+                          {renderSortHeader('Item de Insumo', 'name', inventorySort, setInventorySort)}
+                          {renderSortHeader('Categoria', 'category', inventorySort, setInventorySort)}
+                          <th style={styles.th}>Rastreável</th>
+                          {renderSortHeader('Estoque Atual', 'currentStock', inventorySort, setInventorySort)}
+                          {renderSortHeader('Mínimo', 'minStock', inventorySort, setInventorySort)}
+                          <th style={styles.th}>Status</th>
+                          {renderSortHeader('Preço Unitário', 'price', inventorySort, setInventorySort)}
+                          <th style={styles.th}>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sortedItems.length === 0 ? (
+                          <tr>
+                            <td colSpan="8" style={styles.noDataCell}>Nenhum insumo encontrado no catálogo.</td>
+                          </tr>
+                        ) : (
+                          sortedItems.map((item, idx) => {
+                            const currentVal = parseFloat(item?.currentStock) || 0;
+                            const minVal = parseFloat(item?.minStock) || 0;
+                            const isLow = currentVal <= minVal;
+                            const itemPrice = parseFloat(item?.price) || 0;
+                            const hasLote = !!item?.hasBatchControl;
+
+                            return (
+                              <tr key={item?.id || idx} style={{ height: '36px', ...(isLow ? styles.rowWarning : {}) }}>
+                                <td onClick={() => handleOpenEditModal(item)} style={{ fontWeight: '700', color: isLow ? '#b91c1c' : 'var(--text-primary)', cursor: 'pointer', padding: '0.35rem 0.5rem' }} title="Clique para editar">
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                    <Package size={14} color="#f59e0b" />
+                                    <span>{item?.name || 'Insumo Sem Nome'}</span>
+                                  </div>
+                                </td>
+                                <td style={{ padding: '0.35rem 0.5rem' }}>
+                                  <span style={styles.categoryBadge}>{item?.category || 'Geral'}</span>
+                                </td>
+                                <td style={{ padding: '0.35rem 0.5rem' }}>
+                                  {hasLote ? (
+                                    <span style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '700' }}>
+                                      ✓ Lote
+                                    </span>
+                                  ) : (
+                                    <span style={{ color: '#9ca3af', fontSize: '0.7rem' }}>Geral</span>
+                                  )}
+                                </td>
+                                <td style={{ fontWeight: '700', color: isLow ? 'var(--danger-color)' : 'var(--text-primary)', padding: '0.35rem 0.5rem' }}>
+                                  {currentVal} {item?.unit || 'un'}
+                                </td>
+                                <td style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                  {minVal} {item?.unit || 'un'}
+                                </td>
+                                <td style={{ padding: '0.35rem 0.5rem' }}>
+                                  {isLow ? (
+                                    <span style={{ ...styles.badgeCritical, fontSize: '0.7rem', padding: '0.1rem 0.35rem' }}>Abaixo do Mínimo</span>
+                                  ) : (
+                                    <span style={{ ...styles.badgeNormal, fontSize: '0.7rem', padding: '0.1rem 0.35rem' }}>Regular</span>
+                                  )}
+                                </td>
+                                <td style={{ padding: '0.35rem 0.5rem', fontWeight: '600' }}>
+                                  {formatCurrencyBR(itemPrice)}
+                                </td>
+                                <td style={{ padding: '0.35rem 0.5rem' }}>
+                                  <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                                    <button onClick={() => handleOpenEditModal(item)} style={{ ...styles.actionEditBtn, padding: '0.2rem 0.45rem', fontSize: '0.75rem' }} title="Editar Item">
+                                      Editar
+                                    </button>
+                                    <button onClick={() => handleDeleteItem(item.id)} style={{ ...styles.actionEditBtn, padding: '0.2rem 0.45rem', fontSize: '0.75rem', backgroundColor: '#fee2e2', color: '#991b1b' }} title="Excluir">
+                                      <Trash2 size={12} />
+                                    </button>
+                                    {isLow && (
+                                      <button onClick={() => handleQuickPurchaseRequest(item)} style={{ ...styles.actionEditBtn, padding: '0.2rem 0.45rem', fontSize: '0.75rem', backgroundColor: '#ec4899', color: '#ffffff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '2px' }} title="Pedir Compra">
+                                        + Compra
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* 2. VIEW MODE: NORMAL (DETALHADA) */}
+                {productViewMode === 'normal' && (
+                  <div style={styles.tableWrapper}>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr>
+                          {renderSortHeader('Item de Insumo', 'name', inventorySort, setInventorySort)}
+                          {renderSortHeader('Categoria', 'category', inventorySort, setInventorySort)}
+                          {renderSortHeader('Setor Padrão', 'defaultSectorId', inventorySort, setInventorySort)}
+                          {renderSortHeader('Estoque Atual / Nível', 'currentStock', inventorySort, setInventorySort)}
+                          {renderSortHeader('Mínimo', 'minStock', inventorySort, setInventorySort)}
+                          {renderSortHeader('Preço Unitário', 'price', inventorySort, setInventorySort)}
+                          <th>Total em Estoque</th>
+                          <th style={styles.th}>Rastreabilidade</th>
+                          <th style={styles.th}>Status</th>
+                          <th style={styles.th}>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sortedItems.length === 0 ? (
+                          <tr>
+                            <td colSpan="10" style={styles.noDataCell}>Nenhum insumo encontrado no catálogo.</td>
+                          </tr>
+                        ) : (
+                          sortedItems.map((item, idx) => {
+                            const currentVal = parseFloat(item?.currentStock) || 0;
+                            const minVal = parseFloat(item?.minStock) || 0;
+                            const isLow = currentVal <= minVal;
+                            const sectorName = sectors.find(s => s?.id === item?.defaultSectorId)?.name || 'Almoxarifado Central';
+                            const itemPrice = parseFloat(item?.price) || 0;
+                            const totalValue = currentVal * itemPrice;
+                            const hasLote = !!item?.hasBatchControl;
+                            const stockPercent = minVal > 0 ? Math.min(100, Math.round((currentVal / minVal) * 100)) : 100;
+
+                            return (
+                              <tr key={item?.id || idx} style={isLow ? styles.rowWarning : {}}>
+                                <td onClick={() => handleOpenEditModal(item)} style={{ cursor: 'pointer' }} title="Clique para editar insumo">
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.35rem 0' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                      <Boxes size={16} color="#f59e0b" />
+                                    </div>
+                                    <div>
+                                      <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{item?.name || 'Insumo Sem Nome'}</div>
+                                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Unidade: {item?.unit || 'un'}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td><span style={styles.categoryBadge}>{item?.category || 'Geral'}</span></td>
+                                <td style={{ fontSize: '0.85rem' }}>{sectorName}</td>
+                                <td>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', minWidth: '110px' }}>
+                                    <span style={{ fontWeight: '700', color: isLow ? 'var(--danger-color)' : 'var(--text-primary)' }}>
+                                      {currentVal} {item?.unit || 'un'}
+                                    </span>
+                                    <div style={{ width: '100%', height: '5px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                                      <div style={{
+                                        width: `${stockPercent}%`,
+                                        height: '100%',
+                                        backgroundColor: currentVal <= 0 ? '#ef4444' : isLow ? '#f59e0b' : '#10b981',
+                                        borderRadius: '3px'
+                                      }} />
+                                    </div>
+                                  </div>
+                                </td>
+                                <td style={{ fontSize: '0.85rem' }}>{minVal} {item?.unit || 'un'}</td>
+                                <td style={{ fontWeight: '600' }}>{formatCurrencyBR(itemPrice)}</td>
+                                <td style={{ fontWeight: '700', color: '#10b981' }}>{formatCurrencyBR(totalValue)}</td>
+                                <td>
+                                  {hasLote ? (
+                                    <span style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
+                                      ✓ Lote / FEFO
+                                    </span>
+                                  ) : (
+                                    <span style={{ color: '#9ca3af', fontSize: '0.75rem' }}>Controle Geral</span>
+                                  )}
+                                </td>
+                                <td>
+                                  {isLow ? (
+                                    <span style={styles.badgeCritical}>Abaixo do Mínimo</span>
+                                  ) : (
+                                    <span style={styles.badgeNormal}>Regular</span>
+                                  )}
+                                </td>
+                                <td>
+                                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                                    <button onClick={() => handleOpenEditModal(item)} style={styles.actionEditBtn} title="Editar Item">
+                                      <Edit size={13} /> Editar
+                                    </button>
+                                    <button onClick={() => handleDeleteItem(item.id)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} title="Excluir Item">
+                                      <Trash2 size={13} />
+                                    </button>
+                                    {isLow && (
+                                      <button onClick={() => handleQuickPurchaseRequest(item)} style={{ ...styles.actionEditBtn, backgroundColor: '#ec4899', color: '#ffffff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '2px' }} title="Gerar solicitação automática no Portal de Compras">
+                                        <Plus size={12} /> Pedir Compra
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* 3. VIEW MODE: CARDS (GRADE VISUAL) */}
+                {productViewMode === 'cards' && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                    gap: '1.25rem'
+                  }}>
+                    {sortedItems.length === 0 ? (
+                      <div style={{ ...styles.noDataCell, gridColumn: '1 / -1', padding: '2.5rem', textAlign: 'center', backgroundColor: '#fff', borderRadius: '8px' }}>
+                        Nenhum insumo encontrado no catálogo.
+                      </div>
+                    ) : (
+                      sortedItems.map((item, idx) => {
+                        const currentVal = parseFloat(item?.currentStock) || 0;
+                        const minVal = parseFloat(item?.minStock) || 0;
+                        const isLow = currentVal <= minVal;
+                        const sectorName = sectors.find(s => s?.id === item?.defaultSectorId)?.name || 'Almoxarifado Central';
+                        const itemPrice = parseFloat(item?.price) || 0;
+                        const totalValue = currentVal * itemPrice;
+                        const hasLote = !!item?.hasBatchControl;
+                        const stockPercent = minVal > 0 ? Math.min(100, Math.round((currentVal / minVal) * 100)) : 100;
+
+                        return (
+                          <div 
+                            key={item?.id || idx}
+                            style={{
+                              borderRadius: '12px',
+                              backgroundColor: 'var(--bg-card)',
+                              border: `1px solid ${isLow ? '#fca5a5' : 'var(--border-color)'}`,
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                              padding: '1.1rem',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              gap: '0.85rem',
+                              transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                            }}
+                          >
+                            {/* Card Top: Badges */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={styles.categoryBadge}>
+                                {item?.category || 'Geral'}
                               </span>
-                            ) : (
-                              <span style={{ color: '#9ca3af', fontSize: '0.75rem' }}>Geral</span>
-                            )}
-                          </td>
-                          <td style={{ fontWeight: '700', color: isLow ? 'var(--danger-color)' : 'var(--text-primary)' }}>
-                            {currentVal} {item?.unit || 'unidades'}
-                          </td>
-                          <td>{sectorName}</td>
-                          <td>{minVal} {item?.unit || 'unidades'}</td>
-                          <td>
-                            {isLow ? (
-                              <span style={styles.badgeCritical}>Abaixo do Mínimo</span>
-                            ) : (
-                              <span style={styles.badgeNormal}>Regular</span>
-                            )}
-                          </td>
-                          <td>R$ {itemPrice.toFixed(2)}</td>
-                          <td>
-                            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                              <button onClick={() => handleOpenEditModal(item)} style={styles.actionEditBtn} title="Editar Item">
-                                <Edit size={13} /> Editar
+
+                              {hasLote ? (
+                                <span style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.45rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '700' }}>
+                                  ✓ Rastreável FEFO
+                                </span>
+                              ) : (
+                                <span style={{ backgroundColor: '#f1f5f9', color: '#64748b', padding: '0.15rem 0.45rem', borderRadius: '6px', fontSize: '0.7rem' }}>
+                                  Controle Geral
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Card Center: Icon & Title */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <div style={{
+                                width: '46px',
+                                height: '46px',
+                                borderRadius: '10px',
+                                backgroundColor: isLow ? '#fee2e2' : '#fef3c7',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}>
+                                <Boxes size={22} color={isLow ? '#dc2626' : '#d97706'} />
+                              </div>
+
+                              <div style={{ overflow: 'hidden' }}>
+                                <h3 
+                                  onClick={() => handleOpenEditModal(item)}
+                                  style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', cursor: 'pointer', textDecoration: 'underline' }}
+                                  title="Clique para editar insumo"
+                                >
+                                  {item?.name || 'Insumo Sem Nome'}
+                                </h3>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                  <Warehouse size={12} /> {sectorName}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Stock Level Progress */}
+                            <div style={{ backgroundColor: 'var(--bg-body)', padding: '0.5rem 0.65rem', borderRadius: '8px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.3rem' }}>
+                                <span style={{ color: isLow ? '#dc2626' : '#16a34a', fontWeight: '700' }}>
+                                  {isLow ? '⚠️ Estoque Crítico' : '🟢 Estoque Regular'}
+                                </span>
+                                <span style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>
+                                  {currentVal} / {minVal} {item?.unit || 'un'}
+                                </span>
+                              </div>
+                              <div style={{ width: '100%', height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{
+                                  width: `${stockPercent}%`,
+                                  height: '100%',
+                                  backgroundColor: currentVal <= 0 ? '#ef4444' : isLow ? '#f59e0b' : '#10b981',
+                                  borderRadius: '3px'
+                                }} />
+                              </div>
+                            </div>
+
+                            {/* Key Metrics Grid */}
+                            <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr 1fr',
+                              gap: '0.4rem',
+                              fontSize: '0.75rem'
+                            }}>
+                              <div>
+                                <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.68rem' }}>Preço Unitário</span>
+                                <strong>{formatCurrencyBR(itemPrice)}</strong>
+                              </div>
+                              <div>
+                                <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.68rem' }}>Total Estocado</span>
+                                <strong style={{ color: '#10b981' }}>{formatCurrencyBR(totalValue)}</strong>
+                              </div>
+                            </div>
+
+                            {/* Footer Actions */}
+                            <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.2rem' }}>
+                              <button
+                                onClick={() => handleOpenEditModal(item)}
+                                style={{
+                                  flex: 1,
+                                  padding: '0.4rem',
+                                  fontSize: '0.8rem',
+                                  fontWeight: '700',
+                                  backgroundColor: '#f59e0b',
+                                  color: '#fff',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Editar Insumo
                               </button>
-                              <button onClick={() => handleDeleteItem(item.id)} style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} title="Excluir Item">
+                              <button
+                                onClick={() => handleDeleteItem(item.id)}
+                                style={{
+                                  padding: '0.4rem 0.6rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '600',
+                                  backgroundColor: 'transparent',
+                                  color: 'var(--danger-color)',
+                                  border: '1px solid rgba(239,68,68,0.3)',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer'
+                                }}
+                                title="Excluir Insumo"
+                              >
                                 <Trash2 size={13} />
                               </button>
                               {isLow && (
-                                <button onClick={() => handleQuickPurchaseRequest(item)} style={{ ...styles.actionEditBtn, backgroundColor: '#ec4899', color: '#ffffff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '2px' }} title="Gerar solicitação automática no Portal de Compras">
-                                  <Plus size={12} /> Pedir Compra
+                                <button
+                                  onClick={() => handleQuickPurchaseRequest(item)}
+                                  style={{
+                                    padding: '0.4rem 0.65rem',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '700',
+                                    backgroundColor: '#ec4899',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer'
+                                  }}
+                                  title="Pedir Compra"
+                                >
+                                  + Compra
                                 </button>
                               )}
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* TAB: Physical Inventories (Inventários Físicos) */}
           {activeTab === 'physical_inventory' && (
             <div style={styles.tableWrapper}>
-              <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)' }}>📋 Gestão de Inventários Físicos & Auditoria de Saldo</h3>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                     Crie e execute contagens de estoque por local. Ao concluir, o saldo do sistema é ajustado automaticamente com relatório de divergência.
                   </span>
                 </div>
+                <button onClick={handleOpenInventoryAdd} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#f59e0b', padding: '0.5rem 0.85rem', borderRadius: '6px', fontWeight: '700', fontSize: '0.85rem' }}>
+                  <Plus size={16} /> Novo Inventário
+                </button>
               </div>
 
               <table style={styles.table}>
@@ -449,7 +860,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                 <tbody>
                   {inventories.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={styles.noDataCell}>Nenhum inventário físico registrado. Clique em "Abrir Novo Inventário Físico" para iniciar.</td>
+                      <td colSpan="6" style={styles.noDataCell}>Nenhum inventário físico registrado. Clique em "Novo Inventário" para iniciar.</td>
                     </tr>
                   ) : (
                     inventories.map(inv => (
@@ -501,13 +912,16 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
           {/* TAB: Stock Transfers (Transferências entre Locais) */}
           {activeTab === 'transfers' && (
             <div style={styles.tableWrapper}>
-              <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)' }}>🔄 Histórico de Transferências Entre Locais de Estoque</h3>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                     Rastreamento de movimentações internas (ex: Almoxarifado Central ➡️ Farmácia da Diálise).
                   </span>
                 </div>
+                <button onClick={handleOpenTransferModal} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#f59e0b', padding: '0.5rem 0.85rem', borderRadius: '6px', fontWeight: '700', fontSize: '0.85rem' }}>
+                  <Plus size={16} /> Nova Transferência
+                </button>
               </div>
 
               <table style={styles.table}>
@@ -527,7 +941,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                 <tbody>
                   {transfers.length === 0 ? (
                     <tr>
-                      <td colSpan="9" style={styles.noDataCell}>Nenhuma transferência entre locais registrada. Clique em "Nova Transferência de Estoque".</td>
+                      <td colSpan="9" style={styles.noDataCell}>Nenhuma transferência entre locais registrada. Clique em "Nova Transferência".</td>
                     </tr>
                   ) : (
                     transfers.map(tr => (
@@ -2180,15 +2594,33 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                 </div>
 
                 <div className="form-group">
-                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'block' }}>Instituição / Clínica Parceira *</label>
+                  <label style={{ fontWeight: '600', marginBottom: '0.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Instituição / Clínica Parceira *</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>Selecione na lista ou digite nova</span>
+                  </label>
                   <input 
                     type="text"
-                    placeholder="Ex: Hospital São Lucas / Clínica NefroVida"
+                    list="partner-clinic-suggestions"
+                    placeholder="Selecione na lista ou digite (Ex: Hospital São Lucas)..."
                     style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
                     value={loanForm.partnerName}
                     onChange={e => setLoanForm({ ...loanForm, partnerName: e.target.value })}
                     required
                   />
+                  <datalist id="partner-clinic-suggestions">
+                    {Array.from(new Set([
+                      'Hospital São Lucas',
+                      'Clínica NefroVida',
+                      'Santa Casa de Misericórdia',
+                      'Hospital Regional de Betim',
+                      'Clínica Renal Center',
+                      'Hospital Unimed',
+                      'Hospital das Clínicas',
+                      ...(loans || []).map(l => l?.partnerName).filter(Boolean)
+                    ])).map((name, i) => (
+                      <option key={i} value={name} />
+                    ))}
+                  </datalist>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -2533,22 +2965,66 @@ const styles = {
     flexDirection: 'column',
     gap: '1.5rem',
   },
-  cardHeader: {
+  heroSection: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottom: '1px solid var(--border-color)',
-    paddingBottom: '1rem',
+    flexWrap: 'wrap',
+    gap: '1.5rem',
+    backgroundColor: '#fff',
+    padding: '1.5rem 2rem',
+    borderRadius: '16px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    border: '1px solid var(--border-color)',
+    marginBottom: '0.5rem'
   },
-  title: {
-    fontSize: '1.5rem',
-    fontWeight: '700',
+  heroLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1.25rem'
+  },
+  heroIconBadge: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '14px',
+    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 8px 16px rgba(245, 158, 11, 0.25)',
+    flexShrink: 0
+  },
+  heroTitle: {
+    fontSize: '1.6rem',
+    fontWeight: '800',
     color: 'var(--text-primary)',
-    marginBottom: '0.25rem',
+    margin: 0
   },
-  subtitle: {
-    fontSize: '0.875rem',
+  heroSubtitle: {
+    fontSize: '0.9rem',
     color: 'var(--text-secondary)',
+    margin: '0.35rem 0 0 0',
+    maxWidth: '650px'
+  },
+  heroActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem'
+  },
+  primaryHeroBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.75rem 1.25rem',
+    borderRadius: '10px',
+    backgroundColor: '#f59e0b',
+    color: '#fff',
+    border: 'none',
+    fontWeight: '700',
+    fontSize: '0.9rem',
+    cursor: 'pointer',
+    boxShadow: '0 4px 10px rgba(245, 158, 11, 0.25)',
+    transition: 'all 0.2s ease'
   },
   tabsWrapper: {
     display: 'flex',

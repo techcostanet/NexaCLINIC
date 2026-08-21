@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.18',
+      date: '21/08/2026',
+      title: 'Módulo Estoque & Farmácia - Design Hero NexaSTOCK, 3 Modos de Visualização de Catálogo, Ações de Inventário/Transferência e Empréstimos com Parceiros Inteligentes',
+      description: 'Padronização do Hero Header no design consolidado Nexa, inclusão de 3 modos de visualização no Catálogo de Produtos (Compacta [Padrão], Normal [Detalhada] e Cards [Grade Visual de Suprimentos]), inserção dos botões de ação "+ Novo Inventário" e "+ Nova Transferência", e campo digital auto-sugestivo de Clínicas Parceiras na aba de Empréstimos.',
+      changes: [
+        { type: 'Hero Header NexaSTOCK', text: 'Cabeçalho moderno com badge gradiente âmbar/laranja (Boxes), título estilizado, subtítulo explicativo e botão de ação rápida "+ Cadastrar Insumo".' },
+        { type: '3 Visualizações do Catálogo', text: 'Seletor segmented no toolbar com visualizações Compacta (padrão de alta densidade 36px), Normal (detalhada com barra de estoque e saldo total em R$) e Cards (grade visual de suprimentos com indicadores e atalhos de pedido).' },
+        { type: 'Botões de Inventário & Transferência', text: 'Inserção dos botões "+ Novo Inventário" e "+ Nova Transferência" diretamente nos cabeçalhos das respectivas abas.' },
+        { type: 'Clínicas Parceiras em Empréstimos', text: 'Campo de Clínica Parceira integrado com auto-sugestão dinâmica de instituições hospitalares cadastradas + histórico automático de parceiros.' },
+        { type: 'Manuais e Documentação', text: 'Atualização do guia interativo NexaSTOCK em moduleGuidesData.js com tutoriais práticos das novas ferramentas.' }
+      ]
+    },
+    {
       version: 'v4.7.16',
       date: '21/08/2026',
       title: 'Módulo RH - 3 Modos de Visualização de Funcionários, Padrão Monetário Brasileiro e Nomenclatura Gestão de Vale-Transporte',

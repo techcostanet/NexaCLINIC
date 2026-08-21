@@ -1,3 +1,20 @@
+## [v4.7.18] - 21 de Agosto, 2026
+### Módulo Estoque & Farmácia - Design Hero NexaSTOCK, 3 Modos de Visualização de Catálogo, Ações de Inventário/Transferência e Empréstimos com Parceiros Inteligentes
+- **Hero Header Padrão NexaSTOCK:**
+  - Banner moderno com ícone temático gradiente âmbar/laranja (`Boxes`), título corporativo *NexaSTOCK — Estoque & Farmácia Hospitalar*, subtítulo explicativo e botão de ação rápida `+ Cadastrar Insumo`.
+- **3 Modos de Visualização no Catálogo de Produtos:**
+  - **Compacta (Padrão):** Tabela de alta densidade visual (linhas de 36px), código/insumo com atalho para edição, categoria, badge de lote FEFO, saldo com alerta de ruptura, estoque mínimo, status, preço unitário em `R$` e ações compactas.
+  - **Normal (Detalhada):** Tabela espaçosa com unidade/apresentação, setor padrão, barra de progresso visual de estoque (% em relação ao mínimo), preço unitário e valor financeiro total em estoque (`R$`), controle de lote e ações completas.
+  - **Cards (Grade Visual de Suprimentos):** Grade responsiva de cards com ícone de insumo em container âmbar, setor/almoxarifado padrão, indicador de status (🟢 Regular vs 🔴 Crítico), barra de nível de estoque, 4 blocos métricos e botões de ação rápida (*Editar*, *Excluir*, *+ Compra*).
+- **Inclusão dos Botões de Inventários e Transferências:**
+  - Adicionados os botões de ação `+ Novo Inventário` e `+ Nova Transferência` diretamente no cabeçalho das respectivas abas.
+- **Clínica Parceira Digital & Selecionável em Empréstimos:**
+  - Campo de Instituição / Clínica Parceira integrado com `datalist` dinâmico contendo sugestões de instituições hospitalares e acúmulo automático de parceiros utilizados nos empréstimos anteriores.
+- **Manuais e Documentação Atualizados:**
+  - Atualização completa do guia do módulo em `src/data/moduleGuidesData.js`.
+
+---
+
 ## [v4.7.16] - 21 de Agosto, 2026
 ### Módulo RH - 3 Modos de Visualização de Funcionários, Padrão Monetário Brasileiro & Nomenclatura Gestão de Vale-Transporte
 - **3 Tipos de Visualização na Aba Funcionários:**

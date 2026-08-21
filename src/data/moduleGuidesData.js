@@ -246,12 +246,24 @@ export const MODULE_GUIDES = {
     color: '#f59e0b',
     recursos: [
       {
+        title: 'Múltiplos Modos de Visualização do Catálogo',
+        desc: '3 visualizações operacionais: Compacta (padrão de alta densidade), Normal (detalhada com nível e valor estocado) e Cards (grade visual de suprimentos com barras de nível e valor).'
+      },
+      {
         title: 'Central de Relatórios (15 Tipos)',
         desc: 'Suíte completa com 15 relatórios analíticos: Curva ABC, Posição Geral, Itens Críticos, Validades FEFO, Recall e Kardex.'
       },
       {
-        title: 'Exportação em PDF e Excel (.xlsx)',
-        desc: 'Geração imediata de relatórios em PDF formatado em paisagem e planilhas Excel prontas para fórmulas.'
+        title: 'Gestão de Inventários Físicos & Auditoria',
+        desc: 'Criação e execução de contagens de estoque por local com apuração imediata de divergências e ajuste automático de saldo.'
+      },
+      {
+        title: 'Transferências Entre Locais de Armazenamento',
+        desc: 'Transferência rápida e rastreável de insumos e medicamentos entre estoques e almoxarifados setoriais.'
+      },
+      {
+        title: 'Empréstimos Inter-Hospitalares Inteligentes',
+        desc: 'Controle de insumos concedidos e recebidos de clínicas parceiras com auto-sugestão dinâmica de instituições cadastradas.'
       },
       {
         title: 'Controle de Lotes & Rastreabilidade',
@@ -264,13 +276,44 @@ export const MODULE_GUIDES = {
       {
         title: 'Painel de Busca Reversa (Recall)',
         desc: 'Rastreabilidade completa de ponta a ponta: fornecedor, nota fiscal de compra e todos os pacientes que receberam o lote.'
-      },
-      {
-        title: 'Entrada por XML / PDF (DANFE) & Manual',
-        desc: 'Abastecimento automático de lotes diretamente na importação de notas fiscais ou em movimentações avulsas.'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Alternar as Visualizações do Catálogo de Produtos',
+        steps: [
+          'Acesse a aba "Catálogo de Produtos".',
+          'Na barra de ferramentas, clique em "Compacta" (padrão rápida), "Normal" (tabela detalhada com saldo financeiro) ou "Cards" (grade visual com status e nível de estoque).',
+          'Os filtros de busca e categoria permanecem ativos em qualquer modo de exibição selecionado.'
+        ]
+      },
+      {
+        title: 'Como Abrir um Novo Inventário Físico',
+        steps: [
+          'Acesse a aba "Inventários Físicos".',
+          'Clique no botão "+ Novo Inventário" no canto superior da tabela.',
+          'Informe o título e selecione o local/almoxarifado que será auditado.',
+          'Em seguida, utilize "Digitar Contagem" para lançar as quantidades físicas conferidas.'
+        ]
+      },
+      {
+        title: 'Como Realizar uma Transferência de Estoque',
+        steps: [
+          'Acesse a aba "Transferências".',
+          'Clique no botão "+ Nova Transferência" no cabeçalho da tabela.',
+          'Selecione o local de origem, o local de destino, o insumo, a quantidade e o lote correspondente.',
+          'Confirme o lançamento para movimentar o saldo entre os locais instantaneamente.'
+        ]
+      },
+      {
+        title: 'Como Cadastrar um Empréstimo com Clínica Parceira',
+        steps: [
+          'Acesse a aba "Empréstimos".',
+          'Clique em "+ Novo Empréstimo".',
+          'No campo "Instituição / Clínica Parceira", selecione uma clínica da lista de sugestões ou digite um novo nome.',
+          'O novo parceiro digitado passará a ser sugerido automaticamente nos próximos empréstimos.'
+        ]
+      },
       {
         title: 'Como Gerar e Exportar Relatórios de Estoque (PDF / XLS)',
         steps: [
@@ -279,36 +322,17 @@ export const MODULE_GUIDES = {
           'Defina o período (Data Inicial e Final), Categoria e Setor se desejar filtrar os dados.',
           'Confira os registros na tabela de pré-visualização e clique em "Exportar PDF" ou "Exportar Excel".'
         ]
-      },
-      {
-        title: 'Como Atender Requisições com Lote (FEFO)',
-        steps: [
-          'Na aba "Atendimento de Requisições", clique no botão "Atender Requisição" do pedido pendente.',
-          'Para cada item, o sistema selecionará automaticamente o lote com vencimento mais próximo (⭐ FEFO).',
-          'Altere o lote pelo dropdown se desejar ou informe a quantidade entregue.',
-          'Clique em "Confirmar & Baixar". O sistema abaterá o saldo do lote e registrará no prontuário do paciente.'
-        ]
-      },
-      {
-        title: 'Como Fazer Busca Reversa de Lote (Recall)',
-        steps: [
-          'Acesse a aba "Rastreabilidade & Recall".',
-          'Digite o número do Lote, nome do medicamento ou selecione um dos lotes recentes.',
-          'Clique em "Rastrear Lote" para ver a nota de compra, fornecedor e a lista de pacientes que receberam as doses.',
-          'Utilize o botão "Imprimir Relatório de Recall" para auditoria sanitária ou ANVISA.'
-        ]
-      },
-      {
-        title: 'Como Dar Entrada de Lotes por Nota Fiscal',
-        steps: [
-          'Na aba "Entrada de Notas", clique em "Importar NF-e (XML / PDF)".',
-          'Envie o arquivo XML da SEFAZ ou o PDF da DANFE.',
-          'Na etapa de Mapeamento, confira o número do Lote e a Data de Validade de cada produto.',
-          'Na etapa Finalizar, confirme a entrada. O saldo geral e o lote específico serão abastecidos simultaneamente.'
-        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Qual o modo padrão de visualização do Catálogo de Produtos?',
+        resposta: 'O modo padrão é a "Visualização Compacta", configurada para agilidade operacional e máxima densidade de itens na tela.'
+      },
+      {
+        pergunta: 'As clínicas parceiras cadastradas em empréstimos ficam salvas?',
+        resposta: 'Sim. O sistema possui auto-sugestão dinâmica: toda clínica parceira utilizada em empréstimos anteriores fica salva e disponível para seleção com 1 clique.'
+      },
       {
         pergunta: 'Como exporto a Curva ABC ou a Posição Geral do estoque para o Excel?',
         resposta: 'Abra a modal clicando no botão "Relatórios" na barra superior, selecione "2. Curva ABC de Insumos" ou "1. Posição Geral" e clique no botão verde "Exportar Excel".'
@@ -316,10 +340,6 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Como sei quais pacientes tomaram determinado medicamento de um lote específico?',
         resposta: 'Basta acessar a aba "Rastreabilidade & Recall" ou gerar o relatório "11. Dossiê de Recall Farmacêutico" para listar todos os pacientes e dados fiscais.'
-      },
-      {
-        pergunta: 'Onde vejo no prontuário os remédios que o paciente já tomou?',
-        resposta: 'No módulo Clínico (NexaCLINIC), selecione o paciente e acesse a aba "Medicamentos & Insumos" para ver o histórico detalhado com lote e validade.'
       }
     ]
   },
