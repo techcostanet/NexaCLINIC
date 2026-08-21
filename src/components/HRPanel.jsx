@@ -563,7 +563,7 @@ export default function HRPanel({ currentUser }) {
 
           {/* TAB: Vale-Transporte */}
           {activeTab === 'transport' && (() => {
-            const currentVtList = transportVouchers.filter(v => (v.period || '2026-08') === selectedVtPeriod);
+            const currentVtList = transportVouchers.filter(v => (v.period || '2026-08') === (selectedVtPeriod || '2026-08'));
             const totalPrevisto = currentVtList.reduce((acc, curr) => acc + (parseFloat(curr.expectedValue || curr.totalValue || ((curr.dailyCost || 0) * (curr.daysCount || 22))) || 0), 0);
             const totalSaldo = currentVtList.reduce((acc, curr) => acc + (parseFloat(curr.currentBalance) || 0), 0);
             const totalRecarga = currentVtList.reduce((acc, curr) => acc + (parseFloat(curr.rechargeNeeded) > 0 ? parseFloat(curr.rechargeNeeded) : 0), 0);
@@ -590,7 +590,7 @@ export default function HRPanel({ currentUser }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--bg-card)', padding: '0.4rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                       <label style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>Período:</label>
                       <select
-                        value={selectedVtPeriod}
+                        value={selectedVtPeriod || '2026-08'}
                         onChange={(e) => setSelectedVtPeriod(e.target.value)}
                         style={{ border: 'none', background: 'transparent', fontWeight: '700', color: 'var(--text-color)', cursor: 'pointer', outline: 'none' }}
                       >

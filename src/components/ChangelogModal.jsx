@@ -6,7 +6,7 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v4.7.9',
+      version: 'v4.7.10',
       date: '21/08/2026',
       title: 'Módulo RH - Gestão Histórica de Vale-Transporte (VT) & Sincronização por Período',
       description: 'Sincronização integral do histórico de concessões de Vale-Transporte de março a agosto de 2026 no Firestore, com persistência automática de períodos, cálculo de recargas e atualização das concessões cadastradas.',

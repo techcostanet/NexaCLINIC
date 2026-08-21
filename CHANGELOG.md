@@ -1,4 +1,4 @@
-## [v4.7.9] - 21 de Agosto, 2026
+## [v4.7.10] - 21 de Agosto, 2026
 ### Módulo RH - Gestão Histórica de Vale-Transporte (VT) & Sincronização por Período
 - **Histórico & Sincronização em Produção:**
   - Carga e consolidação de 481 registros de concessões de Vale-Transporte abrangendo março, abril, maio, junho, julho e agosto de 2026 diretamente no Firestore.
