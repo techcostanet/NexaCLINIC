@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.16',
+      date: '21/08/2026',
+      title: 'Módulo RH - 3 Modos de Visualização de Funcionários, Padrão Monetário Brasileiro e Nomenclatura Gestão de Vale-Transporte',
+      description: 'Implementação de 3 modos de visualização rápida na aba Funcionários (Compacta [Padrão], Normal [Detalhada] e Cards [Grade Visual de Crachás]), padronização monetária brasileira (R$ 0,00) em todo o módulo e transição de nomenclatura para "Gestão de Vale-Transporte".',
+      changes: [
+        { type: '3 Visualizações de Funcionários', text: 'Seletor de modos na toolbar: Compacta (padrão de alta densidade), Normal (com salário formatado e tempo de casa) e Cards (grade com fotos, contato WhatsApp e ações rápidas).' },
+        { type: 'Padrão Monetário Brasileiro', text: 'Formatação universal de valores em Real (R$ 1.234,56) e porcentagens (12,34%) com vírgula decimal em todos os cards, relatórios, modais e tabelas.' },
+        { type: 'Gestão de Vale-Transporte', text: 'Renomeação de cabeçalhos e formulários de "Concessão" para "Gestão de Vale-Transporte" e "Novo Vale-Transporte", com sinalização de "Rota Especial".' },
+        { type: 'Documentação & Manuais', text: 'Atualização do manual interativo NexaHR com instruções e FAQs das novas visualizações operacionais.' }
+      ]
+    },
+    {
       version: 'v4.7.14',
       date: '21/08/2026',
       title: 'Módulo RH - Correção de Importação de Ícones (Clock) e Validação de Renderização',

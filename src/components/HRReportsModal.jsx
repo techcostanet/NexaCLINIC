@@ -179,7 +179,7 @@ export default function HRReportsModal({
 
           let situacao = 'Recarga Normal';
           if (v.highlightType === 'orange' || (v.balancePrevious === 0 && currentBal === 0 && expected > 0)) {
-            situacao = 'Concessão Especial';
+            situacao = 'Rota Especial';
           } else if (v.highlightType === 'yellow' || (expected - currentBal) < 0) {
             situacao = 'Saldo Excedente';
           } else if (v.highlightType === 'red' || currentBal < 0) {

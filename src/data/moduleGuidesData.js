@@ -102,16 +102,16 @@ export const MODULE_GUIDES = {
         desc: 'Relatórios completos em PDF e Excel (Cadastro Geral, VT, Presença Premiada, Aniversariantes, Advertências, Absenteísmo, Turnover, Experiência, Vacinas, Dependentes, Folha Sintética, Dados Bancários/PIX, Documentos/CNH, Efetivo e Auditoria LGPD).'
       },
       {
-        title: 'Quadro de Colaboradores & Ficha Completa',
-        desc: 'Cadastro geral de funcionários, setor, cargo, modalidade (CLT/PJ), salário base, dados bancários, dependentes e gestão de documentos.'
+        title: 'Múltiplas Visualizações de Funcionários',
+        desc: '3 modos de visualização rápida: Compacta (padrão de alta densidade), Normal (detalhada com salário/admissão) e Cards (grade de crachás visuais com avatar e atalho WhatsApp).'
       },
       {
-        title: 'Controle de Vale-Transporte & Saldo',
-        desc: 'Gestão de linhas/rotas urbanas, tarifas diárias (ida/volta), cálculo de recargas e histórico consolidado mês a mês.'
+        title: 'Gestão de Vale-Transporte & Saldo',
+        desc: 'Controle de linhas/rotas urbanas, tarifas diárias (ida/volta), cálculo de recargas e identificação de rotas especiais ou saldo excedente.'
       },
       {
         title: 'Presença Premiada & Assiduidade',
-        desc: 'Apuração automatizada de bonificação financeira para colaboradores 100% assíduos sem faltas ou advertências.'
+        desc: 'Apuração automatizada de bonificação financeira para colaboradores 100% assíduos (>90d CLT sem faltas ou advertências).'
       },
       {
         title: 'Saúde Ocupacional & Imunização',
@@ -119,6 +119,14 @@ export const MODULE_GUIDES = {
       }
     ],
     tutorial: [
+      {
+        title: 'Como Alternar a Visualização de Funcionários',
+        steps: [
+          'Acesse a aba "Funcionários".',
+          'Na barra de filtros, selecione a visualização desejada: "Compacta" (padrão rápida), "Normal" (tabela detalhada) ou "Cards" (grade visual de crachás).',
+          'Os dados de busca e setor são sincronizados instantaneamente em qualquer uma das visões.'
+        ]
+      },
       {
         title: 'Como Acessar e Exportar os 15 Relatórios',
         steps: [
@@ -139,7 +147,7 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Fechar a Recarga de Vale-Transporte',
         steps: [
-          'Acesse a aba "Vale-Transporte".',
+          'Acesse a aba "Gestão de Vale-Transporte".',
           'Selecione a competência mensal no seletor de período.',
           'Verifique as tarifas diárias e os saldos remanescentes informados.',
           'Utilize a Central de Relatórios (Relatório 2) para emitir o demonstrativo de recargas para o financeiro.'
@@ -148,12 +156,16 @@ export const MODULE_GUIDES = {
     ],
     duvidas: [
       {
+        pergunta: 'Qual o modo padrão de visualização da lista de colaboradores?',
+        resposta: 'O modo padrão é a "Visualização Compacta", focada em velocidade e alta densidade de registros na tela.'
+      },
+      {
         pergunta: 'Onde encontro a lista de aniversariantes e advertências?',
         resposta: 'Todos os relatórios operacionais e analíticos agora estão centralizados no botão "Relatórios" no topo da navbar, com opções completas de PDF e Excel.'
       },
       {
         pergunta: 'Como funciona a elegibilidade da Presença Premiada?',
-        resposta: 'O sistema avalia automaticamente o período de competência: colaboradores ativos com 0 faltas injustificadas e 0 advertências são classificados como elegíveis ao valor configurado.'
+        resposta: 'O sistema avalia automaticamente o período de competência: colaboradores ativos (>90 dias CLT) com 0 faltas injustificadas e 0 advertências são classificados como elegíveis.'
       },
       {
         pergunta: 'Como funciona a exportação para Excel dos relatórios?',

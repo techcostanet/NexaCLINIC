@@ -1,3 +1,18 @@
+## [v4.7.16] - 21 de Agosto, 2026
+### Módulo RH - 3 Modos de Visualização de Funcionários, Padrão Monetário Brasileiro & Nomenclatura Gestão de Vale-Transporte
+- **3 Tipos de Visualização na Aba Funcionários:**
+  - **Compacta (Padrão):** Tabela de alta densidade visual, linhas de 36px, foto redonda miniatura de 26px e informações essenciais diretas (Funcionário, CPF, Cargo/Setor, Contrato, Admissão, Pendências, Ações compactas).
+  - **Normal (Detalhada):** Tabela expandida com foto de 38px, e-mail/contato, CPF, Cargo, Contrato com salário formatado em Real (`R$`), Admissão com tempo de casa calculado (ex: `2a 5m`), badges de conformidade e status.
+  - **Cards (Grade Visual):** Grade responsiva de crachás corporativos com avatar de 54px, nome com link para ficha, cargo, badge de setor, painel métrico em 4 blocos (CPF, Salário, Admissão, Telefone com atalho direto para WhatsApp), badges de vacinas/documentos/advertências e botões "Ficha Completa", "Demitir" e "Excluir".
+- **Padronização Monetária e Numérica Brasileira:**
+  - Aplicação universal dos formatadores `formatCurrencyBR` (`R$ 1.234,56`) e `formatNumberBR` (`10,20%`) em todos os cards, relatórios, modais e tabelas do módulo.
+- **Nomenclatura "Gestão de Vale-Transporte":**
+  - Transição de termos de "Concessão" para "Gestão de Vale-Transporte" e "+ Novo Vale-Transporte", com sinalização de "Rota Especial".
+- **Manuais e Documentação Atualizados:**
+  - Atualização do manual interativo NexaHR com instruções de operação dos 3 modos de visualização.
+
+---
+
 ## [v4.7.14] - 21 de Agosto, 2026
 ### Módulo RH - Correção de Importação de Ícone (Clock) e Estabilidade do Dashboard
 - **Correção de Referência Lucide-React:**

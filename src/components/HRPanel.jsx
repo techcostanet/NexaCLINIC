@@ -5,7 +5,8 @@ import {
   Search, FileText, UploadCloud, Download, Calendar, ShieldAlert,
   CheckCircle2, AlertTriangle, Eye, Award, Check, UserCheck, HelpCircle,
   Gift, Bus, ArrowUp, ArrowDown, ArrowUpDown, Move, Settings, Save, 
-  RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Trophy, Printer, Clock
+  RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Trophy, Printer, Clock,
+  AlignJustify, Table, LayoutGrid, Phone, Mail, ExternalLink
 } from 'lucide-react';
 
 const DEFAULT_DASHBOARD_LAYOUT = [
@@ -38,6 +39,18 @@ export const formatDateBR = (dateVal) => {
   const d = new Date(dateVal);
   if (isNaN(d.getTime())) return '-';
   return d.toLocaleDateString('pt-BR');
+};
+
+export const formatCurrencyBR = (val) => {
+  if (val === null || val === undefined || val === '') return 'R$ 0,00';
+  const num = typeof val === 'number' ? val : parseFloat(String(val).replace(/[^\d.-]/g, '').replace(',', '.')) || 0;
+  return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
+
+export const formatNumberBR = (val, decimals = 2) => {
+  if (val === null || val === undefined || val === '') return '0,00';
+  const num = typeof val === 'number' ? val : parseFloat(String(val).replace(/[^\d.-]/g, '').replace(',', '.')) || 0;
+  return num.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 };
 
 export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
@@ -182,6 +195,9 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
     absenteeism,
     recentAbsences
   } = logic;
+
+  // View Mode: 'compact' (Padrão) | 'normal' | 'cards'
+  const [employeeViewMode, setEmployeeViewMode] = useState('compact');
 
   return (
     <div style={styles.container}>
@@ -371,7 +387,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                             </div>
                           </div>
                           <div>
-                            <span style={{ ...styles.kpiVal, color: '#10b981' }}>{turnover.toFixed(2)}%</span>
+                            <span style={{ ...styles.kpiVal, color: '#10b981' }}>{formatNumberBR(turnover)}%</span>
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
                               Índice de rotatividade de equipe
                             </span>
@@ -388,7 +404,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                             </div>
                           </div>
                           <div>
-                            <span style={{ ...styles.kpiVal, color: '#3b82f6' }}>{absenteeism.toFixed(2)}%</span>
+                            <span style={{ ...styles.kpiVal, color: '#3b82f6' }}>{formatNumberBR(absenteeism)}%</span>
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
                               Taxa de faltas e ausências
                             </span>
@@ -588,7 +604,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                                     <span onClick={() => handleOpenEmpEdit(emp)} style={{ fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>
                                       {emp.name}
                                     </span>
-                                    <span style={{ fontWeight: '700', color: '#10b981' }}>+R$ {awardValue.toFixed(2)}</span>
+                                    <span style={{ fontWeight: '700', color: '#10b981' }}>+{formatCurrencyBR(awardValue)}</span>
                                   </div>
                                 ))
                               )}
@@ -645,7 +661,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
                     <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Bus size={20} style={{ color: '#ec4899' }} /> Gestão & Concessão de Vale-Transporte (VT)
+                      <Bus size={20} style={{ color: '#ec4899' }} /> Gestão de Vale-Transporte
                     </h2>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Controle de itinerários, recargas por período, regras de cartão e folha de pagamento.</p>
                   </div>
@@ -693,7 +709,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                     </button>
 
                     <button onClick={handleOpenVoucherAdd} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: '#ec4899' }}>
-                      <Plus size={16} /> Nova Concessão
+                      <Plus size={16} /> Novo Vale-Transporte
                     </button>
                   </div>
                 </div>
@@ -706,19 +722,19 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                   </div>
                   <div style={{ ...styles.kpiCard, borderLeftColor: '#3b82f6', display: 'flex', flexDirection: 'column' }}>
                     <span style={styles.kpiLabel}>Previsto</span>
-                    <span style={styles.kpiVal}>R$ {totalPrevisto.toFixed(2)}</span>
+                    <span style={styles.kpiVal}>{formatCurrencyBR(totalPrevisto)}</span>
                   </div>
                   <div style={{ ...styles.kpiCard, borderLeftColor: '#10b981', display: 'flex', flexDirection: 'column' }}>
                     <span style={styles.kpiLabel}>Saldo</span>
-                    <span style={styles.kpiVal}>R$ {totalSaldo.toFixed(2)}</span>
+                    <span style={styles.kpiVal}>{formatCurrencyBR(totalSaldo)}</span>
                   </div>
                   <div style={{ ...styles.kpiCard, borderLeftColor: '#ef4444', display: 'flex', flexDirection: 'column' }}>
                     <span style={styles.kpiLabel}>Recarga</span>
-                    <span style={styles.kpiVal}>R$ {totalRecarga.toFixed(2)}</span>
+                    <span style={styles.kpiVal}>{formatCurrencyBR(totalRecarga)}</span>
                   </div>
                   <div style={{ ...styles.kpiCard, borderLeftColor: '#f59e0b', display: 'flex', flexDirection: 'column' }}>
                     <span style={styles.kpiLabel}>Desconto</span>
-                    <span style={styles.kpiVal}>R$ {totalDescontoFolha.toFixed(2)}</span>
+                    <span style={styles.kpiVal}>{formatCurrencyBR(totalDescontoFolha)}</span>
                   </div>
                 </div>
 
@@ -746,7 +762,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                     </thead>
                     <tbody>
                       {currentVtList.length === 0 ? (
-                        <tr><td colSpan="9" style={styles.noDataCell}>Nenhuma concessão de vale-transporte encontrada para {selectedVtPeriod}.</td></tr>
+                        <tr><td colSpan="9" style={styles.noDataCell}>Nenhum vale-transporte encontrado para {selectedVtPeriod}.</td></tr>
                       ) : (
                         currentVtList.map((v) => {
                           const emp = employees.find(e => e.id === v.employeeId || (e.name && e.name.trim().toLowerCase() === (v.employeeName || '').trim().toLowerCase()));
@@ -770,7 +786,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                             highlightStyle = { backgroundColor: '#fff7ed' };
                             highlightBadge = (
                               <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem', borderRadius: '12px', backgroundColor: '#ffedd5', color: '#c2410c', border: '1px solid #fed7aa' }}>
-                                🟠 Concessão Especial / Nova Rota
+                                🟠 Rota Especial / Sem Saldo
                               </span>
                             );
                           } else if (v.highlightType === 'yellow' || rawRecharge < 0) {
@@ -804,15 +820,15 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                               <td style={{ fontSize: '0.85rem' }}>{empRole} <span style={{ color: 'var(--text-muted)' }}>({empSector})</span></td>
                               <td style={{ fontWeight: '700', fontSize: '0.85rem' }}>{v.workSchedule || 'SEGUNDA A SÁBADO'}</td>
                               <td style={{ fontSize: '0.85rem' }}>
-                                <div>Total: <strong>R$ {daily.toFixed(2)}</strong></div>
-                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Ida: R$ {ida.toFixed(2)} | Volta: R$ {volta.toFixed(2)}</span>
+                                <div>Total: <strong>{formatCurrencyBR(daily)}</strong></div>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Ida: {formatCurrencyBR(ida)} | Volta: {formatCurrencyBR(volta)}</span>
                               </td>
-                              <td style={{ color: '#3b82f6', fontWeight: '700' }}>R$ {expected.toFixed(2)}</td>
+                              <td style={{ color: '#3b82f6', fontWeight: '700' }}>{formatCurrencyBR(expected)}</td>
                               <td style={{ color: currentBal < 0 ? '#ef4444' : '#10b981', fontWeight: '700' }}>
-                                R$ {currentBal.toFixed(2)}
+                                {formatCurrencyBR(currentBal)}
                               </td>
                               <td style={{ color: recharge > 0 ? '#ef4444' : '#6b7280', fontWeight: '800', fontSize: '0.95rem' }}>
-                                R$ {recharge.toFixed(2)}
+                                {formatCurrencyBR(recharge)}
                               </td>
                               <td>{highlightBadge}</td>
                               <td>
@@ -837,131 +853,548 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
           })()}
 
           {/* TAB 2: Employees Directory */}
-          {activeTab === 'employees' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={styles.filtersBar}>
-                <div style={styles.searchWrapper}>
-                  <Search size={18} style={styles.searchIcon} />
-                  <input 
-                    type="text" 
-                    placeholder="Pesquisar funcionário por nome ou CPF..."
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    style={styles.searchInput}
-                  />
-                </div>
-                <div style={{ ...styles.selectsWrapper, display: 'flex', gap: '0.5rem' }}>
-                  <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={styles.filterSelect}>
-                    <option value="active">Apenas Ativos ({employees.filter(e => e.status !== 'Inativo').length})</option>
-                    <option value="inactive">Inativos / Demitidos ({employees.filter(e => e.status === 'Inativo').length})</option>
-                    <option value="all">Todos os Registros ({employees.length})</option>
-                  </select>
-                  <select value={filterSector} onChange={e => setFilterSector(e.target.value)} style={styles.filterSelect}>
-                    <option value="">Todos os Setores</option>
-                    {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                </div>
-                <button onClick={handleOpenEmpAdd} style={styles.addBtn}>
-                  <Plus size={16} /> Novo Funcionário
-                </button>
-              </div>
+          {activeTab === 'employees' && (() => {
+            const getEmployeeTenure = (admissionDate) => {
+              if (!admissionDate) return '';
+              const start = new Date(admissionDate);
+              if (isNaN(start.getTime())) return '';
+              const now = new Date();
+              const diffMonths = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+              if (diffMonths < 1) return '< 1m';
+              if (diffMonths < 12) return `${diffMonths}m`;
+              const years = Math.floor(diffMonths / 12);
+              const remMonths = diffMonths % 12;
+              return remMonths > 0 ? `${years}a ${remMonths}m` : `${years}a`;
+            };
 
-              <div style={styles.tableWrapper}>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th onClick={() => handleSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Nome">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          Funcionário {renderSortIcon('name')}
-                        </div>
-                      </th>
-                      <th onClick={() => handleSort('cpf')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por CPF">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          CPF {renderSortIcon('cpf')}
-                        </div>
-                      </th>
-                      <th onClick={() => handleSort('role')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Cargo">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          Setor / Cargo {renderSortIcon('role')}
-                        </div>
-                      </th>
-                      <th onClick={() => handleSort('contractType')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Contrato">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          Tipo Contrato {renderSortIcon('contractType')}
-                        </div>
-                      </th>
-                      <th onClick={() => handleSort('admissionDate')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Admissão">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          Admissão {renderSortIcon('admissionDate')}
-                        </div>
-                      </th>
-                      <th onClick={() => handleSort('warnings')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Pendências">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          Pendências {renderSortIcon('warnings')}
-                        </div>
-                      </th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={styles.filtersBar}>
+                  <div style={styles.searchWrapper}>
+                    <Search size={18} style={styles.searchIcon} />
+                    <input 
+                      type="text" 
+                      placeholder="Pesquisar funcionário por nome ou CPF..."
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      style={styles.searchInput}
+                    />
+                  </div>
+
+                  <div style={{ ...styles.selectsWrapper, display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={styles.filterSelect}>
+                      <option value="active">Apenas Ativos ({employees.filter(e => e.status !== 'Inativo').length})</option>
+                      <option value="inactive">Inativos / Demitidos ({employees.filter(e => e.status === 'Inativo').length})</option>
+                      <option value="all">Todos os Registros ({employees.length})</option>
+                    </select>
+
+                    <select value={filterSector} onChange={e => setFilterSector(e.target.value)} style={styles.filterSelect}>
+                      <option value="">Todos os Setores</option>
+                      {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+
+                    {/* View Mode Segmented Selector */}
+                    <div style={{ display: 'inline-flex', alignItems: 'center', backgroundColor: 'var(--bg-body)', padding: '0.2rem', borderRadius: '8px', border: '1px solid var(--border-color)', gap: '0.2rem' }}>
+                      <button 
+                        type="button"
+                        onClick={() => setEmployeeViewMode('compact')} 
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          fontSize: '0.78rem',
+                          fontWeight: '600',
+                          border: 'none',
+                          cursor: 'pointer',
+                          backgroundColor: employeeViewMode === 'compact' ? '#ec4899' : 'transparent',
+                          color: employeeViewMode === 'compact' ? '#fff' : 'var(--text-secondary)',
+                          transition: 'all 0.15s ease'
+                        }}
+                        title="Visualização Compacta (Padrão)"
+                      >
+                        <AlignJustify size={14} /> Compacta
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setEmployeeViewMode('normal')} 
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          fontSize: '0.78rem',
+                          fontWeight: '600',
+                          border: 'none',
+                          cursor: 'pointer',
+                          backgroundColor: employeeViewMode === 'normal' ? '#ec4899' : 'transparent',
+                          color: employeeViewMode === 'normal' ? '#fff' : 'var(--text-secondary)',
+                          transition: 'all 0.15s ease'
+                        }}
+                        title="Visualização Normal / Detalhada"
+                      >
+                        <Table size={14} /> Normal
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setEmployeeViewMode('cards')} 
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          fontSize: '0.78rem',
+                          fontWeight: '600',
+                          border: 'none',
+                          cursor: 'pointer',
+                          backgroundColor: employeeViewMode === 'cards' ? '#ec4899' : 'transparent',
+                          color: employeeViewMode === 'cards' ? '#fff' : 'var(--text-secondary)',
+                          transition: 'all 0.15s ease'
+                        }}
+                        title="Visualização em Grade de Cards"
+                      >
+                        <LayoutGrid size={14} /> Cards
+                      </button>
+                    </div>
+                  </div>
+
+                  <button onClick={handleOpenEmpAdd} style={styles.addBtn}>
+                    <Plus size={16} /> Novo Funcionário
+                  </button>
+                </div>
+
+                {/* 1. VIEW MODE: COMPACTA (PADRÃO) */}
+                {employeeViewMode === 'compact' && (
+                  <div style={styles.tableWrapper}>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr>
+                          <th onClick={() => handleSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Nome">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              Funcionário {renderSortIcon('name')}
+                            </div>
+                          </th>
+                          <th onClick={() => handleSort('cpf')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por CPF">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              CPF {renderSortIcon('cpf')}
+                            </div>
+                          </th>
+                          <th onClick={() => handleSort('role')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Cargo">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              Cargo / Setor {renderSortIcon('role')}
+                            </div>
+                          </th>
+                          <th onClick={() => handleSort('contractType')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Contrato">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              Contrato {renderSortIcon('contractType')}
+                            </div>
+                          </th>
+                          <th onClick={() => handleSort('admissionDate')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Admissão">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              Admissão {renderSortIcon('admissionDate')}
+                            </div>
+                          </th>
+                          <th onClick={() => handleSort('warnings')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Pendências">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              Pendências {renderSortIcon('warnings')}
+                            </div>
+                          </th>
+                          <th>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredEmployees.length === 0 ? (
+                          <tr>
+                            <td colSpan="7" style={styles.noDataCell}>Nenhum funcionário cadastrado ou encontrado.</td>
+                          </tr>
+                        ) : (
+                          filteredEmployees.map(emp => {
+                            const warnCount = emp.warnings?.length || 0;
+                            const docCount = emp.documents?.length || 0;
+                            return (
+                              <tr key={emp.id} style={{ height: '36px' }}>
+                                <td onClick={() => handleOpenEmpEdit(emp)} style={{ cursor: 'pointer', padding: '0.35rem 0.5rem' }} title={`Clique para abrir a ficha de ${emp.name}`}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#fdf2f8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#db2777', overflow: 'hidden', fontSize: '0.65rem', flexShrink: 0 }}>
+                                      {emp.photo ? (
+                                        <img src={emp.photo} alt={emp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      ) : (
+                                        emp.name.substring(0, 2).toUpperCase()
+                                      )}
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                      <span style={{ fontWeight: '700', fontSize: '0.85rem', color: emp.status === 'Inativo' ? 'var(--text-muted)' : '#ec4899', textDecoration: 'underline' }}>{emp.name}</span>
+                                      {emp.status === 'Inativo' && (
+                                        <span style={{ fontSize: '0.6rem', padding: '0.05rem 0.3rem', borderRadius: '4px', backgroundColor: '#fee2e2', color: '#dc2626', fontWeight: '700' }}>Inativo</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}>{emp.cpf}</td>
+                                <td style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}>
+                                  <span style={{ fontWeight: '600' }}>{emp.role}</span>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.35rem' }}>({sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId})</span>
+                                </td>
+                                <td style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}>
+                                  <span style={{ fontSize: '0.7rem', fontWeight: '700', padding: '0.1rem 0.35rem', borderRadius: '4px', backgroundColor: emp.contractType === 'PJ' ? '#e0e7ff' : '#f1f5f9', color: emp.contractType === 'PJ' ? '#4338ca' : '#334155' }}>
+                                    {emp.contractType || 'CLT'}
+                                  </span>
+                                </td>
+                                <td style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}>{formatDateBR(emp.admissionDate)}</td>
+                                <td style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}>
+                                  {warnCount > 0 && <span style={{ ...styles.badgeCritical, marginRight: '0.25rem', fontSize: '0.65rem', padding: '0.1rem 0.3rem' }}>{warnCount} Adv</span>}
+                                  {docCount > 0 && <span style={{ ...styles.badgeNormal, fontSize: '0.65rem', padding: '0.1rem 0.3rem' }}>{docCount} Docs</span>}
+                                  {warnCount === 0 && docCount === 0 && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>-</span>}
+                                </td>
+                                <td style={{ padding: '0.35rem 0.5rem' }}>
+                                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                    <button onClick={() => handleOpenEmpEdit(emp)} style={{ ...styles.actionEditBtn, padding: '0.2rem 0.45rem', fontSize: '0.75rem' }} title="Abrir Ficha">Ficha</button>
+                                    {emp.status !== 'Inativo' && (
+                                      <button onClick={() => handleDismissEmployee(emp)} style={{ ...styles.actionEditBtn, padding: '0.2rem 0.45rem', fontSize: '0.75rem', color: '#d97706', borderColor: 'rgba(217,119,6,0.2)' }} title="Registrar Demissão">Demitir</button>
+                                    )}
+                                    <button onClick={() => handleDeleteEmployee(emp)} style={{ ...styles.actionEditBtn, padding: '0.2rem 0.45rem', fontSize: '0.75rem', color: 'var(--danger-color)', borderColor: 'rgba(239,68,68,0.2)' }} title="Excluir">Excluir</button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* 2. VIEW MODE: NORMAL (DETALHADA) */}
+                {employeeViewMode === 'normal' && (
+                  <div style={styles.tableWrapper}>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr>
+                          <th onClick={() => handleSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Nome">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              Colaborador {renderSortIcon('name')}
+                            </div>
+                          </th>
+                          <th onClick={() => handleSort('cpf')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por CPF">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              CPF {renderSortIcon('cpf')}
+                            </div>
+                          </th>
+                          <th onClick={() => handleSort('role')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Cargo">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              Setor & Cargo {renderSortIcon('role')}
+                            </div>
+                          </th>
+                          <th onClick={() => handleSort('salary')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Salário">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              Contrato & Salário {renderSortIcon('salary')}
+                            </div>
+                          </th>
+                          <th onClick={() => handleSort('admissionDate')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Admissão">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              Admissão {renderSortIcon('admissionDate')}
+                            </div>
+                          </th>
+                          <th onClick={() => handleSort('warnings')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Pendências">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              Conformidade {renderSortIcon('warnings')}
+                            </div>
+                          </th>
+                          <th>Status</th>
+                          <th>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredEmployees.length === 0 ? (
+                          <tr>
+                            <td colSpan="8" style={styles.noDataCell}>Nenhum funcionário cadastrado ou encontrado.</td>
+                          </tr>
+                        ) : (
+                          filteredEmployees.map(emp => {
+                            const warnCount = emp.warnings?.length || 0;
+                            const docCount = emp.documents?.length || 0;
+                            const tenure = getEmployeeTenure(emp.admissionDate);
+
+                            return (
+                              <tr key={emp.id}>
+                                <td onClick={() => handleOpenEmpEdit(emp)} style={{ cursor: 'pointer' }} title={`Clique para abrir a ficha de ${emp.name}`}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.4rem 0' }}>
+                                    {emp.photo ? (
+                                      <img src={emp.photo} alt={emp.name} style={styles.tablePhoto} />
+                                    ) : (
+                                      <div style={styles.tablePhotoPlaceholder}>{emp.name.charAt(0)}</div>
+                                    )}
+                                    <div>
+                                      <div style={{ fontWeight: '700', color: emp.status === 'Inativo' ? 'var(--text-muted)' : '#ec4899', textDecoration: 'underline' }}>{emp.name}</div>
+                                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{emp.email || emp.phone || 'Sem contato'}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td>{emp.cpf}</td>
+                                <td>
+                                  <div style={{ fontWeight: '600' }}>{emp.role}</div>
+                                  <span style={styles.categoryBadge}>{sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId}</span>
+                                </td>
+                                <td>
+                                  <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{formatCurrencyBR(emp.salary)}</div>
+                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{emp.contractType || 'CLT'}</span>
+                                </td>
+                                <td>
+                                  <div>{formatDateBR(emp.admissionDate)}</div>
+                                  {tenure && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>({tenure})</span>}
+                                </td>
+                                <td>
+                                  {warnCount > 0 && <span style={{ ...styles.badgeCritical, marginRight: '0.25rem' }}>{warnCount} Adv.</span>}
+                                  {docCount > 0 && <span style={styles.badgeNormal}>{docCount} Docs</span>}
+                                  {warnCount === 0 && docCount === 0 && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>OK</span>}
+                                </td>
+                                <td>
+                                  <span style={{
+                                    fontSize: '0.75rem',
+                                    fontWeight: '700',
+                                    padding: '0.2rem 0.5rem',
+                                    borderRadius: '12px',
+                                    backgroundColor: emp.status === 'Inativo' ? '#fee2e2' : '#f0fdf4',
+                                    color: emp.status === 'Inativo' ? '#dc2626' : '#16a34a'
+                                  }}>
+                                    {emp.status === 'Inativo' ? 'Inativo' : 'Ativo'}
+                                  </span>
+                                </td>
+                                <td>
+                                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                    <button onClick={() => handleOpenEmpEdit(emp)} style={styles.actionEditBtn} title="Abrir Ficha">Ficha</button>
+                                    {emp.status !== 'Inativo' && (
+                                      <button onClick={() => handleDismissEmployee(emp)} style={{ ...styles.actionEditBtn, color: '#d97706', borderColor: 'rgba(217,119,6,0.2)' }} title="Registrar Demissão">Demitir</button>
+                                    )}
+                                    <button onClick={() => handleDeleteEmployee(emp)} style={{ ...styles.actionEditBtn, color: 'var(--danger-color)', borderColor: 'rgba(239,68,68,0.2)' }} title="Excluir">Excluir</button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* 3. VIEW MODE: CARDS (GRADE VISUAL) */}
+                {employeeViewMode === 'cards' && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))',
+                    gap: '1.25rem'
+                  }}>
                     {filteredEmployees.length === 0 ? (
-                      <tr>
-                        <td colSpan="7" style={styles.noDataCell}>Nenhum funcionário cadastrado ou encontrado.</td>
-                      </tr>
+                      <div style={{ ...styles.noDataCell, gridColumn: '1 / -1', padding: '2rem', textAlign: 'center' }}>
+                        Nenhum funcionário cadastrado ou encontrado.
+                      </div>
                     ) : (
                       filteredEmployees.map(emp => {
                         const warnCount = emp.warnings?.length || 0;
                         const docCount = emp.documents?.length || 0;
+                        const vacCount = emp.vaccinations?.length || 0;
+                        const tenure = getEmployeeTenure(emp.admissionDate);
+
                         return (
-                          <tr key={emp.id}>
-                            <td onClick={() => handleOpenEmpEdit(emp)} style={{ cursor: 'pointer' }} title={`Clique para abrir a ficha de ${emp.name}`}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0' }}>
+                          <div 
+                            key={emp.id}
+                            style={{
+                              borderRadius: '12px',
+                              backgroundColor: 'var(--bg-card)',
+                              border: '1px solid var(--border-color)',
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                              padding: '1.1rem',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              gap: '0.75rem',
+                              transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                            }}
+                          >
+                            {/* Card Top: Badges */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{
+                                fontSize: '0.7rem',
+                                fontWeight: '700',
+                                padding: '0.15rem 0.45rem',
+                                borderRadius: '12px',
+                                backgroundColor: emp.status === 'Inativo' ? '#fee2e2' : '#f0fdf4',
+                                color: emp.status === 'Inativo' ? '#dc2626' : '#16a34a'
+                              }}>
+                                • {emp.status === 'Inativo' ? 'Inativo' : 'Ativo'}
+                              </span>
+
+                              <span style={{
+                                fontSize: '0.7rem',
+                                fontWeight: '700',
+                                padding: '0.15rem 0.45rem',
+                                borderRadius: '6px',
+                                backgroundColor: emp.contractType === 'PJ' ? '#e0e7ff' : '#f1f5f9',
+                                color: emp.contractType === 'PJ' ? '#4338ca' : '#475569'
+                              }}>
+                                {emp.contractType || 'CLT'}
+                              </span>
+                            </div>
+
+                            {/* Card Center: Avatar & Info */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '0.4rem' }}>
+                              <div style={{
+                                width: '54px',
+                                height: '54px',
+                                borderRadius: '50%',
+                                backgroundColor: '#fdf2f8',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 'bold',
+                                color: '#db2777',
+                                overflow: 'hidden',
+                                fontSize: '1.2rem',
+                                border: '2px solid #fbcfe8'
+                              }}>
                                 {emp.photo ? (
-                                  <img src={emp.photo} alt={emp.name} style={styles.tablePhoto} />
+                                  <img src={emp.photo} alt={emp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : (
-                                  <div style={styles.tablePhotoPlaceholder}>{emp.name.charAt(0)}</div>
+                                  emp.name.substring(0, 2).toUpperCase()
                                 )}
-                                <div>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                    <div style={{ fontWeight: '700', color: emp.status === 'Inativo' ? 'var(--text-muted)' : '#ec4899', textDecoration: 'underline' }}>{emp.name}</div>
-                                    {emp.status === 'Inativo' && (
-                                      <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem', borderRadius: '4px', backgroundColor: '#fee2e2', color: '#dc2626', fontWeight: '700' }}>Inativo</span>
-                                    )}
-                                  </div>
-                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{emp.email}</div>
+                              </div>
+
+                              <div>
+                                <h3 
+                                  onClick={() => handleOpenEmpEdit(emp)}
+                                  style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }}
+                                  title="Clique para abrir ficha"
+                                >
+                                  {emp.name}
+                                </h3>
+                                <div style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)', marginTop: '0.15rem' }}>
+                                  {emp.role}
                                 </div>
+                                <span style={{ ...styles.categoryBadge, marginTop: '0.25rem', display: 'inline-block' }}>
+                                  {sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId}
+                                </span>
                               </div>
-                            </td>
-                            <td>{emp.cpf}</td>
-                            <td>
-                              <div style={{ fontWeight: '600' }}>{emp.role}</div>
-                              <span style={styles.categoryBadge}>{sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId}</span>
-                            </td>
-                            <td>{emp.contractType}</td>
-                            <td>{formatDateBR(emp.admissionDate)}</td>
-                            <td>
-                              {warnCount > 0 && <span style={{ ...styles.badgeCritical, marginRight: '0.25rem' }}>{warnCount} Adv.</span>}
-                              {docCount > 0 && <span style={styles.badgeNormal}>{docCount} Docs</span>}
-                              {warnCount === 0 && docCount === 0 && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Nenhuma</span>}
-                            </td>
-                            <td>
-                              <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                <button onClick={() => handleOpenEmpEdit(emp)} style={styles.actionEditBtn} title="Abrir Ficha do Funcionário">Ficha</button>
-                                {emp.status !== 'Inativo' && (
-                                  <button onClick={() => handleDismissEmployee(emp)} style={{ ...styles.actionEditBtn, color: '#d97706', borderColor: 'rgba(217,119,6,0.2)' }} title="Registrar Demissão / Desligamento">Demitir</button>
+                            </div>
+
+                            {/* Card Key Metrics Grid */}
+                            <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr 1fr',
+                              gap: '0.4rem',
+                              backgroundColor: 'var(--bg-body)',
+                              padding: '0.5rem 0.6rem',
+                              borderRadius: '8px',
+                              fontSize: '0.75rem'
+                            }}>
+                              <div>
+                                <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.68rem' }}>CPF</span>
+                                <strong>{emp.cpf || '-'}</strong>
+                              </div>
+                              <div>
+                                <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.68rem' }}>Salário</span>
+                                <strong style={{ color: '#10b981' }}>{formatCurrencyBR(emp.salary)}</strong>
+                              </div>
+                              <div>
+                                <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.68rem' }}>Admissão</span>
+                                <strong>{formatDateBR(emp.admissionDate)}</strong>
+                              </div>
+                              <div>
+                                <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.68rem' }}>Contato</span>
+                                {emp.phone ? (
+                                  <a href={`https://wa.me/55${emp.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#10b981', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                    <Phone size={11} /> {emp.phone}
+                                  </a>
+                                ) : (
+                                  <span style={{ color: 'var(--text-muted)' }}>-</span>
                                 )}
-                                <button onClick={() => handleDeleteEmployee(emp)} style={{ ...styles.actionEditBtn, color: 'var(--danger-color)', borderColor: 'rgba(239,68,68,0.2)' }} title="Excluir Permanentemente">Excluir</button>
                               </div>
-                            </td>
-                          </tr>
+                            </div>
+
+                            {/* Badges / Pendências */}
+                            <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', minHeight: '22px' }}>
+                              {warnCount > 0 && (
+                                <span style={{ ...styles.badgeCritical, fontSize: '0.7rem', padding: '0.15rem 0.4rem' }}>
+                                  ⚠️ {warnCount} Adv.
+                                </span>
+                              )}
+                              {docCount > 0 && (
+                                <span style={{ ...styles.badgeNormal, fontSize: '0.7rem', padding: '0.15rem 0.4rem' }}>
+                                  📄 {docCount} Docs
+                                </span>
+                              )}
+                              {vacCount > 0 && (
+                                <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: '600' }}>
+                                  💉 {vacCount} Vacinas
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Card Footer Actions */}
+                            <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.25rem' }}>
+                              <button
+                                onClick={() => handleOpenEmpEdit(emp)}
+                                style={{
+                                  flex: 1,
+                                  padding: '0.4rem',
+                                  fontSize: '0.8rem',
+                                  fontWeight: '700',
+                                  backgroundColor: '#ec4899',
+                                  color: '#fff',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Ficha Completa
+                              </button>
+                              {emp.status !== 'Inativo' && (
+                                <button
+                                  onClick={() => handleDismissEmployee(emp)}
+                                  style={{
+                                    padding: '0.4rem 0.6rem',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '600',
+                                    backgroundColor: 'transparent',
+                                    color: '#d97706',
+                                    border: '1px solid rgba(217,119,6,0.3)',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer'
+                                  }}
+                                  title="Demitir"
+                                >
+                                  Demitir
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteEmployee(emp)}
+                                style={{
+                                  padding: '0.4rem 0.6rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '600',
+                                  backgroundColor: 'transparent',
+                                  color: 'var(--danger-color)',
+                                  border: '1px solid rgba(239,68,68,0.3)',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer'
+                                }}
+                                title="Excluir"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </div>
                         );
                       })
                     )}
-                  </tbody>
-                </table>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* TAB 4: Audit Logs */}
           {activeTab === 'audit' && (
@@ -1560,7 +1993,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
         <div style={styles.modalOverlay}>
           <div style={styles.modalCard}>
             <div style={styles.modalHeader}>
-              <h2>{editingVoucher ? 'Editar Concessão de VT' : 'Nova Concessão de Vale-Transporte'}</h2>
+              <h2>{editingVoucher ? 'Editar Vale-Transporte' : 'Novo Vale-Transporte'}</h2>
               <button onClick={() => setShowVoucherModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
             <form onSubmit={handleSaveVoucher} style={{ ...styles.modalForm, maxHeight: '80vh', overflowY: 'auto' }}>
@@ -1666,13 +2099,13 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
                   <span>Valor Total Previsto:</span>
                   <strong style={{ color: '#3b82f6' }}>
-                    R$ {((parseFloat(voucherForm.dailyCost) || 0) * (parseInt(voucherForm.daysCount) || 0)).toFixed(2)}
+                    {formatCurrencyBR((parseFloat(voucherForm.dailyCost) || 0) * (parseInt(voucherForm.daysCount) || 0))}
                   </strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                   <span>Recarga Necessária (Previsto - Saldo):</span>
                   <strong style={{ color: '#ef4444' }}>
-                    R$ {Math.max(0, ((parseFloat(voucherForm.dailyCost) || 0) * (parseInt(voucherForm.daysCount) || 0)) - (parseFloat(voucherForm.currentBalance) || 0)).toFixed(2)}
+                    {formatCurrencyBR(Math.max(0, ((parseFloat(voucherForm.dailyCost) || 0) * (parseInt(voucherForm.daysCount) || 0)) - (parseFloat(voucherForm.currentBalance) || 0)))}
                   </strong>
                 </div>
               </div>
@@ -1680,7 +2113,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
               <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setShowVoucherModal(false)} className="btn btn-secondary">Cancelar</button>
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: '#ec4899' }}>
-                  {actionLoading ? 'Salvando...' : 'Confirmar Concessão'}
+                  {actionLoading ? 'Salvando...' : 'Salvar Vale-Transporte'}
                 </button>
               </div>
             </form>

@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Trophy, X, Printer, Download, FileSpreadsheet, CheckCircle, AlertTriangle, Calendar, UserCheck, ShieldAlert, Award, Search, Filter } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { formatDateBR } from '../HRPanel';
+import { formatDateBR, formatCurrencyBR } from '../HRPanel';
 
 export default function AwardReportModal({
   isOpen,
@@ -92,8 +92,8 @@ export default function AwardReportModal({
       doc.setTextColor(15, 23, 42);
       doc.setFont('helvetica', 'bold');
       doc.text(`Total de Contemplados: ${eligible.length} colaboradores`, 18, 45);
-      doc.text(`Valor por Ganhador: R$ ${awardValue.toFixed(2)}`, 85, 45);
-      doc.text(`Custo Total do Bônus: R$ ${totalValueEligible.toFixed(2)}`, 145, 45);
+      doc.text(`Valor por Ganhador: ${formatCurrencyBR(awardValue)}`, 85, 45);
+      doc.text(`Custo Total do Bônus: ${formatCurrencyBR(totalValueEligible)}`, 145, 45);
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
@@ -114,7 +114,7 @@ export default function AwardReportModal({
           `${emp.role || 'CLT'}\n(${sectorName})`,
           formatDateBR(emp.admissionDate),
           timeText,
-          `+R$ ${awardValue.toFixed(2)}`,
+          `+${formatCurrencyBR(awardValue)}`,
           '_______________________'
         ];
       });
@@ -267,13 +267,13 @@ export default function AwardReportModal({
           <div style={{ ...modalStyles.kpiCard, borderLeftColor: '#3b82f6' }}>
             <span style={modalStyles.kpiTitle}>Valor por Colaborador</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-              <span style={{ ...modalStyles.kpiValue, color: '#3b82f6' }}>R$ {awardValue.toFixed(2)}</span>
+              <span style={{ ...modalStyles.kpiValue, color: '#3b82f6' }}>{formatCurrencyBR(awardValue)}</span>
             </div>
           </div>
           <div style={{ ...modalStyles.kpiCard, borderLeftColor: '#8b5cf6' }}>
             <span style={modalStyles.kpiTitle}>Custo Total do Benefício</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-              <span style={{ ...modalStyles.kpiValue, color: '#8b5cf6' }}>R$ {totalValueEligible.toFixed(2)}</span>
+              <span style={{ ...modalStyles.kpiValue, color: '#8b5cf6' }}>{formatCurrencyBR(totalValueEligible)}</span>
             </div>
           </div>
           <div style={{ ...modalStyles.kpiCard, borderLeftColor: '#ef4444' }}>
@@ -316,8 +316,8 @@ export default function AwardReportModal({
               </div>
               <div style={{ textAlign: 'right', fontSize: '0.8rem', color: '#64748b' }}>
                 <div><strong>Total Ganhadores:</strong> {eligible.length}</div>
-                <div><strong>Valor Unitário:</strong> R$ {awardValue.toFixed(2)}</div>
-                <div><strong>Custo Total:</strong> R$ {totalValueEligible.toFixed(2)}</div>
+                <div><strong>Valor Unitário:</strong> {formatCurrencyBR(awardValue)}</div>
+                <div><strong>Custo Total:</strong> {formatCurrencyBR(totalValueEligible)}</div>
               </div>
             </div>
           </div>
@@ -328,7 +328,7 @@ export default function AwardReportModal({
               {filteredEligible.length === 0 ? (
                 <div style={modalStyles.emptyState}>
                   <AlertTriangle size={32} color="#94a3b8" />
-                  <p>Nenhum colaborador elegível encontrado com os filtros aplicados.</p>
+                  <p>Nenhum colaborador elegível encontrado para os filtros selecionados.</p>
                 </div>
               ) : (
                 <table style={modalStyles.table} className="award-table">
@@ -339,9 +339,9 @@ export default function AwardReportModal({
                       <th>CPF</th>
                       <th>Cargo / Setor</th>
                       <th style={{ textAlign: 'center' }}>Admissão</th>
-                      <th style={{ textAlign: 'center' }}>Tempo Casa</th>
-                      <th style={{ textAlign: 'right' }}>Prêmio</th>
-                      <th style={{ width: '180px', textAlign: 'center' }} className="receipt-column">Assinatura do Recebedor</th>
+                      <th style={{ textAlign: 'center' }}>Tempo</th>
+                      <th style={{ textAlign: 'right' }}>Prêmio (R$)</th>
+                      <th style={{ textAlign: 'center', width: '180px' }} className="receipt-column">Assinatura de Recebimento</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -364,7 +364,7 @@ export default function AwardReportModal({
                           <td style={{ textAlign: 'center', fontSize: '0.85rem' }}>{formatDateBR(emp.admissionDate)}</td>
                           <td style={{ textAlign: 'center', fontSize: '0.85rem', color: '#10b981', fontWeight: '600' }}>{timeText}</td>
                           <td style={{ textAlign: 'right', fontWeight: '800', color: '#10b981', fontSize: '0.95rem' }}>
-                            +R$ {awardValue.toFixed(2)}
+                            +{formatCurrencyBR(awardValue)}
                           </td>
                           <td style={{ textAlign: 'center' }} className="receipt-column">
                             <div style={modalStyles.signLine}></div>
