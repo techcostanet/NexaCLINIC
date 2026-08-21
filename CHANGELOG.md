@@ -1,3 +1,15 @@
+## [v4.7.13] - 21 de Agosto, 2026
+### Módulo RH - Organização Inteligente de Cards do Dashboard & 5 Opções de Tamanho
+- **Organização Proporcional por Densidade de Conteúdo:**
+  - Cards de métricas numéricas (Total de Colaboradores, Turnover, Absenteísmo, Advertências, Em Experiência) configurados em tamanho compacto com ícones temáticos dedicados e legendas contextuais.
+  - Cards de conteúdo operacional rico (Presença Premiada, Aniversariantes do Mês, Contratos em Experiência, Próximas Vacinações, Últimas Advertências e Ausências) organizados em 2 colunas para exibição fluida e sem cortes.
+- **5 Opções de Dimensionamento de Caixas:**
+  - Inclusão dos seletores: *Compacto (1 Col Métrico)*, *Pequeno (1 Col Padrão)*, *Médio (2 Colunas)*, *Grande (3 Colunas)* e *Largura Total (Linha Inteira)*.
+- **Ajuste de Identidade Visual no Header:**
+  - Remoção do indicador de tempo real do cabeçalho NexaHR, mantendo o padrão visual com ícone gradiente e subtítulo corporativo.
+
+---
+
 ## [v4.7.12] - 21 de Agosto, 2026
 ### Módulo RH - Central de 15 Relatórios Completos, Padronização Visual NexaASSIST e Otimização de Abas
 - **Central de 15 Relatórios do RH (`HRReportsModal`):**

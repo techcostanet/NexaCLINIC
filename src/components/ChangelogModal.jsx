@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.13',
+      date: '21/08/2026',
+      title: 'Módulo RH - Organização Inteligente de Cards do Dashboard, 5 Opções de Tamanho e Ajuste Visual de Header',
+      description: 'Remoção do badge de tempo real do header NexaHR, expansão dos seletores de tamanho para 5 opções (Compacto, Pequeno, Médio, Grande e Largura Total), layout padrão reorganizado por densidade de informação e redesign dos cards métricos com ícones temáticos.',
+      changes: [
+        { type: 'Organização Proporcional', text: 'Reorganização automática das caixas: métricas numéricas em caixas compactas e listas operacionais (Aniversariantes, Vacinas, Advertências, Contratos) em 2 colunas.' },
+        { type: '5 Opções de Tamanho', text: 'Inclusão das opções Compacto (1 Col Métrico), Pequeno (1 Col), Médio (2 Col), Grande (3 Col) e Largura Total (Linha Inteira).' },
+        { type: 'Redesign de KPIs', text: 'Cards numéricos reformulados com ícones destacados, bordas harmônicas e legendas explicativas para eliminar espaços vazios.' },
+        { type: 'Ajuste de Header', text: 'Remoção do badge de tempo real do banner NexaHR, mantendo o padrão visual com ícone gradiente e subtítulo corporativo.' }
+      ]
+    },
+    {
       version: 'v4.7.12',
       date: '21/08/2026',
       title: 'Módulo RH - Central de 15 Relatórios Completos, Padronização Visual NexaASSIST e Otimização de Abas',

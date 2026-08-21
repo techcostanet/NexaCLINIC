@@ -14,12 +14,12 @@ const DEFAULT_DASHBOARD_LAYOUT = [
   { id: 'absenteeism', title: 'Absenteísmo (Mensal)', size: 'small' },
   { id: 'warnings_kpi', title: 'Advertências Registradas', size: 'small' },
   { id: 'experience_kpi', title: 'Em Experiência', size: 'small' },
-  { id: 'birthdays', title: 'Aniversariantes do Mês', size: 'small' },
-  { id: 'warnings_list', title: 'Últimas Advertências', size: 'small' },
-  { id: 'vaccines_list', title: 'Próximas Vacinações Vencendo', size: 'small' },
-  { id: 'absences_list', title: 'Últimas Ausências / Faltas', size: 'small' },
-  { id: 'expiring_contracts', title: 'Contratos em Experiência', size: 'small' },
-  { id: 'presenca_premiada', title: 'Presença Premiada', size: 'small' },
+  { id: 'presenca_premiada', title: 'Presença Premiada', size: 'medium' },
+  { id: 'birthdays', title: 'Aniversariantes do Mês', size: 'medium' },
+  { id: 'expiring_contracts', title: 'Contratos em Experiência', size: 'medium' },
+  { id: 'vaccines_list', title: 'Próximas Vacinações Vencendo', size: 'medium' },
+  { id: 'warnings_list', title: 'Últimas Advertências', size: 'medium' },
+  { id: 'absences_list', title: 'Últimas Ausências / Faltas', size: 'medium' },
 ];
 
 import { useHRLogic } from './HR/hooks/useHRLogic';
@@ -192,12 +192,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
             <Users size={28} color="#fff" />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <h1 style={styles.heroTitle}>NexaHR</h1>
-              <span style={styles.liveBadge}>
-                <span style={styles.pulseDot}></span> Em Tempo Real
-              </span>
-            </div>
+            <h1 style={styles.heroTitle}>NexaHR</h1>
             <p style={styles.heroSubtitle}>
               Gestão estratégica de pessoas, controle de vale-transporte, advertências disciplinares, aniversariantes e conformidade trabalhista.
             </p>
@@ -286,7 +281,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       </button>
                       <button 
                         onClick={handleResetDashboardLayout}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.45rem 0.85rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '600', backgroundColor: 'var(--bg-body)', color: 'var(--danger-color)', border: '1px solid var(--border-color)', cursor: 'pointer' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.45rem 0.85rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '600', backgroundColor: 'var(--bg-body)', color: '#ef4444', border: '1px solid var(--border-color)', cursor: 'pointer' }}
                       >
                         <RotateCcw size={15} /> Restaurar Padrão
                       </button>
@@ -298,14 +293,16 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
               {/* Dynamic Grid Container */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-                gap: '1rem',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '1.25rem',
                 alignItems: 'stretch'
               }}>
                 {dashboardLayout.map((card, index) => {
                   const getSpanStyle = (sz) => {
-                    if (sz === 'medium') return { gridColumn: 'span 2' };
+                    if (sz === 'full') return { gridColumn: '1 / -1' };
                     if (sz === 'large') return { gridColumn: 'span 3' };
+                    if (sz === 'medium') return { gridColumn: 'span 2' };
+                    if (sz === 'compact') return { gridColumn: 'span 1', minHeight: '110px' };
                     return { gridColumn: 'span 1' }; // default small
                   };
 
@@ -315,31 +312,33 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       style={{
                         ...getSpanStyle(card.size),
                         position: 'relative',
-                        borderRadius: '10px',
+                        borderRadius: '12px',
                         backgroundColor: 'var(--bg-card)',
                         border: isCustomizingDashboard ? '2px dashed #ec4899' : '1px solid var(--border-color)',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
-                        padding: '1rem',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                        padding: '1.15rem',
                         display: 'flex',
                         flexDirection: 'column',
-                        justify: 'space-between',
+                        justifyContent: 'space-between',
                         transition: 'all 0.2s ease'
                       }}
                     >
                       {/* Controls overlay in customizing mode */}
                       {isCustomizingDashboard && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(236,72,153,0.08)', padding: '0.35rem 0.5rem', borderRadius: '6px', marginBottom: '0.75rem', fontSize: '0.75rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(236,72,153,0.08)', padding: '0.4rem 0.6rem', borderRadius: '8px', marginBottom: '0.75rem', fontSize: '0.75rem', flexWrap: 'wrap', gap: '0.4rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                             <button disabled={index === 0} onClick={() => handleMoveCard(index, -1)} style={{ border: 'none', background: 'none', cursor: 'pointer', opacity: index === 0 ? 0.3 : 1 }} title="Mover para esquerda/cima"><ChevronLeft size={16} /></button>
                             <button disabled={index === dashboardLayout.length - 1} onClick={() => handleMoveCard(index, 1)} style={{ border: 'none', background: 'none', cursor: 'pointer', opacity: index === dashboardLayout.length - 1 ? 0.3 : 1 }} title="Mover para direita/baixo"><ChevronRight size={16} /></button>
                             <span style={{ fontWeight: '700', color: '#ec4899' }}>Pos. {index + 1}</span>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                             <span style={{ fontWeight: '600' }}>Tamanho:</span>
-                            <select value={card.size || 'small'} onChange={e => handleChangeCardSize(card.id, e.target.value)} style={{ fontSize: '0.75rem', padding: '0.15rem 0.3rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
-                              <option value="small">Pequeno (1 Col)</option>
-                              <option value="medium">Médio (2 Col)</option>
-                              <option value="large">Grande (3 Col)</option>
+                            <select value={card.size || 'small'} onChange={e => handleChangeCardSize(card.id, e.target.value)} style={{ fontSize: '0.75rem', padding: '0.2rem 0.4rem', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: '#fff', fontWeight: '600' }}>
+                              <option value="compact">Compacto (1 Col Métrico)</option>
+                              <option value="small">Pequeno (1 Col Padrão)</option>
+                              <option value="medium">Médio (2 Colunas)</option>
+                              <option value="large">Grande (3 Colunas)</option>
+                              <option value="full">Largura Total (Linha Inteira)</option>
                             </select>
                           </div>
                         </div>
@@ -347,44 +346,89 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
 
                       {/* Card Content Renderers */}
                       {card.id === 'total_employees' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-                          <span style={styles.kpiLabel}>Total de Funcionários</span>
-                          <span style={{ ...styles.kpiVal, color: '#ec4899' }}>{employees.filter(e => e.status !== 'Inativo').length}</span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Colaboradores ativos ({employees.length} total no banco)</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={styles.kpiLabel}>Total de Funcionários</span>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(236,72,153,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Users size={17} color="#ec4899" />
+                            </div>
+                          </div>
+                          <div>
+                            <span style={{ ...styles.kpiVal, color: '#ec4899' }}>{employees.filter(e => e.status !== 'Inativo').length}</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
+                              Colaboradores ativos ({employees.length} total no banco)
+                            </span>
+                          </div>
                         </div>
                       )}
 
                       {card.id === 'turnover' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-                          <span style={styles.kpiLabel}>Turnover (Mensal)</span>
-                          <span style={{ ...styles.kpiVal, color: '#10b981' }}>{turnover.toFixed(2)}%</span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Índice de rotatividade</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={styles.kpiLabel}>Turnover (Mensal)</span>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <RotateCcw size={17} color="#10b981" />
+                            </div>
+                          </div>
+                          <div>
+                            <span style={{ ...styles.kpiVal, color: '#10b981' }}>{turnover.toFixed(2)}%</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
+                              Índice de rotatividade de equipe
+                            </span>
+                          </div>
                         </div>
                       )}
 
                       {card.id === 'absenteeism' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-                          <span style={styles.kpiLabel}>Absenteísmo (Mensal)</span>
-                          <span style={{ ...styles.kpiVal, color: '#3b82f6' }}>{absenteeism.toFixed(2)}%</span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Faltas não justificadas</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={styles.kpiLabel}>Absenteísmo (Mensal)</span>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Clock size={17} color="#3b82f6" />
+                            </div>
+                          </div>
+                          <div>
+                            <span style={{ ...styles.kpiVal, color: '#3b82f6' }}>{absenteeism.toFixed(2)}%</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
+                              Taxa de faltas e ausências
+                            </span>
+                          </div>
                         </div>
                       )}
 
                       {card.id === 'warnings_kpi' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-                          <span style={styles.kpiLabel}>Advertências Registradas</span>
-                          <span style={{ ...styles.kpiVal, color: '#ef4444' }}>{recentWarnings.length}</span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Total de advertências</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={styles.kpiLabel}>Advertências</span>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(239,68,68,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <ShieldAlert size={17} color="#ef4444" />
+                            </div>
+                          </div>
+                          <div>
+                            <span style={{ ...styles.kpiVal, color: '#ef4444' }}>{recentWarnings.length}</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
+                              Ocorrências registradas
+                            </span>
+                          </div>
                         </div>
                       )}
 
                       {card.id === 'experience_kpi' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-                          <span style={styles.kpiLabel}>Em Experiência</span>
-                          <span style={{ ...styles.kpiVal, color: '#f59e0b' }}>
-                            {employees.filter(e => isEmployeeInProbation(e)).length}
-                          </span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Contratos probatórios</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={styles.kpiLabel}>Em Experiência</span>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <UserCheck size={17} color="#f59e0b" />
+                            </div>
+                          </div>
+                          <div>
+                            <span style={{ ...styles.kpiVal, color: '#f59e0b' }}>
+                              {employees.filter(e => isEmployeeInProbation(e)).length}
+                            </span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
+                              Contratos probatórios em curso
+                            </span>
+                          </div>
                         </div>
                       )}
 

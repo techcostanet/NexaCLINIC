@@ -14,12 +14,12 @@ const DEFAULT_DASHBOARD_LAYOUT = [
   { id: 'absenteeism', title: 'Absenteísmo (Mensal)', size: 'small' },
   { id: 'warnings_kpi', title: 'Advertências Registradas', size: 'small' },
   { id: 'experience_kpi', title: 'Em Experiência', size: 'small' },
-  { id: 'birthdays', title: 'Aniversariantes do Mês', size: 'small' },
-  { id: 'warnings_list', title: 'Últimas Advertências', size: 'small' },
-  { id: 'vaccines_list', title: 'Próximas Vacinações Vencendo', size: 'small' },
-  { id: 'absences_list', title: 'Últimas Ausências / Faltas', size: 'small' },
-  { id: 'expiring_contracts', title: 'Contratos em Experiência', size: 'small' },
-  { id: 'presenca_premiada', title: 'Presença Premiada', size: 'small' },
+  { id: 'presenca_premiada', title: 'Presença Premiada', size: 'medium' },
+  { id: 'birthdays', title: 'Aniversariantes do Mês', size: 'medium' },
+  { id: 'expiring_contracts', title: 'Contratos em Experiência', size: 'medium' },
+  { id: 'vaccines_list', title: 'Próximas Vacinações Vencendo', size: 'medium' },
+  { id: 'warnings_list', title: 'Últimas Advertências', size: 'medium' },
+  { id: 'absences_list', title: 'Últimas Ausências / Faltas', size: 'medium' },
 ];
 
 export function useHRLogic(currentUser) {
