@@ -1,4 +1,4 @@
-## [v4.7.6] - 20 de Agosto, 2026
+## [v4.7.7] - 20 de Agosto, 2026
 ### Central de Relatórios de Estoque & Farmácia (15 Relatórios Completos com Exportação PDF e XLS)
 - **Central de Relatórios Nativos (`StockReportsModal`):**
   - Implementação de modal no mesmo padrão de excelência visual do módulo financeiro, acessível pelo botão **"Relatórios (15)"** no topo do painel.

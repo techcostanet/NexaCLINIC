@@ -115,7 +115,7 @@ export default function App() {
       case 'clinical':
         return <ErrorBoundary><ClinicalPanel currentUser={user} /></ErrorBoundary>;
       case 'stock':
-        return <ErrorBoundary><StockPanel currentUser={user} /></ErrorBoundary>;
+        return <ErrorBoundary><StockPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'maintenance':
         return <ErrorBoundary><MaintenancePanel currentUser={user} /></ErrorBoundary>;
       case 'hr':

@@ -259,7 +259,7 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Gerar e Exportar Relatórios de Estoque (PDF / XLS)',
         steps: [
-          'No topo do módulo Estoque, clique no botão azul "Relatórios (15)".',
+          'No topo superior direito da barra de navegação, clique no botão "Relatórios".',
           'Na barra lateral esquerda, escolha um dos 15 relatórios disponíveis (ex: Posição Geral, Curva ABC, Validades, Itens Críticos).',
           'Defina o período (Data Inicial e Final), Categoria e Setor se desejar filtrar os dados.',
           'Confira os registros na tabela de pré-visualização e clique em "Exportar PDF" ou "Exportar Excel".'
@@ -296,7 +296,7 @@ export const MODULE_GUIDES = {
     duvidas: [
       {
         pergunta: 'Como exporto a Curva ABC ou a Posição Geral do estoque para o Excel?',
-        resposta: 'Abra a modal clicando em "Relatórios (15)" no topo do painel, clique em "2. Curva ABC de Insumos" ou "1. Posição Geral" e clique no botão verde "Exportar Excel".'
+        resposta: 'Abra a modal clicando no botão "Relatórios" na barra superior, selecione "2. Curva ABC de Insumos" ou "1. Posição Geral" e clique no botão verde "Exportar Excel".'
       },
       {
         pergunta: 'Como sei quais pacientes tomaram determinado medicamento de um lote específico?',

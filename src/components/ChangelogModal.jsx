@@ -6,7 +6,7 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v4.7.6',
+      version: 'v4.7.7',
       date: '20/08/2026',
       title: 'Central de Relatórios de Estoque & Farmácia (15 Relatórios Completos com PDF e XLS)',
       description: 'Lançamento da Central de Relatórios de Estoque & Farmácia: 15 relatórios analíticos completos com filtros por período, categoria e setor, pré-visualização em tabela e exportação de PDF corporativo e Excel nativo.',
