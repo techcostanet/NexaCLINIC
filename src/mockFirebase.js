@@ -14497,6 +14497,40 @@ export const mockFirestore = {
   // Sectors Methods
   getSectors: async () => {
     const db = getDB();
+    const defaultSectors = [
+      { id: 'hemodialise', name: 'Hemodiálise (Salões)', description: 'Salões de Hemodiálise e Assistência Dialítica' },
+      { id: 'dialise_peritoneal', name: 'Diálise Peritoneal (DP)', description: 'Atendimento e Treinamento de DP Domiciliar' },
+      { id: 'medica', name: 'Corpo Clínico & Médicos', description: 'Nefrologistas, Plantonistas e Consultórios' },
+      { id: 'enfermagem', name: 'Enfermagem', description: 'Equipe de Enfermagem Geral e Supervisão' },
+      { id: 'farmacia', name: 'Farmácia & Almoxarifado', description: 'Dispensação Farmacêutica, Medicamentos e Insumos' },
+      { id: 'recepcao', name: 'Recepção & Atendimento', description: 'Portaria, Atendimento e Admissão de Pacientes' },
+      { id: 'faturamento', name: 'Faturamento & APACs', description: 'Auditoria de Guias SUS, APACs e Convênios' },
+      { id: 'manutencao', name: 'Manutenção & Engenharia Clínica', description: 'Manutenção Predial, Equipamentos e Sistema de Água (ETA)' },
+      { id: 'qualidade', name: 'Qualidade & BI', description: 'Auditorias, Indicadores Assistenciais e Segurança do Paciente' },
+      { id: 'psicologia', name: 'Psicologia Clínica', description: 'Suporte Emocional e Acompanhamento Psicológico Renal' },
+      { id: 'nutricao', name: 'Nutrição Clínica', description: 'Dietoterapia Renal e Avaliações Antropométricas' },
+      { id: 'servico_social', name: 'Serviço Social', description: 'Acolhimento Social, Direitos e Apoio à Família' },
+      { id: 'rh', name: 'Recursos Humanos (RH)', description: 'Gestão de Pessoas, Benefícios VT, DP e Folha' },
+      { id: 'financeiro', name: 'Financeiro & Controladoria', description: 'Contas a Pagar/Receber, Tesouraria e Fluxo de Caixa' },
+      { id: 'compras', name: 'Compras & Suprimentos', description: 'Cotações de 3 Orçamentos, Compras e Fornecedores' },
+      { id: 'sesmt', name: 'SESMT & Segurança do Trabalho', description: 'Checklists de EPIs, Prevenção de Acidentes e Brigada' },
+      { id: 'ti', name: 'Tecnologia da Informação (TI)', description: 'Infraestrutura de Rede, Suporte, Servidores e Software' },
+      { id: 'higienizacao', name: 'Higienização & Limpeza', description: 'Controle de Resíduos de Saúde, Limpeza e Desinfecção Hospitalar' },
+      { id: 'diretoria', name: 'Diretoria & Administração', description: 'Alta Gestão, Compliance e Governança Clínica' }
+    ];
+    if (!db.sectors || db.sectors.length === 0) {
+      db.sectors = defaultSectors;
+      setDB(db);
+    } else {
+      let changed = false;
+      defaultSectors.forEach(defSec => {
+        if (!db.sectors.some(s => s.id === defSec.id)) {
+          db.sectors.push(defSec);
+          changed = true;
+        }
+      });
+      if (changed) setDB(db);
+    }
     return db.sectors;
   },
 

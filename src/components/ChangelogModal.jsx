@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.42',
+      date: '22/08/2026',
+      title: 'Módulo RH — Cargos Selecionáveis Padronizados e Expansão de Setores Hospitalares',
+      description: 'Transformação do campo de Cargo em seletor com lista padronizada da saúde, cadastro de 19 setores hospitalares e limpeza ativa de rótulos para padrão conciso de 1 palavra.',
+      changes: [
+        { type: 'Cargos Padronizados', text: 'Menu suspenso com cargos completos da área de saúde e hospitalar (Enfermagem, Nefrologia, Multidisciplinar, Farmácia, Engenharia Clínica e Gestão).' },
+        { type: 'Setores Hospitalares', text: '19 setores especializados cadastrados cobrindo todas as áreas clínicas, de apoio, hotelaria/higienização e diretoria.' },
+        { type: 'Rótulos Concisos', text: 'Aplicação estrita do padrão de 1 palavra única em todas as abas e formulários cadastrais do RH.' }
+      ]
+    },
+    {
       version: 'v4.7.41',
       date: '22/08/2026',
       title: 'Correções: Deduplicação NexaMED e Busca Alfabética no Vale-Transporte',

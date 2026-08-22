@@ -99,6 +99,8 @@ export const getUploadsHistory = async () => {
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   };
 
+import { STANDARD_SECTORS } from '../../data/hrConstants';
+
 export const getSectors = async () => {
     if (USE_MOCK) {
       return mockFirestore.getSectors();
@@ -111,22 +113,30 @@ export const getSectors = async () => {
     if (snap.empty) {
       const { writeBatch, doc } = await import('firebase/firestore');
       const batch = writeBatch(db);
-      const defaults = [
-        { id: 'enfermagem', name: 'Enfermagem', description: 'Métricas assistenciais da equipe de enfermagem' },
-        { id: 'medica', name: 'Equipe Médica', description: 'Indicadores clínicos e mortalidade' },
-        { id: 'qualidade', name: 'Qualidade', description: 'Satisfação do paciente e auditorias' },
-        { id: 'faturamento', name: 'Faturamento', description: 'Glosas, custos e faturamento de diálise' },
-        { id: 'psicologia', name: 'Psicologia', description: 'Métricas de cobertura de atendimento psicológico, risco emocional e encaminhamentos à rede.' },
-        { id: 'nutricao', name: 'Nutrição', description: 'Métricas de cobertura de atendimento nutricional, adequação metabólica e controle de peso.' }
-      ];
-      defaults.forEach(sec => {
+      STANDARD_SECTORS.forEach(sec => {
         batch.set(doc(db, 'sectors', sec.id), sec);
       });
       await batch.commit();
-      return defaults;
+      return STANDARD_SECTORS;
     }
     
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const existing = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Mesclar setores padrão que ainda não existem
+    const missing = STANDARD_SECTORS.filter(s => !existing.some(e => e.id === s.id));
+    if (missing.length > 0) {
+      try {
+        const { writeBatch, doc } = await import('firebase/firestore');
+        const batch = writeBatch(db);
+        missing.forEach(sec => {
+          batch.set(doc(db, 'sectors', sec.id), sec);
+        });
+        await batch.commit();
+      } catch (err) {
+        console.warn('Erro ao mesclar setores faltantes:', err);
+      }
+      return [...existing, ...missing];
+    }
+    return existing;
   };
 
 export const deleteStockTransfer = async (id) => {

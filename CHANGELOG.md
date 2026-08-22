@@ -1,3 +1,15 @@
+## [v4.7.42] - 22 de Agosto, 2026
+### Módulo RH — Cargos Selecionáveis Padronizados e Expansão de Setores Hospitalares & Clínicos
+- **Cargos Selecionáveis Padronizados (`STANDARD_ROLES`):**
+  - Transformação do campo de texto livre de Cargo em um seletor (`<select>`) com catálogo completo e padronizado de cargos da área de saúde e hospitalar (Enfermagem, Nefrologia, Equipe Multidisciplinar, Farmácia, Engenharia Clínica, SESMT, Faturamento, Operações e Gestão).
+  - Preservação automática de compatibilidade com cargos preexistentes via fallback contextual.
+- **Expansão de Setores Hospitalares & Clínicos (`STANDARD_SECTORS`):**
+  - Cadastro e sincronização de 19 setores especializados cobrindo toda a rotina de clínicas de diálise e hospitais (Hemodiálise nos Salões, Diálise Peritoneal, Corpo Clínico, Enfermagem, Farmácia, Recepção, Faturamento/APACs, Manutenção & Engenharia Clínica, Qualidade & BI, Psicologia, Nutrição, Serviço Social, SESMT, TI, Compras, Higienização/Limpeza, RH, Financeiro e Diretoria).
+- **Padronização Visual e Rótulos Concisos (Boy Scout Rule):**
+  - Limpeza total de termos duplos e aplicação do padrão rigoroso de 1 única palavra em todas as abas e formulários do colaborador (`Nome`, `Nascimento`, `Mãe`, `Telefone`, `E-mail`, `Endereço`, `Cargo`, `Setor`, `Admissão`, `Contrato`, `Status`, `Desligamento`, `Salário`, `CNH`, `Vencimento`, `Conta`, `Dependente`, `Ausência`, `Dias`, `Motivo`, `Descrição`, `Anexo`).
+
+---
+
 ## [v4.7.41] - 22 de Agosto, 2026
 ### Correções: Deduplicação NexaMED no Menu Central e Busca Alfabética de Funcionários no Vale-Transporte
 - **Deduplicação no Seletor de Módulos (`ModuleSelector.jsx`):**

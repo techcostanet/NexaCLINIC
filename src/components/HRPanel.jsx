@@ -26,6 +26,7 @@ const DEFAULT_DASHBOARD_LAYOUT = [
 import { useHRLogic } from './HR/hooks/useHRLogic';
 import AwardReportModal from './HR/AwardReportModal';
 import HRReportsModal from './HRReportsModal';
+import { STANDARD_ROLES, STANDARD_SECTORS } from '../data/hrConstants';
 
 export const formatDateBR = (dateVal) => {
   if (!dateVal) return '-';
@@ -891,7 +892,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
 
                     <select value={filterSector} onChange={e => setFilterSector(e.target.value)} style={styles.filterSelect}>
                       <option value="">Todos os Setores</option>
-                      {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      {(sectors && sectors.length > 0 ? sectors : STANDARD_SECTORS).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
 
                     {/* View Mode Segmented Selector */}
@@ -1485,7 +1486,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
 
                     <div style={styles.formGrid}>
                       <div className="form-group">
-                        <label>Nome Completo *</label>
+                        <label>Nome *</label>
                         <input type="text" className="form-control" required value={empForm.name} onChange={e => setEmpForm({ ...empForm, name: e.target.value })} />
                       </div>
                       <div className="form-group">
@@ -1493,7 +1494,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                         <input type="text" className="form-control" required value={empForm.cpf} onChange={e => setEmpForm({ ...empForm, cpf: formatCpf(e.target.value) })} />
                       </div>
                       <div className="form-group">
-                        <label>Data de Nascimento *</label>
+                        <label>Nascimento *</label>
                         <input type="date" className="form-control" required value={empForm.birthDate} onChange={e => setEmpForm({ ...empForm, birthDate: e.target.value })} />
                       </div>
                       <div className="form-group">
@@ -1508,7 +1509,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                         <input type="text" className="form-control" value={empForm.rg} onChange={e => setEmpForm({ ...empForm, rg: e.target.value })} />
                       </div>
                       <div className="form-group">
-                        <label>Nome da Mãe</label>
+                        <label>Mãe</label>
                         <input type="text" className="form-control" value={empForm.motherName} onChange={e => setEmpForm({ ...empForm, motherName: e.target.value })} />
                       </div>
                     </div>
@@ -1519,15 +1520,15 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                 {empActiveTab === 'contato' && (
                   <div style={styles.formGrid}>
                     <div className="form-group">
-                      <label>Telefone Contato</label>
+                      <label>Telefone</label>
                       <input type="text" className="form-control" placeholder="(00) 00000-0000" value={empForm.phone} onChange={e => setEmpForm({ ...empForm, phone: e.target.value })} />
                     </div>
                     <div className="form-group">
-                      <label>E-mail Pessoal</label>
+                      <label>E-mail</label>
                       <input type="email" className="form-control" placeholder="nome@provedor.com" value={empForm.email} onChange={e => setEmpForm({ ...empForm, email: e.target.value })} />
                     </div>
                     <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                      <label>Endereço Completo</label>
+                      <label>Endereço</label>
                       <input type="text" className="form-control" placeholder="Rua, número, bairro..." value={empForm.address} onChange={e => setEmpForm({ ...empForm, address: e.target.value })} />
                     </div>
                     <div className="form-group">
@@ -1545,21 +1546,45 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                 {empActiveTab === 'profissionais' && (
                   <div style={styles.formGrid}>
                     <div className="form-group">
-                      <label>Cargo / Função *</label>
-                      <input type="text" className="form-control" required placeholder="Ex: Enfermeira" value={empForm.role} onChange={e => setEmpForm({ ...empForm, role: e.target.value })} />
-                    </div>
-                    <div className="form-group">
-                      <label>Setor de Trabalho *</label>
-                      <select className="form-control" value={empForm.sectorId} onChange={e => setEmpForm({ ...empForm, sectorId: e.target.value })}>
-                        {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      <label>Cargo *</label>
+                      <select 
+                        className="form-control" 
+                        required 
+                        value={empForm.role || ''} 
+                        onChange={e => setEmpForm({ ...empForm, role: e.target.value })}
+                      >
+                        <option value="">Selecione o cargo...</option>
+                        {STANDARD_ROLES.map(r => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                        {empForm.role && !STANDARD_ROLES.includes(empForm.role) && (
+                          <option value={empForm.role}>{empForm.role} (Atual)</option>
+                        )}
                       </select>
                     </div>
                     <div className="form-group">
-                      <label>Data de Admissão *</label>
+                      <label>Setor *</label>
+                      <select 
+                        className="form-control" 
+                        required
+                        value={empForm.sectorId || ''} 
+                        onChange={e => setEmpForm({ ...empForm, sectorId: e.target.value })}
+                      >
+                        <option value="">Selecione o setor...</option>
+                        {(sectors && sectors.length > 0 ? sectors : STANDARD_SECTORS).map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                        {empForm.sectorId && !(sectors || STANDARD_SECTORS).some(s => s.id === empForm.sectorId) && (
+                          <option value={empForm.sectorId}>{empForm.sectorId} (Atual)</option>
+                        )}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Admissão *</label>
                       <input type="date" className="form-control" required value={empForm.admissionDate} onChange={e => setEmpForm({ ...empForm, admissionDate: e.target.value })} />
                     </div>
                     <div className="form-group">
-                      <label>Tipo de Contrato</label>
+                      <label>Contrato</label>
                       <select className="form-control" value={empForm.contractType} onChange={e => setEmpForm({ ...empForm, contractType: e.target.value })}>
                         <option value="CLT">CLT</option>
                         <option value="PJ">PJ</option>
@@ -1568,7 +1593,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       </select>
                     </div>
                     <div className="form-group">
-                      <label>Status no Sistema</label>
+                      <label>Status</label>
                       <select className="form-control" value={empForm.status || 'Ativo'} onChange={e => setEmpForm({ ...empForm, status: e.target.value })}>
                         <option value="Ativo">🟢 Ativo (Trabalhando)</option>
                         <option value="Inativo">🔴 Inativo / Demitido</option>
@@ -1576,20 +1601,20 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                     </div>
                     {empForm.status === 'Inativo' && (
                       <div className="form-group">
-                        <label>Data de Desligamento / Demissão</label>
+                        <label>Desligamento</label>
                         <input type="date" className="form-control" value={empForm.terminationDate || ''} onChange={e => setEmpForm({ ...empForm, terminationDate: e.target.value })} />
                       </div>
                     )}
                     <div className="form-group">
-                      <label>Salário Base (R$)</label>
+                      <label>Salário</label>
                       <input type="number" className="form-control" value={empForm.salary} onChange={e => setEmpForm({ ...empForm, salary: e.target.value })} />
                     </div>
                     <div className="form-group">
-                      <label>Número CNH</label>
+                      <label>CNH</label>
                       <input type="text" className="form-control" value={empForm.cnhNumber} onChange={e => setEmpForm({ ...empForm, cnhNumber: e.target.value })} />
                     </div>
                     <div className="form-group">
-                      <label>Vencimento CNH</label>
+                      <label>Vencimento</label>
                       <input type="date" className="form-control" value={empForm.cnhExpiry} onChange={e => setEmpForm({ ...empForm, cnhExpiry: e.target.value })} />
                     </div>
                   </div>
@@ -1607,7 +1632,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       <input type="text" className="form-control" placeholder="1234" value={empForm.bankAgency} onChange={e => setEmpForm({ ...empForm, bankAgency: e.target.value })} />
                     </div>
                     <div className="form-group">
-                      <label>Conta Corrente / Salário</label>
+                      <label>Conta</label>
                       <input type="text" className="form-control" placeholder="12345-6" value={empForm.bankAccount} onChange={e => setEmpForm({ ...empForm, bankAccount: e.target.value })} />
                     </div>
                   </div>
@@ -1618,7 +1643,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                   <div>
                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1.5fr auto', gap: '0.5rem', marginBottom: '1.5rem', alignItems: 'center' }}>
                       <div className="form-group">
-                        <label>Nome do Dependente</label>
+                        <label>Dependente</label>
                         <input type="text" className="form-control" value={newDep.name} onChange={e => setNewDep({ ...newDep, name: e.target.value })} />
                       </div>
                       <div className="form-group">
@@ -1631,7 +1656,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                         </select>
                       </div>
                       <div className="form-group">
-                        <label>Data Nascimento</label>
+                        <label>Nascimento</label>
                         <input type="date" className="form-control" value={newDep.birthDate} onChange={e => setNewDep({ ...newDep, birthDate: e.target.value })} />
                       </div>
                       <button type="button" onClick={handleAddDependent} className="btn btn-primary" style={{ height: '38px', marginTop: '20px', backgroundColor: '#ec4899' }}>Adicionar</button>
@@ -1667,8 +1692,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                     </table>
                   </div>
                 )}
-
-                {/* SUBTAB 9: Ausências / Faltas */}
+                {/* SUBTAB 9: Ausências */}
                 {empActiveTab === 'absences' && (
                   <div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr 2fr auto', gap: '0.5rem', marginBottom: '1.5rem', alignItems: 'center' }}>
@@ -1677,7 +1701,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                         <input type="date" className="form-control" value={newAbsence.date} onChange={e => setNewAbsence({ ...newAbsence, date: e.target.value })} />
                       </div>
                       <div className="form-group">
-                        <label>Tipo de Ausência</label>
+                        <label>Ausência</label>
                         <select className="form-control" value={newAbsence.type} onChange={e => setNewAbsence({ ...newAbsence, type: e.target.value })}>
                           <option value="Falta Injustificada">Falta Injustificada</option>
                           <option value="Falta Justificada">Falta Justificada</option>
@@ -1687,11 +1711,11 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                         </select>
                       </div>
                       <div className="form-group">
-                        <label>Dias Perdidos</label>
+                        <label>Dias</label>
                         <input type="number" step="0.5" min="0.5" className="form-control" placeholder="1" value={newAbsence.days !== undefined ? newAbsence.days : (newAbsence.hours ? parseFloat(newAbsence.hours) / 8 : '1')} onChange={e => setNewAbsence({ ...newAbsence, days: e.target.value })} />
                       </div>
                       <div className="form-group">
-                        <label>Motivo / Observação</label>
+                        <label>Motivo</label>
                         <input type="text" className="form-control" placeholder="Atestado, problemas pessoais..." value={newAbsence.motive} onChange={e => setNewAbsence({ ...newAbsence, motive: e.target.value })} />
                       </div>
                       <button type="button" onClick={handleAddAbsence} className="btn btn-primary" style={{ height: '38px', marginTop: '20px', backgroundColor: '#ec4899' }}>Registrar</button>
@@ -1765,11 +1789,11 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                         </select>
                       </div>
                       <div className="form-group">
-                        <label>Teor/Descrição</label>
+                        <label>Descrição</label>
                         <input type="text" className="form-control" value={newWarning.text} onChange={e => setNewWarning({ ...newWarning, text: e.target.value })} />
                       </div>
                       <div className="form-group">
-                        <label>Anexar Assinado</label>
+                        <label>Anexo</label>
                         <input type="file" onChange={e => handleDocBase64Upload(e, 'warning')} style={{ fontSize: '0.75rem' }} />
                       </div>
                       <button type="button" onClick={handleAddWarning} className="btn btn-primary" style={{ height: '38px', marginTop: '20px', backgroundColor: '#ec4899' }}>Registrar</button>
@@ -1781,7 +1805,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                           <th>Data</th>
                           <th>Motivo</th>
                           <th>Descrição</th>
-                          <th>Arquivo</th>
+                          <th>Anexo</th>
                           <th>Ações</th>
                         </tr>
                       </thead>
@@ -1797,7 +1821,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                               <td>
                                 {w.docUrl ? (
                                   <a href={w.docUrl} download={`advertencia-${empForm.name}-${w.date}.png`} style={{ color: '#ec4899', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                    <Download size={14} /> Baixar Anexo
+                                    <Download size={14} /> Baixar
                                   </a>
                                 ) : (
                                   <span style={{ color: 'var(--text-muted)' }}>Sem anexo</span>
@@ -1839,7 +1863,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                         <input type="date" className="form-control" value={newVaccine.date} onChange={e => setNewVaccine({ ...newVaccine, date: e.target.value })} />
                       </div>
                       <div className="form-group">
-                        <label>Próxima Dose</label>
+                        <label>Próxima</label>
                         <input type="date" className="form-control" value={newVaccine.expiryDate} onChange={e => setNewVaccine({ ...newVaccine, expiryDate: e.target.value })} />
                       </div>
                       <div className="form-group">
@@ -1856,7 +1880,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                           <th>Dose</th>
                           <th>Aplicação</th>
                           <th>Lote</th>
-                          <th>Próxima Dose</th>
+                          <th>Próxima</th>
                           <th>Validade</th>
                           <th>Ações</th>
                         </tr>
@@ -1895,12 +1919,12 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                   </div>
                 )}
 
-                {/* SUBTAB 8: Central de Documentos / Arquivos */}
+                {/* SUBTAB 8: Central de Documentos */}
                 {empActiveTab === 'documents' && (
                   <div>
                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1.5fr 1fr auto', gap: '0.5rem', marginBottom: '1.5rem', alignItems: 'center' }}>
                       <div className="form-group">
-                        <label>Nome do Arquivo *</label>
+                        <label>Arquivo *</label>
                         <input type="text" className="form-control" placeholder="Ex: CPF Assinado, Diploma" value={newDoc.name} onChange={e => setNewDoc({ ...newDoc, name: e.target.value })} />
                       </div>
                       <div className="form-group">
@@ -1915,11 +1939,11 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                         </select>
                       </div>
                       <div className="form-group">
-                        <label>Vencimento (se houver)</label>
+                        <label>Vencimento</label>
                         <input type="date" className="form-control" value={newDoc.expiryDate} onChange={e => setNewDoc({ ...newDoc, expiryDate: e.target.value })} />
                       </div>
                       <div className="form-group">
-                        <label>Arquivo</label>
+                        <label>Anexo</label>
                         <input type="file" onChange={e => handleDocBase64Upload(e, 'doc')} style={{ fontSize: '0.75rem' }} />
                       </div>
                       <button type="button" onClick={handleAddDocument} className="btn btn-primary" style={{ height: '38px', marginTop: '20px', backgroundColor: '#ec4899' }}>Registrar</button>
@@ -1931,7 +1955,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                           <th>Documento</th>
                           <th>Categoria</th>
                           <th>Validade</th>
-                          <th>Download / Arquivo</th>
+                          <th>Download</th>
                           <th>Ações</th>
                         </tr>
                       </thead>
