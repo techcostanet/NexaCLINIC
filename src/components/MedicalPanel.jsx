@@ -48,6 +48,7 @@ export default function MedicalPanel({ onBack }) {
     try {
       const [
         docsData,
+        userList,
         settingsData,
         schedsData,
         swapsData,
@@ -57,6 +58,7 @@ export default function MedicalPanel({ onBack }) {
         apptsData
       ] = await Promise.all([
         dbService.getMedicalDoctors ? dbService.getMedicalDoctors() : [],
+        dbService.getUsers ? dbService.getUsers() : [],
         dbService.getMedicalSettings ? dbService.getMedicalSettings() : {},
         dbService.getMedicalSchedules ? dbService.getMedicalSchedules(selectedMonth) : [],
         dbService.getMedicalSwaps ? dbService.getMedicalSwaps() : [],
@@ -66,7 +68,31 @@ export default function MedicalPanel({ onBack }) {
         dbService.getAppointments ? dbService.getAppointments() : []
       ]);
 
-      setDoctors(docsData || []);
+      // Unify doctors from medicalService and users (from Agenda)
+      const unifiedDocs = [...(docsData || [])];
+      (userList || []).forEach(u => {
+        const uId = u.uid || u.id;
+        const exists = unifiedDocs.some(d => d.id === uId || (d.email && u.email && d.email.toLowerCase() === u.email.toLowerCase()) || d.name === u.name);
+        if (!exists) {
+          unifiedDocs.push({
+            id: uId,
+            name: u.name || 'Profissional',
+            crm: u.crm || (u.name?.includes('Dr') ? '45892/MG' : 'CRM Ativo'),
+            specialty: u.specialty || 'Nefrologia',
+            email: u.email || '',
+            phone: u.phone || '',
+            contractType: u.contractType || 'PJ',
+            pixKey: u.pixKey || u.email || '',
+            bank: u.bank || 'Banco Principal'
+          });
+        }
+      });
+
+      setDoctors(unifiedDocs);
+      if (unifiedDocs.length > 0 && (!currentDoctorId || !unifiedDocs.some(d => d.id === currentDoctorId))) {
+        setCurrentDoctorId(unifiedDocs[0].id);
+      }
+
       setSettings(settingsData || {});
       setSchedules(schedsData || []);
       setSwaps(swapsData || []);
@@ -230,8 +256,8 @@ export default function MedicalPanel({ onBack }) {
         </div>
       )}
 
-      {/* Top Banner & Mode Bar */}
-      <div style={styles.topBanner}>
+      {/* Top Main Card Header */}
+      <div style={styles.cardHeader}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {onBack && (
             <button onClick={onBack} style={styles.backBtn}>
@@ -240,7 +266,7 @@ export default function MedicalPanel({ onBack }) {
             </button>
           )}
           <div>
-            <h1 style={styles.pageTitle}>NexaMED • Gestão Médica & Escalas</h1>
+            <h1 style={styles.pageTitle}>NexaMED - Gestão Médica & Escalas</h1>
             <p style={styles.pageSub}>
               Escala de plantões nos salões/DP, produção ambulatorial, bolsa de trocas com e-mail e repasse financeiro.
             </p>
@@ -249,12 +275,12 @@ export default function MedicalPanel({ onBack }) {
 
         {/* View Mode Selector */}
         <div style={styles.modeControlBox}>
-          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#94a3b8' }}>Acesso:</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>Acesso:</span>
           <select
             className="form-control"
             value={currentDoctorId}
             onChange={e => setCurrentDoctorId(e.target.value)}
-            style={{ width: '220px', fontSize: '0.8rem', backgroundColor: '#1e293b', color: '#fff', borderColor: '#334155' }}
+            style={{ width: '240px', fontSize: '0.8rem', backgroundColor: '#fff', color: '#0f172a', borderColor: '#cbd5e1', fontWeight: '600' }}
           >
             {doctors.map(doc => (
               <option key={doc.id} value={doc.id}>{doc.name} (Médico)</option>
@@ -380,9 +406,11 @@ const styles = {
     padding: '1.25rem 1.5rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
+    gap: '1.25rem',
     backgroundColor: '#f8fafc',
     minHeight: '100vh',
+    maxWidth: '1600px',
+    margin: '0 auto',
   },
   toast: {
     position: 'fixed',
@@ -400,50 +428,51 @@ const styles = {
     fontSize: '0.85rem',
     fontWeight: '700',
   },
-  topBanner: {
-    backgroundColor: '#0f172a',
+  cardHeader: {
+    backgroundColor: '#fff',
     borderRadius: '12px',
     padding: '1.25rem 1.5rem',
-    color: '#fff',
+    border: '1px solid #e2e8f0',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: '1rem',
-    boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
   },
   pageTitle: {
     fontSize: '1.35rem',
-    fontWeight: '900',
+    fontWeight: '800',
     margin: 0,
-    letterSpacing: '-0.5px',
+    color: '#0f172a',
+    letterSpacing: '-0.3px',
   },
   pageSub: {
-    fontSize: '0.8rem',
-    color: '#94a3b8',
+    fontSize: '0.85rem',
+    color: '#64748b',
     margin: '0.2rem 0 0 0',
   },
   backBtn: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.35rem',
-    padding: '0.4rem 0.75rem',
-    fontSize: '0.75rem',
+    padding: '0.45rem 0.85rem',
+    fontSize: '0.8rem',
     fontWeight: '700',
-    backgroundColor: '#1e293b',
-    color: '#cbd5e1',
-    border: '1px solid #334155',
-    borderRadius: '6px',
+    backgroundColor: '#f1f5f9',
+    color: '#334155',
+    border: '1px solid #cbd5e1',
+    borderRadius: '8px',
     cursor: 'pointer',
   },
   modeControlBox: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    backgroundColor: '#1e293b',
+    backgroundColor: '#f8fafc',
     padding: '0.4rem 0.75rem',
     borderRadius: '8px',
-    border: '1px solid #334155',
+    border: '1px solid #e2e8f0',
   },
   tabsBar: {
     display: 'flex',

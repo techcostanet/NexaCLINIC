@@ -23,9 +23,10 @@ export default function MedicalProductionTab({
 
   // Compute production metrics for each doctor
   const doctorProductions = doctors.map(doc => {
+    const docId = doc.id || doc.uid;
     // 1. Shifts: Only present or confirmed shifts
     const docShifts = schedules.filter(s => 
-      s.doctorId === doc.id && 
+      (s.doctorId === docId || s.doctorId === doc.id || s.doctorId === doc.uid) && 
       (s.checkinStatus === 'Presente' || s.checkinStatus === 'Substituído' || (s.status === 'Confirmado' && s.checkinStatus !== 'Ausente'))
     );
     const shiftsCount = docShifts.length;
@@ -33,14 +34,14 @@ export default function MedicalProductionTab({
 
     // 2. Consultations: Appointments completed in calendar
     const docConsults = appointments.filter(a => 
-      (a.doctorName?.includes(doc.name) || a.doctorId === doc.id) &&
+      (a.doctorId === docId || a.doctorId === doc.id || a.doctorId === doc.uid || a.doctorName?.includes(doc.name)) &&
       (a.status === 'Concluída' || a.status === 'Atendido' || a.status === 'completed' || a.status === 'Finalizado')
     );
     const consultationsCount = docConsults.length > 0 ? docConsults.length : 8; // default realistic fallback for demo
     const consultationsTotal = consultationsCount * consultFee;
 
     // 3. Procedures
-    const docProcs = procedures.filter(p => p.doctorId === doc.id);
+    const docProcs = procedures.filter(p => p.doctorId === docId || p.doctorId === doc.id || p.doctorId === doc.uid);
     const proceduresCount = docProcs.length;
     const proceduresTotal = docProcs.reduce((acc, p) => acc + (parseFloat(p.value) || 0), 0);
 
@@ -48,15 +49,15 @@ export default function MedicalProductionTab({
     const netTotal = grossTotal; // PJ without INSS or standard
 
     // Check if already homologated
-    const existingProd = productions.find(p => p.month === selectedMonth && p.doctorId === doc.id);
+    const existingProd = productions.find(p => p.month === selectedMonth && (p.doctorId === docId || p.doctorId === doc.id || p.doctorId === doc.uid));
     const isHomologated = existingProd?.status === 'Homologado';
 
     return {
-      doctorId: doc.id,
+      doctorId: docId,
       doctorName: doc.name,
-      doctorCrm: doc.crm,
-      pixKey: doc.pixKey,
-      contractType: doc.contractType,
+      doctorCrm: doc.crm || '',
+      pixKey: doc.pixKey || '',
+      contractType: doc.contractType || 'PJ',
       shiftsCount,
       shiftsTotal,
       consultationsCount,

@@ -294,7 +294,12 @@ export const createUser = async (email, name, role, allowedSectors) => {
 export const getUsers = async () => {
     const allSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
     const defaultUsers = [
-      { uid: 'techcosta-admin-uid', email: 'contato@techcosta.net', name: 'Administrador TechCosta', role: 'admin', allowedSectors: allSectors, status: 'active' },
+      { uid: 'techcosta-admin-uid', email: 'contato@techcosta.net', name: 'Administrador TechCosta', role: 'admin', allowedSectors: allSectors, status: 'active', crm: '45892/MG', specialty: 'Nefrologia' },
+      { uid: 'doc-lucas-uid', email: 'lucas.mendes@nexaclinic.med.br', name: 'Dr. Lucas Mendes', role: 'professional', allowedSectors: ['medica'], status: 'active', crm: '45892/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: '45892000182@pix.bcb.gov.br', bank: 'Banco do Brasil (001) Ag 1234-5 CC 45892-1' },
+      { uid: 'doc-mariana-uid', email: 'mariana.ribeiro@nexaclinic.med.br', name: 'Dra. Mariana Ribeiro', role: 'professional', allowedSectors: ['medica'], status: 'active', crm: '51204/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: 'mariana.med@gmail.com', bank: 'Itaú (341) Ag 0891 CC 32104-9' },
+      { uid: 'doc-roberto-uid', email: 'roberto.carvalho@nexaclinic.med.br', name: 'Dr. Roberto Carvalho', role: 'professional', allowedSectors: ['medica'], status: 'active', crm: '39812/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: '39812984000192', bank: 'Santander (033) Ag 2201 CC 98120-4' },
+      { uid: 'doc-camila-uid', email: 'camila.albuquerque@nexaclinic.med.br', name: 'Dra. Camila Albuquerque', role: 'professional', allowedSectors: ['medica'], status: 'active', crm: '48920/MG', specialty: 'Nefrologia', contractType: 'CLT', pixKey: 'camila.albuquerque@pix.com', bank: 'Bradesco (237) Ag 1402 CC 89201-3' },
+      { uid: 'doc-fernando-uid', email: 'fernando.vasconcelos@nexaclinic.med.br', name: 'Dr. Fernando Vasconcelos', role: 'professional', allowedSectors: ['medica'], status: 'active', crm: '55431/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: '5543189000109', bank: 'Sicoob (756) Ag 4120 CC 55431-0' },
       { uid: 'anacg-uid', email: 'anacg@nexa.com', name: 'Ana Carolina Cerqueira Gonzaga', role: 'rh', allowedSectors: ['rh'], status: 'active' },
       { uid: 'jsoares-uid', email: 'jsoares@nexa.com', name: 'J. Soares', role: 'rh', allowedSectors: ['rh'], status: 'active' },
       { uid: 'daliam-uid', email: 'daliam@nexa.com', name: 'Dália Moraes', role: 'financial', allowedSectors: ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'], status: 'active' },

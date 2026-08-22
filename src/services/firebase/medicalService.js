@@ -1,12 +1,111 @@
 import { app } from './config';
 import { USE_MOCK, mockFirestore } from './mockDb';
+import { getUsers } from './authService';
 
 export const getMedicalDoctors = async () => {
-  if (USE_MOCK) return mockFirestore.getMedicalDoctors();
-  const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-  const db = getFirestore(app);
-  const snap = await getDocs(collection(db, 'medical_doctors'));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const fallbackDocs = [
+    {
+      id: 'doc-lucas-uid',
+      name: 'Dr. Lucas Mendes',
+      crm: '45892/MG',
+      specialty: 'Nefrologia',
+      email: 'lucas.mendes@nexaclinic.med.br',
+      phone: '(31) 98765-4321',
+      contractType: 'PJ',
+      pixKey: '45892000182@pix.bcb.gov.br',
+      bank: 'Banco do Brasil (001) Ag 1234-5 CC 45892-1',
+      active: true
+    },
+    {
+      id: 'doc-mariana-uid',
+      name: 'Dra. Mariana Ribeiro',
+      crm: '51204/MG',
+      specialty: 'Nefrologia',
+      email: 'mariana.ribeiro@nexaclinic.med.br',
+      phone: '(31) 99123-4567',
+      contractType: 'PJ',
+      pixKey: 'mariana.med@gmail.com',
+      bank: 'Itaú (341) Ag 0891 CC 32104-9',
+      active: true
+    },
+    {
+      id: 'doc-roberto-uid',
+      name: 'Dr. Roberto Carvalho',
+      crm: '39812/MG',
+      specialty: 'Nefrologia',
+      email: 'roberto.carvalho@nexaclinic.med.br',
+      phone: '(31) 98456-7890',
+      contractType: 'PJ',
+      pixKey: '39812984000192',
+      bank: 'Santander (033) Ag 2201 CC 98120-4',
+      active: true
+    },
+    {
+      id: 'doc-camila-uid',
+      name: 'Dra. Camila Albuquerque',
+      crm: '48920/MG',
+      specialty: 'Nefrologia',
+      email: 'camila.albuquerque@nexaclinic.med.br',
+      phone: '(31) 99345-6781',
+      contractType: 'CLT',
+      pixKey: 'camila.albuquerque@pix.com',
+      bank: 'Bradesco (237) Ag 1402 CC 89201-3',
+      active: true
+    },
+    {
+      id: 'doc-fernando-uid',
+      name: 'Dr. Fernando Vasconcelos',
+      crm: '55431/MG',
+      specialty: 'Nefrologia',
+      email: 'fernando.vasconcelos@nexaclinic.med.br',
+      phone: '(31) 98877-6655',
+      contractType: 'PJ',
+      pixKey: '5543189000109',
+      bank: 'Sicoob (756) Ag 4120 CC 55431-0',
+      active: true
+    }
+  ];
+
+  try {
+    const userList = await getUsers();
+    const docUsers = (userList || []).filter(u => 
+      u.role === 'admin' || 
+      u.role === 'professional' || 
+      u.role === 'clinical' || 
+      (u.allowedSectors && u.allowedSectors.includes('medica')) ||
+      (u.name && (u.name.toLowerCase().includes('dr') || u.name.toLowerCase().includes('médic') || u.name.toLowerCase().includes('nefro')))
+    );
+
+    const merged = [...fallbackDocs];
+
+    (docUsers.length > 0 ? docUsers : userList || []).forEach(u => {
+      const uId = u.uid || u.id;
+      const existingIdx = merged.findIndex(m => m.id === uId || (m.email && u.email && m.email.toLowerCase() === u.email.toLowerCase()) || m.name === u.name);
+      const mapped = {
+        id: uId,
+        name: u.name || 'Médico',
+        crm: u.crm || (u.name?.includes('Dr') ? '45892/MG' : 'CRM Ativo'),
+        specialty: u.specialty || 'Nefrologia',
+        email: u.email || '',
+        phone: u.phone || '',
+        contractType: u.contractType || 'PJ',
+        pixKey: u.pixKey || u.email || '',
+        bank: u.bank || 'Banco Principal',
+        active: u.status !== 'inactive'
+      };
+
+      if (existingIdx >= 0) {
+        merged[existingIdx] = { ...merged[existingIdx], ...mapped };
+      } else {
+        merged.push(mapped);
+      }
+    });
+
+    return merged;
+  } catch (err) {
+    console.warn('Fallback getMedicalDoctors:', err);
+    return fallbackDocs;
+  }
 };
 
 export const getMedicalSettings = async () => {

@@ -40,11 +40,12 @@ export default function MedicalScheduleTab({
 
   const handleOpenAdd = (date = null, sec = null, sh = null) => {
     setEditingItem(null);
+    const firstDocId = doctors[0]?.id || doctors[0]?.uid || '';
     setFormData({
       date: date || new Date().toISOString().substring(0, 10),
       sector: sec || 'Salão 1',
       shift: sh || '1º Turno',
-      doctorId: doctors[0]?.id || '',
+      doctorId: firstDocId,
       notes: ''
     });
     setShowAddModal(true);
@@ -64,7 +65,7 @@ export default function MedicalScheduleTab({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const doc = doctors.find(d => d.id === formData.doctorId);
+    const doc = doctors.find(d => (d.id === formData.doctorId || d.uid === formData.doctorId));
     const month = formData.date.substring(0, 7);
     
     onSaveSchedule({
@@ -75,7 +76,7 @@ export default function MedicalScheduleTab({
       shift: formData.shift,
       doctorId: formData.doctorId,
       doctorName: doc ? doc.name : 'Médico Não Informado',
-      doctorCrm: doc ? doc.crm : '',
+      doctorCrm: doc ? (doc.crm || '') : '',
       status: 'Confirmado',
       checkinStatus: editingItem?.checkinStatus || 'Pendente',
       notes: formData.notes
@@ -330,8 +331,11 @@ export default function MedicalScheduleTab({
                     onChange={e => setFormData({ ...formData, doctorId: e.target.value })}
                     required
                   >
+                    <option value="">Selecione o Médico...</option>
                     {doctors.map(doc => (
-                      <option key={doc.id} value={doc.id}>{doc.name} ({doc.crm})</option>
+                      <option key={doc.id || doc.uid} value={doc.id || doc.uid}>
+                        {doc.name} {doc.crm ? `(${doc.crm})` : ''}
+                      </option>
                     ))}
                   </select>
                 </div>

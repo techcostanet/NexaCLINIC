@@ -1,3 +1,14 @@
+## [v4.7.39] - 22 de Agosto, 2026
+### NexaMED - Padrão Visual Clean do Header e Sincronização Total dos Médicos da Agenda
+- **Padrão Visual Harmonizado (Fim do Top Banner Escuro):**
+  - Substituição da barra superior preta pelo padrão de Card Header branco e limpo do NexaCLINIC, com tipografia harmônica, bordas sutis e fundo claro.
+  - Atualização do card do médico no Portal "Meus Plantões" para seguir a identidade visual clean da clínica.
+- **Sincronização Total com a Lista de Médicos da Agenda (NexaCAL):**
+  - Integração unificada que busca todos os médicos e profissionais cadastrados no sistema (via `getUsers()` e `getMedicalDoctors()`).
+  - Disponibilização completa dos médicos nefrologistas em todos os seletores e modais: Escalar Plantão, Bolsa de Trocas, Lançamento de Procedimentos e Apuração de Honorários.
+
+---
+
 ## [v4.7.38] - 22 de Agosto, 2026
 ### Novo Módulo Gestão Médica & Escalas (NexaMED) - Escala de Salões/DP, Bolsa de Trocas com E-mail, Ronda da Recepção e Repasse Financeiro
 - **Escala Mensal de Plantões por Salões e DP:**

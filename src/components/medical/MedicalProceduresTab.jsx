@@ -205,8 +205,11 @@ export default function MedicalProceduresTab({
                     onChange={e => setFormData({ ...formData, doctorId: e.target.value })}
                     required
                   >
+                    <option value="">Selecione o Médico...</option>
                     {doctors.map(d => (
-                      <option key={d.id} value={d.id}>{d.name} ({d.crm})</option>
+                      <option key={d.id || d.uid} value={d.id || d.uid}>
+                        {d.name} {d.crm ? `(${d.crm})` : ''}
+                      </option>
                     ))}
                   </select>
                 </div>

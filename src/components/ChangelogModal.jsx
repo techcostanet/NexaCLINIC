@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.39',
+      date: '22/08/2026',
+      title: 'NexaMED - Padrão Visual Clean do Header e Sincronização Total dos Médicos da Agenda',
+      description: 'Ajuste do padrão visual do cabeçalho superior para o padrão clean/claro do NexaCLINIC e sincronização de todos os médicos da Agenda com o módulo NexaMED.',
+      changes: [
+        { type: 'Padrão Visual Harmonizado', text: 'Substituição do banner superior escuro por card branco com bordas e botões claros no padrão de excelência visual da clínica.' },
+        { type: 'Sincronização de Médicos da Agenda', text: 'Carregamento unificado de todos os médicos cadastrados no sistema em todos os seletores e modais (Escala, Trocas, Procedimentos e Fechamento).' },
+        { type: 'Portal do Médico', text: 'Harmonização do card do médico com avatar lilás e layout limpo.' }
+      ]
+    },
+    {
       version: 'v4.7.38',
       date: '22/08/2026',
       title: 'Novo Módulo Gestão Médica & Escalas (NexaMED) - Escala de Salões/DP, Bolsa de Trocas com E-mail, Ronda da Recepção e Repasse Financeiro',

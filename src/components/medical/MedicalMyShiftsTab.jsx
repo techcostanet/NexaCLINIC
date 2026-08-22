@@ -90,12 +90,12 @@ export default function MedicalMyShiftsTab({
       <div style={styles.doctorCard}>
         <div style={styles.doctorInfo}>
           <div style={styles.avatarBox}>
-            <User size={28} color="#fff" />
+            <User size={24} color="#8b5cf6" />
           </div>
           <div>
             <h2 style={styles.doctorName}>{doctor?.name}</h2>
             <p style={styles.doctorMeta}>
-              CRM: <strong>{doctor?.crm}</strong> • Especialidade: <strong>{doctor?.specialty || 'Nefrologia'}</strong> • E-mail: {doctor?.email}
+              CRM: <strong>{doctor?.crm || 'Ativo'}</strong> • Especialidade: <strong>{doctor?.specialty || 'Nefrologia'}</strong> • E-mail: {doctor?.email}
             </p>
           </div>
         </div>
@@ -233,8 +233,11 @@ export default function MedicalMyShiftsTab({
                     onChange={e => setTargetDoctorId(e.target.value)}
                     required
                   >
-                    {doctors.filter(d => d.id !== doctor?.id).map(doc => (
-                      <option key={doc.id} value={doc.id}>{doc.name} ({doc.crm})</option>
+                    <option value="">Selecione o Médico Substituto...</option>
+                    {doctors.filter(d => (d.id !== doctor?.id && d.uid !== doctor?.id)).map(doc => (
+                      <option key={doc.id || doc.uid} value={doc.id || doc.uid}>
+                        {doc.name} {doc.crm ? `(${doc.crm})` : ''}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -356,16 +359,17 @@ const styles = {
     gap: '1rem',
   },
   doctorCard: {
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+    backgroundColor: '#fff',
     borderRadius: '12px',
     padding: '1.25rem 1.5rem',
-    color: '#fff',
+    color: '#0f172a',
+    border: '1px solid #e2e8f0',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: '1rem',
-    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
   },
   doctorInfo: {
     display: 'flex',
@@ -373,10 +377,10 @@ const styles = {
     gap: '1rem',
   },
   avatarBox: {
-    width: '50px',
-    height: '50px',
+    width: '48px',
+    height: '48px',
     borderRadius: '12px',
-    background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+    backgroundColor: 'rgba(139, 92, 246, 0.12)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -385,10 +389,11 @@ const styles = {
     fontSize: '1.2rem',
     fontWeight: '800',
     margin: 0,
+    color: '#0f172a',
   },
   doctorMeta: {
-    fontSize: '0.8rem',
-    color: '#94a3b8',
+    fontSize: '0.82rem',
+    color: '#64748b',
     margin: '0.2rem 0 0 0',
   },
   procActionBtn: {
