@@ -1,3 +1,29 @@
+## [v4.7.38] - 22 de Agosto, 2026
+### Novo Módulo Gestão Médica & Escalas (NexaMED) - Escala de Salões/DP, Bolsa de Trocas com E-mail, Ronda da Recepção e Repasse Financeiro
+- **Escala Mensal de Plantões por Salões e DP:**
+  - Grade de distribuição dos médicos nefrologistas nos Salões 1, 2, 3 e Diálise Peritoneal (DP) nos 3 turnos diários (1º, 2º e 3º Turno).
+  - Trava Anti-Buraco com semáforo visual para garantir 100% de cobertura médica assistencial exigida pela ANVISA/RDC 11.
+- **Portal do Médico ("Meus Plantões"):**
+  - Visualização da escala pessoal de plantões limpa (sem exposição de valores financeiros).
+  - Botão de solicitação de trocas de plantão com colegas.
+  - Formulário para lançamento de procedimentos nefrológicos executados vinculando paciente e data.
+- **Bolsa de Trocas de Plantão com Notificações por E-mail:**
+  - Rastreabilidade de substituições em 3 etapas (solicitação, aceite do médico substituto e homologação pela coordenação médica).
+  - Disparo automático de e-mails em cada fase com histórico completo gravado.
+- **Integração com Agenda Ambulatorial (NexaCAL):**
+  - Consultas marcadas como finalizadas ou concluídas na agenda entram automaticamente na contagem de produção médica do profissional.
+- **Ronda Médica Presencial na Recepção (Fim da Prancheta):**
+  - Nova aba de ronda no módulo Recepção para auditoria presencial nos salões e DP com 1 toque (*Presente, Atraso, Substituição, Falta*), registrando o horário real.
+- **Tabela de Honorários Configurável:**
+  - Painel de configuração de valores unitários para plantões, consultas ambulatoriais e procedimentos (*Cateter CDL, Permcath, Biópsia Renal, FAV*).
+- **Fechamento de Produção & Homologação Automática para o Financeiro:**
+  - Apuração consolidada de honorários por médico com botão de homologação da coordenação.
+  - Lançamento automático de títulos no **Contas a Pagar** do `NexaFINANCE` (Categoria: *Honorários Médicos*), garantindo segregação de acessos.
+- **Extrato / Holerite Médico em PDF:**
+  - Emissão e impressão em 1 clique do demonstrativo detalhado de produção com assinatura da coordenação e do médico.
+
+---
+
 ## [v4.7.37] - 22 de Agosto, 2026
 ### Renovação do Módulo Clínico (NexaCLINIC) - Cockpit 360°, Prescrição Medicamentosa, Painel Laboratorial SBN, Laudos APAC, Calculadoras e Copiloto IA
 - **Cockpit 360° do Paciente Renal:**

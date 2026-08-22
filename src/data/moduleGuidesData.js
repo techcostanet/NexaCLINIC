@@ -1019,6 +1019,107 @@ export const MODULE_GUIDES = {
         resposta: 'Basta clicar no botão "Exportar" no cockpit do paciente. O sistema compila automaticamente o sumário com dados de acesso vascular, prescrição de diálise, medicamentos ativos, sorologias recentes e últimas evoluções em formato padrão para impressão.'
       }
     ]
+  },
+  medical: {
+    id: 'medical',
+    name: 'Gestão Médica & Escalas',
+    subtitle: 'NexaMED — Corpo Clínico & Produção',
+    color: '#6366f1',
+    recursos: [
+      {
+        title: 'Escala Mensal de Plantões',
+        desc: 'Distribuição dos médicos nefrologistas nos Salões 1, 2, 3 e Diálise Peritoneal (DP) nos 3 turnos diários com Trava Anti-Buraco para evitar turnos descobertos.'
+      },
+      {
+        title: 'Portal do Médico ("Meus Plantões")',
+        desc: 'Visão individual onde o profissional confere sua agenda assistencial sem valores financeiros e solicita trocas com colegas.'
+      },
+      {
+        title: 'Bolsa de Trocas com E-mail',
+        desc: 'Fluxo em 3 etapas (solicitação, aceite do colega e homologação da coordenação) com disparo automático de notificações por e-mail em cada fase.'
+      },
+      {
+        title: 'Lançamento de Procedimentos',
+        desc: 'Registro de procedimentos nefrológicos executados (CDL, Permcath, biópsias, mapeamentos de FAV) vinculando paciente e data.'
+      },
+      {
+        title: 'Integração com Agenda (NexaCAL)',
+        desc: 'Captura automática de atendimentos e consultas concluídas na agenda para a apuração da produção médica.'
+      },
+      {
+        title: 'Ronda Presencial na Recepção',
+        desc: 'Auditoria diária de presença física nos salões com 1 toque no tablet/computador da recepção (Presente, Atraso, Substituição, Ausente).'
+      },
+      {
+        title: 'Fechamento de Honorários & Repasse Automático',
+        desc: 'Homologação da produção pela coordenação com geração automática do título no Contas a Pagar do NexaFINANCE sem expor dados financeiros sigilosos.'
+      },
+      {
+        title: 'Extrato / Holerite Médico em PDF',
+        desc: 'Emissão em 1 clique do demonstrativo detalhado de honorários discriminando plantões, consultas e procedimentos para assinatura.'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Montar e Ajustar a Escala Mensal de Plantões',
+        steps: [
+          'Acesse a aba "Escala" e selecione o mês de competência no topo da página.',
+          'Utilize os filtros por Salão (Salão 1, 2, 3 ou DP) e Turno para verificar a cobertura.',
+          'Clique em "+ Escalar" para adicionar um plantão ou no ícone de lápis para alterar o médico responsável.',
+          'Verifique a faixa de alerta: se houver turnos sem médico, a Trava Anti-Buraco sinalizará em vermelho.'
+        ]
+      },
+      {
+        title: 'Como Solicitar e Homologar uma Troca de Plantão',
+        steps: [
+          'No Portal do Médico (aba "Plantões"), localize o plantão que deseja transferir e clique em "Trocar".',
+          'Selecione o médico substituto, descreva o motivo e confirme o envio. O sistema disparará um e-mail de notificação ao colega.',
+          'O médico substituto acessa a aba "Trocas" e clica em "Aceitar".',
+          'A Coordenação Médica revisa na aba "Trocas" e clica em "Homologar". A escala é atualizada e um e-mail de confirmação é enviado a ambos.'
+        ]
+      },
+      {
+        title: 'Como Lançar um Procedimento Executado',
+        steps: [
+          'Acesse a aba "Plantões" (ou "Procedimentos") e clique no botão "+ Lançar Procedimento".',
+          'Selecione o paciente atendido, a data do procedimento e o tipo de procedimento (ex: Cateter CDL, Implante de Permcath).',
+          'Adicione observações técnicas se necessário e clique em "Gravar Procedimento".'
+        ]
+      },
+      {
+        title: 'Como a Recepção Realiza a Ronda Médica Diária',
+        steps: [
+          'A equipe da recepção acessa o módulo Recepção e entra na aba "Ronda Médica".',
+          'Na lista de salões e turnos de hoje, localiza o médico escalado.',
+          'Clica no botão correspondente: "✓ Presente", "⚠ Atraso", "🔄 Troca" ou "✕ Falta".',
+          'O horário é gravado automaticamente e serve como base para a homologação do pagamento.'
+        ]
+      },
+      {
+        title: 'Como Homologar a Produção Médica e Enviar ao Financeiro',
+        steps: [
+          'A Coordenação Médica acessa a aba "Produção" do NexaMED.',
+          'Confere o espelho de cada médico (soma de plantões auditados + consultas concluídas na agenda + procedimentos).',
+          'Clica no botão "Homologar". O sistema cria instantaneamente a duplicata a pagar no Contas a Pagar do NexaFINANCE.',
+          'Clique em "Extrato" para gerar e imprimir o holerite detalhado do médico em PDF.'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'A Coordenação Médica precisa ter acesso ao Módulo Financeiro para pagar os médicos?',
+        resposta: 'Não! O NexaMED foi desenhado com total segregação de acessos (RBAC). A coordenação audita e clica em "Homologar" diretamente no NexaMED. Em segundo plano, o sistema lança automaticamente a conta a pagar no NexaFINANCE para o setor financeiro quitar.'
+      },
+      {
+        pergunta: 'Como as consultas da agenda médica entram na produção do profissional?',
+        resposta: 'Quando o médico atende um paciente no consultório e marca o agendamento como "Finalizado" ou "Concluído" no módulo Agenda (NexaCAL), a consulta é contabilizada instantaneamente na produção mensal daquele médico.'
+      },
+      {
+        pergunta: 'O que acontece se um médico faltar ao plantão e não avisar?',
+        resposta: 'A recepção marca "Ausente" na Ronda Médica. Esse plantão não é contabilizado na apuração mensal daquele médico no momento do fechamento de produção.'
+      }
+    ]
   }
 };
+
 

@@ -144,6 +144,15 @@ export default function ModuleSelector({ user, onSelectModule }) {
       icon: ShieldCheck,
       color: '#059669', // emerald-600
       allowedRoles: ['admin', 'rh', 'technician', 'sesmt']
+    },
+    {
+      id: 'medical',
+      title: 'Gestão Médica & Escalas',
+      subtitle: 'NexaMED - Corpo Clínico',
+      description: 'Escalas de plantões dos salões/DP, bolsa de trocas com e-mail, procedimentos e fechamento financeiro.',
+      icon: HeartPulse,
+      color: '#6366f1', // indigo-500
+      allowedRoles: ['admin', 'professional', 'financial']
     }
   ];
 

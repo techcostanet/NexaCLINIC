@@ -6,6 +6,22 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.38',
+      date: '22/08/2026',
+      title: 'Novo Módulo Gestão Médica & Escalas (NexaMED) - Escala de Salões/DP, Bolsa de Trocas com E-mail, Ronda da Recepção e Repasse Financeiro',
+      description: 'Lançamento do módulo NexaMED para governança completa do corpo clínico: escala de plantões nos salões de hemodiálise e diálise peritoneal, portal do médico (sem valores), bolsa de trocas auditada com disparo de e-mails, integração automática com consultas concluídas da agenda (NexaCAL), ronda presencial na recepção (fim da prancheta), apuração de honorários com procedimentos e homologação automática para o Contas a Pagar do NexaFINANCE com segregação de acessos.',
+      changes: [
+        { type: 'Escala Mensal de Plantões', text: 'Grade de distribuição médica para Salões 1, 2, 3 e DP nos 3 turnos com Trava Anti-Buraco para garantir 100% de cobertura assistencial.' },
+        { type: 'Portal do Médico', text: 'Visualização da escala pessoal de plantões limpa (sem valores), botão para solicitação de trocas e lançamento de procedimentos nefrológicos executados.' },
+        { type: 'Bolsa de Trocas com E-mail', text: 'Fluxo em 3 etapas (solicitação, aceite e homologação) com rastreabilidade e envio automático de notificações por e-mail a cada transição.' },
+        { type: 'Lançamento de Procedimentos', text: 'Registro de cateteres CDL, Permcath, biópsias renais e mapeamentos de FAV com paciente e data vinculados.' },
+        { type: 'Integração com Agenda (NexaCAL)', text: 'Consultas concluídas e finalizadas na agenda entram automaticamente na contagem de produção médica do mês.' },
+        { type: 'Ronda Médica na Recepção', text: 'Nova aba de ronda no módulo Recepção para auditar presencialmente os médicos nos salões com 1 toque (Presente, Atraso, Substituição, Falta).' },
+        { type: 'Fechamento & Repasse Automático', text: 'Homologação da coordenação médica com criação automática do título no Contas a Pagar do NexaFINANCE sem expor dados financeiros sigilosos.' },
+        { type: 'Extrato Médico em PDF', text: 'Emissão e impressão em 1 clique do holerite detalhado com discriminação de plantões, consultas e procedimentos.' }
+      ]
+    },
+    {
       version: 'v4.7.37',
       date: '22/08/2026',
       title: 'Renovação do Módulo Clínico (NexaCLINIC) - Cockpit 360°, Prescrição Medicamentosa, Painel Laboratorial SBN, Laudos APAC, Calculadoras e Copiloto IA',

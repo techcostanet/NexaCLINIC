@@ -19,6 +19,7 @@ import ApacBillingPanel from './components/ApacBillingPanel';
 import MaintenancePanel from './components/MaintenancePanel';
 import SesmtDashboard from './components/sesmt/SesmtDashboard';
 import AssistPanel from './components/AssistPanel';
+import MedicalPanel from './components/MedicalPanel';
 import ErrorBoundary from './components/ErrorBoundary';
 import ModuleGuideModal from './components/common/ModuleGuideModal';
 
@@ -134,6 +135,8 @@ export default function App() {
         return <ErrorBoundary><ApacBillingPanel currentUser={user} /></ErrorBoundary>;
       case 'sesmt':
         return <ErrorBoundary><SesmtDashboard currentUser={user} /></ErrorBoundary>;
+      case 'medical':
+        return <ErrorBoundary><MedicalPanel currentUser={user} onBack={() => setCurrentModule('selector')} /></ErrorBoundary>;
       default:
         return renderQualityPage();
     }

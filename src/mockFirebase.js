@@ -15280,6 +15280,446 @@ export const mockFirestore = {
     return updated;
   },
 
+  // ==========================================
+  // NexaMED - Gestão Médica & Escalas
+  // ==========================================
+
+  getMedicalDoctors: async () => {
+    const db = getDB();
+    if (!db.medical_doctors || db.medical_doctors.length === 0) {
+      db.medical_doctors = [
+        {
+          id: 'doc-1',
+          name: 'Dr. Lucas Mendes',
+          crm: '45892/MG',
+          specialty: 'Nefrologia',
+          email: 'lucas.mendes@nexaclinic.med.br',
+          phone: '(31) 98765-4321',
+          contractType: 'PJ',
+          pixKey: '45892000182@pix.bcb.gov.br',
+          bank: 'Banco do Brasil (001) Ag 1234-5 CC 45892-1',
+          active: true
+        },
+        {
+          id: 'doc-2',
+          name: 'Dra. Mariana Ribeiro',
+          crm: '51204/MG',
+          specialty: 'Nefrologia',
+          email: 'mariana.ribeiro@nexaclinic.med.br',
+          phone: '(31) 99123-4567',
+          contractType: 'PJ',
+          pixKey: 'mariana.med@gmail.com',
+          bank: 'Itaú (341) Ag 0891 CC 32104-9',
+          active: true
+        },
+        {
+          id: 'doc-3',
+          name: 'Dr. Roberto Carvalho',
+          crm: '39812/MG',
+          specialty: 'Nefrologia',
+          email: 'roberto.carvalho@nexaclinic.med.br',
+          phone: '(31) 98456-7890',
+          contractType: 'PJ',
+          pixKey: '39812984000192',
+          bank: 'Santander (033) Ag 2201 CC 98120-4',
+          active: true
+        },
+        {
+          id: 'doc-4',
+          name: 'Dra. Camila Albuquerque',
+          crm: '48920/MG',
+          specialty: 'Nefrologia',
+          email: 'camila.albuquerque@nexaclinic.med.br',
+          phone: '(31) 99345-6781',
+          contractType: 'CLT',
+          pixKey: 'camila.albuquerque@pix.com',
+          bank: 'Bradesco (237) Ag 1402 CC 89201-3',
+          active: true
+        },
+        {
+          id: 'doc-5',
+          name: 'Dr. Fernando Vasconcelos',
+          crm: '55431/MG',
+          specialty: 'Nefrologia',
+          email: 'fernando.vasconcelos@nexaclinic.med.br',
+          phone: '(31) 98877-6655',
+          contractType: 'PJ',
+          pixKey: '5543189000109',
+          bank: 'Sicoob (756) Ag 4120 CC 55431-0',
+          active: true
+        }
+      ];
+      setDB(db);
+    }
+    return db.medical_doctors || [];
+  },
+
+  getMedicalSettings: async () => {
+    const db = getDB();
+    if (!db.medical_settings) {
+      db.medical_settings = {
+        shiftFee: 1200.0,
+        consultationFee: 150.0,
+        procedureFees: {
+          'Cateter Duplo Lúmen (CDL)': 450.0,
+          'Implante de Permcath': 850.0,
+          'Biópsia Renal': 600.0,
+          'Mapeamento de Fístula AV': 300.0,
+          'Curativo Especial de Acesso': 120.0,
+          'Punção Biópsia / Aspiração': 350.0
+        },
+        cutoffDay: 25
+      };
+      setDB(db);
+    }
+    return db.medical_settings;
+  },
+
+  saveMedicalSettings: async (settingsData) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    db.medical_settings = { ...db.medical_settings, ...settingsData };
+    setDB(db);
+    return db.medical_settings;
+  },
+
+  getMedicalSchedules: async (month) => {
+    const db = getDB();
+    const currentMonth = month || new Date().toISOString().substring(0, 7);
+    if (!db.medical_schedules || db.medical_schedules.length === 0) {
+      // Seed default monthly shifts
+      const doctors = await mockFirestore.getMedicalDoctors();
+      const sectors = ['Salão 1', 'Salão 2', 'Salão 3', 'Diálise Peritoneal (DP)'];
+      const shifts = ['1º Turno', '2º Turno', '3º Turno'];
+      const defaultSchedules = [];
+
+      // Generate for today and surrounding days
+      const today = new Date();
+      const year = today.getFullYear();
+      const mIdx = today.getMonth();
+
+      for (let day = 1; day <= 28; day++) {
+        const dateStr = `${year}-${String(mIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        sectors.forEach((sec, sIdx) => {
+          shifts.forEach((sh, shIdx) => {
+            const docIdx = (day + sIdx + shIdx) % doctors.length;
+            const isToday = day === today.getDate();
+            defaultSchedules.push({
+              id: `sch-${dateStr}-${sec.replace(/[^a-zA-Z0-9]/g, '')}-${sh.replace(/[^a-zA-Z0-9]/g, '')}`,
+              month: `${year}-${String(mIdx + 1).padStart(2, '0')}`,
+              date: dateStr,
+              sector: sec,
+              shift: sh,
+              doctorId: doctors[docIdx].id,
+              doctorName: doctors[docIdx].name,
+              doctorCrm: doctors[docIdx].crm,
+              status: 'Confirmado',
+              checkinStatus: isToday ? (shIdx === 0 ? 'Presente' : 'Pendente') : (day < today.getDate() ? 'Presente' : 'Pendente'),
+              checkinTime: isToday && shIdx === 0 ? '06:05' : (day < today.getDate() ? '06:00' : null),
+              checkedBy: day <= today.getDate() ? 'Recepção Central' : null,
+              notes: ''
+            });
+          });
+        });
+      }
+      db.medical_schedules = defaultSchedules;
+      setDB(db);
+    }
+    return (db.medical_schedules || []).filter(s => !month || s.month === month);
+  },
+
+  saveMedicalSchedule: async (shiftData) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (!db.medical_schedules) db.medical_schedules = [];
+    const index = db.medical_schedules.findIndex(s => s.id === shiftData.id);
+    const updated = {
+      id: shiftData.id || 'sch-' + Math.random().toString(36).substr(2, 9),
+      ...shiftData,
+      updatedAt: new Date().toISOString()
+    };
+    if (index > -1) {
+      db.medical_schedules[index] = updated;
+    } else {
+      db.medical_schedules.push(updated);
+    }
+    setDB(db);
+    return updated;
+  },
+
+  deleteMedicalSchedule: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.medical_schedules) {
+      db.medical_schedules = db.medical_schedules.filter(s => s.id !== id);
+      setDB(db);
+    }
+    return { success: true };
+  },
+
+  recordMedicalCheckin: async (scheduleId, checkinStatus, checkedBy, notes = '') => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (!db.medical_schedules) return null;
+    const index = db.medical_schedules.findIndex(s => s.id === scheduleId);
+    if (index > -1) {
+      const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      db.medical_schedules[index] = {
+        ...db.medical_schedules[index],
+        checkinStatus,
+        checkinTime: checkinStatus === 'Presente' || checkinStatus === 'Atraso' ? now : null,
+        checkedBy: checkedBy || 'Recepção Central',
+        notes: notes || db.medical_schedules[index].notes,
+        updatedAt: new Date().toISOString()
+      };
+      setDB(db);
+      return db.medical_schedules[index];
+    }
+    return null;
+  },
+
+  // Swaps with Email Notifications
+  getMedicalSwaps: async () => {
+    const db = getDB();
+    if (!db.medical_swaps || db.medical_swaps.length === 0) {
+      db.medical_swaps = [
+        {
+          id: 'swap-1',
+          requestingDoctorId: 'doc-1',
+          requestingDoctorName: 'Dr. Lucas Mendes',
+          targetDoctorId: 'doc-2',
+          targetDoctorName: 'Dra. Mariana Ribeiro',
+          scheduleId: 'sch-today-demo',
+          shiftDate: new Date().toISOString().substring(0, 10),
+          sector: 'Salão 1',
+          shift: '2º Turno',
+          reason: 'Congresso Mineiro de Nefrologia',
+          status: 'Homologado',
+          requestedAt: '2026-08-20T10:00:00.000Z',
+          respondedAt: '2026-08-20T11:30:00.000Z',
+          homologatedAt: '2026-08-20T14:00:00.000Z',
+          homologatedBy: 'Dr. Roberto (Coordenador Médico)',
+          emailLogs: [
+            { to: 'mariana.ribeiro@nexaclinic.med.br', subject: 'Solicitação de Troca de Plantão - Dr. Lucas Mendes', date: '2026-08-20 10:00' },
+            { to: 'lucas.mendes@nexaclinic.med.br', subject: 'Troca Aceita por Dra. Mariana Ribeiro', date: '2026-08-20 11:30' },
+            { to: 'ambos', subject: 'Troca Homologada pela Coordenação Médica', date: '2026-08-20 14:00' }
+          ]
+        }
+      ];
+      setDB(db);
+    }
+    return db.medical_swaps || [];
+  },
+
+  createMedicalSwap: async (swapData) => {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const db = getDB();
+    if (!db.medical_swaps) db.medical_swaps = [];
+    const newSwap = {
+      id: 'swap-' + Math.random().toString(36).substr(2, 9),
+      ...swapData,
+      status: 'Pendente',
+      requestedAt: new Date().toISOString(),
+      emailLogs: [
+        {
+          to: swapData.targetDoctorEmail || swapData.targetDoctorName,
+          subject: `Solicitação de Troca de Plantão - ${swapData.requestingDoctorName}`,
+          date: new Date().toLocaleString('pt-BR')
+        }
+      ]
+    };
+    db.medical_swaps.push(newSwap);
+    setDB(db);
+    return newSwap;
+  },
+
+  respondMedicalSwap: async (swapId, accepted) => {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const db = getDB();
+    if (!db.medical_swaps) return null;
+    const index = db.medical_swaps.findIndex(s => s.id === swapId);
+    if (index > -1) {
+      const swap = db.medical_swaps[index];
+      const newStatus = accepted ? 'Aceito' : 'Recusado';
+      swap.status = newStatus;
+      swap.respondedAt = new Date().toISOString();
+      swap.emailLogs.push({
+        to: swap.requestingDoctorName,
+        subject: `Troca ${accepted ? 'Aceita' : 'Recusada'} por ${swap.targetDoctorName}`,
+        date: new Date().toLocaleString('pt-BR')
+      });
+      setDB(db);
+      return swap;
+    }
+    return null;
+  },
+
+  homologateMedicalSwap: async (swapId, approved, homologatedBy) => {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const db = getDB();
+    if (!db.medical_swaps) return null;
+    const index = db.medical_swaps.findIndex(s => s.id === swapId);
+    if (index > -1) {
+      const swap = db.medical_swaps[index];
+      swap.status = approved ? 'Homologado' : 'Cancelado';
+      swap.homologatedAt = new Date().toISOString();
+      swap.homologatedBy = homologatedBy || 'Coordenação Médica';
+      swap.emailLogs.push({
+        to: 'Ambos os Médicos',
+        subject: `Troca ${approved ? 'Homologada' : 'Indeferida'} pela Coordenação Médica`,
+        date: new Date().toLocaleString('pt-BR')
+      });
+
+      // Update the schedule to target doctor if approved
+      if (approved && db.medical_schedules) {
+        const schIdx = db.medical_schedules.findIndex(s => s.id === swap.scheduleId || (s.date === swap.shiftDate && s.sector === swap.sector && s.shift === swap.shift));
+        if (schIdx > -1) {
+          db.medical_schedules[schIdx] = {
+            ...db.medical_schedules[schIdx],
+            doctorId: swap.targetDoctorId,
+            doctorName: swap.targetDoctorName,
+            status: 'Substituído',
+            notes: `Troca com ${swap.requestingDoctorName} homologada.`
+          };
+        }
+      }
+      setDB(db);
+      return swap;
+    }
+    return null;
+  },
+
+  // Medical Procedures
+  getMedicalProcedures: async (doctorId) => {
+    const db = getDB();
+    if (!db.medical_procedures || db.medical_procedures.length === 0) {
+      db.medical_procedures = [
+        {
+          id: 'proc-1',
+          doctorId: 'doc-1',
+          doctorName: 'Dr. Lucas Mendes',
+          patientId: 'pat-1',
+          patientName: 'ADAIR PRAXEDES MORENO',
+          date: '2026-08-10',
+          procedureType: 'Cateter Duplo Lúmen (CDL)',
+          value: 450.0,
+          status: 'Auditado',
+          notes: 'Implante em Veia Jugular Interna D guiado por ultrassom.'
+        },
+        {
+          id: 'proc-2',
+          doctorId: 'doc-1',
+          doctorName: 'Dr. Lucas Mendes',
+          patientId: 'pat-2',
+          patientName: 'ADAO LUCIANO DIAS',
+          date: '2026-08-14',
+          procedureType: 'Mapeamento de Fístula AV',
+          value: 300.0,
+          status: 'Auditado',
+          notes: 'Avaliação de fluxo de FAV rádio-cefálica com Doppler.'
+        },
+        {
+          id: 'proc-3',
+          doctorId: 'doc-2',
+          doctorName: 'Dra. Mariana Ribeiro',
+          patientId: 'pat-3',
+          patientName: 'ADCELIO BARBOSA DE OLIVEIRA',
+          date: '2026-08-18',
+          procedureType: 'Implante de Permcath',
+          value: 850.0,
+          status: 'Auditado',
+          notes: 'Permcath tunelizado em Jugular D com bom fluxo.'
+        }
+      ];
+      setDB(db);
+    }
+    return (db.medical_procedures || []).filter(p => !doctorId || p.doctorId === doctorId);
+  },
+
+  saveMedicalProcedure: async (procData) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (!db.medical_procedures) db.medical_procedures = [];
+    const settings = await mockFirestore.getMedicalSettings();
+    const val = procData.value || settings.procedureFees[procData.procedureType] || 350.0;
+
+    const newProc = {
+      id: procData.id || 'proc-' + Math.random().toString(36).substr(2, 9),
+      ...procData,
+      value: parseFloat(val),
+      status: procData.status || 'Realizado',
+      createdAt: new Date().toISOString()
+    };
+    const index = db.medical_procedures.findIndex(p => p.id === procData.id);
+    if (index > -1) {
+      db.medical_procedures[index] = newProc;
+    } else {
+      db.medical_procedures.push(newProc);
+    }
+    setDB(db);
+    return newProc;
+  },
+
+  deleteMedicalProcedure: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.medical_procedures) {
+      db.medical_procedures = db.medical_procedures.filter(p => p.id !== id);
+      setDB(db);
+    }
+    return { success: true };
+  },
+
+  // Monthly Production Homologation & Finance Integration
+  getMedicalProductions: async (month) => {
+    const db = getDB();
+    return (db.medical_productions || []).filter(p => !month || p.month === month);
+  },
+
+  homologateMedicalProduction: async (productionData) => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const db = getDB();
+    if (!db.medical_productions) db.medical_productions = [];
+    if (!db.accounts_payable) db.accounts_payable = [];
+
+    const existingIdx = db.medical_productions.findIndex(p => p.month === productionData.month && p.doctorId === productionData.doctorId);
+
+    // 1. Create title in Accounts Payable (NexaFINANCE)
+    const payableTitle = {
+      id: 'pay-med-' + Math.random().toString(36).substr(2, 9),
+      supplierName: productionData.doctorName,
+      cnpj: productionData.doctorCrm || 'CRM ' + productionData.doctorName,
+      category: 'Honorários Médicos',
+      costCenter: 'Corpo Clínico & Nefrologia',
+      description: `Repasse Honorários ${productionData.month} - ${productionData.shiftsCount} Plantões, ${productionData.consultationsCount} Consultas, ${productionData.proceduresCount} Procedimentos`,
+      amount: parseFloat(productionData.netTotal || productionData.grossTotal),
+      dueDate: `${productionData.month}-30`,
+      status: 'pending',
+      paymentMethod: 'PIX',
+      pixKey: productionData.pixKey || 'Chave cadastrada no NexaMED',
+      createdAt: new Date().toISOString()
+    };
+    db.accounts_payable.push(payableTitle);
+
+    // 2. Save Medical Production Record
+    const prodRecord = {
+      id: existingIdx > -1 ? db.medical_productions[existingIdx].id : 'prod-' + Math.random().toString(36).substr(2, 9),
+      ...productionData,
+      status: 'Homologado',
+      payableId: payableTitle.id,
+      homologatedAt: new Date().toISOString()
+    };
+
+    if (existingIdx > -1) {
+      db.medical_productions[existingIdx] = prodRecord;
+    } else {
+      db.medical_productions.push(prodRecord);
+    }
+
+    setDB(db);
+    return { production: prodRecord, payable: payableTitle };
+  },
+
   // Stock/Inventory Items
   getInventoryItems: async () => {
     const db = getDB();
