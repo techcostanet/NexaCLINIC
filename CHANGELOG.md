@@ -1,3 +1,20 @@
+## [v4.7.32] - 22 de Agosto, 2026
+### Módulo de Compras (NexaPROCURE) - Reposição Crítica em Tempo Real, Pedidos em Lote, Design Padronizado e Fornecedores Ordenáveis
+- **Aba de Reposição Crítica em Tempo Real:**
+  - Nova aba conectada em tempo real ao saldo e estoque mínimo da farmácia/estoque (`inventory_items`).
+  - Cards de métricas com total de itens críticos, zerados e abaixo do mínimo.
+  - Cálculo automático da sugestão de compra e botão de solicitação rápida individual com 1 clique.
+- **Geração de Pedidos em Lote:**
+  - Botão no cabeçalho da aba de reposição que gera automaticamente solicitações unificadas de compras para todos os insumos críticos de forma instantânea.
+- **Catálogo de Fornecedores com Colunas Clicáveis (Ordenação):**
+  - Ordenação dinâmica por clique nos cabeçalhos de *Razão*, *CNPJ*, *Contato*, *Email* e *Prazo*, alternando entre crescente (A-Z) e decrescente (Z-A).
+- **Hero Header Padronizado:**
+  - Cabeçalho padronizado com ícone amplo `56x56px` com gradiente temático (`#0891b2`), tipografia `1.6rem` e badges com contadores dinâmicos nas abas.
+- **Manual do Módulo Adicionado:**
+  - Documentação interativa completa do *NexaPROCURE* adicionada em `src/data/moduleGuidesData.js`.
+
+---
+
 ## [v4.7.31] - 22 de Agosto, 2026
 ### Módulo NexaASSIST - Nomes Completos de Categorias, Hero Padronizado, 3 Modos de Visualização e Proteção de Autoria
 - **Nomes Completos sem Cortes:**

@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.32',
+      date: '22/08/2026',
+      title: 'Módulo de Compras (NexaPROCURE) - Reposição Crítica em Tempo Real, Pedidos em Lote, Design Padronizado e Fornecedores Ordenáveis',
+      description: 'Evolução completa do módulo de compras: nova aba de Reposição Crítica integrada ao estoque mínimo da farmácia, geração de solicitações em lote com 1 clique, redesign do Hero Header com o padrão premium do sistema, colunas clicáveis de ordenação em fornecedores e manual interativo.',
+      changes: [
+        { type: 'Reposição Crítica em Tempo Real', text: 'Aba dedicada com monitoramento contínuo dos medicamentos e insumos com saldo zerado ou abaixo do estoque mínimo, cálculo automático de sugestão de compra e botão de solicitação rápida.' },
+        { type: 'Solicitação em Lote', text: 'Botão no topo da aba de reposição que gera automaticamente pedidos unificados para todos os insumos críticos com um único clique.' },
+        { type: 'Fornecedores com Colunas Ordenáveis', text: 'Cabeçalhos clicáveis em todas as colunas da tabela de fornecedores (Razão, CNPJ, Contato, Email e Prazo) para ordenação ascendente e descendente.' },
+        { type: 'Hero Header Padronizado', text: 'Novo cabeçalho com ícone amplo 56x56px, gradiente temático de compras, tipografia 1.6rem e badges dinâmicos em todas as abas.' },
+        { type: 'Manual do Módulo', text: 'Inclusão da documentação interativa completa do NexaPROCURE em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v4.7.31',
       date: '22/08/2026',
       title: 'Módulo NexaASSIST - Nomes Completos de Categorias, Hero Padronizado, 3 Modos de Visualização e Proteção de Autoria',

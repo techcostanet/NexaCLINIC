@@ -773,5 +773,72 @@ export const MODULE_GUIDES = {
         resposta: 'Basta clicar no card de qualquer categoria na grade superior para filtrar o mural. Um segundo clique no mesmo card desativa o filtro e volta a exibir todos os comunicados.'
       }
     ]
+  },
+
+  purchasing: {
+    id: 'purchasing',
+    name: 'Compras & Suprimentos',
+    subtitle: 'NexaPROCURE — Cotações & Reposição de Estoque',
+    color: '#0891b2',
+    recursos: [
+      {
+        title: 'Reposição Crítica em Tempo Real',
+        desc: 'Monitoramento contínuo dos medicamentos e materiais com saldo abaixo ou igual ao estoque mínimo, com cálculo automático da sugestão de compra.'
+      },
+      {
+        title: 'Solicitação em Lote com 1 Clique',
+        desc: 'Botão para gerar automaticamente solicitações de compra unificadas para todos os insumos em nível crítico sem digitação manual.'
+      },
+      {
+        title: 'Esteira de Solicitações & Alçadas',
+        desc: 'Fluxo completo de aprovação em etapas (Solicitado, Gestor de Setor, Diretor Clínico, Cotação e Finalizado).'
+      },
+      {
+        title: 'Sala de Cotações Triplas com IA',
+        desc: 'Comparativo lado a lado de 3 orçamentos destacando automaticamente Menor Preço e Entrega Mais Rápida com entrada automatizada no Estoque e no Financeiro.'
+      },
+      {
+        title: 'Catálogo de Fornecedores com Ordenação',
+        desc: 'Gestão de empresas distribuidoras com ordenação clicável em todas as colunas (Razão, CNPJ, Contato, Email, Prazo).'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Solicitar Reposição de Insumos Críticos',
+        steps: [
+          'Acesse a aba "Reposição" para visualizar todos os insumos abaixo do estoque mínimo.',
+          'Para solicitar um item individual, clique no botão "Solicitar" na linha do insumo.',
+          'Para repor todos os itens de uma vez, clique em "Solicitação em Lote" no topo do painel.',
+          'As solicitações entrarão imediatamente na esteira de aprovação dos gestores.'
+        ]
+      },
+      {
+        title: 'Como Comparar Orçamentos e Finalizar a Compra',
+        steps: [
+          'Acesse a aba "Cotações" e selecione o item aprovado na lista à esquerda.',
+          'Preencha os valores e prazos dos Fornecedores A, B e C.',
+          'O sistema indicará os vencedores de Melhor Preço e Entrega Mais Rápida.',
+          'Clique em "Comprar do A", "B" ou "C" para finalizar. O sistema criará a entrada no Estoque e a despesa no Contas a Pagar.'
+        ]
+      },
+      {
+        title: 'Como Ordenar e Filtrar Fornecedores',
+        steps: [
+          'Acesse a aba "Fornecedores".',
+          'Dê um clique no cabeçalho de qualquer coluna (Razão, CNPJ, Contato, Email ou Prazo) para ordenar de forma crescente (A-Z) ou decrescente (Z-A).',
+          'Utilize a barra de pesquisa para filtrar rapidamente por nome, CNPJ ou representante.'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'Como o sistema calcula a sugestão de compra na aba Reposição?',
+        resposta: 'A sugestão de compra é calculada subtraindo o Saldo Atual do Estoque Ideal (ou o dobro do Estoque Mínimo se o ideal não estiver configurado), garantindo a cobertura necessária para o salão.'
+      },
+      {
+        pergunta: 'A finalização de uma compra gera movimentações automáticas em outros módulos?',
+        resposta: 'Sim! Ao finalizar a compra na sala de cotações, o NexaPROCURE gera automaticamente a entrada do lote no módulo de Estoque (NexaSTOCK) e lança a duplicata a pagar no módulo Financeiro (NexaFINANCE).'
+      }
+    ]
   }
 };
