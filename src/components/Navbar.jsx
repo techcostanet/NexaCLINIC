@@ -79,6 +79,8 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
     ? 'NexaREQ - Salão'
     : currentModule === 'sesmt'
     ? 'NexaSAFE - SESMT'
+    : currentModule === 'medical'
+    ? 'NexaMED — Gestão Médica'
     : 'NexaINDEX';
 
   return (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Calendar, UserCheck, RefreshCw, Activity, DollarSign, 
-  Settings, Users, ShieldAlert, Sparkles, AlertCircle, ArrowLeft
+  Settings, Users, ShieldAlert, Sparkles, AlertCircle, ArrowLeft, Stethoscope
 } from 'lucide-react';
 import { dbService } from '../firebase';
 
@@ -145,8 +145,8 @@ export default function MedicalPanel({ onBack }) {
   const handleRequestSwap = async (swapData) => {
     try {
       setLoading(true);
-      await dbService.createMedicalSwap(swapData);
-      showToast(`Solicitação de troca enviada! E-mail disparado para ${swapData.targetDoctorName}.`);
+      await dbService.requestMedicalSwap(swapData);
+      showToast('Solicitação de troca enviada! E-mails disparados com sucesso.');
       await loadAllData();
     } catch (err) {
       console.error(err);
@@ -155,11 +155,11 @@ export default function MedicalPanel({ onBack }) {
     }
   };
 
-  const handleRespondSwap = async (swapId, accepted) => {
+  const handleRespondSwap = async (swapId, accepted, reason = '') => {
     try {
       setLoading(true);
-      await dbService.respondMedicalSwap(swapId, accepted);
-      showToast(`Troca ${accepted ? 'aceita' : 'recusada'}! E-mail de notificação disparado.`);
+      await dbService.respondMedicalSwap(swapId, accepted, reason);
+      showToast(accepted ? 'Troca aceita! Encaminhada para homologação da coordenação.' : 'Troca recusada.');
       await loadAllData();
     } catch (err) {
       console.error(err);
@@ -168,11 +168,11 @@ export default function MedicalPanel({ onBack }) {
     }
   };
 
-  const handleHomologateSwap = async (swapId, approved) => {
+  const handleHomologateSwap = async (swapId) => {
     try {
       setLoading(true);
-      await dbService.homologateMedicalSwap(swapId, approved, 'Coordenação Médica');
-      showToast(`Troca ${approved ? 'homologada' : 'indeferida'} e escala atualizada! E-mail oficial enviado.`);
+      await dbService.homologateMedicalSwap(swapId, 'Coordenação Médica');
+      showToast('Troca homologada! Escala atualizada e médicos notificados.');
       await loadAllData();
     } catch (err) {
       console.error(err);
@@ -182,11 +182,11 @@ export default function MedicalPanel({ onBack }) {
   };
 
   // Procedure Actions
-  const handleSaveProcedure = async (procData) => {
+  const handleSaveProcedure = async (procedureData) => {
     try {
       setLoading(true);
-      await dbService.saveMedicalProcedure(procData);
-      showToast('Procedimento médico gravado com sucesso!');
+      await dbService.saveMedicalProcedure(procedureData);
+      showToast('Procedimento lançado com sucesso!');
       await loadAllData();
     } catch (err) {
       console.error(err);
@@ -196,7 +196,7 @@ export default function MedicalPanel({ onBack }) {
   };
 
   const handleDeleteProcedure = async (id) => {
-    if (!window.confirm('Deseja excluir este procedimento?')) return;
+    if (!window.confirm('Deseja realmente excluir este procedimento?')) return;
     try {
       setLoading(true);
       await dbService.deleteMedicalProcedure(id);
@@ -247,7 +247,7 @@ export default function MedicalPanel({ onBack }) {
   ];
 
   return (
-    <div style={styles.page}>
+    <div style={styles.container}>
       {/* Toast Notification */}
       {toastMessage && (
         <div style={styles.toast}>
@@ -256,36 +256,41 @@ export default function MedicalPanel({ onBack }) {
         </div>
       )}
 
-      {/* Top Main Card Header */}
-      <div style={styles.cardHeader}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      {/* Header / Hero Section (Design Padrão Nexa) */}
+      <div style={styles.heroSection}>
+        <div style={styles.heroLeft}>
+          <div style={styles.heroIconBadge}>
+            <Stethoscope size={28} color="#fff" />
+          </div>
+          <div>
+            <h1 style={styles.heroTitle}>NexaMED — Gestão Médica & Escalas</h1>
+            <p style={styles.heroSubtitle}>
+              Escala de plantões nos salões/DP, produção ambulatorial, bolsa de trocas e repasse financeiro.
+            </p>
+          </div>
+        </div>
+
+        <div style={styles.heroActions}>
           {onBack && (
             <button onClick={onBack} style={styles.backBtn}>
               <ArrowLeft size={16} />
               <span>Voltar</span>
             </button>
           )}
-          <div>
-            <h1 style={styles.pageTitle}>NexaMED - Gestão Médica & Escalas</h1>
-            <p style={styles.pageSub}>
-              Escala de plantões nos salões/DP, produção ambulatorial, bolsa de trocas com e-mail e repasse financeiro.
-            </p>
-          </div>
-        </div>
 
-        {/* View Mode Selector */}
-        <div style={styles.modeControlBox}>
-          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>Acesso:</span>
-          <select
-            className="form-control"
-            value={currentDoctorId}
-            onChange={e => setCurrentDoctorId(e.target.value)}
-            style={{ width: '240px', fontSize: '0.8rem', backgroundColor: '#fff', color: '#0f172a', borderColor: '#cbd5e1', fontWeight: '600' }}
-          >
-            {doctors.map(doc => (
-              <option key={doc.id} value={doc.id}>{doc.name} (Médico)</option>
-            ))}
-          </select>
+          <div style={styles.modeControlBox}>
+            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>Acesso:</span>
+            <select
+              className="form-control"
+              value={currentDoctorId}
+              onChange={e => setCurrentDoctorId(e.target.value)}
+              style={{ width: '230px', fontSize: '0.82rem', backgroundColor: '#fff', color: '#0f172a', borderColor: '#cbd5e1', fontWeight: '600' }}
+            >
+              {doctors.map(doc => (
+                <option key={doc.id || doc.uid} value={doc.id || doc.uid}>{doc.name} (Médico)</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -402,13 +407,11 @@ export default function MedicalPanel({ onBack }) {
 }
 
 const styles = {
-  page: {
-    padding: '1.25rem 1.5rem',
+  container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem',
-    backgroundColor: '#f8fafc',
-    minHeight: '100vh',
+    gap: '1.5rem',
+    padding: '1.5rem',
     maxWidth: '1600px',
     margin: '0 auto',
   },
@@ -428,36 +431,58 @@ const styles = {
     fontSize: '0.85rem',
     fontWeight: '700',
   },
-  cardHeader: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    padding: '1.25rem 1.5rem',
-    border: '1px solid #e2e8f0',
+  heroSection: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: '1rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+    gap: '1.5rem',
+    backgroundColor: '#fff',
+    padding: '1.5rem 2rem',
+    borderRadius: '16px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    border: '1px solid var(--border-color, #e2e8f0)',
+    marginBottom: '0.25rem'
   },
-  pageTitle: {
-    fontSize: '1.35rem',
+  heroLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1.25rem'
+  },
+  heroIconBadge: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '14px',
+    background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 8px 16px rgba(2, 132, 199, 0.25)',
+    flexShrink: 0
+  },
+  heroTitle: {
+    fontSize: '1.6rem',
     fontWeight: '800',
-    margin: 0,
-    color: '#0f172a',
-    letterSpacing: '-0.3px',
+    color: 'var(--text-primary, #0f172a)',
+    margin: 0
   },
-  pageSub: {
-    fontSize: '0.85rem',
-    color: '#64748b',
-    margin: '0.2rem 0 0 0',
+  heroSubtitle: {
+    fontSize: '0.9rem',
+    color: 'var(--text-secondary, #64748b)',
+    margin: '0.25rem 0 0 0'
+  },
+  heroActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    flexWrap: 'wrap'
   },
   backBtn: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.35rem',
-    padding: '0.45rem 0.85rem',
-    fontSize: '0.8rem',
+    padding: '0.5rem 0.9rem',
+    fontSize: '0.82rem',
     fontWeight: '700',
     backgroundColor: '#f1f5f9',
     color: '#334155',
@@ -470,8 +495,8 @@ const styles = {
     alignItems: 'center',
     gap: '0.5rem',
     backgroundColor: '#f8fafc',
-    padding: '0.4rem 0.75rem',
-    borderRadius: '8px',
+    padding: '0.45rem 0.85rem',
+    borderRadius: '10px',
     border: '1px solid #e2e8f0',
   },
   tabsBar: {

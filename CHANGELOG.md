@@ -1,3 +1,12 @@
+## [v4.7.40] - 22 de Agosto, 2026
+### NexaMED — Aplicação do Design System Padrão Oficial Hero Section
+- **Hero Section Oficial Nexa (`heroIconBadge` + `heroTitle` + `heroSubtitle`):**
+  - Implementação da identidade visual padrão com badge de canto arredondado em degradê azul/safira médico (`linear-gradient(135deg, #0284c7 0%, #2563eb 100%)`) e ícone do estetoscópio (`Stethoscope`).
+  - Padronização do título em travessão: **`NexaMED — Gestão Médica & Escalas`** no mesmo estilo de `NexaSTOCK`, `NexaHR`, `NexaCAL` e `NexaASSIST`.
+  - Inclusão do módulo no Seletor Central (`ModuleSelector.jsx`) e na barra de navegação global (`Navbar.jsx`).
+
+---
+
 ## [v4.7.39] - 22 de Agosto, 2026
 ### NexaMED - Padrão Visual Clean do Header e Sincronização Total dos Médicos da Agenda
 - **Padrão Visual Harmonizado (Fim do Top Banner Escuro):**

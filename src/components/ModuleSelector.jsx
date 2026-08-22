@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, 
   Settings, ShoppingCart, Calendar, ClipboardList, FileText, Wrench, ShieldCheck,
-  LayoutGrid, List, LayoutList, Columns, ArrowRight, Search, Megaphone
+  LayoutGrid, List, LayoutList, Columns, ArrowRight, Search, Megaphone, Stethoscope
 } from 'lucide-react';
 import { authService } from '../firebase';
 
@@ -22,16 +22,25 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'assist',
       title: 'Feed Assistencial & Alertas',
-      subtitle: 'NexaASSIST - Comunicação IA',
+      subtitle: 'NexaASSIST — Comunicação IA',
       description: 'Mural de comunicados rápidos, altas hospitalares, internações por salão/turno e leitor de e-mails com IA.',
       icon: Megaphone,
       color: '#ec4899', // pink-500
       allowedRoles: ['admin', 'professional', 'receptionist', 'rh', 'sesmt']
     },
     {
+      id: 'medical',
+      title: 'Gestão Médica & Escalas',
+      subtitle: 'NexaMED — Corpo Clínico',
+      description: 'Escala mensal de plantões por salão/DP, bolsa de trocas com e-mail, portal do médico e fechamento de honorários.',
+      icon: Stethoscope,
+      color: '#0284c7', // sky-600
+      allowedRoles: ['admin', 'professional', 'clinical']
+    },
+    {
       id: 'reception',
       title: 'Recepção & Cadastro',
-      subtitle: 'NexaCLINIC - Recepção',
+      subtitle: 'NexaCLINIC — Recepção',
       description: 'Admissão de pacientes, regulação de guias/APACs e controle presencial de diálise diária.',
       icon: Users,
       color: 'var(--secondary-color)',
@@ -40,7 +49,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'clinical',
       title: 'Módulo Clínico & Prescrição',
-      subtitle: 'NexaCLINIC - Assistencial',
+      subtitle: 'NexaCLINIC — Assistencial',
       description: 'Prescrições de diálise, prontuário médico, evoluções multiprofissionais e acompanhamento de sessões.',
       icon: HeartPulse,
       color: '#8b5cf6', // purple-500

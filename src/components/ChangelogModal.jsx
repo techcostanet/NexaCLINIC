@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.40',
+      date: '22/08/2026',
+      title: 'NexaMED — Aplicação do Design System Padrão Oficial Hero Section',
+      description: 'Aplicação da Hero Section padrão com badge quadrado em degradê e ícone do estetoscópio, título com travessão e harmonização no Seletor de Módulos.',
+      changes: [
+        { type: 'Hero Section Padrão Oficial', text: 'Badge arredondado em degradê azul médico com ícone Stethoscope, título NexaMED — Gestão Médica & Escalas e subtítulo padronizado.' },
+        { type: 'Seletor Central de Módulos', text: 'Adição do card NexaMED com permissões RBAC no grid principal de módulos do sistema.' }
+      ]
+    },
+    {
       version: 'v4.7.39',
       date: '22/08/2026',
       title: 'NexaMED - Padrão Visual Clean do Header e Sincronização Total dos Médicos da Agenda',
