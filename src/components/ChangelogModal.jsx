@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.41',
+      date: '22/08/2026',
+      title: 'Correções: Deduplicação NexaMED e Busca Alfabética no Vale-Transporte',
+      description: 'Remoção do card duplicado do NexaMED no seletor de módulos e ordenação alfabética com campo de busca de funcionários no modal de Vale-Transporte do RH.',
+      changes: [
+        { type: 'Seletor de Módulos', text: 'Removida a duplicidade do card NexaMED, mantendo o card oficial único no menu central.' },
+        { type: 'Vale-Transporte (RH)', text: 'Lista de funcionários organizada de A a Z com campo de busca em tempo real por nome e cargo.' }
+      ]
+    },
+    {
       version: 'v4.7.40',
       date: '22/08/2026',
       title: 'NexaMED — Aplicação do Design System Padrão Oficial Hero Section',

@@ -1,3 +1,13 @@
+## [v4.7.41] - 22 de Agosto, 2026
+### Correções: Deduplicação NexaMED no Menu Central e Busca Alfabética de Funcionários no Vale-Transporte
+- **Deduplicação no Seletor de Módulos (`ModuleSelector.jsx`):**
+  - Removida a entrada duplicada do módulo `NexaMED`, mantendo um único card oficial integrado no menu central de navegação.
+- **Vale-Transporte (Módulo RH - `HRPanel.jsx`):**
+  - Lista de funcionários ordenada estritamente em **ordem alfabética** (`A-Z`).
+  - Adicionado **campo de busca em tempo real** (`input` com ícone de lupa) acima do seletor, permitindo pesquisar instantaneamente colaboradores por nome ou cargo antes da emissão do VT.
+
+---
+
 ## [v4.7.40] - 22 de Agosto, 2026
 ### NexaMED — Aplicação do Design System Padrão Oficial Hero Section
 - **Hero Section Oficial Nexa (`heroIconBadge` + `heroTitle` + `heroSubtitle`):**

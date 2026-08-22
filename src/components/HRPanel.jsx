@@ -55,6 +55,7 @@ export const formatNumberBR = (val, decimals = 2) => {
 
 export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const logic = useHRLogic(currentUser);
+  const [vtEmpSearch, setVtEmpSearch] = useState('');
   const {
     activeTab,
     setActiveTab,
@@ -1989,41 +1990,87 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
       )}
 
       {/* Vale-Transporte Modal */}
-      {showVoucherModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalCard}>
-            <div style={styles.modalHeader}>
-              <h2>{editingVoucher ? 'Editar Vale-Transporte' : 'Novo Vale-Transporte'}</h2>
-              <button onClick={() => setShowVoucherModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
-            </div>
-            <form onSubmit={handleSaveVoucher} style={{ ...styles.modalForm, maxHeight: '80vh', overflowY: 'auto' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                <div className="form-group">
-                  <label>Funcionário</label>
-                  <select className="form-control" required value={voucherForm.employeeId} onChange={e => setVoucherForm({ ...voucherForm, employeeId: e.target.value })}>
-                    {employees.filter(emp => emp.status !== 'Inativo').map(emp => (
-                      <option key={emp.id} value={emp.id}>{emp.name} ({emp.role})</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Período</label>
-                  <select
-                    className="form-control"
-                    required
-                    value={voucherForm.period || selectedVtPeriod || '2026-08'}
-                    onChange={e => setVoucherForm({ ...voucherForm, period: e.target.value })}
-                  >
-                    {Array.from({ length: 24 }).map((_, i) => {
-                      const d = new Date(2026, 0);
-                      d.setMonth(d.getMonth() + i);
-                      const val = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-                      const label = d.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-                      return <option key={val} value={val}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>;
-                    })}
-                  </select>
-                </div>
+      {showVoucherModal && (() => {
+        const sortedActiveEmployees = (employees || [])
+          .filter(emp => emp.status !== 'Inativo')
+          .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+
+        const filteredVtEmployees = sortedActiveEmployees.filter(emp => {
+          if (!vtEmpSearch) return true;
+          const term = vtEmpSearch.toLowerCase();
+          return (emp.name || '').toLowerCase().includes(term) ||
+                 (emp.role || '').toLowerCase().includes(term) ||
+                 (emp.cpf || '').includes(term);
+        });
+
+        return (
+          <div style={styles.modalOverlay}>
+            <div style={styles.modalCard}>
+              <div style={styles.modalHeader}>
+                <h2>{editingVoucher ? 'Editar Vale-Transporte' : 'Novo Vale-Transporte'}</h2>
+                <button onClick={() => { setShowVoucherModal(false); setVtEmpSearch(''); }} style={styles.modalCloseBtn}><X size={20} /></button>
               </div>
+              <form onSubmit={handleSaveVoucher} style={{ ...styles.modalForm, maxHeight: '80vh', overflowY: 'auto' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label>Funcionário *</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <div style={{ position: 'relative' }}>
+                        <Search size={14} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Digitar para buscar funcionário..."
+                          value={vtEmpSearch}
+                          onChange={e => {
+                            const val = e.target.value;
+                            setVtEmpSearch(val);
+                            const matches = sortedActiveEmployees.filter(emp =>
+                              (emp.name || '').toLowerCase().includes(val.toLowerCase()) ||
+                              (emp.role || '').toLowerCase().includes(val.toLowerCase())
+                            );
+                            if (matches.length > 0 && !matches.some(m => m.id === voucherForm.employeeId)) {
+                              setVoucherForm(prev => ({ ...prev, employeeId: matches[0].id }));
+                            }
+                          }}
+                          style={{ paddingLeft: '2rem', fontSize: '0.82rem' }}
+                        />
+                      </div>
+                      <select 
+                        className="form-control" 
+                        required 
+                        value={voucherForm.employeeId} 
+                        onChange={e => setVoucherForm({ ...voucherForm, employeeId: e.target.value })}
+                      >
+                        {filteredVtEmployees.length === 0 ? (
+                          <option value="">Nenhum funcionário encontrado</option>
+                        ) : (
+                          filteredVtEmployees.map(emp => (
+                            <option key={emp.id} value={emp.id}>{emp.name} ({emp.role})</option>
+                          ))
+                        )}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Período *</label>
+                    <select
+                      className="form-control"
+                      required
+                      value={voucherForm.period || selectedVtPeriod || '2026-08'}
+                      onChange={e => setVoucherForm({ ...voucherForm, period: e.target.value })}
+                      style={{ marginTop: '2.15rem' }}
+                    >
+                      {Array.from({ length: 24 }).map((_, i) => {
+                        const d = new Date(2026, 0);
+                        d.setMonth(d.getMonth() + i);
+                        const val = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                        const label = d.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+                        return <option key={val} value={val}>{label.charAt(0).toUpperCase() + label.slice(1)}</option>;
+                      })}
+                    </select>
+                  </div>
+                </div>
 
               <div className="form-group">
                 <label>Itinerário</label>
@@ -2111,7 +2158,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
               </div>
 
               <div style={styles.modalFooter}>
-                <button type="button" onClick={() => setShowVoucherModal(false)} className="btn btn-secondary">Cancelar</button>
+                <button type="button" onClick={() => { setShowVoucherModal(false); setVtEmpSearch(''); }} className="btn btn-secondary">Cancelar</button>
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: '#ec4899' }}>
                   {actionLoading ? 'Salvando...' : 'Salvar Vale-Transporte'}
                 </button>
@@ -2119,7 +2166,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
             </form>
           </div>
         </div>
-      )}
+      )})()}
 
       {/* Award Report Modal (Presença Premiada) */}
       <AwardReportModal
