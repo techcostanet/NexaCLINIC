@@ -1,3 +1,17 @@
+## [v4.7.30] - 22 de Agosto, 2026
+### Módulo NexaASSIST - Redesign Ultra-Clean, Grade Compacta de Categorias e Simplificação Operacional
+- **Grade Compacta de Categorias (Unificação sem Redundâncias):**
+  - Eliminação da duplicidade entre cards gigantes e pílulas inferiores, criando uma única grade compacta de cards responsivos com ícone, nome e contador de cada categoria clínica.
+  - Redução de mais de 60% do espaço vertical ocupado no topo do mural.
+- **Hero Header Enxuto:**
+  - Remoção do badge "Em Tempo Real" e do botão de e-mail, mantendo o topo padronizado com foco exclusivo no botão primário `+ Novo Comunicado`.
+- **Feed Clínico Despoluído:**
+  - Remoção dos controles de "Dar Ciente", do filtro "Não Lidos" e de badges legados "Via E-mail", focando a visualização no paciente, categoria, local e conteúdo clínico da mensagem.
+- **Manual do Módulo Atualizado:**
+  - Guia do *NexaASSIST* atualizado em `src/data/moduleGuidesData.js` com a nova estrutura operacional.
+
+---
+
 ## [v4.7.29] - 22 de Agosto, 2026
 ### Módulo NexaASSIST - Filtro de Datas Inteligente, Cards de KPI Clicáveis e Estabilização Antiflicker
 - **Cards de KPI Interativos e Clicáveis:**

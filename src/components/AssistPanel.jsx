@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { dbService } from '../firebase';
 import { 
-  Megaphone, Search, Plus, Filter, Mail, CheckCircle2, AlertTriangle, 
-  Clock, User, RefreshCw, Layers, Sparkles, Building2, Eye, Trash2, 
-  Edit3, Link as LinkIcon, ChevronRight, MessageSquare, Send, Check,
-  Activity, ShieldAlert, HeartPulse, Stethoscope, ArrowRight, UserCheck,
-  Calendar
+  Megaphone, Search, Plus, Clock, User, RefreshCw, Building2, 
+  Trash2, Edit3, AlertTriangle, CheckCircle2, ChevronRight, X
 } from 'lucide-react';
 
 const isSamePosts = (a, b) => {
@@ -14,8 +11,7 @@ const isSamePosts = (a, b) => {
     if (
       a[i].id !== b[i].id || 
       a[i].patientId !== b[i].patientId || 
-      a[i].updatedAt !== b[i].updatedAt || 
-      (a[i].readBy?.length || 0) !== (b[i].readBy?.length || 0)
+      a[i].updatedAt !== b[i].updatedAt
     ) {
       return false;
     }
@@ -36,19 +32,12 @@ export default function AssistPanel({ currentUser }) {
   const [selectedRoom, setSelectedRoom] = useState('all');
   const [selectedShift, setSelectedShift] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedKpiFilter, setSelectedKpiFilter] = useState('all'); // 'all' | 'Internação' | 'Alta' | 'Intercorrência' | 'pending'
-  const [datePreset, setDatePreset] = useState('all'); // 'all' | 'today' | 'yesterday' | '7days' | '30days' | 'month' | 'custom'
+  const [datePreset, setDatePreset] = useState('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-  const [onlyUnread, setOnlyUnread] = useState(false);
 
   // Modais
   const [showPostModal, setShowPostModal] = useState(false);
-  const [showEmailSimulatorModal, setShowEmailSimulatorModal] = useState(false);
-  const [showLinkPatientModal, setShowLinkPatientModal] = useState(false);
-  const [showReadersModal, setShowReadersModal] = useState(false);
-  const [selectedPostForReaders, setSelectedPostForReaders] = useState(null);
-  const [selectedPostForLink, setSelectedPostForLink] = useState(null);
   const [patientSearchTerm, setPatientSearchTerm] = useState('');
   const [editingPost, setEditingPost] = useState(null);
 
@@ -64,15 +53,24 @@ export default function AssistPanel({ currentUser }) {
     shift: '1º Turno'
   });
 
-  // Ingestão de E-mail
-  const [emailForm, setEmailForm] = useState({
-    from: 'enfermagem.plantao@nexaclinic.med.br',
-    subject: 'Internação - Adair Praxedes Moreno',
-    body: 'Bom dia equipe,\n\nInformamos que o paciente Adair Praxedes Moreno foi internado ontem à noite no Hospital Municipal com febre persistente e calafrios. A sessão de hemodiálise de hoje foi suspensa.\n\nAtenciosamente,\nEnfª Mariana Costa'
-  });
-  const [parsedEmailResult, setParsedEmailResult] = useState(null);
+  // Categorias clínicas oficiais
+  const categories = [
+    { id: 'Internação', label: 'Internação', color: '#ef4444', bg: '#fef2f2', border: '#fecaca', icon: '🔴' },
+    { id: 'Alta', label: 'Alta', color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0', icon: '🟢' },
+    { id: 'Intercorrência', label: 'Intercorrência', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', icon: '🟡' },
+    { id: 'Transferência', label: 'Transferência', color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe', icon: '🔵' },
+    { id: 'Nutrição', label: 'Nutrição', color: '#059669', bg: '#ecfdf5', border: '#6ee7b7', icon: '🥗' },
+    { id: 'Psicologia', label: 'Psicologia', color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe', icon: '🧠' },
+    { id: 'Serviço Social', label: 'Serviço Social', color: '#ea580c', bg: '#fff7ed', border: '#fed7aa', icon: '🤝' },
+    { id: 'Óbito', label: 'Óbito', color: '#374151', bg: '#f3f4f6', border: '#d1d5db', icon: '⚫' },
+    { id: 'Geral', label: 'Geral', color: '#6b7280', bg: '#f9fafb', border: '#e5e7eb', icon: 'ℹ️' }
+  ];
 
-  // Carregar dados na montagem e escutar em tempo real sem loops
+  const getCategoryMeta = (catName) => {
+    return categories.find(c => c.id === catName) || categories[categories.length - 1];
+  };
+
+  // Carregar dados na montagem e escutar em tempo real
   useEffect(() => {
     let unsubscribe = () => {};
 
@@ -94,7 +92,7 @@ export default function AssistPanel({ currentUser }) {
         setPosts(prev => isSamePosts(prev, autoLinked) ? prev : autoLinked);
       } catch (err) {
         console.error('Erro ao carregar dados do Feed Assistencial:', err);
-        showAlert('Erro ao carregar dados do Feed.', 'danger');
+        showAlert('Erro ao carregar comunicados.', 'danger');
       } finally {
         setLoading(false);
       }
@@ -150,23 +148,6 @@ export default function AssistPanel({ currentUser }) {
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
   };
 
-  // Categorias disponíveis
-  const categories = [
-    { id: 'Internação', label: 'Internação', color: '#ef4444', bg: '#fef2f2', border: '#fecaca', icon: '🔴' },
-    { id: 'Alta', label: 'Alta Hospitalar', color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0', icon: '🟢' },
-    { id: 'Transferência', label: 'Transferência', color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe', icon: '🔵' },
-    { id: 'Intercorrência', label: 'Intercorrência', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', icon: '🟡' },
-    { id: 'Nutrição', label: 'Nutrição', color: '#059669', bg: '#ecfdf5', border: '#6ee7b7', icon: '🥗' },
-    { id: 'Psicologia', label: 'Psicologia', color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe', icon: '🧠' },
-    { id: 'Serviço Social', label: 'Serviço Social', color: '#ea580c', bg: '#fff7ed', border: '#fed7aa', icon: '🤝' },
-    { id: 'Óbito', label: 'Óbito', color: '#374151', bg: '#f3f4f6', border: '#d1d5db', icon: '⚫' },
-    { id: 'Geral', label: 'Aviso Geral', color: '#6b7280', bg: '#f9fafb', border: '#e5e7eb', icon: 'ℹ️' }
-  ];
-
-  const getCategoryMeta = (catName) => {
-    return categories.find(c => c.id === catName) || categories[categories.length - 1];
-  };
-
   // Filtragem por Período de Data
   const dateFilteredPosts = useMemo(() => {
     if (datePreset === 'all') return posts;
@@ -210,42 +191,22 @@ export default function AssistPanel({ currentUser }) {
     });
   }, [posts, datePreset, customStartDate, customEndDate]);
 
-  // KPIs calculados com base no período de data ativo
-  const kpis = useMemo(() => {
-    const total = dateFilteredPosts.length;
-    const internacoes = dateFilteredPosts.filter(p => p.category === 'Internação').length;
-    const altas = dateFilteredPosts.filter(p => p.category === 'Alta').length;
-    const intercorrencias = dateFilteredPosts.filter(p => p.category === 'Intercorrência').length;
-    const pendentes = dateFilteredPosts.filter(p => p.status === 'pending_link' || !p.patientId).length;
-    return { total, internacoes, altas, intercorrencias, pendentes };
+  // Contagens por categoria baseadas no período
+  const categoryCounts = useMemo(() => {
+    const counts = { all: dateFilteredPosts.length };
+    categories.forEach(c => {
+      counts[c.id] = dateFilteredPosts.filter(p => p.category === c.id).length;
+    });
+    return counts;
   }, [dateFilteredPosts]);
-
-  // Manipulador de clique no card de KPI
-  const handleKpiCardClick = (kpiKey) => {
-    if (selectedKpiFilter === kpiKey) {
-      setSelectedKpiFilter('all');
-      setSelectedCategory('all');
-    } else {
-      setSelectedKpiFilter(kpiKey);
-      if (kpiKey === 'pending') {
-        setSelectedCategory('all');
-      } else {
-        setSelectedCategory(kpiKey);
-      }
-    }
-  };
 
   // Lista Filtrada
   const filteredPosts = useMemo(() => {
-    const userId = currentUser?.id || currentUser?.uid || currentUser?.email || 'user';
-    const userName = currentUser?.name || currentUser?.email || 'Profissional';
-
     return dateFilteredPosts.filter(post => {
-      // Filtro ativo do Card de KPI
-      if (selectedKpiFilter === 'Internação' && post.category !== 'Internação') return false;
-      if (selectedKpiFilter === 'Alta' && post.category !== 'Alta') return false;
-      if (selectedKpiFilter === 'Intercorrência' && post.category !== 'Intercorrência') return false;
-      if (selectedKpiFilter === 'pending' && !(post.status === 'pending_link' || !post.patientId)) return false;
+      // Categoria selecionada
+      if (selectedCategory !== 'all' && post.category !== selectedCategory) {
+        return false;
+      }
 
       // Busca texto
       if (searchTerm) {
@@ -267,23 +228,11 @@ export default function AssistPanel({ currentUser }) {
         if (post.shift !== selectedShift) return false;
       }
 
-      // Categoria selecionada nas pílulas (caso não haja filtro de KPI ativo)
-      if (selectedCategory !== 'all' && selectedKpiFilter === 'all') {
-        if (post.category !== selectedCategory) return false;
-      }
-
-      // Apenas não lidos
-      if (onlyUnread) {
-        const readBy = Array.isArray(post.readBy) ? post.readBy : [];
-        const hasRead = readBy.some(r => r.userId === userId || r.name === userName);
-        if (hasRead) return false;
-      }
-
       return true;
     });
-  }, [dateFilteredPosts, selectedKpiFilter, searchTerm, selectedRoom, selectedShift, selectedCategory, onlyUnread, currentUser]);
+  }, [dateFilteredPosts, selectedCategory, searchTerm, selectedRoom, selectedShift]);
 
-  // Pacientes filtrados para o modal de autocomplete / vínculo
+  // Pacientes filtrados para o modal de autocomplete
   const filteredPatients = useMemo(() => {
     if (!patientSearchTerm) return patients.slice(0, 8);
     const term = patientSearchTerm.toLowerCase();
@@ -358,7 +307,7 @@ export default function AssistPanel({ currentUser }) {
         room: postForm.room || 'Geral',
         shift: postForm.shift || 'Geral',
         source: 'native',
-        status: postForm.patientId ? 'published' : 'pending_link',
+        status: 'published',
         author: currentUser?.name || 'Profissional NexaCLINIC',
         authorRole: currentUser?.role || 'Assistencial',
         createdAt: editingPost ? editingPost.createdAt : new Date().toISOString()
@@ -397,64 +346,6 @@ export default function AssistPanel({ currentUser }) {
     }
   };
 
-  const handleToggleRead = async (postId) => {
-    try {
-      const updatedReadBy = await dbService.toggleAssistPostRead(postId, currentUser);
-      if (updatedReadBy) {
-        setPosts(prev => prev.map(p => p.id === postId ? { ...p, readBy: updatedReadBy } : p));
-      }
-    } catch (err) {
-      console.error('Erro ao marcar ciente:', err);
-    }
-  };
-
-  const handleLinkPatient = async (patient) => {
-    if (!selectedPostForLink || !patient) return;
-    setActionLoading(true);
-    try {
-      await dbService.linkPatientToPost(selectedPostForLink.id, patient);
-      showAlert(`Comunicado vinculado com sucesso ao paciente ${patient.name}!`, 'success');
-      setShowLinkPatientModal(false);
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      showAlert('Erro ao vincular paciente.', 'danger');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Ingestão / Simulação de E-mail
-  const handleRunEmailAI = () => {
-    if (!emailForm.body.trim()) return;
-    const parsed = dbService.parseIncomingEmail(emailForm, patients);
-    setParsedEmailResult(parsed);
-  };
-
-  const handleApproveEmailIngestion = async () => {
-    if (!parsedEmailResult) return;
-    setActionLoading(true);
-    try {
-      await dbService.createAssistPost(parsedEmailResult);
-      showAlert('E-mail processado e integrado com sucesso ao Feed Assistencial!', 'success');
-      setShowEmailSimulatorModal(false);
-      setParsedEmailResult(null);
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      showAlert('Erro ao processar e-mail.', 'danger');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const hasUserRead = (post) => {
-    const userId = currentUser?.id || currentUser?.uid || currentUser?.email || 'user';
-    const userName = currentUser?.name || currentUser?.email || 'Profissional';
-    const readBy = Array.isArray(post.readBy) ? post.readBy : [];
-    return readBy.some(r => r.userId === userId || r.name === userName);
-  };
-
   const formatDate = (isoString) => {
     if (!isoString) return '--';
     const date = new Date(isoString);
@@ -466,7 +357,7 @@ export default function AssistPanel({ currentUser }) {
 
   return (
     <div style={styles.container}>
-      {/* Mensagem Toast */}
+      {/* Toast Alert */}
       {message.text && (
         <div style={{
           ...styles.alertToast,
@@ -476,35 +367,21 @@ export default function AssistPanel({ currentUser }) {
         </div>
       )}
 
-      {/* Header / Hero */}
+      {/* Hero Header Enxuto */}
       <div style={styles.heroSection}>
         <div style={styles.heroLeft}>
           <div style={styles.heroIconBadge}>
-            <Megaphone size={28} color="#fff" />
+            <Megaphone size={26} color="#fff" />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <h1 style={styles.heroTitle}>NexaASSIST</h1>
-              <span style={styles.liveBadge}>
-                <span style={styles.pulseDot}></span> Em Tempo Real
-              </span>
-            </div>
+            <h1 style={styles.heroTitle}>NexaASSIST</h1>
             <p style={styles.heroSubtitle}>
-              Mural de comunicação assistencial rápida, categorização clínica e histórico do paciente.
+              Mural de comunicados clínicos rápidos, categorização e histórico assistencial.
             </p>
           </div>
         </div>
 
         <div style={styles.heroActions}>
-          <button 
-            onClick={() => setShowEmailSimulatorModal(true)}
-            style={styles.secondaryBtn}
-            title="Leitor inteligente de e-mails Titan"
-          >
-            <Mail size={18} />
-            <span>Ingestão IA</span>
-          </button>
-
           <button 
             onClick={() => handleOpenCreateModal()}
             style={styles.primaryBtn}
@@ -515,127 +392,78 @@ export default function AssistPanel({ currentUser }) {
         </div>
       </div>
 
-      {/* KPI Cards Interativos Clicáveis */}
-      <div style={styles.kpiGrid}>
-        <div 
-          onClick={() => handleKpiCardClick('all')}
-          style={{ 
-            ...styles.kpiCard, 
-            borderLeft: '4px solid var(--primary-color)',
-            borderColor: selectedKpiFilter === 'all' ? 'var(--primary-color)' : 'var(--border-color)',
-            backgroundColor: selectedKpiFilter === 'all' ? '#f5f3ff' : '#fff',
-            boxShadow: selectedKpiFilter === 'all' ? '0 0 0 2px rgba(109, 40, 217, 0.25), 0 4px 12px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.05)',
-            transform: selectedKpiFilter === 'all' ? 'translateY(-2px)' : 'none',
-            cursor: 'pointer'
+      {/* Grade de Cards Compactos de Categorias (Unificação Ultra-Clean) */}
+      <div style={styles.compactCategoryGrid}>
+        {/* Card Todos */}
+        <div
+          onClick={() => setSelectedCategory('all')}
+          style={{
+            ...styles.compactCategoryCard,
+            borderColor: selectedCategory === 'all' ? 'var(--primary-color)' : 'var(--border-color)',
+            backgroundColor: selectedCategory === 'all' ? '#f5f3ff' : '#fff',
+            boxShadow: selectedCategory === 'all' ? '0 0 0 2px rgba(109, 40, 217, 0.2), 0 2px 6px rgba(0,0,0,0.04)' : '0 1px 2px rgba(0,0,0,0.03)'
           }}
-          title="Clique para exibir todos os comunicados"
+          title="Exibir todos os comunicados"
         >
-          <div style={styles.kpiHeader}>
-            <span style={{ ...styles.kpiLabel, fontWeight: selectedKpiFilter === 'all' ? '700' : '600' }}>Total</span>
-            <Layers size={18} color="var(--primary-color)" />
+          <div style={styles.compactCardLeft}>
+            <span style={{ fontSize: '0.9rem' }}>📋</span>
+            <span style={{ 
+              ...styles.compactCardLabel, 
+              fontWeight: selectedCategory === 'all' ? '700' : '600',
+              color: selectedCategory === 'all' ? 'var(--primary-color)' : 'var(--text-primary)'
+            }}>
+              Todos
+            </span>
           </div>
-          <div style={styles.kpiValue}>{kpis.total}</div>
-          <div style={styles.kpiFootnote}>
-            {selectedKpiFilter === 'all' ? '🟢 Filtrando Todos' : 'Clique para filtrar'}
-          </div>
+          <span style={{
+            ...styles.compactCardBadge,
+            backgroundColor: selectedCategory === 'all' ? 'var(--primary-color)' : '#f3f4f6',
+            color: selectedCategory === 'all' ? '#fff' : 'var(--text-secondary)'
+          }}>
+            {categoryCounts.all}
+          </span>
         </div>
 
-        <div 
-          onClick={() => handleKpiCardClick('Internação')}
-          style={{ 
-            ...styles.kpiCard, 
-            borderLeft: '4px solid #ef4444',
-            borderColor: selectedKpiFilter === 'Internação' ? '#ef4444' : 'var(--border-color)',
-            backgroundColor: selectedKpiFilter === 'Internação' ? '#fef2f2' : '#fff',
-            boxShadow: selectedKpiFilter === 'Internação' ? '0 0 0 2px rgba(239, 68, 68, 0.25), 0 4px 12px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.05)',
-            transform: selectedKpiFilter === 'Internação' ? 'translateY(-2px)' : 'none',
-            cursor: 'pointer'
-          }}
-          title="Clique para filtrar apenas internações"
-        >
-          <div style={styles.kpiHeader}>
-            <span style={{ ...styles.kpiLabel, fontWeight: selectedKpiFilter === 'Internação' ? '700' : '600' }}>Internações</span>
-            <ShieldAlert size={18} color="#ef4444" />
-          </div>
-          <div style={{ ...styles.kpiValue, color: '#ef4444' }}>{kpis.internacoes}</div>
-          <div style={styles.kpiFootnote}>
-            {selectedKpiFilter === 'Internação' ? '🔴 Filtrando Internações' : 'Pacientes hospitalizados'}
-          </div>
-        </div>
+        {/* Cards por Categoria */}
+        {categories.map(cat => {
+          const isSelected = selectedCategory === cat.id;
+          const count = categoryCounts[cat.id] || 0;
 
-        <div 
-          onClick={() => handleKpiCardClick('Alta')}
-          style={{ 
-            ...styles.kpiCard, 
-            borderLeft: '4px solid #10b981',
-            borderColor: selectedKpiFilter === 'Alta' ? '#10b981' : 'var(--border-color)',
-            backgroundColor: selectedKpiFilter === 'Alta' ? '#ecfdf5' : '#fff',
-            boxShadow: selectedKpiFilter === 'Alta' ? '0 0 0 2px rgba(16, 185, 129, 0.25), 0 4px 12px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.05)',
-            transform: selectedKpiFilter === 'Alta' ? 'translateY(-2px)' : 'none',
-            cursor: 'pointer'
-          }}
-          title="Clique para filtrar apenas altas hospitalares"
-        >
-          <div style={styles.kpiHeader}>
-            <span style={{ ...styles.kpiLabel, fontWeight: selectedKpiFilter === 'Alta' ? '700' : '600' }}>Altas</span>
-            <CheckCircle2 size={18} color="#10b981" />
-          </div>
-          <div style={{ ...styles.kpiValue, color: '#10b981' }}>{kpis.altas}</div>
-          <div style={styles.kpiFootnote}>
-            {selectedKpiFilter === 'Alta' ? '🟢 Filtrando Altas' : 'Retornos confirmados'}
-          </div>
-        </div>
-
-        <div 
-          onClick={() => handleKpiCardClick('Intercorrência')}
-          style={{ 
-            ...styles.kpiCard, 
-            borderLeft: '4px solid #f59e0b',
-            borderColor: selectedKpiFilter === 'Intercorrência' ? '#f59e0b' : 'var(--border-color)',
-            backgroundColor: selectedKpiFilter === 'Intercorrência' ? '#fffbeb' : '#fff',
-            boxShadow: selectedKpiFilter === 'Intercorrência' ? '0 0 0 2px rgba(245, 158, 11, 0.25), 0 4px 12px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.05)',
-            transform: selectedKpiFilter === 'Intercorrência' ? 'translateY(-2px)' : 'none',
-            cursor: 'pointer'
-          }}
-          title="Clique para filtrar apenas intercorrências"
-        >
-          <div style={styles.kpiHeader}>
-            <span style={{ ...styles.kpiLabel, fontWeight: selectedKpiFilter === 'Intercorrência' ? '700' : '600' }}>Intercorrências</span>
-            <AlertTriangle size={18} color="#f59e0b" />
-          </div>
-          <div style={{ ...styles.kpiValue, color: '#f59e0b' }}>{kpis.intercorrencias}</div>
-          <div style={styles.kpiFootnote}>
-            {selectedKpiFilter === 'Intercorrência' ? '🟡 Filtrando Intercorrências' : 'Alertas clínicos'}
-          </div>
-        </div>
-
-        {kpis.pendentes > 0 && (
-          <div 
-            onClick={() => handleKpiCardClick('pending')}
-            style={{ 
-              ...styles.kpiCard, 
-              borderLeft: '4px solid #ea580c',
-              borderColor: selectedKpiFilter === 'pending' ? '#ea580c' : '#fed7aa',
-              backgroundColor: selectedKpiFilter === 'pending' ? '#ffedd5' : '#fff7ed',
-              boxShadow: selectedKpiFilter === 'pending' ? '0 0 0 2px rgba(234, 88, 12, 0.25), 0 4px 12px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.05)',
-              transform: selectedKpiFilter === 'pending' ? 'translateY(-2px)' : 'none',
-              cursor: 'pointer'
-            }}
-            title="Clique para filtrar comunicados sem paciente vinculado"
-          >
-            <div style={styles.kpiHeader}>
-              <span style={{ ...styles.kpiLabel, color: '#c2410c', fontWeight: selectedKpiFilter === 'pending' ? '700' : '600' }}>Pendentes</span>
-              <LinkIcon size={18} color="#ea580c" />
+          return (
+            <div
+              key={cat.id}
+              onClick={() => setSelectedCategory(isSelected ? 'all' : cat.id)}
+              style={{
+                ...styles.compactCategoryCard,
+                borderColor: isSelected ? cat.color : 'var(--border-color)',
+                backgroundColor: isSelected ? cat.bg : '#fff',
+                boxShadow: isSelected ? `0 0 0 2px ${cat.border}, 0 2px 6px rgba(0,0,0,0.04)` : '0 1px 2px rgba(0,0,0,0.03)'
+              }}
+              title={`Filtrar por ${cat.label}`}
+            >
+              <div style={styles.compactCardLeft}>
+                <span style={{ fontSize: '0.85rem' }}>{cat.icon}</span>
+                <span style={{ 
+                  ...styles.compactCardLabel, 
+                  fontWeight: isSelected ? '700' : '500',
+                  color: isSelected ? cat.color : 'var(--text-primary)'
+                }}>
+                  {cat.label}
+                </span>
+              </div>
+              <span style={{
+                ...styles.compactCardBadge,
+                backgroundColor: isSelected ? cat.color : '#f3f4f6',
+                color: isSelected ? '#fff' : count > 0 ? 'var(--text-primary)' : '#9ca3af'
+              }}>
+                {count}
+              </span>
             </div>
-            <div style={{ ...styles.kpiValue, color: '#ea580c' }}>{kpis.pendentes}</div>
-            <div style={{ ...styles.kpiFootnote, color: '#9a3412' }}>
-              {selectedKpiFilter === 'pending' ? '🟠 Filtrando Pendentes' : 'Sem vínculo com paciente'}
-            </div>
-          </div>
-        )}
+          );
+        })}
       </div>
 
-      {/* Barra de Filtros Inteligentes com Período de Data */}
+      {/* Barra de Filtros Direta */}
       <div style={styles.filterBar}>
         <div style={styles.searchBox}>
           <Search size={18} color="var(--text-secondary)" />
@@ -653,7 +481,7 @@ export default function AssistPanel({ currentUser }) {
 
         <div style={styles.filterSelects}>
           {/* Filtro de Período / Data */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <select 
               value={datePreset} 
               onChange={(e) => setDatePreset(e.target.value)}
@@ -716,90 +544,27 @@ export default function AssistPanel({ currentUser }) {
             <option value="3º Turno">3º Turno</option>
           </select>
 
-          {/* Botão de não lidos */}
-          <button 
-            onClick={() => setOnlyUnread(!onlyUnread)}
-            style={{
-              ...styles.filterToggleBtn,
-              backgroundColor: onlyUnread ? '#ecfdf5' : '#f3f4f6',
-              color: onlyUnread ? '#047857' : 'var(--text-secondary)',
-              borderColor: onlyUnread ? '#10b981' : '#e5e7eb'
-            }}
-          >
-            <Eye size={16} />
-            <span>Não Lidos</span>
-          </button>
-
           <button onClick={() => fetchData(true)} style={styles.refreshBtn} title="Atualizar feed">
             <RefreshCw size={16} className={loading ? 'spin' : ''} />
           </button>
         </div>
       </div>
 
-      {/* Pílulas de Categoria */}
-      <div style={styles.categoryPills}>
-        <button
-          onClick={() => {
-            setSelectedCategory('all');
-            setSelectedKpiFilter('all');
-          }}
-          style={{
-            ...styles.categoryPill,
-            backgroundColor: selectedCategory === 'all' && selectedKpiFilter === 'all' ? 'var(--primary-color)' : '#fff',
-            color: selectedCategory === 'all' && selectedKpiFilter === 'all' ? '#fff' : 'var(--text-primary)',
-            borderColor: selectedCategory === 'all' && selectedKpiFilter === 'all' ? 'var(--primary-color)' : '#e5e7eb'
-          }}
-        >
-          Todos ({dateFilteredPosts.length})
-        </button>
-
-        {categories.map(cat => {
-          const count = dateFilteredPosts.filter(p => p.category === cat.id).length;
-          const isSelected = selectedCategory === cat.id || selectedKpiFilter === cat.id;
-          return (
-            <button
-              key={cat.id}
-              onClick={() => {
-                if (isSelected) {
-                  setSelectedCategory('all');
-                  setSelectedKpiFilter('all');
-                } else {
-                  setSelectedCategory(cat.id);
-                  setSelectedKpiFilter(cat.id);
-                }
-              }}
-              style={{
-                ...styles.categoryPill,
-                backgroundColor: isSelected ? cat.color : cat.bg,
-                color: isSelected ? '#fff' : cat.color,
-                borderColor: cat.border,
-                fontWeight: isSelected ? '700' : '500'
-              }}
-            >
-              <span>{cat.icon} {cat.label}</span>
-              <span style={{
-                ...styles.pillBadge,
-                backgroundColor: isSelected ? 'rgba(255,255,255,0.25)' : '#fff',
-                color: isSelected ? '#fff' : cat.color
-              }}>
-                {count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
       {/* FEED DE COMUNICADOS */}
       {loading ? (
         <div style={styles.emptyState}>
-          <RefreshCw size={32} color="var(--primary-color)" className="spin" />
-          <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>Carregando comunicados assistenciais...</p>
+          <RefreshCw size={30} color="var(--primary-color)" className="spin" />
+          <p style={{ marginTop: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            Carregando comunicados...
+          </p>
         </div>
       ) : filteredPosts.length === 0 ? (
         <div style={styles.emptyState}>
-          <Megaphone size={48} color="var(--text-secondary)" style={{ opacity: 0.5 }} />
-          <h3 style={{ marginTop: '1rem', color: 'var(--text-primary)' }}>Nenhum comunicado encontrado</h3>
-          <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', margin: '0.5rem auto 1.5rem auto' }}>
+          <Megaphone size={44} color="var(--text-secondary)" style={{ opacity: 0.4 }} />
+          <h3 style={{ marginTop: '1rem', color: 'var(--text-primary)', fontSize: '1.1rem' }}>
+            Nenhum comunicado encontrado
+          </h3>
+          <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', margin: '0.5rem auto 1.25rem auto', fontSize: '0.85rem' }}>
             Não há comunicados correspondentes aos filtros selecionados.
           </p>
           <button onClick={() => handleOpenCreateModal()} style={styles.primaryBtn}>
@@ -811,16 +576,13 @@ export default function AssistPanel({ currentUser }) {
         <div style={styles.feedTimeline}>
           {filteredPosts.map(post => {
             const catMeta = getCategoryMeta(post.category);
-            const isRead = hasUserRead(post);
-            const readersCount = Array.isArray(post.readBy) ? post.readBy.length : 0;
-            const isPending = post.status === 'pending_link' || !post.patientId;
 
             return (
               <div 
                 key={post.id} 
                 style={{
                   ...styles.postCard,
-                  borderLeft: `5px solid ${catMeta.color}`,
+                  borderLeft: `4px solid ${catMeta.color}`,
                   backgroundColor: post.urgency === 'Urgente' ? '#fffafb' : '#fff'
                 }}
               >
@@ -842,16 +604,6 @@ export default function AssistPanel({ currentUser }) {
                       </span>
                     )}
 
-                    {post.source === 'email' ? (
-                      <span style={styles.sourceBadgeEmail} title="Recebido automaticamente via lista de e-mail (assistencia@...)">
-                        <Mail size={12} /> Via E-mail
-                      </span>
-                    ) : (
-                      <span style={styles.sourceBadgeNative} title="Criado diretamente no NexaCLINIC">
-                        <Sparkles size={12} /> NexaCLINIC
-                      </span>
-                    )}
-
                     {post.room && post.room !== 'Geral' && (
                       <span style={styles.roomBadge}>
                         <Building2 size={12} /> {post.room} {post.shift ? `• ${post.shift}` : ''}
@@ -865,7 +617,6 @@ export default function AssistPanel({ currentUser }) {
                       {formatDate(post.createdAt)}
                     </span>
 
-                    {/* Ações do autor/admin */}
                     <div style={styles.cardActions}>
                       <button 
                         onClick={() => handleOpenEditModal(post)} 
@@ -885,50 +636,31 @@ export default function AssistPanel({ currentUser }) {
                   </div>
                 </div>
 
-                {/* Bloco de Paciente Vinculado / Alerta de Vínculo Pendente */}
-                {post.patientId && post.patientName ? (
+                {/* Banner de Paciente Vinculado */}
+                {post.patientName && (
                   <div style={styles.patientBanner}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <User size={16} color="var(--primary-color)" />
+                      <User size={15} color="var(--primary-color)" />
                       <span style={styles.patientNameHighlight}>{post.patientName}</span>
                     </div>
-                    <div style={styles.patientSubinfo}>
-                      <span>{post.room}</span>
-                      <span>•</span>
-                      <span>{post.shift}</span>
-                    </div>
+                    {post.room && post.room !== 'Geral' && (
+                      <div style={styles.patientSubinfo}>
+                        <span>{post.room}</span>
+                        {post.shift && <span>• {post.shift}</span>}
+                      </div>
+                    )}
                   </div>
-                ) : isPending ? (
-                  <div style={styles.pendingPatientBanner}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <AlertTriangle size={16} color="#c2410c" />
-                      <span style={{ color: '#9a3412', fontSize: '0.85rem', fontWeight: '600' }}>
-                        Paciente não vinculado automaticamente
-                      </span>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        setSelectedPostForLink(post);
-                        setPatientSearchTerm('');
-                        setShowLinkPatientModal(true);
-                      }}
-                      style={styles.linkPatientBtn}
-                    >
-                      <LinkIcon size={14} />
-                      <span>Associar Paciente</span>
-                    </button>
-                  </div>
-                ) : null}
+                )}
 
                 {/* Conteúdo da Mensagem */}
                 <div style={styles.cardBody}>
-                  {post.title && post.title !== post.patientName && (
+                  {post.title && post.title !== post.patientName && !post.title.startsWith(`${post.category} -`) && (
                     <h4 style={styles.postTitle}>{post.title}</h4>
                   )}
                   <p style={styles.postMessage}>{post.message}</p>
                 </div>
 
-                {/* Rodapé: Autor e Controle de "Ciente" */}
+                {/* Rodapé: Autor do Comunicado */}
                 <div style={styles.cardFooter}>
                   <div style={styles.authorInfo}>
                     <div style={styles.authorAvatar}>
@@ -939,38 +671,6 @@ export default function AssistPanel({ currentUser }) {
                       <div style={styles.authorRole}>{post.authorRole || 'Assistencial'}</div>
                     </div>
                   </div>
-
-                  <div style={styles.footerRight}>
-                    {/* Visualizar leitores */}
-                    {readersCount > 0 && (
-                      <button 
-                        onClick={() => {
-                          setSelectedPostForReaders(post);
-                          setShowReadersModal(true);
-                        }}
-                        style={styles.readersListBtn}
-                        title="Ver quem já deu ciente neste comunicado"
-                      >
-                        <UserCheck size={14} color="#059669" />
-                        <span>{readersCount} {readersCount === 1 ? 'ciente' : 'cientes'}</span>
-                      </button>
-                    )}
-
-                    {/* Botão Dar Ciente */}
-                    <button 
-                      onClick={() => handleToggleRead(post.id)}
-                      style={{
-                        ...styles.readToggleBtn,
-                        backgroundColor: isRead ? '#ecfdf5' : '#f9fafb',
-                        color: isRead ? '#047857' : 'var(--text-secondary)',
-                        borderColor: isRead ? '#10b981' : '#d1d5db'
-                      }}
-                      title={isRead ? 'Você já confirmou ciente (clique para desfazer)' : 'Confirmar que você leu este comunicado'}
-                    >
-                      <CheckCircle2 size={16} color={isRead ? '#10b981' : '#9ca3af'} />
-                      <span>{isRead ? 'Ciente Registrado' : 'Dar Ciente'}</span>
-                    </button>
-                  </div>
                 </div>
               </div>
             );
@@ -978,7 +678,7 @@ export default function AssistPanel({ currentUser }) {
         </div>
       )}
 
-      {/* MODAL: COMUNICADO */}
+      {/* MODAL: COMUNICADO (Criar / Editar) */}
       {showPostModal && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
@@ -997,7 +697,7 @@ export default function AssistPanel({ currentUser }) {
               <div style={styles.formGroup}>
                 <label style={styles.formLabel}>Categoria:</label>
                 <div style={styles.categorySelectGrid}>
-                  {categories.filter(c => c.id !== 'all').map(cat => (
+                  {categories.map(cat => (
                     <button
                       type="button"
                       key={cat.id}
@@ -1151,299 +851,6 @@ export default function AssistPanel({ currentUser }) {
           </div>
         </div>
       )}
-
-      {/* MODAL: INGESTÃO IA DE E-MAILS */}
-      {showEmailSimulatorModal && (
-        <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalContent, maxWidth: '750px' }}>
-            <div style={styles.modalHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Sparkles size={20} color="#8b5cf6" />
-                <h3 style={styles.modalTitle}>Ingestão IA</h3>
-              </div>
-              <button onClick={() => setShowEmailSimulatorModal(false)} style={styles.modalCloseBtn}>×</button>
-            </div>
-
-            <div style={{ padding: '1.25rem' }}>
-              <div style={styles.infoCallout}>
-                <Mail size={24} color="#6366f1" />
-                <div style={{ fontSize: '0.85rem', color: '#3730a3', flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <strong>Servidor Titan IMAP:</strong>
-                    <span style={{ fontSize: '0.75rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.15rem 0.5rem', borderRadius: '10px', fontWeight: '700' }}>
-                      🟢 Ativo
-                    </span>
-                  </div>
-                  <div style={{ marginTop: '0.35rem', fontSize: '0.8rem' }}>
-                    <code>integracao@dialize.com.br</code> • IMAP: <code>imap.titan.email:993</code>
-                  </div>
-                </div>
-              </div>
-
-              {/* Modelos de Teste */}
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
-                  Modelos Rápidos:
-                </label>
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmailForm({
-                        from: 'Márcia Alves Teixeira <enfermagembetim7@dialize.com.br>',
-                        subject: 'INFECÇÃO ALEXANDRE JOSE DE PAULA',
-                        body: 'ATB: Ceftazidima 2g/vancomicina 1g com lok, por 14 dias\nMedico: ISABELA\nRealizado coleta de Hemocultura 1ª E 2ª amostra, hemograma e PCR.'
-                      });
-                      setParsedEmailResult(null);
-                    }}
-                    style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', borderRadius: '6px', border: '1px solid #c7d2fe', backgroundColor: '#f5f3ff', color: '#4338ca', cursor: 'pointer', fontWeight: '600' }}
-                  >
-                    ✉️ E-mail Real (Infecção)
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmailForm({
-                        from: 'Enfermagem Betim <assistencia.betim@dialize.com.br>',
-                        subject: 'INTERNAÇÃO - ADAIR PRAXEDES MORENO',
-                        body: 'Bom dia equipe,\n\nInformamos que o paciente Adair Praxedes Moreno foi internado ontem à noite no Hospital Municipal com quadro de febre e suspeita de infecção no cateter. Sessão de hoje suspensa na clínica.'
-                      });
-                      setParsedEmailResult(null);
-                    }}
-                    style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', borderRadius: '6px', border: '1px solid #fecaca', backgroundColor: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: '600' }}
-                  >
-                    🔴 Internação
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmailForm({
-                        from: 'Dr. Lucas Nefrologista <medicos.betim@dialize.com.br>',
-                        subject: 'ALTA HOSPITALAR - ADAO LUCIANO DIAS',
-                        body: 'Boa tarde,\n\nPaciente Adão Luciano Dias recebeu alta hoje do Hospital Regional e retornará às sessões regulares no 1º Turno (Salão 3).'
-                      });
-                      setParsedEmailResult(null);
-                    }}
-                    style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', borderRadius: '6px', border: '1px solid #a7f3d0', backgroundColor: '#ecfdf5', color: '#047857', cursor: 'pointer', fontWeight: '600' }}
-                  >
-                    🟢 Alta
-                  </button>
-                </div>
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Remetente:</label>
-                <input 
-                  type="text" 
-                  value={emailForm.from}
-                  onChange={(e) => setEmailForm(prev => ({ ...prev, from: e.target.value }))}
-                  style={styles.modalInput}
-                />
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Assunto:</label>
-                <input 
-                  type="text" 
-                  value={emailForm.subject}
-                  onChange={(e) => setEmailForm(prev => ({ ...prev, subject: e.target.value }))}
-                  style={styles.modalInput}
-                />
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Mensagem:</label>
-                <textarea 
-                  rows={5}
-                  value={emailForm.body}
-                  onChange={(e) => setEmailForm(prev => ({ ...prev, body: e.target.value }))}
-                  style={styles.modalTextarea}
-                />
-              </div>
-
-              <button 
-                type="button" 
-                onClick={handleRunEmailAI}
-                style={styles.aiProcessBtn}
-              >
-                <Sparkles size={16} />
-                <span>Processar IA</span>
-              </button>
-
-              {/* Resultado do Processamento */}
-              {parsedEmailResult && (
-                <div style={styles.aiResultCard}>
-                  <div style={styles.aiResultHeader}>
-                    <CheckCircle2 size={18} color="#10b981" />
-                    <strong style={{ color: '#065f46' }}>Reconhecimento Realizado:</strong>
-                  </div>
-
-                  <div style={styles.aiResultGrid}>
-                    <div>
-                      <span style={styles.aiLabel}>Paciente:</span>
-                      <div style={{ fontWeight: '700', color: parsedEmailResult.patientName ? '#047857' : '#c2410c' }}>
-                        {parsedEmailResult.patientName || '⚠️ Não identificado'}
-                      </div>
-                      {parsedEmailResult.matchConfidence > 0 && (
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                          Confiança: {(parsedEmailResult.matchConfidence * 100).toFixed(0)}% ({parsedEmailResult.matchType})
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <span style={styles.aiLabel}>Categoria:</span>
-                      <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
-                        {parsedEmailResult.category}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span style={styles.aiLabel}>Urgência:</span>
-                      <div style={{ fontWeight: '700', color: parsedEmailResult.urgency === 'Urgente' ? '#ef4444' : '#10b981' }}>
-                        {parsedEmailResult.urgency}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span style={styles.aiLabel}>Local:</span>
-                      <div style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>
-                        {parsedEmailResult.room} ({parsedEmailResult.shift})
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: '0.75rem' }}>
-                    <span style={styles.aiLabel}>Texto:</span>
-                    <div style={styles.aiCleanTextPreview}>
-                      {parsedEmailResult.message}
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                    <button 
-                      onClick={() => setParsedEmailResult(null)}
-                      style={styles.modalCancelBtn}
-                    >
-                      Descartar
-                    </button>
-                    <button 
-                      onClick={handleApproveEmailIngestion}
-                      disabled={actionLoading}
-                      style={styles.approveIngestBtn}
-                    >
-                      <Check size={16} />
-                      <span>{actionLoading ? 'Publicando...' : 'Aprovar'}</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: ASSOCIAR PACIENTE MANUALMENTE */}
-      {showLinkPatientModal && selectedPostForLink && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <LinkIcon size={20} color="var(--primary-color)" />
-                <h3 style={styles.modalTitle}>Associar Paciente ao Comunicado</h3>
-              </div>
-              <button onClick={() => setShowLinkPatientModal(false)} style={styles.modalCloseBtn}>×</button>
-            </div>
-
-            <div style={{ padding: '1.25rem' }}>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                Selecione o paciente correspondente a este comunicado:
-              </p>
-
-              <div style={{ padding: '0.75rem', backgroundColor: '#f9fafb', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #e5e7eb' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-primary)' }}>{selectedPostForLink.title}</div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>{selectedPostForLink.message}</div>
-              </div>
-
-              <input 
-                type="text"
-                placeholder="Buscar paciente por nome ou CPF..."
-                value={patientSearchTerm}
-                onChange={(e) => setPatientSearchTerm(e.target.value)}
-                style={styles.modalInput}
-                autoFocus
-              />
-
-              <div style={{ maxHeight: '250px', overflowY: 'auto', marginTop: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-                {filteredPatients.map(pat => (
-                  <div 
-                    key={pat.id}
-                    onClick={() => handleLinkPatient(pat)}
-                    style={styles.patientLinkItem}
-                  >
-                    <div>
-                      <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{pat.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        {pat.room || 'Sem salão'} • {pat.shift || 'Turno N/A'} • CPF: {pat.cpf || 'N/A'}
-                      </div>
-                    </div>
-                    <button style={styles.selectPatientBtn}>
-                      <span>Vincular</span>
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: HISTÓRICO DE QUEM DEU CIENTE */}
-      {showReadersModal && selectedPostForReaders && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <UserCheck size={20} color="#10b981" />
-                <h3 style={styles.modalTitle}>Confirmações de Ciente</h3>
-              </div>
-              <button onClick={() => setShowReadersModal(false)} style={styles.modalCloseBtn}>×</button>
-            </div>
-
-            <div style={{ padding: '1.25rem' }}>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                Profissionais que confirmaram a leitura deste comunicado:
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '300px', overflowY: 'auto' }}>
-                {Array.isArray(selectedPostForReaders.readBy) && selectedPostForReaders.readBy.length > 0 ? (
-                  selectedPostForReaders.readBy.map((r, idx) => (
-                    <div key={idx} style={styles.readerRow}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={styles.readerAvatar}>{r.name.charAt(0).toUpperCase()}</div>
-                        <div>
-                          <div style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.9rem' }}>{r.name}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{r.role || 'Profissional'}</div>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: '500' }}>
-                        {formatDate(r.readAt)}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-secondary)' }}>
-                    Nenhuma confirmação de ciente registrada até o momento.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -1451,180 +858,152 @@ export default function AssistPanel({ currentUser }) {
 const styles = {
   container: {
     padding: '1.5rem',
-    maxWidth: '1300px',
+    maxWidth: '1280px',
     margin: '0 auto'
   },
   alertToast: {
     position: 'fixed',
     top: '20px',
     right: '20px',
-    padding: '0.75rem 1.5rem',
     color: '#fff',
-    borderRadius: '8px',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+    padding: '0.85rem 1.25rem',
+    borderRadius: '10px',
+    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.15)',
     zIndex: 9999,
-    fontWeight: '500',
+    fontSize: '0.875rem',
+    fontWeight: '600',
     animation: 'slideIn 0.3s ease-out'
   },
   heroSection: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '1.5rem',
+    marginBottom: '1.25rem',
     backgroundColor: '#fff',
-    padding: '1.5rem 2rem',
-    borderRadius: '16px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    padding: '1.25rem 1.5rem',
+    borderRadius: '12px',
     border: '1px solid var(--border-color)',
-    marginBottom: '1.5rem'
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+    flexWrap: 'wrap',
+    gap: '1rem'
   },
   heroLeft: {
     display: 'flex',
     alignItems: 'center',
-    gap: '1.25rem'
+    gap: '1rem'
   },
   heroIconBadge: {
-    width: '56px',
-    height: '56px',
-    borderRadius: '14px',
-    background: 'linear-gradient(135deg, var(--primary-color) 0%, #ec4899 100%)',
+    width: '46px',
+    height: '46px',
+    borderRadius: '12px',
+    background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 8px 16px rgba(236, 72, 153, 0.25)'
+    boxShadow: '0 4px 10px rgba(236, 72, 153, 0.3)'
   },
   heroTitle: {
-    fontSize: '1.6rem',
+    fontSize: '1.35rem',
     fontWeight: '800',
     color: 'var(--text-primary)',
     margin: 0
   },
   heroSubtitle: {
-    fontSize: '0.9rem',
+    fontSize: '0.85rem',
     color: 'var(--text-secondary)',
-    margin: '0.35rem 0 0 0',
-    maxWidth: '550px'
-  },
-  liveBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.35rem',
-    fontSize: '0.75rem',
-    fontWeight: '700',
-    color: '#059669',
-    backgroundColor: '#ecfdf5',
-    padding: '0.2rem 0.6rem',
-    borderRadius: '12px',
-    border: '1px solid #a7f3d0'
-  },
-  pulseDot: {
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    backgroundColor: '#10b981'
+    margin: '0.2rem 0 0 0'
   },
   heroActions: {
     display: 'flex',
-    gap: '0.75rem',
     alignItems: 'center',
-    flexWrap: 'wrap'
+    gap: '0.75rem'
   },
   primaryBtn: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '0.4rem',
     backgroundColor: 'var(--primary-color)',
     color: '#fff',
     border: 'none',
-    padding: '0.75rem 1.25rem',
-    borderRadius: '10px',
+    padding: '0.6rem 1.15rem',
+    borderRadius: '8px',
     fontWeight: '600',
-    fontSize: '0.9rem',
+    fontSize: '0.85rem',
     cursor: 'pointer',
-    boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+    transition: 'all 0.15s ease'
   },
-  secondaryBtn: {
+  compactCategoryGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))',
+    gap: '0.5rem',
+    marginBottom: '1rem'
+  },
+  compactCategoryCard: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    backgroundColor: '#f5f3ff',
-    color: '#6d28d9',
-    border: '1px solid #ddd6fe',
-    padding: '0.75rem 1.25rem',
-    borderRadius: '10px',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-    cursor: 'pointer'
-  },
-  kpiGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '1rem',
-    marginBottom: '1.5rem'
-  },
-  kpiCard: {
-    backgroundColor: '#fff',
-    padding: '1.25rem',
-    borderRadius: '12px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-    border: '1px solid var(--border-color)'
-  },
-  kpiHeader: {
-    display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    padding: '0.55rem 0.75rem',
+    borderRadius: '8px',
+    border: '1px solid',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+    userSelect: 'none'
   },
-  kpiLabel: {
+  compactCardLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    overflow: 'hidden'
+  },
+  compactCardLabel: {
     fontSize: '0.8rem',
-    fontWeight: '600',
-    color: 'var(--text-secondary)'
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+    overflow: 'hidden'
   },
-  kpiValue: {
-    fontSize: '1.8rem',
-    fontWeight: '800',
-    color: 'var(--text-primary)',
-    margin: '0.5rem 0 0.25rem 0'
-  },
-  kpiFootnote: {
-    fontSize: '0.75rem',
-    color: 'var(--text-secondary)'
+  compactCardBadge: {
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    padding: '0.1rem 0.4rem',
+    borderRadius: '10px',
+    minWidth: '20px',
+    textAlign: 'center'
   },
   filterBar: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '1rem',
-    flexWrap: 'wrap',
+    gap: '0.75rem',
     backgroundColor: '#fff',
-    padding: '1rem 1.25rem',
-    borderRadius: '12px',
+    padding: '0.75rem 1rem',
+    borderRadius: '10px',
     border: '1px solid var(--border-color)',
-    marginBottom: '1rem'
+    marginBottom: '1.25rem',
+    flexWrap: 'wrap'
   },
   searchBox: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
     backgroundColor: '#f9fafb',
-    border: '1px solid #e5e7eb',
+    padding: '0.45rem 0.75rem',
     borderRadius: '8px',
-    padding: '0.5rem 0.75rem',
-    flex: '1 1 300px',
-    position: 'relative'
+    border: '1px solid #e5e7eb',
+    flex: '1 1 250px'
   },
   searchInput: {
     border: 'none',
     background: 'transparent',
     outline: 'none',
     width: '100%',
-    fontSize: '0.875rem',
+    fontSize: '0.85rem',
     color: 'var(--text-primary)'
   },
   clearSearchBtn: {
     background: 'none',
     border: 'none',
-    fontSize: '1.2rem',
+    fontSize: '1.1rem',
     cursor: 'pointer',
     color: 'var(--text-secondary)'
   },
@@ -1635,16 +1014,16 @@ const styles = {
     flexWrap: 'wrap'
   },
   selectInput: {
-    padding: '0.5rem 0.75rem',
+    padding: '0.45rem 0.65rem',
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
     backgroundColor: '#fff',
-    fontSize: '0.85rem',
+    fontSize: '0.82rem',
     color: 'var(--text-primary)',
     cursor: 'pointer'
   },
   dateInput: {
-    padding: '0.45rem 0.6rem',
+    padding: '0.4rem 0.55rem',
     borderRadius: '8px',
     border: '1px solid #d1d5db',
     backgroundColor: '#fff',
@@ -1652,19 +1031,8 @@ const styles = {
     color: 'var(--text-primary)',
     outline: 'none'
   },
-  filterToggleBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    padding: '0.5rem 0.85rem',
-    borderRadius: '8px',
-    border: '1px solid',
-    fontSize: '0.85rem',
-    fontWeight: '600',
-    cursor: 'pointer'
-  },
   refreshBtn: {
-    padding: '0.55rem',
+    padding: '0.5rem',
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
     backgroundColor: '#fff',
@@ -1673,62 +1041,37 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center'
   },
-  categoryPills: {
-    display: 'flex',
-    gap: '0.5rem',
-    overflowX: 'auto',
-    paddingBottom: '0.75rem',
-    marginBottom: '1rem'
-  },
-  categoryPill: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.4rem 0.85rem',
-    borderRadius: '20px',
-    border: '1px solid',
-    fontSize: '0.8rem',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    transition: 'all 0.15s ease'
-  },
-  pillBadge: {
-    padding: '0.1rem 0.4rem',
-    borderRadius: '10px',
-    fontSize: '0.7rem',
-    fontWeight: '700'
-  },
   feedTimeline: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem'
+    gap: '0.85rem'
   },
   postCard: {
     backgroundColor: '#fff',
-    borderRadius: '14px',
-    padding: '1.25rem 1.5rem',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    borderRadius: '12px',
+    padding: '1.15rem 1.35rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
     border: '1px solid var(--border-color)',
-    transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+    transition: 'all 0.15s ease'
   },
   cardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     flexWrap: 'wrap',
-    gap: '0.75rem',
-    marginBottom: '0.75rem'
+    gap: '0.5rem',
+    marginBottom: '0.65rem'
   },
   cardMetaLeft: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '0.45rem',
     flexWrap: 'wrap'
   },
   catBadge: {
     fontSize: '0.75rem',
     fontWeight: '700',
-    padding: '0.2rem 0.6rem',
+    padding: '0.2rem 0.55rem',
     borderRadius: '6px',
     border: '1px solid'
   },
@@ -1738,35 +1081,11 @@ const styles = {
     gap: '0.25rem',
     fontSize: '0.7rem',
     fontWeight: '700',
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
+    backgroundColor: '#fef2f2',
+    color: '#ef4444',
     padding: '0.2rem 0.5rem',
     borderRadius: '6px',
-    border: '1px solid #fca5a5'
-  },
-  sourceBadgeEmail: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    fontSize: '0.7rem',
-    fontWeight: '600',
-    backgroundColor: '#f3f4f6',
-    color: '#4b5563',
-    padding: '0.2rem 0.5rem',
-    borderRadius: '6px',
-    border: '1px solid #e5e7eb'
-  },
-  sourceBadgeNative: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    fontSize: '0.7rem',
-    fontWeight: '600',
-    backgroundColor: '#f5f3ff',
-    color: '#7c3aed',
-    padding: '0.2rem 0.5rem',
-    borderRadius: '6px',
-    border: '1px solid #ddd6fe'
+    border: '1px solid #fecaca'
   },
   roomBadge: {
     display: 'flex',
@@ -1783,7 +1102,7 @@ const styles = {
   cardMetaRight: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.75rem'
+    gap: '0.65rem'
   },
   dateLabel: {
     display: 'flex',
@@ -1795,12 +1114,12 @@ const styles = {
   cardActions: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.25rem'
+    gap: '0.2rem'
   },
   cardActionBtn: {
     background: 'none',
     border: 'none',
-    padding: '0.3rem',
+    padding: '0.25rem',
     borderRadius: '4px',
     cursor: 'pointer',
     color: 'var(--text-secondary)'
@@ -1811,57 +1130,34 @@ const styles = {
     alignItems: 'center',
     backgroundColor: '#f8fafc',
     border: '1px solid #e2e8f0',
+    padding: '0.45rem 0.75rem',
     borderRadius: '8px',
-    padding: '0.5rem 0.85rem',
-    marginBottom: '0.75rem'
+    marginBottom: '0.65rem'
   },
   patientNameHighlight: {
+    fontSize: '0.85rem',
     fontWeight: '700',
-    fontSize: '0.9rem',
     color: 'var(--text-primary)'
   },
   patientSubinfo: {
-    display: 'flex',
-    gap: '0.35rem',
     fontSize: '0.75rem',
-    color: 'var(--text-secondary)'
-  },
-  pendingPatientBanner: {
+    color: 'var(--text-secondary)',
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff7ed',
-    border: '1px dashed #fdba74',
-    borderRadius: '8px',
-    padding: '0.5rem 0.85rem',
-    marginBottom: '0.75rem'
-  },
-  linkPatientBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.35rem',
-    backgroundColor: '#ea580c',
-    color: '#fff',
-    border: 'none',
-    padding: '0.3rem 0.65rem',
-    borderRadius: '6px',
-    fontSize: '0.75rem',
-    fontWeight: '600',
-    cursor: 'pointer'
+    gap: '0.35rem'
   },
   cardBody: {
-    marginBottom: '1rem'
+    marginBottom: '0.75rem'
   },
   postTitle: {
-    fontSize: '1rem',
+    fontSize: '0.95rem',
     fontWeight: '700',
     color: 'var(--text-primary)',
     margin: '0 0 0.35rem 0'
   },
   postMessage: {
-    fontSize: '0.925rem',
-    color: '#374151',
+    fontSize: '0.88rem',
     lineHeight: '1.5',
+    color: '#374151',
     margin: 0,
     whiteSpace: 'pre-line'
   },
@@ -1869,9 +1165,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '0.75rem',
-    paddingTop: '0.75rem',
+    paddingTop: '0.65rem',
     borderTop: '1px solid #f3f4f6'
   },
   authorInfo: {
@@ -1880,59 +1174,31 @@ const styles = {
     gap: '0.5rem'
   },
   authorAvatar: {
-    width: '32px',
-    height: '32px',
+    width: '26px',
+    height: '26px',
     borderRadius: '50%',
-    backgroundColor: 'var(--primary-color)',
-    color: '#fff',
+    backgroundColor: '#e5e7eb',
+    color: '#4b5563',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontWeight: '700',
-    fontSize: '0.85rem'
+    fontSize: '0.75rem',
+    fontWeight: '700'
   },
   authorName: {
-    fontSize: '0.825rem',
-    fontWeight: '700',
+    fontSize: '0.8rem',
+    fontWeight: '600',
     color: 'var(--text-primary)'
   },
   authorRole: {
     fontSize: '0.7rem',
     color: 'var(--text-secondary)'
   },
-  footerRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem'
-  },
-  readersListBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.35rem',
-    background: 'none',
-    border: 'none',
-    fontSize: '0.75rem',
-    fontWeight: '600',
-    color: '#059669',
-    cursor: 'pointer'
-  },
-  readToggleBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    padding: '0.4rem 0.85rem',
-    borderRadius: '8px',
-    border: '1px solid',
-    fontSize: '0.8rem',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease'
-  },
   emptyState: {
-    backgroundColor: '#fff',
-    borderRadius: '16px',
-    padding: '3rem 1.5rem',
     textAlign: 'center',
+    padding: '3rem 1.5rem',
+    backgroundColor: '#fff',
+    borderRadius: '12px',
     border: '1px dashed #d1d5db'
   },
   modalOverlay: {
@@ -1950,22 +1216,22 @@ const styles = {
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderRadius: '16px',
+    borderRadius: '12px',
     width: '100%',
-    maxWidth: '650px',
+    maxWidth: '560px',
     maxHeight: '90vh',
     overflowY: 'auto',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
   },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '1.25rem 1.5rem',
-    borderBottom: '1px solid var(--border-color)'
+    padding: '1rem 1.25rem',
+    borderBottom: '1px solid #f3f4f6'
   },
   modalTitle: {
-    fontSize: '1.15rem',
+    fontSize: '1.1rem',
     fontWeight: '700',
     color: 'var(--text-primary)',
     margin: 0
@@ -1975,10 +1241,11 @@ const styles = {
     border: 'none',
     fontSize: '1.5rem',
     cursor: 'pointer',
-    color: 'var(--text-secondary)'
+    color: 'var(--text-secondary)',
+    lineHeight: 1
   },
   modalForm: {
-    padding: '1.25rem 1.5rem',
+    padding: '1.25rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem'
@@ -1986,47 +1253,49 @@ const styles = {
   formGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.4rem'
+    gap: '0.35rem'
   },
   formRow: {
     display: 'flex',
-    gap: '1rem',
-    flexWrap: 'wrap'
+    gap: '0.75rem'
   },
   formLabel: {
-    fontSize: '0.825rem',
+    fontSize: '0.8rem',
     fontWeight: '600',
-    color: 'var(--text-primary)'
+    color: 'var(--text-secondary)'
   },
   modalInput: {
-    padding: '0.65rem 0.85rem',
+    padding: '0.55rem 0.75rem',
     borderRadius: '8px',
     border: '1px solid #d1d5db',
-    fontSize: '0.875rem',
-    outline: 'none',
-    width: '100%'
-  },
-  modalTextarea: {
-    padding: '0.65rem 0.85rem',
-    borderRadius: '8px',
-    border: '1px solid #d1d5db',
-    fontSize: '0.875rem',
+    fontSize: '0.85rem',
     outline: 'none',
     width: '100%',
+    boxSizing: 'border-box'
+  },
+  modalTextarea: {
+    padding: '0.55rem 0.75rem',
+    borderRadius: '8px',
+    border: '1px solid #d1d5db',
+    fontSize: '0.85rem',
+    outline: 'none',
+    width: '100%',
+    boxSizing: 'border-box',
     resize: 'vertical'
   },
   categorySelectGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-    gap: '0.5rem'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
+    gap: '0.4rem'
   },
   catSelectBtn: {
-    padding: '0.5rem',
-    borderRadius: '8px',
+    padding: '0.45rem 0.5rem',
+    borderRadius: '6px',
     border: '1px solid',
     fontSize: '0.75rem',
     cursor: 'pointer',
-    textAlign: 'center'
+    textAlign: 'center',
+    transition: 'all 0.15s ease'
   },
   patientDropdown: {
     position: 'absolute',
@@ -2037,13 +1306,13 @@ const styles = {
     border: '1px solid #d1d5db',
     borderRadius: '8px',
     marginTop: '4px',
-    maxHeight: '200px',
+    maxHeight: '180px',
     overflowY: 'auto',
     zIndex: 10,
     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
   },
   patientDropdownItem: {
-    padding: '0.6rem 0.85rem',
+    padding: '0.55rem 0.75rem',
     borderBottom: '1px solid #f3f4f6',
     cursor: 'pointer'
   },
@@ -2053,7 +1322,7 @@ const styles = {
     alignItems: 'center',
     backgroundColor: '#ecfdf5',
     border: '1px solid #a7f3d0',
-    padding: '0.4rem 0.75rem',
+    padding: '0.35rem 0.65rem',
     borderRadius: '6px',
     fontSize: '0.8rem',
     color: '#065f46',
@@ -2070,146 +1339,28 @@ const styles = {
   modalActions: {
     display: 'flex',
     justifyContent: 'flex-end',
-    gap: '0.75rem',
+    gap: '0.65rem',
     paddingTop: '0.5rem',
     borderTop: '1px solid #f3f4f6'
   },
   modalCancelBtn: {
-    padding: '0.65rem 1.25rem',
+    padding: '0.55rem 1.15rem',
     borderRadius: '8px',
     border: '1px solid #d1d5db',
     backgroundColor: '#fff',
-    fontSize: '0.875rem',
+    fontSize: '0.85rem',
     fontWeight: '600',
     color: 'var(--text-secondary)',
     cursor: 'pointer'
   },
   modalSubmitBtn: {
-    padding: '0.65rem 1.5rem',
+    padding: '0.55rem 1.35rem',
     borderRadius: '8px',
     border: 'none',
     backgroundColor: 'var(--primary-color)',
-    fontSize: '0.875rem',
-    fontWeight: '600',
-    color: '#fff',
-    cursor: 'pointer'
-  },
-  infoCallout: {
-    display: 'flex',
-    gap: '0.75rem',
-    backgroundColor: '#eef2ff',
-    border: '1px solid #c7d2fe',
-    borderRadius: '8px',
-    padding: '0.85rem',
-    marginBottom: '1rem',
-    alignItems: 'center'
-  },
-  aiProcessBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.5rem',
-    backgroundColor: '#6d28d9',
-    color: '#fff',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
-    fontWeight: '600',
-    fontSize: '0.875rem',
-    cursor: 'pointer',
-    width: '100%',
-    marginTop: '0.5rem'
-  },
-  aiResultCard: {
-    marginTop: '1.25rem',
-    backgroundColor: '#f0fdf4',
-    border: '1px solid #bbf7d0',
-    borderRadius: '10px',
-    padding: '1rem'
-  },
-  aiResultHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    marginBottom: '0.75rem'
-  },
-  aiResultGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-    gap: '0.75rem',
-    backgroundColor: '#fff',
-    padding: '0.75rem',
-    borderRadius: '8px',
-    border: '1px solid #dcfce7'
-  },
-  aiLabel: {
-    fontSize: '0.7rem',
-    fontWeight: '600',
-    color: 'var(--text-secondary)'
-  },
-  aiCleanTextPreview: {
-    backgroundColor: '#fff',
-    padding: '0.65rem 0.85rem',
-    borderRadius: '6px',
-    border: '1px solid #dcfce7',
     fontSize: '0.85rem',
-    color: '#1f2937',
-    marginTop: '0.25rem',
-    whiteSpace: 'pre-line'
-  },
-  approveIngestBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    backgroundColor: '#059669',
-    color: '#fff',
-    border: 'none',
-    padding: '0.65rem 1.25rem',
-    borderRadius: '8px',
     fontWeight: '600',
-    fontSize: '0.85rem',
-    cursor: 'pointer'
-  },
-  patientLinkItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '0.65rem 0.85rem',
-    borderBottom: '1px solid #f3f4f6',
-    cursor: 'pointer'
-  },
-  selectPatientBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    backgroundColor: '#eff6ff',
-    color: '#2563eb',
-    border: '1px solid #bfdbfe',
-    padding: '0.3rem 0.6rem',
-    borderRadius: '6px',
-    fontSize: '0.75rem',
-    fontWeight: '600',
-    cursor: 'pointer'
-  },
-  readerRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '0.5rem 0.75rem',
-    backgroundColor: '#f9fafb',
-    borderRadius: '6px',
-    border: '1px solid #f3f4f6'
-  },
-  readerAvatar: {
-    width: '28px',
-    height: '28px',
-    borderRadius: '50%',
-    backgroundColor: '#10b981',
     color: '#fff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '0.75rem',
-    fontWeight: '700'
+    cursor: 'pointer'
   }
 };

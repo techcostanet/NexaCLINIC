@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.30',
+      date: '22/08/2026',
+      title: 'Módulo NexaASSIST - Redesign Ultra-Clean, Grade Compacta de Categorias e Simplificação Operacional',
+      description: 'Redesign completo do mural assistencial: unificação e eliminação da redundância entre KPIs e pílulas com a nova Grade Compacta de Categorias, remoção definitiva de recursos legados de e-mail e botões de ciente para uma experiência ágil e 100% clínica.',
+      changes: [
+        { type: 'Grade Compacta de Categorias', text: 'Unificação em uma linha fina de cards responsivos com ícone, nome e contador de cada categoria clínica, economizando mais de 60% de espaço vertical.' },
+        { type: 'Hero Header Enxuto', text: 'Remoção do badge "Em Tempo Real" e do botão de e-mail, mantendo foco exclusivo no botão "+ Novo Comunicado".' },
+        { type: 'Feed Clínico Despoluído', text: 'Remoção dos botões de "Dar Ciente", filtro "Não Lidos" e badges "Via E-mail", tornando a leitura rápida e direta para toda a equipe de salão.' },
+        { type: 'Manual do Módulo', text: 'Atualização das diretrizes e tutoriais do NexaASSIST em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v4.7.29',
       date: '22/08/2026',
       title: 'Módulo NexaASSIST - Filtro de Datas Inteligente, Cards de KPI Clicáveis e Estabilização Antiflicker',
