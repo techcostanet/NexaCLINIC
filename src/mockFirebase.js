@@ -15011,6 +15011,275 @@ export const mockFirestore = {
     return { success: true };
   },
 
+  // Patient Medications (Intradialytic & Continuous)
+  getPatientMedications: async (patientId) => {
+    const db = getDB();
+    if (!db.patient_medications || db.patient_medications.length === 0) {
+      // Seed default nephrology medications for demo
+      db.patient_medications = [
+        {
+          id: 'med-1',
+          patientId: patientId || 'pat-1',
+          name: 'Alfaepoetina (Eritropoetina Humana Recombinante)',
+          dosage: '4.000 UI',
+          route: 'IV (Pós-Diálise)',
+          frequency: '3x por semana (Após cada sessão de HD)',
+          type: 'Intradialítico',
+          indication: 'Tratamento de anemia da DRC (Alvo Hb 10-12 g/dL)',
+          prescriber: 'Dr. Lucas (Nefrologista)',
+          status: 'Ativo',
+          startDate: '2026-01-10',
+          observations: 'Administrar lentamente na linha venosa ao término da sessão.'
+        },
+        {
+          id: 'med-2',
+          patientId: patientId || 'pat-1',
+          name: 'Sacarato de Hidróxido de Ferro (Noripurum)',
+          dosage: '100 mg (1 ampola)',
+          route: 'IV (Em infusão SF 0.9% 100mL)',
+          frequency: '1x por semana (Sessão de Quarta)',
+          type: 'Intradialítico',
+          indication: 'Reposição de ferro para atingir Ferritina > 200 ng/mL e Sat. Transf. > 20%',
+          prescriber: 'Dr. Lucas (Nefrologista)',
+          status: 'Ativo',
+          startDate: '2026-02-01',
+          observations: 'Infundir na última hora de diálise sob monitorização de pressão arterial.'
+        },
+        {
+          id: 'med-3',
+          patientId: patientId || 'pat-1',
+          name: 'Carbonato de Sevelamer',
+          dosage: '800 mg',
+          route: 'Oral',
+          frequency: '2 comprimidos 3x ao dia (junto às principais refeições)',
+          type: 'Uso Domiciliar',
+          indication: 'Quelante de fósforo não cálcico para controle da hiperfosfatemia',
+          prescriber: 'Dra. Mariana (Nefrologista)',
+          status: 'Ativo',
+          startDate: '2026-01-15',
+          observations: 'Tomar rigorosamente durante as refeições, não em jejum.'
+        },
+        {
+          id: 'med-4',
+          patientId: patientId || 'pat-1',
+          name: 'Calcitriol',
+          dosage: '0.25 mcg',
+          route: 'Oral',
+          frequency: '1 cápsula ao dia à noite',
+          type: 'Uso Domiciliar',
+          indication: 'Controle de Hiperparatireoidismo Secundário',
+          prescriber: 'Dr. Lucas (Nefrologista)',
+          status: 'Ativo',
+          startDate: '2026-03-01',
+          observations: 'Monitorar cálcio e fósforo séricos mensalmente.'
+        },
+        {
+          id: 'med-5',
+          patientId: patientId || 'pat-1',
+          name: 'Anlodipino',
+          dosage: '10 mg',
+          route: 'Oral',
+          frequency: '1x ao dia pela manhã',
+          type: 'Uso Domiciliar',
+          indication: 'Controle de Hipertensão Arterial Sistêmica',
+          prescriber: 'Dr. Roberto (Cardiologista)',
+          status: 'Ativo',
+          startDate: '2025-11-20',
+          observations: 'Evitar tomada imediatamente antes da sessão de diálise se houver tendência a hipotensão.'
+        }
+      ];
+      setDB(db);
+    }
+    return (db.patient_medications || []).filter(m => !patientId || m.patientId === patientId);
+  },
+
+  savePatientMedication: async (medData) => {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const db = getDB();
+    if (!db.patient_medications) db.patient_medications = [];
+    const index = db.patient_medications.findIndex(m => m.id === medData.id);
+    const updated = {
+      id: medData.id || 'med-' + Math.random().toString(36).substr(2, 9),
+      ...medData,
+      updatedAt: new Date().toISOString()
+    };
+    if (index > -1) {
+      db.patient_medications[index] = updated;
+    } else {
+      db.patient_medications.push(updated);
+    }
+    setDB(db);
+    return updated;
+  },
+
+  deletePatientMedication: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.patient_medications) {
+      db.patient_medications = db.patient_medications.filter(m => m.id !== id);
+      setDB(db);
+    }
+    return { success: true };
+  },
+
+  // Patient Lab Exams (Monthly/Quarterly Nephrology Profiles)
+  getPatientLabExams: async (patientId) => {
+    const db = getDB();
+    if (!db.patient_lab_exams || db.patient_lab_exams.length === 0) {
+      db.patient_lab_exams = [
+        {
+          id: 'lab-1',
+          patientId: patientId || 'pat-1',
+          date: '2026-08-05',
+          month: '2026-08',
+          hemoglobin: 11.4,
+          hematocrit: 34.5,
+          ferritin: 340,
+          transferrinSat: 28,
+          phosphorus: 4.8,
+          calcium: 9.1,
+          pth: 280,
+          potassium: 5.1,
+          ureaPre: 142,
+          ureaPost: 38,
+          ktv: 1.48,
+          urr: 73.2,
+          albumin: 3.9,
+          hiv: 'Não Reagente',
+          hcv: 'Não Reagente',
+          hbsag: 'Não Reagente',
+          antiHbs: 'Reagente (>100 UI/mL)',
+          notes: 'Adequação dialítica excelente (Kt/V 1.48). Anemia compensada com EPO 4.000 UI 3x/sem.'
+        },
+        {
+          id: 'lab-2',
+          patientId: patientId || 'pat-1',
+          date: '2026-07-08',
+          month: '2026-07',
+          hemoglobin: 10.8,
+          hematocrit: 32.8,
+          ferritin: 290,
+          transferrinSat: 24,
+          phosphorus: 5.6,
+          calcium: 8.9,
+          pth: 310,
+          potassium: 5.4,
+          ureaPre: 156,
+          ureaPost: 44,
+          ktv: 1.39,
+          urr: 71.8,
+          albumin: 3.8,
+          hiv: 'Não Reagente',
+          hcv: 'Não Reagente',
+          hbsag: 'Não Reagente',
+          antiHbs: 'Reagente (>100 UI/mL)',
+          notes: 'Fósforo levemente elevado. Ajustada dose de Sevelamer para 2 cp nas principais refeições.'
+        },
+        {
+          id: 'lab-3',
+          patientId: patientId || 'pat-1',
+          date: '2026-06-10',
+          month: '2026-06',
+          hemoglobin: 10.2,
+          hematocrit: 31.0,
+          ferritin: 210,
+          transferrinSat: 19,
+          phosphorus: 5.1,
+          calcium: 9.0,
+          pth: 295,
+          potassium: 5.0,
+          ureaPre: 138,
+          ureaPost: 40,
+          ktv: 1.35,
+          urr: 71.0,
+          albumin: 3.7,
+          notes: 'Iniciado ciclo de reposição de Noripurum 100mg IV semanal por saturação de transferrina < 20%.'
+        }
+      ];
+      setDB(db);
+    }
+    return (db.patient_lab_exams || []).filter(e => !patientId || e.patientId === patientId).sort((a, b) => b.date.localeCompare(a.date));
+  },
+
+  savePatientLabExam: async (examData) => {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const db = getDB();
+    if (!db.patient_lab_exams) db.patient_lab_exams = [];
+    const index = db.patient_lab_exams.findIndex(e => e.id === examData.id);
+    const updated = {
+      id: examData.id || 'lab-' + Math.random().toString(36).substr(2, 9),
+      ...examData,
+      updatedAt: new Date().toISOString()
+    };
+    if (index > -1) {
+      db.patient_lab_exams[index] = updated;
+    } else {
+      db.patient_lab_exams.push(updated);
+    }
+    setDB(db);
+    return updated;
+  },
+
+  deletePatientLabExam: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.patient_lab_exams) {
+      db.patient_lab_exams = db.patient_lab_exams.filter(e => e.id !== id);
+      setDB(db);
+    }
+    return { success: true };
+  },
+
+  // Patient APAC & Authorization Records
+  getPatientApacRecords: async (patientId) => {
+    const db = getDB();
+    if (!db.patient_apac_records || db.patient_apac_records.length === 0) {
+      db.patient_apac_records = [
+        {
+          id: 'apac-1',
+          patientId: patientId || 'pat-1',
+          apacNumber: '31260049281-9',
+          procedureCode: '03.05.01.010-7',
+          procedureName: 'Hemodiálise (máximo 3 sessões por semana)',
+          cid: 'N18.0 - Doença Renal Crônica Estágio 5',
+          status: 'Ativo',
+          startDate: '2026-06-01',
+          expiryDate: '2026-08-31',
+          prescribingDoctor: 'Dr. Lucas (CRM/MG 45892)',
+          cnsDoctor: '704209123849102',
+          clinicCnes: '2158941',
+          laudoDate: '2026-05-25',
+          renalEtiology: 'Nefropatia Diabética e Hipertensiva',
+          vascularAccess: 'Fístula Arteriovenosa Rádio-Cefálica E',
+          hepatitisBStatus: 'Imunizado (Anti-HBs > 100 UI)',
+          hivStatus: 'Não Reagente',
+          hcvStatus: 'Não Reagente'
+        }
+      ];
+      setDB(db);
+    }
+    return (db.patient_apac_records || []).filter(a => !patientId || a.patientId === patientId);
+  },
+
+  savePatientApacRecord: async (apacData) => {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const db = getDB();
+    if (!db.patient_apac_records) db.patient_apac_records = [];
+    const index = db.patient_apac_records.findIndex(a => a.id === apacData.id || a.patientId === apacData.patientId);
+    const updated = {
+      id: apacData.id || 'apac-' + Math.random().toString(36).substr(2, 9),
+      ...apacData,
+      updatedAt: new Date().toISOString()
+    };
+    if (index > -1) {
+      db.patient_apac_records[index] = updated;
+    } else {
+      db.patient_apac_records.push(updated);
+    }
+    setDB(db);
+    return updated;
+  },
+
   // Stock/Inventory Items
   getInventoryItems: async () => {
     const db = getDB();

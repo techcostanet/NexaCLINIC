@@ -928,5 +928,97 @@ export const MODULE_GUIDES = {
         resposta: 'Sim! Ao finalizar a compra na sala de cotações, o NexaPROCURE gera automaticamente a entrada do lote no módulo de Estoque (NexaSTOCK) e lança a duplicata a pagar no módulo Financeiro (NexaFINANCE).'
       }
     ]
+  },
+
+  clinical: {
+    id: 'clinical',
+    name: 'Módulo Clínico & Assistencial',
+    subtitle: 'NexaCLINIC — Prontuário Renal & Prescrições',
+    color: '#8b5cf6',
+    recursos: [
+      {
+        title: 'Cockpit 360 do Paciente Renal',
+        desc: 'Visão unificada com identificação do paciente, tipo e sítio do acesso vascular, peso seco alvo, alertas de segurança (alergias em destaque e sorologias) e atalhos rápidos.'
+      },
+      {
+        title: 'Prescrição Dialítica e Medicamentosa',
+        desc: 'Prescrição completa de parâmetros de máquina (dialisador, fluxo, tempo, heparina, bicarbonato) e fármacos intradialíticos (Eritropoetina, Noripurum) e contínuos com envio para farmácia e salão.'
+      },
+      {
+        title: 'Painel Laboratorial com Semáforo SBN',
+        desc: 'Histórico mensal de biomarcadores (Hemoglobina, Ferritina, Saturação de Transferrina, Fósforo, Cálcio, PTH, Potássio, Kt/V e URR) com semáforo de metas da Sociedade Brasileira de Nefrologia.'
+      },
+      {
+        title: 'Acompanhamento Horário de Sessões e Alerta Hemodinâmico',
+        desc: 'Registro horário de PA, FC, PV, PA art, fluxo real e taxa de ultrafiltração, com cálculo de perda ponderal e alerta de ultrafiltração excessiva (> 13 mL/kg/h).'
+      },
+      {
+        title: 'Central de Laudos e Regulação APAC (SUS)',
+        desc: 'Controle de validade de autorizações de diálise SUS com alerta preventivo de 30 dias e gerador oficial de Laudo de Solicitação (LME) para impressão e assinatura médica.'
+      },
+      {
+        title: 'Evoluções Multiprofissionais Estruturadas',
+        desc: 'Notas clínicas separadas por especialidade (Medicina, Enfermagem, Nutrição, Psicologia e Serviço Social) com templates de roteiro rápido em 1 clique.'
+      },
+      {
+        title: 'Copiloto Clínico IA & Calculadoras Nefrológicas',
+        desc: 'Síntese instantânea do histórico do paciente gerada por Inteligência Artificial e calculadoras integradas de Kt/V Daugirdas, Ganzoni (déficit de ferro), Recirculação de Acesso e Taxa de UF.'
+      },
+      {
+        title: 'Exportação de Sumário e Ficha de Trânsito',
+        desc: 'Emissão formatada em PDF padrão CFM/SBN para transferências hospitalares e pacientes dialisando em trânsito.'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Prescrever Medicamentos Intradialíticos',
+        steps: [
+          'Selecione o paciente na lista lateral e clique na aba "Medicamentos".',
+          'Clique em "+ Prescrever" ou escolha uma sugestão rápida (ex: Alfaepoetina 4.000 UI ou Noripurum 100mg).',
+          'Defina a via de administração, dosagem e frequência por sessão.',
+          'Clique em "Salvar Prescrição". O medicamento ficará disponível para requisição direta no salão (NexaREQ).'
+        ]
+      },
+      {
+        title: 'Como Registrar o Acompanhamento de Sessão de Hemodiálise',
+        steps: [
+          'Acesse a aba "Sessões" e selecione o paciente na grade do turno do dia.',
+          'Informe a máquina utilizada e os pesos pré e pós-diálise.',
+          'Preencha as medições horárias de pressão arterial, pressão venosa e ultrafiltração.',
+          'Marque intercorrências clínicas se houver (ex: hipotensão, câimbras) e clique em "Gravar Acompanhamento".'
+        ]
+      },
+      {
+        title: 'Como Emitir o Laudo de APAC para Renovação SUS',
+        steps: [
+          'Acesse a aba "Laudos" do paciente.',
+          'Verifique o prazo de validade e o alerta de renovação.',
+          'Clique em "Imprimir" para gerar o formulário oficial LME/APAC já preenchido com dados clínicos, CID-10 e exames para assinatura do médico nefrologista.'
+        ]
+      },
+      {
+        title: 'Como Utilizar o Copiloto Clínico IA',
+        steps: [
+          'No cabeçalho do cockpit do paciente, clique no botão "Copiloto" (com ícone de brilho).',
+          'A IA analisará os últimos exames, medicamentos, prescrição e intercorrências dos últimos 30 dias.',
+          'Revise as recomendações nefrológicas e clique em "Inserir como Evolução" para salvar diretamente no prontuário.'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'Como funciona o cálculo de adequação dialítica (Kt/V)?',
+        resposta: 'O sistema utiliza a fórmula de Daugirdas de 2ª geração single-pool (-ln(R - 0.008*t) + (4 - 3.5*R) * (UF/W)), considerando as dosagens de ureia pré e pós, tempo e ultrafiltração. Resultados ≥ 1.20 são classificados como adequados.'
+      },
+      {
+        pergunta: 'O que significa o alerta de taxa de ultrafiltração (> 13 mL/kg/h)?',
+        resposta: 'Diretrizes internacionais de segurança em diálise indicam que taxas de remoção hídrica superiores a 13 mL por kg por hora aumentam significativamente o risco de hipotensão intradialítica e atordoamento miocárdico. O sistema emite um alerta preventivo para ajuste do tempo de sessão.'
+      },
+      {
+        pergunta: 'Como emitir a ficha de trânsito quando o paciente viajar?',
+        resposta: 'Basta clicar no botão "Exportar" no cockpit do paciente. O sistema compila automaticamente o sumário com dados de acesso vascular, prescrição de diálise, medicamentos ativos, sorologias recentes e últimas evoluções em formato padrão para impressão.'
+      }
+    ]
   }
 };
+

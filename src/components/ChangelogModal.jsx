@@ -6,6 +6,22 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.37',
+      date: '22/08/2026',
+      title: 'Renovação do Módulo Clínico (NexaCLINIC) - Cockpit 360°, Prescrição Medicamentosa, Painel Laboratorial SBN, Laudos APAC, Calculadoras e Copiloto IA',
+      description: 'Transformação profunda do Módulo Clínico & Assistencial em uma plataforma de prontuário eletrônico nefrológico de última geração, integrada com Farmácia, Salões, APAC/SUS, BI e Engenharia Clínica.',
+      changes: [
+        { type: 'Cockpit 360° do Paciente', text: 'Header unificado com foto, idade, tempo de diálise, tipo/sítio do acesso vascular, peso seco alvo, badges de alergias em destaque e sorologias ativas.' },
+        { type: 'Prescrição Medicamentosa', text: 'Gestão completa de medicamentos intradialíticos (Eritropoetina, Noripurum) e de uso domiciliar, com modelos rápidos e envio direto de requisição para salão e farmácia.' },
+        { type: 'Painel Laboratorial & Metas SBN', text: 'Histórico mensal de biomarcadores (Hb, Ferritina, Sat. Transf., Fósforo, Cálcio, PTH, Potássio, Kt/V, URR) com semáforo visual de metas da Sociedade Brasileira de Nefrologia.' },
+        { type: 'Sessões & Alerta Hemodinâmico', text: 'Acompanhamento horário intradialítico com registro da máquina de diálise, cálculo de perda ponderal e alerta preventivo de taxa de ultrafiltração excessiva (> 13 mL/kg/h).' },
+        { type: 'Central de Laudos APAC (SUS)', text: 'Controle de validade de autorizações de diálise com alerta preventivo de 30 dias e emissão oficial de Laudo de Solicitação de Procedimentos de Alta Complexidade (LME) para assinatura médica.' },
+        { type: 'Evoluções Multiprofissionais', text: 'Abas por especialidade (Medicina, Enfermagem, Nutrição, Psicologia, Serviço Social) com filtros dedicados e botões de roteiro rápido em 1 clique.' },
+        { type: 'Copiloto Clínico IA & Calculadoras', text: 'Síntese instantânea do prontuário com IA e calculadoras nefrológicas interativas de Kt/V Daugirdas, Ganzoni (déficit de ferro), Recirculação de Acesso e Taxa de UF.' },
+        { type: 'Exportação e Ficha de Trânsito', text: 'Geração e download de sumário de transferência e trânsito em PDF formatado padrão CFM/SBN.' }
+      ]
+    },
+    {
       version: 'v4.7.35',
       date: '22/08/2026',
       title: 'Módulo SESMT - Padronização dos Formulários de Inspeção de Extintores e Hidrantes',

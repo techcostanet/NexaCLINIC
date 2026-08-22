@@ -1,3 +1,24 @@
+## [v4.7.37] - 22 de Agosto, 2026
+### Renovação do Módulo Clínico (NexaCLINIC) - Cockpit 360°, Prescrição Medicamentosa, Painel Laboratorial SBN, Laudos APAC, Calculadoras e Copiloto IA
+- **Cockpit 360° do Paciente Renal:**
+  - Header unificado com foto/avatar, idade, tempo de diálise, tipo e sítio anatômico do acesso vascular, peso seco alvo, badges de alergias em destaque e sorologias ativas (*HBV, HCV, HIV*).
+- **Prescrição Medicamentosa Integrada (NexaSTOCK & NexaREQ):**
+  - Aba dedicada para prescrição médica de fármacos intradialíticos (*Alfaepoetina, Noripurum, Calcitriol, Cefazolina*) e uso domiciliar (*Sevelamer, Anti-hipertensivos*), com atalhos rápidos e botão de envio de requisição direta para salões de hemodiálise.
+- **Painel Laboratorial com Semáforo de Metas SBN/ANVISA:**
+  - Matriz cronológica dos biomarcadores renais (*Hemoglobina, Ferritina, Sat. Transf., Fósforo, Cálcio, PTH, Potássio, Kt/V, URR e Albumina*) com sinalização visual por semáforo de metas da Sociedade Brasileira de Nefrologia.
+- **Sessões com Alerta Hemodinâmico e Máquina de Diálise:**
+  - Registro horário de parâmetros com seleção da máquina de diálise ativa (*vinculada ao NexaSERVICE*), cálculo automático de perda ponderal e alerta preventivo de taxa de ultrafiltração excessiva (> 13 mL/kg/h).
+- **Central de Laudos e Regulação APAC (SUS):**
+  - Monitoramento de validade com alerta preventivo de 30 dias e emissor oficial de Laudo de Solicitação de Procedimentos de Alta Complexidade (LME) para assinatura médica e faturamento no BPA/SUS.
+- **Evoluções Multiprofissionais Estruturadas:**
+  - Filtros e formulários dedicados para Medicina, Enfermagem, Nutrição, Psicologia e Serviço Social com botões de roteiro rápido em 1 clique.
+- **Copiloto Clínico IA & Calculadoras Nefrológicas:**
+  - Síntese inteligente do prontuário em 1 clique com inserção direta em evolução e calculadoras interativas de Kt/V Daugirdas, Fórmula de Ganzoni, Taxa de Recirculação e Taxa de Ultrafiltração Segura.
+- **Exportação de Sumário e Ficha de Trânsito:**
+  - Emissão de prontuário e ficha de trânsito em PDF formatado padrão CFM/SBN.
+
+---
+
 ## [v4.7.35] - 22 de Agosto, 2026
 ### Módulo SESMT - Padronização dos Formulários de Inspeção de Extintores e Hidrantes
 - **Remoção da Coluna de Assinatura Individual nas Tabelas:**

@@ -175,3 +175,90 @@ export const deleteCheckin = async (id) => {
     return deleteDoc(doc(db, 'checkins', id));
   };
 
+// Patient Medications (Intradialytic & Continuous)
+export const getPatientMedications = async (patientId) => {
+  if (USE_MOCK) return mockFirestore.getPatientMedications(patientId);
+  const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  const snap = await getDocs(collection(db, 'patient_medications'));
+  const all = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return all.filter(m => !patientId || m.patientId === patientId);
+};
+
+export const savePatientMedication = async (medData) => {
+  if (USE_MOCK) return mockFirestore.savePatientMedication(medData);
+  const { getFirestore, collection, addDoc, doc, updateDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  if (medData.id) {
+    const docRef = doc(db, 'patient_medications', medData.id);
+    await updateDoc(docRef, { ...medData, updatedAt: new Date().toISOString() });
+    return medData;
+  } else {
+    const docRef = await addDoc(collection(db, 'patient_medications'), { ...medData, createdAt: new Date().toISOString() });
+    return { id: docRef.id, ...medData };
+  }
+};
+
+export const deletePatientMedication = async (id) => {
+  if (USE_MOCK) return mockFirestore.deletePatientMedication(id);
+  const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  return deleteDoc(doc(db, 'patient_medications', id));
+};
+
+// Patient Lab Exams
+export const getPatientLabExams = async (patientId) => {
+  if (USE_MOCK) return mockFirestore.getPatientLabExams(patientId);
+  const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  const snap = await getDocs(collection(db, 'patient_lab_exams'));
+  const all = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return all.filter(e => !patientId || e.patientId === patientId).sort((a, b) => b.date.localeCompare(a.date));
+};
+
+export const savePatientLabExam = async (examData) => {
+  if (USE_MOCK) return mockFirestore.savePatientLabExam(examData);
+  const { getFirestore, collection, addDoc, doc, updateDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  if (examData.id) {
+    const docRef = doc(db, 'patient_lab_exams', examData.id);
+    await updateDoc(docRef, { ...examData, updatedAt: new Date().toISOString() });
+    return examData;
+  } else {
+    const docRef = await addDoc(collection(db, 'patient_lab_exams'), { ...examData, createdAt: new Date().toISOString() });
+    return { id: docRef.id, ...examData };
+  }
+};
+
+export const deletePatientLabExam = async (id) => {
+  if (USE_MOCK) return mockFirestore.deletePatientLabExam(id);
+  const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  return deleteDoc(doc(db, 'patient_lab_exams', id));
+};
+
+// Patient APAC Records
+export const getPatientApacRecords = async (patientId) => {
+  if (USE_MOCK) return mockFirestore.getPatientApacRecords(patientId);
+  const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  const snap = await getDocs(collection(db, 'patient_apac_records'));
+  const all = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return all.filter(a => !patientId || a.patientId === patientId);
+};
+
+export const savePatientApacRecord = async (apacData) => {
+  if (USE_MOCK) return mockFirestore.savePatientApacRecord(apacData);
+  const { getFirestore, collection, addDoc, doc, updateDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  if (apacData.id) {
+    const docRef = doc(db, 'patient_apac_records', apacData.id);
+    await updateDoc(docRef, { ...apacData, updatedAt: new Date().toISOString() });
+    return apacData;
+  } else {
+    const docRef = await addDoc(collection(db, 'patient_apac_records'), { ...apacData, createdAt: new Date().toISOString() });
+    return { id: docRef.id, ...apacData };
+  }
+};
+
+
