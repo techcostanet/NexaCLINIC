@@ -1,3 +1,18 @@
+## [v4.7.31] - 22 de Agosto, 2026
+### Módulo NexaASSIST - Nomes Completos de Categorias, Hero Padronizado, 3 Modos de Visualização e Proteção de Autoria
+- **Nomes Completos sem Cortes:**
+  - Ajuste na grade superior de categorias com flex-wrap inteligente e padding balanceado, garantindo que nomes longos (*Internação*, *Intercorrência*, *Serviço Social*, *Psicologia*, etc.) nunca fiquem cortados com reticências.
+- **Hero Header Padronizado:**
+  - Alinhamento das dimensões do ícone (`56x56px`), títulos (`1.6rem`), tipografia e botões com os padrões visuais dos módulos *NexaSTOCK* e *NexaHR*.
+- **3 Modos de Visualização:**
+  - Inclusão de seletor rápido no toolbar permitindo alternar entre modo **Compacta** (tabela densa com uma linha por ocorrência), **Normal** (cards individuais clássicos) e **Grade** (colunas múltiplas tipo dashboard).
+- **Proteção de Autoria (Segurança Clínica):**
+  - Botões de ação (Editar e Excluir) restritos ao autor que criou a publicação ou administradores do sistema, impedindo alterações não autorizadas em comunicados de colegas.
+- **Manual do Módulo Atualizado:**
+  - Documentação do *NexaASSIST* atualizada em `src/data/moduleGuidesData.js`.
+
+---
+
 ## [v4.7.30] - 22 de Agosto, 2026
 ### Módulo NexaASSIST - Redesign Ultra-Clean, Grade Compacta de Categorias e Simplificação Operacional
 - **Grade Compacta de Categorias (Unificação sem Redundâncias):**

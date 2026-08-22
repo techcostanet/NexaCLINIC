@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { dbService } from '../firebase';
 import { 
   Megaphone, Search, Plus, Clock, User, RefreshCw, Building2, 
-  Trash2, Edit3, AlertTriangle, CheckCircle2, ChevronRight, X
+  Trash2, Edit3, AlertTriangle, List, LayoutList, LayoutGrid, X
 } from 'lucide-react';
 
 const isSamePosts = (a, b) => {
@@ -26,6 +26,9 @@ export default function AssistPanel({ currentUser }) {
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   const patientsRef = useRef([]);
+
+  // Modo de Visualização: 'compact' | 'normal' | 'grid'
+  const [viewMode, setViewMode] = useState('normal');
 
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,6 +71,47 @@ export default function AssistPanel({ currentUser }) {
 
   const getCategoryMeta = (catName) => {
     return categories.find(c => c.id === catName) || categories[categories.length - 1];
+  };
+
+  // Checagem de Permissão: Apenas o autor ou admin pode editar/excluir
+  const isUserAdmin = (user) => {
+    if (!user) return false;
+    const role = (user.role || '').toLowerCase();
+    const email = (user.email || '').toLowerCase();
+    return (
+      role === 'admin' || 
+      role === 'master' || 
+      role === 'gestor' || 
+      email === 'contato@techcosta.net' || 
+      email === 'admin@dialize.com.br' ||
+      user.isAdmin === true
+    );
+  };
+
+  const canManagePost = (post) => {
+    if (!currentUser || !post) return false;
+    if (isUserAdmin(currentUser)) return true;
+
+    // Comparação por UID do autor
+    if (post.authorId && (post.authorId === currentUser.uid || post.authorId === currentUser.id)) {
+      return true;
+    }
+
+    // Comparação por E-mail do autor
+    if (post.authorEmail && currentUser.email && post.authorEmail.toLowerCase() === currentUser.email.toLowerCase()) {
+      return true;
+    }
+
+    // Comparação por Nome do autor
+    if (post.author && currentUser.name) {
+      const pAuthor = post.author.trim().toLowerCase();
+      const uName = currentUser.name.trim().toLowerCase();
+      if (pAuthor === uName || pAuthor.includes(uName) || uName.includes(pAuthor)) {
+        return true;
+      }
+    }
+
+    return false;
   };
 
   // Carregar dados na montagem e escutar em tempo real
@@ -261,6 +305,11 @@ export default function AssistPanel({ currentUser }) {
   };
 
   const handleOpenEditModal = (post) => {
+    if (!canManagePost(post)) {
+      showAlert('Acesso restrito: você só pode editar comunicados criados por você mesmo.', 'warning');
+      return;
+    }
+
     setEditingPost(post);
     setPatientSearchTerm(post.patientName || '');
     setPostForm({
@@ -308,9 +357,12 @@ export default function AssistPanel({ currentUser }) {
         shift: postForm.shift || 'Geral',
         source: 'native',
         status: 'published',
-        author: currentUser?.name || 'Profissional NexaCLINIC',
-        authorRole: currentUser?.role || 'Assistencial',
-        createdAt: editingPost ? editingPost.createdAt : new Date().toISOString()
+        author: editingPost ? editingPost.author : (currentUser?.name || 'Profissional NexaCLINIC'),
+        authorEmail: editingPost ? editingPost.authorEmail : (currentUser?.email || ''),
+        authorId: editingPost ? editingPost.authorId : (currentUser?.uid || currentUser?.id || ''),
+        authorRole: editingPost ? editingPost.authorRole : (currentUser?.role || 'Assistencial'),
+        createdAt: editingPost ? editingPost.createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       if (editingPost) {
@@ -331,11 +383,16 @@ export default function AssistPanel({ currentUser }) {
     }
   };
 
-  const handleDeletePost = async (postId) => {
+  const handleDeletePost = async (post) => {
+    if (!canManagePost(post)) {
+      showAlert('Acesso restrito: você só pode excluir comunicados criados por você mesmo.', 'warning');
+      return;
+    }
+
     if (!window.confirm('Tem certeza que deseja remover este comunicado?')) return;
     setActionLoading(true);
     try {
-      await dbService.deleteAssistPost(postId);
+      await dbService.deleteAssistPost(post.id);
       showAlert('Comunicado removido com sucesso.', 'success');
       fetchData();
     } catch (err) {
@@ -367,11 +424,11 @@ export default function AssistPanel({ currentUser }) {
         </div>
       )}
 
-      {/* Hero Header Enxuto */}
+      {/* Hero Header Padronizado com NexaSTOCK e NexaHR */}
       <div style={styles.heroSection}>
         <div style={styles.heroLeft}>
           <div style={styles.heroIconBadge}>
-            <Megaphone size={26} color="#fff" />
+            <Megaphone size={28} color="#fff" />
           </div>
           <div>
             <h1 style={styles.heroTitle}>NexaASSIST</h1>
@@ -392,7 +449,7 @@ export default function AssistPanel({ currentUser }) {
         </div>
       </div>
 
-      {/* Grade de Cards Compactos de Categorias (Unificação Ultra-Clean) */}
+      {/* Grade de Cards de Categorias (Sem cortes nos nomes) */}
       <div style={styles.compactCategoryGrid}>
         {/* Card Todos */}
         <div
@@ -406,7 +463,7 @@ export default function AssistPanel({ currentUser }) {
           title="Exibir todos os comunicados"
         >
           <div style={styles.compactCardLeft}>
-            <span style={{ fontSize: '0.9rem' }}>📋</span>
+            <span style={{ fontSize: '0.95rem' }}>📋</span>
             <span style={{ 
               ...styles.compactCardLabel, 
               fontWeight: selectedCategory === 'all' ? '700' : '600',
@@ -424,7 +481,7 @@ export default function AssistPanel({ currentUser }) {
           </span>
         </div>
 
-        {/* Cards por Categoria */}
+        {/* Cards por Categoria (Nomes Completos) */}
         {categories.map(cat => {
           const isSelected = selectedCategory === cat.id;
           const count = categoryCounts[cat.id] || 0;
@@ -442,7 +499,7 @@ export default function AssistPanel({ currentUser }) {
               title={`Filtrar por ${cat.label}`}
             >
               <div style={styles.compactCardLeft}>
-                <span style={{ fontSize: '0.85rem' }}>{cat.icon}</span>
+                <span style={{ fontSize: '0.9rem' }}>{cat.icon}</span>
                 <span style={{ 
                   ...styles.compactCardLabel, 
                   fontWeight: isSelected ? '700' : '500',
@@ -463,7 +520,7 @@ export default function AssistPanel({ currentUser }) {
         })}
       </div>
 
-      {/* Barra de Filtros Direta */}
+      {/* Barra de Filtros e Modos de Visualização */}
       <div style={styles.filterBar}>
         <div style={styles.searchBox}>
           <Search size={18} color="var(--text-secondary)" />
@@ -480,6 +537,51 @@ export default function AssistPanel({ currentUser }) {
         </div>
 
         <div style={styles.filterSelects}>
+          {/* Seletor de Modo de Visualização (Compacta / Normal / Grade) */}
+          <div style={styles.viewModeGroup}>
+            <button
+              onClick={() => setViewMode('compact')}
+              style={{
+                ...styles.viewModeBtn,
+                backgroundColor: viewMode === 'compact' ? 'var(--primary-color)' : '#fff',
+                color: viewMode === 'compact' ? '#fff' : 'var(--text-secondary)',
+                borderColor: viewMode === 'compact' ? 'var(--primary-color)' : '#e5e7eb'
+              }}
+              title="Visualização Compacta (Lista Ágil)"
+            >
+              <List size={15} />
+              <span style={{ fontSize: '0.78rem' }}>Compacta</span>
+            </button>
+
+            <button
+              onClick={() => setViewMode('normal')}
+              style={{
+                ...styles.viewModeBtn,
+                backgroundColor: viewMode === 'normal' ? 'var(--primary-color)' : '#fff',
+                color: viewMode === 'normal' ? '#fff' : 'var(--text-secondary)',
+                borderColor: viewMode === 'normal' ? 'var(--primary-color)' : '#e5e7eb'
+              }}
+              title="Visualização Normal (Cards Padrão)"
+            >
+              <LayoutList size={15} />
+              <span style={{ fontSize: '0.78rem' }}>Normal</span>
+            </button>
+
+            <button
+              onClick={() => setViewMode('grid')}
+              style={{
+                ...styles.viewModeBtn,
+                backgroundColor: viewMode === 'grid' ? 'var(--primary-color)' : '#fff',
+                color: viewMode === 'grid' ? '#fff' : 'var(--text-secondary)',
+                borderColor: viewMode === 'grid' ? 'var(--primary-color)' : '#e5e7eb'
+              }}
+              title="Visualização em Grade (Colunas / Mural)"
+            >
+              <LayoutGrid size={15} />
+              <span style={{ fontSize: '0.78rem' }}>Grade</span>
+            </button>
+          </div>
+
           {/* Filtro de Período / Data */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <select 
@@ -572,10 +674,108 @@ export default function AssistPanel({ currentUser }) {
             <span>Criar Primeiro Comunicado</span>
           </button>
         </div>
+      ) : viewMode === 'compact' ? (
+        /* VISUALIZAÇÃO COMPACTA (Lista Ágil) */
+        <div style={styles.compactTableContainer}>
+          <table style={styles.compactTable}>
+            <thead>
+              <tr style={styles.compactTheadRow}>
+                <th style={styles.compactTh}>Categoria</th>
+                <th style={styles.compactTh}>Paciente</th>
+                <th style={styles.compactTh}>Local</th>
+                <th style={styles.compactTh}>Mensagem</th>
+                <th style={styles.compactTh}>Data</th>
+                <th style={styles.compactTh}>Autor</th>
+                <th style={{ ...styles.compactTh, textAlign: 'right' }}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPosts.map(post => {
+                const catMeta = getCategoryMeta(post.category);
+                const canManage = canManagePost(post);
+
+                return (
+                  <tr key={post.id} style={styles.compactTr}>
+                    <td style={styles.compactTd}>
+                      <span style={{
+                        ...styles.compactCatPill,
+                        backgroundColor: catMeta.bg,
+                        color: catMeta.color,
+                        borderColor: catMeta.border
+                      }}>
+                        {catMeta.icon} {post.category}
+                      </span>
+                      {post.urgency === 'Urgente' && (
+                        <span style={styles.compactUrgentBadge}>🔴</span>
+                      )}
+                    </td>
+                    <td style={styles.compactTd}>
+                      {post.patientName ? (
+                        <strong style={{ color: 'var(--text-primary)', fontSize: '0.82rem' }}>
+                          {post.patientName}
+                        </strong>
+                      ) : (
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>-</span>
+                      )}
+                    </td>
+                    <td style={styles.compactTd}>
+                      {post.room && post.room !== 'Geral' ? (
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                          {post.room} {post.shift ? `• ${post.shift}` : ''}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#9ca3af', fontSize: '0.78rem' }}>Geral</span>
+                      )}
+                    </td>
+                    <td style={{ ...styles.compactTd, maxWidth: '400px' }}>
+                      <div style={styles.compactMessageText} title={post.message}>
+                        {post.message}
+                      </div>
+                    </td>
+                    <td style={styles.compactTd}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                        {formatDate(post.createdAt)}
+                      </span>
+                    </td>
+                    <td style={styles.compactTd}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                        {post.author || 'Assistencial'}
+                      </span>
+                    </td>
+                    <td style={{ ...styles.compactTd, textAlign: 'right' }}>
+                      {canManage ? (
+                        <div style={{ display: 'inline-flex', gap: '0.2rem' }}>
+                          <button 
+                            onClick={() => handleOpenEditModal(post)} 
+                            style={styles.cardActionBtn} 
+                            title="Editar comunicado"
+                          >
+                            <Edit3 size={14} />
+                          </button>
+                          <button 
+                            onClick={() => handleDeletePost(post)} 
+                            style={{ ...styles.cardActionBtn, color: '#ef4444' }} 
+                            title="Excluir comunicado"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '0.72rem', color: '#9ca3af' }}>-</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       ) : (
-        <div style={styles.feedTimeline}>
+        /* VISUALIZAÇÃO NORMAL (Cards) & GRADE (Colunas) */
+        <div style={viewMode === 'grid' ? styles.feedGrid : styles.feedTimeline}>
           {filteredPosts.map(post => {
             const catMeta = getCategoryMeta(post.category);
+            const canManage = canManagePost(post);
 
             return (
               <div 
@@ -617,22 +817,24 @@ export default function AssistPanel({ currentUser }) {
                       {formatDate(post.createdAt)}
                     </span>
 
-                    <div style={styles.cardActions}>
-                      <button 
-                        onClick={() => handleOpenEditModal(post)} 
-                        style={styles.cardActionBtn} 
-                        title="Editar comunicado"
-                      >
-                        <Edit3 size={15} />
-                      </button>
-                      <button 
-                        onClick={() => handleDeletePost(post.id)} 
-                        style={{ ...styles.cardActionBtn, color: '#ef4444' }} 
-                        title="Excluir comunicado"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
+                    {canManage && (
+                      <div style={styles.cardActions}>
+                        <button 
+                          onClick={() => handleOpenEditModal(post)} 
+                          style={styles.cardActionBtn} 
+                          title="Editar comunicado"
+                        >
+                          <Edit3 size={15} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeletePost(post)} 
+                          style={{ ...styles.cardActionBtn, color: '#ef4444' }} 
+                          title="Excluir comunicado"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -878,40 +1080,42 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '1.25rem',
+    marginBottom: '1rem',
     backgroundColor: '#fff',
-    padding: '1.25rem 1.5rem',
-    borderRadius: '12px',
+    padding: '1.5rem',
+    borderRadius: '16px',
     border: '1px solid var(--border-color)',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
     flexWrap: 'wrap',
-    gap: '1rem'
+    gap: '1.25rem'
   },
   heroLeft: {
     display: 'flex',
     alignItems: 'center',
-    gap: '1rem'
+    gap: '1.25rem'
   },
   heroIconBadge: {
-    width: '46px',
-    height: '46px',
-    borderRadius: '12px',
-    background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+    width: '56px',
+    height: '56px',
+    borderRadius: '14px',
+    background: 'linear-gradient(135deg, #ec4899 0%, #a855f7 100%)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 4px 10px rgba(236, 72, 153, 0.3)'
+    boxShadow: '0 8px 16px rgba(236, 72, 153, 0.25)',
+    flexShrink: 0
   },
   heroTitle: {
-    fontSize: '1.35rem',
+    fontSize: '1.6rem',
     fontWeight: '800',
     color: 'var(--text-primary)',
     margin: 0
   },
   heroSubtitle: {
-    fontSize: '0.85rem',
+    fontSize: '0.9rem',
     color: 'var(--text-secondary)',
-    margin: '0.2rem 0 0 0'
+    margin: '0.35rem 0 0 0',
+    maxWidth: '580px'
   },
   heroActions: {
     display: 'flex',
@@ -921,52 +1125,53 @@ const styles = {
   primaryBtn: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.4rem',
-    backgroundColor: 'var(--primary-color)',
+    gap: '0.5rem',
+    backgroundColor: '#ec4899',
     color: '#fff',
     border: 'none',
-    padding: '0.6rem 1.15rem',
-    borderRadius: '8px',
+    padding: '0.75rem 1.25rem',
+    borderRadius: '10px',
     fontWeight: '600',
-    fontSize: '0.85rem',
+    fontSize: '0.9rem',
     cursor: 'pointer',
-    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+    boxShadow: '0 4px 12px rgba(236, 72, 153, 0.25)',
     transition: 'all 0.15s ease'
   },
   compactCategoryGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))',
+    display: 'flex',
+    flexWrap: 'wrap',
     gap: '0.5rem',
-    marginBottom: '1rem'
+    marginBottom: '1rem',
+    alignItems: 'center'
   },
   compactCategoryCard: {
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0.55rem 0.75rem',
-    borderRadius: '8px',
+    gap: '0.65rem',
+    padding: '0.5rem 0.85rem',
+    borderRadius: '10px',
     border: '1px solid',
     cursor: 'pointer',
     transition: 'all 0.15s ease',
-    userSelect: 'none'
+    userSelect: 'none',
+    flex: '1 1 auto',
+    minWidth: 'fit-content'
   },
   compactCardLeft: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.35rem',
-    overflow: 'hidden'
+    gap: '0.45rem'
   },
   compactCardLabel: {
-    fontSize: '0.8rem',
-    whiteSpace: 'nowrap',
-    textOverflow: 'ellipsis',
-    overflow: 'hidden'
+    fontSize: '0.82rem',
+    whiteSpace: 'nowrap'
   },
   compactCardBadge: {
-    fontSize: '0.7rem',
+    fontSize: '0.72rem',
     fontWeight: '700',
-    padding: '0.1rem 0.4rem',
-    borderRadius: '10px',
+    padding: '0.15rem 0.5rem',
+    borderRadius: '12px',
     minWidth: '20px',
     textAlign: 'center'
   },
@@ -977,7 +1182,7 @@ const styles = {
     gap: '0.75rem',
     backgroundColor: '#fff',
     padding: '0.75rem 1rem',
-    borderRadius: '10px',
+    borderRadius: '12px',
     border: '1px solid var(--border-color)',
     marginBottom: '1.25rem',
     flexWrap: 'wrap'
@@ -990,7 +1195,7 @@ const styles = {
     padding: '0.45rem 0.75rem',
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
-    flex: '1 1 250px'
+    flex: '1 1 230px'
   },
   searchInput: {
     border: 'none',
@@ -1012,6 +1217,23 @@ const styles = {
     alignItems: 'center',
     gap: '0.5rem',
     flexWrap: 'wrap'
+  },
+  viewModeGroup: {
+    display: 'inline-flex',
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb',
+    overflow: 'hidden',
+    backgroundColor: '#fff'
+  },
+  viewModeBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.45rem 0.65rem',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: '600',
+    transition: 'all 0.15s ease'
   },
   selectInput: {
     padding: '0.45rem 0.65rem',
@@ -1046,13 +1268,21 @@ const styles = {
     flexDirection: 'column',
     gap: '0.85rem'
   },
+  feedGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+    gap: '1rem'
+  },
   postCard: {
     backgroundColor: '#fff',
     borderRadius: '12px',
     padding: '1.15rem 1.35rem',
     boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
     border: '1px solid var(--border-color)',
-    transition: 'all 0.15s ease'
+    transition: 'all 0.15s ease',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between'
   },
   cardHeader: {
     display: 'flex',
@@ -1146,7 +1376,8 @@ const styles = {
     gap: '0.35rem'
   },
   cardBody: {
-    marginBottom: '0.75rem'
+    marginBottom: '0.75rem',
+    flex: 1
   },
   postTitle: {
     fontSize: '0.95rem',
@@ -1193,6 +1424,57 @@ const styles = {
   authorRole: {
     fontSize: '0.7rem',
     color: 'var(--text-secondary)'
+  },
+  /* Tabela Compacta */
+  compactTableContainer: {
+    backgroundColor: '#fff',
+    borderRadius: '12px',
+    border: '1px solid var(--border-color)',
+    overflowX: 'auto',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+  },
+  compactTable: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    textAlign: 'left'
+  },
+  compactTheadRow: {
+    backgroundColor: '#f9fafb',
+    borderBottom: '1px solid #e5e7eb'
+  },
+  compactTh: {
+    padding: '0.65rem 0.85rem',
+    fontSize: '0.78rem',
+    fontWeight: '700',
+    color: 'var(--text-secondary)'
+  },
+  compactTr: {
+    borderBottom: '1px solid #f3f4f6',
+    transition: 'background-color 0.15s ease'
+  },
+  compactTd: {
+    padding: '0.6rem 0.85rem',
+    fontSize: '0.82rem',
+    verticalAlign: 'middle'
+  },
+  compactCatPill: {
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    padding: '0.15rem 0.45rem',
+    borderRadius: '6px',
+    border: '1px solid',
+    whiteSpace: 'nowrap'
+  },
+  compactUrgentBadge: {
+    marginLeft: '0.3rem',
+    fontSize: '0.65rem'
+  },
+  compactMessageText: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: '#374151',
+    fontSize: '0.82rem'
   },
   emptyState: {
     textAlign: 'center',

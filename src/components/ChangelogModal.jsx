@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.31',
+      date: '22/08/2026',
+      title: 'Módulo NexaASSIST - Nomes Completos de Categorias, Hero Padronizado, 3 Modos de Visualização e Proteção de Autoria',
+      description: 'Ajuste responsivo para exibição 100% integral dos nomes das categorias sem cortes, padronização dimensional do Hero Header com os módulos NexaSTOCK e NexaHR, adição de 3 modos de visualização (Compacta, Normal e Grade) e bloqueio de segurança para que cada usuário possa gerenciar apenas seus próprios comunicados.',
+      changes: [
+        { type: 'Nomes Completos sem Cortes', text: 'Remoção de restrições rígidas de largura na grade superior, permitindo que todas as categorias (Internação, Intercorrência, Serviço Social, Psicologia, etc.) exibam seus nomes completos.' },
+        { type: 'Hero Header Padronizado', text: 'Ajuste das dimensões do ícone, títulos e botões para o padrão visual unificado presente no NexaSTOCK e NexaHR.' },
+        { type: '3 Modos de Visualização', text: 'Seletor na barra de ferramentas para alternar entre Compacta (lista ágil em tabela), Normal (cards individuais) e Grade (mural em colunas tipo dashboard).' },
+        { type: 'Proteção de Autoria', text: 'Botões de editar e excluir visíveis e acessíveis apenas para o autor do comunicado ou administradores do sistema.' }
+      ]
+    },
+    {
       version: 'v4.7.30',
       date: '22/08/2026',
       title: 'Módulo NexaASSIST - Redesign Ultra-Clean, Grade Compacta de Categorias e Simplificação Operacional',

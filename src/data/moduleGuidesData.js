@@ -718,19 +718,32 @@ export const MODULE_GUIDES = {
         desc: 'Feed ágil de comunicados clínicos rápidos para passagem de plantão e alinhamento direto entre enfermagem, médicos, nutrição, psicologia e serviço social.'
       },
       {
-        title: 'Grade Compacta de Categorias',
-        desc: 'Painel superior fino com contadores em tempo real para Total, Internação, Alta, Intercorrência, Transferência, Nutrição, Psicologia, Serviço Social, Óbito e Geral.'
+        title: '3 Modos de Visualização',
+        desc: 'Alternância instantânea entre modo Normal (Cards detalhados), Compacta (Lista ágil e densa em tabela) e Grade (Cards em múltiplas colunas para monitores).'
+      },
+      {
+        title: 'Grade de Categorias sem Cortes',
+        desc: 'Cards responsivos de categorias com contagens em tempo real para Total, Internação, Alta, Intercorrência, Transferência, Nutrição, Psicologia, Serviço Social, Óbito e Geral com nomes 100% visíveis.'
+      },
+      {
+        title: 'Controle de Autoria e Segurança',
+        desc: 'Proteção onde apenas o profissional autor do comunicado ou administradores podem editar ou excluir seus respectivos avisos.'
       },
       {
         title: 'Filtro Dinâmico por Período de Data',
         desc: 'Seletor de intervalo temporal (Hoje, Ontem, 7 Dias, 30 Dias, Este Mês ou Personalizado com início e fim) que recalcula automaticamente métricas e comunicados.'
-      },
-      {
-        title: 'Vinculação Direta de Pacientes',
-        desc: 'Busca inteligente e associação direta do paciente do salão de hemodiálise ao comunicado publicado.'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Alternar entre os Modos de Visualização',
+        steps: [
+          'Na barra de ferramentas, localize o seletor com os botões "Compacta", "Normal" e "Grade".',
+          'Clique em "Compacta" para ver uma tabela de alta densidade com uma linha por ocorrência (ideal para passagens de plantão rápidas).',
+          'Clique em "Normal" para a visualização padrão em cards detalhados.',
+          'Clique em "Grade" para organizar os comunicados em múltiplas colunas simultâneas.'
+        ]
+      },
       {
         title: 'Como Publicar um Comunicado Rápido',
         steps: [
@@ -745,27 +758,19 @@ export const MODULE_GUIDES = {
         title: 'Como Filtrar Comunicados por Categoria',
         steps: [
           'Dê um clique direto no card da categoria desejada na grade superior (ex: "🔴 Internação" ou "🟢 Alta").',
-          'O card ficará realçado e a lista exibirá imediatamente apenas os comunicados correspondentes.',
+          'O card ficará realçado e o feed exibirá imediatamente apenas os comunicados correspondentes.',
           'Para voltar a ver todos os avisos, clique novamente no mesmo card ou clique no card "Todos".'
-        ]
-      },
-      {
-        title: 'Como Selecionar o Intervalo de Datas',
-        steps: [
-          'Na barra de filtros, selecione a opção desejada no seletor de período (Hoje, 7 Dias, 30 Dias, Este Mês, etc.).',
-          'Para definir datas específicas, escolha "Personalizado" e preencha a Data Inicial e Data Final.',
-          'As contagens da grade e a lista de comunicados serão recalculadas instantaneamente.'
         ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'Como funciona a filtragem rápida na grade superior?',
-        resposta: 'Basta clicar no card de qualquer categoria na grade superior para filtrar o mural. Um segundo clique no mesmo card desativa o filtro e volta a exibir todos os comunicados.'
+        pergunta: 'Quem pode editar ou excluir um comunicado?',
+        resposta: 'Por segurança e rastreabilidade clínica, apenas o profissional que redigiu o comunicado (autor) ou usuários com perfil de Administrador têm permissão para editar ou excluir a postagem.'
       },
       {
-        pergunta: 'Como editar ou excluir um comunicado já publicado?',
-        resposta: 'No card do comunicado, utilize os ícones de lápis (Editar) ou lixeira (Excluir) localizados no canto superior direito.'
+        pergunta: 'Como funciona a filtragem rápida na grade superior?',
+        resposta: 'Basta clicar no card de qualquer categoria na grade superior para filtrar o mural. Um segundo clique no mesmo card desativa o filtro e volta a exibir todos os comunicados.'
       }
     ]
   }
