@@ -1,3 +1,36 @@
+## [v4.7.29] - 22 de Agosto, 2026
+### Módulo NexaASSIST - Filtro de Datas Inteligente, Cards de KPI Clicáveis e Estabilização Antiflicker
+- **Cards de KPI Interativos e Clicáveis:**
+  - Clique direto nos cards de *Total*, *Internações*, *Altas*, *Intercorrências* e *Pendentes* para filtrar instantaneamente os comunicados na tela.
+  - Efeito visual de foco com borda temática acentuada, realce de background e badge de filtro ativo (`🟢 Filtrando Todos`, `🔴 Filtrando Internações`, etc.).
+- **Filtro Dinâmico por Período de Data:**
+  - Seletor de período no toolbar com opções rápidas: *Todos*, *Hoje*, *Ontem*, *7 Dias*, *30 Dias*, *Este Mês* e *Personalizado*.
+  - Modo Personalizado com campos de data inicial e final.
+  - Recálculo automático em tempo real das métricas dos cards de KPI e dos comunicados exibidos no feed.
+- **Blindagem Antiflicker Definitiva:**
+  - Comparação de integridade de dados (`isSamePosts`) impedindo re-renderizações desnecessárias e listener Firestore otimizado sem loops de reconexão ou quedas circulares.
+- **Manual do Módulo Atualizado:**
+  - Guia completo do *NexaASSIST* atualizado em `src/data/moduleGuidesData.js` com instruções dos novos filtros e cards interativos.
+
+---
+
+## [v4.7.26] - 22 de Agosto, 2026
+### Módulo NexaASSIST - Correção do Loop de Renderização, Ingestão IA e Sincronização dos E-mails Titan
+- **Eliminação de Loop Infinito e Piscamento da Tela:**
+  - Correção do `useEffect` no componente `AssistPanel.jsx`, desacoplando a dependência cíclica de `patients` e utilizando `useRef` para os ouvintes em tempo real do Firestore.
+  - Carregamento estável e fluido do feed assistencial sem flickering ou alternância intermitente de spinner.
+- **Sincronização Titan IMAP (`integracao@dialize.com.br`):**
+  - Carga completa de 58 comunicados assistenciais reais extraídos da caixa de e-mails via script Python/Firestore.
+  - Atualização do arquivo de fallback local e `mockFirebase.js` com a base completa de comunicados reais.
+- **Acesso Rápido de Ingestão de E-mails com IA:**
+  - Adição do botão `Ingestão IA` no cabeçalho (*Hero Actions*) do NexaASSIST para leitura, análise com IA e aprovação de e-mails assistenciais.
+- **Padronização Rigorosa de Rótulos Únicos (Boy Scout Rule):**
+  - Adequação de todos os rótulos de campos, modais e filtros para o padrão direto sem barras ou conectivos redundantes.
+- **Manual do Módulo Atualizado:**
+  - Adição do guia completo do módulo *NexaASSIST* em `src/data/moduleGuidesData.js` com recursos, tutoriais de publicação e confirmação de ciente, e FAQs.
+
+---
+
 ## [v4.7.24] - 21 de Agosto, 2026
 ### Módulo de Requisições - Alinhamento Rigoroso ao Padrão de Design Hero Banner NexaREQ, 3 Modos de Visualização e Rótulos Únicos
 - **Alinhamento do Hero Banner (Padrão NexaSTOCK / NexaHR):**

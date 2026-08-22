@@ -6,6 +6,31 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.29',
+      date: '22/08/2026',
+      title: 'Módulo NexaASSIST - Filtro de Datas Inteligente, Cards de KPI Clicáveis e Estabilização Antiflicker',
+      description: 'Implementação de filtro temporal flexível (Hoje, Ontem, 7 Dias, 30 Dias, Este Mês e Personalizado), cards de KPI interativos clicáveis com destaque visual para filtragem direta por categoria, e blindagem estrutural completa contra re-renderizações e loops no feed assistencial.',
+      changes: [
+        { type: 'Cards de KPI Clicáveis', text: 'Clique direto nos cards de Total, Internações, Altas, Intercorrências e Pendentes para filtrar instantaneamente os resultados correspondentes no feed com feedback visual.' },
+        { type: 'Filtro Dinâmico de Datas', text: 'Seletor de intervalo de datas integrado que recalcula métricas de KPI e comunicados do feed em tempo real com suporte a períodos predefinidos e personalizados.' },
+        { type: 'Blindagem Antiflicker Definitiva', text: 'Prevenção de re-renderizações cíclicas via comparação de integridade de dados e listener Firestore unificado sem chamadas recursivas de erro.' },
+        { type: 'Manual do Módulo', text: 'Atualização do guia interativo do NexaASSIST com instruções de uso dos novos filtros temporais e cards interativos.' }
+      ]
+    },
+    {
+      version: 'v4.7.26',
+      date: '22/08/2026',
+      title: 'Módulo NexaASSIST - Correção do Loop de Renderização, Ingestão IA e Sincronização dos E-mails Titan',
+      description: 'Resolução definitiva do loop infinito de carregamento que causava o piscamento da tela no Feed Assistencial, integração dos 58 comunicados reais da clínica extraídos via IMAP da conta Titan, adição do botão de Ingestão IA no cabeçalho e padronização rigorosa de rótulos diretos.',
+      changes: [
+        { type: 'Eliminação de Loop / Piscamento', text: 'Correção do useEffect em AssistPanel desacoplando a dependência cíclica de pacientes e estabilizando a renderização dos comunicados em tempo real.' },
+        { type: 'Sincronização Titan IMAP', text: 'Carga completa de 58 comunicados assistenciais reais extraídos da caixa integracao@dialize.com.br no Firestore e na base de fallback local.' },
+        { type: 'Acesso Rápido Ingestão IA', text: 'Inclusão do botão "Ingestão IA" no cabeçalho para processamento, extração de entidades e aprovação de e-mails assistenciais.' },
+        { type: 'Rótulos Diretos de 1 Palavra', text: 'Adequação de todos os formulários, filtros e modais removendo termos duplos com barras ou conectivos de acordo com as diretrizes do projeto.' },
+        { type: 'Manual do Módulo', text: 'Atualização do manual interativo NexaASSIST em moduleGuidesData.js com fluxo de comunicados e sincronização.' }
+      ]
+    },
+    {
       version: 'v4.7.24',
       date: '21/08/2026',
       title: 'Módulo de Requisições - Alinhamento Rigoroso ao Padrão de Design Hero Banner NexaREQ, 3 Modos de Visualização e Rótulos Únicos',

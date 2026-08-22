@@ -3,6 +3,7 @@
 
 import initialSuppliers from './data/initialSuppliers.json';
 import initialProducts from './data/initialProducts.json';
+import syncedAssistEmails from './data/synced_assist_emails.json';
 
 const MOCK_STORAGE_KEY = 'sistema_indicadores_mock_db';
 
@@ -16126,154 +16127,29 @@ export const mockFirestore = {
     await new Promise(resolve => setTimeout(resolve, 150));
     const db = getDB();
     if (!db.assist_posts || db.assist_posts.length === 0) {
-      db.assist_posts = [
-        {
-          id: 'post-titan-real-1',
-          source: 'email',
-          title: 'INFECÇÃO - ALEXANDRE JOSE DE PAULA',
-          message: 'ATB: Ceftazidima 2g/vancomicina 1g com lok, por 14 dias.\nMédico Responsável: ISABELA.\nRealizado coleta de Hemocultura 1ª E 2ª amostra, hemograma e PCR.',
-          category: 'Intercorrência',
-          urgency: 'Urgente',
-          patientId: 'pat-alexandre',
-          patientName: 'ALEXANDRE JOSE DE PAULA',
-          room: 'Salão 3',
-          shift: '1º Turno',
-          status: 'published',
-          originalFrom: 'Márcia Alves Teixeira <enfermagembetim7@dialize.com.br>',
-          originalSubject: 'INFECÇÃO ALEXANDRE JOSE DE PAULA',
-          author: 'Márcia Alves Teixeira',
-          authorRole: 'Enfermeira (Titan IMAP)',
-          createdAt: new Date().toISOString(),
-          readBy: []
-        },
-        {
-          id: 'post-titan-real-2',
-          source: 'email',
-          title: 'Admissão de Raquel Tabita Andrade da Silva - 17/08/2026!',
-          message: 'Prezadas (o),\nBoa Tarde!\nComunico admissão da paciente Raquel Tabita Andrade da Silva:\nData: 18/08/2026.\nProveniência: Hospital Manoel Gonçalves de Souza Moreira - Itaúna.\nTurno: 2º Turno de Terça, Quinta e Sábado.\nSalão: 3. Ponto: 14.\nAcesso: CDL em VJID.\nHorário: 11:30 às 15:30.',
-          category: 'Internação',
-          urgency: 'Urgente',
-          patientId: 'pat-raquel',
-          patientName: 'RAQUEL TABITA ANDRADE DA SILVA',
-          room: 'Salão 3',
-          shift: '2º Turno',
-          status: 'published',
-          originalFrom: 'Erick Assis Correia de Moura <coordenfermagembetim@dialize.com.br>',
-          originalSubject: 'Admissão de Raquel Tabita Andrade da Silva - 17/08/2026!',
-          author: 'Erick Assis Correia de Moura',
-          authorRole: 'Coordenador de Enfermagem (Titan IMAP)',
-          createdAt: new Date(Date.now() - 1800000).toISOString(),
-          readBy: []
-        },
-        {
-          id: 'post-titan-real-3',
-          source: 'email',
-          title: 'Alta hospitalar Celso Gonçalves Matos',
-          message: 'Boa tarde!\nInformo alta hospitalar do paciente Celso Gonçalves Matos do HPRB em 14/08/26.\nModalidade: APD.\nAtte,\nGraziella Santos Xavier',
-          category: 'Alta',
-          urgency: 'Atenção',
-          patientId: 'pat-celso',
-          patientName: 'CELSO GONÇALVES MATOS',
-          room: 'Salão 2',
-          shift: '1º Turno',
-          status: 'published',
-          originalFrom: 'Graziella Santos - Enfermeira Diálise Peritoneal <enfermagembetim11@dialize.com.br>',
-          originalSubject: 'Alta hospitalar Celso Gonçalves Matos',
-          author: 'Graziella Santos Xavier',
-          authorRole: 'Enfermeira Diálise Peritoneal (Titan IMAP)',
-          createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-          readBy: []
-        },
-        {
-          id: 'post-titan-real-4',
-          source: 'email',
-          title: 'Hospitalização Flavio Ferreira e Ester Guimarães',
-          message: 'Boa tarde!\nInformo Internação dos seguintes pacientes: Flavio Ferreira da Silva internado no HPRB em 13/08/26 e Ester Guimarães internada em 15/08/26.\nAtte,\nGraziella Santos',
-          category: 'Internação',
-          urgency: 'Urgente',
-          patientId: 'pat-flavio',
-          patientName: 'FLAVIO FERREIRA DA SILVA',
-          room: 'Salão 1',
-          shift: '3º Turno',
-          status: 'published',
-          originalFrom: 'Graziella Santos - Enfermeira Diálise Peritoneal <enfermagembetim11@dialize.com.br>',
-          originalSubject: 'Hospitalização Flavio Ferreira e Ester Guimarães',
-          author: 'Graziella Santos',
-          authorRole: 'Enfermeira Diálise Peritoneal (Titan IMAP)',
-          createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-          readBy: []
-        },
-        {
-          id: 'post-1',
-          source: 'email',
-          title: 'Internação Hospitalar - ADAIR PRAXEDES MORENO',
-          message: 'Informamos que o paciente Adair Praxedes Moreno foi internado ontem à noite no Hospital Municipal com quadro de febre e suspeita de infecção no cateter. Sessão de hoje suspensa na clínica.',
-          category: 'Internação',
-          urgency: 'Urgente',
-          patientId: 'pat-1',
-          patientName: 'ADAIR PRAXEDES MORENO',
-          room: 'Salão 1',
-          shift: '2º Turno',
-          status: 'published',
-          author: 'Enfª. Juliana Mendes',
-          authorRole: 'Enfermagem (E-mail)',
-          createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-          readBy: [
-            { userId: 'user-admin', name: 'Dr. Lucas (Nefro)', role: 'Médico', readAt: new Date(Date.now() - 3600000 * 2).toISOString() }
-          ]
-        },
-        {
-          id: 'post-2',
-          source: 'native',
-          title: 'Alta Hospitalar e Retorno às Sessões',
-          message: 'Paciente Adão Luciano Dias recebeu alta hospitalar do Hospital Regional. Retorna para as sessões regulares de hemodiálise amanhã no 1º Turno (Salão 3). Acesso FAV íntegro.',
-          category: 'Alta',
-          urgency: 'Atenção',
-          patientId: 'pat-2',
-          patientName: 'ADAO LUCIANO DIAS',
-          room: 'Salão 3',
-          shift: '1º Turno',
-          status: 'published',
-          author: 'Dr. Lucas (Nefrologista)',
-          authorRole: 'Corpo Médico',
-          createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
-          readBy: []
-        },
-        {
-          id: 'post-3',
-          source: 'native',
-          title: 'Ajuste de Dieta e Suplementação Hiperproteica',
-          message: 'Realizada avaliação nutricional do paciente Adcelio Barbosa. Iniciada prescrição de suplemento hiperproteico específico para hemodiálise e reforçada a orientação de restrição hídrica para 800ml/dia.',
-          category: 'Nutrição',
-          urgency: 'Informativo',
-          patientId: 'pat-3',
-          patientName: 'ADCELIO BARBOSA DE OLIVEIRA',
-          room: 'Salão 1',
-          shift: '3º Turno',
-          status: 'published',
-          author: 'Dra. Camila Santos',
-          authorRole: 'Nutrição Clínica',
-          createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-          readBy: []
-        },
-        {
-          id: 'post-4',
-          source: 'email',
-          title: 'Acolhimento Familiar e Encaminhamento de Transporte',
-          message: 'Realizado atendimento social com a família da paciente. Foi solicitado apoio para transporte sanitário municipal (TFD) para os dias de terça, quinta e sábado.',
-          category: 'Serviço Social',
-          urgency: 'Informativo',
-          patientId: null,
-          patientName: null,
-          room: 'Geral',
-          shift: 'Geral',
-          status: 'pending_link',
-          author: 'Assistente Social Mariana',
-          authorRole: 'Serviço Social (E-mail)',
-          createdAt: new Date(Date.now() - 3600000 * 30).toISOString(),
-          readBy: []
-        }
-      ];
+      db.assist_posts = (syncedAssistEmails && Array.isArray(syncedAssistEmails) && syncedAssistEmails.length > 0)
+        ? [...syncedAssistEmails]
+        : [
+            {
+              id: 'post-titan-real-1',
+              source: 'email',
+              title: 'INFECÇÃO - ALEXANDRE JOSE DE PAULA',
+              message: 'ATB: Ceftazidima 2g/vancomicina 1g com lok, por 14 dias.\nMédico Responsável: ISABELA.\nRealizado coleta de Hemocultura 1ª E 2ª amostra, hemograma e PCR.',
+              category: 'Intercorrência',
+              urgency: 'Urgente',
+              patientId: 'pat-alexandre',
+              patientName: 'ALEXANDRE JOSE DE PAULA',
+              room: 'Salão 3',
+              shift: '1º Turno',
+              status: 'published',
+              originalFrom: 'Márcia Alves Teixeira <enfermagembetim7@dialize.com.br>',
+              originalSubject: 'INFECÇÃO ALEXANDRE JOSE DE PAULA',
+              author: 'Márcia Alves Teixeira',
+              authorRole: 'Enfermeira (Titan IMAP)',
+              createdAt: new Date().toISOString(),
+              readBy: []
+            }
+          ];
       setDB(db);
     }
     return db.assist_posts;

@@ -1,11 +1,27 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { dbService } from '../firebase';
 import { 
   Megaphone, Search, Plus, Filter, Mail, CheckCircle2, AlertTriangle, 
   Clock, User, RefreshCw, Layers, Sparkles, Building2, Eye, Trash2, 
   Edit3, Link as LinkIcon, ChevronRight, MessageSquare, Send, Check,
-  Activity, ShieldAlert, HeartPulse, Stethoscope, ArrowRight, UserCheck
+  Activity, ShieldAlert, HeartPulse, Stethoscope, ArrowRight, UserCheck,
+  Calendar
 } from 'lucide-react';
+
+const isSamePosts = (a, b) => {
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (
+      a[i].id !== b[i].id || 
+      a[i].patientId !== b[i].patientId || 
+      a[i].updatedAt !== b[i].updatedAt || 
+      (a[i].readBy?.length || 0) !== (b[i].readBy?.length || 0)
+    ) {
+      return false;
+    }
+  }
+  return true;
+};
 
 export default function AssistPanel({ currentUser }) {
   const [posts, setPosts] = useState([]);
@@ -13,12 +29,17 @@ export default function AssistPanel({ currentUser }) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+  const patientsRef = useRef([]);
 
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRoom, setSelectedRoom] = useState('all');
   const [selectedShift, setSelectedShift] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedKpiFilter, setSelectedKpiFilter] = useState('all'); // 'all' | 'Internação' | 'Alta' | 'Intercorrência' | 'pending'
+  const [datePreset, setDatePreset] = useState('all'); // 'all' | 'today' | 'yesterday' | '7days' | '30days' | 'month' | 'custom'
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
   const [onlyUnread, setOnlyUnread] = useState(false);
 
   // Modais
@@ -31,7 +52,7 @@ export default function AssistPanel({ currentUser }) {
   const [patientSearchTerm, setPatientSearchTerm] = useState('');
   const [editingPost, setEditingPost] = useState(null);
 
-  // Formulário de Novo Comunicado
+  // Formulário de Comunicado
   const [postForm, setPostForm] = useState({
     title: '',
     message: '',
@@ -43,7 +64,7 @@ export default function AssistPanel({ currentUser }) {
     shift: '1º Turno'
   });
 
-  // Simulador de Ingestão de E-mail
+  // Ingestão de E-mail
   const [emailForm, setEmailForm] = useState({
     from: 'enfermagem.plantao@nexaclinic.med.br',
     subject: 'Internação - Adair Praxedes Moreno',
@@ -51,18 +72,44 @@ export default function AssistPanel({ currentUser }) {
   });
   const [parsedEmailResult, setParsedEmailResult] = useState(null);
 
-  // Carregar dados e escutar em tempo real
+  // Carregar dados na montagem e escutar em tempo real sem loops
   useEffect(() => {
     let unsubscribe = () => {};
-    fetchData();
+
+    const loadInitialData = async () => {
+      setLoading(true);
+      try {
+        const [postList, patientList] = await Promise.all([
+          dbService.getAssistPosts(),
+          dbService.getPatients()
+        ]);
+        const resolvedPatients = patientList || [];
+        patientsRef.current = resolvedPatients;
+        setPatients(resolvedPatients);
+
+        const rawPosts = postList || [];
+        const autoLinked = dbService.autoLinkAssistPosts 
+          ? dbService.autoLinkAssistPosts(rawPosts, resolvedPatients) 
+          : rawPosts;
+        setPosts(prev => isSamePosts(prev, autoLinked) ? prev : autoLinked);
+      } catch (err) {
+        console.error('Erro ao carregar dados do Feed Assistencial:', err);
+        showAlert('Erro ao carregar dados do Feed.', 'danger');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
 
     if (dbService.subscribeToAssistPosts) {
       unsubscribe = dbService.subscribeToAssistPosts((livePosts) => {
         if (livePosts && Array.isArray(livePosts)) {
-          setPosts(prev => {
-            const pList = patients && patients.length > 0 ? patients : [];
-            return dbService.autoLinkAssistPosts ? dbService.autoLinkAssistPosts(livePosts, pList) : livePosts;
-          });
+          const currentPatients = patientsRef.current || [];
+          const autoLinked = dbService.autoLinkAssistPosts 
+            ? dbService.autoLinkAssistPosts(livePosts, currentPatients) 
+            : livePosts;
+          setPosts(prev => isSamePosts(prev, autoLinked) ? prev : autoLinked);
         }
       });
     }
@@ -72,24 +119,29 @@ export default function AssistPanel({ currentUser }) {
         unsubscribe();
       }
     };
-  }, [patients]);
+  }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (showSpinner = false) => {
+    if (showSpinner) setLoading(true);
     try {
       const [postList, patientList] = await Promise.all([
         dbService.getAssistPosts(),
         dbService.getPatients()
       ]);
       const resolvedPatients = patientList || [];
-      const autoLinkedPosts = dbService.autoLinkAssistPosts ? dbService.autoLinkAssistPosts(postList || [], resolvedPatients) : (postList || []);
-      setPosts(autoLinkedPosts);
+      patientsRef.current = resolvedPatients;
       setPatients(resolvedPatients);
+
+      const rawPosts = postList || [];
+      const autoLinked = dbService.autoLinkAssistPosts 
+        ? dbService.autoLinkAssistPosts(rawPosts, resolvedPatients) 
+        : rawPosts;
+      setPosts(prev => isSamePosts(prev, autoLinked) ? prev : autoLinked);
     } catch (err) {
       console.error(err);
-      showAlert('Erro ao carregar dados do Feed Assistencial.', 'danger');
+      showAlert('Erro ao atualizar dados do Feed.', 'danger');
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
@@ -115,22 +167,86 @@ export default function AssistPanel({ currentUser }) {
     return categories.find(c => c.id === catName) || categories[categories.length - 1];
   };
 
-  // KPIs
+  // Filtragem por Período de Data
+  const dateFilteredPosts = useMemo(() => {
+    if (datePreset === 'all') return posts;
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    return posts.filter(post => {
+      if (!post.createdAt) return false;
+      const postDate = new Date(post.createdAt);
+      if (isNaN(postDate.getTime())) return true;
+
+      if (datePreset === 'today') {
+        return postDate >= startOfToday;
+      }
+      if (datePreset === 'yesterday') {
+        const startOfYesterday = new Date(startOfToday);
+        startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+        return postDate >= startOfYesterday && postDate < startOfToday;
+      }
+      if (datePreset === '7days') {
+        const past7 = new Date(startOfToday);
+        past7.setDate(past7.getDate() - 7);
+        return postDate >= past7;
+      }
+      if (datePreset === '30days') {
+        const past30 = new Date(startOfToday);
+        past30.setDate(past30.getDate() - 30);
+        return postDate >= past30;
+      }
+      if (datePreset === 'month') {
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        return postDate >= startOfMonth;
+      }
+      if (datePreset === 'custom') {
+        if (customStartDate && postDate < new Date(`${customStartDate}T00:00:00`)) return false;
+        if (customEndDate && postDate > new Date(`${customEndDate}T23:59:59`)) return false;
+        return true;
+      }
+      return true;
+    });
+  }, [posts, datePreset, customStartDate, customEndDate]);
+
+  // KPIs calculados com base no período de data ativo
   const kpis = useMemo(() => {
-    const total = posts.length;
-    const internacoes = posts.filter(p => p.category === 'Internação').length;
-    const altas = posts.filter(p => p.category === 'Alta').length;
-    const intercorrencias = posts.filter(p => p.category === 'Intercorrência').length;
-    const pendentes = posts.filter(p => p.status === 'pending_link' || !p.patientId).length;
+    const total = dateFilteredPosts.length;
+    const internacoes = dateFilteredPosts.filter(p => p.category === 'Internação').length;
+    const altas = dateFilteredPosts.filter(p => p.category === 'Alta').length;
+    const intercorrencias = dateFilteredPosts.filter(p => p.category === 'Intercorrência').length;
+    const pendentes = dateFilteredPosts.filter(p => p.status === 'pending_link' || !p.patientId).length;
     return { total, internacoes, altas, intercorrencias, pendentes };
-  }, [posts]);
+  }, [dateFilteredPosts]);
+
+  // Manipulador de clique no card de KPI
+  const handleKpiCardClick = (kpiKey) => {
+    if (selectedKpiFilter === kpiKey) {
+      setSelectedKpiFilter('all');
+      setSelectedCategory('all');
+    } else {
+      setSelectedKpiFilter(kpiKey);
+      if (kpiKey === 'pending') {
+        setSelectedCategory('all');
+      } else {
+        setSelectedCategory(kpiKey);
+      }
+    }
+  };
 
   // Lista Filtrada
   const filteredPosts = useMemo(() => {
     const userId = currentUser?.id || currentUser?.uid || currentUser?.email || 'user';
     const userName = currentUser?.name || currentUser?.email || 'Profissional';
 
-    return posts.filter(post => {
+    return dateFilteredPosts.filter(post => {
+      // Filtro ativo do Card de KPI
+      if (selectedKpiFilter === 'Internação' && post.category !== 'Internação') return false;
+      if (selectedKpiFilter === 'Alta' && post.category !== 'Alta') return false;
+      if (selectedKpiFilter === 'Intercorrência' && post.category !== 'Intercorrência') return false;
+      if (selectedKpiFilter === 'pending' && !(post.status === 'pending_link' || !post.patientId)) return false;
+
       // Busca texto
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
@@ -151,8 +267,8 @@ export default function AssistPanel({ currentUser }) {
         if (post.shift !== selectedShift) return false;
       }
 
-      // Categoria
-      if (selectedCategory !== 'all') {
+      // Categoria selecionada nas pílulas (caso não haja filtro de KPI ativo)
+      if (selectedCategory !== 'all' && selectedKpiFilter === 'all') {
         if (post.category !== selectedCategory) return false;
       }
 
@@ -165,7 +281,7 @@ export default function AssistPanel({ currentUser }) {
 
       return true;
     });
-  }, [posts, searchTerm, selectedRoom, selectedShift, selectedCategory, onlyUnread, currentUser]);
+  }, [dateFilteredPosts, selectedKpiFilter, searchTerm, selectedRoom, selectedShift, selectedCategory, onlyUnread, currentUser]);
 
   // Pacientes filtrados para o modal de autocomplete / vínculo
   const filteredPatients = useMemo(() => {
@@ -374,73 +490,152 @@ export default function AssistPanel({ currentUser }) {
               </span>
             </div>
             <p style={styles.heroSubtitle}>
-              Mural inteligente de comunicação assistencial rápida, categorização clínica e histórico consolidado do paciente.
+              Mural de comunicação assistencial rápida, categorização clínica e histórico do paciente.
             </p>
           </div>
         </div>
 
         <div style={styles.heroActions}>
           <button 
+            onClick={() => setShowEmailSimulatorModal(true)}
+            style={styles.secondaryBtn}
+            title="Leitor inteligente de e-mails Titan"
+          >
+            <Mail size={18} />
+            <span>Ingestão IA</span>
+          </button>
+
+          <button 
             onClick={() => handleOpenCreateModal()}
             style={styles.primaryBtn}
           >
             <Plus size={18} />
-            <span>Novo Comunicado Rápido</span>
+            <span>Novo Comunicado</span>
           </button>
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards Interativos Clicáveis */}
       <div style={styles.kpiGrid}>
-        <div style={{ ...styles.kpiCard, borderLeft: '4px solid var(--primary-color)' }}>
+        <div 
+          onClick={() => handleKpiCardClick('all')}
+          style={{ 
+            ...styles.kpiCard, 
+            borderLeft: '4px solid var(--primary-color)',
+            borderColor: selectedKpiFilter === 'all' ? 'var(--primary-color)' : 'var(--border-color)',
+            backgroundColor: selectedKpiFilter === 'all' ? '#f5f3ff' : '#fff',
+            boxShadow: selectedKpiFilter === 'all' ? '0 0 0 2px rgba(109, 40, 217, 0.25), 0 4px 12px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.05)',
+            transform: selectedKpiFilter === 'all' ? 'translateY(-2px)' : 'none',
+            cursor: 'pointer'
+          }}
+          title="Clique para exibir todos os comunicados"
+        >
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>Total de Comunicados</span>
+            <span style={{ ...styles.kpiLabel, fontWeight: selectedKpiFilter === 'all' ? '700' : '600' }}>Total</span>
             <Layers size={18} color="var(--primary-color)" />
           </div>
           <div style={styles.kpiValue}>{kpis.total}</div>
-          <div style={styles.kpiFootnote}>Histórico completo do sistema</div>
+          <div style={styles.kpiFootnote}>
+            {selectedKpiFilter === 'all' ? '🟢 Filtrando Todos' : 'Clique para filtrar'}
+          </div>
         </div>
 
-        <div style={{ ...styles.kpiCard, borderLeft: '4px solid #ef4444' }}>
+        <div 
+          onClick={() => handleKpiCardClick('Internação')}
+          style={{ 
+            ...styles.kpiCard, 
+            borderLeft: '4px solid #ef4444',
+            borderColor: selectedKpiFilter === 'Internação' ? '#ef4444' : 'var(--border-color)',
+            backgroundColor: selectedKpiFilter === 'Internação' ? '#fef2f2' : '#fff',
+            boxShadow: selectedKpiFilter === 'Internação' ? '0 0 0 2px rgba(239, 68, 68, 0.25), 0 4px 12px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.05)',
+            transform: selectedKpiFilter === 'Internação' ? 'translateY(-2px)' : 'none',
+            cursor: 'pointer'
+          }}
+          title="Clique para filtrar apenas internações"
+        >
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>Internações Ativas</span>
+            <span style={{ ...styles.kpiLabel, fontWeight: selectedKpiFilter === 'Internação' ? '700' : '600' }}>Internações</span>
             <ShieldAlert size={18} color="#ef4444" />
           </div>
           <div style={{ ...styles.kpiValue, color: '#ef4444' }}>{kpis.internacoes}</div>
-          <div style={styles.kpiFootnote}>Pacientes hospitalizados</div>
+          <div style={styles.kpiFootnote}>
+            {selectedKpiFilter === 'Internação' ? '🔴 Filtrando Internações' : 'Pacientes hospitalizados'}
+          </div>
         </div>
 
-        <div style={{ ...styles.kpiCard, borderLeft: '4px solid #10b981' }}>
+        <div 
+          onClick={() => handleKpiCardClick('Alta')}
+          style={{ 
+            ...styles.kpiCard, 
+            borderLeft: '4px solid #10b981',
+            borderColor: selectedKpiFilter === 'Alta' ? '#10b981' : 'var(--border-color)',
+            backgroundColor: selectedKpiFilter === 'Alta' ? '#ecfdf5' : '#fff',
+            boxShadow: selectedKpiFilter === 'Alta' ? '0 0 0 2px rgba(16, 185, 129, 0.25), 0 4px 12px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.05)',
+            transform: selectedKpiFilter === 'Alta' ? 'translateY(-2px)' : 'none',
+            cursor: 'pointer'
+          }}
+          title="Clique para filtrar apenas altas hospitalares"
+        >
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>Altas Hospitalares</span>
+            <span style={{ ...styles.kpiLabel, fontWeight: selectedKpiFilter === 'Alta' ? '700' : '600' }}>Altas</span>
             <CheckCircle2 size={18} color="#10b981" />
           </div>
           <div style={{ ...styles.kpiValue, color: '#10b981' }}>{kpis.altas}</div>
-          <div style={styles.kpiFootnote}>Retornos à clínica confirmados</div>
+          <div style={styles.kpiFootnote}>
+            {selectedKpiFilter === 'Alta' ? '🟢 Filtrando Altas' : 'Retornos confirmados'}
+          </div>
         </div>
 
-        <div style={{ ...styles.kpiCard, borderLeft: '4px solid #f59e0b' }}>
+        <div 
+          onClick={() => handleKpiCardClick('Intercorrência')}
+          style={{ 
+            ...styles.kpiCard, 
+            borderLeft: '4px solid #f59e0b',
+            borderColor: selectedKpiFilter === 'Intercorrência' ? '#f59e0b' : 'var(--border-color)',
+            backgroundColor: selectedKpiFilter === 'Intercorrência' ? '#fffbeb' : '#fff',
+            boxShadow: selectedKpiFilter === 'Intercorrência' ? '0 0 0 2px rgba(245, 158, 11, 0.25), 0 4px 12px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.05)',
+            transform: selectedKpiFilter === 'Intercorrência' ? 'translateY(-2px)' : 'none',
+            cursor: 'pointer'
+          }}
+          title="Clique para filtrar apenas intercorrências"
+        >
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>Intercorrências</span>
+            <span style={{ ...styles.kpiLabel, fontWeight: selectedKpiFilter === 'Intercorrência' ? '700' : '600' }}>Intercorrências</span>
             <AlertTriangle size={18} color="#f59e0b" />
           </div>
           <div style={{ ...styles.kpiValue, color: '#f59e0b' }}>{kpis.intercorrencias}</div>
-          <div style={styles.kpiFootnote}>Alertas e eventos clínicos</div>
+          <div style={styles.kpiFootnote}>
+            {selectedKpiFilter === 'Intercorrência' ? '🟡 Filtrando Intercorrências' : 'Alertas clínicos'}
+          </div>
         </div>
 
         {kpis.pendentes > 0 && (
-          <div style={{ ...styles.kpiCard, borderLeft: '4px solid #ea580c', backgroundColor: '#fff7ed' }}>
+          <div 
+            onClick={() => handleKpiCardClick('pending')}
+            style={{ 
+              ...styles.kpiCard, 
+              borderLeft: '4px solid #ea580c',
+              borderColor: selectedKpiFilter === 'pending' ? '#ea580c' : '#fed7aa',
+              backgroundColor: selectedKpiFilter === 'pending' ? '#ffedd5' : '#fff7ed',
+              boxShadow: selectedKpiFilter === 'pending' ? '0 0 0 2px rgba(234, 88, 12, 0.25), 0 4px 12px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.05)',
+              transform: selectedKpiFilter === 'pending' ? 'translateY(-2px)' : 'none',
+              cursor: 'pointer'
+            }}
+            title="Clique para filtrar comunicados sem paciente vinculado"
+          >
             <div style={styles.kpiHeader}>
-              <span style={{ ...styles.kpiLabel, color: '#c2410c' }}>Vínculo Pendente</span>
+              <span style={{ ...styles.kpiLabel, color: '#c2410c', fontWeight: selectedKpiFilter === 'pending' ? '700' : '600' }}>Pendentes</span>
               <LinkIcon size={18} color="#ea580c" />
             </div>
             <div style={{ ...styles.kpiValue, color: '#ea580c' }}>{kpis.pendentes}</div>
-            <div style={{ ...styles.kpiFootnote, color: '#9a3412' }}>Vieram de e-mail sem match</div>
+            <div style={{ ...styles.kpiFootnote, color: '#9a3412' }}>
+              {selectedKpiFilter === 'pending' ? '🟠 Filtrando Pendentes' : 'Sem vínculo com paciente'}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Barra de Filtros Inteligentes */}
+      {/* Barra de Filtros Inteligentes com Período de Data */}
       <div style={styles.filterBar}>
         <div style={styles.searchBox}>
           <Search size={18} color="var(--text-secondary)" />
@@ -457,18 +652,56 @@ export default function AssistPanel({ currentUser }) {
         </div>
 
         <div style={styles.filterSelects}>
+          {/* Filtro de Período / Data */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <select 
+              value={datePreset} 
+              onChange={(e) => setDatePreset(e.target.value)}
+              style={styles.selectInput}
+              title="Período de referência dos comunicados"
+            >
+              <option value="all">📅 Todos</option>
+              <option value="today">📅 Hoje</option>
+              <option value="yesterday">📅 Ontem</option>
+              <option value="7days">📅 7 Dias</option>
+              <option value="30days">📅 30 Dias</option>
+              <option value="month">📅 Este Mês</option>
+              <option value="custom">📅 Personalizado</option>
+            </select>
+
+            {datePreset === 'custom' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <input 
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  style={styles.dateInput}
+                  title="Data Inicial"
+                />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>até</span>
+                <input 
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  style={styles.dateInput}
+                  title="Data Final"
+                />
+              </div>
+            )}
+          </div>
+
           {/* Filtro de Salão */}
           <select 
             value={selectedRoom} 
             onChange={(e) => setSelectedRoom(e.target.value)}
             style={styles.selectInput}
           >
-            <option value="all">🏢 Todos os Salões</option>
+            <option value="all">🏢 Salões</option>
             <option value="Salão 1">Salão 1</option>
             <option value="Salão 2">Salão 2</option>
             <option value="Salão 3">Salão 3</option>
-            <option value="DP">Diálise Peritoneal (DP)</option>
-            <option value="Geral">Geral / Administrativo</option>
+            <option value="DP">DP</option>
+            <option value="Geral">Geral</option>
           </select>
 
           {/* Filtro de Turno */}
@@ -477,10 +710,10 @@ export default function AssistPanel({ currentUser }) {
             onChange={(e) => setSelectedShift(e.target.value)}
             style={styles.selectInput}
           >
-            <option value="all">⏰ Todos os Turnos</option>
-            <option value="1º Turno">1º Turno (Manhã)</option>
-            <option value="2º Turno">2º Turno (Tarde)</option>
-            <option value="3º Turno">3º Turno (Noite)</option>
+            <option value="all">⏰ Turnos</option>
+            <option value="1º Turno">1º Turno</option>
+            <option value="2º Turno">2º Turno</option>
+            <option value="3º Turno">3º Turno</option>
           </select>
 
           {/* Botão de não lidos */}
@@ -494,10 +727,10 @@ export default function AssistPanel({ currentUser }) {
             }}
           >
             <Eye size={16} />
-            <span>Apenas Sem Meu Ciente</span>
+            <span>Não Lidos</span>
           </button>
 
-          <button onClick={fetchData} style={styles.refreshBtn} title="Atualizar feed">
+          <button onClick={() => fetchData(true)} style={styles.refreshBtn} title="Atualizar feed">
             <RefreshCw size={16} className={loading ? 'spin' : ''} />
           </button>
         </div>
@@ -506,24 +739,35 @@ export default function AssistPanel({ currentUser }) {
       {/* Pílulas de Categoria */}
       <div style={styles.categoryPills}>
         <button
-          onClick={() => setSelectedCategory('all')}
+          onClick={() => {
+            setSelectedCategory('all');
+            setSelectedKpiFilter('all');
+          }}
           style={{
             ...styles.categoryPill,
-            backgroundColor: selectedCategory === 'all' ? 'var(--primary-color)' : '#fff',
-            color: selectedCategory === 'all' ? '#fff' : 'var(--text-primary)',
-            borderColor: selectedCategory === 'all' ? 'var(--primary-color)' : '#e5e7eb'
+            backgroundColor: selectedCategory === 'all' && selectedKpiFilter === 'all' ? 'var(--primary-color)' : '#fff',
+            color: selectedCategory === 'all' && selectedKpiFilter === 'all' ? '#fff' : 'var(--text-primary)',
+            borderColor: selectedCategory === 'all' && selectedKpiFilter === 'all' ? 'var(--primary-color)' : '#e5e7eb'
           }}
         >
-          Todos ({posts.length})
+          Todos ({dateFilteredPosts.length})
         </button>
 
         {categories.map(cat => {
-          const count = posts.filter(p => p.category === cat.id).length;
-          const isSelected = selectedCategory === cat.id;
+          const count = dateFilteredPosts.filter(p => p.category === cat.id).length;
+          const isSelected = selectedCategory === cat.id || selectedKpiFilter === cat.id;
           return (
             <button
               key={cat.id}
-              onClick={() => setSelectedCategory(isSelected ? 'all' : cat.id)}
+              onClick={() => {
+                if (isSelected) {
+                  setSelectedCategory('all');
+                  setSelectedKpiFilter('all');
+                } else {
+                  setSelectedCategory(cat.id);
+                  setSelectedKpiFilter(cat.id);
+                }
+              }}
               style={{
                 ...styles.categoryPill,
                 backgroundColor: isSelected ? cat.color : cat.bg,
@@ -734,7 +978,7 @@ export default function AssistPanel({ currentUser }) {
         </div>
       )}
 
-      {/* MODAL: NOVO / EDITAR COMUNICADO */}
+      {/* MODAL: COMUNICADO */}
       {showPostModal && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
@@ -742,16 +986,16 @@ export default function AssistPanel({ currentUser }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Megaphone size={20} color="var(--primary-color)" />
                 <h3 style={styles.modalTitle}>
-                  {editingPost ? 'Editar Comunicado Assistencial' : 'Novo Comunicado Rápido'}
+                  {editingPost ? 'Editar Comunicado' : 'Novo Comunicado'}
                 </h3>
               </div>
               <button onClick={() => setShowPostModal(false)} style={styles.modalCloseBtn}>×</button>
             </div>
 
             <form onSubmit={handleSavePost} style={styles.modalForm}>
-              {/* Seleção Rápida de Categoria */}
+              {/* Seleção de Categoria */}
               <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Categoria do Comunicado:</label>
+                <label style={styles.formLabel}>Categoria:</label>
                 <div style={styles.categorySelectGrid}>
                   {categories.filter(c => c.id !== 'all').map(cat => (
                     <button
@@ -780,11 +1024,11 @@ export default function AssistPanel({ currentUser }) {
 
               {/* Paciente com Autocomplete */}
               <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Paciente Relacionado (Opcional):</label>
+                <label style={styles.formLabel}>Paciente:</label>
                 <div style={{ position: 'relative' }}>
                   <input 
                     type="text"
-                    placeholder="Digite o nome ou CPF para buscar o paciente..."
+                    placeholder="Digite o nome ou CPF..."
                     value={patientSearchTerm}
                     onChange={(e) => {
                       setPatientSearchTerm(e.target.value);
@@ -840,8 +1084,8 @@ export default function AssistPanel({ currentUser }) {
                     <option value="Salão 1">Salão 1</option>
                     <option value="Salão 2">Salão 2</option>
                     <option value="Salão 3">Salão 3</option>
-                    <option value="DP">Diálise Peritoneal (DP)</option>
-                    <option value="Geral">Geral / Administrativo</option>
+                    <option value="DP">DP</option>
+                    <option value="Geral">Geral</option>
                   </select>
                 </div>
 
@@ -852,9 +1096,9 @@ export default function AssistPanel({ currentUser }) {
                     onChange={(e) => setPostForm(prev => ({ ...prev, shift: e.target.value }))}
                     style={styles.modalInput}
                   >
-                    <option value="1º Turno">1º Turno (Manhã)</option>
-                    <option value="2º Turno">2º Turno (Tarde)</option>
-                    <option value="3º Turno">3º Turno (Noite)</option>
+                    <option value="1º Turno">1º Turno</option>
+                    <option value="2º Turno">2º Turno</option>
+                    <option value="3º Turno">3º Turno</option>
                     <option value="Geral">Geral</option>
                   </select>
                 </div>
@@ -873,12 +1117,12 @@ export default function AssistPanel({ currentUser }) {
                 </div>
               </div>
 
-              {/* Texto do Comunicado */}
+              {/* Mensagem */}
               <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Conteúdo da Mensagem / Notícia:</label>
+                <label style={styles.formLabel}>Mensagem:</label>
                 <textarea 
                   rows={4}
-                  placeholder="Ex: Paciente internado ontem no Hospital Regional devido a quadro de febre. Sessões suspensas temporariamente..."
+                  placeholder="Descreva o comunicado ou ocorrência clínica..."
                   value={postForm.message}
                   onChange={(e) => setPostForm(prev => ({ ...prev, message: e.target.value }))}
                   style={styles.modalTextarea}
@@ -900,7 +1144,7 @@ export default function AssistPanel({ currentUser }) {
                   disabled={actionLoading}
                   style={styles.modalSubmitBtn}
                 >
-                  {actionLoading ? 'Salvando...' : editingPost ? 'Atualizar Comunicado' : 'Publicar no Feed'}
+                  {actionLoading ? 'Salvando...' : editingPost ? 'Atualizar' : 'Publicar'}
                 </button>
               </div>
             </form>
@@ -908,14 +1152,14 @@ export default function AssistPanel({ currentUser }) {
         </div>
       )}
 
-      {/* MODAL: SIMULADOR & LEITOR DE E-MAILS DA CONTA ESPELHO */}
+      {/* MODAL: INGESTÃO IA DE E-MAILS */}
       {showEmailSimulatorModal && (
         <div style={styles.modalOverlay}>
           <div style={{ ...styles.modalContent, maxWidth: '750px' }}>
             <div style={styles.modalHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Sparkles size={20} color="#8b5cf6" />
-                <h3 style={styles.modalTitle}>Leitor & Ingestão Inteligente de E-mails (IA)</h3>
+                <h3 style={styles.modalTitle}>Ingestão IA</h3>
               </div>
               <button onClick={() => setShowEmailSimulatorModal(false)} style={styles.modalCloseBtn}>×</button>
             </div>
@@ -925,21 +1169,21 @@ export default function AssistPanel({ currentUser }) {
                 <Mail size={24} color="#6366f1" />
                 <div style={{ fontSize: '0.85rem', color: '#3730a3', flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <strong>Servidor Titan IMAP Configurado:</strong>
+                    <strong>Servidor Titan IMAP:</strong>
                     <span style={{ fontSize: '0.75rem', backgroundColor: '#dcfce7', color: '#166534', padding: '0.15rem 0.5rem', borderRadius: '10px', fontWeight: '700' }}>
-                      🟢 Conexão Ativa (SSL/TLS)
+                      🟢 Ativo
                     </span>
                   </div>
                   <div style={{ marginTop: '0.35rem', fontSize: '0.8rem' }}>
-                    <code>integracao@dialize.com.br</code> • IMAP: <code>imap.titan.email:993</code> • POP: <code>pop.titan.email:995</code>
+                    <code>integracao@dialize.com.br</code> • IMAP: <code>imap.titan.email:993</code>
                   </div>
                 </div>
               </div>
 
-              {/* Botões de Modelos Rápidos para Teste */}
+              {/* Modelos de Teste */}
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
-                  Modelos Rápidos (Exemplos Reais da Clínica):
+                  Modelos Rápidos:
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <button
@@ -954,7 +1198,7 @@ export default function AssistPanel({ currentUser }) {
                     }}
                     style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', borderRadius: '6px', border: '1px solid #c7d2fe', backgroundColor: '#f5f3ff', color: '#4338ca', cursor: 'pointer', fontWeight: '600' }}
                   >
-                    ✉️ E-mail Real Titan (Enfª Márcia - Infecção)
+                    ✉️ E-mail Real (Infecção)
                   </button>
 
                   <button
@@ -969,7 +1213,7 @@ export default function AssistPanel({ currentUser }) {
                     }}
                     style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', borderRadius: '6px', border: '1px solid #fecaca', backgroundColor: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: '600' }}
                   >
-                    🔴 Internação (Adair Moreno)
+                    🔴 Internação
                   </button>
 
                   <button
@@ -984,7 +1228,7 @@ export default function AssistPanel({ currentUser }) {
                     }}
                     style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', borderRadius: '6px', border: '1px solid #a7f3d0', backgroundColor: '#ecfdf5', color: '#047857', cursor: 'pointer', fontWeight: '600' }}
                   >
-                    🟢 Alta Hospitalar (Adão Luciano)
+                    🟢 Alta
                   </button>
                 </div>
               </div>
@@ -1000,7 +1244,7 @@ export default function AssistPanel({ currentUser }) {
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Assunto do E-mail:</label>
+                <label style={styles.formLabel}>Assunto:</label>
                 <input 
                   type="text" 
                   value={emailForm.subject}
@@ -1010,7 +1254,7 @@ export default function AssistPanel({ currentUser }) {
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Corpo do E-mail:</label>
+                <label style={styles.formLabel}>Mensagem:</label>
                 <textarea 
                   rows={5}
                   value={emailForm.body}
@@ -1025,7 +1269,7 @@ export default function AssistPanel({ currentUser }) {
                 style={styles.aiProcessBtn}
               >
                 <Sparkles size={16} />
-                <span>Processar E-mail com IA (Extrair Entidades)</span>
+                <span>Processar IA</span>
               </button>
 
               {/* Resultado do Processamento */}
@@ -1033,14 +1277,14 @@ export default function AssistPanel({ currentUser }) {
                 <div style={styles.aiResultCard}>
                   <div style={styles.aiResultHeader}>
                     <CheckCircle2 size={18} color="#10b981" />
-                    <strong style={{ color: '#065f46' }}>Extração e Reconhecimento Realizados:</strong>
+                    <strong style={{ color: '#065f46' }}>Reconhecimento Realizado:</strong>
                   </div>
 
                   <div style={styles.aiResultGrid}>
                     <div>
-                      <span style={styles.aiLabel}>Paciente Identificado:</span>
+                      <span style={styles.aiLabel}>Paciente:</span>
                       <div style={{ fontWeight: '700', color: parsedEmailResult.patientName ? '#047857' : '#c2410c' }}>
-                        {parsedEmailResult.patientName || '⚠️ Não identificado com certeza'}
+                        {parsedEmailResult.patientName || '⚠️ Não identificado'}
                       </div>
                       {parsedEmailResult.matchConfidence > 0 && (
                         <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
@@ -1050,21 +1294,21 @@ export default function AssistPanel({ currentUser }) {
                     </div>
 
                     <div>
-                      <span style={styles.aiLabel}>Categoria Classificada:</span>
+                      <span style={styles.aiLabel}>Categoria:</span>
                       <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
                         {parsedEmailResult.category}
                       </div>
                     </div>
 
                     <div>
-                      <span style={styles.aiLabel}>Urgência Detectada:</span>
+                      <span style={styles.aiLabel}>Urgência:</span>
                       <div style={{ fontWeight: '700', color: parsedEmailResult.urgency === 'Urgente' ? '#ef4444' : '#10b981' }}>
                         {parsedEmailResult.urgency}
                       </div>
                     </div>
 
                     <div>
-                      <span style={styles.aiLabel}>Salão / Turno:</span>
+                      <span style={styles.aiLabel}>Local:</span>
                       <div style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>
                         {parsedEmailResult.room} ({parsedEmailResult.shift})
                       </div>
@@ -1072,7 +1316,7 @@ export default function AssistPanel({ currentUser }) {
                   </div>
 
                   <div style={{ marginTop: '0.75rem' }}>
-                    <span style={styles.aiLabel}>Texto Limpo para o Feed:</span>
+                    <span style={styles.aiLabel}>Texto:</span>
                     <div style={styles.aiCleanTextPreview}>
                       {parsedEmailResult.message}
                     </div>
@@ -1091,7 +1335,7 @@ export default function AssistPanel({ currentUser }) {
                       style={styles.approveIngestBtn}
                     >
                       <Check size={16} />
-                      <span>{actionLoading ? 'Publicando...' : 'Aprovar & Inserir no Feed'}</span>
+                      <span>{actionLoading ? 'Publicando...' : 'Aprovar'}</span>
                     </button>
                   </div>
                 </div>
@@ -1398,6 +1642,15 @@ const styles = {
     fontSize: '0.85rem',
     color: 'var(--text-primary)',
     cursor: 'pointer'
+  },
+  dateInput: {
+    padding: '0.45rem 0.6rem',
+    borderRadius: '8px',
+    border: '1px solid #d1d5db',
+    backgroundColor: '#fff',
+    fontSize: '0.8rem',
+    color: 'var(--text-primary)',
+    outline: 'none'
   },
   filterToggleBtn: {
     display: 'flex',

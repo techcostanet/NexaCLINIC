@@ -218,34 +218,28 @@ export const getAssistPosts = async () => {
   if (USE_MOCK) {
     return mockFirestore.getAssistPosts ? mockFirestore.getAssistPosts() : [];
   }
-  const { getFirestore, collection, getDocs, query, orderBy } = await import('firebase/firestore');
+  const { getFirestore, collection, getDocs } = await import('firebase/firestore');
   const db = getFirestore(app);
   
   try {
-    const q = query(collection(db, 'assist_posts'), orderBy('createdAt', 'desc'));
-    const snap = await getDocs(q);
-    
+    const snap = await getDocs(collection(db, 'assist_posts'));
     if (snap.empty) {
-      // Retorna seed inicial se vazio
       if (mockFirestore.getAssistPosts) {
         return mockFirestore.getAssistPosts();
       }
       return [];
     }
 
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    return items;
   } catch (err) {
-    console.warn('Erro ao buscar assist_posts no Firestore, tentando fallback sem ordenação:', err);
-    try {
-      const snap = await getDocs(collection(db, 'assist_posts'));
-      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    } catch (e) {
-      console.error('Falha ao recuperar assist_posts:', e);
-      if (mockFirestore.getAssistPosts) return mockFirestore.getAssistPosts();
-      return [];
-    }
+    console.warn('Falha na busca remota de assist_posts, utilizando fallback local:', err);
+    if (mockFirestore.getAssistPosts) return mockFirestore.getAssistPosts();
+    return [];
   }
 };
+
 /**
  * Listener em tempo real para os comunicados assistenciais no Firestore
  */
@@ -257,38 +251,46 @@ export const subscribeToAssistPosts = (callback) => {
     return () => {};
   }
 
-  let unsubscribe = () => {};
-  import('firebase/firestore').then(({ getFirestore, collection, onSnapshot, query, orderBy }) => {
+  let activeUnsubscribe = null;
+  let isCancelled = false;
+
+  import('firebase/firestore').then(({ getFirestore, collection, onSnapshot }) => {
+    if (isCancelled) return;
     const db = getFirestore(app);
-    const q = query(collection(db, 'assist_posts'), orderBy('createdAt', 'desc'));
-    
-    unsubscribe = onSnapshot(q, (snap) => {
-      if (!snap.empty) {
-        const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        callback(items);
-      } else {
-        getAssistPosts().then(callback);
-      }
-    }, (err) => {
-      console.warn("Aviso no listener real-time de assist_posts (tentando fallback sem order):", err);
-      // Fallback sem orderBy
-      import('firebase/firestore').then(({ collection: col, onSnapshot: onSnap }) => {
-        unsubscribe = onSnap(col(db, 'assist_posts'), (snap2) => {
-          const items = snap2.docs.map(d => ({ id: d.id, ...d.data() }))
-            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+    try {
+      const colRef = collection(db, 'assist_posts');
+      activeUnsubscribe = onSnapshot(colRef, (snap) => {
+        if (isCancelled) return;
+        if (!snap.empty) {
+          const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
           callback(items);
-        }, (err2) => {
-          console.error("Erro no listener assist_posts:", err2);
-          getAssistPosts().then(callback);
-        });
+        } else {
+          if (mockFirestore.getAssistPosts) {
+            mockFirestore.getAssistPosts().then(res => {
+              if (!isCancelled) callback(res || []);
+            });
+          } else {
+            callback([]);
+          }
+        }
+      }, (err) => {
+        console.warn("Aviso no listener real-time de assist_posts:", err);
       });
-    });
+    } catch (e) {
+      console.error("Erro ao inicializar onSnapshot assist_posts:", e);
+    }
   }).catch(err => {
-    console.error("Erro ao inicializar listener assist_posts:", err);
-    getAssistPosts().then(callback);
+    console.error("Erro ao carregar SDK Firestore para listener:", err);
   });
 
-  return () => unsubscribe();
+  return () => {
+    isCancelled = true;
+    if (typeof activeUnsubscribe === 'function') {
+      activeUnsubscribe();
+    }
+  };
 };
 
 /**

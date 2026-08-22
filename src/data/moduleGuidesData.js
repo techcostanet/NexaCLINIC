@@ -705,5 +705,106 @@ export const MODULE_GUIDES = {
     duvidas: [
       { pergunta: 'Manual em finalização', resposta: 'Consulte o suporte técnico de TI para parametrizações.' }
     ]
+  },
+
+  assist: {
+    id: 'assist',
+    name: 'Assistência Clínica',
+    subtitle: 'NexaASSIST — Feed Assistencial & Comunicados Rápidos',
+    color: '#ec4899',
+    recursos: [
+      {
+        title: 'Mural Assistencial em Tempo Real',
+        desc: 'Feed de comunicados clínicos rápidos para alinhamento entre enfermagem, médicos, nutrição, psicologia e serviço social.'
+      },
+      {
+        title: 'Filtro Dinâmico por Período de Data',
+        desc: 'Seletor de intervalo temporal (Hoje, Ontem, 7 Dias, 30 Dias, Este Mês ou Personalizado com início e fim) que recalcula automaticamente métricas e feed.'
+      },
+      {
+        title: 'Cards de KPI Interativos e Clicáveis',
+        desc: 'Clique direto nos cards de Total, Internações, Altas, Intercorrências e Pendentes para filtrar instantaneamente os comunicados correspondentes na tela.'
+      },
+      {
+        title: 'Sincronizador Automático Titan E-mail',
+        desc: 'Ingestão e leitura contínua da caixa de entrada integracao@dialize.com.br (IMAP SSL 993) com extração de dados clínicos.'
+      },
+      {
+        title: 'Classificação Clínica Inteligente',
+        desc: 'Identificação automática de categorias (Internação, Alta, Intercorrência, Nutrição, Óbito) e nível de urgência com IA.'
+      },
+      {
+        title: 'Vinculação Inteligente de Pacientes',
+        desc: 'Reconhecimento fuzzy e associação automática do paciente citado no texto com a base de pacientes ativos.'
+      },
+      {
+        title: 'Confirmação e Histórico de Ciente',
+        desc: 'Controle de leitura onde cada profissional confirma ciência e visualiza a lista de colegas que já leram.'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Filtrar Comunicados Clicando nos Cards de KPI',
+        steps: [
+          'No topo do painel, visualize os cards com as contagens calculadas para o período.',
+          'Dê um clique no card desejado (ex: "Internações" ou "Altas").',
+          'O card receberá destaque visual ativo e o feed abaixo exibirá imediatamente apenas os comunicados daquela categoria.',
+          'Para remover o filtro, clique novamente no mesmo card ou clique no card "Total".'
+        ]
+      },
+      {
+        title: 'Como Selecionar o Intervalo de Datas',
+        steps: [
+          'Na barra de filtros, selecione a opção desejada no seletor de período (Hoje, 7 Dias, 30 Dias, Este Mês, etc.).',
+          'Para definir datas específicas, escolha "Personalizado" e preencha a Data Inicial e Data Final.',
+          'Tanto as métricas dos cards quanto a lista de comunicados serão recalculados instantaneamente para o intervalo escolhido.'
+        ]
+      },
+      {
+        title: 'Como Publicar um Comunicado Rápido',
+        steps: [
+          'No topo do mural, clique em "+ Novo Comunicado".',
+          'Selecione a Categoria clínica (Internação, Alta, Intercorrência, etc.).',
+          'Busque e selecione o paciente para vincular o comunicado diretamente ao prontuário.',
+          'Defina o Salão, Turno e nível de Urgência.',
+          'Escreva a mensagem e clique em "Publicar". O aviso aparecerá instantaneamente para toda a equipe.'
+        ]
+      },
+      {
+        title: 'Como Confirmar Ciência em um Comunicado',
+        steps: [
+          'No card do comunicado, clique no botão "Dar Ciente".',
+          'O sistema registrará seu nome, cargo e horário de leitura.',
+          'Clique no contador de cientes para ver a lista de todos os profissionais que já confirmaram leitura.'
+        ]
+      },
+      {
+        title: 'Como Utilizar a Ingestão de E-mails com IA',
+        steps: [
+          'Clique no botão "Ingestão IA" no cabeçalho do módulo.',
+          'Cole o texto ou remetente de qualquer e-mail de intercorrência recebido da equipe.',
+          'Clique em "Processar IA" para que o sistema extraia o paciente, categoria e urgência.',
+          'Revise os dados e clique em "Aprovar" para inserir diretamente no mural assistencial.'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'Como funciona o filtro pelos Cards de KPI?',
+        resposta: 'Basta clicar em qualquer card de métrica (Total, Internações, Altas, Intercorrências ou Pendentes). Ao clicar, o feed aplica o filtro correspondente e o card fica realçado. Um segundo clique no card cancela o filtro.'
+      },
+      {
+        pergunta: 'Como funciona a sincronização automática dos e-mails da Titan?',
+        resposta: 'O robô em Python (scripts/sync_assist_emails.py) pode rodar como serviço em segundo plano conectando via IMAP na conta integracao@dialize.com.br. Ao receber um e-mail novo, ele grava no Firestore e o mural atualiza em tempo real para todos os usuários.'
+      },
+      {
+        pergunta: 'O que fazer se um e-mail recebido não vinculou o paciente automaticamente?',
+        resposta: 'O comunicado receberá a tag de "Pendentes". Basta clicar no botão "Associar Paciente" no card do comunicado e selecionar o paciente correto na lista.'
+      },
+      {
+        pergunta: 'Como filtrar apenas comunicados que eu ainda não li?',
+        resposta: 'Clique no botão de filtro "Não Lidos" na barra superior para exibir apenas os comunicados pendentes do seu ciente.'
+      }
+    ]
   }
 };
