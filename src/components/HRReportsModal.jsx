@@ -8,6 +8,7 @@ import {
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { STANDARD_SECTORS, normalizeSingleWord, normalizeSectorName } from '../data/hrConstants';
 
 export default function HRReportsModal({ 
   onClose, 
@@ -85,8 +86,9 @@ export default function HRReportsModal({
 
   const getSectorName = (sectorId) => {
     if (!sectorId) return 'Geral';
-    const sec = sectors.find(s => s.id === sectorId || s.name === sectorId);
-    return sec ? sec.name : sectorId;
+    const activeList = (sectors && sectors.length > 0 ? sectors : STANDARD_SECTORS);
+    const sec = activeList.find(s => s.id === sectorId || s.name.toLowerCase() === sectorId.toLowerCase());
+    return sec ? normalizeSectorName(sec.name) : normalizeSectorName(sectorId);
   };
 
   useEffect(() => {
@@ -130,7 +132,7 @@ export default function HRReportsModal({
           .map(e => ({
             nome: e.name || '-',
             cpf: e.cpf || '-',
-            cargo: e.role || '-',
+            cargo: normalizeSingleWord(e.role) || '-',
             setor: getSectorName(e.sectorId),
             admissao: formatDateBR(e.admissionDate),
             contrato: e.contractType || 'CLT',
@@ -917,26 +919,30 @@ export default function HRReportsModal({
             <div style={styles.filtersBar}>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={styles.filterGroup}>
-                  <label style={styles.label}>Data Inicial</label>
+                  <label style={styles.label}>Início</label>
                   <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={styles.input} />
                 </div>
                 <div style={styles.filterGroup}>
-                  <label style={styles.label}>Data Final</label>
+                  <label style={styles.label}>Fim</label>
                   <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={styles.input} />
                 </div>
                 <div style={styles.filterGroup}>
                   <label style={styles.label}>Setor</label>
                   <select value={sectorFilter} onChange={e => setSectorFilter(e.target.value)} style={styles.input}>
                     <option value="Todos">Todos os Setores</option>
-                    {sectors.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                    {(sectors && sectors.length > 0 ? sectors : STANDARD_SECTORS)
+                      .map(s => ({ ...s, name: normalizeSectorName(s.name) }))
+                      .filter((s, idx, arr) => arr.findIndex(x => x.name === s.name) === idx)
+                      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+                      .map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
                   </select>
                 </div>
                 <div style={styles.filterGroup}>
                   <label style={styles.label}>Status</label>
                   <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={styles.input}>
-                    <option value="Ativo">Apenas Ativos</option>
-                    <option value="Inativo">Inativos / Demitidos</option>
-                    <option value="Todos">Todos os Cadastros</option>
+                    <option value="Ativo">Ativos</option>
+                    <option value="Inativo">Inativos</option>
+                    <option value="Todos">Todos</option>
                   </select>
                 </div>
 

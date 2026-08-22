@@ -14498,39 +14498,35 @@ export const mockFirestore = {
   getSectors: async () => {
     const db = getDB();
     const defaultSectors = [
-      { id: 'hemodialise', name: 'Hemodiálise (Salões)', description: 'Salões de Hemodiálise e Assistência Dialítica' },
-      { id: 'dialise_peritoneal', name: 'Diálise Peritoneal (DP)', description: 'Atendimento e Treinamento de DP Domiciliar' },
-      { id: 'medica', name: 'Corpo Clínico & Médicos', description: 'Nefrologistas, Plantonistas e Consultórios' },
-      { id: 'enfermagem', name: 'Enfermagem', description: 'Equipe de Enfermagem Geral e Supervisão' },
-      { id: 'farmacia', name: 'Farmácia & Almoxarifado', description: 'Dispensação Farmacêutica, Medicamentos e Insumos' },
-      { id: 'recepcao', name: 'Recepção & Atendimento', description: 'Portaria, Atendimento e Admissão de Pacientes' },
-      { id: 'faturamento', name: 'Faturamento & APACs', description: 'Auditoria de Guias SUS, APACs e Convênios' },
-      { id: 'manutencao', name: 'Manutenção & Engenharia Clínica', description: 'Manutenção Predial, Equipamentos e Sistema de Água (ETA)' },
-      { id: 'qualidade', name: 'Qualidade & BI', description: 'Auditorias, Indicadores Assistenciais e Segurança do Paciente' },
-      { id: 'psicologia', name: 'Psicologia Clínica', description: 'Suporte Emocional e Acompanhamento Psicológico Renal' },
-      { id: 'nutricao', name: 'Nutrição Clínica', description: 'Dietoterapia Renal e Avaliações Antropométricas' },
-      { id: 'servico_social', name: 'Serviço Social', description: 'Acolhimento Social, Direitos e Apoio à Família' },
-      { id: 'rh', name: 'Recursos Humanos (RH)', description: 'Gestão de Pessoas, Benefícios VT, DP e Folha' },
-      { id: 'financeiro', name: 'Financeiro & Controladoria', description: 'Contas a Pagar/Receber, Tesouraria e Fluxo de Caixa' },
-      { id: 'compras', name: 'Compras & Suprimentos', description: 'Cotações de 3 Orçamentos, Compras e Fornecedores' },
-      { id: 'sesmt', name: 'SESMT & Segurança do Trabalho', description: 'Checklists de EPIs, Prevenção de Acidentes e Brigada' },
-      { id: 'ti', name: 'Tecnologia da Informação (TI)', description: 'Infraestrutura de Rede, Suporte, Servidores e Software' },
-      { id: 'higienizacao', name: 'Higienização & Limpeza', description: 'Controle de Resíduos de Saúde, Limpeza e Desinfecção Hospitalar' },
-      { id: 'diretoria', name: 'Diretoria & Administração', description: 'Alta Gestão, Compliance e Governança Clínica' }
-    ];
-    if (!db.sectors || db.sectors.length === 0) {
-      db.sectors = defaultSectors;
-      setDB(db);
-    } else {
-      let changed = false;
-      defaultSectors.forEach(defSec => {
-        if (!db.sectors.some(s => s.id === defSec.id)) {
-          db.sectors.push(defSec);
-          changed = true;
-        }
-      });
-      if (changed) setDB(db);
-    }
+      { id: 'administracao', name: 'Administração', description: 'Diretoria e Gestão' },
+      { id: 'almoxarifado', name: 'Almoxarifado', description: 'Almoxarifado' },
+      { id: 'ambulatorio', name: 'Ambulatório', description: 'Ambulatório e Consultórios' },
+      { id: 'atendimento', name: 'Atendimento', description: 'Atendimento ao Paciente' },
+      { id: 'clinica', name: 'Clínica', description: 'Área Clínica Geral' },
+      { id: 'compras', name: 'Compras', description: 'Compras e Suprimentos' },
+      { id: 'diretoria', name: 'Diretoria', description: 'Diretoria Geral' },
+      { id: 'enfermagem', name: 'Enfermagem', description: 'Equipe de Enfermagem' },
+      { id: 'estoque', name: 'Estoque', description: 'Controle de Estoque' },
+      { id: 'farmacia', name: 'Farmácia', description: 'Farmácia Hospitalar' },
+      { id: 'faturamento', name: 'Faturamento', description: 'Faturamento e APACs' },
+      { id: 'financeiro', name: 'Financeiro', description: 'Financeiro e Controladoria' },
+      { id: 'hemodialise', name: 'Hemodiálise', description: 'Salões de Hemodiálise' },
+      { id: 'higienizacao', name: 'Higienização', description: 'Higienização e Limpeza' },
+      { id: 'manutencao', name: 'Manutenção', description: 'Manutenção e Engenharia Clínica' },
+      { id: 'medica', name: 'Médico', description: 'Corpo Clínico' },
+      { id: 'nutricao', name: 'Nutrição', description: 'Nutrição Clínica' },
+      { id: 'peritoneal', name: 'Peritoneal', description: 'Diálise Peritoneal' },
+      { id: 'psicologia', name: 'Psicologia', description: 'Psicologia Clínica' },
+      { id: 'qualidade', name: 'Qualidade', description: 'Qualidade e Auditoria' },
+      { id: 'recepcao', name: 'Recepção', description: 'Recepção e Portaria' },
+      { id: 'rh', name: 'RH', description: 'Recursos Humanos' },
+      { id: 'sesmt', name: 'SESMT', description: 'Segurança do Trabalho' },
+      { id: 'social', name: 'Social', description: 'Serviço Social' },
+      { id: 'ti', name: 'TI', description: 'Tecnologia da Informação' }
+    ].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+
+    db.sectors = defaultSectors;
+    setDB(db);
     return db.sectors;
   },
 

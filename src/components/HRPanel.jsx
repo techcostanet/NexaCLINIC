@@ -26,7 +26,7 @@ const DEFAULT_DASHBOARD_LAYOUT = [
 import { useHRLogic } from './HR/hooks/useHRLogic';
 import AwardReportModal from './HR/AwardReportModal';
 import HRReportsModal from './HRReportsModal';
-import { STANDARD_ROLES, STANDARD_SECTORS } from '../data/hrConstants';
+import { STANDARD_ROLES, STANDARD_SECTORS, normalizeSingleWord, normalizeSectorName } from '../data/hrConstants';
 
 export const formatDateBR = (dateVal) => {
   if (!dateVal) return '-';
@@ -892,7 +892,11 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
 
                     <select value={filterSector} onChange={e => setFilterSector(e.target.value)} style={styles.filterSelect}>
                       <option value="">Todos os Setores</option>
-                      {(sectors && sectors.length > 0 ? sectors : STANDARD_SECTORS).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      {(sectors && sectors.length > 0 ? sectors : STANDARD_SECTORS)
+                        .map(s => ({ ...s, name: normalizeSectorName(s.name) }))
+                        .filter((s, idx, arr) => arr.findIndex(x => x.name === s.name) === idx)
+                        .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+                        .map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
 
                     {/* View Mode Segmented Selector */}
@@ -986,7 +990,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                           </th>
                           <th onClick={() => handleSort('role')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Cargo">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                              Cargo / Setor {renderSortIcon('role')}
+                              Cargo {renderSortIcon('role')}
                             </div>
                           </th>
                           <th onClick={() => handleSort('contractType')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Contrato">
@@ -1037,8 +1041,8 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                                 </td>
                                 <td style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}>{emp.cpf}</td>
                                 <td style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}>
-                                  <span style={{ fontWeight: '600' }}>{emp.role}</span>
-                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.35rem' }}>({sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId})</span>
+                                  <span style={{ fontWeight: '600' }}>{normalizeSingleWord(emp.role)}</span>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.35rem' }}>({normalizeSectorName(sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId)})</span>
                                 </td>
                                 <td style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}>
                                   <span style={{ fontSize: '0.7rem', fontWeight: '700', padding: '0.1rem 0.35rem', borderRadius: '4px', backgroundColor: emp.contractType === 'PJ' ? '#e0e7ff' : '#f1f5f9', color: emp.contractType === 'PJ' ? '#4338ca' : '#334155' }}>
@@ -1087,12 +1091,12 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                           </th>
                           <th onClick={() => handleSort('role')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Cargo">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                              Setor & Cargo {renderSortIcon('role')}
+                              Cargo {renderSortIcon('role')}
                             </div>
                           </th>
                           <th onClick={() => handleSort('salary')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Salário">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                              Contrato & Salário {renderSortIcon('salary')}
+                              Salário {renderSortIcon('salary')}
                             </div>
                           </th>
                           <th onClick={() => handleSort('admissionDate')} style={{ cursor: 'pointer', userSelect: 'none' }} title="Clique para ordenar por Admissão">
@@ -1137,8 +1141,8 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                                 </td>
                                 <td>{emp.cpf}</td>
                                 <td>
-                                  <div style={{ fontWeight: '600' }}>{emp.role}</div>
-                                  <span style={styles.categoryBadge}>{sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId}</span>
+                                  <div style={{ fontWeight: '600' }}>{normalizeSingleWord(emp.role)}</div>
+                                  <span style={styles.categoryBadge}>{normalizeSectorName(sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId)}</span>
                                 </td>
                                 <td>
                                   <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{formatCurrencyBR(emp.salary)}</div>
@@ -1274,10 +1278,10 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                                   {emp.name}
                                 </h3>
                                 <div style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)', marginTop: '0.15rem' }}>
-                                  {emp.role}
+                                  {normalizeSingleWord(emp.role)}
                                 </div>
                                 <span style={{ ...styles.categoryBadge, marginTop: '0.25rem', display: 'inline-block' }}>
-                                  {sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId}
+                                  {normalizeSectorName(sectors.find(s => s.id === emp.sectorId)?.name || emp.sectorId)}
                                 </span>
                               </div>
                             </div>
@@ -1550,15 +1554,15 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       <select 
                         className="form-control" 
                         required 
-                        value={empForm.role || ''} 
+                        value={empForm.role ? normalizeSingleWord(empForm.role) : ''} 
                         onChange={e => setEmpForm({ ...empForm, role: e.target.value })}
                       >
                         <option value="">Selecione o cargo...</option>
                         {STANDARD_ROLES.map(r => (
                           <option key={r} value={r}>{r}</option>
                         ))}
-                        {empForm.role && !STANDARD_ROLES.includes(empForm.role) && (
-                          <option value={empForm.role}>{empForm.role} (Atual)</option>
+                        {empForm.role && !STANDARD_ROLES.includes(normalizeSingleWord(empForm.role)) && (
+                          <option value={normalizeSingleWord(empForm.role)}>{normalizeSingleWord(empForm.role)}</option>
                         )}
                       </select>
                     </div>
@@ -1567,15 +1571,24 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       <select 
                         className="form-control" 
                         required
-                        value={empForm.sectorId || ''} 
+                        value={(() => {
+                          if (!empForm.sectorId) return '';
+                          const activeList = (sectors && sectors.length > 0 ? sectors : STANDARD_SECTORS);
+                          const matched = activeList.find(s => s.id === empForm.sectorId || s.name.toLowerCase() === empForm.sectorId.toLowerCase());
+                          return matched ? matched.id : empForm.sectorId;
+                        })()} 
                         onChange={e => setEmpForm({ ...empForm, sectorId: e.target.value })}
                       >
                         <option value="">Selecione o setor...</option>
-                        {(sectors && sectors.length > 0 ? sectors : STANDARD_SECTORS).map(s => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                        {empForm.sectorId && !(sectors || STANDARD_SECTORS).some(s => s.id === empForm.sectorId) && (
-                          <option value={empForm.sectorId}>{empForm.sectorId} (Atual)</option>
+                        {(sectors && sectors.length > 0 ? sectors : STANDARD_SECTORS)
+                          .map(s => ({ ...s, name: normalizeSectorName(s.name) }))
+                          .filter((s, idx, arr) => arr.findIndex(x => x.name === s.name) === idx)
+                          .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+                          .map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        {empForm.sectorId && !(sectors || STANDARD_SECTORS).some(s => s.id === empForm.sectorId || s.name.toLowerCase() === empForm.sectorId.toLowerCase()) && (
+                          <option value={empForm.sectorId}>{normalizeSectorName(empForm.sectorId)}</option>
                         )}
                       </select>
                     </div>
@@ -2070,7 +2083,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                           <option value="">Nenhum funcionário encontrado</option>
                         ) : (
                           filteredVtEmployees.map(emp => (
-                            <option key={emp.id} value={emp.id}>{emp.name} ({emp.role})</option>
+                            <option key={emp.id} value={emp.id}>{emp.name} ({normalizeSingleWord(emp.role)})</option>
                           ))
                         )}
                       </select>

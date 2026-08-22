@@ -1,3 +1,16 @@
+## [v4.7.43] - 22 de Agosto, 2026
+### Padronização Estrita de Cargos e Setores (1 Palavra, Title Case e Ordem Alfabética A-Z)
+- **Cargos Padronizados em 1 Palavra e Primeira Letra Maiúscula:**
+  - Padronização de todo o catálogo de cargos para termos únicos com primeira letra maiúscula (`Administrador`, `Administrativo`, `Almoxarife`, `Analista`, `Assistente`, `Atendente`, `Auxiliar`, `Biomédico`, `Comprador`, `Coordenador`, `Diretor`, `Enfermeiro`, `Engenheiro`, `Estagiário`, `Estoquista`, `Farmacêutico`, `Faturista`, `Gerente`, `Higienista`, `Líder`, `Manutenção`, `Médico`, `Motorista`, `Nefrologista`, `Nutricionista`, `Plantonista`, `Psicólogo`, `Recepcionista`, `Supervisor`, `Técnico`).
+  - Ordenação estritamente alfabética (`A-Z`).
+- **Setores Padronizados em 1 Palavra e Primeira Letra Maiúscula:**
+  - Catálogo de 25 setores ajustado para termos únicos objetivos (`Administração`, `Almoxarifado`, `Ambulatório`, `Atendimento`, `Clínica`, `Compras`, `Diretoria`, `Enfermagem`, `Estoque`, `Farmácia`, `Faturamento`, `Financeiro`, `Hemodiálise`, `Higienização`, `Manutenção`, `Médico`, `Nutrição`, `Peritoneal`, `Psicologia`, `Qualidade`, `Recepção`, `RH`, `SESMT`, `Social`, `TI`).
+  - Ordenação estritamente alfabética (`A-Z`) e deduplicação garantida.
+- **Normalização Automática de Dados Legados:**
+  - Conversão inteligente de cadastros legados com nomes compostos ou em caixa alta (ex: `AUXILIAR ADMINISTRATIVO` ➡️ `Administrativo`, `administrativo (Atual)` ➡️ `Administração`), refletindo em todas as telas, cards, listas e relatórios.
+
+---
+
 ## [v4.7.42] - 22 de Agosto, 2026
 ### Módulo RH — Cargos Selecionáveis Padronizados e Expansão de Setores Hospitalares & Clínicos
 - **Cargos Selecionáveis Padronizados (`STANDARD_ROLES`):**

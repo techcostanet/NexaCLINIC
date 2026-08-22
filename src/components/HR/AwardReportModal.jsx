@@ -3,6 +3,7 @@ import { Trophy, X, Printer, Download, FileSpreadsheet, CheckCircle, AlertTriang
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { formatDateBR, formatCurrencyBR } from '../HRPanel';
+import { normalizeSingleWord, normalizeSectorName } from '../../data/hrConstants';
 
 export default function AwardReportModal({
   isOpen,
@@ -337,7 +338,7 @@ export default function AwardReportModal({
                       <th style={{ width: '40px', textAlign: 'center' }}>Nº</th>
                       <th>Colaborador</th>
                       <th>CPF</th>
-                      <th>Cargo / Setor</th>
+                      <th>Cargo</th>
                       <th style={{ textAlign: 'center' }}>Admissão</th>
                       <th style={{ textAlign: 'center' }}>Tempo</th>
                       <th style={{ textAlign: 'right' }}>Prêmio (R$)</th>
@@ -358,8 +359,8 @@ export default function AwardReportModal({
                           </td>
                           <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{emp.cpf || '-'}</td>
                           <td>
-                            <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{emp.role || 'Colaborador'}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{sectorName}</div>
+                            <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{normalizeSingleWord(emp.role) || 'Colaborador'}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{normalizeSectorName(sectorName)}</div>
                           </td>
                           <td style={{ textAlign: 'center', fontSize: '0.85rem' }}>{formatDateBR(emp.admissionDate)}</td>
                           <td style={{ textAlign: 'center', fontSize: '0.85rem', color: '#10b981', fontWeight: '600' }}>{timeText}</td>
@@ -392,7 +393,7 @@ export default function AwardReportModal({
                     <tr>
                       <th style={{ width: '40px', textAlign: 'center' }}>Nº</th>
                       <th>Colaborador</th>
-                      <th>Vínculo / Cargo</th>
+                      <th>Cargo</th>
                       <th>Setor</th>
                       <th style={{ textAlign: 'center' }}>Admissão</th>
                       <th>Motivo(s) da Desclassificação</th>
@@ -411,12 +412,12 @@ export default function AwardReportModal({
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>CPF: {emp.cpf || '-'}</div>
                           </td>
                           <td>
-                            <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{emp.role || 'Colaborador'}</div>
+                            <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{normalizeSingleWord(emp.role) || 'Colaborador'}</div>
                             <span style={{ ...modalStyles.contractBadge, backgroundColor: contractType === 'CLT' ? '#f1f5f9' : '#fee2e2', color: contractType === 'CLT' ? '#475569' : '#b91c1c' }}>
                               {contractType}
                             </span>
                           </td>
-                          <td style={{ fontSize: '0.85rem' }}>{sectorName}</td>
+                          <td style={{ fontSize: '0.85rem' }}>{normalizeSectorName(sectorName)}</td>
                           <td style={{ textAlign: 'center', fontSize: '0.85rem' }}>{formatDateBR(emp.admissionDate)}</td>
                           <td>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>

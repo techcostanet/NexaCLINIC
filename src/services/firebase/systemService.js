@@ -105,13 +105,12 @@ export const getSectors = async () => {
     if (USE_MOCK) {
       return mockFirestore.getSectors();
     }
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+    const { getFirestore, collection, getDocs, writeBatch, doc } = await import('firebase/firestore');
     const db = getFirestore(app);
     const snap = await getDocs(collection(db, 'sectors'));
     
     // Seed default sectors if Firestore is empty
     if (snap.empty) {
-      const { writeBatch, doc } = await import('firebase/firestore');
       const batch = writeBatch(db);
       STANDARD_SECTORS.forEach(sec => {
         batch.set(doc(db, 'sectors', sec.id), sec);
@@ -120,23 +119,7 @@ export const getSectors = async () => {
       return STANDARD_SECTORS;
     }
     
-    const existing = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    // Mesclar setores padrão que ainda não existem
-    const missing = STANDARD_SECTORS.filter(s => !existing.some(e => e.id === s.id));
-    if (missing.length > 0) {
-      try {
-        const { writeBatch, doc } = await import('firebase/firestore');
-        const batch = writeBatch(db);
-        missing.forEach(sec => {
-          batch.set(doc(db, 'sectors', sec.id), sec);
-        });
-        await batch.commit();
-      } catch (err) {
-        console.warn('Erro ao mesclar setores faltantes:', err);
-      }
-      return [...existing, ...missing];
-    }
-    return existing;
+    return STANDARD_SECTORS.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   };
 
 export const deleteStockTransfer = async (id) => {

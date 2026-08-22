@@ -102,8 +102,8 @@ export const MODULE_GUIDES = {
         desc: 'Relatórios completos em PDF e Excel (Cadastro Geral, VT, Presença Premiada, Aniversariantes, Advertências, Absenteísmo, Turnover, Experiência, Vacinas, Dependentes, Folha Sintética, Dados Bancários/PIX, Documentos/CNH, Efetivo e Auditoria LGPD).'
       },
       {
-        title: 'Cargos e Setores Hospitalares Padronizados',
-        desc: 'Classificação estruturada de cargos da saúde (Enfermagem, Nefrologistas, Farmácia, Nutrição, Psicologia, Engenharia Clínica e SESMT) e setores hospitalares completos para controle de lotação e folha.'
+        title: 'Cargos e Setores Padronizados (1 Palavra A-Z)',
+        desc: 'Catálogo de cargos e 25 setores hospitalares padronizados estritamente com termo único, primeira letra maiúscula e ordenação alfabética (A-Z), com normalização automática de cadastros legados.'
       },
       {
         title: 'Múltiplas Visualizações de Funcionários',

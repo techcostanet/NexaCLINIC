@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.43',
+      date: '22/08/2026',
+      title: 'Padronização Estrita de Cargos e Setores (1 Palavra, Title Case e Ordem A-Z)',
+      description: 'Todos os cargos e setores foram padronizados rigorosamente com 1 palavra apenas, primeira letra maiúscula e ordenação alfabética estrita nos dois campos.',
+      changes: [
+        { type: 'Cargos (A-Z)', text: 'Catálogo de cargos reestruturado com exatamente 1 termo (Administrador, Enfermeiro, Médico, Nutricionista, Técnico, etc.) em ordem alfabética.' },
+        { type: 'Setores (A-Z)', text: 'Catálogo de 25 setores ajustado para termos únicos (Administração, Enfermagem, Farmácia, Hemodiálise, Recepção, etc.) em ordem alfabética.' },
+        { type: 'Normalização Legada', text: 'Mapeamento inteligente para que cadastros antigos em caixa alta ou compostos sejam exibidos e salvos no novo formato padronizado.' }
+      ]
+    },
+    {
       version: 'v4.7.42',
       date: '22/08/2026',
       title: 'Módulo RH — Cargos Selecionáveis Padronizados e Expansão de Setores Hospitalares',
