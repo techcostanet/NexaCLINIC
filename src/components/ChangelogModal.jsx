@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.34',
+      date: '22/08/2026',
+      title: 'Módulo de Compras Inteligente - Modelo dos 4 Saldos de Estoque, TTL de Requisições Configurável e Semáforo de Urgência',
+      description: 'Implementação do modelo dos 4 saldos de estoque (Físico, Reservado, Disponível e Trânsito) no módulo de compras e almoxarifado, cálculo automático do saldo disponível para evitar falsos positivos de compra entre turnos, controle de tempo de vida (TTL inicial de 1h configurável em TI) para expiração automática de requisições pendentes, semáforo de urgência visual e renovação em 1 clique para enfermagem.',
+      changes: [
+        { type: '4 Saldos de Estoque em Compras', text: 'Aba Reposição com matriz de decisão inteligente exibindo Físico, Reservado (pedidos dos salões), Disponível (Físico - Reservado), Trânsito (pedidos em andamento), Mínimo e Sugestão. O gatilho de compra dispara quando Disponível <= Mínimo.' },
+        { type: 'Detalhamento de Requisições por Salão', text: 'Clique direto no badge de saldo Reservado para inspecionar todas as requisições em aberto com código, salão, solicitante, paciente, quantidade e data/hora.' },
+        { type: 'TTL de Requisições Configurável em T.I.', text: 'Parametrização do tempo limite das requisições (1h padrão, 2h, 4h, 8h/turno, 12h, 24h) com expiração automática das pendentes e liberação imediata do saldo reservado.' },
+        { type: 'Semáforo de Urgência & Contagem Regressiva', text: 'Indicador visual de tempo restante nas requisições da enfermagem e farmácia com semáforo de urgência (verde, amarelo, vermelho) e botão de renovação em 1 clique para pedidos expirados.' },
+        { type: 'Documentação e Manuais Atualizados', text: 'Atualização completa das diretrizes, tutoriais e dúvidas frequentes dos módulos de Compras, Estoque, Requisições e Configurações em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v4.7.32',
       date: '22/08/2026',
       title: 'Módulo de Compras (NexaPROCURE) - Reposição Crítica em Tempo Real, Pedidos em Lote, Design Padronizado e Fornecedores Ordenáveis',

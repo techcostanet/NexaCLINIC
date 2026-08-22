@@ -365,65 +365,124 @@ export const MODULE_GUIDES = {
     ]
   },
 
-  purchasing: {
-    id: 'purchasing',
-    name: 'Compras & Cotações',
-    subtitle: 'NexaPROCURE — Suprimentos & Orçamentos',
+  stock: {
+    id: 'stock',
+    name: 'Estoque & Farmácia',
+    subtitle: 'NexaSTOCK — Farmácia Clínica & Insumos',
     color: '#f59e0b',
     recursos: [
       {
-        title: 'Solicitações de Compra',
-        desc: 'Abertura de pedidos de compra pelos setores da clínica com justificativa técnica e grau de urgência.'
+        title: 'Modelo dos 4 Saldos de Estoque',
+        desc: 'Visão fidedigna do estoque: Físico (na prateleira), Reservado (solicitado pelos salões), Disponível (livre para novas demandas) e Trânsito (pedidos de compras abertos).'
       },
       {
-        title: 'Mapa Comparativo de 3 Cotações',
-        desc: 'Inserção de propostas de até 3 fornecedores com destaque automático para o menor preço e melhor condição de pagamento.'
+        title: 'Expiração Automática por TTL',
+        desc: 'Requisições pendentes ou parciais não atendidas no prazo configurado (padrão 1h) expiram automaticamente, liberando o saldo reservado de volta para o disponível.'
       },
       {
-        title: 'Alçada de Aprovação de Diretoria',
-        desc: 'Fluxo de autorização de verba com aprovação ou rejeição formal pelo gestor financeiro.'
+        title: 'Semáforo de Urgência no Atendimento',
+        desc: 'Indicador visual por tempo de vida das requisições: 🟢 Recente (>30m), 🟡 Atenção (15 a 30m), 🔴 Quase Expirando (<15m) e ⏱️ Expirada (TTL esgotado).'
       },
       {
-        title: 'Conversão Automática em Ordem de Compra (OC)',
-        desc: 'Geração de PDF da Ordem de Compra para envio formal ao fornecedor vencedor.'
+        title: 'Múltiplos Modos de Visualização do Catálogo',
+        desc: '3 visualizações operacionais: Compacta (padrão de alta densidade), Normal (detalhada com nível e valor estocado) e Cards (grade visual de suprimentos).'
+      },
+      {
+        title: 'Gestão de Kits de Insumos & Procedimentos',
+        desc: 'Cadastro e manutenção de kits clínicos padronizados (ex: Kit Conexão de Fístula, Kit Punção, Kit Curativo) com cálculo automático de custo e vinculação ao salão físico.'
+      },
+      {
+        title: 'Sinalização Visual de Medicamentos Controlados',
+        desc: 'Identificação visual imediata (Portaria 344/ANVISA) em vermelho de alerta em todo o catálogo, kits, requisições do salão e atendimento da farmácia.'
+      },
+      {
+        title: 'Logística de Salões de Diálise Integrada',
+        desc: 'Roteamento físico obrigatório de pedidos de kits para Salão 1, Salão 2 ou Salão 3, permitindo separação e entrega no posto correto.'
+      },
+      {
+        title: 'Central de Relatórios (15 Tipos)',
+        desc: 'Suíte completa com 15 relatórios analíticos: Curva ABC, Posição Geral, Itens Críticos, Validades FEFO, Recall e Kardex.'
+      },
+      {
+        title: 'Gestão de Inventários Físicos & Auditoria',
+        desc: 'Criação e execução de contagens de estoque por local com apuração imediata de divergências e ajuste automático de saldo.'
+      },
+      {
+        title: 'Transferências Entre Locais de Armazenamento',
+        desc: 'Transferência rápida e rastreável de insumos e medicamentos entre estoques e almoxarifados setoriais.'
+      },
+      {
+        title: 'Empréstimos Inter-Hospitalares Inteligentes',
+        desc: 'Controle de insumos concedidos e recebidos de clínicas parceiras com auto-sugestão dinâmica de instituições cadastradas.'
+      },
+      {
+        title: 'Controle de Lotes & Rastreabilidade',
+        desc: 'Gestão atômica de múltiplos lotes com saldos individuais, validade, fornecedor e nota fiscal de origem.'
+      },
+      {
+        title: 'Dispensação com Sugestão FEFO',
+        desc: 'Atendimento de requisições com seleção de lote físico e recomendação automática do lote mais próximo do vencimento.'
+      },
+      {
+        title: 'Painel de Busca Reversa (Recall)',
+        desc: 'Rastreabilidade completa de ponta a ponta: fornecedor, nota fiscal de compra e todos os pacientes que receberam o lote.'
       }
     ],
     tutorial: [
       {
-        title: 'Como Criar uma Solicitação de Compra',
+        title: 'Como Atender Requisições com Controle de Urgência',
         steps: [
-          'Clique no botão "+ Nova Solicitação".',
-          'Descreva os itens solicitados, quantidades, setor requisitante e justificativa.',
-          'Defina a prioridade (Baixa, Média, Alta ou Urgente) e clique em "Salvar".',
-          'O setor de compras receberá a notificação para iniciar as cotações.'
+          'Acesse a aba "Requisições" no painel de Estoque.',
+          'Observe o semáforo de tempo restante ao lado do status (🟢 Recente, 🟡 Atenção, 🔴 Quase Expirando).',
+          'Atenda as requisições prioritárias antes do término do tempo limite de TTL.',
+          'Clique em "Atender Requisição", selecione os lotes físicos (sugestão FEFO) e confirme a entrega.',
+          'Caso uma requisição expire pelo TTL, seu status muda para "Expirada" e a reserva de saldo é desfeita automaticamente.'
         ]
       },
       {
-        title: 'Como Preencher o Mapa de Cotações',
+        title: 'Como Cadastrar um Kit de Insumos',
         steps: [
-          'Abra a solicitação pendente e acesse a aba "Cotações".',
-          'Insira os dados do Fornecedor A, Fornecedor B e Fornecedor C (Preço Unitário, Frete e Prazo de Entrega).',
-          'O sistema calcula o menor custo global e recomenda a melhor proposta.',
-          'Envie para a "Alçada de Aprovação da Diretoria".'
+          'Acesse a aba "Kits" no painel de Estoque.',
+          'Clique no botão "+ Novo Kit".',
+          'Preencha o Código (ex: KIT-HEMO-01), Nome do Kit, Categoria e Salão Padrão sugerido.',
+          'No seletor de composição, escolha os insumos e ajuste as quantidades necessárias.',
+          'Confira o custo estimado total do pacote e clique em "Salvar Kit".'
         ]
       },
       {
-        title: 'Como Emitir a Ordem de Compra',
+        title: 'Como Identificar e Cadastrar Medicamentos Controlados',
         steps: [
-          'Após a aprovação da diretoria, clique em "Gerar Ordem de Compra".',
-          'Baixe o documento em PDF ou envie diretamente por e-mail ao fornecedor.',
-          'Quando a mercadoria for entregue, a OC alimentará a entrada no estoque com 1 clique.'
+          'No cadastro de insumos ou edição de produto, marque a opção "🔒 Medicamento Controlado (Portaria 344)".',
+          'O sistema passará a exibir a tarja e o badge de segurança vermelho no catálogo, na lista de kits e nas requisições da enfermagem.',
+          'Itens controlados exigem atenção redobrada na dispensação e guarda em armário trancado.'
+        ]
+      },
+      {
+        title: 'Como Realizar uma Transferência de Estoque',
+        steps: [
+          'Acesse a aba "Transferências".',
+          'Clique no botão "+ Nova Transferência" no cabeçalho da tabela.',
+          'Selecione a origem, o destino, o insumo, a quantidade e o lote correspondente.',
+          'Confirme o lançamento para movimentar o saldo entre os locais instantaneamente.'
         ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'É obrigatório ter 3 cotações para aprovar uma compra?',
-        resposta: 'Para itens de valor relevante a política do sistema recomenda 3 orçamentos, mas para compras exclusivas ou tabeladas é possível justificar fornecedor único.'
+        pergunta: 'O que é o Estoque Reservado e como ele afeta o Almoxarifado?',
+        resposta: 'O Estoque Reservado é a soma de todos os insumos solicitados pela enfermagem que ainda estão pendentes de entrega. O saldo Disponível (Físico - Reservado) reflete o que realmente pode ser usado ou prometido.'
       },
       {
-        pergunta: 'Como o financeiro sabe o que foi aprovado em compras?',
-        resposta: 'As ordens de compra aprovadas alimentam a previsão de desembolso no módulo financeiro, auxiliando no planejamento de caixa.'
+        pergunta: 'O que acontece quando uma requisição atinge o tempo limite (TTL)?',
+        resposta: 'Ela muda automaticamente para o status "Expirada" e os materiais reservados voltam a ficar disponíveis para o estoque geral, evitando que pedidos esquecidos travem falsamente os insumos da clínica.'
+      },
+      {
+        pergunta: 'Por que o saldo em estoque não aparece para a equipe de enfermagem ao requisitar?',
+        resposta: 'Para garantir que as solicitações de materiais sejam estritamente pautadas pela necessidade clínica do paciente em diálise, sem interferência ou viés pelo nível de estoque da farmácia central.'
+      },
+      {
+        pergunta: 'Como funciona a sinalização visual de medicamentos controlados?',
+        resposta: 'Todos os medicamentos sujeitos a controle especial pela Portaria 344/ANVISA recebem badges em vermelho de alto contraste (🔒 Controlado / Portaria 344) em todas as telas, alertas e relatórios.'
       }
     ]
   },
@@ -434,6 +493,14 @@ export const MODULE_GUIDES = {
     subtitle: 'NexaREQ — Enfermagem & Salões de Diálise',
     color: '#14b8a6',
     recursos: [
+      {
+        title: 'Controle de Tempo de Vida (TTL) & Expiração',
+        desc: 'Controle inteligente de tempo limite (inicial de 1h) para atendimento na farmácia com contagem regressiva em tempo real.'
+      },
+      {
+        title: 'Renovação de Requisições em 1 Clique',
+        desc: 'Botão de renovação instantânea para requisições que expiraram sem necessidade de preenchimento manual de todos os insumos novamente.'
+      },
       {
         title: 'Múltiplos Modos de Visualização',
         desc: '3 opções visuais completas: Compacta (padrão de alta velocidade), Normal (detalhada) e Cards (painel visual de solicitações com filtros rápidos).'
@@ -449,10 +516,6 @@ export const MODULE_GUIDES = {
       {
         title: 'Vinculação Obrigatória de Salão para Kits',
         desc: 'Direcionamento logístico seguro para entrega direta no Salão 1, Salão 2, Salão 3 ou Consultório.'
-      },
-      {
-        title: 'Foco Clínico sem Exibição de Saldo',
-        desc: 'Busca inteligente de insumos por ordem alfabética sem expor saldos numéricos para manter o foco na necessidade assistencial.'
       }
     ],
     tutorial: [
@@ -467,15 +530,26 @@ export const MODULE_GUIDES = {
         ]
       },
       {
-        title: 'Como Visualizar e Acompanhar o Atendimento',
+        title: 'Como Renovar uma Requisição Expirada',
         steps: [
-          'Alterne entre as visões "Compacta", "Normal" ou "Cards" no seletor do topo.',
-          'Acompanhe o status do pedido: Pendente (amarelo), Parcial (laranja) ou Entregue (verde).',
-          'Clique no botão de visualização (ícone de olho) para conferir a conferência física e as notas da farmácia central.'
+          'Caso o atendimento não ocorra dentro do TTL estabelecido (ex: 1h), a requisição receberá a tarja vermelha "Expirada (TTL)".',
+          'Na coluna de Ações (ou no rodapé do Card), clique no botão de renovar (ícone de repetição).',
+          'Confirme o envio: uma nova requisição com código atualizado será gerada imediatamente para a farmácia.'
+        ]
+      },
+      {
+        title: 'Como Acompanhar o Tempo Restante',
+        steps: [
+          'Em qualquer uma das visualizações (Compacta, Normal ou Cards), observe o contador ao lado do status (ex: "42m restantes").',
+          'Quando faltarem menos de 15 minutos, o alerta ficará em vermelho indicando urgência.'
         ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'O que significa o status "Expirada (TTL)" na minha requisição?',
+        resposta: 'Significa que o prazo configurado para retirada na farmácia (ex: 1 hora) expirou antes que a farmácia realizasse a baixa. A reserva do medicamento foi liberada e você pode clicar no botão "Renovar" para reenviar a solicitação.'
+      },
       {
         pergunta: 'Por que o saldo do estoque central não é exibido durante a requisição?',
         resposta: 'Para garantir que a equipe de enfermagem solicite exatamente o que o procedimento e o paciente necessitam, sem influências ou restrições pelo nível atual do almoxarifado.'
@@ -483,10 +557,6 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'É obrigatório selecionar o Salão de Destino?',
         resposta: 'Para requisições contendo Kits de produtos o campo Salão é obrigatório, pois a logística de entrega precisa saber em qual bancada física o kit deve ser depositado.'
-      },
-      {
-        pergunta: 'Posso editar ou cancelar uma requisição já enviada?',
-        resposta: 'Requisições com status "Pendente" podem ser editadas ou canceladas diretamente no painel. Pedidos que já estão em separação ou foram atendidos não podem ser alterados.'
       }
     ]
   },
@@ -697,13 +767,22 @@ export const MODULE_GUIDES = {
     subtitle: 'NexaCONFIG — Administração & Acessos',
     color: '#8b5cf6',
     recursos: [
-      { title: 'Gestão de Usuários & RBAC', desc: 'Controle de permissões, papéis de acesso e customização de tema.' }
+      { title: 'Gestão de Usuários & RBAC', desc: 'Controle de permissões, papéis de acesso e customização de tema.' },
+      { title: 'Tempo de Vida das Requisições (TTL)', desc: 'Parametrização do tempo limite (1h padrão, 2h, 4h, 8h/turno, 12h, 24h) para atendimento de materiais antes da liberação automática de saldo reservado.' }
     ],
     tutorial: [
-      { title: 'Administração do Sistema', steps: ['Acesso restrito a administradores de TI do sistema.'] }
+      {
+        title: 'Como Configurar o TTL de Requisições',
+        steps: [
+          'Acesse o módulo de Configurações.',
+          'Na seção "Parâmetros do Sistema / Farmácia", localize o campo "Tempo Limite de Requisições (TTL)".',
+          'Selecione um dos presets rápidos (1h, 2h, 4h, 8h/Turno, 12h, 24h) ou digite o valor em horas.',
+          'Clique em "Salvar Configurações". A regra será aplicada a todas as novas requisições de salão.'
+        ]
+      }
     ],
     duvidas: [
-      { pergunta: 'Manual em finalização', resposta: 'Consulte o suporte técnico de TI para parametrizações.' }
+      { pergunta: 'O que acontece ao alterar o TTL?', resposta: 'O novo limite temporal passa a valer para a verificação contínua de requisições pendentes, recalculando o prazo para que requisições não atendidas expirem.' }
     ]
   },
 
@@ -782,8 +861,12 @@ export const MODULE_GUIDES = {
     color: '#0891b2',
     recursos: [
       {
-        title: 'Reposição Crítica em Tempo Real',
-        desc: 'Monitoramento contínuo dos medicamentos e materiais com saldo abaixo ou igual ao estoque mínimo, com cálculo automático da sugestão de compra.'
+        title: 'Reposição Inteligente com 4 Saldos',
+        desc: 'Matriz visual de decisão de compra com colunas Físico, Reservado, Disponível, Trânsito, Mínimo e Sugestão. O gatilho de compra dispara quando Disponível <= Mínimo, evitando compras desnecessárias ou faltas surpresa.'
+      },
+      {
+        title: 'Detalhamento de Requisições por Salão',
+        desc: 'Clique direto no saldo Reservado para inspecionar todas as requisições de enfermagem em aberto (Salão, Solicitante, Paciente, Quantidade e Horário).'
       },
       {
         title: 'Solicitação em Lote com 1 Clique',
@@ -804,12 +887,13 @@ export const MODULE_GUIDES = {
     ],
     tutorial: [
       {
-        title: 'Como Solicitar Reposição de Insumos Críticos',
+        title: 'Como Tomar Decisões de Compra pela Reposição',
         steps: [
-          'Acesse a aba "Reposição" para visualizar todos os insumos abaixo do estoque mínimo.',
-          'Para solicitar um item individual, clique no botão "Solicitar" na linha do insumo.',
-          'Para repor todos os itens de uma vez, clique em "Solicitação em Lote" no topo do painel.',
-          'As solicitações entrarão imediatamente na esteira de aprovação dos gestores.'
+          'Acesse a aba "Reposição" no módulo de Compras.',
+          'Analise a tabela com os 4 saldos: Físico, Reservado, Disponível e Trânsito.',
+          'Se o saldo Disponível estiver zerado ou abaixo do mínimo, o item é sinalizado em vermelho ou amarelo.',
+          'Dê um clique no badge de "Reservado" para abrir o modal com o detalhamento das requisições e salões demandantes.',
+          'Clique em "Solicitar" ou utilize "Solicitação em Lote" para iniciar o processo de cotação com a quantidade sugerida calculada.'
         ]
       },
       {
@@ -832,8 +916,12 @@ export const MODULE_GUIDES = {
     ],
     duvidas: [
       {
-        pergunta: 'Como o sistema calcula a sugestão de compra na aba Reposição?',
-        resposta: 'A sugestão de compra é calculada subtraindo o Saldo Atual do Estoque Ideal (ou o dobro do Estoque Mínimo se o ideal não estiver configurado), garantindo a cobertura necessária para o salão.'
+        pergunta: 'Por que o sistema considera o Estoque Disponível e não apenas o Estoque Físico?',
+        resposta: 'Porque quando as técnicas de enfermagem requisitam materiais para os salões nos 3 turnos, os insumos ainda podem estar fisicamente na prateleira. Se o comprador olhar apenas o físico, ele não compraria e o estoque zeraria horas depois. O saldo Disponível (Físico - Reservado) resolve esse problema.'
+      },
+      {
+        pergunta: 'Como o sistema calcula a sugestão de compra?',
+        resposta: 'A sugestão é calculada como Max(0, Estoque Ideal - (Estoque Disponível + Em Trânsito)), evitando comprar itens que já possuem pedidos de compra em andamento.'
       },
       {
         pergunta: 'A finalização de uma compra gera movimentações automáticas em outros módulos?',

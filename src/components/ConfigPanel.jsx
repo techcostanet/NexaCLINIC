@@ -3,7 +3,7 @@ import { dbService } from '../firebase';
 import { 
   Settings, Users, Shield, Globe, Database, Key, Check, Plus, X, 
   Trash2, ShieldAlert, CheckCircle2, Copy, Download, Upload, Palette,
-  ListFilter, Edit, Warehouse, KeyRound, RefreshCw
+  ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock
 } from 'lucide-react';
 
 export default function ConfigPanel() {
@@ -550,6 +550,66 @@ export default function ConfigPanel() {
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '1.75rem', marginTop: '0.2rem' }}>
                     Quando ativado, as técnicas no salão de hemodiálise serão impedidas de solicitar produtos cujo saldo seja zero ou insuficiente.
                   </p>
+
+                  <div style={{ marginTop: '1.25rem', padding: '1rem', backgroundColor: 'var(--bg-body)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                      <div style={{ flex: '1 1 300px' }}>
+                        <label style={{ margin: 0, fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <Clock size={16} color="var(--primary-color)" /> Tempo de Vida das Requisições (TTL por Turno)
+                        </label>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>
+                          Tempo limite para que requisições pendentes/parciais expirem automaticamente, liberando o estoque reservado de volta para o saldo disponível de compra e novos turnos.
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input
+                          type="number"
+                          min="0.25"
+                          max="72"
+                          step="0.5"
+                          className="form-control"
+                          value={tenantSettings.requisitionTTLHours !== undefined ? tenantSettings.requisitionTTLHours : 1}
+                          onChange={e => setTenantSettings({ ...tenantSettings, requisitionTTLHours: Math.max(0.1, parseFloat(e.target.value) || 1) })}
+                          style={{ width: '85px', textAlign: 'center', fontWeight: '700', padding: '0.4rem' }}
+                        />
+                        <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>hora(s)</span>
+                      </div>
+                    </div>
+
+                    {/* Presets rápidos */}
+                    <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.85rem', flexWrap: 'wrap' }}>
+                      {[
+                        { label: '1 hora (Inicial)', hours: 1 },
+                        { label: '2 horas', hours: 2 },
+                        { label: '4 horas', hours: 4 },
+                        { label: '8 horas (1 Turno)', hours: 8 },
+                        { label: '12 horas', hours: 12 },
+                        { label: '24 horas (1 Dia)', hours: 24 }
+                      ].map(preset => {
+                        const isSelected = (parseFloat(tenantSettings.requisitionTTLHours) || 1) === preset.hours;
+                        return (
+                          <button
+                            key={preset.hours}
+                            type="button"
+                            onClick={() => setTenantSettings({ ...tenantSettings, requisitionTTLHours: preset.hours })}
+                            style={{
+                              padding: '0.35rem 0.65rem',
+                              borderRadius: '6px',
+                              border: isSelected ? '1.5px solid var(--primary-color)' : '1px solid var(--border-color)',
+                              backgroundColor: isSelected ? 'rgba(236, 72, 153, 0.12)' : '#ffffff',
+                              color: isSelected ? 'var(--primary-color)' : 'var(--text-secondary)',
+                              fontSize: '0.78rem',
+                              fontWeight: isSelected ? '700' : '500',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            {preset.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
 
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', alignSelf: 'flex-start', marginTop: '1rem' }}>

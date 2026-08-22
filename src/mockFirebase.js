@@ -15796,7 +15796,14 @@ export const mockFirestore = {
   // Tenant Settings (SaaS Configurations)
   getTenantSettings: async () => {
     const db = getDB();
-    return db.tenant_settings || { name: 'Nexa Nefrologia', cnpj: '', logo: '', themeColor: '#ec4899' };
+    return db.tenant_settings || { 
+      name: 'Nexa Nefrologia', 
+      cnpj: '', 
+      logo: '', 
+      themeColor: '#ec4899',
+      blockRequisitionZeroStock: true,
+      requisitionTTLHours: 1
+    };
   },
 
   saveTenantSettings: async (settings) => {
@@ -15964,8 +15971,8 @@ export const mockFirestore = {
           patientId: 'pat-1',
           patientName: 'ADAIR PRAXEDES MORENO',
           status: 'Pendente',
-          createdAt: new Date(Date.now() - 3600000).toISOString(),
-          updatedAt: new Date(Date.now() - 3600000).toISOString(),
+          createdAt: new Date(Date.now() - 1800000).toISOString(),
+          updatedAt: new Date(Date.now() - 1800000).toISOString(),
           items: [
             { itemId: 'item-1', itemName: 'Capilar Dialisador FX 80', requestedQuantity: 2, deliveredQuantity: 0, unit: 'unidades' },
             { itemId: 'item-3', itemName: 'Agulha para Fístula 16G', requestedQuantity: 4, deliveredQuantity: 0, unit: 'unidades' }
@@ -15975,6 +15982,33 @@ export const mockFirestore = {
       ];
       setDB(db);
     }
+
+    // Auto-Expire requisitions based on configured TTL in tenantSettings (default 1h)
+    const ttlHours = parseFloat(db.tenant_settings?.requisitionTTLHours) || 1;
+    const ttlMs = ttlHours * 60 * 60 * 1000;
+    const now = Date.now();
+    let hasChanged = false;
+
+    db.material_requisitions = db.material_requisitions.map(req => {
+      if ((req.status === 'Pendente' || req.status === 'Parcial') && req.createdAt) {
+        const createdTime = new Date(req.createdAt).getTime();
+        if (!isNaN(createdTime) && (now - createdTime) > ttlMs) {
+          hasChanged = true;
+          return {
+            ...req,
+            status: 'Expirada',
+            expiredAt: new Date(createdTime + ttlMs).toISOString(),
+            expiredReason: `Expirada automaticamente após atingir o TTL de ${ttlHours}h sem atendimento.`
+          };
+        }
+      }
+      return req;
+    });
+
+    if (hasChanged) {
+      setDB(db);
+    }
+
     return db.material_requisitions;
   },
 

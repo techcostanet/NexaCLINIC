@@ -1,3 +1,21 @@
+## [v4.7.34] - 22 de Agosto, 2026
+### Módulo de Compras Inteligente - Modelo dos 4 Saldos de Estoque, TTL de Requisições Configurável e Semáforo de Urgência
+- **Modelo dos 4 Saldos de Estoque em Compras (NexaPROCURE):**
+  - Matriz visual na aba *Reposição* exibindo **Físico**, **Reservado** (soma dos pedidos pendentes da enfermagem), **Disponível** (Físico - Reservado), **Trânsito** (pedidos abertos em compras), **Mínimo** e **Sugestão**.
+  - O gatilho de compra agora dispara quando `Disponível <= Mínimo`, prevenindo faltas causadas pelo atraso de separação da farmácia entre os 3 turnos clínicos.
+- **Detalhamento de Requisições por Salão / Turno:**
+  - Clique direto no badge de saldo *Reservado* abre popover/modal detalhando cada requisição em aberto (código, salão de hemodiálise, técnica solicitante, paciente, quantidade e data/hora).
+- **TTL de Requisições Configurável no Módulo de Configurações (T.I.):**
+  - Adicionado controle de Tempo Limite de Requisições no painel de TI com valor padrão inicial de **1 hora** e botões de atalho rápido (1h, 2h, 4h, 8h/turno, 12h, 24h).
+  - Expiração automática de requisições pendentes que ultrapassarem o TTL, com transição para status `Expirada` e liberação imediata do saldo reservado para disponível.
+- **Semáforo de Urgência e Renovação em 1 Clique (NexaREQ & NexaSTOCK):**
+  - Indicador visual com tempo restante de atendimento nas requisições da enfermagem e farmácia com semáforo de cores (verde, amarelo, vermelho e expirada).
+  - Botão de renovação instantânea com 1 clique para a enfermagem reenviar requisições que expiraram sem necessidade de preenchimento manual.
+- **Documentação e Manuais Atualizados:**
+  - Atualização completa dos manuais de *Compras*, *Estoque*, *Requisições* e *Configurações* em `src/data/moduleGuidesData.js`.
+
+---
+
 ## [v4.7.32] - 22 de Agosto, 2026
 ### Módulo de Compras (NexaPROCURE) - Reposição Crítica em Tempo Real, Pedidos em Lote, Design Padronizado e Fornecedores Ordenáveis
 - **Aba de Reposição Crítica em Tempo Real:**

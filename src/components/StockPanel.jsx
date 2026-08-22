@@ -216,7 +216,10 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
     getExpiryTransactions,
     filteredItems,
     lowStockItems,
-    expiryList
+    expiryList,
+    tenantSettings,
+    setTenantSettings,
+    getTimeRemaining
   } = stockLogic;
 
   // View Mode: 'compact' (Padrão) | 'normal' | 'cards'
@@ -1510,7 +1513,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
       {activeTab === 'requisitions' && (
         <div style={{ marginTop: '1rem' }}>
           {/* Cards KPI de Requisições */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
             <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Total</span>
@@ -1528,7 +1531,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
               <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#d97706' }}>
                 {requisitions.filter(r => r?.status === 'Pendente').length}
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Aguardando separação na farmácia</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Aguardando separação</div>
             </div>
 
             <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border-color)', borderTop: '4px solid #ea580c', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1552,6 +1555,17 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Concluídos com sucesso</div>
             </div>
+
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border-color)', borderTop: '4px solid #ef4444', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Expiradas</span>
+                <Clock size={20} color="#ef4444" />
+              </div>
+              <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#ef4444' }}>
+                {requisitions.filter(r => r?.status === 'Expirada').length}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Reserva liberada (TTL)</div>
+            </div>
           </div>
 
           <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '10px', border: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
@@ -1561,15 +1575,18 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                   Atendimento de Requisições do Salão
                 </h3>
                 <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  Recebimento de pedidos de insumos em tempo real vindos da hemodiálise com abate automático no estoque.
+                  Recebimento de pedidos em tempo real com controle de TTL e abate automático no estoque físico.
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.8rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.35rem 0.65rem', borderRadius: '9999px', fontWeight: '600', border: '1px solid #fde68a' }}>
                   {requisitions.filter(r => r?.status === 'Pendente').length} Pendente(s)
                 </span>
                 <span style={{ fontSize: '0.8rem', backgroundColor: '#ffedd5', color: '#c2410c', padding: '0.35rem 0.65rem', borderRadius: '9999px', fontWeight: '600', border: '1px solid #fed7aa' }}>
                   {requisitions.filter(r => r?.status === 'Parcial').length} Parcial(is)
+                </span>
+                <span style={{ fontSize: '0.8rem', backgroundColor: '#fee2e2', color: '#991b1b', padding: '0.35rem 0.65rem', borderRadius: '9999px', fontWeight: '600', border: '1px solid #fca5a5' }}>
+                  {requisitions.filter(r => r?.status === 'Expirada').length} Expirada(s)
                 </span>
               </div>
             </div>
@@ -1597,69 +1614,100 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                     </tr>
                   </thead>
                   <tbody>
-                    {requisitions.map((req) => (
-                      <tr key={req?.id || Math.random()} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                        <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: 'var(--primary-color)' }}>
-                          {req?.requisitionCode}
-                        </td>
-                        <td style={{ padding: '0.875rem 1rem' }}>
-                          <div>{req?.createdAt && !isNaN(new Date(req.createdAt).getTime()) ? new Date(req.createdAt).toLocaleDateString('pt-BR') : '-'}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{req?.createdAt && !isNaN(new Date(req.createdAt).getTime()) ? new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
-                        </td>
-                        <td style={{ padding: '0.875rem 1rem' }}>{req?.requestedBy}</td>
-                        <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>
-                          <div>{req?.patientName || 'Uso Geral'}</div>
-                          {req?.salonLocation && (
-                            <div style={{ marginTop: '0.25rem' }}>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.75rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>
-                                📍 {req.salonLocation}
-                              </span>
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ padding: '0.875rem 1rem' }}>
-                          {req?.items && req.items.length > 0 ? (
-                            <div>
-                              <div><strong>{req.items[0]?.itemName}</strong> ({req.items[0]?.requestedQuantity} {req.items[0]?.unit})</div>
-                              {req.items.length > 1 && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>+ {req.items.length - 1} outro(s) item(ns)</div>}
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.25rem' }}>
-                                {req.hasKit && (
-                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
-                                    📦 Kit de Insumos
-                                  </span>
-                                )}
-                                {(req.hasControlledMedicine || req.items.some(i => i.isControlled || items.find(it => it.id === i.itemId)?.isControlled)) && (
-                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
-                                    🔒 CONTROLADO (Portaria 344)
-                                  </span>
-                                )}
+                    {requisitions.map((req) => {
+                      const isExpired = req?.status === 'Expirada';
+                      const isDelivered = req?.status === 'Entregue';
+                      const isCancel = req?.status === 'Cancelado';
+                      const rem = getTimeRemaining ? getTimeRemaining(req?.createdAt) : null;
+
+                      let badgeBg = '#fef3c7';
+                      let badgeColor = '#b45309';
+                      let semaforoDot = '#f59e0b';
+
+                      if (isDelivered) {
+                        badgeBg = '#d1fae5'; badgeColor = '#047857'; semaforoDot = '#10b981';
+                      } else if (isExpired) {
+                        badgeBg = '#fee2e2'; badgeColor = '#991b1b'; semaforoDot = '#ef4444';
+                      } else if (req?.status === 'Parcial') {
+                        badgeBg = '#ffedd5'; badgeColor = '#c2410c'; semaforoDot = '#ea580c';
+                      } else if (rem?.urgent) {
+                        badgeBg = '#fee2e2'; badgeColor = '#b91c1c'; semaforoDot = '#dc2626';
+                      }
+
+                      return (
+                        <tr key={req?.id || Math.random()} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: isExpired ? '#fafafa' : '#ffffff' }}>
+                          <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: isExpired ? '#9ca3af' : 'var(--primary-color)' }}>
+                            {req?.requisitionCode}
+                          </td>
+                          <td style={{ padding: '0.875rem 1rem' }}>
+                            <div>{req?.createdAt && !isNaN(new Date(req.createdAt).getTime()) ? new Date(req.createdAt).toLocaleDateString('pt-BR') : '-'}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{req?.createdAt && !isNaN(new Date(req.createdAt).getTime()) ? new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
+                          </td>
+                          <td style={{ padding: '0.875rem 1rem' }}>{req?.requestedBy}</td>
+                          <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>
+                            <div>{req?.patientName || 'Uso Geral'}</div>
+                            {req?.salonLocation && (
+                              <div style={{ marginTop: '0.25rem' }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.75rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>
+                                  📍 {req.salonLocation}
+                                </span>
                               </div>
+                            )}
+                          </td>
+                          <td style={{ padding: '0.875rem 1rem' }}>
+                            {req?.items && req.items.length > 0 ? (
+                              <div>
+                                <div><strong>{req.items[0]?.itemName}</strong> ({req.items[0]?.requestedQuantity} {req.items[0]?.unit})</div>
+                                {req.items.length > 1 && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>+ {req.items.length - 1} outro(s) item(ns)</div>}
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.25rem' }}>
+                                  {req.hasKit && (
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', backgroundColor: '#fef3c7', color: '#b45309', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
+                                      📦 Kit de Insumos
+                                    </span>
+                                  )}
+                                  {(req.hasControlledMedicine || req.items.some(i => i.isControlled || items.find(it => it.id === i.itemId)?.isControlled)) && (
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
+                                      🔒 CONTROLADO (Portaria 344)
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ) : 'Sem itens'}
+                          </td>
+                          <td style={{ padding: '0.875rem 1rem' }}>
+                            <div>
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '0.25rem 0.55rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '700', backgroundColor: badgeBg, color: badgeColor }}>
+                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: semaforoDot }} />
+                                {req?.status}
+                              </div>
+                              {(req?.status === 'Pendente' || req?.status === 'Parcial') && rem && !rem.expired && (
+                                <div style={{ fontSize: '0.7rem', color: rem.urgent ? '#dc2626' : rem.attention ? '#d97706' : '#059669', fontWeight: '700', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                  <Clock size={11} /> {rem.text}
+                                </div>
+                              )}
                             </div>
-                          ) : 'Sem itens'}
-                        </td>
-                        <td style={{ padding: '0.875rem 1rem' }}>
-                          <span style={{ 
-                            padding: '0.25rem 0.5rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '600',
-                            backgroundColor: req?.status === 'Pendente' ? '#fef3c7' : req?.status === 'Parcial' ? '#ffedd5' : req?.status === 'Entregue' ? '#d1fae5' : '#fee2e2',
-                            color: req?.status === 'Pendente' ? '#b45309' : req?.status === 'Parcial' ? '#c2410c' : req?.status === 'Entregue' ? '#047857' : '#b91c1c'
-                          }}>
-                            {req?.status}
-                          </span>
-                        </td>
-                        <td style={{ padding: '0.875rem 1rem', textAlign: 'right' }}>
-                          <button 
-                            onClick={() => handleOpenFulfillModal(req)}
-                            style={{ 
-                              padding: '0.4rem 0.8rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer',
-                              backgroundColor: req?.status === 'Entregue' ? '#f3f4f6' : 'var(--primary-color)',
-                              color: req?.status === 'Entregue' ? '#374151' : '#ffffff'
-                            }}
-                          >
-                            {req?.status === 'Entregue' ? 'Ver Atendimento' : 'Atender Requisição'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td style={{ padding: '0.875rem 1rem', textAlign: 'right' }}>
+                            {isExpired ? (
+                              <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: '600', padding: '0.4rem 0.6rem', backgroundColor: '#f3f4f6', borderRadius: '6px', display: 'inline-block' }}>
+                                Expirada
+                              </span>
+                            ) : (
+                              <button 
+                                onClick={() => handleOpenFulfillModal(req)}
+                                style={{ 
+                                  padding: '0.4rem 0.8rem', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer',
+                                  backgroundColor: isDelivered ? '#f3f4f6' : 'var(--primary-color)',
+                                  color: isDelivered ? '#374151' : '#ffffff'
+                                }}
+                              >
+                                {isDelivered ? 'Ver Atendimento' : 'Atender Requisição'}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

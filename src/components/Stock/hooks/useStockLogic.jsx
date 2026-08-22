@@ -31,6 +31,7 @@ export function useStockLogic(currentUser) {
   const [transfers, setTransfers] = useState([]);
   const [productBatches, setProductBatches] = useState([]);
   const [productKits, setProductKits] = useState([]);
+  const [tenantSettings, setTenantSettings] = useState({ requisitionTTLHours: 1 });
   
   // Traceability & Recall State
   const [traceabilitySearchTerm, setTraceabilitySearchTerm] = useState('');
@@ -180,17 +181,34 @@ export function useStockLogic(currentUser) {
     fetchTabData(activeTab);
   }, [activeTab]);
 
+  const getTimeRemaining = (createdAt) => {
+    if (!createdAt) return null;
+    const ttlHours = parseFloat(tenantSettings?.requisitionTTLHours) || 1;
+    const ttlMs = ttlHours * 60 * 60 * 1000;
+    const createdMs = new Date(createdAt).getTime();
+    if (isNaN(createdMs)) return null;
+    const diff = (createdMs + ttlMs) - Date.now();
+    if (diff <= 0) return { expired: true, text: 'Expirada', mins: 0 };
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return { expired: false, text: `${mins}m restantes`, mins, urgent: mins <= 15, attention: mins <= 30 };
+    const hrs = Math.floor(mins / 60);
+    const remMins = mins % 60;
+    return { expired: false, text: `${hrs}h ${remMins}m`, mins, urgent: false, attention: false };
+  };
+
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [itemList, supList, secList, catList, locList, batchList, kitList] = await Promise.all([
+      const [itemList, supList, secList, catList, locList, batchList, kitList, reqList, tSettings] = await Promise.all([
         dbService.getInventoryItems ? dbService.getInventoryItems().catch(() => []) : [],
         dbService.getSuppliers ? dbService.getSuppliers().catch(() => []) : [],
         dbService.getStockSectors ? dbService.getStockSectors().catch(() => []) : [],
         dbService.getProductCategories ? dbService.getProductCategories().catch(() => []) : [],
         dbService.getStockLocations ? dbService.getStockLocations().catch(() => []) : [],
         dbService.getProductBatches ? dbService.getProductBatches().catch(() => []) : [],
-        dbService.getProductKits ? dbService.getProductKits().catch(() => []) : []
+        dbService.getProductKits ? dbService.getProductKits().catch(() => []) : [],
+        dbService.getMaterialRequisitions ? dbService.getMaterialRequisitions().catch(() => []) : [],
+        dbService.getTenantSettings ? dbService.getTenantSettings().catch(() => ({ requisitionTTLHours: 1 })) : { requisitionTTLHours: 1 }
       ]);
       
       setItems(safeArray(itemList));
@@ -199,6 +217,8 @@ export function useStockLogic(currentUser) {
       setStockLocations(safeArray(locList));
       setProductBatches(safeArray(batchList));
       setProductKits(safeArray(kitList));
+      setRequisitions(safeArray(reqList));
+      if (tSettings) setTenantSettings(tSettings);
       setCategoriesList((catList && safeArray(catList).length > 0) ? safeArray(catList) : [
         { id: 'c1', name: 'Insumo Clínico / MatMed' },
         { id: 'c2', name: 'Medicamento' },
@@ -1963,6 +1983,9 @@ export function useStockLogic(currentUser) {
     handleDeleteKit,
     filteredItems,
     lowStockItems,
-    expiryList
+    expiryList,
+    tenantSettings,
+    setTenantSettings,
+    getTimeRemaining
   };
 }

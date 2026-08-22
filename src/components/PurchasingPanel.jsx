@@ -3,7 +3,7 @@ import {
   ShoppingBag, ClipboardList, CheckSquare, DollarSign, Truck, Plus, 
   Search, Building2, User, Clock, ArrowRight, ShieldAlert, Award,
   Edit, Trash2, X, AlertTriangle, ArrowUpDown, ChevronUp, ChevronDown,
-  Package, Zap, CheckCircle2, History, Filter, RefreshCw
+  Package, Zap, CheckCircle2, History, Filter, RefreshCw, Layers, Info
 } from 'lucide-react';
 import { dbService } from '../firebase';
 
@@ -12,6 +12,10 @@ export default function PurchasingPanel({ currentUser }) {
   const [purchases, setPurchases] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [requisitions, setRequisitions] = useState([]);
+  const [tenantSettings, setTenantSettings] = useState({});
+  const [showSalonModal, setShowSalonModal] = useState(false);
+  const [selectedItemBreakdown, setSelectedItemBreakdown] = useState(null);
   const [user, setUser] = useState(currentUser || null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -81,15 +85,19 @@ export default function PurchasingPanel({ currentUser }) {
   const fetchData = async (showSpinner = true) => {
     if (showSpinner) setLoading(true);
     try {
-      const [purList, itemsList, suppList] = await Promise.all([
+      const [purList, itemsList, suppList, reqList, settings] = await Promise.all([
         dbService.getPurchases ? dbService.getPurchases() : [],
         dbService.getInventoryItems ? dbService.getInventoryItems() : [],
-        dbService.getSuppliers ? dbService.getSuppliers() : []
+        dbService.getSuppliers ? dbService.getSuppliers() : [],
+        dbService.getMaterialRequisitions ? dbService.getMaterialRequisitions() : [],
+        dbService.getTenantSettings ? dbService.getTenantSettings() : {}
       ]);
 
       setPurchases(purList || []);
       setInventoryItems(itemsList || []);
       setSuppliers(suppList || []);
+      setRequisitions(reqList || []);
+      setTenantSettings(settings || {});
     } catch (err) {
       console.error('Erro ao carregar dados do portal de compras:', err);
       showAlert('Erro ao carregar dados de compras.', 'danger');
@@ -103,15 +111,83 @@ export default function PurchasingPanel({ currentUser }) {
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
   };
 
-  // Itens Críticos do Estoque (Abaixo ou no Estoque Mínimo)
-  const criticalItems = useMemo(() => {
-    return inventoryItems.filter(item => {
-      const current = parseFloat(item.currentStock) || 0;
-      const min = parseFloat(item.minStock) || 0;
-      // Item crítico se saldo for zero ou menor/igual ao mínimo
-      return current <= min || current === 0;
+  // Itens com Cálculo dos 4 Saldos (Físico, Reservado, Disponível, Trânsito)
+  const enrichedInventoryItems = useMemo(() => {
+    return inventoryItems.map(item => {
+      const physicalStock = parseFloat(item.currentStock) || 0;
+      const minStock = parseFloat(item.minStock) || 0;
+      const idealStock = parseFloat(item.idealStock) || (minStock * 2 > 0 ? minStock * 2 : 20);
+
+      // Requisições Ativas (Pendente ou Parcial) que comprometem este item
+      const activeReqsForItem = requisitions.filter(r => 
+        (r.status === 'Pendente' || r.status === 'Parcial') &&
+        r.items && r.items.some(i => i.itemId === item.id || (i.itemName && i.itemName.toLowerCase() === (item.name || '').toLowerCase()))
+      );
+
+      let committedStock = 0;
+      const salonBreakdown = [];
+
+      activeReqsForItem.forEach(r => {
+        const matchItem = r.items.find(i => i.itemId === item.id || (i.itemName && i.itemName.toLowerCase() === (item.name || '').toLowerCase()));
+        if (matchItem) {
+          const reqQty = parseFloat(matchItem.requestedQuantity) || 0;
+          const delQty = parseFloat(matchItem.deliveredQuantity) || 0;
+          const pendingQty = Math.max(0, reqQty - delQty);
+          committedStock += pendingQty;
+          if (pendingQty > 0) {
+            salonBreakdown.push({
+              code: r.requisitionCode,
+              salon: r.salonLocation || 'Salão Geral',
+              requestedBy: r.requestedBy || 'Técnica',
+              patient: r.patientName || 'Uso Geral',
+              qty: pendingQty,
+              unit: matchItem.unit || item.unit || 'un',
+              status: r.status,
+              createdAt: r.createdAt
+            });
+          }
+        }
+      });
+
+      // Saldo Disponível Real (Físico - Reservado)
+      const availableStock = Math.max(0, physicalStock - committedStock);
+
+      // Compras em Trânsito (Pedidos de Compra Abertos)
+      const inTransitPurchases = purchases.filter(p => 
+        (p.productId === item.id || (p.productName && p.productName.toLowerCase() === (item.name || '').toLowerCase())) &&
+        p.status !== 'Finalizado' && p.status !== 'Rejeitado'
+      );
+
+      const inTransitStock = inTransitPurchases.reduce((acc, p) => acc + (parseFloat(p.quantity) || 0), 0);
+      const projectedStock = availableStock + inTransitStock;
+
+      // Sugestão de Compra Inteligente
+      const suggestedQty = Math.max(0, Math.round(idealStock - projectedStock));
+
+      // É Crítico se o Disponível for menor/igual ao Mínimo ou Zerado
+      const isCritical = (availableStock <= minStock) || (availableStock === 0);
+
+      return {
+        ...item,
+        physicalStock,
+        committedStock,
+        availableStock,
+        inTransitStock,
+        projectedStock,
+        minStock,
+        idealStock,
+        suggestedQty,
+        isCritical,
+        salonBreakdown,
+        activeReqCount: activeReqsForItem.length
+      };
     });
-  }, [inventoryItems]);
+  }, [inventoryItems, requisitions, purchases]);
+
+  // Itens Críticos do Estoque (Baseados no Saldo Disponível)
+  const criticalItems = useMemo(() => {
+    return enrichedInventoryItems.filter(item => item.isCritical);
+  }, [enrichedInventoryItems]);
 
   // Itens Críticos Filtrados
   const filteredCriticalItems = useMemo(() => {
@@ -130,11 +206,11 @@ export default function PurchasingPanel({ currentUser }) {
         return false;
       }
 
-      // Gravidade
-      const current = parseFloat(item.currentStock) || 0;
-      const min = parseFloat(item.minStock) || 0;
-      if (repositionSeverity === 'zero' && current > 0) return false;
-      if (repositionSeverity === 'below_min' && (current === 0 || current > min)) return false;
+      // Gravidade (baseada em Disponível)
+      const avail = item.availableStock;
+      const min = item.minStock;
+      if (repositionSeverity === 'zero' && avail > 0) return false;
+      if (repositionSeverity === 'below_min' && (avail === 0 || avail > min)) return false;
 
       return true;
     });
@@ -193,10 +269,12 @@ export default function PurchasingPanel({ currentUser }) {
 
   // Abrir Modal de Solicitação Rápida para Item Crítico Específico
   const handleQuickRequestItem = (item) => {
-    const current = parseFloat(item.currentStock) || 0;
-    const min = parseFloat(item.minStock) || 0;
-    const ideal = parseFloat(item.idealStock) || (min * 2 > 0 ? min * 2 : 20);
-    const suggestedQty = Math.max(1, Math.round(ideal - current));
+    const avail = item.availableStock;
+    const phys = item.physicalStock;
+    const res = item.committedStock;
+    const min = item.minStock;
+    const trans = item.inTransitStock;
+    const suggestedQty = item.suggestedQty > 0 ? item.suggestedQty : Math.max(1, Math.round(item.idealStock - avail));
 
     setRequestForm({
       type: 'Reposição',
@@ -204,7 +282,7 @@ export default function PurchasingPanel({ currentUser }) {
       newItemName: item.name,
       quantity: suggestedQty,
       unit: item.unit || 'Unidade',
-      justification: `Reposição automática: Saldo atual (${current} ${item.unit || 'un'}) abaixo do mínimo (${min} ${item.unit || 'un'}).`,
+      justification: `Reposição Inteligente: Saldo Disponível (${avail} ${item.unit || 'un'}) crítico perante o mínimo (${min} ${item.unit || 'un'}). [Físico: ${phys}, Reservado: ${res}, Trânsito: ${trans}].`,
       sector: item.category === 'Medicamento' ? 'farmacia' : 'enfermagem'
     });
     setShowRequestModal(true);
@@ -217,7 +295,7 @@ export default function PurchasingPanel({ currentUser }) {
       return;
     }
 
-    if (!window.confirm(`Deseja gerar solicitações de compra automáticas para todos os ${criticalItems.length} itens críticos?`)) {
+    if (!window.confirm(`Deseja gerar solicitações de compra automáticas para todos os ${criticalItems.length} itens críticos calculados sobre o saldo disponível?`)) {
       return;
     }
 
@@ -225,10 +303,12 @@ export default function PurchasingPanel({ currentUser }) {
     try {
       let createdCount = 0;
       for (const item of criticalItems) {
-        const current = parseFloat(item.currentStock) || 0;
-        const min = parseFloat(item.minStock) || 0;
-        const ideal = parseFloat(item.idealStock) || (min * 2 > 0 ? min * 2 : 20);
-        const suggestedQty = Math.max(1, Math.round(ideal - current));
+        const avail = item.availableStock;
+        const phys = item.physicalStock;
+        const res = item.committedStock;
+        const min = item.minStock;
+        const trans = item.inTransitStock;
+        const suggestedQty = item.suggestedQty > 0 ? item.suggestedQty : Math.max(1, Math.round(item.idealStock - avail));
 
         const newRequest = {
           type: 'Reposição',
@@ -236,13 +316,13 @@ export default function PurchasingPanel({ currentUser }) {
           productName: item.name,
           quantity: suggestedQty,
           unit: item.unit || 'Unidade',
-          justification: `Reposição em Lote: Saldo atual (${current}) crítico perante o estoque mínimo (${min}).`,
+          justification: `Reposição em Lote Inteligente: Saldo Disponível (${avail}) crítico perante o mínimo (${min}). [Físico: ${phys}, Reservado: ${res}, Trânsito: ${trans}].`,
           sector: item.category === 'Medicamento' ? 'farmacia' : 'enfermagem',
           requesterName: currentUser?.name || 'Comprador NexaPROCURE',
           requesterEmail: currentUser?.email || 'compras@dialize.com.br',
           status: 'Aguardando Gestor',
           history: [
-            { status: 'Aguardando Gestor', date: new Date().toISOString(), message: 'Solicitação gerada via Reposição Crítica em Lote.' }
+            { status: 'Aguardando Gestor', date: new Date().toISOString(), message: 'Solicitação gerada via Reposição Crítica em Lote com análise de saldo disponível.' }
           ]
         };
 
@@ -250,7 +330,7 @@ export default function PurchasingPanel({ currentUser }) {
         createdCount++;
       }
 
-      showAlert(`Sucesso! ${createdCount} solicitações de compras geradas para aprovação.`, 'success');
+      showAlert(`Sucesso! ${createdCount} solicitações de compras geradas com base no saldo disponível.`, 'success');
       fetchData(false);
       setActiveTab('requests');
     } catch (err) {
@@ -696,7 +776,7 @@ export default function PurchasingPanel({ currentUser }) {
           {/* TAB 1: REPOSIÇÃO CRÍTICA (Estoque Mínimo em Tempo Real) */}
           {activeTab === 'reposition' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Cards de Métricas da Reposição */}
+              {/* Cards de Métricas da Reposição Inteligente */}
               <div style={styles.repositionMetricsGrid}>
                 <div style={styles.repositionMetricCard}>
                   <span style={styles.metricLabel}>Total Crítico</span>
@@ -704,15 +784,15 @@ export default function PurchasingPanel({ currentUser }) {
                     <strong style={{ fontSize: '1.6rem', color: criticalItems.length > 0 ? '#ef4444' : '#10b981' }}>
                       {criticalItems.length}
                     </strong>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>itens</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>insumos</span>
                   </div>
                 </div>
 
                 <div style={styles.repositionMetricCard}>
-                  <span style={styles.metricLabel}>Estoque Zerado</span>
+                  <span style={styles.metricLabel}>Disponível Zerado</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginTop: '0.25rem' }}>
                     <strong style={{ fontSize: '1.6rem', color: '#b91c1c' }}>
-                      {criticalItems.filter(i => (parseFloat(i.currentStock) || 0) === 0).length}
+                      {criticalItems.filter(i => i.availableStock === 0).length}
                     </strong>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>urgentes</span>
                   </div>
@@ -722,23 +802,19 @@ export default function PurchasingPanel({ currentUser }) {
                   <span style={styles.metricLabel}>Abaixo do Mínimo</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginTop: '0.25rem' }}>
                     <strong style={{ fontSize: '1.6rem', color: '#d97706' }}>
-                      {criticalItems.filter(i => {
-                        const cur = parseFloat(i.currentStock) || 0;
-                        const min = parseFloat(i.minStock) || 0;
-                        return cur > 0 && cur <= min;
-                      }).length}
+                      {criticalItems.filter(i => i.availableStock > 0 && i.availableStock <= i.minStock).length}
                     </strong>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>itens</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>em risco</span>
                   </div>
                 </div>
 
                 <div style={styles.repositionMetricCard}>
-                  <span style={styles.metricLabel}>Catálogo Total</span>
+                  <span style={styles.metricLabel}>Em Trânsito</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginTop: '0.25rem' }}>
-                    <strong style={{ fontSize: '1.6rem', color: 'var(--text-primary)' }}>
-                      {inventoryItems.length}
+                    <strong style={{ fontSize: '1.6rem', color: '#0369a1' }}>
+                      {enrichedInventoryItems.filter(i => i.inTransitStock > 0).length}
                     </strong>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>cadastrados</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>pedidos abertos</span>
                   </div>
                 </div>
               </div>
@@ -777,47 +853,44 @@ export default function PurchasingPanel({ currentUser }) {
                     style={styles.selectInput}
                   >
                     <option value="all">⚠️ Gravidade</option>
-                    <option value="zero">🔴 Somente Zerados (0)</option>
+                    <option value="zero">🔴 Disponível Zerado (0)</option>
                     <option value="below_min">🟡 Abaixo do Mínimo</option>
                   </select>
 
-                  <button onClick={() => fetchData(true)} style={styles.refreshBtn} title="Atualizar estoque em tempo real">
+                  <button onClick={() => fetchData(true)} style={styles.refreshBtn} title="Atualizar estoque e requisições em tempo real">
                     <RefreshCw size={16} />
                   </button>
                 </div>
               </div>
 
-              {/* Tabela de Itens Críticos */}
+              {/* Tabela Inteligente dos 4 Saldos de Estoque */}
               <div style={styles.tableCard}>
                 <table style={styles.table}>
                   <thead>
                     <tr style={styles.theadRow}>
                       <th style={styles.th}>Insumo</th>
                       <th style={styles.th}>Categoria</th>
-                      <th style={styles.th}>Saldo</th>
+                      <th style={styles.th}>Físico</th>
+                      <th style={styles.th}>Reservado</th>
+                      <th style={styles.th}>Disponível</th>
+                      <th style={styles.th}>Trânsito</th>
                       <th style={styles.th}>Mínimo</th>
-                      <th style={styles.th}>Ideal</th>
                       <th style={styles.th}>Sugestão</th>
-                      <th style={styles.th}>Custo</th>
                       <th style={{ ...styles.th, textAlign: 'right' }}>Ações</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredCriticalItems.length === 0 ? (
                       <tr>
-                        <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+                        <td colSpan="9" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
                           <CheckCircle2 size={36} color="#10b981" style={{ margin: '0 auto 0.5rem auto' }} />
                           <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>Estoque em Nível Seguro!</div>
-                          <span style={{ fontSize: '0.85rem' }}>Nenhum produto está abaixo do estoque mínimo com os filtros selecionados.</span>
+                          <span style={{ fontSize: '0.85rem' }}>Nenhum insumo está com saldo disponível abaixo do estoque mínimo.</span>
                         </td>
                       </tr>
                     ) : (
                       filteredCriticalItems.map(item => {
-                        const current = parseFloat(item.currentStock) || 0;
-                        const min = parseFloat(item.minStock) || 0;
-                        const ideal = parseFloat(item.idealStock) || (min * 2 > 0 ? min * 2 : 20);
-                        const suggestedQty = Math.max(1, Math.round(ideal - current));
-                        const isZero = current === 0;
+                        const isZeroAvail = item.availableStock === 0;
 
                         return (
                           <tr key={item.id} style={styles.tr}>
@@ -833,33 +906,75 @@ export default function PurchasingPanel({ currentUser }) {
                               </span>
                             </td>
                             <td style={styles.td}>
+                              <span style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.88rem' }}>
+                                {item.physicalStock} {item.unit || 'un'}
+                              </span>
+                            </td>
+                            <td style={styles.td}>
+                              {item.committedStock > 0 ? (
+                                <button 
+                                  type="button" 
+                                  onClick={() => { setSelectedItemBreakdown(item); setShowSalonModal(true); }}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    padding: '0.25rem 0.55rem',
+                                    borderRadius: '6px',
+                                    backgroundColor: '#fef3c7',
+                                    color: '#b45309',
+                                    border: '1px solid #fde68a',
+                                    fontWeight: '700',
+                                    fontSize: '0.78rem',
+                                    cursor: 'pointer'
+                                  }}
+                                  title="Clique para ver requisições e salões demandantes"
+                                >
+                                  ⚠️ {item.committedStock} {item.unit || 'un'}
+                                </button>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>0</span>
+                              )}
+                            </td>
+                            <td style={styles.td}>
                               <span style={{
                                 ...styles.stockStatusBadge,
-                                backgroundColor: isZero ? '#fef2f2' : '#fffbeb',
-                                color: isZero ? '#ef4444' : '#d97706',
-                                borderColor: isZero ? '#fecaca' : '#fde68a'
+                                backgroundColor: isZeroAvail ? '#fef2f2' : '#fffbeb',
+                                color: isZeroAvail ? '#ef4444' : '#d97706',
+                                borderColor: isZeroAvail ? '#fecaca' : '#fde68a',
+                                fontWeight: '800'
                               }}>
-                                {current} {item.unit || 'un'}
+                                {item.availableStock} {item.unit || 'un'}
                               </span>
+                            </td>
+                            <td style={styles.td}>
+                              {item.inTransitStock > 0 ? (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                  fontSize: '0.78rem',
+                                  backgroundColor: '#e0f2fe',
+                                  color: '#0369a1',
+                                  padding: '0.2rem 0.5rem',
+                                  borderRadius: '4px',
+                                  fontWeight: '700',
+                                  border: '1px solid #bae6fd'
+                                }}>
+                                  <Truck size={12} /> +{item.inTransitStock} {item.unit || 'un'}
+                                </span>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>-</span>
+                              )}
                             </td>
                             <td style={styles.td}>
                               <span style={{ fontWeight: '600', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                                {min} {item.unit || 'un'}
-                              </span>
-                            </td>
-                            <td style={styles.td}>
-                              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                                {ideal} {item.unit || 'un'}
+                                {item.minStock} {item.unit || 'un'}
                               </span>
                             </td>
                             <td style={styles.td}>
                               <span style={{ fontWeight: '800', color: '#0891b2', fontSize: '0.9rem' }}>
-                                +{suggestedQty} {item.unit || 'un'}
-                              </span>
-                            </td>
-                            <td style={styles.td}>
-                              <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600' }}>
-                                {item.costPrice ? `R$ ${parseFloat(item.costPrice).toFixed(2)}` : '--'}
+                                +{item.suggestedQty} {item.unit || 'un'}
                               </span>
                             </td>
                             <td style={{ ...styles.td, textAlign: 'right' }}>
@@ -1602,6 +1717,73 @@ export default function PurchasingPanel({ currentUser }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: DETALHAMENTO DE RESERVAS POR SALÃO / TÉCNICA */}
+      {showSalonModal && selectedItemBreakdown && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalContent, maxWidth: '620px' }}>
+            <div style={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Layers size={20} color="#b45309" />
+                <h3 style={styles.modalTitle}>Detalhamento de Requisições Abertas</h3>
+              </div>
+              <button onClick={() => { setShowSalonModal(false); setSelectedItemBreakdown(null); }} style={styles.modalCloseBtn}>×</button>
+            </div>
+
+            <div style={{ padding: '1.25rem' }}>
+              <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '0.85rem', marginBottom: '1rem' }}>
+                <strong style={{ color: '#b45309', fontSize: '0.95rem' }}>{selectedItemBreakdown.name}</strong>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.35rem', fontSize: '0.82rem', color: '#92400e', flexWrap: 'wrap' }}>
+                  <span>Físico: <strong>{selectedItemBreakdown.physicalStock} {selectedItemBreakdown.unit || 'un'}</strong></span>
+                  <span>Reservado: <strong>{selectedItemBreakdown.committedStock} {selectedItemBreakdown.unit || 'un'}</strong></span>
+                  <span>Disponível: <strong>{selectedItemBreakdown.availableStock} {selectedItemBreakdown.unit || 'un'}</strong></span>
+                  <span>Mínimo: <strong>{selectedItemBreakdown.minStock} {selectedItemBreakdown.unit || 'un'}</strong></span>
+                </div>
+              </div>
+
+              <h4 style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                Requisições que Comprometeram o Estoque:
+              </h4>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '300px', overflowY: 'auto' }}>
+                {selectedItemBreakdown.salonBreakdown.map((req, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <strong style={{ color: 'var(--primary-color)', fontSize: '0.85rem' }}>{req.code}</strong>
+                        <span style={{ fontSize: '0.75rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
+                          📍 {req.salon}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                        Solicitante: <strong>{req.requestedBy}</strong> | Destino: <strong>{req.patient}</strong>
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                        Data: {req.createdAt ? new Date(req.createdAt).toLocaleString('pt-BR') : '-'}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#b45309' }}>
+                        {req.qty} {req.unit}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => { setShowSalonModal(false); setSelectedItemBreakdown(null); }}
+                  style={styles.primaryBtn}
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

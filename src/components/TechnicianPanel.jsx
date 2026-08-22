@@ -3,7 +3,7 @@ import { dbService } from '../firebase';
 import { 
   ClipboardList, Plus, Search, Filter, X, CheckCircle2, 
   AlertTriangle, Clock, Trash2, Edit, AlertCircle, User, Package, 
-  Eye, RefreshCw, AlignJustify, Table, LayoutGrid, Layers, MapPin, Send
+  Eye, RefreshCw, AlignJustify, Table, LayoutGrid, Layers, MapPin, Send, Repeat
 } from 'lucide-react';
 
 export default function TechnicianPanel({ currentUser }) {
@@ -355,6 +355,53 @@ export default function TechnicianPanel({ currentUser }) {
   const pendingCount = requisitions.filter(r => r.status === 'Pendente').length;
   const partialCount = requisitions.filter(r => r.status === 'Parcial').length;
   const deliveredCount = requisitions.filter(r => r.status === 'Entregue').length;
+  const expiredCount = requisitions.filter(r => r.status === 'Expirada').length;
+
+  const getTimeRemaining = (createdAt) => {
+    if (!createdAt) return null;
+    const ttlHours = parseFloat(tenantSettings.requisitionTTLHours) || 1;
+    const ttlMs = ttlHours * 60 * 60 * 1000;
+    const createdMs = new Date(createdAt).getTime();
+    if (isNaN(createdMs)) return null;
+    const diff = (createdMs + ttlMs) - Date.now();
+    if (diff <= 0) return { expired: true, text: 'Expirada' };
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return { expired: false, text: `${mins}m restantes`, urgent: mins <= 15 };
+    const hrs = Math.floor(mins / 60);
+    const remMins = mins % 60;
+    return { expired: false, text: `${hrs}h ${remMins}m`, urgent: false };
+  };
+
+  const handleReRequestExpired = async (req) => {
+    if (!window.confirm(`Deseja reenviar a requisição ${req.requisitionCode} para o salão ${req.salonLocation || ''}?`)) return;
+    setActionLoading(true);
+    try {
+      const operatorName = currentUser?.name || currentUser?.email || 'Técnica de Enfermagem';
+      const newReqPayload = {
+        requestedBy: operatorName,
+        userId: currentUser?.uid || 'user-tech',
+        patientId: req.patientId || null,
+        patientName: req.patientName || 'Uso Geral',
+        salonLocation: req.salonLocation || '',
+        hasKit: !!req.hasKit,
+        kitId: req.kitId || null,
+        hasControlledMedicine: req.hasControlledMedicine,
+        status: 'Pendente',
+        notes: req.notes ? `[Renovação de ${req.requisitionCode}] ${req.notes}` : `Renovação de ${req.requisitionCode}`,
+        items: (req.items || []).map(i => ({ ...i, deliveredQuantity: 0 })),
+        createdAt: new Date().toISOString()
+      };
+      const saved = await dbService.saveMaterialRequisition(newReqPayload);
+      showAlert(`Nova requisição ${saved.requisitionCode} criada com sucesso!`, 'success');
+      logAudit('Requisição Renovada', `Requisição ${saved.requisitionCode} recriada após expiração de ${req.requisitionCode}.`);
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      showAlert('Erro ao renovar requisição.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   // Filtered List
   const filteredRequisitions = useMemo(() => {
@@ -382,8 +429,10 @@ export default function TechnicianPanel({ currentUser }) {
         return <span style={{ ...styles.badge, backgroundColor: '#ffedd5', color: '#c2410c', border: '1px solid #fed7aa' }}><AlertTriangle size={12} /> Parcial</span>;
       case 'Entregue':
         return <span style={{ ...styles.badge, backgroundColor: '#d1fae5', color: '#047857', border: '1px solid #a7f3d0' }}><CheckCircle2 size={12} /> Entregue</span>;
+      case 'Expirada':
+        return <span style={{ ...styles.badge, backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5' }}><Clock size={12} /> Expirada (TTL)</span>;
       case 'Cancelado':
-        return <span style={{ ...styles.badge, backgroundColor: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' }}><X size={12} /> Cancelado</span>;
+        return <span style={{ ...styles.badge, backgroundColor: '#f3f4f6', color: '#4b5563', border: '1px solid #e5e7eb' }}><X size={12} /> Cancelado</span>;
       default:
         return <span style={styles.badge}>{status}</span>;
     }
@@ -482,6 +531,17 @@ export default function TechnicianPanel({ currentUser }) {
           <div style={{ ...styles.kpiValue, color: '#059669' }}>{deliveredCount}</div>
           <div style={styles.kpiSub}>Concluídos com sucesso</div>
         </div>
+
+        <div style={{ ...styles.kpiCard, borderTop: '4px solid #ef4444' }}>
+          <div style={styles.kpiHeader}>
+            <span style={styles.kpiTitle}>Expiradas</span>
+            <div style={{ ...styles.kpiIconWrapper, backgroundColor: '#fee2e2' }}>
+              <Clock size={18} color="#ef4444" />
+            </div>
+          </div>
+          <div style={{ ...styles.kpiValue, color: '#ef4444' }}>{expiredCount}</div>
+          <div style={styles.kpiSub}>Reserva liberada (TTL)</div>
+        </div>
       </div>
 
       {/* Filters & View Switcher Bar */}
@@ -514,6 +574,7 @@ export default function TechnicianPanel({ currentUser }) {
               <option value="Pendente">Pendentes</option>
               <option value="Parcial">Parciais</option>
               <option value="Entregue">Entregues</option>
+              <option value="Expirada">Expiradas (TTL)</option>
               <option value="Cancelado">Cancelados</option>
             </select>
           </div>
@@ -668,7 +729,20 @@ export default function TechnicianPanel({ currentUser }) {
                           {req.requestedBy}
                         </td>
                         <td style={styles.tdCompact}>
-                          {getStatusBadge(req.status)}
+                          <div>
+                            {getStatusBadge(req.status)}
+                            {(req.status === 'Pendente' || req.status === 'Parcial') && (
+                              (() => {
+                                const rem = getTimeRemaining(req.createdAt);
+                                if (!rem || rem.expired) return null;
+                                return (
+                                  <div style={{ fontSize: '0.68rem', color: rem.urgent ? '#dc2626' : '#b45309', fontWeight: '700', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                    <Clock size={10} /> {rem.text}
+                                  </div>
+                                );
+                              })()
+                            )}
+                          </div>
                         </td>
                         <td style={{ ...styles.tdCompact, textAlign: 'right' }}>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.3rem' }}>
@@ -679,6 +753,16 @@ export default function TechnicianPanel({ currentUser }) {
                             >
                               <Eye size={14} />
                             </button>
+
+                            {req.status === 'Expirada' && (
+                              <button 
+                                style={{ ...styles.actionBtnEdit, backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }} 
+                                onClick={() => handleReRequestExpired(req)}
+                                title="Requisitar Novamente (Renovar)"
+                              >
+                                <Repeat size={14} />
+                              </button>
+                            )}
                             
                             {req.status === 'Pendente' && (
                               <>
@@ -786,7 +870,20 @@ export default function TechnicianPanel({ currentUser }) {
                           {req.requestedBy}
                         </td>
                         <td style={styles.td}>
-                          {getStatusBadge(req.status)}
+                          <div>
+                            {getStatusBadge(req.status)}
+                            {(req.status === 'Pendente' || req.status === 'Parcial') && (
+                              (() => {
+                                const rem = getTimeRemaining(req.createdAt);
+                                if (!rem || rem.expired) return null;
+                                return (
+                                  <div style={{ fontSize: '0.72rem', color: rem.urgent ? '#dc2626' : '#b45309', fontWeight: '700', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <Clock size={11} /> {rem.text}
+                                  </div>
+                                );
+                              })()
+                            )}
+                          </div>
                         </td>
                         <td style={{ ...styles.td, textAlign: 'right' }}>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.35rem' }}>
@@ -797,6 +894,16 @@ export default function TechnicianPanel({ currentUser }) {
                             >
                               <Eye size={15} />
                             </button>
+
+                            {req.status === 'Expirada' && (
+                              <button 
+                                style={{ ...styles.actionBtnEdit, backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }} 
+                                onClick={() => handleReRequestExpired(req)}
+                                title="Requisitar Novamente (Renovar)"
+                              >
+                                <Repeat size={15} />
+                              </button>
+                            )}
                             
                             {req.status === 'Pendente' && (
                               <>
@@ -837,7 +944,20 @@ export default function TechnicianPanel({ currentUser }) {
                           {new Date(req.createdAt).toLocaleDateString('pt-BR')} às {new Date(req.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
-                      <div>{getStatusBadge(req.status)}</div>
+                      <div style={{ textAlign: 'right' }}>
+                        {getStatusBadge(req.status)}
+                        {(req.status === 'Pendente' || req.status === 'Parcial') && (
+                          (() => {
+                            const rem = getTimeRemaining(req.createdAt);
+                            if (!rem || rem.expired) return null;
+                            return (
+                              <div style={{ fontSize: '0.7rem', color: rem.urgent ? '#dc2626' : '#b45309', fontWeight: '700', marginTop: '0.2rem' }}>
+                                ⏳ {rem.text}
+                              </div>
+                            );
+                          })()
+                        )}
+                      </div>
                     </div>
 
                     <div style={styles.reqCardBody}>
@@ -888,6 +1008,15 @@ export default function TechnicianPanel({ currentUser }) {
                         >
                           <Eye size={14} />
                         </button>
+                        {req.status === 'Expirada' && (
+                          <button 
+                            style={{ ...styles.actionBtnEdit, backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }} 
+                            onClick={() => handleReRequestExpired(req)}
+                            title="Requisitar Novamente (Renovar)"
+                          >
+                            <Repeat size={14} />
+                          </button>
+                        )}
                         {req.status === 'Pendente' && (
                           <>
                             <button 
