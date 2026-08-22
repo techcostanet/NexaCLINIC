@@ -398,11 +398,7 @@ export default function TechnicianPanel({ currentUser }) {
             <ClipboardList size={28} color="#fff" />
           </div>
           <div>
-            <div style={styles.liveBadge}>
-              <span style={styles.pulseDot}></span>
-              <span>Enfermagem & Salão</span>
-            </div>
-            <h1 style={styles.heroTitle}>NexaREQ — Requisições</h1>
+            <h1 style={styles.heroTitle}>NexaREQ — Requisições de Insumos</h1>
             <p style={styles.heroSubtitle}>
               Solicitações ágeis de materiais e medicamentos para salões de hemodiálise, kits padronizados e dispensação central.
             </p>
@@ -1437,25 +1433,6 @@ const styles = {
     boxShadow: '0 8px 16px rgba(20, 184, 166, 0.25)',
     flexShrink: 0,
   },
-  liveBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.35rem',
-    fontSize: '0.75rem',
-    fontWeight: '700',
-    color: '#0f766e',
-    backgroundColor: '#ccfbf1',
-    padding: '0.15rem 0.55rem',
-    borderRadius: '12px',
-    border: '1px solid #99f6e4',
-    marginBottom: '0.3rem',
-  },
-  pulseDot: {
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    backgroundColor: '#0d9488',
-  },
   heroTitle: {
     fontSize: '1.6rem',
     fontWeight: '800',
@@ -1466,8 +1443,8 @@ const styles = {
   heroSubtitle: {
     fontSize: '0.9rem',
     color: 'var(--text-muted, #64748b)',
-    margin: '0.25rem 0 0 0',
-    maxWidth: '580px',
+    margin: '0.35rem 0 0 0',
+    maxWidth: '650px',
   },
   heroActions: {
     display: 'flex',

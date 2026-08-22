@@ -2199,24 +2199,6 @@ const styles = {
     margin: '0.35rem 0 0 0',
     maxWidth: '550px'
   },
-  liveBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.35rem',
-    fontSize: '0.75rem',
-    fontWeight: '700',
-    color: '#059669',
-    backgroundColor: '#ecfdf5',
-    padding: '0.2rem 0.6rem',
-    borderRadius: '12px',
-    border: '1px solid #a7f3d0'
-  },
-  pulseDot: {
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    backgroundColor: '#10b981'
-  },
   heroActions: {
     display: 'flex',
     gap: '0.75rem',

@@ -1,8 +1,7 @@
-## [v4.7.23] - 21 de Agosto, 2026
-### Módulo de Requisições - Redesign Visual NexaREQ, 3 Modos de Visualização e Padronização Rigorosa de Rótulos Únicos
-- **Identidade Visual Consolidada NexaREQ:**
-  - Banner hero superior no padrão oficial Nexa com badge temático gradiente em teal (`#14b8a6`), indicador ao vivo (*Enfermagem & Salão*), título *NexaREQ — Requisições*, subtítulo descritivo e botões de ação rápida (*Atualizar* e *Nova Requisição*).
-  - Cards de indicadores KPI estilizados com topo colorido, ícones temáticos e contadores em tempo real (*Total*, *Pendentes*, *Parciais*, *Entregues*).
+## [v4.7.24] - 21 de Agosto, 2026
+### Módulo de Requisições - Alinhamento Rigoroso ao Padrão de Design Hero Banner NexaREQ, 3 Modos de Visualização e Rótulos Únicos
+- **Alinhamento do Hero Banner (Padrão NexaSTOCK / NexaHR):**
+  - Remoção da tag/badge flutuante superior, deixando o cabeçalho perfeitamente limpo e padronizado: ícone em gradiente teal (`#14b8a6`), título *NexaREQ — Requisições de Insumos* e subtítulo descritivo direto.
 - **3 Modos de Visualização Operacional:**
   - **Compacta (Padrão):** Visualização de alta densidade para operação ágil das técnicas no salão, com linhas compactas, badges de salão, kit e controle especial.
   - **Normal (Detalhada):** Tabela completa com informações estruturadas de paciente, solicitante, data/hora e ações.
