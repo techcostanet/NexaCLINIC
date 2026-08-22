@@ -116,7 +116,7 @@ export default function DailyEPIChecklist({ onSuccess }) {
             />
           </div>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Turno de Trabalho</label>
+            <label style={styles.label}>Turno</label>
             <select 
               name="shift"
               value={formData.shift}
@@ -209,7 +209,7 @@ export default function DailyEPIChecklist({ onSuccess }) {
 
         <div style={styles.grid2}>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Enfermeiro(a) Responsável</label>
+            <label style={styles.label}>Enfermeiro</label>
             <input 
               type="text" 
               name="enfermeiro"
@@ -221,7 +221,7 @@ export default function DailyEPIChecklist({ onSuccess }) {
             />
           </div>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Técnico de Segurança do Trabalho</label>
+            <label style={styles.label}>Técnico</label>
             <input 
               type="text" 
               name="tecnicoSeguranca"

@@ -1,3 +1,14 @@
+## [v4.7.35] - 22 de Agosto, 2026
+### Módulo SESMT - Padronização dos Formulários de Inspeção de Extintores e Hidrantes
+- **Remoção da Coluna de Assinatura Individual nas Tabelas:**
+  - Removida a coluna de assinatura/rubrica por linha nas tabelas das abas *Inspeção Extintores* e *Inspeção Hidrantes*, tornando o preenchimento mais rápido, limpo e responsivo.
+- **Campos de Responsabilidade no Rodapé (Padrão EPI):**
+  - Adicionados os campos de *Inspetor* e *Técnico de Segurança* no final dos formulários de extintores e hidrantes, exatamente como no padrão utilizado no checklist de EPI.
+- **Histórico e Modais Atualizados:**
+  - Visualização detalhada das inspeções no histórico SESMT atualizada com cabeçalhos diretos e sem a coluna de assinatura.
+
+---
+
 ## [v4.7.34] - 22 de Agosto, 2026
 ### Módulo de Compras Inteligente - Modelo dos 4 Saldos de Estoque, TTL de Requisições Configurável e Semáforo de Urgência
 - **Modelo dos 4 Saldos de Estoque em Compras (NexaPROCURE):**

@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.35',
+      date: '22/08/2026',
+      title: 'Módulo SESMT - Padronização dos Formulários de Inspeção de Extintores e Hidrantes',
+      description: 'Remoção da coluna de assinatura individual dentro das tabelas das abas de Extintores e Hidrantes, posicionando os campos de responsabilidade técnica no rodapé do formulário conforme o padrão do checklist de EPI.',
+      changes: [
+        { type: 'Formulário de Extintores', text: 'Remoção da coluna de assinatura por linha da tabela e inclusão dos campos Inspetor e Técnico no rodapé do formulário antes do salvamento.' },
+        { type: 'Formulário de Hidrantes', text: 'Remoção da coluna de assinatura por linha da tabela e inclusão dos campos Inspetor e Técnico no rodapé do formulário antes do salvamento.' },
+        { type: 'Histórico e Auditoria', text: 'Adequação dos modais de visualização detalhada de inspeções de combate a incêndio sem coluna de assinatura.' },
+        { type: 'Padronização de Rótulos', text: 'Aplicação da regra de termos únicos e diretos nos cabeçalhos e campos do SESMT.' }
+      ]
+    },
+    {
       version: 'v4.7.34',
       date: '22/08/2026',
       title: 'Módulo de Compras Inteligente - Modelo dos 4 Saldos de Estoque, TTL de Requisições Configurável e Semáforo de Urgência',

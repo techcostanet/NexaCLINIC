@@ -3,20 +3,21 @@ import { dbService } from '../../firebase';
 import { Save, Droplet, RefreshCw } from 'lucide-react';
 
 const CRITERIA = [
-  { id: 'acesso', label: 'Acesso e Visib.' },
+  { id: 'acesso', label: 'Acesso' },
   { id: 'sinalizacao', label: 'Sinalização' },
-  { id: 'caixa', label: 'Caixa / Abrigo' },
+  { id: 'caixa', label: 'Caixa' },
   { id: 'mangueira', label: 'Mangueira' },
   { id: 'esguicho', label: 'Esguicho' },
-  { id: 'chave', label: 'Chave Storz' },
-  { id: 'registro', label: 'Registro / Válvula' },
-  { id: 'estado_fisico', label: 'Estado Físico' }
+  { id: 'chave', label: 'Chave' },
+  { id: 'registro', label: 'Registro' },
+  { id: 'estado_fisico', label: 'Estado' }
 ];
 
 export default function WeeklyFireHydrantForm({ onSuccess }) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     inspectorName: '',
+    tecnicoSeguranca: '',
     items: []
   });
 
@@ -36,14 +37,12 @@ export default function WeeklyFireHydrantForm({ onSuccess }) {
         code: hyd.code || `HID-${String(i + 1).padStart(2, '0')}`,
         sector: hyd.sector || 'Geral',
         type: hyd.type || 'Hidrante de Parede',
-        signature: '',
         evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
       })) : Array.from({ length: 6 }).map((_, i) => ({
         hydrantNum: i + 1,
         code: `HID-${String(i + 1).padStart(2, '0')}`,
         sector: 'Setor Geral',
         type: 'Hidrante de Parede',
-        signature: '',
         evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
       }));
 
@@ -67,14 +66,6 @@ export default function WeeklyFireHydrantForm({ onSuccess }) {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleItemChange = (index, field, value) => {
-    setFormData(prev => {
-      const newItems = [...prev.items];
-      newItems[index][field] = value;
-      return { ...prev, items: newItems };
-    });
-  };
-
   const handleEvaluationChange = (index, critId, value) => {
     setFormData(prev => {
       const newItems = [...prev.items];
@@ -91,6 +82,7 @@ export default function WeeklyFireHydrantForm({ onSuccess }) {
       await dbService.saveFireHydrantInspection({
         date: formData.date,
         inspectorName: formData.inspectorName,
+        tecnicoSeguranca: formData.tecnicoSeguranca || '',
         items: formData.items,
         createdAt: new Date().toISOString()
       });
@@ -133,7 +125,7 @@ export default function WeeklyFireHydrantForm({ onSuccess }) {
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.grid2}>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Data da Inspeção</label>
+            <label style={styles.label}>Data</label>
             <input 
               type="date" 
               name="date"
@@ -143,31 +135,18 @@ export default function WeeklyFireHydrantForm({ onSuccess }) {
               required 
             />
           </div>
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Nome do Inspetor / Responsável</label>
-            <input 
-              type="text" 
-              name="inspectorName"
-              value={formData.inspectorName}
-              onChange={handleChange}
-              style={styles.input}
-              placeholder="Nome do técnico ou responsável pela vistoria"
-              required 
-            />
-          </div>
         </div>
 
         <div style={styles.tableContainer}>
           <table style={styles.table}>
             <thead style={styles.tableHead}>
               <tr>
-                <th style={{ ...styles.th, width: '70px' }}>N° / Cód.</th>
-                <th style={{ ...styles.th, textAlign: 'left', minWidth: '150px' }}>Localização / Setor</th>
+                <th style={{ ...styles.th, width: '80px' }}>Código</th>
+                <th style={{ ...styles.th, textAlign: 'left', minWidth: '150px' }}>Setor</th>
                 <th style={{ ...styles.th, minWidth: '130px' }}>Tipo</th>
                 {CRITERIA.map(c => (
                   <th key={c.id} style={{...styles.th, textAlign: 'center'}}>{c.label}</th>
                 ))}
-                <th style={{...styles.th, textAlign: 'center', minWidth: '120px'}}>Assinatura / Rubrica</th>
               </tr>
             </thead>
             <tbody>
@@ -205,19 +184,37 @@ export default function WeeklyFireHydrantForm({ onSuccess }) {
                       </td>
                     );
                   })}
-                  <td style={styles.td}>
-                    <input 
-                      type="text" 
-                      value={item.signature || ''}
-                      onChange={(e) => handleItemChange(index, 'signature', e.target.value)}
-                      placeholder="Rubrica"
-                      style={styles.inputSmall}
-                    />
-                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div style={styles.grid2}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Inspetor</label>
+            <input 
+              type="text" 
+              name="inspectorName"
+              value={formData.inspectorName}
+              onChange={handleChange}
+              style={styles.input}
+              placeholder="Nome"
+              required 
+            />
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Técnico</label>
+            <input 
+              type="text" 
+              name="tecnicoSeguranca"
+              value={formData.tecnicoSeguranca || ''}
+              onChange={handleChange}
+              style={styles.input}
+              placeholder="Nome"
+              required 
+            />
+          </div>
         </div>
 
         <div style={styles.actions}>

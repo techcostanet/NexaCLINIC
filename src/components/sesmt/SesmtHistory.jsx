@@ -418,8 +418,8 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                   <table style={styles.innerTable}>
                     <thead>
                       <tr>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>N° / Cód.</th>
-                        <th style={styles.innerTh}>Localização / Setor</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Código</th>
+                        <th style={styles.innerTh}>Setor</th>
                         <th style={styles.innerTh}>Tipo</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Acesso</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Sinaliz.</th>
@@ -428,8 +428,7 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Pressão</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Mangueira</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Bico</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Físico</th>
-                        <th style={styles.innerTh}>Assinatura</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Estado</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -446,7 +445,6 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.mangueira || 'C'}</td>
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.bico || 'C'}</td>
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.estado_fisico || 'C'}</td>
-                          <td style={styles.innerTd}>{item.signature || '-'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -461,8 +459,8 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                   <table style={styles.innerTable}>
                     <thead>
                       <tr>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>N° / Cód.</th>
-                        <th style={styles.innerTh}>Localização / Setor</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Código</th>
+                        <th style={styles.innerTh}>Setor</th>
                         <th style={styles.innerTh}>Tipo</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Acesso</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Sinaliz.</th>
@@ -471,8 +469,7 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Esguicho</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Chave</th>
                         <th style={{ ...styles.innerTh, textAlign: 'center' }}>Registro</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Físico</th>
-                        <th style={styles.innerTh}>Assinatura</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Estado</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -489,7 +486,6 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.chave || item.evaluations?.chaves || 'C'}</td>
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.registro || 'C'}</td>
                           <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.estado_fisico || 'C'}</td>
-                          <td style={styles.innerTd}>{item.signature || '-'}</td>
                         </tr>
                       ))}
                     </tbody>
