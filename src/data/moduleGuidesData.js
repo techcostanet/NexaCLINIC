@@ -1039,6 +1039,18 @@ export const MODULE_GUIDES = {
         desc: 'Visão individual onde o profissional confere sua agenda assistencial sem valores financeiros e solicita trocas com colegas.'
       },
       {
+        title: 'Matriz Semanal por Salão e Turno (Modo Planilha)',
+        desc: 'Visualização completa em grade das 5 semanas do mês com divisão por Salões 1, 2, 3 e DP em cada um dos 3 turnos diários.'
+      },
+      {
+        title: 'Mapa de Cores de Status (Trocas e Vagas)',
+        desc: 'Identificação visual imediata: Verde Claro para trocas/substituições, Vermelho Alerta para vagas/buracos de escala e Branco para plantões regulares.'
+      },
+      {
+        title: 'Impressão A4 Paisagem (Mural dos Salões)',
+        desc: 'Layout diagramado para impressão em folha A4 Paisagem com cabeçalho oficial da clínica, legenda e campo de assinatura da Coordenação Médica.'
+      },
+      {
         title: 'Bolsa de Trocas com E-mail',
         desc: 'Fluxo em 3 etapas (solicitação, aceite do colega e homologação da coordenação) com disparo automático de notificações por e-mail em cada fase.'
       },

@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.49',
+      date: '23/08/2026',
+      title: 'NexaMED — Matriz Semanal de Salões, Mapa de Cores de Trocas e Impressão A4 Paisagem',
+      description: 'Reestruturação visual completa da escala médica inspirada na rotina real de clínicas de hemodiálise, com matriz semanal por salões e turnos, mapa de calor de trocas e vagas, bolsa de compensações e exportação em A4 Paisagem para mural.',
+      changes: [
+        { type: 'Matriz Semanal', text: 'Visualização da escala médica organizada por 1ª a 5ª semanas do mês com linhas por Salão 1, 2, 3 e DP nos 3 turnos diários.' },
+        { type: 'Mapa de Cores', text: 'Células em Verde Claro para trocas/substituições, Vermelho Alerta para vagas/buracos de escala e Branco para plantões regulares.' },
+        { type: 'Bolsa de Trocas', text: 'Painel no rodapé exibindo os pares de médicos com trocas no mês e balanço de coberturas de cada nefrologista.' },
+        { type: 'Impressão A4 Paisagem', text: 'Layout diagramado para impressão em formato A4 Paisagem com cabeçalho institucional para afixação nos murais dos salões.' }
+      ]
+    },
+    {
       version: 'v4.7.47',
       date: '23/08/2026',
       title: 'Módulo de T.I. — Servidor Centralizado de E-mail (SMTP) e Disparos Universais',

@@ -1,3 +1,19 @@
+## [v4.7.49] - 23 de Agosto, 2026
+### NexaMED — Matriz Semanal de Salões, Mapa de Cores de Trocas e Impressão A4 Paisagem
+- **Modo Matriz Semanal (Visualização Planilha Interativa):**
+  - Implementado modo de visualização em grade agrupado por semanas (`1ª a 5ª Semana`), dividindo os dias da semana (Segunda a Sábado e Domingo) por **Salão 1**, **Salão 2**, **Salão 3** e **DP** em cada um dos **3 Turnos diários (1ºT, 2ºT e 3ºT)**.
+  - Alternador de visualização rápido no topo: **`Matriz`** vs **`Lista`**.
+- **Mapa de Cores de Status:**
+  - Células com fundo **Verde Claro** para plantões fruto de **Troca/Substituição** (com identificação do titular original).
+  - Células com fundo **Vermelho Alerta** para **Vagas/Buracos na escala** com botão imediato de preenchimento.
+  - Células com fundo **Branco/Azul** para plantões regulares titulares.
+- **Painel de Bolsa de Trocas & Balanço de Coberturas:**
+  - Quadro inferior exibindo em tempo real as trocas do mês e o saldo de plantões titulares versus coberturas assumidas por cada nefrologista.
+- **Impressão Oficial A4 Paisagem (Mural dos Salões):**
+  - Botão de impressão diagramado em formato A4 Landscape com cabeçalho institucional e campo de assinatura da Coordenação Médica para afixação nos salões de diálise.
+
+---
+
 ## [v4.7.47] - 23 de Agosto, 2026
 ### Módulo de T.I. (NexaCONFIG) — Servidor Centralizado de E-mail (SMTP) e Disparos Universais
 - **Aba E-mail no Módulo de T.I.:**

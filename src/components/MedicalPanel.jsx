@@ -322,6 +322,7 @@ export default function MedicalPanel({ currentUser }) {
           <MedicalScheduleTab
             schedules={schedules}
             doctors={doctors}
+            swaps={swaps}
             selectedMonth={selectedMonth}
             onChangeMonth={setSelectedMonth}
             onSaveSchedule={handleSaveSchedule}
