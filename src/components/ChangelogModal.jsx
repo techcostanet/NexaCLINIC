@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.45',
+      date: '23/08/2026',
+      title: 'NexaMED — Ajuste Visual do Header, Lista de Médicos na Escala e Correção do Seletor de Mês/Ano',
+      description: 'Remoção do botão voltar e controle de acesso do cabeçalho, garantia de listagem de todos os médicos no modal de escala de plantões, aumento da largura do seletor de mês para evitar corte do ano e padronização de rótulos concisos.',
+      changes: [
+        { type: 'Cabeçalho Clean', text: 'Removidos o botão "Voltar" e o campo "Acesso" da Hero Section do NexaMED, deixando o cabeçalho limpo e alinhado ao padrão do sistema.' },
+        { type: 'Escala de Médicos', text: 'Garantido o carregamento e exibição completa da lista de médicos nefrologistas no dropdown do modal de escalar plantão.' },
+        { type: 'Seletor de Mês e Ano', text: 'Ajustada a largura do seletor mensal para 220px, exibindo o ano completo sem cortes em todos os navegadores e resoluções.' },
+        { type: 'Rótulos Concisos', text: 'Aplicação da regra de 1 palavra única nos cabeçalhos e campos de formulário de todas as abas do NexaMED.' }
+      ]
+    },
+    {
       version: 'v4.7.43',
       date: '22/08/2026',
       title: 'Padronização Estrita de Cargos e Setores (1 Palavra, Title Case e Ordem A-Z)',

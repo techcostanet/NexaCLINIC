@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Calendar, UserCheck, RefreshCw, Activity, DollarSign, 
-  Settings, Users, ShieldAlert, Sparkles, AlertCircle, ArrowLeft, Stethoscope
+  Settings, Users, ShieldAlert, Sparkles, AlertCircle, Stethoscope
 } from 'lucide-react';
 import { dbService } from '../firebase';
+import { FALLBACK_DOCTORS } from '../services/firebase/medicalService';
 
 import MedicalScheduleTab from './medical/MedicalScheduleTab';
 import MedicalMyShiftsTab from './medical/MedicalMyShiftsTab';
@@ -13,17 +14,17 @@ import MedicalProductionTab from './medical/MedicalProductionTab';
 import MedicalSettingsTab from './medical/MedicalSettingsTab';
 import MedicalStatementModal from './medical/MedicalStatementModal';
 
-export default function MedicalPanel({ onBack }) {
+export default function MedicalPanel({ currentUser }) {
   const [activeTab, setActiveTab] = useState('Escala');
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().substring(0, 7));
   const [loading, setLoading] = useState(false);
 
   // View switch: Coordination vs specific doctor portal
-  const [currentDoctorId, setCurrentDoctorId] = useState('doc-1');
+  const [currentDoctorId, setCurrentDoctorId] = useState('doc-lucas-uid');
   const [viewMode, setViewMode] = useState('coordination'); // 'coordination' | 'doctor'
 
-  // Data states
-  const [doctors, setDoctors] = useState([]);
+  // Data states (initialized with FALLBACK_DOCTORS to prevent blank dropdowns)
+  const [doctors, setDoctors] = useState(FALLBACK_DOCTORS);
   const [schedules, setSchedules] = useState([]);
   const [swaps, setSwaps] = useState([]);
   const [procedures, setProcedures] = useState([]);
@@ -57,40 +58,62 @@ export default function MedicalPanel({ onBack }) {
         patsData,
         apptsData
       ] = await Promise.all([
-        dbService.getMedicalDoctors ? dbService.getMedicalDoctors() : [],
-        dbService.getUsers ? dbService.getUsers() : [],
-        dbService.getMedicalSettings ? dbService.getMedicalSettings() : {},
-        dbService.getMedicalSchedules ? dbService.getMedicalSchedules(selectedMonth) : [],
-        dbService.getMedicalSwaps ? dbService.getMedicalSwaps() : [],
-        dbService.getMedicalProcedures ? dbService.getMedicalProcedures() : [],
-        dbService.getMedicalProductions ? dbService.getMedicalProductions(selectedMonth) : [],
-        dbService.getPatients ? dbService.getPatients() : [],
-        dbService.getAppointments ? dbService.getAppointments() : []
+        dbService.getMedicalDoctors ? dbService.getMedicalDoctors().catch(() => FALLBACK_DOCTORS) : Promise.resolve(FALLBACK_DOCTORS),
+        dbService.getUsers ? dbService.getUsers().catch(() => []) : Promise.resolve([]),
+        dbService.getMedicalSettings ? dbService.getMedicalSettings().catch(() => ({})) : Promise.resolve({}),
+        dbService.getMedicalSchedules ? dbService.getMedicalSchedules(selectedMonth).catch(() => []) : Promise.resolve([]),
+        dbService.getMedicalSwaps ? dbService.getMedicalSwaps().catch(() => []) : Promise.resolve([]),
+        dbService.getMedicalProcedures ? dbService.getMedicalProcedures().catch(() => []) : Promise.resolve([]),
+        dbService.getMedicalProductions ? dbService.getMedicalProductions(selectedMonth).catch(() => []) : Promise.resolve([]),
+        dbService.getPatients ? dbService.getPatients().catch(() => []) : Promise.resolve([]),
+        dbService.getAppointments ? dbService.getAppointments().catch(() => []) : Promise.resolve([])
       ]);
 
       // Unify doctors from medicalService and users (from Agenda)
-      const unifiedDocs = [...(docsData || [])];
+      const unifiedDocs = Array.isArray(docsData) && docsData.length > 0 ? [...docsData] : [...FALLBACK_DOCTORS];
       (userList || []).forEach(u => {
         const uId = u.uid || u.id;
         const exists = unifiedDocs.some(d => d.id === uId || (d.email && u.email && d.email.toLowerCase() === u.email.toLowerCase()) || d.name === u.name);
         if (!exists) {
-          unifiedDocs.push({
-            id: uId,
-            name: u.name || 'Profissional',
-            crm: u.crm || (u.name?.includes('Dr') ? '45892/MG' : 'CRM Ativo'),
-            specialty: u.specialty || 'Nefrologia',
-            email: u.email || '',
-            phone: u.phone || '',
-            contractType: u.contractType || 'PJ',
-            pixKey: u.pixKey || u.email || '',
-            bank: u.bank || 'Banco Principal'
-          });
+          const isDoc = u.role === 'admin' || 
+            u.role === 'professional' || 
+            u.role === 'clinical' || 
+            (u.allowedSectors && u.allowedSectors.includes('medica')) ||
+            (u.name && (u.name.toLowerCase().includes('dr') || u.name.toLowerCase().includes('médic') || u.name.toLowerCase().includes('nefro')));
+          
+          if (isDoc) {
+            unifiedDocs.push({
+              id: uId,
+              name: u.name || 'Profissional',
+              crm: u.crm || (u.name?.includes('Dr') ? '45892/MG' : 'CRM Ativo'),
+              specialty: u.specialty || 'Nefrologia',
+              email: u.email || '',
+              phone: u.phone || '',
+              contractType: u.contractType || 'PJ',
+              pixKey: u.pixKey || u.email || '',
+              bank: u.bank || 'Banco Principal'
+            });
+          }
         }
       });
 
-      setDoctors(unifiedDocs);
-      if (unifiedDocs.length > 0 && (!currentDoctorId || !unifiedDocs.some(d => d.id === currentDoctorId))) {
-        setCurrentDoctorId(unifiedDocs[0].id);
+      const sortedDocs = unifiedDocs.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      setDoctors(sortedDocs);
+
+      // Select doctor based on current logged user if available, or maintain selection
+      if (currentUser && currentUser.email) {
+        const matchedDoc = sortedDocs.find(d => 
+          (d.email && d.email.toLowerCase() === currentUser.email.toLowerCase()) || 
+          d.id === currentUser.uid ||
+          (d.name && currentUser.name && d.name.toLowerCase() === currentUser.name.toLowerCase())
+        );
+        if (matchedDoc) {
+          setCurrentDoctorId(matchedDoc.id || matchedDoc.uid);
+        } else if (sortedDocs.length > 0 && !sortedDocs.some(d => d.id === currentDoctorId)) {
+          setCurrentDoctorId(sortedDocs[0].id || sortedDocs[0].uid);
+        }
+      } else if (sortedDocs.length > 0 && (!currentDoctorId || !sortedDocs.some(d => d.id === currentDoctorId))) {
+        setCurrentDoctorId(sortedDocs[0].id || sortedDocs[0].uid);
       }
 
       setSettings(settingsData || {});
@@ -267,29 +290,6 @@ export default function MedicalPanel({ onBack }) {
             <p style={styles.heroSubtitle}>
               Escala de plantões nos salões/DP, produção ambulatorial, bolsa de trocas e repasse financeiro.
             </p>
-          </div>
-        </div>
-
-        <div style={styles.heroActions}>
-          {onBack && (
-            <button onClick={onBack} style={styles.backBtn}>
-              <ArrowLeft size={16} />
-              <span>Voltar</span>
-            </button>
-          )}
-
-          <div style={styles.modeControlBox}>
-            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>Acesso:</span>
-            <select
-              className="form-control"
-              value={currentDoctorId}
-              onChange={e => setCurrentDoctorId(e.target.value)}
-              style={{ width: '230px', fontSize: '0.82rem', backgroundColor: '#fff', color: '#0f172a', borderColor: '#cbd5e1', fontWeight: '600' }}
-            >
-              {doctors.map(doc => (
-                <option key={doc.id || doc.uid} value={doc.id || doc.uid}>{doc.name} (Médico)</option>
-              ))}
-            </select>
           </div>
         </div>
       </div>
@@ -470,34 +470,6 @@ const styles = {
     fontSize: '0.9rem',
     color: 'var(--text-secondary, #64748b)',
     margin: '0.25rem 0 0 0'
-  },
-  heroActions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    flexWrap: 'wrap'
-  },
-  backBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.35rem',
-    padding: '0.5rem 0.9rem',
-    fontSize: '0.82rem',
-    fontWeight: '700',
-    backgroundColor: '#f1f5f9',
-    color: '#334155',
-    border: '1px solid #cbd5e1',
-    borderRadius: '8px',
-    cursor: 'pointer',
-  },
-  modeControlBox: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    backgroundColor: '#f8fafc',
-    padding: '0.45rem 0.85rem',
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0',
   },
   tabsBar: {
     display: 'flex',

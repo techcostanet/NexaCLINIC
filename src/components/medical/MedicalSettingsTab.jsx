@@ -44,7 +44,7 @@ export default function MedicalSettingsTab({
       {/* Header */}
       <div style={styles.header}>
         <div>
-          <h3 style={styles.title}>Tabela de Honorários & Parâmetros de Repasse</h3>
+          <h3 style={styles.title}>Tabela de Honorários</h3>
           <p style={styles.subtitle}>Configuração dos valores praticados para plantões, consultas e procedimentos.</p>
         </div>
       </div>
@@ -53,10 +53,10 @@ export default function MedicalSettingsTab({
         <div style={styles.grid2}>
           {/* Column 1: Base Fees */}
           <div style={styles.card}>
-            <h4 style={styles.cardTitle}>Valores Base de Plantão e Consulta</h4>
+            <h4 style={styles.cardTitle}>Valores Base</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem' }}>
               <div className="form-group">
-                <label>Valor por Plantão (Salão / DP) *</label>
+                <label>Plantão *</label>
                 <div style={styles.inputPrefix}>
                   <span>R$</span>
                   <input 
@@ -72,7 +72,7 @@ export default function MedicalSettingsTab({
               </div>
 
               <div className="form-group">
-                <label>Valor por Consulta Ambulatorial *</label>
+                <label>Consulta *</label>
                 <div style={styles.inputPrefix}>
                   <span>R$</span>
                   <input 
@@ -91,7 +91,7 @@ export default function MedicalSettingsTab({
 
           {/* Column 2: Procedure Fees Table */}
           <div style={styles.card}>
-            <h4 style={styles.cardTitle}>Tabela de Procedimentos Nefrológicos</h4>
+            <h4 style={styles.cardTitle}>Procedimentos</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '0.75rem' }}>
               {Object.keys(formData.procedureFees).map(proc => (
                 <div key={proc} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>

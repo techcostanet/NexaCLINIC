@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Edit2, Activity, CheckCircle, Search } from 'lucide-react';
+import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
 
 export default function MedicalProceduresTab({
   procedures = [],
@@ -10,12 +11,14 @@ export default function MedicalProceduresTab({
   onDeleteProcedure,
   loading = false
 }) {
+  const availableDoctors = Array.isArray(doctors) && doctors.length > 0 ? doctors : FALLBACK_DOCTORS;
+
   const [showModal, setShowModal] = useState(false);
   const [filterDoc, setFilterDoc] = useState('Todos');
   const [searchTerm, setSearchTerm] = useState('');
 
   const [formData, setFormData] = useState({
-    doctorId: doctors[0]?.id || '',
+    doctorId: availableDoctors[0]?.id || availableDoctors[0]?.uid || '',
     patientId: patients[0]?.id || '',
     date: new Date().toISOString().substring(0, 10),
     procedureType: 'Cateter Duplo Lúmen (CDL)',
@@ -47,7 +50,7 @@ export default function MedicalProceduresTab({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const doc = doctors.find(d => d.id === formData.doctorId);
+    const doc = availableDoctors.find(d => (d.id === formData.doctorId || d.uid === formData.doctorId));
     const pat = patients.find(p => p.id === formData.patientId);
 
     onSaveProcedure({
@@ -111,15 +114,15 @@ export default function MedicalProceduresTab({
             style={{ width: '220px', fontSize: '0.8rem' }}
           >
             <option value="Todos">Todos os Médicos</option>
-            {doctors.map(doc => (
-              <option key={doc.id} value={doc.id}>{doc.name}</option>
+            {availableDoctors.map(doc => (
+              <option key={doc.id || doc.uid} value={doc.id || doc.uid}>{doc.name}</option>
             ))}
           </select>
 
           <input 
             type="text" 
             className="form-control" 
-            placeholder="Buscar por paciente, procedimento..." 
+            placeholder="Buscar paciente ou procedimento..." 
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             style={{ width: '240px', fontSize: '0.8rem' }}
@@ -133,10 +136,10 @@ export default function MedicalProceduresTab({
           <thead>
             <tr>
               <th>Data</th>
-              <th>Médico Executante</th>
+              <th>Médico</th>
               <th>Paciente</th>
               <th>Procedimento</th>
-              <th>Valor Unitário</th>
+              <th>Valor</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
@@ -192,7 +195,7 @@ export default function MedicalProceduresTab({
         <div style={styles.modalOverlay}>
           <div style={styles.modalCard}>
             <h4 style={{ margin: '0 0 1rem 0', fontWeight: '800', color: '#0f172a' }}>
-              Lançar Procedimento Executado
+              Lançar Procedimento
             </h4>
 
             <form onSubmit={handleSubmit}>
@@ -205,8 +208,8 @@ export default function MedicalProceduresTab({
                     onChange={e => setFormData({ ...formData, doctorId: e.target.value })}
                     required
                   >
-                    <option value="">Selecione o Médico...</option>
-                    {doctors.map(d => (
+                    <option value="">Selecione...</option>
+                    {availableDoctors.map(d => (
                       <option key={d.id || d.uid} value={d.id || d.uid}>
                         {d.name} {d.crm ? `(${d.crm})` : ''}
                       </option>

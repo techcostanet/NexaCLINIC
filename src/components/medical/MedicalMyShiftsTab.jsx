@@ -3,6 +3,7 @@ import {
   Calendar, RefreshCw, Plus, CheckCircle2, 
   Clock, ShieldAlert, FileText, Send, User, ChevronRight
 } from 'lucide-react';
+import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
 
 export default function MedicalMyShiftsTab({
   doctor,
@@ -14,6 +15,9 @@ export default function MedicalMyShiftsTab({
   onSaveProcedure,
   loading = false
 }) {
+  const availableDoctors = Array.isArray(doctors) && doctors.length > 0 ? doctors : FALLBACK_DOCTORS;
+  const activeDoctor = doctor || availableDoctors[0];
+
   const [showSwapModal, setShowSwapModal] = useState(false);
   const [selectedShiftForSwap, setSelectedShiftForSwap] = useState(null);
   const [targetDoctorId, setTargetDoctorId] = useState('');
@@ -28,30 +32,30 @@ export default function MedicalMyShiftsTab({
   });
 
   const mySchedules = schedules
-    .filter(s => s.doctorId === doctor?.id)
+    .filter(s => s.doctorId === activeDoctor?.id || s.doctorId === activeDoctor?.uid)
     .sort((a, b) => a.date.localeCompare(b.date));
 
   const myProcedures = procedures
-    .filter(p => p.doctorId === doctor?.id)
+    .filter(p => p.doctorId === activeDoctor?.id || p.doctorId === activeDoctor?.uid)
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const handleOpenSwap = (shift) => {
     setSelectedShiftForSwap(shift);
-    const otherDocs = doctors.filter(d => d.id !== doctor?.id);
-    setTargetDoctorId(otherDocs[0]?.id || '');
+    const otherDocs = availableDoctors.filter(d => (d.id || d.uid) !== (activeDoctor?.id || activeDoctor?.uid));
+    setTargetDoctorId(otherDocs[0]?.id || otherDocs[0]?.uid || '');
     setSwapReason('');
     setShowSwapModal(true);
   };
 
   const handleSendSwap = (e) => {
     e.preventDefault();
-    const targetDoc = doctors.find(d => d.id === targetDoctorId);
+    const targetDoc = availableDoctors.find(d => (d.id === targetDoctorId || d.uid === targetDoctorId));
     if (!selectedShiftForSwap || !targetDoc) return;
 
     onRequestSwap({
-      requestingDoctorId: doctor.id,
-      requestingDoctorName: doctor.name,
-      targetDoctorId: targetDoc.id,
+      requestingDoctorId: activeDoctor.id || activeDoctor.uid,
+      requestingDoctorName: activeDoctor.name,
+      targetDoctorId: targetDoc.id || targetDoc.uid,
       targetDoctorName: targetDoc.name,
       targetDoctorEmail: targetDoc.email,
       scheduleId: selectedShiftForSwap.id,
@@ -233,8 +237,8 @@ export default function MedicalMyShiftsTab({
                     onChange={e => setTargetDoctorId(e.target.value)}
                     required
                   >
-                    <option value="">Selecione o Médico Substituto...</option>
-                    {doctors.filter(d => (d.id !== doctor?.id && d.uid !== doctor?.id)).map(doc => (
+                    <option value="">Selecione...</option>
+                    {availableDoctors.filter(d => ((d.id || d.uid) !== (activeDoctor?.id || activeDoctor?.uid))).map(doc => (
                       <option key={doc.id || doc.uid} value={doc.id || doc.uid}>
                         {doc.name} {doc.crm ? `(${doc.crm})` : ''}
                       </option>
@@ -243,11 +247,11 @@ export default function MedicalMyShiftsTab({
                 </div>
 
                 <div className="form-group">
-                  <label>Motivo da Troca *</label>
+                  <label>Motivo *</label>
                   <textarea 
                     rows={3} 
                     className="form-control" 
-                    placeholder="Descreva o motivo (ex: Congresso, Compromisso acadêmico, Imprevisto pessoal)..."
+                    placeholder="Descreva o motivo da troca..."
                     value={swapReason}
                     onChange={e => setSwapReason(e.target.value)}
                     required
@@ -264,7 +268,7 @@ export default function MedicalMyShiftsTab({
                   Cancelar
                 </button>
                 <button type="submit" disabled={loading} className="btn btn-primary" style={{ backgroundColor: '#0284c7' }}>
-                  {loading ? 'Enviando...' : 'Enviar Solicitação'}
+                  {loading ? 'Enviando...' : 'Enviar'}
                 </button>
               </div>
             </form>
@@ -272,12 +276,12 @@ export default function MedicalMyShiftsTab({
         </div>
       )}
 
-      {/* Modal: Lançar Procedimento Executado */}
+      {/* Modal: Lançar Procedimento */}
       {showProcModal && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalCard}>
             <h4 style={{ margin: '0 0 1rem 0', fontWeight: '800', color: '#0f172a' }}>
-              Lançar Procedimento Executado
+              Lançar Procedimento
             </h4>
 
             <form onSubmit={handleSaveProc}>
@@ -341,7 +345,7 @@ export default function MedicalMyShiftsTab({
                   Cancelar
                 </button>
                 <button type="submit" disabled={loading} className="btn btn-primary" style={{ backgroundColor: '#10b981' }}>
-                  {loading ? 'Salvando...' : 'Gravar Procedimento'}
+                  {loading ? 'Salvando...' : 'Salvar'}
                 </button>
               </div>
             </form>

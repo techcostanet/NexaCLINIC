@@ -1,3 +1,16 @@
+## [v4.7.45] - 23 de Agosto, 2026
+### NexaMED — Ajuste Visual do Header, Lista de Médicos na Escala e Correção do Seletor de Mês/Ano
+- **Cabeçalho Limpo e Harmonizado:**
+  - Removidos o botão "Voltar" e o campo de seleção "Acesso" da Hero Section do NexaMED, proporcionando um cabeçalho limpo no padrão do sistema.
+- **Lista de Médicos no Modal de Escala:**
+  - Garantido o carregamento robusto e exibição da lista completa de médicos nefrologistas no dropdown do modal de escalar plantão nos salões e diálise peritoneal.
+- **Correção do Seletor de Mês e Ano:**
+  - Aumentada a largura do seletor mensal (`<input type="month" />`) para 220px, prevenindo que o ano seja cortado na interface.
+- **Padronização Estrita de Rótulos Concisos (1 Palavra):**
+  - Aplicação da regra de 1 palavra única nos cabeçalhos de tabelas, formulários e modais em todas as abas do NexaMED (`Setor`, `Médico`, `Presença`, `Plantões`, `Consultas`, `Total`, `Unitário`, `Descrição`, `Salvar`).
+
+---
+
 ## [v4.7.43] - 22 de Agosto, 2026
 ### Padronização Estrita de Cargos e Setores (1 Palavra, Title Case e Ordem Alfabética A-Z)
 - **Cargos Padronizados em 1 Palavra e Primeira Letra Maiúscula:**

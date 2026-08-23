@@ -79,16 +79,16 @@ export default function MedicalStatementModal({
           <table style={styles.statementTable}>
             <thead>
               <tr>
-                <th>Descrição do Item / Atividade</th>
+                <th>Descrição</th>
                 <th style={{ textAlign: 'center' }}>Qtd</th>
-                <th style={{ textAlign: 'right' }}>Valor Unit.</th>
+                <th style={{ textAlign: 'right' }}>Unitário</th>
                 <th style={{ textAlign: 'right' }}>Subtotal</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>
-                  <strong>Plantões nos Salões de Hemodiálise & DP</strong>
+                  <strong>Plantões nos Salões e DP</strong>
                   <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Escala assistencial presencial auditada pela ronda da recepção.</div>
                 </td>
                 <td style={{ textAlign: 'center', fontWeight: '700' }}>{production.shiftsCount}</td>

@@ -3,6 +3,7 @@ import {
   DollarSign, CheckCircle2, FileText, Send, 
   Printer, ArrowRight, ShieldCheck, ChevronRight
 } from 'lucide-react';
+import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
 
 export default function MedicalProductionTab({
   selectedMonth,
@@ -17,12 +18,13 @@ export default function MedicalProductionTab({
   loading = false
 }) {
   const [homologatingId, setHomologatingId] = useState(null);
+  const availableDoctors = Array.isArray(doctors) && doctors.length > 0 ? doctors : FALLBACK_DOCTORS;
 
   const shiftFee = settings.shiftFee || 1200.0;
   const consultFee = settings.consultationFee || 150.0;
 
   // Compute production metrics for each doctor
-  const doctorProductions = doctors.map(doc => {
+  const doctorProductions = availableDoctors.map(doc => {
     const docId = doc.id || doc.uid;
     // 1. Shifts: Only present or confirmed shifts
     const docShifts = schedules.filter(s => 
@@ -104,7 +106,7 @@ export default function MedicalProductionTab({
       {/* Header */}
       <div style={styles.header}>
         <div>
-          <h3 style={styles.title}>Fechamento de Produção & Honorários Médicos</h3>
+          <h3 style={styles.title}>Fechamento de Produção</h3>
           <p style={styles.subtitle}>Apuração consolidada de plantões nos salões, consultas da agenda e procedimentos.</p>
         </div>
       </div>
@@ -112,7 +114,7 @@ export default function MedicalProductionTab({
       {/* KPI Cards */}
       <div style={styles.kpiGrid}>
         <div style={styles.kpiCard}>
-          <span style={styles.kpiLabel}>Total Geral de Repasses ({selectedMonth})</span>
+          <span style={styles.kpiLabel}>Total Geral ({selectedMonth})</span>
           <div style={{ ...styles.kpiValue, color: '#059669' }}>
             R$ {grandTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </div>
@@ -120,7 +122,7 @@ export default function MedicalProductionTab({
         </div>
 
         <div style={styles.kpiCard}>
-          <span style={styles.kpiLabel}>Status de Homologação</span>
+          <span style={styles.kpiLabel}>Homologação</span>
           <div style={{ ...styles.kpiValue, color: homologatedCount === doctorProductions.length ? '#166534' : '#d97706' }}>
             {homologatedCount} de {doctorProductions.length} Homologados
           </div>
@@ -128,7 +130,7 @@ export default function MedicalProductionTab({
         </div>
 
         <div style={styles.kpiCard}>
-          <span style={styles.kpiLabel}>Tabela Base Vigente</span>
+          <span style={styles.kpiLabel}>Tabela Base</span>
           <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#334155', marginTop: '0.2rem' }}>
             Plantão: R$ {shiftFee.toLocaleString('pt-BR')} • Consulta: R$ {consultFee.toLocaleString('pt-BR')}
           </div>
@@ -141,11 +143,11 @@ export default function MedicalProductionTab({
           <thead>
             <tr>
               <th>Médico</th>
-              <th>Plantões (Salões/DP)</th>
-              <th>Consultas (Agenda)</th>
+              <th>Plantões</th>
+              <th>Consultas</th>
               <th>Procedimentos</th>
-              <th>Total Apurado</th>
-              <th>Status Repasse</th>
+              <th>Total</th>
+              <th>Status</th>
               <th>Ações</th>
             </tr>
           </thead>

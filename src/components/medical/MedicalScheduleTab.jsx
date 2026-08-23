@@ -3,6 +3,7 @@ import {
   Calendar, Plus, AlertTriangle, CheckCircle2, 
   Trash2, Edit2, Filter, ChevronLeft, ChevronRight, UserCheck, ShieldAlert
 } from 'lucide-react';
+import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
 
 export default function MedicalScheduleTab({
   schedules = [],
@@ -13,6 +14,8 @@ export default function MedicalScheduleTab({
   onDeleteSchedule,
   loading = false
 }) {
+  const availableDoctors = Array.isArray(doctors) && doctors.length > 0 ? doctors : FALLBACK_DOCTORS;
+
   const [selectedSector, setSelectedSector] = useState('Todos');
   const [selectedShift, setSelectedShift] = useState('Todos');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -22,7 +25,7 @@ export default function MedicalScheduleTab({
     date: new Date().toISOString().substring(0, 10),
     sector: 'Salão 1',
     shift: '1º Turno',
-    doctorId: doctors[0]?.id || '',
+    doctorId: availableDoctors[0]?.id || availableDoctors[0]?.uid || '',
     notes: ''
   });
 
@@ -40,7 +43,7 @@ export default function MedicalScheduleTab({
 
   const handleOpenAdd = (date = null, sec = null, sh = null) => {
     setEditingItem(null);
-    const firstDocId = doctors[0]?.id || doctors[0]?.uid || '';
+    const firstDocId = availableDoctors[0]?.id || availableDoctors[0]?.uid || '';
     setFormData({
       date: date || new Date().toISOString().substring(0, 10),
       sector: sec || 'Salão 1',
@@ -65,7 +68,7 @@ export default function MedicalScheduleTab({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const doc = doctors.find(d => (d.id === formData.doctorId || d.uid === formData.doctorId));
+    const doc = availableDoctors.find(d => (d.id === formData.doctorId || d.uid === formData.doctorId));
     const month = formData.date.substring(0, 7);
     
     onSaveSchedule({
@@ -89,8 +92,8 @@ export default function MedicalScheduleTab({
       {/* Top Header */}
       <div style={styles.header}>
         <div>
-          <h3 style={styles.title}>Escala Mensal de Plantões (Salões & DP)</h3>
-          <p style={styles.subtitle}>Distribuição da equipe médica nos Salões 1, 2, 3 e Diálise Peritoneal (DP) nos 3 turnos.</p>
+          <h3 style={styles.title}>Escala Mensal de Plantões</h3>
+          <p style={styles.subtitle}>Distribuição da equipe médica nos Salões 1, 2, 3 e Diálise Peritoneal nos 3 turnos.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <input 
@@ -98,7 +101,7 @@ export default function MedicalScheduleTab({
             className="form-control"
             value={selectedMonth}
             onChange={e => onChangeMonth(e.target.value)}
-            style={{ width: '160px', fontWeight: '700' }}
+            style={{ width: '220px', minWidth: '220px', fontWeight: '700' }}
           />
           <button 
             type="button" 
@@ -174,11 +177,11 @@ export default function MedicalScheduleTab({
           <thead>
             <tr>
               <th>Data</th>
-              <th>Salão</th>
+              <th>Setor</th>
               <th>Turno</th>
-              <th>Médico Escalado</th>
+              <th>Médico</th>
               <th>CRM</th>
-              <th>Presença (Ronda)</th>
+              <th>Presença</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
@@ -281,7 +284,7 @@ export default function MedicalScheduleTab({
         <div style={styles.modalOverlay}>
           <div style={styles.modalCard}>
             <h4 style={{ margin: '0 0 1rem 0', fontWeight: '800', color: '#0f172a' }}>
-              {editingItem ? 'Editar Plantão da Escala' : 'Escalar Médico para Plantão'}
+              {editingItem ? 'Editar Plantão' : 'Escalar Médico'}
             </h4>
 
             <form onSubmit={handleSubmit}>
@@ -298,7 +301,7 @@ export default function MedicalScheduleTab({
                 </div>
 
                 <div className="form-group">
-                  <label>Salão / Setor *</label>
+                  <label>Setor *</label>
                   <select 
                     className="form-control" 
                     value={formData.sector} 
@@ -324,15 +327,15 @@ export default function MedicalScheduleTab({
                 </div>
 
                 <div className="form-group">
-                  <label>Médico Nefrologista *</label>
+                  <label>Médico *</label>
                   <select 
                     className="form-control" 
                     value={formData.doctorId} 
                     onChange={e => setFormData({ ...formData, doctorId: e.target.value })}
                     required
                   >
-                    <option value="">Selecione o Médico...</option>
-                    {doctors.map(doc => (
+                    <option value="">Selecione...</option>
+                    {availableDoctors.map(doc => (
                       <option key={doc.id || doc.uid} value={doc.id || doc.uid}>
                         {doc.name} {doc.crm ? `(${doc.crm})` : ''}
                       </option>
@@ -345,7 +348,7 @@ export default function MedicalScheduleTab({
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="Ex: Plantão em duplicidade / Sobreaviso"
+                    placeholder="Ex: Sobreaviso ou duplicidade"
                     value={formData.notes} 
                     onChange={e => setFormData({ ...formData, notes: e.target.value })} 
                   />
@@ -357,7 +360,7 @@ export default function MedicalScheduleTab({
                   Cancelar
                 </button>
                 <button type="submit" disabled={loading} className="btn btn-primary" style={{ backgroundColor: '#8b5cf6' }}>
-                  {loading ? 'Salvando...' : 'Salvar Escala'}
+                  {loading ? 'Salvando...' : 'Salvar'}
                 </button>
               </div>
             </form>
