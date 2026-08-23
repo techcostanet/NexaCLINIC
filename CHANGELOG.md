@@ -1,3 +1,22 @@
+## [v4.7.47] - 23 de Agosto, 2026
+### Módulo de T.I. (NexaCONFIG) — Servidor Centralizado de E-mail (SMTP) e Disparos Universais
+- **Aba E-mail no Módulo de T.I.:**
+  - Implementação de painel centralizado de configuração de correio eletrônico institucional no [ConfigPanel.jsx](file:///c:/Nexa/NexAi-CLINIC/src/components/ConfigPanel.jsx) através do componente [EmailSettingsTab.jsx](file:///c:/Nexa/NexAi-CLINIC/src/components/config/EmailSettingsTab.jsx).
+- **Provedores Pré-Configurados (1-Click Presets):**
+  - Presets para Google Workspace / Gmail, Microsoft 365 / Outlook, Amazon SES, Resend e SMTP Personalizado com preenchimento automático de portas e protocolos de segurança (TLS/SSL).
+- **Credenciais e Segurança SMTP:**
+  - Configuração de Remetente (Nome e E-mail), Host, Porta, Criptografia, Login, Senha de Aplicativo / API Key (com botão para exibir/ocultar senha), E-mail de Resposta (Reply-To), Cópia Oculta (BCC para Auditoria T.I.) e Assinatura Institucional Padrão de Rodapé.
+- **Teste de Disparo em Tempo Real:**
+  - Função de envio imediato de e-mail de teste com diagnóstico de conectividade, feedback visual instantâneo e gravação de log.
+- **Controle Granular de Gatilhos por Módulo:**
+  - Switches para ativar ou pausar disparos automáticos nos módulos `NexaMED` (escalas/trocas), `NexaSERVICE` (ordens de serviço), `NexaHR` (admissões/férias), `NexaPROCURE` (cotações), `NexaCAL` (lembretes de consultas), `NexaASSIST` (alertas de internação) e `NexaCONFIG` (segurança/auditoria).
+- **Histórico e Logs de Disparos:**
+  - Tabela com rastreabilidade completa de todos os e-mails gerados pelo sistema com data, módulo originador, destinatário e status de entrega.
+- **Manual do Módulo Atualizado:**
+  - Documentação completa em [moduleGuidesData.js](file:///c:/Nexa/NexAi-CLINIC/src/data/moduleGuidesData.js) com recursos, tutorial passo a passo e perguntas frequentes.
+
+---
+
 ## [v4.7.45] - 23 de Agosto, 2026
 ### NexaMED — Ajuste Visual do Header, Lista de Médicos na Escala e Correção do Seletor de Mês/Ano
 - **Cabeçalho Limpo e Harmonizado:**

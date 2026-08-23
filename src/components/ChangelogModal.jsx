@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.47',
+      date: '23/08/2026',
+      title: 'Módulo de T.I. — Servidor Centralizado de E-mail (SMTP) e Disparos Universais',
+      description: 'Implementação de aba dedicada no módulo de T.I. (NexaCONFIG) para configuração centralizada do servidor de e-mail institucional, suporte a múltiplos provedores, teste em tempo real e controle de disparos por módulo.',
+      changes: [
+        { type: 'Servidor SMTP', text: 'Configuração completa de remetente, host, porta, TLS/SSL, usuário, senha de app, e-mail de resposta e cópia oculta (BCC) para auditoria.' },
+        { type: 'Presets Rápidos', text: 'Seleção em 1 clique de perfis para Google Workspace/Gmail, Microsoft 365/Outlook, Amazon SES, Resend e SMTP Personalizado.' },
+        { type: 'Teste em Tempo Real', text: 'Disparo de e-mail de teste com feedback visual instantâneo e diagnóstico de conexão.' },
+        { type: 'Gatilhos por Módulo', text: 'Controle de permissões para disparos automáticos nos módulos NexaMED, NexaSERVICE, NexaHR, NexaPROCURE, NexaCAL e NexaASSIST.' },
+        { type: 'Logs de Disparo', text: 'Histórico detalhado com registro de data, módulo emissor, destinatário e status de entrega.' }
+      ]
+    },
+    {
       version: 'v4.7.45',
       date: '23/08/2026',
       title: 'NexaMED — Ajuste Visual do Header, Lista de Médicos na Escala e Correção do Seletor de Mês/Ano',

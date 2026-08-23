@@ -3,11 +3,12 @@ import { dbService } from '../firebase';
 import { 
   Settings, Users, Shield, Globe, Database, Key, Check, Plus, X, 
   Trash2, ShieldAlert, CheckCircle2, Copy, Download, Upload, Palette,
-  ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock
+  ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock, Mail
 } from 'lucide-react';
+import EmailSettingsTab from './config/EmailSettingsTab';
 
 export default function ConfigPanel() {
-  const [activeTab, setActiveTab] = useState('branding'); // 'branding' | 'profiles' | 'users' | 'locations' | 'categories' | 'integrations' | 'logs'
+  const [activeTab, setActiveTab] = useState('branding'); // 'branding' | 'profiles' | 'users' | 'locations' | 'categories' | 'email' | 'integrations' | 'logs'
   
   // Data States
   const [tenantSettings, setTenantSettings] = useState({ name: '', cnpj: '', logo: '', themeColor: '#ec4899' });
@@ -17,6 +18,34 @@ export default function ConfigPanel() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [categoriesList, setCategoriesList] = useState([]);
   const [stockLocations, setStockLocations] = useState([]);
+
+  // Email Server State (Módulo T.I)
+  const [emailSettings, setEmailSettings] = useState({
+    enabled: true,
+    senderName: 'NexaCLINIC — Notificações Automáticas',
+    senderEmail: 'notificacoes@clinica.med.br',
+    replyToEmail: 'contato@clinica.med.br',
+    provider: 'smtp',
+    smtpHost: 'smtp.gmail.com',
+    smtpPort: 587,
+    encryption: 'TLS',
+    smtpUser: 'notificacoes@clinica.med.br',
+    smtpPassword: '',
+    bccAudit: 'ti.auditoria@clinica.med.br',
+    footerSignature: 'NexaCLINIC — Gestão Hospitalar & Nefrologia Integrada\nEsta é uma notificação automática gerada pelo sistema. Por favor, não responda diretamente a este e-mail.',
+    notifications: {
+      medicalSwaps: true,
+      serviceOrders: true,
+      hrAdmissions: true,
+      purchasingQuotes: true,
+      calendarReminders: true,
+      assistAlerts: true,
+      securityAlerts: true
+    }
+  });
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [testResult, setTestResult] = useState(null);
+  const [emailLogsList, setEmailLogsList] = useState([]);
   
   // Actions loading
   const [loading, setLoading] = useState(true);
@@ -73,14 +102,16 @@ export default function ConfigPanel() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [settings, profileList, users, empList, logs, catList, locList] = await Promise.all([
+      const [settings, profileList, users, empList, logs, catList, locList, emailConf, emailLogs] = await Promise.all([
         dbService.getTenantSettings(),
         dbService.getUserProfiles(),
         dbService.getUsers(),
         dbService.getEmployees(),
         dbService.getAuditLogs(),
         dbService.getProductCategories ? dbService.getProductCategories() : [],
-        dbService.getStockLocations ? dbService.getStockLocations() : []
+        dbService.getStockLocations ? dbService.getStockLocations() : [],
+        dbService.getEmailSettings ? dbService.getEmailSettings() : null,
+        dbService.getEmailLogs ? dbService.getEmailLogs() : []
       ]);
       setTenantSettings(settings);
       setProfiles(profileList);
@@ -89,6 +120,8 @@ export default function ConfigPanel() {
       setAuditLogs(logs);
       setCategoriesList(catList);
       setStockLocations(locList);
+      if (emailConf) setEmailSettings(emailConf);
+      if (emailLogs) setEmailLogsList(emailLogs);
 
       // Apply theme color immediately
       if (settings.themeColor) {
@@ -441,37 +474,89 @@ export default function ConfigPanel() {
     }
   };
 
+  // ----------------------------------------------------
+  // Email Server Configuration (Módulo T.I)
+  // ----------------------------------------------------
+  const handleSaveEmailSettings = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setActionLoading(true);
+    try {
+      await dbService.saveEmailSettings(emailSettings);
+      showAlert('Configurações do servidor de e-mail salvas com sucesso!', 'success');
+      logAudit('Configuração de E-mail', `Servidor SMTP ${emailSettings.smtpHost}:${emailSettings.smtpPort} (${emailSettings.senderEmail}) atualizado.`);
+      if (dbService.getEmailLogs) {
+        const logs = await dbService.getEmailLogs();
+        setEmailLogsList(logs);
+      }
+    } catch (err) {
+      showAlert('Erro ao salvar configurações do servidor de e-mail.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleTestEmail = async (targetRecipient) => {
+    setTestingEmail(true);
+    setTestResult(null);
+    try {
+      await dbService.testEmailConnection(targetRecipient, emailSettings);
+      setTestResult({
+        success: true,
+        message: `Disparo concluído com sucesso para ${targetRecipient}!`,
+        timestamp: new Date().toLocaleTimeString('pt-BR')
+      });
+      showAlert(`Disparo de teste concluído com sucesso para ${targetRecipient}!`, 'success');
+      logAudit('Teste de E-mail', `Disparo de teste de e-mail executado para ${targetRecipient}.`);
+      if (dbService.getEmailLogs) {
+        const logs = await dbService.getEmailLogs();
+        setEmailLogsList(logs);
+      }
+    } catch (err) {
+      setTestResult({
+        success: false,
+        message: 'Falha no teste: ' + (err.message || 'Verifique as credenciais SMTP.'),
+        timestamp: new Date().toLocaleTimeString('pt-BR')
+      });
+      showAlert('Falha no envio de teste de e-mail.', 'danger');
+    } finally {
+      setTestingEmail(false);
+    }
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.cardHeader}>
         <div>
-          <h1 style={styles.title}>NexaCONFIG - Portal de Administração & T.I.</h1>
-          <p style={styles.subtitle}>Gerenciamento de marcas da clínica (SaaS), controle de acesso por perfis de segurança (RBAC), chaves de API e backups do banco.</p>
+          <h1 style={styles.title}>NexaCONFIG — Administração & T.I.</h1>
+          <p style={styles.subtitle}>Gerenciamento de marcas da clínica (SaaS), controle de acesso por perfis de segurança (RBAC), servidor de e-mails, integrações e logs.</p>
         </div>
       </div>
 
       {/* Tabs */}
       <div style={styles.tabsWrapper}>
         <button onClick={() => setActiveTab('branding')} style={{ ...styles.tabBtn, ...(activeTab === 'branding' ? styles.tabBtnActive : {}) }}>
-          <Palette size={16} /> Personalização & Branding
+          <Palette size={16} /> Branding
         </button>
         <button onClick={() => setActiveTab('profiles')} style={{ ...styles.tabBtn, ...(activeTab === 'profiles' ? styles.tabBtnActive : {}) }}>
-          <Shield size={16} /> Perfis & Permissões (RBAC)
+          <Shield size={16} /> Perfis
         </button>
         <button onClick={() => setActiveTab('users')} style={{ ...styles.tabBtn, ...(activeTab === 'users' ? styles.tabBtnActive : {}) }}>
-          <Users size={16} /> Usuários do Sistema ({usersList.length})
+          <Users size={16} /> Usuários ({usersList.length})
         </button>
         <button onClick={() => setActiveTab('locations')} style={{ ...styles.tabBtn, ...(activeTab === 'locations' ? styles.tabBtnActive : {}) }}>
-          <Warehouse size={16} /> Locais de Estoque ({stockLocations.length})
+          <Warehouse size={16} /> Locais ({stockLocations.length})
         </button>
         <button onClick={() => setActiveTab('categories')} style={{ ...styles.tabBtn, ...(activeTab === 'categories' ? styles.tabBtnActive : {}) }}>
-          <ListFilter size={16} /> Categorias do Sistema ({categoriesList.length})
+          <ListFilter size={16} /> Categorias ({categoriesList.length})
+        </button>
+        <button onClick={() => setActiveTab('email')} style={{ ...styles.tabBtn, ...(activeTab === 'email' ? styles.tabBtnActive : {}) }}>
+          <Mail size={16} /> E-mail
         </button>
         <button onClick={() => setActiveTab('integrations')} style={{ ...styles.tabBtn, ...(activeTab === 'integrations' ? styles.tabBtnActive : {}) }}>
-          <Key size={16} /> Integrações & Backups
+          <Key size={16} /> Integrações
         </button>
         <button onClick={() => setActiveTab('logs')} style={{ ...styles.tabBtn, ...(activeTab === 'logs' ? styles.tabBtnActive : {}) }}>
-          <ShieldAlert size={16} /> Segurança & Logs de T.I.
+          <ShieldAlert size={16} /> Segurança ({auditLogs.length})
         </button>
       </div>
 
@@ -936,6 +1021,21 @@ export default function ConfigPanel() {
                 </tbody>
               </table>
             </div>
+          )}
+
+          {/* TAB: Email Server Configuration (Módulo T.I) */}
+          {activeTab === 'email' && (
+            <EmailSettingsTab
+              emailSettings={emailSettings}
+              setEmailSettings={setEmailSettings}
+              onSave={handleSaveEmailSettings}
+              onTest={handleTestEmail}
+              testing={testingEmail}
+              testResult={testResult}
+              actionLoading={actionLoading}
+              emailLogs={emailLogsList}
+              themeColor={tenantSettings.themeColor || '#8b5cf6'}
+            />
           )}
 
           {/* TAB 4: Integrations & Backup */}

@@ -1123,6 +1123,90 @@ export const MODULE_GUIDES = {
         resposta: 'A recepção marca "Ausente" na Ronda Médica. Esse plantão não é contabilizado na apuração mensal daquele médico no momento do fechamento de produção.'
       }
     ]
+  },
+  config: {
+    id: 'config',
+    name: 'Configurações & T.I.',
+    subtitle: 'NexaCONFIG — Administração & Segurança',
+    color: '#8b5cf6',
+    recursos: [
+      {
+        title: 'Servidor de E-mail Universal (SMTP)',
+        desc: 'Centralização de remetente e conexão SMTP com suporte a Google Workspace, Microsoft 365, Amazon SES, Resend e servidores dedicados para disparos de todos os módulos.'
+      },
+      {
+        title: 'Disparo de E-mail de Teste em Tempo Real',
+        desc: 'Validação instantânea da conexão SMTP com feedback de resposta, diagnóstico e registro em auditoria.'
+      },
+      {
+        title: 'Controle de Gatilhos por Módulo',
+        desc: 'Permissões granulares para definir quais módulos (NexaMED, NexaSERVICE, NexaHR, NexaPROCURE, NexaCAL, NexaASSIST) podem disparar notificações eletrônicas.'
+      },
+      {
+        title: 'Histórico de Disparos de E-mail',
+        desc: 'Log detalhado de todos os e-mails emitidos com data/hora, destinatário, assunto e status.'
+      },
+      {
+        title: 'Personalização & Branding (SaaS)',
+        desc: 'Customização de nome fantasia da clínica, CNPJ, logomarca institucional e cor primária do sistema.'
+      },
+      {
+        title: 'Perfis de Segurança & Permissões (RBAC)',
+        desc: 'Controle de acessos e permissões por perfil (Administrador, Médico, Enfermagem, Recepção, RH, Financeiro, SESMT).'
+      },
+      {
+        title: 'Gestão de Usuários & Senhas Temporárias',
+        desc: 'Criação de contas de login, vinculação com colaboradores do RH e redefinição de senhas com expiração.'
+      },
+      {
+        title: 'Backups & Logs de Auditoria',
+        desc: 'Exportação completa do banco de dados em formato JSON e registro de logs de segurança com rastreabilidade de operadores.'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Configurar o Servidor de E-mail do Sistema',
+        steps: [
+          'Acesse o módulo "Configurações & TI" e clique na aba "E-mail".',
+          'Selecione o provedor pré-configurado desejado (Google/Gmail, Microsoft 365, Amazon SES, Resend ou SMTP Personalizado).',
+          'Preencha o Nome do Remetente (ex: "NexaCLINIC — Notificações") e o E-mail de Envio.',
+          'Informe o Usuário e a Senha de Aplicativo (ou API Key) do seu provedor de e-mail.',
+          'Personalize a assinatura padrão que aparecerá no rodapé das notificações.',
+          'Clique no botão "Salvar" para gravar os parâmetros.'
+        ]
+      },
+      {
+        title: 'Como Validar e Testar o Envio de E-mails',
+        steps: [
+          'Na aba "E-mail", localize o card "Testar Disparo" no lado direito.',
+          'Digite seu endereço de e-mail no campo "Destinatário" e clique em "Testar".',
+          'Aguarde a confirmação na tela: se o servidor estiver correto, uma caixa verde sinalizará o sucesso do disparo.',
+          'Consulte a tabela "Histórico de Disparos" no rodapé para visualizar o registro do envio.'
+        ]
+      },
+      {
+        title: 'Como Habilitar ou Desabilitar Disparos por Módulo',
+        steps: [
+          'Na aba "E-mail", localize o quadro "Módulos Conectados".',
+          'Ative ou desative os switches de acordo com a política da clínica (ex: desativar notificações do NexaCAL e manter ativas as do NexaMED e NexaSERVICE).',
+          'Clique em "Salvar" para aplicar a regra imediatamente.'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'Como obtenho a senha para usar o Gmail ou Google Workspace?',
+        resposta: 'O Google exige o uso de uma "Senha de Aplicativo" de 16 dígitos gerada em Gerenciar Conta Google > Segurança > Verificação em duas etapas > Senhas de app. Nunca utilize sua senha pessoal de login comum.'
+      },
+      {
+        pergunta: 'Onde vejo os e-mails que os módulos dispararam?',
+        resposta: 'No rodapé da aba "E-mail" do módulo de T.I., na tabela "Histórico de Disparos". Ela lista em tempo real todos os e-mails emitidos com o módulo de origem, destinatário e status.'
+      },
+      {
+        pergunta: 'Se eu desativar o servidor de e-mail, os módulos param de funcionar?',
+        resposta: 'Não. Os módulos continuam operando normalmente em tela. Apenas o disparo de mensagens para caixas postais externas é pausado com segurança.'
+      }
+    ]
   }
 };
 

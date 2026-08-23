@@ -130,3 +130,122 @@ export const deleteStockTransfer = async (id) => {
     return { success: true };
   };
 
+// =========================================================================
+// Serviço Universal de E-mail do Sistema (NexaCONFIG - Módulo de T.I.)
+// =========================================================================
+
+export const DEFAULT_EMAIL_SETTINGS = {
+  enabled: true,
+  senderName: 'NexaCLINIC — Notificações Automáticas',
+  senderEmail: 'notificacoes@clinica.med.br',
+  replyToEmail: 'contato@clinica.med.br',
+  provider: 'smtp', // 'smtp' | 'gmail' | 'outlook' | 'ses' | 'resend'
+  smtpHost: 'smtp.gmail.com',
+  smtpPort: 587,
+  encryption: 'TLS', // 'TLS' | 'SSL' | 'None'
+  smtpUser: 'notificacoes@clinica.med.br',
+  smtpPassword: '',
+  bccAudit: 'ti.auditoria@clinica.med.br',
+  footerSignature: 'NexaCLINIC — Gestão Hospitalar & Nefrologia Integrada\nEsta é uma notificação automática gerada pelo sistema. Por favor, não responda diretamente a este e-mail.',
+  notifications: {
+    medicalSwaps: true,       // NexaMED: Trocas e homologações de plantão
+    serviceOrders: true,      // NexaSERVICE: Ordens de serviço e chamados
+    hrAdmissions: true,       // NexaHR: Admissões, férias e holerites
+    purchasingQuotes: true,   // NexaPROCURE: Cotações e pedidos de compra
+    calendarReminders: true,  // NexaCAL: Confirmações de agenda e consultas
+    assistAlerts: true,       // NexaASSIST: Altas e internações críticas
+    securityAlerts: true      // NexaCONFIG: Alertas de T.I. e acessos
+  }
+};
+
+export const getEmailSettings = async () => {
+  if (USE_MOCK) {
+    if (mockFirestore.getEmailSettings) return mockFirestore.getEmailSettings();
+    return DEFAULT_EMAIL_SETTINGS;
+  }
+  try {
+    const { getFirestore, doc, getDoc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const snap = await getDoc(doc(db, 'settings', 'email'));
+    if (snap.exists()) {
+      return { ...DEFAULT_EMAIL_SETTINGS, ...snap.data() };
+    }
+    await setDoc(doc(db, 'settings', 'email'), DEFAULT_EMAIL_SETTINGS);
+    return DEFAULT_EMAIL_SETTINGS;
+  } catch (err) {
+    console.warn('Fallback getEmailSettings:', err);
+    return DEFAULT_EMAIL_SETTINGS;
+  }
+};
+
+export const saveEmailSettings = async (emailSettings) => {
+  if (USE_MOCK) {
+    if (mockFirestore.saveEmailSettings) return mockFirestore.saveEmailSettings(emailSettings);
+    return emailSettings;
+  }
+  const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  const payload = {
+    ...emailSettings,
+    updatedAt: new Date().toISOString()
+  };
+  await setDoc(doc(db, 'settings', 'email'), payload, { merge: true });
+  return payload;
+};
+
+export const sendSystemEmail = async ({ to, subject, body, html, moduleSource = 'Sistema' }) => {
+  const emailLog = {
+    to,
+    subject,
+    moduleSource,
+    sentAt: new Date().toISOString(),
+    status: 'Enviado',
+    preview: body ? body.substring(0, 120) : 'Notificação enviada com sucesso.'
+  };
+
+  if (USE_MOCK) {
+    if (mockFirestore.logEmailDispatch) await mockFirestore.logEmailDispatch(emailLog);
+    return { success: true, emailLog };
+  }
+
+  try {
+    const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const docRef = await addDoc(collection(db, 'email_logs'), emailLog);
+    return { success: true, id: docRef.id, ...emailLog };
+  } catch (err) {
+    console.warn('Erro ao registrar log de e-mail no Firestore:', err);
+    return { success: true, emailLog };
+  }
+};
+
+export const getEmailLogs = async () => {
+  if (USE_MOCK) {
+    if (mockFirestore.getEmailLogs) return mockFirestore.getEmailLogs();
+    return [];
+  }
+  try {
+    const { getFirestore, collection, getDocs, query, orderBy, limit } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const snap = await getDocs(query(collection(db, 'email_logs'), orderBy('sentAt', 'desc'), limit(30)));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (err) {
+    console.warn('Fallback getEmailLogs:', err);
+    return [];
+  }
+};
+
+export const testEmailConnection = async (testRecipientEmail, currentSettings) => {
+  const target = testRecipientEmail || currentSettings.senderEmail || 'ti@clinica.med.br';
+  const testSubject = `[NexaCLINIC Teste de E-mail] Conexão com Servidor de Disparo (${currentSettings.provider || 'SMTP'})`;
+  const testBody = `Este é um e-mail de validação emitido pelo painel de T.I. (NexaCONFIG).\n\nServidor SMTP: ${currentSettings.smtpHost}:${currentSettings.smtpPort}\nRemetente: ${currentSettings.senderName} <${currentSettings.senderEmail}>\nCriptografia: ${currentSettings.encryption}\nData/Hora: ${new Date().toLocaleString('pt-BR')}\n\nSe você recebeu esta mensagem, o canal institucional de e-mails está ativo e pronto para atender todos os módulos do sistema.`;
+
+  return await sendSystemEmail({
+    to: target,
+    subject: testSubject,
+    body: testBody,
+    moduleSource: 'T.I. (NexaCONFIG)'
+  });
+};
+
+
