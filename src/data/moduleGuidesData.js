@@ -1132,9 +1132,23 @@ export const MODULE_GUIDES = {
       {
         title: 'Extrato / Holerite Médico em PDF',
         desc: 'Emissão em 1 clique do demonstrativo detalhado de honorários discriminando plantões, consultas e procedimentos para assinatura.'
+      },
+      {
+        title: 'Cadastro Completo de Médicos & Integração T.I.',
+        desc: 'Fluxo centralizado onde o T.I. cria o login com perfil RBAC "Médico" e a Coordenação Médica completa os dados cadastrais (CPF, Cartão SUS, Celular, CRM/UF, Especialidade, Vínculo, Chave PIX e Dados Bancários) na aba Honorários.'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Cadastrar e Completar a Ficha do Médico',
+        steps: [
+          'O Administrador de T.I. cria o usuário no módulo NexaCONFIG com o perfil "Médico / Corpo Clínico".',
+          'A Coordenação Médica acessa o módulo NexaMED e entra na aba "Honorários".',
+          'Na tabela "Profissionais", localiza o médico recém-criado (sinalizado com a etiqueta amarela "Completar") e clica no botão "Completar" ou "Editar".',
+          'Preenche o CPF, Cartão SUS (CNS), Celular, CRM/UF, Especialidade, Vínculo Contratual (PJ, CLT, Autônomo, Cooperado), Chave PIX e Dados Bancários.',
+          'Clica em "Salvar". Os dados são sincronizados em nuvem e integrados aos módulos de Escala, Agenda e Fechamento Financeiro.'
+        ]
+      },
       {
         title: 'Como Montar e Ajustar a Escala Mensal de Plantões',
         steps: [
@@ -1181,6 +1195,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Por que o cadastro médico é feito em 2 etapas (T.I. e NexaMED)?',
+        resposta: 'Para garantir máxima segurança: a criação da conta e concessão do perfil RBAC "Médico" fica centralizada no T.I., enquanto a complementação de dados sensíveis da prática médica (CRM, SUS, CPF, PIX e banco) fica sob gestão da Coordenação Médica.'
+      },
       {
         pergunta: 'A Coordenação Médica precisa ter acesso ao Módulo Financeiro para pagar os médicos?',
         resposta: 'Não! O NexaMED foi desenhado com total segregação de acessos (RBAC). A coordenação audita e clica em "Homologar" diretamente no NexaMED. Em segundo plano, o sistema lança automaticamente a conta a pagar no NexaFINANCE para o setor financeiro quitar.'
@@ -1310,6 +1328,16 @@ export const MODULE_GUIDES = {
       }
     ],
     tutorial: [
+      {
+        title: 'Como Criar Usuário com Perfil de Médico',
+        steps: [
+          'Acesse a aba "Usuários" no módulo "Configurações & TI" e clique em "+ Novo Usuário".',
+          'Informe o Nome Completo e o E-mail institucional ou profissional do médico.',
+          'No campo "Perfil de Acesso", selecione a opção "Médico / Corpo Clínico".',
+          'Defina a Filial Principal de atuação e clique em "Salvar".',
+          'O login é gerado imediatamente e o médico já fica disponível no NexaMED para complementação cadastral.'
+        ]
+      },
       {
         title: 'Como Configurar o Servidor de E-mail do Sistema',
         steps: [

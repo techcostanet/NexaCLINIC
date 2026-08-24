@@ -1,3 +1,23 @@
+## [v4.7.59] - 24 de Agosto, 2026
+### Perfil RBAC Médico e Cadastro Completo no NexaMED (CPF, SUS, Celular, CRM, PIX e Banco)
+- **Novo Perfil RBAC "Médico / Corpo Clínico" (`doctor`):**
+  - Adicionado perfil de segurança dedicado com concessão automática de acessos aos módulos clínicos e assistenciais (`medical`, `clinical`, `calendar`, `assist`, `stock: read`, `maintenance: read`).
+  - Disponível para seleção imediata no painel de administração e T.I. (`NexaCONFIG`).
+- **Fluxo Integrado em 2 Etapas (T.I. + Coordenação Médica):**
+  - O Administrador de T.I. cria o usuário no sistema centralizando o controle de acesso e senhas.
+  - A Coordenação Médica realiza a complementação da ficha do profissional diretamente na aba **Honorários** do **NexaMED**.
+- **Cadastro Médico Completo & Persistência em Nuvem:**
+  - Novo modal de edição e complementação médica incluindo:
+    - **Dados Pessoais & Contato:** Nome, CPF, Cartão SUS (CNS), Celular / WhatsApp, E-mail.
+    - **Dados Profissionais:** CRM / UF, Especialidade (Nefrologia, Cirurgia Vascular, etc.).
+    - **Dados Financeiros & Honorários:** Vínculo Contratual (PJ, CLT, Autônomo, Cooperado), Chave PIX, Banco (Agência/Conta), Status (Ativo/Inativo).
+  - Badge inteligente **"Completar"** para sinalizar médicos recém-criados que ainda possuem dados pendentes de preenchimento.
+  - Sincronização automática entre a coleção de médicos (`medical_doctors`) e a base de usuários (`users`) no Firestore.
+- **Padrão Rigoroso de Rótulos Concisos (1 Palavra):**
+  - Aplicação estrita da diretriz de 1 palavra nos botões, modais, formulários e tabelas do módulo médico.
+
+---
+
 ## [v4.7.57] - 24 de Agosto, 2026
 ### NexaCAL — Atualização das Salas de Atendimento (Consultórios 1 a 6 e Consultório DP)
 - **Padronização das Salas da Agenda:**

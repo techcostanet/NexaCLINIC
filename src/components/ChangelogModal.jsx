@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.59',
+      date: '24/08/2026',
+      title: 'Perfil RBAC Médico e Cadastro Completo no NexaMED (CPF, SUS, Celular, CRM, PIX e Banco)',
+      description: 'Implementação do fluxo centralizado de criação de usuários de médicos via T.I. (NexaCONFIG) com novo perfil RBAC exclusivo "Médico / Corpo Clínico", e complementação cadastral completa e segura pela Coordenação Médica no NexaMED (CPF, Cartão SUS, Celular, CRM/UF, Especialidade, Vínculo, Chave PIX e Dados Bancários).',
+      changes: [
+        { type: 'Perfil RBAC Médico', text: 'Criação do perfil dedicado "Médico / Corpo Clínico" (doctor) com permissões automáticas aos módulos clínicos, assistenciais e de escalas (NexaMED, NexaCAL, NexaCLINIC e NexaASSIST).' },
+        { type: 'Fluxo em 2 Etapas', text: 'Centralização da segurança no T.I. com complementação direta dos dados médicos, profissionais e bancários na aba Honorários do NexaMED.' },
+        { type: 'Modal de Cadastro Médico', text: 'Novo modal com campos completos para Nome, CPF, Cartão SUS (CNS), Celular/WhatsApp, E-mail, CRM/UF, Especialidade, Vínculo Contratual, Chave PIX e Dados Bancários.' },
+        { type: 'Badge Inteligente', text: 'Identificação visual "Completar" para profissionais recém-criados pelo T.I. que necessitam de preenchimento cadastral.' },
+        { type: 'Persistência Integrada', text: 'Sincronização em tempo real entre a coleção médica dedicada e a base de usuários do Firestore.' }
+      ]
+    },
+    {
       version: 'v4.7.57',
       date: '24/08/2026',
       title: 'NexaCAL — Atualização das Salas de Atendimento (Consultórios 1 a 6 e Consultório DP)',

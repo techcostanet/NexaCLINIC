@@ -115,8 +115,12 @@ export default function AdminPanel({ currentUser }) {
     setNewRole(role);
     if (role === 'admin') {
       setNewSectors(sectors.map(s => s.id));
+    } else if (role === 'doctor') {
+      setNewSectors(['medica', 'clinico']);
     } else if (role === 'rh') {
       setNewSectors(['rh']);
+    } else if (role === 'sesmt') {
+      setNewSectors(['sesmt']);
     } else {
       setNewSectors([]);
     }
@@ -144,7 +148,7 @@ export default function AdminPanel({ currentUser }) {
     try {
       const finalAllowedSectors = newRole === 'admin' 
         ? sectors.map(s => s.id) 
-        : (newRole === 'rh' ? ['rh'] : (newRole === 'sesmt' ? ['sesmt'] : newSectors));
+        : (newRole === 'doctor' ? ['medica', 'clinico'] : (newRole === 'rh' ? ['rh'] : (newRole === 'sesmt' ? ['sesmt'] : newSectors)));
 
       if (editingUser) {
         await dbService.updateUser(editingUser.uid, {
@@ -594,6 +598,16 @@ export default function AdminPanel({ currentUser }) {
               <div className="form-group">
                 <label>Perfil de Acesso</label>
                 <div style={styles.radioGroup}>
+                  <label style={styles.radioLabel}>
+                    <input
+                      type="radio"
+                      name="role"
+                      checked={newRole === 'doctor'}
+                      onChange={() => handleRoleChange('doctor')}
+                      disabled={actionLoading}
+                    />
+                    <span>Médico / Corpo Clínico</span>
+                  </label>
                   <label style={styles.radioLabel}>
                     <input
                       type="radio"

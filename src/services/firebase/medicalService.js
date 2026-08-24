@@ -102,10 +102,25 @@ export const getMedicalDoctors = async () => {
           const dData = docSnap.data();
           const docId = docSnap.id;
           const exIdx = merged.findIndex(m => m.id === docId || (m.email && dData.email && m.email.toLowerCase() === dData.email.toLowerCase()) || m.name === dData.name);
+          const fullDoc = {
+            id: docId,
+            name: dData.name || 'Médico',
+            crm: dData.crm || '',
+            specialty: dData.specialty || 'Nefrologia',
+            cpf: dData.cpf || '',
+            susCard: dData.susCard || '',
+            email: dData.email || '',
+            phone: dData.phone || dData.mobile || '',
+            contractType: dData.contractType || 'PJ',
+            pixKey: dData.pixKey || '',
+            bank: dData.bank || '',
+            active: dData.active !== false
+          };
+
           if (exIdx >= 0) {
-            merged[exIdx] = { ...merged[exIdx], ...dData, id: docId };
+            merged[exIdx] = { ...merged[exIdx], ...fullDoc };
           } else {
-            merged.push({ id: docId, ...dData });
+            merged.push(fullDoc);
           }
         });
       }
@@ -119,6 +134,7 @@ export const getMedicalDoctors = async () => {
       (userList || []).forEach(u => {
         const uId = u.uid || u.id;
         const isDoc = u.role === 'admin' || 
+          u.role === 'doctor' ||
           u.role === 'professional' || 
           u.role === 'clinical' || 
           (u.allowedSectors && u.allowedSectors.includes('medica')) ||
@@ -129,18 +145,32 @@ export const getMedicalDoctors = async () => {
           const mapped = {
             id: uId,
             name: u.name || 'Médico',
-            crm: u.crm || (u.name?.includes('Dr') ? '45892/MG' : 'CRM Ativo'),
+            crm: u.crm || (u.name?.includes('Dr') ? '45892/MG' : ''),
             specialty: u.specialty || 'Nefrologia',
+            cpf: u.cpf || '',
+            susCard: u.susCard || '',
             email: u.email || '',
             phone: u.phone || '',
             contractType: u.contractType || 'PJ',
-            pixKey: u.pixKey || u.email || '',
-            bank: u.bank || 'Banco Principal',
+            pixKey: u.pixKey || '',
+            bank: u.bank || '',
             active: u.status !== 'inactive'
           };
 
           if (existingIdx >= 0) {
-            merged[existingIdx] = { ...merged[existingIdx], ...mapped };
+            merged[existingIdx] = {
+              ...mapped,
+              ...merged[existingIdx],
+              // Give precedence to non-empty fields
+              crm: merged[existingIdx].crm || mapped.crm,
+              specialty: merged[existingIdx].specialty || mapped.specialty,
+              cpf: merged[existingIdx].cpf || mapped.cpf,
+              susCard: merged[existingIdx].susCard || mapped.susCard,
+              phone: merged[existingIdx].phone || mapped.phone,
+              email: merged[existingIdx].email || mapped.email,
+              pixKey: merged[existingIdx].pixKey || mapped.pixKey,
+              bank: merged[existingIdx].bank || mapped.bank
+            };
           } else {
             merged.push(mapped);
           }
@@ -155,6 +185,44 @@ export const getMedicalDoctors = async () => {
     console.warn('Fallback getMedicalDoctors:', err);
     return FALLBACK_DOCTORS;
   }
+};
+
+export const saveMedicalDoctor = async (doctorId, doctorData) => {
+  if (USE_MOCK) {
+    return mockFirestore.saveMedicalDoctor ? mockFirestore.saveMedicalDoctor(doctorId, doctorData) : doctorData;
+  }
+  const { getFirestore, doc, setDoc, updateDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+
+  const payload = {
+    ...doctorData,
+    updatedAt: new Date().toISOString()
+  };
+
+  // 1. Save to medical_doctors collection
+  await setDoc(doc(db, 'medical_doctors', doctorId), payload, { merge: true });
+
+  // 2. Sync to users collection if user exists
+  try {
+    const userRef = doc(db, 'users', doctorId);
+    await updateDoc(userRef, {
+      name: doctorData.name || '',
+      crm: doctorData.crm || '',
+      specialty: doctorData.specialty || 'Nefrologia',
+      cpf: doctorData.cpf || '',
+      susCard: doctorData.susCard || '',
+      phone: doctorData.phone || '',
+      email: doctorData.email || '',
+      contractType: doctorData.contractType || 'PJ',
+      pixKey: doctorData.pixKey || '',
+      bank: doctorData.bank || '',
+      updatedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    // Non-fatal if user is not in users collection
+  }
+
+  return { id: doctorId, ...payload };
 };
 
 export const getMedicalSettings = async () => {

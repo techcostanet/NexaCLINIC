@@ -249,6 +249,20 @@ export default function MedicalPanel({ currentUser, onBack }) {
     }
   };
 
+  const handleSaveDoctor = async (doctorId, doctorData) => {
+    try {
+      setLoading(true);
+      await dbService.saveMedicalDoctor(doctorId, doctorData);
+      showToast(`Dados de "${doctorData.name}" salvos na nuvem com sucesso!`);
+      await loadAllData();
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao salvar dados do médico.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Production Homologation
   const handleHomologateProduction = async (productionData) => {
     try {
@@ -401,6 +415,7 @@ export default function MedicalPanel({ currentUser, onBack }) {
             settings={settings}
             doctors={currentDoctors}
             onSaveSettings={handleSaveSettings}
+            onSaveDoctor={handleSaveDoctor}
             loading={loading}
           />
         )}

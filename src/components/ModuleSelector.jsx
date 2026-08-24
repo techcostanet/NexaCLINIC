@@ -27,7 +27,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
       description: 'Mural de comunicados rápidos, altas hospitalares, internações por salão/turno e leitor de e-mails com IA.',
       icon: Megaphone,
       color: '#ec4899', // pink-500
-      allowedRoles: ['admin', 'professional', 'receptionist', 'rh', 'sesmt']
+      allowedRoles: ['admin', 'professional', 'clinical', 'doctor', 'receptionist', 'rh', 'sesmt']
     },
     {
       id: 'medical',
@@ -36,7 +36,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
       description: 'Escala mensal de plantões por salão/DP, bolsa de trocas com e-mail, portal do médico e fechamento de honorários.',
       icon: Stethoscope,
       color: '#0284c7', // sky-600
-      allowedRoles: ['admin', 'professional', 'clinical']
+      allowedRoles: ['admin', 'professional', 'clinical', 'doctor']
     },
     {
       id: 'reception',
@@ -54,7 +54,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
       description: 'Prescrições de diálise, prontuário médico, evoluções multiprofissionais e acompanhamento de sessões.',
       icon: HeartPulse,
       color: '#8b5cf6', // purple-500
-      allowedRoles: ['admin', 'professional']
+      allowedRoles: ['admin', 'professional', 'clinical', 'doctor']
     },
     {
       id: 'stock',
@@ -72,7 +72,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
       description: 'Gestão de ativos biomédicos e prediais com histórico técnico por equipamento e chamados de ordem de serviço.',
       icon: Wrench,
       color: '#0891b2', // cyan-600
-      allowedRoles: ['admin', 'professional', 'technician', 'rh']
+      allowedRoles: ['admin', 'professional', 'technician', 'rh', 'doctor']
     },
     {
       id: 'quality',
@@ -117,7 +117,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
       description: 'Grade horária diária, semanal e mensal, controle de salas, confirmação de pacientes e bloqueio de conflito de escalas.',
       icon: Calendar,
       color: '#06b6d4', // cyan-500
-      allowedRoles: ['admin', 'professional', 'receptionist']
+      allowedRoles: ['admin', 'professional', 'clinical', 'doctor', 'receptionist']
     },
     {
       id: 'purchasing',
@@ -135,7 +135,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
       description: 'Solicitação ágil de materiais e medicamentos para salões de hemodiálise e vinculação a pacientes.',
       icon: ClipboardList,
       color: '#14b8a6', // teal-500
-      allowedRoles: ['admin', 'professional', 'technician']
+      allowedRoles: ['admin', 'professional', 'clinical', 'doctor', 'technician']
     },
     {
       id: 'config',
