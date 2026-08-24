@@ -442,22 +442,30 @@ export default function AssistPanel({ currentUser }) {
         </div>
 
         <div style={styles.heroActions}>
-          <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.15)', padding: '3px', borderRadius: '12px', gap: '4px' }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            backgroundColor: '#f1f5f9',
+            padding: '4px',
+            borderRadius: '12px',
+            gap: '4px',
+            border: '1px solid #e2e8f0'
+          }}>
             <button
               onClick={() => setActiveAssistTab('escala')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '8px 16px',
-                borderRadius: '9px',
+                padding: '8px 18px',
+                borderRadius: '8px',
                 border: 'none',
                 cursor: 'pointer',
-                fontWeight: activeAssistTab === 'escala' ? '700' : '500',
-                fontSize: '0.85rem',
-                backgroundColor: activeAssistTab === 'escala' ? '#ffffff' : 'transparent',
-                color: activeAssistTab === 'escala' ? '#4f46e5' : '#ffffff',
-                boxShadow: activeAssistTab === 'escala' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+                fontWeight: activeAssistTab === 'escala' ? '700' : '600',
+                fontSize: '0.88rem',
+                backgroundColor: activeAssistTab === 'escala' ? '#4f46e5' : 'transparent',
+                color: activeAssistTab === 'escala' ? '#ffffff' : '#64748b',
+                boxShadow: activeAssistTab === 'escala' ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none',
                 transition: 'all 0.2s ease'
               }}
             >
@@ -470,15 +478,15 @@ export default function AssistPanel({ currentUser }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '8px 16px',
-                borderRadius: '9px',
+                padding: '8px 18px',
+                borderRadius: '8px',
                 border: 'none',
                 cursor: 'pointer',
-                fontWeight: activeAssistTab === 'mural' ? '700' : '500',
-                fontSize: '0.85rem',
-                backgroundColor: activeAssistTab === 'mural' ? '#ffffff' : 'transparent',
-                color: activeAssistTab === 'mural' ? '#4f46e5' : '#ffffff',
-                boxShadow: activeAssistTab === 'mural' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+                fontWeight: activeAssistTab === 'mural' ? '700' : '600',
+                fontSize: '0.88rem',
+                backgroundColor: activeAssistTab === 'mural' ? '#ec4899' : 'transparent',
+                color: activeAssistTab === 'mural' ? '#ffffff' : '#64748b',
+                boxShadow: activeAssistTab === 'mural' ? '0 2px 8px rgba(236, 72, 153, 0.25)' : 'none',
                 transition: 'all 0.2s ease'
               }}
             >
@@ -492,7 +500,7 @@ export default function AssistPanel({ currentUser }) {
             style={styles.primaryBtn}
           >
             <Plus size={18} />
-            <span>Novo Comunicado</span>
+            <span>Comunicado</span>
           </button>
         </div>
       </div>

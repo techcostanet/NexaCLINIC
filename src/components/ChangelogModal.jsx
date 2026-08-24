@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.51',
+      date: '24/08/2026',
+      title: 'NexaASSIST — Refatoração de Design System Vanilla CSS no Mapa de Salões e Header de Abas',
+      description: 'Refatoração completa do componente DialysisScheduleTab com estilização pura em Vanilla CSS, cards de leitos e boxes com visual de alta densidade e tipografia moderna, e novo seletor de abas na Hero Section.',
+      changes: [
+        { type: 'Vanilla CSS', text: 'Estilização inline de alto padrão sem dependências externas não carregadas, garantindo compatibilidade total em todos os navegadores.' },
+        { type: 'Cards de Leitos', text: 'Layout renovado com badges de agulhas e acessos nítidos, avatares em degradê e status de manutenção.' },
+        { type: 'Abas Hero Section', text: 'Seletor de abas Escala vs Mural com fundo contrastante e badges ativas destacadas.' }
+      ]
+    },
+    {
       version: 'v4.7.50',
       date: '24/08/2026',
       title: 'NexaASSIST — Escala Operacional de Hemodiálise por Salões & Turnos e Vínculo com Manutenção',

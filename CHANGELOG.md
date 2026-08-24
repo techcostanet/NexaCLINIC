@@ -1,3 +1,16 @@
+## [v4.7.51] - 24 de Agosto, 2026
+### NexaASSIST — Refatoração de Design System Vanilla CSS no Mapa de Salões e Header de Abas
+- **Padronização Visual Completa (Vanilla CSS):**
+  - Refatoração integral do componente `DialysisScheduleTab` com estilização inline pura e compatível com o design system do NexaCLINIC, eliminando dependências externas não carregadas.
+  - Cards de pontos/leitos reestruturados com tipografia moderna, avatares em degradê, badges cromáticas de acessos vasculares (FAV 15/16/17, CDL, Permcath) e alertas de isolamento destacados.
+  - Indicadores operacionais (KPIs) organizados em grid responsivo com cards brancos de alto contraste e bordas suaves.
+- **Alternador de Abas do NexaASSIST (`Escala` vs `Mural`):**
+  - Redesenho do seletor de abas na Hero Section com fundo de alto contraste (`#f1f5f9`), ícones nítidos e destaque cromático ativo (`#4f46e5` para Escala e `#ec4899` para Mural).
+- **Rótulo Padronizado de 1 Palavra:**
+  - Botão de publicação simplificado para `+ Comunicado` em conformidade com as diretrizes de UI.
+
+---
+
 ## [v4.7.50] - 24 de Agosto, 2026
 ### NexaASSIST — Escala Operacional de Hemodiálise por Salões & Turnos, Unificação de 570 Pacientes e Vínculo com Manutenção
 - **Escala de Hemodiálise por Salões e Turnos (NexaASSIST):**

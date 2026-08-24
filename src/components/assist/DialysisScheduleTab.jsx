@@ -12,7 +12,6 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
   const [selectedSalon, setSelectedSalon] = useState('Salão 01');
   const [selectedShift, setSelectedShift] = useState('1º Turno');
   const [cadence, setCadence] = useState('SQS'); // 'SQS' (Seg/Qua/Sex) | 'TQS' (Ter/Qui/Sáb)
-  const [selectedDay, setSelectedDay] = useState('all'); // 'all' or 'segunda', 'terca', etc.
 
   // Data State
   const [scheduleData, setScheduleData] = useState(null);
@@ -38,7 +37,7 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
   const [showMachineModal, setShowMachineModal] = useState(false);
   const [selectedMachine, setSelectedMachine] = useState(null);
 
-  // Set default cadence based on today's day of week
+  // Auto-detect today's cadence
   useEffect(() => {
     const dayOfWeek = new Date().getDay(); // 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
     if (dayOfWeek === 2 || dayOfWeek === 4 || dayOfWeek === 6) {
@@ -149,9 +148,9 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
         brand: 'Nipro',
         status: 'Em Operação',
         sector: `${selectedSalon} - ${selectedShift}`,
-        lastPreventiveDate: '2026-05-10',
-        nextPreventiveDate: '2026-08-10',
-        calibrationValidUntil: '2026-12-31',
+        lastPreventiveDate: '10/05/2026',
+        nextPreventiveDate: '10/08/2026',
+        calibrationValidUntil: '31/12/2026',
         notes: 'Equipamento em operação com conformidade atestada.'
       });
     }
@@ -164,7 +163,7 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
     setActionLoading(true);
     try {
       let patientToSave = null;
-      if (selectedNewPatient) {
+      if (selectedNewPatient && !selectedNewPatient.isVacant) {
         patientToSave = {
           name: selectedNewPatient.name,
           dn: selectedNewPatient.birthDate ? selectedNewPatient.birthDate.split('-').reverse().join('/') : '',
@@ -195,228 +194,234 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
     }
   };
 
-  // Print Handler
   const handlePrint = () => {
     window.print();
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner / Notification */}
+    <div style={tabStyles.container}>
+      {/* Toast Alert */}
       {message.text && (
-        <div className={`p-4 rounded-xl flex items-center justify-between text-sm shadow-sm transition-all duration-300 ${
-          message.type === 'success' 
-            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
-            : 'bg-rose-50 text-rose-800 border border-rose-200'
-        }`}>
-          <div className="flex items-center gap-2">
-            {message.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <AlertTriangle className="w-5 h-5 text-rose-600" />}
-            <span className="font-semibold">{message.text}</span>
-          </div>
-          <button onClick={() => setMessage({ text: '', type: '' })} className="p-1 hover:bg-black/5 rounded-lg">
-            <X className="w-4 h-4" />
-          </button>
+        <div style={{
+          ...tabStyles.alertToast,
+          backgroundColor: message.type === 'success' ? '#10b981' : '#ef4444'
+        }}>
+          <span>{message.text}</span>
+          <button onClick={() => setMessage({ text: '', type: '' })} style={tabStyles.toastCloseBtn}>×</button>
         </div>
       )}
 
-      {/* Control Navigation & Filter Bar */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-4 print:hidden">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      {/* Control Navigation & Filter Card */}
+      <div style={tabStyles.filterCard}>
+        <div style={tabStyles.filterTopRow}>
           {/* Salão Selector */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 mr-1 flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5" /> Salão
+          <div style={tabStyles.filterGroup}>
+            <span style={tabStyles.filterLabel}>
+              <MapPin size={14} style={{ marginRight: '4px', color: '#6366f1' }} /> Salão
             </span>
-            {['Salão 01', 'Salão 02', 'Salão 03'].map(sal => (
-              <button
-                key={sal}
-                onClick={() => setSelectedSalon(sal)}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 whitespace-nowrap shadow-xs ${
-                  selectedSalon === sal
-                    ? 'bg-indigo-600 text-white shadow-indigo-200 ring-2 ring-indigo-600 ring-offset-2'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {sal}
-              </button>
-            ))}
+            <div style={tabStyles.pillContainer}>
+              {['Salão 01', 'Salão 02', 'Salão 03'].map(sal => (
+                <button
+                  key={sal}
+                  onClick={() => setSelectedSalon(sal)}
+                  style={{
+                    ...tabStyles.pillBtn,
+                    backgroundColor: selectedSalon === sal ? '#4f46e5' : '#f8fafc',
+                    color: selectedSalon === sal ? '#ffffff' : '#475569',
+                    borderColor: selectedSalon === sal ? '#4f46e5' : '#e2e8f0',
+                    fontWeight: selectedSalon === sal ? '700' : '500',
+                    boxShadow: selectedSalon === sal ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none'
+                  }}
+                >
+                  {sal}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Turno Selector */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 mr-1 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" /> Turno
+          <div style={tabStyles.filterGroup}>
+            <span style={tabStyles.filterLabel}>
+              <Clock size={14} style={{ marginRight: '4px', color: '#0ea5e9' }} /> Turno
             </span>
-            {['1º Turno', '2º Turno', '3º Turno'].map(tur => (
-              <button
-                key={tur}
-                onClick={() => setSelectedShift(tur)}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 whitespace-nowrap shadow-xs ${
-                  selectedShift === tur
-                    ? 'bg-cyan-600 text-white shadow-cyan-200 ring-2 ring-cyan-600 ring-offset-2'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {tur}
-              </button>
-            ))}
+            <div style={tabStyles.pillContainer}>
+              {['1º Turno', '2º Turno', '3º Turno'].map(tur => (
+                <button
+                  key={tur}
+                  onClick={() => setSelectedShift(tur)}
+                  style={{
+                    ...tabStyles.pillBtn,
+                    backgroundColor: selectedShift === tur ? '#0284c7' : '#f8fafc',
+                    color: selectedShift === tur ? '#ffffff' : '#475569',
+                    borderColor: selectedShift === tur ? '#0284c7' : '#e2e8f0',
+                    fontWeight: selectedShift === tur ? '700' : '500',
+                    boxShadow: selectedShift === tur ? '0 2px 8px rgba(2, 132, 199, 0.25)' : 'none'
+                  }}
+                >
+                  {tur}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Actions: Search & Print */}
-          <div className="flex items-center gap-2">
+          {/* Quick Actions (Search & Print) */}
+          <div style={tabStyles.actionBtnsGroup}>
             <button
               onClick={() => setShowSearchModal(true)}
-              className="flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-colors shadow-xs"
-              title="Buscar Paciente ou Máquina em todos os Salões"
+              style={tabStyles.searchOpenBtn}
+              title="Buscar paciente ou máquina em qualquer salão"
             >
-              <Search className="w-4 h-4 text-slate-500" />
+              <Search size={15} color="#4f46e5" />
               <span>Localizar</span>
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-semibold transition-colors shadow-xs"
-              title="Imprimir Escala do Salão em A4"
+              style={tabStyles.printBtn}
+              title="Imprimir escala em A4 para o posto de enfermagem"
             >
-              <Printer className="w-4 h-4" />
+              <Printer size={15} />
               <span>Imprimir</span>
             </button>
           </div>
         </div>
 
-        {/* Cadence Tabs */}
-        <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 mr-1 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" /> Cadência
+        {/* Cadence Bar */}
+        <div style={tabStyles.cadenceRow}>
+          <div style={tabStyles.cadenceLeft}>
+            <span style={tabStyles.filterLabel}>
+              <Calendar size={14} style={{ marginRight: '4px', color: '#10b981' }} /> Cadência
             </span>
-            <button
-              onClick={() => setCadence('SQS')}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                cadence === 'SQS'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              Segunda • Quarta • Sexta
-            </button>
-            <button
-              onClick={() => setCadence('TQS')}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                cadence === 'TQS'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              Terça • Quinta • Sábado
-            </button>
+            <div style={tabStyles.pillContainer}>
+              <button
+                onClick={() => setCadence('SQS')}
+                style={{
+                  ...tabStyles.cadenceBtn,
+                  backgroundColor: cadence === 'SQS' ? '#2563eb' : '#f8fafc',
+                  color: cadence === 'SQS' ? '#ffffff' : '#475569',
+                  borderColor: cadence === 'SQS' ? '#2563eb' : '#e2e8f0',
+                  fontWeight: cadence === 'SQS' ? '700' : '500'
+                }}
+              >
+                Segunda • Quarta • Sexta
+              </button>
+              <button
+                onClick={() => setCadence('TQS')}
+                style={{
+                  ...tabStyles.cadenceBtn,
+                  backgroundColor: cadence === 'TQS' ? '#059669' : '#f8fafc',
+                  color: cadence === 'TQS' ? '#ffffff' : '#475569',
+                  borderColor: cadence === 'TQS' ? '#059669' : '#e2e8f0',
+                  fontWeight: cadence === 'TQS' ? '700' : '500'
+                }}
+              >
+                Terça • Quinta • Sábado
+              </button>
+            </div>
           </div>
 
-          <div className="text-xs font-medium text-slate-500 flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Escala Operacional Ativa • {selectedSalon} • {selectedShift}</span>
+          <div style={tabStyles.activeBadgeIndicator}>
+            <span style={tabStyles.liveDot}></span>
+            <span>Escala Operacional • {selectedSalon} • {selectedShift}</span>
           </div>
         </div>
       </div>
 
       {/* KPI Stats Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 print:grid-cols-6">
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">Capacidade</span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-2xl font-black text-slate-800">{metrics.totalMachines || 0}</span>
-            <span className="text-xs text-slate-600">máquinas</span>
+      <div style={tabStyles.statsGrid}>
+        <div style={tabStyles.statCard}>
+          <span style={tabStyles.statLabel}>Capacidade</span>
+          <div style={tabStyles.statValueRow}>
+            <span style={tabStyles.statNumber}>{metrics.totalMachines || 0}</span>
+            <span style={tabStyles.statSub}>máquinas</span>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">Ocupação</span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-2xl font-black text-indigo-600">{metrics.occupiedSlots || 0}</span>
-            <span className="text-xs font-semibold text-indigo-500">({metrics.occupancyRate || 0}%)</span>
+        <div style={tabStyles.statCard}>
+          <span style={tabStyles.statLabel}>Ocupação</span>
+          <div style={tabStyles.statValueRow}>
+            <span style={{ ...tabStyles.statNumber, color: '#4f46e5' }}>{metrics.occupiedSlots || 0}</span>
+            <span style={{ ...tabStyles.statSub, color: '#6366f1', fontWeight: '700' }}>
+              ({metrics.occupancyRate || 0}%)
+            </span>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">Vagas</span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className={`text-2xl font-black ${(metrics.vacantSlots || 0) > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
+        <div style={tabStyles.statCard}>
+          <span style={tabStyles.statLabel}>Vagas</span>
+          <div style={tabStyles.statValueRow}>
+            <span style={{ 
+              ...tabStyles.statNumber, 
+              color: (metrics.vacantSlots || 0) > 0 ? '#059669' : '#94a3b8' 
+            }}>
               {metrics.vacantSlots || 0}
             </span>
-            <span className="text-xs text-slate-600">livres</span>
+            <span style={tabStyles.statSub}>livres</span>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">Fístulas</span>
-          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-            <span className="text-xl font-black text-emerald-700">{metrics.favCount || 0}</span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-200">
-              15: {metrics.needle15 || 0}
-            </span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-200">
-              16: {metrics.needle16 || 0}
-            </span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-200">
-              17: {metrics.needle17 || 0}
-            </span>
+        <div style={tabStyles.statCard}>
+          <span style={tabStyles.statLabel}>Fístulas (FAV)</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+            <span style={{ ...tabStyles.statNumber, color: '#047857' }}>{metrics.favCount || 0}</span>
+            <span style={tabStyles.needlePill}>15: {metrics.needle15 || 0}</span>
+            <span style={tabStyles.needlePill}>16: {metrics.needle16 || 0}</span>
+            <span style={tabStyles.needlePill}>17: {metrics.needle17 || 0}</span>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">Cateteres</span>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-xs font-bold text-amber-700">CDL: {metrics.cdlCount || 0}</span>
-            <span className="text-xs font-bold text-purple-700">Perm: {metrics.permcathCount || 0}</span>
+        <div style={tabStyles.statCard}>
+          <span style={tabStyles.statLabel}>Cateteres</span>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#b45309' }}>CDL: {metrics.cdlCount || 0}</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#7e22ce' }}>Perm: {metrics.permcathCount || 0}</span>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">Isolamento</span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className={`text-2xl font-black ${(metrics.isolationCount || 0) > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+        <div style={tabStyles.statCard}>
+          <span style={tabStyles.statLabel}>Isolamento</span>
+          <div style={tabStyles.statValueRow}>
+            <span style={{ 
+              ...tabStyles.statNumber, 
+              color: (metrics.isolationCount || 0) > 0 ? '#e11d48' : '#94a3b8' 
+            }}>
               {metrics.isolationCount || 0}
             </span>
-            <span className="text-xs text-slate-600">pacientes</span>
+            <span style={tabStyles.statSub}>pacientes</span>
           </div>
         </div>
-      </div>
-
-      {/* Print Header (Only visible on paper) */}
-      <div className="hidden print:block mb-4 pb-2 border-b-2 border-slate-800 text-center">
-        <h1 className="text-xl font-bold text-slate-900">ESCALA OPERACIONAL DE HEMODIÁLISE — {selectedSalon.toUpperCase()}</h1>
-        <p className="text-xs font-semibold text-slate-600">
-          Turno: {selectedShift} • Cadência: {cadence === 'SQS' ? 'Segunda / Quarta / Sexta' : 'Terça / Quinta / Sábado'} • Data da Impressão: {new Date().toLocaleDateString('pt-BR')}
-        </p>
       </div>
 
       {/* Room Grid Layout by Box */}
       {loading ? (
-        <div className="bg-white rounded-2xl p-16 border border-slate-200 text-center flex flex-col items-center justify-center">
-          <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mb-3" />
-          <p className="text-sm font-semibold text-slate-600">Carregando mapa de leitos e pacientes...</p>
+        <div style={tabStyles.loadingBox}>
+          <RefreshCw size={32} color="#4f46e5" className="spin" />
+          <p style={{ marginTop: '0.75rem', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>
+            Carregando leitos e pacientes da hemodiálise...
+          </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {Object.entries(groupedBoxes).map(([boxName, points]) => (
-            <div key={boxName} className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200 shadow-xs">
-              {/* Box Title Bar */}
-              <div className="flex items-center justify-between mb-3 px-1">
-                <div className="flex items-center gap-2">
-                  <span className={`px-2.5 py-1 rounded-lg text-xs font-bold tracking-wide uppercase ${
-                    boxName.includes('Amarela') 
-                      ? 'bg-amber-100 text-amber-900 border border-amber-300' 
-                      : 'bg-slate-800 text-white'
-                  }`}>
+            <div key={boxName} style={tabStyles.boxWrapper}>
+              {/* Box Header */}
+              <div style={tabStyles.boxHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{
+                    ...tabStyles.boxTag,
+                    backgroundColor: boxName.includes('Amarela') ? '#fef3c7' : '#1e293b',
+                    color: boxName.includes('Amarela') ? '#92400e' : '#ffffff',
+                    border: boxName.includes('Amarela') ? '1px solid #fde68a' : 'none'
+                  }}>
                     {boxName}
                   </span>
-                  <span className="text-xs font-medium text-slate-500">
-                    {points.length} {points.length === 1 ? 'ponto' : 'pontos'} instalados
+                  <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '500' }}>
+                    {points.length} {points.length === 1 ? 'ponto' : 'pontos'}
                   </span>
                 </div>
               </div>
 
-              {/* Points Grid inside Box */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+              {/* Points Grid */}
+              <div style={tabStyles.pointsGrid}>
                 {points.map(pt => {
                   const patient = cadence === 'SQS' ? pt.sqs?.mainPatient : pt.tqs?.mainPatient;
                   const isVacant = !patient || !patient.name;
@@ -426,106 +431,117 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                   return (
                     <div
                       key={pt.id || pt.ponto}
-                      className={`relative bg-white rounded-xl p-3.5 border transition-all duration-200 shadow-xs hover:shadow-md flex flex-col justify-between ${
-                        isVacant
-                          ? 'border-dashed border-emerald-300 bg-emerald-50/30'
-                          : patient?.isolation
-                          ? 'border-rose-200 ring-1 ring-rose-300/50'
-                          : 'border-slate-200/90'
-                      }`}
+                      style={{
+                        ...tabStyles.pointCard,
+                        borderStyle: isVacant ? 'dashed' : 'solid',
+                        borderColor: isVacant ? '#6ee7b7' : patient?.isolation ? '#fca5a5' : '#e2e8f0',
+                        backgroundColor: isVacant ? '#f0fdf4' : '#ffffff'
+                      }}
                     >
-                      {/* Point Card Header */}
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                        <div className="flex items-center gap-1.5">
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-800 rounded-md text-xs font-black">
+                      {/* Point Header */}
+                      <div style={tabStyles.pointHeader}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={tabStyles.pointNumBadge}>
                             P{pt.ponto}
                           </span>
                           {pt.serialNumber ? (
                             <button
+                              type="button"
                               onClick={() => handleOpenMachineDetails(pt.serialNumber)}
-                              className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1"
+                              style={tabStyles.serialBtn}
                               title="Ver ficha técnica e manutenção da máquina"
                             >
-                              <Cpu className="w-3 h-3" />
+                              <Cpu size={12} style={{ marginRight: '3px' }} />
                               <span>{pt.serialNumber}</span>
                             </button>
                           ) : (
-                            <span className="text-[11px] text-slate-400">Sem máquina</span>
+                            <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Sem máquina</span>
                           )}
                         </div>
 
-                        {/* Machine Maintenance status badge */}
+                        {/* Machine status badge */}
                         {pt.serialNumber && (
                           <span
                             onClick={() => handleOpenMachineDetails(pt.serialNumber)}
-                            className={`cursor-pointer inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                              isMaintenanceAlert
-                                ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                                : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            }`}
-                            title="Status de Manutenção"
+                            style={{
+                              ...tabStyles.maintStatusPill,
+                              backgroundColor: isMaintenanceAlert ? '#fef3c7' : '#ecfdf5',
+                              color: isMaintenanceAlert ? '#92400e' : '#047857',
+                              borderColor: isMaintenanceAlert ? '#fde68a' : '#a7f3d0'
+                            }}
+                            title="Status da Manutenção"
                           >
-                            <span className={`w-1.5 h-1.5 rounded-full ${isMaintenanceAlert ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
-                            <span>{isMaintenanceAlert ? eq.status : 'Operacional'}</span>
+                            <span style={{
+                              width: '6px',
+                              height: '6px',
+                              borderRadius: '50%',
+                              backgroundColor: isMaintenanceAlert ? '#f59e0b' : '#10b981',
+                              marginRight: '4px'
+                            }}></span>
+                            {isMaintenanceAlert ? eq.status : 'Operacional'}
                           </span>
                         )}
                       </div>
 
-                      {/* Point Card Body */}
-                      <div className="py-2.5">
+                      {/* Point Body */}
+                      <div style={{ padding: '0.75rem 0' }}>
                         {isVacant ? (
-                          <div className="py-3 text-center">
-                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-lg">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Vaga Livre
+                          <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
+                            <span style={tabStyles.vacantPill}>
+                              <CheckCircle2 size={13} style={{ marginRight: '4px' }} /> Vaga Livre
                             </span>
-                            <p className="text-[11px] text-slate-400 mt-1">Disponível para admissão ou remanejamento</p>
+                            <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '4px 0 0 0' }}>
+                              Disponível para paciente
+                            </p>
                           </div>
                         ) : (
-                          <div className="space-y-1.5">
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             {/* Patient Name */}
-                            <div className="flex items-start gap-1.5">
-                              <User className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-                              <div className="min-w-0 flex-1">
-                                <h4 className="text-xs font-bold text-slate-900 leading-tight truncate" title={patient.name}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                              <div style={tabStyles.patientAvatar}>
+                                {patient.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <h4 style={tabStyles.patientName} title={patient.name}>
                                   {patient.name}
                                 </h4>
                                 {patient.dn && (
-                                  <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                                  <div style={{ fontSize: '0.73rem', color: '#64748b', marginTop: '2px' }}>
                                     <span>DN: {patient.dn}</span>
                                     {calculateAge(null, patient.dn) && (
-                                      <span className="text-slate-400 font-medium">• {calculateAge(null, patient.dn)}</span>
+                                      <span style={{ color: '#475569', fontWeight: '600' }}> • {calculateAge(null, patient.dn)}</span>
                                     )}
-                                  </p>
+                                  </div>
                                 )}
                               </div>
                             </div>
 
-                            {/* Access & Isolation Badges */}
-                            <div className="flex flex-wrap items-center gap-1 pt-1">
+                            {/* Access & Isolation Tags */}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
                               {/* Vascular Access */}
                               {patient.accessType === 'Permcath' || (patient.accessRaw && patient.accessRaw.toUpperCase().includes('PERM')) ? (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">
+                                <span style={tabStyles.accessPermcath}>
                                   🟣 Permcath
                                 </span>
                               ) : patient.accessType === 'Cateter Duplo Lúmen' || (patient.accessRaw && patient.accessRaw.toUpperCase().includes('CDL')) ? (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+                                <span style={tabStyles.accessCDL}>
                                   🟡 CDL
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                <span style={tabStyles.accessFAV}>
                                   🟢 FAV {patient.needleSize ? `Ag.${patient.needleSize}` : (patient.accessRaw?.match(/AG\s*\.?\s*(\d+)/i)?.[0] || 'Ag.16')}
                                 </span>
                               )}
 
-                              {/* Isolation / Special tag */}
+                              {/* Isolation Tag */}
                               {(patient.isolation || patient.accessRaw?.toUpperCase().includes('HIV') || patient.accessRaw?.toUpperCase().includes('ÚNICO') || patient.accessRaw?.toUpperCase().includes('UNICO')) && (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1">
-                                  <ShieldAlert className="w-2.5 h-2.5" /> Uso Único
+                                <span style={tabStyles.accessIsolation}>
+                                  <ShieldAlert size={10} style={{ marginRight: '3px' }} /> Uso Único
                                 </span>
                               )}
 
                               {patient.accessRaw?.toUpperCase().includes('HCV') && (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-100 text-orange-800 border border-orange-300">
+                                <span style={tabStyles.accessHCV}>
                                   HCV
                                 </span>
                               )}
@@ -534,10 +550,11 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                         )}
                       </div>
 
-                      {/* Point Card Footer Actions */}
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] print:hidden">
+                      {/* Point Footer Actions */}
+                      <div style={tabStyles.pointFooter}>
                         {isVacant ? (
                           <button
+                            type="button"
                             onClick={() => {
                               setSelectedSlotForReallocate({
                                 pointId: pt.id || pt.ponto,
@@ -547,14 +564,15 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                               });
                               setShowReallocateModal(true);
                             }}
-                            className="w-full py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg flex items-center justify-center gap-1 transition-colors"
+                            style={tabStyles.allocateBtn}
                           >
-                            <Plus className="w-3.5 h-3.5" />
+                            <Plus size={14} style={{ marginRight: '4px' }} />
                             <span>Alocar</span>
                           </button>
                         ) : (
                           <>
                             <button
+                              type="button"
                               onClick={() => {
                                 setSelectedSlotForReallocate({
                                   pointId: pt.id || pt.ponto,
@@ -564,15 +582,16 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                                 });
                                 setShowReallocateModal(true);
                               }}
-                              className="text-slate-600 hover:text-indigo-600 font-semibold flex items-center gap-1 transition-colors"
+                              style={tabStyles.reallocateBtn}
                               title="Remanejar ou trocar paciente de leito"
                             >
-                              <ArrowRightLeft className="w-3 h-3" />
+                              <ArrowRightLeft size={13} style={{ marginRight: '4px' }} />
                               <span>Remanejar</span>
                             </button>
 
                             {onOpenPostModalWithPatient && (
                               <button
+                                type="button"
                                 onClick={() => onOpenPostModalWithPatient({
                                   patientName: patient.name,
                                   room: selectedSalon,
@@ -580,10 +599,10 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                                   point: pt.ponto,
                                   serialNumber: pt.serialNumber
                                 })}
-                                className="text-slate-600 hover:text-rose-600 font-semibold flex items-center gap-1 transition-colors"
-                                title="Abrir comunicado clínico deste paciente no mural"
+                                style={tabStyles.postTriggerBtn}
+                                title="Abrir comunicado no mural"
                               >
-                                <AlertTriangle className="w-3 h-3" />
+                                <AlertTriangle size={13} style={{ marginRight: '4px' }} />
                                 <span>Comunicado</span>
                               </button>
                             )}
@@ -601,42 +620,40 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
 
       {/* Global Patient Search Modal */}
       {showSearchModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-              <div className="flex items-center gap-2">
-                <Search className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-bold text-slate-800 text-base">Localizador de Pacientes & Máquinas</h3>
+        <div style={tabStyles.modalBackdrop}>
+          <div style={tabStyles.modalCard}>
+            <div style={tabStyles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Search size={18} color="#4f46e5" />
+                <h3 style={tabStyles.modalHeading}>Localizar Paciente ou Máquina</h3>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setShowSearchModal(false);
                   setSearchTerm('');
                   setSearchResults([]);
                 }}
-                className="p-1 rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors"
+                style={tabStyles.modalCloseBtn}
               >
-                <X className="w-5 h-5" />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-4 border-b border-slate-100">
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Digite o nome do paciente ou número de série da máquina..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
-                  autoFocus
-                />
-              </div>
+            <div style={{ padding: '1rem', borderBottom: '1px solid #f1f5f9' }}>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Digite o nome do paciente ou número de série da máquina..."
+                style={tabStyles.modalSearchInput}
+                autoFocus
+              />
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div style={tabStyles.modalSearchResultsList}>
               {searchResults.length === 0 ? (
-                <div className="py-12 text-center text-slate-400 text-sm">
+                <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8', fontSize: '0.85rem' }}>
                   {searchTerm.trim() ? 'Nenhum paciente ou máquina localizada com este termo.' : 'Digite o nome do paciente para localizá-lo em qualquer salão e turno.'}
                 </div>
               ) : (
@@ -650,21 +667,17 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                       setShowSearchModal(false);
                       setSearchTerm('');
                     }}
-                    className="p-3 bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-200 rounded-xl cursor-pointer transition-all flex items-center justify-between group"
+                    style={tabStyles.searchResultItem}
                   >
                     <div>
-                      <h4 className="text-sm font-bold text-slate-800 group-hover:text-indigo-700">
+                      <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: '#1e293b' }}>
                         {res.patient.name}
                       </h4>
-                      <p className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
-                        <span className="font-semibold text-slate-700">{res.salao}</span> •
-                        <span>{res.turno}</span> •
-                        <span>{res.box}</span> •
-                        <span className="font-bold text-slate-700">Ponto {res.ponto}</span> •
-                        <span>{res.cadence}</span>
+                      <p style={{ margin: '3px 0 0 0', fontSize: '0.78rem', color: '#64748b' }}>
+                        <strong style={{ color: '#4f46e5' }}>{res.salao}</strong> • {res.turno} • {res.box} • <strong>Ponto {res.ponto}</strong> • {res.cadence}
                       </p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                    <ChevronRight size={18} color="#94a3b8" />
                   </div>
                 ))
               )}
@@ -673,57 +686,57 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
         </div>
       )}
 
-      {/* Reallocation / Alocação Modal */}
+      {/* Reallocation Modal */}
       {showReallocateModal && selectedSlotForReallocate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-              <div className="flex items-center gap-2">
-                <ArrowRightLeft className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-bold text-slate-800 text-base">
+        <div style={tabStyles.modalBackdrop}>
+          <div style={{ ...tabStyles.modalCard, maxWidth: '520px' }}>
+            <div style={tabStyles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ArrowRightLeft size={18} color="#4f46e5" />
+                <h3 style={tabStyles.modalHeading}>
                   {selectedSlotForReallocate.currentPatient ? 'Remanejar Paciente' : 'Alocar Paciente no Leito'}
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setShowReallocateModal(false);
                   setSelectedSlotForReallocate(null);
                   setSelectedNewPatient(null);
                   setReallocatePatientTerm('');
                 }}
-                className="p-1 rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors"
+                style={tabStyles.modalCloseBtn}
               >
-                <X className="w-5 h-5" />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-5 space-y-4">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
-                <p><strong className="text-slate-700">Localização:</strong> {selectedSalon} • {selectedShift} • {selectedSlotForReallocate.box} • Ponto {selectedSlotForReallocate.ponto}</p>
-                <p><strong className="text-slate-700">Cadência:</strong> {cadence === 'SQS' ? 'Segunda, Quarta e Sexta' : 'Terça, Quinta e Sábado'}</p>
+            <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={tabStyles.infoBox}>
+                <p style={{ margin: 0 }}><strong>Local:</strong> {selectedSalon} • {selectedShift} • {selectedSlotForReallocate.box} • Ponto {selectedSlotForReallocate.ponto}</p>
+                <p style={{ margin: '4px 0 0 0' }}><strong>Cadência:</strong> {cadence === 'SQS' ? 'Segunda, Quarta e Sexta' : 'Terça, Quinta e Sábado'}</p>
                 {selectedSlotForReallocate.currentPatient && (
-                  <p><strong className="text-slate-700">Paciente Atual:</strong> {selectedSlotForReallocate.currentPatient.name}</p>
+                  <p style={{ margin: '4px 0 0 0' }}><strong>Paciente Atual:</strong> {selectedSlotForReallocate.currentPatient.name}</p>
                 )}
               </div>
 
-              {/* Patient Selection Dropdown */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
-                  Novo Paciente
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>
+                  Selecionar Novo Paciente
                 </label>
                 <input
                   type="text"
                   value={reallocatePatientTerm}
                   onChange={(e) => setReallocatePatientTerm(e.target.value)}
-                  placeholder="Pesquisar paciente cadastrado no sistema..."
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  placeholder="Buscar paciente cadastrado..."
+                  style={tabStyles.modalSearchInput}
                 />
 
                 {reallocatePatientTerm.trim() && (
-                  <div className="mt-2 max-h-40 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 bg-white shadow-xs">
+                  <div style={tabStyles.dropdownList}>
                     {patients
                       .filter(p => (p.name || '').toLowerCase().includes(reallocatePatientTerm.toLowerCase()))
-                      .slice(0, 10)
+                      .slice(0, 8)
                       .map(p => (
                         <button
                           key={p.id}
@@ -732,10 +745,10 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                             setSelectedNewPatient(p);
                             setReallocatePatientTerm(p.name);
                           }}
-                          className="w-full text-left p-2.5 hover:bg-indigo-50 text-xs font-semibold text-slate-700 flex items-center justify-between"
+                          style={tabStyles.dropdownItem}
                         >
-                          <span>{p.name}</span>
-                          <span className="text-[10px] text-slate-400">{p.accessType || 'FAV'}</span>
+                          <span style={{ fontWeight: '600' }}>{p.name}</span>
+                          <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{p.accessType || 'FAV'}</span>
                         </button>
                       ))}
                   </div>
@@ -743,19 +756,26 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
               </div>
 
               {selectedSlotForReallocate.currentPatient && (
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedNewPatient({ name: '', isVacant: true })}
-                    className="text-xs font-semibold text-rose-600 hover:text-rose-800 flex items-center gap-1"
-                  >
-                    <span>Liberar esta vaga (deixar leito livre)</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedNewPatient({ name: '', isVacant: true })}
+                  style={{
+                    border: 'none',
+                    background: 'none',
+                    color: '#e11d48',
+                    fontSize: '0.8rem',
+                    fontWeight: '600',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    padding: 0
+                  }}
+                >
+                  ✕ Desocupar esta vaga (liberar leito)
+                </button>
               )}
             </div>
 
-            <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2">
+            <div style={tabStyles.modalFooter}>
               <button
                 type="button"
                 onClick={() => {
@@ -763,7 +783,7 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                   setSelectedSlotForReallocate(null);
                   setSelectedNewPatient(null);
                 }}
-                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors"
+                style={tabStyles.cancelBtn}
               >
                 Cancelar
               </button>
@@ -771,7 +791,7 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                 type="button"
                 onClick={handleSaveReallocation}
                 disabled={actionLoading}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-xs transition-colors disabled:opacity-50"
+                style={tabStyles.confirmBtn}
               >
                 {actionLoading ? 'Salvando...' : 'Confirmar'}
               </button>
@@ -782,73 +802,93 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
 
       {/* Machine Maintenance Modal */}
       {showMachineModal && selectedMachine && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-              <div className="flex items-center gap-2">
-                <Wrench className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-bold text-slate-800 text-base">Ficha Técnica da Máquina</h3>
+        <div style={tabStyles.modalBackdrop}>
+          <div style={{ ...tabStyles.modalCard, maxWidth: '500px' }}>
+            <div style={tabStyles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Wrench size={18} color="#4f46e5" />
+                <h3 style={tabStyles.modalHeading}>Ficha Técnica da Máquina</h3>
               </div>
-              <button
-                onClick={() => {
-                  setShowMachineModal(false);
-                  setSelectedMachine(null);
-                }}
-                className="p-1 rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-3.5 text-xs">
-              <div className="flex items-center justify-between p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl">
-                <div>
-                  <h4 className="font-black text-indigo-950 text-sm">{selectedMachine.name}</h4>
-                  <p className="text-indigo-700 font-mono text-xs mt-0.5">Série: {selectedMachine.serialNumber}</p>
-                </div>
-                <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full font-bold text-[11px]">
-                  {selectedMachine.status || 'Em Operação'}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Marca / Modelo</span>
-                  <span className="text-slate-800 font-semibold mt-0.5 block">{selectedMachine.brand || 'Nipro'} • {selectedMachine.model || 'DIAMAX 220F'}</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Setor Físico</span>
-                  <span className="text-slate-800 font-semibold mt-0.5 block">{selectedMachine.sector || selectedSalon}</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Última Preventiva</span>
-                  <span className="text-slate-800 font-semibold mt-0.5 block">{selectedMachine.lastPreventiveDate || '10/05/2026'}</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Próxima Preventiva</span>
-                  <span className="text-slate-800 font-semibold mt-0.5 block">{selectedMachine.nextPreventiveDate || '10/08/2026'}</span>
-                </div>
-              </div>
-
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Calibração & Observações</span>
-                <p className="text-slate-700 mt-1 leading-relaxed">
-                  {selectedMachine.notes || 'Equipamento calibrado e conforme com o protocolo técnico de dialisato.'}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end">
               <button
                 type="button"
                 onClick={() => {
                   setShowMachineModal(false);
                   setSelectedMachine(null);
                 }}
-                className="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl transition-colors"
+                style={tabStyles.modalCloseBtn}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '0.85rem',
+                backgroundColor: '#eef2ff',
+                borderRadius: '10px',
+                border: '1px solid #e0e7ff'
+              }}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: '#1e1b4b' }}>
+                    {selectedMachine.name}
+                  </h4>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#4338ca', fontFamily: 'monospace' }}>
+                    Série: {selectedMachine.serialNumber}
+                  </p>
+                </div>
+                <span style={{
+                  padding: '4px 10px',
+                  backgroundColor: '#dcfce7',
+                  color: '#166534',
+                  borderRadius: '20px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700'
+                }}>
+                  {selectedMachine.status || 'Em Operação'}
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div style={tabStyles.maintDetailCard}>
+                  <span style={tabStyles.maintDetailLabel}>Marca / Modelo</span>
+                  <span style={tabStyles.maintDetailVal}>{selectedMachine.brand || 'Nipro'} • {selectedMachine.model || 'DIAMAX 220F'}</span>
+                </div>
+                <div style={tabStyles.maintDetailCard}>
+                  <span style={tabStyles.maintDetailLabel}>Setor Físico</span>
+                  <span style={tabStyles.maintDetailVal}>{selectedMachine.sector || selectedSalon}</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div style={tabStyles.maintDetailCard}>
+                  <span style={tabStyles.maintDetailLabel}>Última Preventiva</span>
+                  <span style={tabStyles.maintDetailVal}>{selectedMachine.lastPreventiveDate || '10/05/2026'}</span>
+                </div>
+                <div style={tabStyles.maintDetailCard}>
+                  <span style={tabStyles.maintDetailLabel}>Próxima Preventiva</span>
+                  <span style={tabStyles.maintDetailVal}>{selectedMachine.nextPreventiveDate || '10/08/2026'}</span>
+                </div>
+              </div>
+
+              <div style={tabStyles.maintDetailCard}>
+                <span style={tabStyles.maintDetailLabel}>Calibração & Observações</span>
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.78rem', color: '#334155', lineHeight: 1.4 }}>
+                  {selectedMachine.notes || 'Equipamento calibrado e conforme com o protocolo técnico de dialisato.'}
+                </p>
+              </div>
+            </div>
+
+            <div style={tabStyles.modalFooter}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMachineModal(false);
+                  setSelectedMachine(null);
+                }}
+                style={tabStyles.cancelBtn}
               >
                 Fechar
               </button>
@@ -859,3 +899,545 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
     </div>
   );
 }
+
+const tabStyles = {
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem',
+    width: '100%'
+  },
+  alertToast: {
+    padding: '0.85rem 1.25rem',
+    borderRadius: '10px',
+    color: '#ffffff',
+    fontSize: '0.88rem',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+  },
+  toastCloseBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#ffffff',
+    fontSize: '1.2rem',
+    cursor: 'pointer'
+  },
+  filterCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    padding: '1.25rem',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem'
+  },
+  filterTopRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '1rem'
+  },
+  filterGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  filterLabel: {
+    fontSize: '0.78rem',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    color: '#475569',
+    display: 'flex',
+    alignItems: 'center'
+  },
+  pillContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    flexWrap: 'wrap'
+  },
+  pillBtn: {
+    padding: '7px 14px',
+    borderRadius: '10px',
+    fontSize: '0.85rem',
+    border: '1px solid',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  actionBtnsGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  searchOpenBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '8px 14px',
+    borderRadius: '10px',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    backgroundColor: '#f1f5f9',
+    color: '#334155',
+    border: '1px solid #cbd5e1',
+    cursor: 'pointer'
+  },
+  printBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '8px 14px',
+    borderRadius: '10px',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    backgroundColor: '#1e293b',
+    color: '#ffffff',
+    border: 'none',
+    cursor: 'pointer'
+  },
+  cadenceRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '0.75rem',
+    paddingTop: '0.75rem',
+    borderTop: '1px solid #f1f5f9'
+  },
+  cadenceLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    flexWrap: 'wrap'
+  },
+  cadenceBtn: {
+    padding: '6px 14px',
+    borderRadius: '8px',
+    fontSize: '0.82rem',
+    border: '1px solid',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  activeBadgeIndicator: {
+    fontSize: '0.78rem',
+    fontWeight: '600',
+    color: '#64748b',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  },
+  liveDot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    backgroundColor: '#10b981'
+  },
+  statsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+    gap: '0.75rem'
+  },
+  statCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    padding: '0.85rem 1rem',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between'
+  },
+  statLabel: {
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    color: '#475569'
+  },
+  statValueRow: {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: '6px',
+    marginTop: '4px'
+  },
+  statNumber: {
+    fontSize: '1.4rem',
+    fontWeight: '900',
+    color: '#1e293b'
+  },
+  statSub: {
+    fontSize: '0.75rem',
+    color: '#475569'
+  },
+  needlePill: {
+    fontSize: '0.68rem',
+    fontWeight: '700',
+    padding: '2px 5px',
+    backgroundColor: '#ecfdf5',
+    color: '#065f46',
+    borderRadius: '4px',
+    border: '1px solid #a7f3d0'
+  },
+  loadingBox: {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    padding: '3rem',
+    textAlign: 'center',
+    border: '1px solid #e2e8f0',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  boxWrapper: {
+    backgroundColor: '#f8fafc',
+    borderRadius: '16px',
+    padding: '1.15rem',
+    border: '1px solid #e2e8f0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.85rem'
+  },
+  boxHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  boxTag: {
+    padding: '4px 10px',
+    borderRadius: '8px',
+    fontSize: '0.78rem',
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em'
+  },
+  pointsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))',
+    gap: '0.85rem'
+  },
+  pointCard: {
+    borderRadius: '12px',
+    padding: '0.85rem 1rem',
+    borderWidth: '1px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    transition: 'all 0.15s ease',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+  },
+  pointHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: '6px',
+    borderBottom: '1px solid #f1f5f9'
+  },
+  pointNumBadge: {
+    padding: '2px 7px',
+    backgroundColor: '#f1f5f9',
+    color: '#1e293b',
+    borderRadius: '6px',
+    fontSize: '0.75rem',
+    fontWeight: '800'
+  },
+  serialBtn: {
+    border: 'none',
+    background: 'none',
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    color: '#4f46e5',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    padding: 0
+  },
+  maintStatusPill: {
+    fontSize: '0.68rem',
+    fontWeight: '700',
+    padding: '2px 7px',
+    borderRadius: '12px',
+    border: '1px solid',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center'
+  },
+  patientAvatar: {
+    width: '30px',
+    height: '30px',
+    borderRadius: '50%',
+    backgroundColor: '#e0e7ff',
+    color: '#4338ca',
+    fontSize: '0.8rem',
+    fontWeight: '800',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  },
+  patientName: {
+    margin: 0,
+    fontSize: '0.82rem',
+    fontWeight: '700',
+    color: '#0f172a',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
+  },
+  accessFAV: {
+    fontSize: '0.68rem',
+    fontWeight: '700',
+    padding: '2px 7px',
+    borderRadius: '6px',
+    backgroundColor: '#ecfdf5',
+    color: '#065f46',
+    border: '1px solid #a7f3d0'
+  },
+  accessCDL: {
+    fontSize: '0.68rem',
+    fontWeight: '700',
+    padding: '2px 7px',
+    borderRadius: '6px',
+    backgroundColor: '#fffbeb',
+    color: '#92400e',
+    border: '1px solid #fde68a'
+  },
+  accessPermcath: {
+    fontSize: '0.68rem',
+    fontWeight: '700',
+    padding: '2px 7px',
+    borderRadius: '6px',
+    backgroundColor: '#faf5ff',
+    color: '#6b21a8',
+    border: '1px solid #e9d5ff'
+  },
+  accessIsolation: {
+    fontSize: '0.68rem',
+    fontWeight: '700',
+    padding: '2px 7px',
+    borderRadius: '6px',
+    backgroundColor: '#ffe4e6',
+    color: '#9f1239',
+    border: '1px solid #fecdd3',
+    display: 'inline-flex',
+    alignItems: 'center'
+  },
+  accessHCV: {
+    fontSize: '0.68rem',
+    fontWeight: '700',
+    padding: '2px 7px',
+    borderRadius: '6px',
+    backgroundColor: '#ffedd5',
+    color: '#9a3412',
+    border: '1px solid #fed7aa'
+  },
+  vacantPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    fontSize: '0.78rem',
+    fontWeight: '700',
+    color: '#047857',
+    backgroundColor: '#d1fae5',
+    padding: '3px 10px',
+    borderRadius: '8px'
+  },
+  pointFooter: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: '6px',
+    borderTop: '1px solid #f1f5f9'
+  },
+  allocateBtn: {
+    width: '100%',
+    padding: '6px',
+    borderRadius: '8px',
+    backgroundColor: '#059669',
+    color: '#ffffff',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    border: 'none',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  reallocateBtn: {
+    border: 'none',
+    background: 'none',
+    color: '#475569',
+    fontSize: '0.72rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '2px 4px'
+  },
+  postTriggerBtn: {
+    border: 'none',
+    background: 'none',
+    color: '#e11d48',
+    fontSize: '0.72rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '2px 4px'
+  },
+  modalBackdrop: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 9999,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backdropFilter: 'blur(4px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '1rem'
+  },
+  modalCard: {
+    backgroundColor: '#ffffff',
+    width: '100%',
+    maxWidth: '620px',
+    borderRadius: '16px',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    maxHeight: '85vh'
+  },
+  modalHeader: {
+    padding: '1rem 1.25rem',
+    borderBottom: '1px solid #e2e8f0',
+    backgroundColor: '#f8fafc',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  modalHeading: {
+    margin: 0,
+    fontSize: '1rem',
+    fontWeight: '800',
+    color: '#1e293b'
+  },
+  modalCloseBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#94a3b8',
+    cursor: 'pointer',
+    padding: '4px'
+  },
+  modalSearchInput: {
+    width: '100%',
+    padding: '10px 14px',
+    borderRadius: '10px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: '#f8fafc',
+    fontSize: '0.88rem',
+    outline: 'none',
+    boxSizing: 'border-box'
+  },
+  modalSearchResultsList: {
+    flex: 1,
+    overflowY: 'auto',
+    padding: '0.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+  searchResultItem: {
+    padding: '10px 12px',
+    backgroundColor: '#f8fafc',
+    borderRadius: '10px',
+    border: '1px solid #e2e8f0',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    transition: 'all 0.15s ease'
+  },
+  infoBox: {
+    padding: '10px 12px',
+    backgroundColor: '#f8fafc',
+    borderRadius: '10px',
+    border: '1px solid #e2e8f0',
+    fontSize: '0.8rem',
+    color: '#334155'
+  },
+  dropdownList: {
+    marginTop: '6px',
+    maxHeight: '160px',
+    overflowY: 'auto',
+    border: '1px solid #e2e8f0',
+    borderRadius: '10px',
+    backgroundColor: '#ffffff',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+  },
+  dropdownItem: {
+    width: '100%',
+    textAlign: 'left',
+    padding: '8px 12px',
+    border: 'none',
+    borderBottom: '1px solid #f1f5f9',
+    backgroundColor: '#ffffff',
+    cursor: 'pointer',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: '0.8rem'
+  },
+  modalFooter: {
+    padding: '0.85rem 1.25rem',
+    borderTop: '1px solid #e2e8f0',
+    backgroundColor: '#f8fafc',
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '8px'
+  },
+  cancelBtn: {
+    padding: '7px 14px',
+    borderRadius: '10px',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    backgroundColor: '#e2e8f0',
+    color: '#475569',
+    border: 'none',
+    cursor: 'pointer'
+  },
+  confirmBtn: {
+    padding: '7px 18px',
+    borderRadius: '10px',
+    fontSize: '0.85rem',
+    fontWeight: '700',
+    backgroundColor: '#4f46e5',
+    color: '#ffffff',
+    border: 'none',
+    cursor: 'pointer'
+  },
+  maintDetailCard: {
+    padding: '8px 10px',
+    backgroundColor: '#f8fafc',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0'
+  },
+  maintDetailLabel: {
+    display: 'block',
+    fontSize: '0.68rem',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    color: '#64748b'
+  },
+  maintDetailVal: {
+    display: 'block',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    color: '#1e293b',
+    marginTop: '2px'
+  }
+};
