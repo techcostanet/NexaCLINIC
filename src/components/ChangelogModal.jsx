@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.55',
+      date: '24/08/2026',
+      title: 'Correção de Permissões de Filial por Usuário (Restrição Individual de Unidades)',
+      description: 'Ajuste na política de controle de acesso a unidades: remoção de regras fixas em código e aplicação estrita das permissões de filial (primaryUnit/allowedUnits) definidas no cadastro do operador.',
+      changes: [
+        { type: 'Permissões por Usuário', text: 'Usuários locais como anacg@nexa.com possuem acesso estrito à sua unidade de operação (Betim), exibindo seletor fixo e dados correspondentes.' },
+        { type: 'Gestão em NexaCONFIG', text: 'Adicionado seletor de Filial de Operação nos cadastros de usuários do painel de Configurações & T.I.' },
+        { type: 'Administrador Master', text: 'Garantido acesso global e alternância entre filiais para contato@techcosta.net.' }
+      ]
+    },
+    {
       version: 'v4.7.54',
       date: '24/08/2026',
       title: 'Isolamento Total de Dados por Filial (Taguatinga/DF vs Betim/MG) em Todos os Módulos',

@@ -1,3 +1,16 @@
+## [v4.7.55] - 24 de Agosto, 2026
+### Correção de Permissões de Filial por Usuário (Restrição Individual de Unidades)
+- **Remoção de Sobrecargas Globais em Código:**
+  - Removida a atribuição forçada de multi-unidades para usuárias específicas (`anacg@nexa.com`, `jsoares@nexa.com`), fazendo com que o acesso a filiais seja governado **estritamente pelo perfil e unidade atribuída no cadastro (`primaryUnit` / `allowedUnits`)**.
+- **Gestão Completa de Filial em Configurações & T.I. (`NexaCONFIG` e `Painel de Governança`):**
+  - Inclusão do campo de Filial de Operação nos formulários de criação e edição de operadores em ambos os painéis administrativos.
+  - Exibição de badge visual de filial (`🏢 Betim`, `🏢 Taguatinga` ou `🌐 Todas`) na tabela de usuários.
+- **Sanitização Automática de Sessão:**
+  - Usuários locais com filial Betim (`anacg`, etc.) agora abrem diretamente com a filial Betim selecionada e seletor estático (sem opção de troca não autorizada para Taguatinga ou Todas as Unidades).
+  - Administrador Master (`contato@techcosta.net`) mantém permissão global irrestrita de gerenciamento e alternância de filiais.
+
+---
+
 ## [v4.7.54] - 24 de Agosto, 2026
 ### Isolamento Total de Dados por Filial (Taguatinga/DF vs Betim/MG) em Todos os Módulos do Sistema
 - **Isolamento Completo e Rigoroso de Dados por Unidade:**

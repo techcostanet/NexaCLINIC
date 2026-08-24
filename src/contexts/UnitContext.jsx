@@ -48,12 +48,6 @@ export function UnitProvider({ children, currentUser }) {
   const allowedUnitIds = useMemo(() => {
     if (!currentUser) return ['betim'];
     if (isSuperAdmin) return ['all', 'betim', 'taguatinga'];
-    
-    const email = (currentUser.email || '').toLowerCase().trim();
-    // Gestoras com acesso às 2 unidades
-    if (email === 'anacg@nexa.com' || email === 'jsoares@nexa.com' || currentUser.role === 'gestor') {
-      return ['all', 'betim', 'taguatinga'];
-    }
 
     if (Array.isArray(currentUser.allowedUnits) && currentUser.allowedUnits.length > 0) {
       if (currentUser.allowedUnits.includes('*') || currentUser.allowedUnits.includes('all')) {
@@ -63,6 +57,7 @@ export function UnitProvider({ children, currentUser }) {
     }
 
     if (currentUser.primaryUnit) {
+      if (currentUser.primaryUnit === 'all') return ['all', 'betim', 'taguatinga'];
       return [currentUser.primaryUnit];
     }
 

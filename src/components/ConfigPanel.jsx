@@ -213,6 +213,8 @@ export default function ConfigPanel() {
       email: '',
       role: profiles[0]?.id || 'reception',
       employeeId: employees[0]?.id || '',
+      primaryUnit: 'betim',
+      allowedUnits: ['betim'],
       status: 'active'
     });
     setShowUserModal(true);
@@ -222,11 +224,14 @@ export default function ConfigPanel() {
     setEditingUser(user);
     setTempPasswordMessage('');
     const matchedRole = (user.role === 'rh') ? 'hr' : (user.role || 'reception');
+    const uUnit = user.primaryUnit || (user.allowedUnits && user.allowedUnits.includes('taguatinga') && !user.allowedUnits.includes('betim') ? 'taguatinga' : (user.allowedUnits && user.allowedUnits.includes('all') ? 'all' : 'betim'));
     setUserForm({
       name: user.name || '',
       email: user.email || '',
       role: matchedRole,
       employeeId: user.employeeId || '',
+      primaryUnit: uUnit,
+      allowedUnits: user.allowedUnits || (uUnit === 'all' ? ['all', 'betim', 'taguatinga'] : [uUnit]),
       status: user.status || 'active'
     });
     setShowUserModal(true);
@@ -255,24 +260,30 @@ export default function ConfigPanel() {
     e.preventDefault();
     setActionLoading(true);
     try {
+      const allowedUnitsToSave = userForm.primaryUnit === 'all' ? ['all', 'betim', 'taguatinga'] : [userForm.primaryUnit || 'betim'];
       if (editingUser) {
-        await dbService.updateUser(editingUser.uid, userForm);
+        await dbService.updateUser(editingUser.uid, {
+          ...userForm,
+          allowedUnits: allowedUnitsToSave
+        });
         if (userForm.password) {
           const identifier = editingUser.email || editingUser.uid;
           await dbService.updateUserPassword(identifier, userForm.password);
         }
         showAlert(`Acesso de "${userForm.name}" gravado com sucesso no banco cloud!`, 'success');
-        logAudit('Modificação de Usuário', `Usuário ${userForm.email} editado. Status: ${userForm.status}, Perfil: ${userForm.role}`);
+        logAudit('Modificação de Usuário', `Usuário ${userForm.email} editado. Status: ${userForm.status}, Perfil: ${userForm.role}, Filial: ${userForm.primaryUnit}`);
         setShowUserModal(false);
       } else {
         const tempPass = userForm.password || Math.random().toString(36).substring(2, 10);
         const res = await dbService.createUser(userForm.email, userForm.name, userForm.role, []);
-        // Get created user to update employeeId, password & status
+        // Get created user to update employeeId, password, unit & status
         const updatedUsers = await dbService.getUsers();
         const created = updatedUsers.find(u => (u.email || '').toLowerCase() === userForm.email.toLowerCase());
         if (created) {
           await dbService.updateUser(created.uid, {
             employeeId: userForm.employeeId,
+            primaryUnit: userForm.primaryUnit || 'betim',
+            allowedUnits: allowedUnitsToSave,
             status: userForm.status,
             password: tempPass
           });
@@ -282,7 +293,7 @@ export default function ConfigPanel() {
           : `Usuário criado com sucesso! Senha configurada na nuvem: ${tempPass}`;
         setTempPasswordMessage(msg);
         setGeneratedTempPass(tempPass);
-        logAudit('Criação de Usuário', `Usuário de login ${userForm.email} salvo sob perfil ${userForm.role}.`);
+        logAudit('Criação de Usuário', `Usuário de login ${userForm.email} salvo sob perfil ${userForm.role} na filial ${userForm.primaryUnit}.`);
       }
       fetchData();
     } catch (err) {
@@ -808,6 +819,7 @@ export default function ConfigPanel() {
                     <tr>
                       <th>Operador / Usuário</th>
                       <th>Email de Login</th>
+                      <th>Filial</th>
                       <th>Perfil / Permissão</th>
                       <th>Vínculo Funcionário</th>
                       <th>Status da Conta</th>
@@ -819,11 +831,25 @@ export default function ConfigPanel() {
                       const emp = employees.find(e => e.id === user.employeeId);
                       const userRoleKey = (user.role === 'rh') ? 'hr' : user.role;
                       const profile = profiles.find(p => p.id === user.role || p.id === userRoleKey || (user.role === 'hr' && p.id === 'rh'));
+                      const uUnit = user.primaryUnit || (user.allowedUnits && user.allowedUnits.includes('taguatinga') && !user.allowedUnits.includes('betim') ? 'taguatinga' : (user.allowedUnits && user.allowedUnits.includes('all') ? 'all' : 'betim'));
 
                       return (
                         <tr key={user.uid}>
                           <td style={{ fontWeight: '600' }}>{user.name}</td>
                           <td>{user.email}</td>
+                          <td>
+                            <span style={{ 
+                              padding: '0.2rem 0.5rem', 
+                              borderRadius: '4px', 
+                              fontSize: '0.72rem', 
+                              fontWeight: '700',
+                              backgroundColor: uUnit === 'taguatinga' ? '#ecfdf5' : uUnit === 'all' ? '#f5f3ff' : '#eff6ff',
+                              color: uUnit === 'taguatinga' ? '#065f46' : uUnit === 'all' ? '#6b21a8' : '#1e40af',
+                              border: `1px solid ${uUnit === 'taguatinga' ? '#a7f3d0' : uUnit === 'all' ? '#ddd6fe' : '#bfdbfe'}`
+                            }}>
+                              {uUnit === 'taguatinga' ? '🏢 Taguatinga' : uUnit === 'all' ? '🌐 Todas' : '🏢 Betim'}
+                            </span>
+                          </td>
                           <td>
                             <span style={{ 
                               padding: '0.2rem 0.5rem', 
@@ -1192,6 +1218,28 @@ export default function ConfigPanel() {
                       {profiles.map(p => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Filial de Operação *</label>
+                    <select 
+                      className="form-control" 
+                      required 
+                      value={userForm.primaryUnit || 'betim'} 
+                      onChange={e => {
+                        const u = e.target.value;
+                        setUserForm({ 
+                          ...userForm, 
+                          primaryUnit: u,
+                          allowedUnits: u === 'all' ? ['all', 'betim', 'taguatinga'] : [u]
+                        });
+                      }} 
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}
+                    >
+                      <option value="betim">🏢 Unidade Betim - MG</option>
+                      <option value="taguatinga">🏢 Unidade Taguatinga - DF</option>
+                      <option value="all">🌐 Todas as Unidades (Acesso Global)</option>
                     </select>
                   </div>
 

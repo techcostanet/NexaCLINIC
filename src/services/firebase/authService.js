@@ -77,6 +77,13 @@ export const onAuthChange = (callback) => {
             if (!userData.status) {
               userData.status = 'active';
             }
+            if ((cleanEmail === 'anacg@nexa.com' || cleanEmail === 'jsoares@nexa.com') && (!userData.primaryUnit || userData.primaryUnit === 'betim')) {
+              if (Array.isArray(userData.allowedUnits) && userData.allowedUnits.includes('all')) {
+                userData.primaryUnit = 'betim';
+                userData.allowedUnits = ['betim'];
+                setDoc(userDocRef, { primaryUnit: 'betim', allowedUnits: ['betim'] }, { merge: true }).catch(err => console.error(err));
+              }
+            }
           }
 
           const finalUser = {
@@ -304,8 +311,8 @@ export const getUsers = async () => {
       { uid: 'doc-roberto-uid', email: 'roberto.carvalho@nexaclinic.med.br', name: 'Dr. Roberto Carvalho', role: 'professional', allowedSectors: ['medica'], primaryUnit: 'betim', allowedUnits: ['betim'], status: 'active', crm: '39812/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: '39812984000192', bank: 'Santander (033) Ag 2201 CC 98120-4' },
       { uid: 'doc-camila-uid', email: 'camila.albuquerque@nexaclinic.med.br', name: 'Dra. Camila Albuquerque', role: 'professional', allowedSectors: ['medica'], primaryUnit: 'betim', allowedUnits: ['betim'], status: 'active', crm: '48920/MG', specialty: 'Nefrologia', contractType: 'CLT', pixKey: 'camila.albuquerque@pix.com', bank: 'Bradesco (237) Ag 1402 CC 89201-3' },
       { uid: 'doc-fernando-uid', email: 'fernando.vasconcelos@nexaclinic.med.br', name: 'Dr. Fernando Vasconcelos', role: 'professional', allowedSectors: ['medica'], primaryUnit: 'betim', allowedUnits: ['betim'], status: 'active', crm: '55431/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: '5543189000109', bank: 'Sicoob (756) Ag 4120 CC 55431-0' },
-      { uid: 'anacg-uid', email: 'anacg@nexa.com', name: 'Ana Carolina Cerqueira Gonzaga', role: 'rh', allowedSectors: ['rh'], allowedUnits: ['all', 'betim', 'taguatinga'], primaryUnit: 'betim', status: 'active' },
-      { uid: 'jsoares-uid', email: 'jsoares@nexa.com', name: 'J. Soares', role: 'rh', allowedSectors: ['rh'], allowedUnits: ['all', 'betim', 'taguatinga'], primaryUnit: 'betim', status: 'active' },
+      { uid: 'anacg-uid', email: 'anacg@nexa.com', name: 'Ana Carolina Cerqueira Gonzaga', role: 'rh', allowedSectors: ['rh'], allowedUnits: ['betim'], primaryUnit: 'betim', status: 'active' },
+      { uid: 'jsoares-uid', email: 'jsoares@nexa.com', name: 'J. Soares', role: 'rh', allowedSectors: ['rh'], allowedUnits: ['betim'], primaryUnit: 'betim', status: 'active' },
       { uid: 'daliam-uid', email: 'daliam@nexa.com', name: 'Dália Moraes', role: 'financial', allowedSectors: ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'], allowedUnits: ['all', 'betim', 'taguatinga'], primaryUnit: 'betim', status: 'active' },
       { uid: 'taguatinga-fin-uid', email: 'financeiro.taguatinga@nexa.com', name: 'Operadora Financeira (Taguatinga)', role: 'financial', allowedSectors: ['faturamento', 'finance', 'estoque', 'compras'], allowedUnits: ['taguatinga'], primaryUnit: 'taguatinga', status: 'active' },
       { uid: 'roseannefa-uid', email: 'roseannefa@nexa.com', name: 'Roseanne Faria', role: 'sesmt', allowedSectors: ['sesmt'], allowedUnits: ['betim'], primaryUnit: 'betim', status: 'active' }
@@ -332,6 +339,14 @@ export const getUsers = async () => {
         } else {
           if (!found.status) {
             found.status = 'active';
+          }
+          // Sanitize legacy hardcoded 'all' units for standard local users (e.g. anacg)
+          if ((found.email === 'anacg@nexa.com' || found.email === 'jsoares@nexa.com') && (!found.primaryUnit || found.primaryUnit === 'betim')) {
+            if (Array.isArray(found.allowedUnits) && found.allowedUnits.includes('all')) {
+              found.primaryUnit = 'betim';
+              found.allowedUnits = ['betim'];
+              setDoc(doc(db, 'users', found.uid), { primaryUnit: 'betim', allowedUnits: ['betim'] }, { merge: true }).catch(e => console.error(e));
+            }
           }
         }
       });
