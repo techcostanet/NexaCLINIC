@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.57',
+      date: '24/08/2026',
+      title: 'NexaCAL — Atualização das Salas de Atendimento (Consultórios 1 a 6 e Consultório DP)',
+      description: 'Reestruturação completa do catálogo de salas e consultórios da Agenda, limitando a lista aos Consultórios 1 a 6 e Consultório DP na visualização por salas, filtros e modais de agendamento.',
+      changes: [
+        { type: 'Salas Padronizadas', text: 'Catálogo de salas atualizado estritamente para Consultório 1 ao 6 e Consultório DP na grade de salas, filtro de pesquisa e modal de agendamento.' },
+        { type: 'Grade Médica', text: 'Consultório padrão atualizado nas configurações de grade do profissional de saúde.' }
+      ]
+    },
+    {
       version: 'v4.7.56',
       date: '24/08/2026',
       title: 'NexaCAL — Configuração Anual de Grade, Pesquisa Global Multianual e Legenda Visual',

@@ -75,10 +75,10 @@ export default function DoctorScheduleModal({
     'Consultório 1',
     'Consultório 2',
     'Consultório 3',
-    'Salão 1 (Diálise)',
-    'Salão 2 (Diálise)',
-    'Sala Ultrassom',
-    'Sala de Pequenos Procedimentos'
+    'Consultório 4',
+    'Consultório 5',
+    'Consultório 6',
+    'Consultório DP'
   ];
 
   useEffect(() => {

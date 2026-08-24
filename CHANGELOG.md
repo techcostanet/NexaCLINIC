@@ -1,3 +1,11 @@
+## [v4.7.57] - 24 de Agosto, 2026
+### NexaCAL — Atualização das Salas de Atendimento (Consultórios 1 a 6 e Consultório DP)
+- **Padronização das Salas da Agenda:**
+  - O catálogo de salas do módulo Agenda foi atualizado para conter exclusivamente: **Consultório 1**, **Consultório 2**, **Consultório 3**, **Consultório 4**, **Consultório 5**, **Consultório 6** e **Consultório DP**.
+  - Removidas salas não aplicáveis (Salão 1, Salão 2, Sala Ultrassom e Pequenos Procedimentos) da grade por salas, do filtro de pesquisa e dos seletores dos modais de agendamento e grade médica.
+
+---
+
 ## [v4.7.56] - 24 de Agosto, 2026
 ### NexaCAL — Configuração Anual de Grade, Pesquisa Global Multianual e Legenda Visual
 - **Configuração de Agenda por Ano Inteiro (12 Meses):**
