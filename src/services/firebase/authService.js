@@ -208,9 +208,9 @@ export const logout = async () => {
     return signOut(auth);
   };
 
-export const createUser = async (email, name, role, allowedSectors) => {
+export const createUser = async (email, name, role, allowedSectors, primaryUnit = 'betim', allowedUnits = ['betim']) => {
     if (USE_MOCK) {
-      return mockAuth.createUser(email, name, role, allowedSectors);
+      return mockAuth.createUser(email, name, role, allowedSectors, primaryUnit, allowedUnits);
     }
     
     const { initializeApp: initializeSecondaryApp } = await import('firebase/app');
@@ -243,6 +243,8 @@ export const createUser = async (email, name, role, allowedSectors) => {
         name,
         role,
         allowedSectors,
+        primaryUnit: primaryUnit || 'betim',
+        allowedUnits: allowedUnits || [primaryUnit || 'betim'],
         authPassword: tempPassword, // Save this to help heal Firebase Auth later
         createdAt: new Date().toISOString()
       });
@@ -251,7 +253,7 @@ export const createUser = async (email, name, role, allowedSectors) => {
       await signOut(secondaryAuth);
       await secondaryApp.delete();
 
-      return { uid, email, name, role };
+      return { uid, email, name, role, primaryUnit, allowedUnits };
     } catch (err) {
       try {
         await secondaryApp.delete();
@@ -272,12 +274,14 @@ export const createUser = async (email, name, role, allowedSectors) => {
             name: name || 'Operador',
             role: role || 'reception',
             allowedSectors: allowedSectors || [],
+            primaryUnit: primaryUnit || 'betim',
+            allowedUnits: allowedUnits || [primaryUnit || 'betim'],
             status: 'active',
             updatedAt: new Date().toISOString()
           };
 
           await setDoc(doc(db, 'users', targetUid), userPayload, { merge: true });
-          return { uid: targetUid, email: cleanEmail, name, role, isExisting: true };
+          return { uid: targetUid, email: cleanEmail, name, role, primaryUnit, allowedUnits, isExisting: true };
         } catch (dbErr) {
           console.error("Erro ao sincronizar perfil do usuário existente no Firestore:", dbErr);
         }
@@ -294,16 +298,17 @@ export const createUser = async (email, name, role, allowedSectors) => {
 export const getUsers = async () => {
     const allSectors = ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'];
     const defaultUsers = [
-      { uid: 'techcosta-admin-uid', email: 'contato@techcosta.net', name: 'Administrador TechCosta', role: 'admin', allowedSectors: allSectors, status: 'active', crm: '45892/MG', specialty: 'Nefrologia' },
-      { uid: 'doc-lucas-uid', email: 'lucas.mendes@nexaclinic.med.br', name: 'Dr. Lucas Mendes', role: 'professional', allowedSectors: ['medica'], status: 'active', crm: '45892/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: '45892000182@pix.bcb.gov.br', bank: 'Banco do Brasil (001) Ag 1234-5 CC 45892-1' },
-      { uid: 'doc-mariana-uid', email: 'mariana.ribeiro@nexaclinic.med.br', name: 'Dra. Mariana Ribeiro', role: 'professional', allowedSectors: ['medica'], status: 'active', crm: '51204/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: 'mariana.med@gmail.com', bank: 'Itaú (341) Ag 0891 CC 32104-9' },
-      { uid: 'doc-roberto-uid', email: 'roberto.carvalho@nexaclinic.med.br', name: 'Dr. Roberto Carvalho', role: 'professional', allowedSectors: ['medica'], status: 'active', crm: '39812/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: '39812984000192', bank: 'Santander (033) Ag 2201 CC 98120-4' },
-      { uid: 'doc-camila-uid', email: 'camila.albuquerque@nexaclinic.med.br', name: 'Dra. Camila Albuquerque', role: 'professional', allowedSectors: ['medica'], status: 'active', crm: '48920/MG', specialty: 'Nefrologia', contractType: 'CLT', pixKey: 'camila.albuquerque@pix.com', bank: 'Bradesco (237) Ag 1402 CC 89201-3' },
-      { uid: 'doc-fernando-uid', email: 'fernando.vasconcelos@nexaclinic.med.br', name: 'Dr. Fernando Vasconcelos', role: 'professional', allowedSectors: ['medica'], status: 'active', crm: '55431/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: '5543189000109', bank: 'Sicoob (756) Ag 4120 CC 55431-0' },
-      { uid: 'anacg-uid', email: 'anacg@nexa.com', name: 'Ana Carolina Cerqueira Gonzaga', role: 'rh', allowedSectors: ['rh'], status: 'active' },
-      { uid: 'jsoares-uid', email: 'jsoares@nexa.com', name: 'J. Soares', role: 'rh', allowedSectors: ['rh'], status: 'active' },
-      { uid: 'daliam-uid', email: 'daliam@nexa.com', name: 'Dália Moraes', role: 'financial', allowedSectors: ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'], status: 'active' },
-      { uid: 'roseannefa-uid', email: 'roseannefa@nexa.com', name: 'Roseanne Faria', role: 'sesmt', allowedSectors: ['sesmt'], status: 'active' }
+      { uid: 'techcosta-admin-uid', email: 'contato@techcosta.net', name: 'Administrador TechCosta', role: 'admin', allowedSectors: allSectors, allowedUnits: ['all', 'betim', 'taguatinga'], primaryUnit: 'betim', status: 'active', crm: '45892/MG', specialty: 'Nefrologia' },
+      { uid: 'doc-lucas-uid', email: 'lucas.mendes@nexaclinic.med.br', name: 'Dr. Lucas Mendes', role: 'professional', allowedSectors: ['medica'], primaryUnit: 'betim', allowedUnits: ['betim'], status: 'active', crm: '45892/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: '45892000182@pix.bcb.gov.br', bank: 'Banco do Brasil (001) Ag 1234-5 CC 45892-1' },
+      { uid: 'doc-mariana-uid', email: 'mariana.ribeiro@nexaclinic.med.br', name: 'Dra. Mariana Ribeiro', role: 'professional', allowedSectors: ['medica'], primaryUnit: 'betim', allowedUnits: ['betim'], status: 'active', crm: '51204/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: 'mariana.med@gmail.com', bank: 'Itaú (341) Ag 0891 CC 32104-9' },
+      { uid: 'doc-roberto-uid', email: 'roberto.carvalho@nexaclinic.med.br', name: 'Dr. Roberto Carvalho', role: 'professional', allowedSectors: ['medica'], primaryUnit: 'betim', allowedUnits: ['betim'], status: 'active', crm: '39812/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: '39812984000192', bank: 'Santander (033) Ag 2201 CC 98120-4' },
+      { uid: 'doc-camila-uid', email: 'camila.albuquerque@nexaclinic.med.br', name: 'Dra. Camila Albuquerque', role: 'professional', allowedSectors: ['medica'], primaryUnit: 'betim', allowedUnits: ['betim'], status: 'active', crm: '48920/MG', specialty: 'Nefrologia', contractType: 'CLT', pixKey: 'camila.albuquerque@pix.com', bank: 'Bradesco (237) Ag 1402 CC 89201-3' },
+      { uid: 'doc-fernando-uid', email: 'fernando.vasconcelos@nexaclinic.med.br', name: 'Dr. Fernando Vasconcelos', role: 'professional', allowedSectors: ['medica'], primaryUnit: 'betim', allowedUnits: ['betim'], status: 'active', crm: '55431/MG', specialty: 'Nefrologia', contractType: 'PJ', pixKey: '5543189000109', bank: 'Sicoob (756) Ag 4120 CC 55431-0' },
+      { uid: 'anacg-uid', email: 'anacg@nexa.com', name: 'Ana Carolina Cerqueira Gonzaga', role: 'rh', allowedSectors: ['rh'], allowedUnits: ['all', 'betim', 'taguatinga'], primaryUnit: 'betim', status: 'active' },
+      { uid: 'jsoares-uid', email: 'jsoares@nexa.com', name: 'J. Soares', role: 'rh', allowedSectors: ['rh'], allowedUnits: ['all', 'betim', 'taguatinga'], primaryUnit: 'betim', status: 'active' },
+      { uid: 'daliam-uid', email: 'daliam@nexa.com', name: 'Dália Moraes', role: 'financial', allowedSectors: ['faturamento', 'finance', 'compras', 'qualidade', 'recepcao'], allowedUnits: ['all', 'betim', 'taguatinga'], primaryUnit: 'betim', status: 'active' },
+      { uid: 'taguatinga-fin-uid', email: 'financeiro.taguatinga@nexa.com', name: 'Operadora Financeira (Taguatinga)', role: 'financial', allowedSectors: ['faturamento', 'finance', 'estoque', 'compras'], allowedUnits: ['taguatinga'], primaryUnit: 'taguatinga', status: 'active' },
+      { uid: 'roseannefa-uid', email: 'roseannefa@nexa.com', name: 'Roseanne Faria', role: 'sesmt', allowedSectors: ['sesmt'], allowedUnits: ['betim'], primaryUnit: 'betim', status: 'active' }
     ];
 
     if (USE_MOCK) {

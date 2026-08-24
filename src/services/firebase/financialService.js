@@ -197,11 +197,15 @@ export const createPurchaseInvoice = async (invoiceData) => {
     
     const invoiceRef = doc(collection(db, 'purchase_invoices'));
     const entryDate = new Date().toISOString().substring(0, 10);
+    const targetUnitId = invoiceData.unitId || 'betim';
+    const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
     const invoiceRecord = {
       ...invoiceData,
       id: invoiceRef.id,
       entryDate,
-      status: 'Processada'
+      status: 'Processada',
+      unitId: targetUnitId,
+      unit: targetUnit
     };
     batch.set(invoiceRef, invoiceRecord);
 
@@ -218,7 +222,9 @@ export const createPurchaseInvoice = async (invoiceData) => {
         expiryDate: item.expiryDate || '',
         operator: 'Importador de Notas',
         date: new Date().toISOString(),
-        notes: `Entrada via NF-e ${invoiceData.number}`
+        notes: `Entrada via NF-e ${invoiceData.number}`,
+        unitId: targetUnitId,
+        unit: targetUnit
       });
     }
     await batch.commit();

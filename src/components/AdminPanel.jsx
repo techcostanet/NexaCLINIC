@@ -25,6 +25,8 @@ export default function AdminPanel({ currentUser }) {
   const [newEmail, setNewEmail] = useState('');
   const [newRole, setNewRole] = useState('professional');
   const [newSectors, setNewSectors] = useState([]);
+  const [newPrimaryUnit, setNewPrimaryUnit] = useState('betim');
+  const [newAllowedUnits, setNewAllowedUnits] = useState(['betim']);
   const [newStatus, setNewStatus] = useState('active');
   const [editingUser, setEditingUser] = useState(null);
 
@@ -150,18 +152,22 @@ export default function AdminPanel({ currentUser }) {
           email: newEmail,
           role: newRole,
           allowedSectors: finalAllowedSectors,
+          primaryUnit: newPrimaryUnit,
+          allowedUnits: newAllowedUnits,
           status: newStatus
         });
         showAlert(`Profissional "${newName}" atualizado com sucesso!`, 'success');
         setEditingUser(null);
       } else {
-        await authService.createUser(newEmail, newName, newRole, newSectors);
+        await authService.createUser(newEmail, newName, newRole, finalAllowedSectors, newPrimaryUnit, newAllowedUnits);
         showAlert(`Profissional cadastrado! Senha inicial: ${newEmail.split('@')[0]}123`, 'success');
       }
       setNewName('');
       setNewEmail('');
       setNewRole('professional');
       setNewSectors([]);
+      setNewPrimaryUnit('betim');
+      setNewAllowedUnits(['betim']);
       setNewStatus('active');
       await fetchData();
     } catch (err) {
@@ -177,6 +183,8 @@ export default function AdminPanel({ currentUser }) {
     setNewEmail(user.email);
     setNewRole(user.role);
     setNewSectors(user.allowedSectors || []);
+    setNewPrimaryUnit(user.primaryUnit || 'betim');
+    setNewAllowedUnits(user.allowedUnits || (user.primaryUnit ? [user.primaryUnit] : ['betim']));
     setNewStatus(user.status || 'active');
   };
 
@@ -186,6 +194,8 @@ export default function AdminPanel({ currentUser }) {
     setNewEmail('');
     setNewRole('professional');
     setNewSectors([]);
+    setNewPrimaryUnit('betim');
+    setNewAllowedUnits(['betim']);
     setNewStatus('active');
   };
 
@@ -662,6 +672,29 @@ export default function AdminPanel({ currentUser }) {
                 </div>
               )}
 
+              <div className="form-group">
+                <label htmlFor="user-unit">Filial Principal *</label>
+                <select
+                  id="user-unit"
+                  className="form-control"
+                  value={newPrimaryUnit}
+                  onChange={(e) => {
+                    const u = e.target.value;
+                    setNewPrimaryUnit(u);
+                    if (u === 'all') {
+                      setNewAllowedUnits(['all', 'betim', 'taguatinga']);
+                    } else {
+                      setNewAllowedUnits([u]);
+                    }
+                  }}
+                  disabled={actionLoading}
+                >
+                  <option value="betim">🏢 Unidade Betim - MG</option>
+                  <option value="taguatinga">🏢 Unidade Taguatinga - DF</option>
+                  <option value="all">🌐 Todas as Unidades (Acesso Global)</option>
+                </select>
+              </div>
+
               {editingUser && (
                 <div className="form-group">
                   <label htmlFor="user-status">Status da Conta</label>
@@ -720,6 +753,7 @@ export default function AdminPanel({ currentUser }) {
                 <thead>
                   <tr>
                     <th>Nome / E-mail</th>
+                    <th>Filial</th>
                     <th>Perfil</th>
                     <th>Setores Liberados</th>
                     <th>Status</th>
@@ -727,11 +761,31 @@ export default function AdminPanel({ currentUser }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
+                  {users.map((u) => {
+                    const uUnit = u.primaryUnit || (u.allowedUnits && u.allowedUnits.includes('taguatinga') && !u.allowedUnits.includes('betim') ? 'taguatinga' : (u.allowedUnits && u.allowedUnits.includes('all') ? 'all' : 'betim'));
+                    return (
                     <tr key={u.uid}>
                       <td>
                         <div style={{ fontWeight: '600' }}>{u.name}</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{u.email}</div>
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            fontSize: '0.72rem',
+                            fontWeight: '700',
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '4px',
+                            backgroundColor: uUnit === 'taguatinga' ? '#ecfdf5' : uUnit === 'all' ? '#f5f3ff' : '#eff6ff',
+                            color: uUnit === 'taguatinga' ? '#065f46' : uUnit === 'all' ? '#6b21a8' : '#1e40af',
+                            border: `1px solid ${uUnit === 'taguatinga' ? '#a7f3d0' : uUnit === 'all' ? '#ddd6fe' : '#bfdbfe'}`,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                        >
+                          {uUnit === 'taguatinga' ? '🏢 Taguatinga' : uUnit === 'all' ? '🌐 Todas' : '🏢 Betim'}
+                        </span>
                       </td>
                       <td>
                         <span
@@ -809,7 +863,8 @@ export default function AdminPanel({ currentUser }) {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  );
+                })}
                 </tbody>
               </table>
             </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -42,6 +42,8 @@ import {
 
 import { dbService } from '../firebase';
 import FinanceReportsModal from './FinanceReportsModal';
+import { useUnit } from '../contexts/UnitContext';
+import UnitSelector from './common/UnitSelector';
 
 export const EXPENSE_CATEGORIES = [
   'Material Médico-Hospitalar (MatMed)',
@@ -70,6 +72,18 @@ export const EXPENSE_CATEGORIES = [
 ];
 
 export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
+  const { activeUnitId, activeUnit, isConsolidated, filterByActiveUnit, getUnitMeta, units } = useUnit();
+
+  const matchItemUnit = (item) => {
+    if (!item) return false;
+    if (activeUnitId === 'all') return true;
+    const itemUnit = item.unitId || item.unit || item.filial || 'betim';
+    const cleanUnit = String(itemUnit).toLowerCase().trim();
+    if (activeUnitId === 'betim') return cleanUnit === 'betim' || cleanUnit === 'btm';
+    if (activeUnitId === 'taguatinga') return cleanUnit === 'taguatinga' || cleanUnit === 'tag';
+    return cleanUnit === activeUnitId;
+  };
+
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'payable' | 'receivable' | 'budget' | 'cashflow_projection' | 'agreements' | 'installments' | 'reconciliation'
   const [payableList, setPayableList] = useState([]);
   const [receivableList, setReceivableList] = useState([]);
@@ -761,8 +775,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     if (!itemToSave.supplier || !itemToSave.amount || !itemToSave.dueDate) return;
 
     try {
+      const targetUnitId = itemToSave.unitId || (activeUnitId === 'all' ? 'betim' : activeUnitId);
+      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
       await dbService.saveAccountsPayable({
         ...itemToSave,
+        unitId: targetUnitId,
+        unit: targetUnit,
         amount: parseFloat(itemToSave.amount),
         status: itemToSave.status || 'Pendente',
         paymentDate: itemToSave.paymentDate || ''
@@ -780,7 +798,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         invoiceNumber: '',
         paymentMethod: 'PIX',
         bankAccount: 'Itaú Unibanco (PJ)',
-        natureType: 'Custo Variável / Operacional'
+        natureType: 'Custo Variável / Operacional',
+        unitId: activeUnitId === 'all' ? 'betim' : activeUnitId
       });
       loadData();
     } catch (err) {
@@ -795,8 +814,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     if (!itemToSave.client || !itemToSave.amount || !itemToSave.dueDate) return;
 
     try {
+      const targetUnitId = itemToSave.unitId || (activeUnitId === 'all' ? 'betim' : activeUnitId);
+      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
       await dbService.saveAccountsReceivable({
         ...itemToSave,
+        unitId: targetUnitId,
+        unit: targetUnit,
         amount: parseFloat(itemToSave.amount),
         status: itemToSave.status || 'Pendente',
         receivedDate: itemToSave.receivedDate || ''
@@ -809,7 +832,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         description: '',
         amount: '',
         dueDate: '',
-        invoiceNumber: ''
+        invoiceNumber: '',
+        unitId: activeUnitId === 'all' ? 'betim' : activeUnitId
       });
       loadData();
     } catch (err) {
@@ -890,13 +914,16 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     return s === 'pago' || s === 'recebido' || (amt > 0 && paid >= amt);
   };
 
-  // Calculate Metrics
-  const totalReceivables = receivableList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
-  const receivedAmount = receivableList.filter(r => isItemPaid(r)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
+  // Calculate Metrics based on active unit filter (or consolidated if all)
+  const currentPayableList = useMemo(() => payableList.filter(matchItemUnit), [payableList, activeUnitId]);
+  const currentReceivableList = useMemo(() => receivableList.filter(matchItemUnit), [receivableList, activeUnitId]);
+
+  const totalReceivables = currentReceivableList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const receivedAmount = currentReceivableList.filter(r => isItemPaid(r)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
   const pendingReceivables = totalReceivables - receivedAmount;
 
-  const totalPayables = payableList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
-  const paidAmount = payableList.filter(p => isItemPaid(p)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
+  const totalPayables = currentPayableList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const paidAmount = currentPayableList.filter(p => isItemPaid(p)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
   const pendingPayables = totalPayables - paidAmount;
 
   const ebitda = receivedAmount - paidAmount; // Operacional líquido realizado
@@ -904,7 +931,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   
   // Categorized expenses
   const categories = {};
-  payableList.forEach(p => {
+  currentPayableList.forEach(p => {
     categories[p.category] = (categories[p.category] || 0) + (parseFloat(p.amount) || 0);
   });
 
@@ -923,10 +950,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const prevMonthPrefix = `${prevYearVal}-${String(prevMonthVal).padStart(2, '0')}`;
 
   // 1. Contas a pagar do Mês (Saldo Pendente)
-  const payablesSelectedMonthList = payableList.filter(p => {
-    const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
-    const matchMonth = p.dueDate && p.dueDate.startsWith(selectedMonthPrefix);
-    return matchUnit && matchMonth;
+  const payablesSelectedMonthList = currentPayableList.filter(p => {
+    return p.dueDate && p.dueDate.startsWith(selectedMonthPrefix);
   });
   const pendingPayablesSelectedMonthList = payablesSelectedMonthList.filter(p => !isItemPaid(p));
   const totalPayablesSelectedMonth = payablesSelectedMonthList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
@@ -940,11 +965,10 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   }, 0);
 
   // 2. Vencidos do Mês Anterior
-  const overduePrevMonthList = payableList.filter(p => {
-    const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
+  const overduePrevMonthList = currentPayableList.filter(p => {
     const matchMonth = p.dueDate && p.dueDate.startsWith(prevMonthPrefix);
     const isPaid = isItemPaid(p);
-    return matchUnit && matchMonth && !isPaid;
+    return matchMonth && !isPaid;
   });
   const totalOverduePrevMonth = overduePrevMonthList.reduce((acc, curr) => {
     const amt = parseFloat(curr.amount) || 0;
@@ -953,12 +977,11 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   }, 0);
 
   // 3. Vencidos do Mês Corrente / Selecionado
-  const overdueSelectedMonthList = payableList.filter(p => {
-    const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
+  const overdueSelectedMonthList = currentPayableList.filter(p => {
     const matchMonth = p.dueDate && p.dueDate.startsWith(selectedMonthPrefix);
     const isPaid = isItemPaid(p);
     const isOverdue = p.dueDate && p.dueDate < todayStr;
-    return matchUnit && matchMonth && !isPaid && isOverdue;
+    return matchMonth && !isPaid && isOverdue;
   });
   const totalOverdueSelectedMonth = overdueSelectedMonthList.reduce((acc, curr) => {
     const amt = parseFloat(curr.amount) || 0;
@@ -966,16 +989,16 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     return acc + Math.max(0, amt - paid);
   }, 0);
 
-  const receivablesToday = receivableList.filter(r => (r.dueDate || '') === todayStr);
+  const receivablesToday = currentReceivableList.filter(r => (r.dueDate || '') === todayStr);
   const totalReceivablesToday = receivablesToday.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   const receivedToday = receivablesToday.filter(r => isItemPaid(r)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
 
-  const totalReceivedRealized = receivableList.filter(r => isItemPaid(r)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
-  const totalPaidRealized = payableList.filter(p => isItemPaid(p)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
+  const totalReceivedRealized = currentReceivableList.filter(r => isItemPaid(r)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
+  const totalPaidRealized = currentPayableList.filter(p => isItemPaid(p)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
   const realizedBalance = totalReceivedRealized - totalPaidRealized;
 
-  const overduePayables = payableList.filter(p => !isItemPaid(p) && (p.dueDate || '') < todayStr);
-  const overdueReceivables = receivableList.filter(r => !isItemPaid(r) && (r.dueDate || '') < todayStr);
+  const overduePayables = currentPayableList.filter(p => !isItemPaid(p) && (p.dueDate || '') < todayStr);
+  const overdueReceivables = currentReceivableList.filter(r => !isItemPaid(r) && (r.dueDate || '') < todayStr);
   const totalOverdueAmount = overduePayables.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0) + overdueReceivables.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
 
   // 7 Days & 15 Days Payables Calculations
@@ -1039,13 +1062,13 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             onClick={() => setActiveTab('payable')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'payable' ? styles.tabBtnActive : {}) }}
           >
-            Contas a Pagar ({payableList.filter(p => selectedUnit === 'Todas' || p.unit === selectedUnit).length})
+            Contas a Pagar ({currentPayableList.length})
           </button>
           <button 
             onClick={() => setActiveTab('receivable')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'receivable' ? styles.tabBtnActive : {}) }}
           >
-            Contas a Receber ({receivableList.length})
+            Contas a Receber ({currentReceivableList.length})
           </button>
           <button 
             onClick={() => setActiveTab('budget')} 
@@ -1085,9 +1108,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
           </button>
         </div>
 
-        <button onClick={loadData} style={styles.refreshBtn} title="Atualizar dados">
-          <RefreshCw size={15} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <UnitSelector compact showLabel={false} />
+          <button onClick={loadData} style={styles.refreshBtn} title="Atualizar dados">
+            <RefreshCw size={15} />
+          </button>
+        </div>
       </div>
 
 
@@ -2218,6 +2244,22 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                     <option value="Custo Fixo Recorrente">Fixo (Aluguel/Folha/TI)</option>
                   </select>
                 </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Filial / Unidade</label>
+                  <select 
+                    value={editingPayable ? (editingPayable.unitId || 'betim') : (newPayable.unitId || (activeUnitId === 'all' ? 'betim' : activeUnitId))} 
+                    onChange={e => {
+                      const uId = e.target.value;
+                      const uName = uId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+                      if (editingPayable) setEditingPayable({ ...editingPayable, unitId: uId, unit: uName });
+                      else setNewPayable({ ...newPayable, unitId: uId, unit: uName });
+                    }} 
+                    style={styles.input}
+                  >
+                    <option value="betim">🏢 Unidade Betim - MG</option>
+                    <option value="taguatinga">🏢 Unidade Taguatinga - DF</option>
+                  </select>
+                </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
@@ -2259,7 +2301,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               <tbody>
                 {sortList(
                   payableList.filter(p => {
-                    const matchUnit = selectedUnit === 'Todas' || !p.unit || p.unit === selectedUnit;
+                    const matchUnit = matchItemUnit(p);
                     const isPaid = isItemPaid(p);
                     const matchFilter = payableFilter === 'Todos' || (payableFilter === 'Pago' && isPaid) || (payableFilter === 'Pendente' && !isPaid) || p.status === payableFilter;
                     
@@ -2306,6 +2348,19 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                           <strong style={{ whiteSpace: isCompact ? 'nowrap' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isCompact ? '220px' : 'none' }} title={p.supplier}>
                             {p.supplier}
                           </strong>
+                          {/* Badge de Filial */}
+                          <span style={{ 
+                            fontSize: '0.62rem', 
+                            padding: '0.05rem 0.35rem', 
+                            borderRadius: '3px', 
+                            backgroundColor: (p.unitId === 'taguatinga' || p.unit === 'Taguatinga') ? '#ecfdf5' : '#eef2ff', 
+                            color: (p.unitId === 'taguatinga' || p.unit === 'Taguatinga') ? '#065f46' : '#4338ca', 
+                            fontWeight: '700', 
+                            border: `1px solid ${(p.unitId === 'taguatinga' || p.unit === 'Taguatinga') ? '#a7f3d0' : '#c7d2fe'}`, 
+                            whiteSpace: 'nowrap' 
+                          }}>
+                            {(p.unitId === 'taguatinga' || p.unit === 'Taguatinga') ? 'Taguatinga' : 'Betim'}
+                          </span>
                           {p.paymentMethod && (
                             <span style={{ fontSize: '0.62rem', padding: '0.05rem 0.35rem', borderRadius: '3px', backgroundColor: '#f0fdf4', color: '#166534', fontWeight: '700', border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>
                               💳 {p.paymentMethod}
@@ -2607,6 +2662,22 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                     <option value="Outro">Outro</option>
                   </select>
                 </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Filial / Unidade</label>
+                  <select 
+                    value={editingReceivable ? (editingReceivable.unitId || 'betim') : (newReceivable.unitId || (activeUnitId === 'all' ? 'betim' : activeUnitId))} 
+                    onChange={e => {
+                      const uId = e.target.value;
+                      const uName = uId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+                      if (editingReceivable) setEditingReceivable({ ...editingReceivable, unitId: uId, unit: uName });
+                      else setNewReceivable({ ...newReceivable, unitId: uId, unit: uName });
+                    }} 
+                    style={styles.input}
+                  >
+                    <option value="betim">🏢 Unidade Betim - MG</option>
+                    <option value="taguatinga">🏢 Unidade Taguatinga - DF</option>
+                  </select>
+                </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
@@ -2643,12 +2714,31 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               </thead>
               <tbody>
                 {sortList(
-                  receivableList.filter(r => receivableFilter === 'Todos' || r.status === receivableFilter),
+                  receivableList.filter(r => {
+                    const matchUnit = matchItemUnit(r);
+                    const matchFilter = receivableFilter === 'Todos' || r.status === receivableFilter;
+                    return matchUnit && matchFilter;
+                  }),
                   receivableSort
                 ).map(r => (
                   <tr key={r.id} style={styles.tr}>
                     <td style={styles.td}>
-                      <strong>{r.client}</strong>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
+                        <strong>{r.client}</strong>
+                        {/* Badge de Filial */}
+                        <span style={{ 
+                          fontSize: '0.62rem', 
+                          padding: '0.05rem 0.35rem', 
+                          borderRadius: '3px', 
+                          backgroundColor: (r.unitId === 'taguatinga' || r.unit === 'Taguatinga') ? '#ecfdf5' : '#eef2ff', 
+                          color: (r.unitId === 'taguatinga' || r.unit === 'Taguatinga') ? '#065f46' : '#4338ca', 
+                          fontWeight: '700', 
+                          border: `1px solid ${(r.unitId === 'taguatinga' || r.unit === 'Taguatinga') ? '#a7f3d0' : '#c7d2fe'}`, 
+                          whiteSpace: 'nowrap' 
+                        }}>
+                          {(r.unitId === 'taguatinga' || r.unit === 'Taguatinga') ? 'Taguatinga' : 'Betim'}
+                        </span>
+                      </div>
                       {r.description && <div style={styles.subtext}>{r.description}</div>}
                     </td>
                     <td style={styles.td}>{r.category}</td>

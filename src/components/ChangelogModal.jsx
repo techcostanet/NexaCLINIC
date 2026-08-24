@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.53',
+      date: '24/08/2026',
+      title: 'Arquitetura Multi-Unidade (Betim/MG e Taguatinga/DF) & Integração Financeiro e Estoque',
+      description: 'Implementação de arquitetura multi-unidade global com isolamento de filiais e visão consolidada para diretoria/gestores, campos e filtros dinâmicos no Financeiro e Estoque, e controle de acesso no Admin.',
+      changes: [
+        { type: 'Contexto Global Multi-Unidade', text: 'Criação do UnitContext e componente UnitSelector permitindo alternar instantaneamente entre Betim, Taguatinga ou Todas as Unidades (Consolidado).' },
+        { type: 'Financeiro Integrado', text: 'Totalizadores, EBITDA, saldos e gráficos recalculados por filial, com seleção de unidade em contas a pagar e receber e badges cromáticas.' },
+        { type: 'Estoque & Importação NF-e', text: 'Importador XML/PDF vincula lotes de insumos e gera duplicatas financeiras associadas diretamente à filial de destino.' },
+        { type: 'Admin & Permissões', text: 'Cadastro de usuários com filial principal e permissões granulares, com acesso master irrestrito para contato@techcosta.net.' }
+      ]
+    },
+    {
       version: 'v4.7.52',
       date: '24/08/2026',
       title: 'NexaASSIST — Novas Categorias Clínicas no Mural e Correção de Alinhamento/Espaçamento Visual de Cards',

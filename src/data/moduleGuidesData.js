@@ -35,6 +35,10 @@ export const MODULE_GUIDES = {
       {
         title: 'DRE Gerencial',
         desc: 'Demonstrativo de Resultado do Exercício apurado por Regime de Caixa (Receita Bruta, Despesas e Margem Líquida).'
+      },
+      {
+        title: 'Gestão Multi-Unidade (Betim & Taguatinga)',
+        desc: 'Visão consolidada de receitas, despesas, fluxo de caixa e DRE para a diretoria, com possibilidade de isolar cada filial (Betim/MG ou Taguatinga/DF) com 1 clique no seletor do cabeçalho.'
       }
     ],
     tutorial: [
@@ -42,7 +46,7 @@ export const MODULE_GUIDES = {
         title: 'Como Lançar uma Conta a Pagar',
         steps: [
           'Acesse a aba "Contas a Pagar" e clique no botão "+ Nova Despesa".',
-          'Preencha o Fornecedor, CNPJ, Categoria (ex: MatMed, Medicamentos), Centro de Custo e Valor.',
+          'Preencha o Fornecedor, CNPJ, Categoria (ex: MatMed, Medicamentos), Centro de Custo, Valor e a Filial (Betim ou Taguatinga).',
           'Defina a Data de Vencimento e anexe o comprovante ou Nota Fiscal se houver.',
           'Clique em "Salvar Lançamento". O título entrará automaticamente nas projeções de fluxo de caixa.'
         ]
@@ -54,6 +58,15 @@ export const MODULE_GUIDES = {
           'Clique no botão "Baixar" na coluna de Ações.',
           'Confirme a Data do Pagamento, Meio Utilizado (PIX, Boleto, Débito) e Conta Bancária.',
           'O status mudará para "Pago" e o valor será lançado automaticamente no DRE.'
+        ]
+      },
+      {
+        title: 'Como Filtrar e Alternar Entre Filiais',
+        steps: [
+          'No topo do painel ou na barra superior, utilize o Seletor de Unidades.',
+          'Escolha "🌐 Todas as Unidades" para visualizar o demonstrativo financeiro e saldo consolidado do grupo econômico.',
+          'Ou selecione especificamente "🏢 Betim - MG" ou "🏢 Taguatinga - DF" para auditar as contas e lançamentos individuais da filial selecionada.',
+          'Ao lançar uma nova conta a pagar ou receber, certifique-se de selecionar a Filial correta no formulário.'
         ]
       },
       {
@@ -76,6 +89,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como funciona o acesso de operadoras de filiais remotas (ex: Taguatinga)?',
+        resposta: 'Colaboradores com acesso restrito a Taguatinga só visualizam e lançam despesas e notas da sua respectiva unidade. Já a Gestora Financeira e Administradores possuem visão de Todas as Unidades simultaneamente.'
+      },
       {
         pergunta: 'Os relatórios exportam com o "R$" na frente do valor?',
         resposta: 'Não. Os valores são exportados como números puros decimais para facilitar o uso de fórmulas como =SOMA() e filtros no Excel.'

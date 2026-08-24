@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { authService, dbService } from '../firebase';
 import { Activity, LogOut, Menu, X, BarChart3, UploadCloud, Users, HeartPulse, FileText, LayoutGrid, Megaphone, ShoppingCart, BookOpen } from 'lucide-react';
 import ChangelogModal from './ChangelogModal';
+import UnitSelector from './common/UnitSelector';
 
 export default function Navbar({ user, currentPage, setCurrentPage, currentModule, setCurrentModule, setIsReportsOpen, setIsGuideOpen }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -151,6 +152,11 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
               </button>
             );
           })}
+        </div>
+
+        {/* Unit Selector */}
+        <div style={{ display: 'flex', alignItems: 'center', marginRight: '0.4rem' }}>
+          <UnitSelector compact showLabel={false} />
         </div>
 
         {/* User Profile Info & Logout */}

@@ -5,6 +5,7 @@ import {
   LayoutGrid, List, LayoutList, Columns, ArrowRight, Search, Megaphone, Stethoscope
 } from 'lucide-react';
 import { authService } from '../firebase';
+import UnitSelector from './common/UnitSelector';
 
 export default function ModuleSelector({ user, onSelectModule }) {
   const [viewMode, setViewMode] = React.useState('grid'); // 'grid' (padrão), 'list', 'compact', 'expanded'
@@ -248,7 +249,10 @@ export default function ModuleSelector({ user, onSelectModule }) {
           <h1 style={styles.welcome}>Olá, {user?.name || 'Profissional'}</h1>
           <p style={styles.instructions}>Selecione abaixo o portal que deseja acessar para continuar o trabalho:</p>
           <div style={styles.roleContainer}>
-            Perfil atual: <span style={styles.roleBadge}>{roleLabel}</span>
+            <span>Perfil: <strong style={styles.roleBadge}>{roleLabel}</strong></span>
+            <div style={{ marginLeft: '1rem', display: 'inline-flex' }}>
+              <UnitSelector compact showLabel={true} />
+            </div>
           </div>
         </div>
 

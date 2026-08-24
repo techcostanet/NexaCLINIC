@@ -10,6 +10,7 @@ import {
 
 import { useStockLogic } from './Stock/hooks/useStockLogic';
 import StockReportsModal from './StockReportsModal';
+import UnitSelector from './common/UnitSelector';
 
 export const formatCurrencyBR = (val) => {
   const num = parseFloat(val) || 0;
@@ -242,6 +243,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
         </div>
 
         <div style={styles.heroActions}>
+          <UnitSelector compact showLabel={false} />
           <button 
             onClick={handleOpenAddModal}
             style={styles.primaryHeroBtn}

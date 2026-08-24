@@ -22,6 +22,7 @@ import AssistPanel from './components/AssistPanel';
 import MedicalPanel from './components/MedicalPanel';
 import ErrorBoundary from './components/ErrorBoundary';
 import ModuleGuideModal from './components/common/ModuleGuideModal';
+import { UnitProvider } from './contexts/UnitContext';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -103,7 +104,11 @@ export default function App() {
 
   // If authenticated but no module selected, show selector
   if (currentModule === 'selector') {
-    return <ModuleSelector user={user} onSelectModule={setCurrentModule} />;
+    return (
+      <UnitProvider currentUser={user}>
+        <ModuleSelector user={user} onSelectModule={setCurrentModule} />
+      </UnitProvider>
+    );
   }
 
   // Simple Router based on state
@@ -161,39 +166,41 @@ export default function App() {
   };
 
   return (
-    <div className="app-container">
-      {/* Navigation bar */}
-      <Navbar 
-        user={user} 
-        currentPage={currentPage} 
-        setCurrentPage={setCurrentPage} 
-        currentModule={currentModule}
-        setCurrentModule={setCurrentModule}
-        setIsReportsOpen={setIsReportsOpen}
-        setIsGuideOpen={setIsGuideOpen}
-      />
-
-      {/* Main body content area */}
-      <main className="main-content">
-        {renderContent()}
-      </main>
-
-      {/* Module Guide Modal */}
-      {isGuideOpen && (
-        <ModuleGuideModal 
-          moduleId={currentModule} 
-          onClose={() => setIsGuideOpen(false)} 
+    <UnitProvider currentUser={user}>
+      <div className="app-container">
+        {/* Navigation bar */}
+        <Navbar 
+          user={user} 
+          currentPage={currentPage} 
+          setCurrentPage={setCurrentPage} 
+          currentModule={currentModule}
+          setCurrentModule={setCurrentModule}
+          setIsReportsOpen={setIsReportsOpen}
+          setIsGuideOpen={setIsGuideOpen}
         />
-      )}
 
-      {/* Footer copyright */}
-      <footer style={styles.footer}>
-        <div style={styles.footerContainer}>
-          <span>© {new Date().getFullYear()} NexaCLINIC & NexaINDEX. Plataforma Integrada de Gestão Hospitalar.</span>
-          <span style={styles.footerVersion}>v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0'}</span>
-        </div>
-      </footer>
-    </div>
+        {/* Main body content area */}
+        <main className="main-content">
+          {renderContent()}
+        </main>
+
+        {/* Module Guide Modal */}
+        {isGuideOpen && (
+          <ModuleGuideModal 
+            moduleId={currentModule} 
+            onClose={() => setIsGuideOpen(false)} 
+          />
+        )}
+
+        {/* Footer copyright */}
+        <footer style={styles.footer}>
+          <div style={styles.footerContainer}>
+            <span>© {new Date().getFullYear()} NexaCLINIC & NexaINDEX. Plataforma Integrada de Gestão Hospitalar.</span>
+            <span style={styles.footerVersion}>v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0'}</span>
+          </div>
+        </footer>
+      </div>
+    </UnitProvider>
   );
 }
 

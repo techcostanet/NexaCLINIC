@@ -1566,8 +1566,19 @@ export function useStockLogic(currentUser) {
     setItemMappings(prev => prev.map(m => m.xmlCode === xmlCode ? { ...m, [field]: value } : m));
   };
 
+  const getSelectedUnit = () => {
+    try {
+      const stored = localStorage.getItem('nexa_active_unit');
+      if (stored && stored !== 'all') return stored;
+    } catch (e) {}
+    if (currentUser?.primaryUnit && currentUser.primaryUnit !== 'all') return currentUser.primaryUnit;
+    return 'betim';
+  };
+
   const handleFinishXmlWizard = async () => {
     setActionLoading(true);
+    const currentUnitId = getSelectedUnit();
+    const currentUnitName = currentUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
     try {
       // Step 1: Create all new items if mapped to CREATE_NEW
       const finalItemsList = [];
@@ -1587,7 +1598,9 @@ export function useStockLogic(currentUser) {
             unit: 'unidades',
             price: m.price,
             hasBatchControl: !!(m.batch || m.expiryDate),
-            defaultSectorId: sectors[0]?.id || ''
+            defaultSectorId: sectors[0]?.id || '',
+            unitId: currentUnitId,
+            unit: currentUnitName
           });
           itemId = newCat.id;
           updatedItemList.push(newCat);
@@ -1614,7 +1627,9 @@ export function useStockLogic(currentUser) {
             unit: 'unidades',
             costPrice: m.price,
             supplierName: supplierMapping.name,
-            invoiceNumber: xmlData.number
+            invoiceNumber: xmlData.number,
+            unitId: currentUnitId,
+            unit: currentUnitName
           });
         }
 
@@ -1627,7 +1642,9 @@ export function useStockLogic(currentUser) {
           batch: m.batch || 'ENTRADA-NFE',
           expiryDate: m.expiryDate || '',
           operator: currentUser?.name || currentUser?.email || 'Farmácia Central',
-          notes: `Entrada NF-e Nº ${xmlData.number} (${supplierMapping.name})`
+          notes: `Entrada NF-e Nº ${xmlData.number} (${supplierMapping.name})`,
+          unitId: currentUnitId,
+          unit: currentUnitName
         });
       }
 
@@ -1639,7 +1656,9 @@ export function useStockLogic(currentUser) {
         supplierId: supplierMapping.id,
         supplierName: supplierMapping.name,
         totalValue: xmlData.totalValue,
-        items: finalItemsList
+        items: finalItemsList,
+        unitId: currentUnitId,
+        unit: currentUnitName
       });
 
       // Step 3: Automate Payable Account creation in Finance for every installment/duplicata
@@ -1662,7 +1681,9 @@ export function useStockLogic(currentUser) {
             category: 'Insumo Clínico',
             invoiceNumber: xmlData.number,
             accessKey: xmlData.accessKey || '',
-            status: 'Pendente'
+            status: 'Pendente',
+            unitId: currentUnitId,
+            unit: currentUnitName
           });
         }
       }

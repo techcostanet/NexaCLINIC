@@ -1,3 +1,21 @@
+## [v4.7.53] - 24 de Agosto, 2026
+### Arquitetura Multi-Unidade (Betim/MG e Taguatinga/DF) & Preparação para SaaS e Integração Financeira/Estoque
+- **Arquitetura Global Multi-Unidade (`UnitContext` & `UnitSelector`):**
+  - Implementado provedor global de filiais (`UnitContext`) com suporte nativo às unidades **Betim / MG** e **Taguatinga / DF**, com persistência local e suporte a modo consolidado (`🌐 Todas as Unidades`).
+  - Seletor de unidades moderno e responsivo integrado na Navbar, no Hub de Módulos, no painel Financeiro e no painel de Estoque/Farmácia.
+  - Usuários gestores e o administrador (`contato@techcosta.net`) possuem visão global e alternância livre entre unidades; operadoras locais possuem visão focada na filial designada.
+- **Módulo Financeiro Multi-Filial Integrado:**
+  - Métricas em tempo real (Total a Pagar, Total a Receber, EBITDA, Saldo Realizado, Vencidos) recalculadas dinamicamente com base na unidade selecionada ou visão consolidada do grupo econômico.
+  - Inclusão do campo de Filial nos cadastros de Contas a Pagar e Contas a Receber, com badges visuais cromáticas (🟢 `Taguatinga` e 🔵 `Betim`) nas tabelas.
+  - Total retrocompatibilidade com lançamentos legados, mantendo fallback automático e seguro para Betim sem qualquer perda de dados.
+- **Estoque & Farmácia com Importação de NF-e por Filial:**
+  - Importação de notas fiscais (XML/PDF DANFE) vincula automaticamente os lotes abastecidos e gera contas a pagar associadas à filial ativa (Taguatinga ou Betim).
+- **Gestão de Usuários e Permissões no Admin:**
+  - Cadastro de usuários atualizado com seleção de Filial Principal e controle de acesso a múltiplas unidades.
+  - Provisionamento do perfil financeiro e de estoque para operações de Taguatinga.
+
+---
+
 ## [v4.7.52] - 24 de Agosto, 2026
 ### NexaASSIST — Novas Categorias Clínicas no Mural e Correção de Alinhamento/Espaçamento Visual de Cards
 - **5 Novas Categorias Clínicas Especializadas:**
