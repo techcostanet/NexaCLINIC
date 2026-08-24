@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.56',
+      date: '24/08/2026',
+      title: 'NexaCAL — Configuração Anual de Grade, Pesquisa Global Multianual e Legenda Visual',
+      description: 'Implementação de configuração de grade e cotas para o ano todo com replicação em 1 clique e métricas anuais, pesquisa global universal que busca agendamentos em todos os anos, meses e dias, legenda limpa de cores e padronização rigorosa de rótulos de 1 palavra.',
+      changes: [
+        { type: 'Agenda Anual', text: 'Seletor de ano, navegação pelos 12 meses, replicação anual em 1 clique e painel de capacidade anual de consultas e procedimentos.' },
+        { type: 'Busca Global Universal', text: 'Pesquisa em tempo real que localiza pacientes, CPFs, telefones, médicos e datas em todo o histórico e futuro do sistema, com botão "Ver Dia" para navegação direta.' },
+        { type: 'Legenda Visual Clean', text: 'Remoção dos nomes das cores dos badges da legenda, mantendo identificação por pontos visuais de cor.' },
+        { type: 'Rótulos Concisos (1 Palavra)', text: 'Varredura e remoção de termos duplos em formulários, modais, cabeçalhos de tabela e botões do módulo Agenda.' }
+      ]
+    },
+    {
       version: 'v4.7.55',
       date: '24/08/2026',
       title: 'Correção de Permissões de Filial por Usuário (Restrição Individual de Unidades)',

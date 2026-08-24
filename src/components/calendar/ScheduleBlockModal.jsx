@@ -17,10 +17,10 @@ export default function ScheduleBlockModal({
   const [doctorId, setDoctorId] = useState(doctors[0]?.uid || 'all');
   const [startDate, setStartDate] = useState(new Date().toISOString().substring(0, 10));
   const [endDate, setEndDate] = useState(new Date().toISOString().substring(0, 10));
-  const [period, setPeriod] = useState('Dia Inteiro'); // 'Dia Inteiro' | 'Manhã' | 'Tarde' | 'Horário'
+  const [period, setPeriod] = useState('Dia Inteiro');
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('18:00');
-  const [reason, setReason] = useState('Solicitação do Médico'); // 'Férias' | 'Congresso Médico' | 'Folga' | 'Compromisso Pessoal' | 'Atestado' | 'Solicitação do Médico'
+  const [reason, setReason] = useState('Solicitação');
   const [notes, setNotes] = useState('');
   
   const [saving, setSaving] = useState(false);
@@ -71,7 +71,7 @@ export default function ScheduleBlockModal({
       };
 
       const created = await dbService.createScheduleBlock(payload);
-      setFeedback({ text: 'Bloqueio de agenda registrado com sucesso!', type: 'success' });
+      setFeedback({ text: 'Bloqueio registrado com sucesso!', type: 'success' });
       if (onBlockSaved) onBlockSaved(created);
       setTimeout(() => {
         setFeedback({ text: '', type: '' });
@@ -105,8 +105,8 @@ export default function ScheduleBlockModal({
               <Lock size={20} color="#dc2626" />
             </div>
             <div>
-              <h2 style={styles.title}>Bloquear Agenda & Fechar Dias</h2>
-              <p style={styles.subtitle}>Registre solicitações médicas, congressos, férias ou ausências para fechar horários na grade.</p>
+              <h2 style={styles.title}>Bloquear</h2>
+              <p style={styles.subtitle}>Registre solicitações, congressos, férias ou ausências para fechar horários na grade.</p>
             </div>
           </div>
           <button onClick={onClose} style={styles.closeBtn}>
@@ -153,19 +153,19 @@ export default function ScheduleBlockModal({
                   onChange={e => setReason(e.target.value)} 
                   style={styles.input}
                 >
-                  <option value="Solicitação do Médico">Solicitação do Médico</option>
-                  <option value="Congresso Médico">Congresso Médico</option>
+                  <option value="Solicitação">Solicitação</option>
+                  <option value="Congresso">Congresso</option>
                   <option value="Férias">Férias</option>
-                  <option value="Folga">Folga Programada</option>
-                  <option value="Compromisso Pessoal">Compromisso Pessoal</option>
-                  <option value="Atestado / Saúde">Atestado / Saúde</option>
-                  <option value="Manutenção de Consultório">Manutenção de Consultório</option>
+                  <option value="Folga">Folga</option>
+                  <option value="Pessoal">Pessoal</option>
+                  <option value="Atestado">Atestado</option>
+                  <option value="Manutenção">Manutenção</option>
                   <option value="Outro">Outro</option>
                 </select>
               </div>
 
               <div style={styles.inputGroup}>
-                <label style={styles.label}>Data Inicial</label>
+                <label style={styles.label}>Início</label>
                 <input 
                   type="date" 
                   value={startDate} 
@@ -176,7 +176,7 @@ export default function ScheduleBlockModal({
               </div>
 
               <div style={styles.inputGroup}>
-                <label style={styles.label}>Data Final</label>
+                <label style={styles.label}>Fim</label>
                 <input 
                   type="date" 
                   value={endDate} 
@@ -194,9 +194,9 @@ export default function ScheduleBlockModal({
                   style={styles.input}
                 >
                   <option value="Dia Inteiro">Dia Inteiro</option>
-                  <option value="Manhã">Apenas Manhã (08:00 às 12:00)</option>
-                  <option value="Tarde">Apenas Tarde (13:30 às 18:00)</option>
-                  <option value="Horário">Horário Personalizado</option>
+                  <option value="Manhã">Manhã (08:00 às 12:00)</option>
+                  <option value="Tarde">Tarde (13:30 às 18:00)</option>
+                  <option value="Horário">Horário</option>
                 </select>
               </div>
 
@@ -261,7 +261,7 @@ export default function ScheduleBlockModal({
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '0.5rem' }}>
               <button type="button" onClick={onClose} style={styles.btnSecondary}>Cancelar</button>
               <button type="submit" disabled={saving} style={styles.btnDanger}>
-                <Lock size={15} /> {saving ? 'Salvando...' : 'Confirmar e Bloquear Agenda'}
+                <Lock size={15} /> {saving ? 'Salvando...' : 'Bloquear'}
               </button>
             </div>
           </form>
@@ -270,7 +270,7 @@ export default function ScheduleBlockModal({
           <div style={styles.activeBlocksSection}>
             <div style={styles.sectionTitleRow}>
               <ShieldAlert size={16} color="#dc2626" />
-              <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>Bloqueios Ativos ({existingBlocks.length})</strong>
+              <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>Bloqueios ({existingBlocks.length})</strong>
             </div>
 
             <div style={styles.blocksList}>
@@ -296,7 +296,7 @@ export default function ScheduleBlockModal({
                         type="button" 
                         onClick={() => handleDelete(b.id)}
                         style={styles.deleteBtn}
-                        title="Desbloquear / Excluir Bloqueio"
+                        title="Desbloquear"
                       >
                         <Trash2 size={14} /> Desbloquear
                       </button>

@@ -3,7 +3,7 @@ import {
   Calendar as CalendarIcon, Clock, User, HeartPulse, Building2, Plus, 
   ChevronLeft, ChevronRight, CheckCircle2, AlertTriangle, MessageSquare, Check, X,
   Search, RefreshCw, Phone, Edit2, Trash2, ArrowRight, UserCheck, ShieldAlert, Sparkles,
-  Send, Users, Eye, Filter, Zap, Cake, HelpCircle, Lock, Award, Sliders
+  Send, Users, Eye, Filter, Zap, Cake, HelpCircle, Lock, Award, Sliders, ExternalLink
 } from 'lucide-react';
 import { dbService } from '../firebase';
 import { isBrazilianHoliday, getBrazilianHolidays } from '../utils/brazilHolidays';
@@ -14,6 +14,7 @@ import UnitSelector from './common/UnitSelector';
 
 export default function CalendarPanel({ currentUser }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
+
   // Navigation & View Mode
   const [viewMode, setViewMode] = useState('day'); // 'day' | 'rooms' | 'week' | 'month'
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -151,7 +152,9 @@ export default function CalendarPanel({ currentUser }) {
             isEncaixe: false,
             status: 'Confirmado',
             whatsappStatus: 'Enviado',
-            notes: 'Acompanhamento trimestral de creatinina'
+            notes: 'Acompanhamento trimestral de creatinina',
+            unitId: 'betim',
+            unit: 'Betim'
           },
           {
             patientId: patList[1]?.id || 'pat-2',
@@ -169,7 +172,9 @@ export default function CalendarPanel({ currentUser }) {
             isEncaixe: false,
             status: 'Aguardando',
             whatsappStatus: 'Confirmado',
-            notes: 'Reavaliação de exames pós-hemodiálise'
+            notes: 'Reavaliação de exames pós-hemodiálise',
+            unitId: 'betim',
+            unit: 'Betim'
           }
         ];
         const createdList = [];
@@ -192,6 +197,12 @@ export default function CalendarPanel({ currentUser }) {
     setTimeout(() => setMessage({ text: '', type: '' }), 4500);
   };
 
+  // Filtragem de Dados pela Unidade Ativa
+  const currentAppointments = useMemo(() => filterByActiveUnit(appointments), [appointments, activeUnitId, filterByActiveUnit]);
+  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId, filterByActiveUnit]);
+  const currentDoctorSchedules = useMemo(() => filterByActiveUnit(doctorSchedules), [doctorSchedules, activeUnitId, filterByActiveUnit]);
+  const currentScheduleBlocks = useMemo(() => filterByActiveUnit(scheduleBlocks), [scheduleBlocks, activeUnitId, filterByActiveUnit]);
+
   // Date Navigation
   const handleNavigateDate = (direction) => {
     const next = new Date(currentDate);
@@ -211,7 +222,7 @@ export default function CalendarPanel({ currentUser }) {
 
   // Helper to get doctor schedule duration
   const getDoctorDuration = (docId) => {
-    const s = doctorSchedules.find(sc => sc.doctorId === docId);
+    const s = currentDoctorSchedules.find(sc => sc.doctorId === docId) || doctorSchedules.find(sc => sc.doctorId === docId);
     return s?.slotDuration || 30;
   };
 
@@ -271,14 +282,14 @@ export default function CalendarPanel({ currentUser }) {
   // Conflict / Multiple Patients Check in real time
   const conflictingAppointments = useMemo(() => {
     if (!aptForm.doctorId || !aptForm.date || !aptForm.time) return [];
-    return appointments.filter(apt => 
+    return currentAppointments.filter(apt => 
       apt.id !== editingApt?.id &&
       apt.doctorId === aptForm.doctorId && 
       apt.date === aptForm.date && 
       apt.time === aptForm.time &&
       apt.status !== 'Cancelado'
     );
-  }, [appointments, editingApt, aptForm.doctorId, aptForm.date, aptForm.time]);
+  }, [currentAppointments, editingApt, aptForm.doctorId, aptForm.date, aptForm.time]);
 
   // Check if chosen modal date is holiday
   const modalDateHoliday = useMemo(() => {
@@ -288,16 +299,16 @@ export default function CalendarPanel({ currentUser }) {
   // Check if chosen doctor is blocked on modal date
   const modalDoctorBlock = useMemo(() => {
     if (!aptForm.doctorId || !aptForm.date) return null;
-    return scheduleBlocks.find(b => 
+    return currentScheduleBlocks.find(b => 
       (b.doctorId === 'all' || b.doctorId === aptForm.doctorId) &&
       aptForm.date >= b.startDate && aptForm.date <= b.endDate
     );
-  }, [scheduleBlocks, aptForm.doctorId, aptForm.date]);
+  }, [currentScheduleBlocks, aptForm.doctorId, aptForm.date]);
 
   // Check if doctor attends on that day of the week
   const modalDoctorDayConfig = useMemo(() => {
     if (!aptForm.doctorId || !aptForm.date) return null;
-    const sched = doctorSchedules.find(s => s.doctorId === aptForm.doctorId);
+    const sched = currentDoctorSchedules.find(s => s.doctorId === aptForm.doctorId) || doctorSchedules.find(s => s.doctorId === aptForm.doctorId);
     if (!sched) return null;
 
     const parts = aptForm.date.split('-');
@@ -310,15 +321,16 @@ export default function CalendarPanel({ currentUser }) {
       dayOfWeek,
       schedule: sched
     };
-  }, [doctorSchedules, aptForm.doctorId, aptForm.date]);
+  }, [currentDoctorSchedules, doctorSchedules, aptForm.doctorId, aptForm.date]);
 
-  // Check doctor's monthly quotas
+  // Check doctor's monthly / annual quotas
   const modalDoctorQuotaCheck = useMemo(() => {
     if (!aptForm.doctorId || !aptForm.date) return null;
-    const sched = doctorSchedules.find(s => s.doctorId === aptForm.doctorId);
-    const monthPrefix = aptForm.date.substring(0, 7);
+    const sched = currentDoctorSchedules.find(s => s.doctorId === aptForm.doctorId) || doctorSchedules.find(s => s.doctorId === aptForm.doctorId);
+    const monthPrefix = aptForm.date.substring(0, 7); // YYYY-MM
+    const [yearKey, monthKey] = monthPrefix.split('-');
 
-    const docMonthApts = appointments.filter(a => 
+    const docMonthApts = currentAppointments.filter(a => 
       a.id !== editingApt?.id &&
       a.doctorId === aptForm.doctorId && 
       a.date && a.date.startsWith(monthPrefix) &&
@@ -331,8 +343,10 @@ export default function CalendarPanel({ currentUser }) {
     const firstCount = docMonthApts.filter(a => (a.type || '').toLowerCase().includes('primeira')).length;
     const returnCount = docMonthApts.filter(a => (a.type || '').toLowerCase().includes('retorno')).length;
 
-    const firstLimit = sched?.monthlyFirstConsultLimit ?? 30;
-    const returnLimit = sched?.monthlyReturnLimit ?? 50;
+    // Check if custom quota exists in yearlyConfigs for this year and month
+    const customMonthCfg = sched?.yearlyConfigs?.[yearKey]?.months?.[monthKey];
+    const firstLimit = customMonthCfg?.monthlyFirstConsultLimit ?? (sched?.monthlyFirstConsultLimit ?? 30);
+    const returnLimit = customMonthCfg?.monthlyReturnLimit ?? (sched?.monthlyReturnLimit ?? 50);
 
     return {
       firstCount,
@@ -342,7 +356,7 @@ export default function CalendarPanel({ currentUser }) {
       returnLimit,
       returnExceeded: isReturn && returnCount >= returnLimit
     };
-  }, [doctorSchedules, appointments, editingApt, aptForm.doctorId, aptForm.date, aptForm.type]);
+  }, [currentDoctorSchedules, doctorSchedules, currentAppointments, editingApt, aptForm.doctorId, aptForm.date, aptForm.type]);
 
   // Save Appointment (Create or Edit)
   const handleSaveAppointment = async (e) => {
@@ -364,7 +378,7 @@ export default function CalendarPanel({ currentUser }) {
     let patBirthDate = aptForm.patientBirthDate;
 
     if (aptForm.patientId) {
-      const p = patients.find(pat => pat.id === aptForm.patientId);
+      const p = currentPatients.find(pat => pat.id === aptForm.patientId) || patients.find(pat => pat.id === aptForm.patientId);
       if (p) {
         patName = p.name;
         patPhone = p.phone || patPhone;
@@ -373,9 +387,7 @@ export default function CalendarPanel({ currentUser }) {
       }
     }
 
-    // Auto-flag as Encaixe if conflicting with another appointment at same doctor + date + time
     const finalIsEncaixe = Boolean(aptForm.isEncaixe || conflictingAppointments.length > 0);
-
     const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
     const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
 
@@ -483,13 +495,18 @@ export default function CalendarPanel({ currentUser }) {
     }
   };
 
-  // Filtragem de Dados pela Unidade Ativa
-  const currentAppointments = useMemo(() => filterByActiveUnit(appointments), [appointments, activeUnitId]);
-  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
-  const currentDoctorSchedules = useMemo(() => filterByActiveUnit(doctorSchedules), [doctorSchedules, activeUnitId]);
-  const currentScheduleBlocks = useMemo(() => filterByActiveUnit(scheduleBlocks), [scheduleBlocks, activeUnitId]);
+  // Navigation helpers for Global Search results
+  const handleJumpToAppointmentDate = (dateStr) => {
+    if (!dateStr) return;
+    const [y, m, d] = dateStr.split('-').map(Number);
+    if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+      setCurrentDate(new Date(y, m - 1, d));
+      setViewMode('day');
+      setSearchTerm('');
+    }
+  };
 
-  // Filtered Appointments
+  // Formatted Current Date
   const formattedCurrentDate = useMemo(() => {
     return currentDate.toISOString().substring(0, 10);
   }, [currentDate]);
@@ -508,6 +525,52 @@ export default function CalendarPanel({ currentUser }) {
     );
   }, [currentScheduleBlocks, formattedCurrentDate, selectedDoctorId]);
 
+  // 🔍 GLOBAL SEARCH RESULTS (Searches across ALL days, ALL months, ALL years)
+  const globalSearchResults = useMemo(() => {
+    if (!searchTerm.trim()) return [];
+    const term = searchTerm.toLowerCase().trim();
+
+    return currentAppointments.filter(apt => {
+      // Doctor filter if selected
+      if (selectedDoctorId !== 'all' && apt.doctorId !== selectedDoctorId) return false;
+      // Room filter if selected
+      if (selectedRoom !== 'all' && (apt.room || 'Nenhum') !== selectedRoom) return false;
+      // Status filter if selected
+      if (selectedStatusFilter !== 'all') {
+        if (selectedStatusFilter === 'Encaixe') {
+          if (!apt.isEncaixe) return false;
+        } else if (apt.status !== selectedStatusFilter) {
+          return false;
+        }
+      }
+
+      // Deep search matching across all fields:
+      const nameMatch = (apt.patientName || '').toLowerCase().includes(term);
+      const cpfMatch = (apt.patientCpf || '').replace(/\D/g, '').includes(term.replace(/\D/g, '')) || (apt.patientCpf || '').toLowerCase().includes(term);
+      const phoneMatch = (apt.patientPhone || '').replace(/\D/g, '').includes(term.replace(/\D/g, '')) || (apt.patientPhone || '').toLowerCase().includes(term);
+      const docMatch = (apt.doctorName || '').toLowerCase().includes(term);
+      const notesMatch = (apt.notes || '').toLowerCase().includes(term);
+      const typeMatch = (apt.type || '').toLowerCase().includes(term);
+      const roomMatch = (apt.room || '').toLowerCase().includes(term);
+      const statusMatch = (apt.status || '').toLowerCase().includes(term);
+      const timeMatch = (apt.time || '').toLowerCase().includes(term);
+
+      // Date matching in multiple formats: '2026-08-24', '24/08/2026', '24/08', '2026', month name
+      let dateMatch = false;
+      if (apt.date) {
+        const dateIso = apt.date; // YYYY-MM-DD
+        const dateBr = apt.date.split('-').reverse().join('/'); // DD/MM/YYYY
+        const dateBrShort = apt.date.split('-').slice(1).reverse().join('/'); // DD/MM
+        const yearStr = apt.date.split('-')[0];
+        
+        dateMatch = dateIso.includes(term) || dateBr.includes(term) || dateBrShort.includes(term) || yearStr.includes(term);
+      }
+
+      return nameMatch || cpfMatch || phoneMatch || docMatch || notesMatch || typeMatch || roomMatch || statusMatch || timeMatch || dateMatch;
+    }).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (a.time || '').localeCompare(b.time || ''));
+  }, [currentAppointments, searchTerm, selectedDoctorId, selectedRoom, selectedStatusFilter]);
+
+  // Standard Filtered Appointments (for calendar view modes)
   const filteredAppointments = useMemo(() => {
     return currentAppointments.filter(apt => {
       if (selectedDoctorId !== 'all' && apt.doctorId !== selectedDoctorId) return false;
@@ -519,18 +582,9 @@ export default function CalendarPanel({ currentUser }) {
           return false;
         }
       }
-      if (searchTerm.trim()) {
-        const term = searchTerm.toLowerCase();
-        const matchName = (apt.patientName || '').toLowerCase().includes(term);
-        const matchDoc = (apt.doctorName || '').toLowerCase().includes(term);
-        const matchNotes = (apt.notes || '').toLowerCase().includes(term);
-        const matchType = (apt.type || '').toLowerCase().includes(term);
-        const matchCpf = (apt.patientCpf || '').includes(term);
-        if (!matchName && !matchDoc && !matchNotes && !matchType && !matchCpf) return false;
-      }
       return true;
     });
-  }, [currentAppointments, selectedDoctorId, selectedRoom, selectedStatusFilter, searchTerm]);
+  }, [currentAppointments, selectedDoctorId, selectedRoom, selectedStatusFilter]);
 
   // Current Day KPIs
   const dayAppointments = useMemo(() => {
@@ -572,6 +626,175 @@ export default function CalendarPanel({ currentUser }) {
   // VIEW RENDERERS
   // =========================================================================
 
+  // 0. Global Search Results View (Displays when search term is active)
+  const renderGlobalSearchView = () => {
+    return (
+      <div style={styles.searchResultsContainer}>
+        <div style={styles.searchResultsHeader}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Search size={18} color="#0891b2" />
+            <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>
+              Busca Global — {globalSearchResults.length} agendamento(s) encontrado(s) em todos os anos e meses
+            </strong>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => setSearchTerm('')} 
+            style={styles.clearSearchBadgeBtn}
+          >
+            Limpar Busca
+          </button>
+        </div>
+
+        {globalSearchResults.length === 0 ? (
+          <div style={styles.emptyGlobalSearch}>
+            <Search size={32} color="#cbd5e1" />
+            <strong style={{ color: '#475569', fontSize: '0.95rem' }}>Nenhum agendamento encontrado</strong>
+            <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+              Não encontramos resultados para "{searchTerm}" em nenhuma data, mês ou ano.
+            </span>
+            <button onClick={() => setSearchTerm('')} style={styles.btnSecondarySmall}>
+              Limpar Pesquisa
+            </button>
+          </div>
+        ) : (
+          <div style={styles.tableWrapper}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>Data</th>
+                  <th style={{ ...styles.th, width: '90px', textAlign: 'center' }}>Horário</th>
+                  <th style={styles.th}>Paciente</th>
+                  <th style={styles.th}>Médico</th>
+                  <th style={styles.th}>WhatsApp</th>
+                  <th style={styles.th}>Status</th>
+                  <th style={{ ...styles.th, width: '220px', textAlign: 'center' }}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {globalSearchResults.map(apt => {
+                  const patAge = apt.patientBirthDate ? calculateAge(apt.patientBirthDate) : null;
+                  const dateFormatted = apt.date ? apt.date.split('-').reverse().join('/') : '-';
+                  const dateObj = apt.date ? new Date(apt.date + 'T12:00:00') : null;
+                  const weekdayStr = dateObj ? dateObj.toLocaleDateString('pt-BR', { weekday: 'short' }) : '';
+
+                  return (
+                    <tr key={apt.id} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: apt.isEncaixe ? '#fffbeb' : '#ffffff' }}>
+                      {/* Data */}
+                      <td style={{ padding: '0.65rem 0.85rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <strong style={{ fontSize: '0.85rem', color: '#0f172a' }}>{dateFormatted}</strong>
+                          <span style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'capitalize' }}>{weekdayStr}</span>
+                        </div>
+                      </td>
+
+                      {/* Horário */}
+                      <td style={{ padding: '0.65rem 0.85rem', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <strong style={{ fontSize: '0.88rem', color: '#0891b2' }}>{apt.time}</strong>
+                          {apt.endTime && <span style={{ fontSize: '0.68rem', color: '#64748b' }}>{apt.endTime}</span>}
+                        </div>
+                      </td>
+
+                      {/* Paciente */}
+                      <td style={{ padding: '0.65rem 0.85rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{apt.patientName}</strong>
+                            {apt.isEncaixe && (
+                              <span style={styles.encaixeBadge}>
+                                <Zap size={11} /> ENCAIXE
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.72rem', color: '#64748b' }}>
+                            <span style={{ fontWeight: '700', color: apt.type?.includes('Primeira') ? '#0891b2' : '#10b981' }}>{apt.type}</span>
+                            {patAge && <span>• 🎂 {patAge}</span>}
+                            {apt.patientPhone && <span>• 📞 {apt.patientPhone}</span>}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Médico & Sala */}
+                      <td style={{ padding: '0.65rem 0.85rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontWeight: '700', fontSize: '0.82rem', color: '#334155' }}>{apt.doctorName}</span>
+                          <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{apt.room}</span>
+                        </div>
+                      </td>
+
+                      {/* WhatsApp */}
+                      <td style={{ padding: '0.65rem 0.85rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <span style={{
+                            padding: '0.15rem 0.4rem',
+                            borderRadius: '4px',
+                            fontSize: '0.68rem',
+                            fontWeight: '700',
+                            backgroundColor: apt.whatsappStatus === 'Confirmado' ? '#dcfce7' : apt.whatsappStatus === 'Recusado' ? '#fee2e2' : '#fef3c7',
+                            color: apt.whatsappStatus === 'Confirmado' ? '#166534' : apt.whatsappStatus === 'Recusado' ? '#991b1b' : '#b45309'
+                          }}>
+                            💬 {apt.whatsappStatus || 'Pendente'}
+                          </span>
+                          <button onClick={() => handleSendWhatsApp(apt)} style={styles.waActionBtn} title="WhatsApp">
+                            <Send size={10} />
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* Status */}
+                      <td style={{ padding: '0.65rem 0.85rem' }}>
+                        <span style={{
+                          padding: '0.2rem 0.5rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.72rem',
+                          fontWeight: '700',
+                          display: 'inline-block',
+                          backgroundColor: 
+                            apt.status === 'Aguardando' ? '#fef3c7' :
+                            apt.status === 'Em Consulta' ? '#ede9fe' :
+                            apt.status === 'Finalizado' ? '#dcfce7' :
+                            apt.status === 'Cancelado' ? '#fee2e2' : '#e0f2fe',
+                          color: 
+                            apt.status === 'Aguardando' ? '#b45309' :
+                            apt.status === 'Em Consulta' ? '#6d28d9' :
+                            apt.status === 'Finalizado' ? '#166534' :
+                            apt.status === 'Cancelado' ? '#991b1b' : '#0369a1'
+                        }}>
+                          {apt.status}
+                        </span>
+                      </td>
+
+                      {/* Ações */}
+                      <td style={{ padding: '0.65rem 0.85rem', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
+                          <button 
+                            type="button" 
+                            onClick={() => handleJumpToAppointmentDate(apt.date)}
+                            style={styles.jumpDateBtn}
+                            title="Ir para esta data na grade do dia"
+                          >
+                            <ExternalLink size={12} /> Ver Dia
+                          </button>
+                          <button onClick={() => handleOpenEditModal(apt)} style={styles.iconBtn} title="Editar">
+                            <Edit2 size={13} color="#0891b2" />
+                          </button>
+                          <button onClick={() => handleDeleteAppointment(apt)} style={{ ...styles.iconBtn, backgroundColor: '#fee2e2' }} title="Excluir">
+                            <Trash2 size={13} color="#dc2626" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // 1. Day View (Timeline Table)
   const renderDayView = () => {
     return (
@@ -591,7 +814,6 @@ export default function CalendarPanel({ currentUser }) {
             {dynamicTimeSlots.map(time => {
               const aptsAtThisTime = dayAppointments.filter(a => a.time === time);
               
-              // Check if this time slot falls into any block
               const isSlotBlocked = currentDayBlocks.some(b => {
                 if (b.period === 'Dia Inteiro') return true;
                 if (b.period === 'Manhã') return time < '12:00';
@@ -613,9 +835,9 @@ export default function CalendarPanel({ currentUser }) {
                       {isSlotBlocked ? (
                         <div style={styles.blockedSlotBanner}>
                           <Lock size={13} color="#dc2626" />
-                          <span>Horário Bloqueado / Indisponível</span>
+                          <span>Horário Bloqueado</span>
                           <button 
-                            type="button"
+                            type="button" 
                             onClick={() => setShowScheduleBlockModal(true)} 
                             style={styles.manageBlockSmallBtn}
                           >
@@ -744,7 +966,7 @@ export default function CalendarPanel({ currentUser }) {
                             <button 
                               onClick={() => handleSendWhatsApp(apt)} 
                               style={styles.waActionBtn}
-                              title="Enviar confirmação via WhatsApp"
+                              title="Enviar WhatsApp"
                             >
                               <Send size={11} /> Lembrete
                             </button>
@@ -785,7 +1007,7 @@ export default function CalendarPanel({ currentUser }) {
                                   </button>
                                 )}
                                 {(apt.status === 'Agendado' || apt.status === 'Confirmado') && (
-                                  <button onClick={() => handleUpdateStatus(apt.id, 'Aguardando')} style={{ ...styles.statusBtn, backgroundColor: '#d97706' }} title="Paciente chegou na recepção">
+                                  <button onClick={() => handleUpdateStatus(apt.id, 'Aguardando')} style={{ ...styles.statusBtn, backgroundColor: '#d97706' }} title="Chegou">
                                     <UserCheck size={12} /> Chegou
                                   </button>
                                 )}
@@ -802,10 +1024,10 @@ export default function CalendarPanel({ currentUser }) {
                               </>
                             )}
                             
-                            <button onClick={() => handleOpenEditModal(apt)} style={styles.iconBtn} title="Editar / Reagendar">
+                            <button onClick={() => handleOpenEditModal(apt)} style={styles.iconBtn} title="Editar">
                               <Edit2 size={13} color="#0891b2" />
                             </button>
-                            <button onClick={() => handleDeleteAppointment(apt)} style={{ ...styles.iconBtn, backgroundColor: '#fee2e2' }} title="Excluir Agendamento">
+                            <button onClick={() => handleDeleteAppointment(apt)} style={{ ...styles.iconBtn, backgroundColor: '#fee2e2' }} title="Excluir">
                               <Trash2 size={13} color="#dc2626" />
                             </button>
                           </div>
@@ -934,7 +1156,7 @@ export default function CalendarPanel({ currentUser }) {
                         ...styles.weekAptCard, 
                         ...(apt.isEncaixe ? { borderLeft: '3px solid #f97316', backgroundColor: '#fffbeb' } : {}) 
                       }} 
-                      title="Clique para editar"
+                      title="Editar"
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#0891b2' }}>{apt.time}</span>
@@ -1038,8 +1260,8 @@ export default function CalendarPanel({ currentUser }) {
             <CalendarIcon size={24} color="#ffffff" />
           </div>
           <div>
-            <h1 style={styles.title}>NexaCAL — Gestão de Agenda & Consultas</h1>
-            <p style={styles.subtitle}>Painel multissala com feriados nacionais, bloqueio de ausências, WhatsApp e cotas por médico.</p>
+            <h1 style={styles.title}>Agenda</h1>
+            <p style={styles.subtitle}>Painel multissala com feriados nacionais, bloqueios, WhatsApp e cotas anuais por médico.</p>
           </div>
         </div>
 
@@ -1049,26 +1271,26 @@ export default function CalendarPanel({ currentUser }) {
             onClick={() => setShowDoctorScheduleModal(true)} 
             className="btn btn-secondary" 
             style={styles.configBtn} 
-            title="Configurar cotas mensais e grade de cada médico"
+            title="Configurar cotas anuais e grade de cada médico"
           >
             <Sliders size={15} />
-            <span>Configurar Grade</span>
+            <span>Grade</span>
           </button>
           <button 
             onClick={() => setShowScheduleBlockModal(true)} 
             className="btn btn-secondary" 
             style={styles.blockBtn} 
-            title="Bloquear dia ou período para ausências / congressos / férias"
+            title="Bloquear dias ou períodos para ausências ou congressos"
           >
             <Lock size={15} />
-            <span>Bloquear Dia</span>
+            <span>Bloquear</span>
           </button>
-          <button onClick={fetchData} className="btn btn-secondary" style={styles.refreshBtn} title="Atualizar dados na nuvem">
+          <button onClick={fetchData} className="btn btn-secondary" style={styles.refreshBtn} title="Atualizar">
             <RefreshCw size={15} className={loading ? 'spin' : ''} />
             <span>Atualizar</span>
           </button>
           <button onClick={() => handleOpenAddModal()} className="btn btn-primary" style={styles.newAptBtn}>
-            <Plus size={18} /> Novo Agendamento
+            <Plus size={18} /> Agendar
           </button>
         </div>
       </div>
@@ -1100,7 +1322,7 @@ export default function CalendarPanel({ currentUser }) {
               </span>
             </div>
           </div>
-          <span style={styles.holidayTag}>Data Comemorativa</span>
+          <span style={styles.holidayTag}>Feriado</span>
         </div>
       )}
 
@@ -1111,7 +1333,7 @@ export default function CalendarPanel({ currentUser }) {
             <Lock size={18} color="#dc2626" />
             <div>
               <strong style={{ fontSize: '0.88rem', color: '#991b1b' }}>
-                Bloqueio de Agenda Ativo ({currentDayBlocks.length}):
+                Bloqueios ({currentDayBlocks.length}):
               </strong>
               <span style={{ fontSize: '0.78rem', color: '#7f1d1d', marginLeft: '0.4rem' }}>
                 {currentDayBlocks.map(b => `${b.doctorName} (${b.reason} - ${b.period})`).join(' | ')}
@@ -1122,7 +1344,7 @@ export default function CalendarPanel({ currentUser }) {
             onClick={() => setShowScheduleBlockModal(true)} 
             style={styles.manageBlockBtn}
           >
-            Gerenciar Bloqueios
+            Bloqueios
           </button>
         </div>
       )}
@@ -1134,11 +1356,11 @@ export default function CalendarPanel({ currentUser }) {
           style={{ ...styles.kpiCard, borderColor: selectedStatusFilter === 'all' ? '#0891b2' : '#e2e8f0', cursor: 'pointer' }}
         >
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>Total do Dia</span>
+            <span style={styles.kpiLabel}>Total</span>
             <Users size={18} color="#0891b2" />
           </div>
           <div style={styles.kpiValue}>{kpis.total}</div>
-          <div style={styles.kpiSub}>Agendamentos hoje</div>
+          <div style={styles.kpiSub}>Hoje</div>
         </div>
 
         <div 
@@ -1150,7 +1372,7 @@ export default function CalendarPanel({ currentUser }) {
             <CheckCircle2 size={18} color="#0284c7" />
           </div>
           <div style={{ ...styles.kpiValue, color: '#0284c7' }}>{kpis.confirmed}</div>
-          <div style={styles.kpiSub}>Presença confirmada</div>
+          <div style={styles.kpiSub}>Confirmados</div>
         </div>
 
         <div 
@@ -1162,7 +1384,7 @@ export default function CalendarPanel({ currentUser }) {
             <Clock size={18} color="#d97706" />
           </div>
           <div style={{ ...styles.kpiValue, color: '#d97706' }}>{kpis.waiting}</div>
-          <div style={styles.kpiSub}>Na recepção</div>
+          <div style={styles.kpiSub}>Recepção</div>
         </div>
 
         <div 
@@ -1170,11 +1392,11 @@ export default function CalendarPanel({ currentUser }) {
           style={{ ...styles.kpiCard, borderColor: selectedStatusFilter === 'Em Consulta' ? '#7c3aed' : '#e2e8f0', cursor: 'pointer' }}
         >
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>Em Atendimento</span>
+            <span style={styles.kpiLabel}>Atendimento</span>
             <HeartPulse size={18} color="#7c3aed" />
           </div>
           <div style={{ ...styles.kpiValue, color: '#7c3aed' }}>{kpis.inProgress}</div>
-          <div style={styles.kpiSub}>Em consultório</div>
+          <div style={styles.kpiSub}>Consultório</div>
         </div>
 
         <div 
@@ -1182,11 +1404,11 @@ export default function CalendarPanel({ currentUser }) {
           style={{ ...styles.kpiCard, borderColor: selectedStatusFilter === 'Encaixe' ? '#ea580c' : '#e2e8f0', cursor: 'pointer', backgroundColor: '#fff7ed' }}
         >
           <div style={styles.kpiHeader}>
-            <span style={{ ...styles.kpiLabel, color: '#c2410c' }}>Encaixes ⚡</span>
+            <span style={{ ...styles.kpiLabel, color: '#c2410c' }}>Encaixes</span>
             <Zap size={18} color="#ea580c" />
           </div>
           <div style={{ ...styles.kpiValue, color: '#ea580c' }}>{kpis.encaixes}</div>
-          <div style={styles.kpiSub}>Simultâneos / Extras</div>
+          <div style={styles.kpiSub}>Extras</div>
         </div>
 
         <div 
@@ -1198,40 +1420,40 @@ export default function CalendarPanel({ currentUser }) {
             <UserCheck size={18} color="#16a34a" />
           </div>
           <div style={{ ...styles.kpiValue, color: '#16a34a' }}>{kpis.finished}</div>
-          <div style={styles.kpiSub}>Finalizados hoje</div>
+          <div style={styles.kpiSub}>Finalizados</div>
         </div>
       </div>
 
-      {/* 🏷️ Legenda Explicativa de Cores & Status */}
+      {/* 🏷️ Legenda Visual Limpa (Sem os nomes das cores) */}
       <div style={styles.legendContainer}>
         <div style={styles.legendHeader}>
           <Filter size={13} color="#0891b2" />
-          <span style={{ fontWeight: '700', fontSize: '0.8rem', color: '#334155' }}>Legenda de Cores & Status:</span>
+          <span style={{ fontWeight: '700', fontSize: '0.8rem', color: '#334155' }}>Legenda:</span>
         </div>
         <div style={styles.legendBadges}>
           <div style={styles.legendItem}>
             <span style={{ ...styles.legendDot, backgroundColor: '#0284c7' }} />
-            <span>Agendado (Azul)</span>
+            <span>Agendado</span>
           </div>
           <div style={styles.legendItem}>
             <span style={{ ...styles.legendDot, backgroundColor: '#16a34a' }} />
-            <span>Confirmado (Verde)</span>
+            <span>Confirmado</span>
           </div>
           <div style={styles.legendItem}>
             <span style={{ ...styles.legendDot, backgroundColor: '#d97706' }} />
-            <span>Aguardando Recepção (Amarelo)</span>
+            <span>Aguardando</span>
           </div>
           <div style={styles.legendItem}>
             <span style={{ ...styles.legendDot, backgroundColor: '#7c3aed' }} />
-            <span>Em Consulta (Roxo)</span>
+            <span>Em Consulta</span>
           </div>
           <div style={{ ...styles.legendItem, backgroundColor: '#ffedd5', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
             <span style={{ ...styles.legendDot, backgroundColor: '#ea580c' }} />
-            <span style={{ fontWeight: '800', color: '#c2410c' }}>⚡ Encaixe (Laranja / Âmbar)</span>
+            <span style={{ fontWeight: '800', color: '#c2410c' }}>⚡ Encaixe</span>
           </div>
           <div style={styles.legendItem}>
             <span style={{ ...styles.legendDot, backgroundColor: '#dc2626' }} />
-            <span>Cancelado (Vermelho)</span>
+            <span>Cancelado</span>
           </div>
         </div>
       </div>
@@ -1240,7 +1462,7 @@ export default function CalendarPanel({ currentUser }) {
       <div style={styles.toolbar}>
         <div style={styles.viewModeGroup}>
           <button onClick={() => setViewMode('day')} style={{ ...styles.viewBtn, ...(viewMode === 'day' ? styles.viewBtnActive : {}) }}>Horários</button>
-          <button onClick={() => setViewMode('rooms')} style={{ ...styles.viewBtn, ...(viewMode === 'rooms' ? styles.viewBtnActive : {}) }}>Por Salas</button>
+          <button onClick={() => setViewMode('rooms')} style={{ ...styles.viewBtn, ...(viewMode === 'rooms' ? styles.viewBtnActive : {}) }}>Salas</button>
           <button onClick={() => setViewMode('week')} style={{ ...styles.viewBtn, ...(viewMode === 'week' ? styles.viewBtnActive : {}) }}>Semanal</button>
           <button onClick={() => setViewMode('month')} style={{ ...styles.viewBtn, ...(viewMode === 'month' ? styles.viewBtnActive : {}) }}>Mensal</button>
         </div>
@@ -1265,18 +1487,19 @@ export default function CalendarPanel({ currentUser }) {
           <button onClick={() => handleNavigateDate(1)} style={styles.navArrowBtn}><ChevronRight size={16} /></button>
         </div>
 
-        {/* Global Search Bar */}
+        {/* Global Universal Search Bar (Searches across all years, months, and days) */}
         <div style={styles.searchBox}>
-          <Search size={16} color="#64748b" />
+          <Search size={16} color="#0891b2" />
           <input 
             type="text" 
-            placeholder="Buscar paciente, CPF, médico..." 
+            placeholder="Pesquisar..." 
             value={searchTerm} 
             onChange={e => setSearchTerm(e.target.value)}
             style={styles.searchInput}
+            title="Pesquise por nome, CPF, telefone, médico, data ou procedimento em todos os anos e meses"
           />
           {searchTerm && (
-            <button onClick={() => setSearchTerm('')} style={styles.clearSearchBtn}><X size={14} /></button>
+            <button onClick={() => setSearchTerm('')} style={styles.clearSearchBtn} title="Limpar"><X size={14} /></button>
           )}
         </div>
       </div>
@@ -1286,7 +1509,7 @@ export default function CalendarPanel({ currentUser }) {
         <div style={styles.filterGroup}>
           <label style={styles.filterLabel}>Médico:</label>
           <select value={selectedDoctorId} onChange={e => setSelectedDoctorId(e.target.value)} style={styles.selectFilter}>
-            <option value="all">Todos os Profissionais</option>
+            <option value="all">Todos os Médicos</option>
             {doctors.map(d => (
               <option key={d.uid} value={d.uid}>{d.name}</option>
             ))}
@@ -1309,9 +1532,9 @@ export default function CalendarPanel({ currentUser }) {
             <option value="all">Todos os Status</option>
             <option value="Agendado">Agendado</option>
             <option value="Confirmado">Confirmado</option>
-            <option value="Aguardando">Aguardando (Recepção)</option>
+            <option value="Aguardando">Aguardando</option>
             <option value="Em Consulta">Em Consulta</option>
-            <option value="Encaixe">⚡ Apenas Encaixes</option>
+            <option value="Encaixe">Encaixes</option>
             <option value="Finalizado">Finalizado</option>
             <option value="Cancelado">Cancelado</option>
           </select>
@@ -1327,7 +1550,7 @@ export default function CalendarPanel({ currentUser }) {
             }}
             style={styles.clearFiltersBtn}
           >
-            Limpar Filtros
+            Limpar
           </button>
         )}
       </div>
@@ -1337,8 +1560,11 @@ export default function CalendarPanel({ currentUser }) {
         {loading ? (
           <div style={styles.loadingBox}>
             <RefreshCw size={24} className="spin" color="#0891b2" />
-            <span>Sincronizando agenda e horários com a nuvem...</span>
+            <span>Sincronizando agenda com a nuvem...</span>
           </div>
+        ) : searchTerm.trim() ? (
+          /* Render Global Search Results whenever a search term is present */
+          renderGlobalSearchView()
         ) : (
           <>
             {viewMode === 'day' && renderDayView()}
@@ -1355,10 +1581,10 @@ export default function CalendarPanel({ currentUser }) {
         onClose={() => setShowDoctorScheduleModal(false)}
         doctors={doctors}
         selectedDoctorId={selectedDoctorId !== 'all' ? selectedDoctorId : doctors[0]?.uid}
-        appointments={appointments}
+        appointments={currentAppointments}
         onSaved={() => {
           fetchData();
-          showAlert('Configuração de grade atualizada com sucesso!');
+          showAlert('Agenda atualizada com sucesso!');
         }}
       />
 
@@ -1367,15 +1593,15 @@ export default function CalendarPanel({ currentUser }) {
         isOpen={showScheduleBlockModal}
         onClose={() => setShowScheduleBlockModal(false)}
         doctors={doctors}
-        appointments={appointments}
-        existingBlocks={scheduleBlocks}
+        appointments={currentAppointments}
+        existingBlocks={currentScheduleBlocks}
         onBlockSaved={() => {
           fetchData();
-          showAlert('Bloqueio de agenda criado com sucesso!');
+          showAlert('Bloqueio criado com sucesso!');
         }}
         onBlockDeleted={() => {
           fetchData();
-          showAlert('Bloqueio removido e horários liberados com sucesso!');
+          showAlert('Bloqueio removido com sucesso!');
         }}
       />
 
@@ -1388,7 +1614,7 @@ export default function CalendarPanel({ currentUser }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <CalendarIcon size={20} color="#0891b2" />
                 <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#0f172a', fontWeight: '800' }}>
-                  {editingApt ? 'Editar Agendamento' : 'Novo Agendamento Clínico'}
+                  {editingApt ? 'Editar' : 'Agendamento'}
                 </h3>
               </div>
               <button onClick={() => setShowModal(false)} style={styles.closeBtn}>
@@ -1414,7 +1640,7 @@ export default function CalendarPanel({ currentUser }) {
                 <div style={styles.modalBlockAlert}>
                   <Lock size={16} color="#dc2626" />
                   <div style={{ fontSize: '0.8rem', color: '#991b1b', fontWeight: '700' }}>
-                    Aviso: O profissional selecionado possui bloqueio de agenda nesta data ({modalDoctorBlock.reason} - {modalDoctorBlock.period}).
+                    Aviso: O profissional possui bloqueio nesta data ({modalDoctorBlock.reason} - {modalDoctorBlock.period}).
                   </div>
                 </div>
               )}
@@ -1424,12 +1650,12 @@ export default function CalendarPanel({ currentUser }) {
                 <div style={styles.modalDayAlert}>
                   <AlertTriangle size={16} color="#d97706" />
                   <div style={{ fontSize: '0.8rem', color: '#92400e', fontWeight: '700' }}>
-                    Aviso: O médico não possui atendimento previsto para este dia da semana na grade cadastrada.
+                    Aviso: O médico não possui atendimento previsto para este dia da semana na grade.
                   </div>
                 </div>
               )}
 
-              {/* 📊 AVISO DE COTA MENSAL ATINGIDA */}
+              {/* 📊 AVISO DE COTA ATINGIDA */}
               {modalDoctorQuotaCheck && (modalDoctorQuotaCheck.firstExceeded || modalDoctorQuotaCheck.returnExceeded) && (
                 <div style={styles.modalQuotaAlert}>
                   <Award size={16} color="#c2410c" />
@@ -1447,7 +1673,7 @@ export default function CalendarPanel({ currentUser }) {
                   type="text" 
                   className="form-control" 
                   required 
-                  placeholder="Digite para buscar paciente por nome ou CPF..."
+                  placeholder="Buscar paciente por nome ou CPF..."
                   value={patientSearchInModal || aptForm.patientName} 
                   onChange={e => {
                     setPatientSearchInModal(e.target.value);
@@ -1545,12 +1771,12 @@ export default function CalendarPanel({ currentUser }) {
                   >
                     <option value="Primeira Consulta">Primeira Consulta (Cota)</option>
                     <option value="Retorno">Retorno (Cota)</option>
-                    <option value="Consulta Nefrologia">Consulta Especializada</option>
-                    <option value="Avaliação Nutricional">Avaliação Nutricional</option>
-                    <option value="Acompanhamento Psicológico">Acompanhamento Psicológico</option>
-                    <option value="Procedimento Clínico">Pequeno Procedimento</option>
-                    <option value="Sessão de Diálise">Sessão de Diálise</option>
-                    <option value="Exame Ultrassom">Exame Ultrassom</option>
+                    <option value="Consulta Nefrologia">Consulta Nefrologia</option>
+                    <option value="Avaliação Nutricional">Nutrição</option>
+                    <option value="Acompanhamento Psicológico">Psicologia</option>
+                    <option value="Procedimento Clínico">Procedimento</option>
+                    <option value="Sessão de Diálise">Diálise</option>
+                    <option value="Exame Ultrassom">Ultrassom</option>
                   </select>
                 </div>
               </div>
@@ -1629,7 +1855,7 @@ export default function CalendarPanel({ currentUser }) {
                       onChange={e => setAptForm(f => ({ ...f, isEncaixe: e.target.checked }))}
                       style={{ width: '16px', height: '16px', accentColor: '#ea580c' }}
                     />
-                    <span>⚡ Confirmar e registrar como ENCAIXE</span>
+                    <span>⚡ Confirmar como ENCAIXE</span>
                   </label>
                 </div>
               )}
@@ -1645,7 +1871,7 @@ export default function CalendarPanel({ currentUser }) {
                     style={{ width: '16px', height: '16px', accentColor: '#ea580c' }}
                   />
                   <label htmlFor="isEncaixeCheckbox" style={{ fontSize: '0.8rem', fontWeight: '700', color: '#b45309', cursor: 'pointer', margin: 0 }}>
-                    ⚡ Marcar este agendamento como Encaixe / Extra
+                    ⚡ Marcar como Encaixe
                   </label>
                 </div>
               )}
@@ -1662,7 +1888,7 @@ export default function CalendarPanel({ currentUser }) {
                   >
                     <option value="Agendado">Agendado</option>
                     <option value="Confirmado">Confirmado</option>
-                    <option value="Aguardando">Aguardando (Recepção)</option>
+                    <option value="Aguardando">Aguardando</option>
                     <option value="Em Consulta">Em Consulta</option>
                     <option value="Finalizado">Finalizado</option>
                     <option value="Cancelado">Cancelado</option>
@@ -1687,7 +1913,7 @@ export default function CalendarPanel({ currentUser }) {
                   Cancelar
                 </button>
                 <button type="submit" disabled={actionLoading} style={styles.confirmSaveBtn}>
-                  {actionLoading ? 'Salvando na Nuvem...' : editingApt ? 'Salvar Alterações' : 'Confirmar Agendamento'}
+                  {actionLoading ? 'Salvando...' : editingApt ? 'Salvar' : 'Confirmar'}
                 </button>
               </div>
             </form>
@@ -1989,7 +2215,7 @@ const styles = {
     alignItems: 'center',
     gap: '0.4rem',
     backgroundColor: '#f8fafc',
-    border: '1px solid #cbd5e1',
+    border: '1px solid #0891b2',
     borderRadius: '8px',
     padding: '0.35rem 0.65rem'
   },
@@ -1999,7 +2225,7 @@ const styles = {
     outline: 'none',
     fontSize: '0.82rem',
     color: '#0f172a',
-    width: '180px'
+    width: '200px'
   },
   clearSearchBtn: {
     border: 'none',
@@ -2045,6 +2271,66 @@ const styles = {
     padding: '0.35rem 0.65rem',
     borderRadius: '6px',
     cursor: 'pointer'
+  },
+  searchResultsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem'
+  },
+  searchResultsHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#ecfeff',
+    border: '1px solid #a5f3fc',
+    padding: '0.65rem 1rem',
+    borderRadius: '8px'
+  },
+  clearSearchBadgeBtn: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #0891b2',
+    color: '#0891b2',
+    borderRadius: '6px',
+    padding: '0.25rem 0.6rem',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    cursor: 'pointer'
+  },
+  emptyGlobalSearch: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '10px',
+    padding: '3rem 1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.5rem',
+    textAlign: 'center'
+  },
+  jumpDateBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    backgroundColor: '#e0f2fe',
+    color: '#0369a1',
+    border: '1px solid #bae6fd',
+    borderRadius: '5px',
+    padding: '0.25rem 0.5rem',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    cursor: 'pointer'
+  },
+  btnSecondarySmall: {
+    backgroundColor: '#f1f5f9',
+    border: '1px solid #cbd5e1',
+    borderRadius: '6px',
+    padding: '0.4rem 0.8rem',
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    color: '#334155',
+    cursor: 'pointer',
+    marginTop: '0.5rem'
   },
   loadingBox: {
     display: 'flex',

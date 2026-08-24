@@ -44,7 +44,7 @@ export default function MedicalSettingsTab({
       {/* Header */}
       <div style={styles.header}>
         <div>
-          <h3 style={styles.title}>Tabela de Honorários</h3>
+          <h3 style={styles.title}>Honorários</h3>
           <p style={styles.subtitle}>Configuração dos valores praticados para plantões, consultas e procedimentos.</p>
         </div>
       </div>
@@ -53,7 +53,7 @@ export default function MedicalSettingsTab({
         <div style={styles.grid2}>
           {/* Column 1: Base Fees */}
           <div style={styles.card}>
-            <h4 style={styles.cardTitle}>Valores Base</h4>
+            <h4 style={styles.cardTitle}>Base</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem' }}>
               <div className="form-group">
                 <label>Plantão *</label>
@@ -121,7 +121,7 @@ export default function MedicalSettingsTab({
           )}
           <button type="submit" disabled={loading} className="btn btn-primary" style={{ backgroundColor: '#8b5cf6', padding: '0.5rem 1.25rem' }}>
             <Save size={16} />
-            <span>{loading ? 'Salvando...' : 'Salvar Tabela'}</span>
+            <span>{loading ? 'Salvando...' : 'Salvar'}</span>
           </button>
         </div>
       </form>
@@ -129,7 +129,7 @@ export default function MedicalSettingsTab({
       {/* Registered Doctors Table */}
       <div style={{ marginTop: '1.5rem' }}>
         <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#0f172a', margin: '0 0 0.5rem 0' }}>
-          Corpo Clínico & Dados de Pagamento
+          Profissionais
         </h4>
         <div style={styles.tableWrapper}>
           <table style={styles.table}>
@@ -139,8 +139,8 @@ export default function MedicalSettingsTab({
                 <th>CRM</th>
                 <th>Especialidade</th>
                 <th>Vínculo</th>
-                <th>Chave PIX</th>
-                <th>Dados Bancários</th>
+                <th>PIX</th>
+                <th>Banco</th>
               </tr>
             </thead>
             <tbody>

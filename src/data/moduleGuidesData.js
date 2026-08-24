@@ -1195,6 +1195,81 @@ export const MODULE_GUIDES = {
       }
     ]
   },
+  calendar: {
+    id: 'calendar',
+    name: 'Agenda & Consultórios',
+    subtitle: 'NexaCAL — Gestão de Agendamentos & Cotas',
+    color: '#0891b2',
+    recursos: [
+      {
+        title: 'Configuração Anual de Grade e Cotas',
+        desc: 'Parametrização de cotas anuais e mensais de primeiras consultas, retornos e procedimentos por médico, com botão de replicação para os 12 meses do ano em 1 clique e painel de capacidade anual consolidada.'
+      },
+      {
+        title: 'Pesquisa Global Multianual',
+        desc: 'Busca universal e profunda em todo o banco de agendamentos em todos os dias, meses e anos por nome, CPF, telefone, médico, sala ou data, com botão de navegação direta "Ver Dia".'
+      },
+      {
+        title: 'Gestão Multissalas e 4 Visualizações',
+        desc: 'Alternância instantânea entre modos Horários (Timeline do dia), Salas (Visão por consultório), Semanal e Mensal.'
+      },
+      {
+        title: 'Bloqueio de Dias e Ausências',
+        desc: 'Registro de congressos, férias e solicitações com detecção em tempo real de pacientes afetados para remanejamento preventivo.'
+      },
+      {
+        title: 'Feriados Nacionais Automáticos',
+        desc: 'Identificação e sinalização de feriados nacionais do Brasil no calendário com avisos preventivos em agendamentos.'
+      },
+      {
+        title: 'Notificações via WhatsApp',
+        desc: 'Envio de lembretes e confirmações com 1 clique direto para o WhatsApp do paciente com informações de local e horário.'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Configurar a Grade Anual do Médico',
+        steps: [
+          'No cabeçalho da Agenda, clique no botão "Grade".',
+          'Selecione o profissional de saúde na barra lateral.',
+          'Utilize o seletor de ano para definir o exercício desejado (ex: 2026 ou 2027).',
+          'Ajuste as cotas mensais de Primeira Consulta, Retorno e Procedimentos.',
+          'Clique em "Replicar para o Ano Inteiro" para aplicar os valores aos 12 meses simultaneamente.',
+          'Defina os dias e horários de atendimento da semana e clique em "Salvar".'
+        ]
+      },
+      {
+        title: 'Como Realizar Busca Global em Todos os Anos',
+        steps: [
+          'No campo de pesquisa na barra superior, digite qualquer termo: nome do paciente, CPF, telefone, médico ou data (ex: "24/08/2026", "2026" ou "Agosto").',
+          'O sistema abrirá a visualização de Busca Global listando todos os agendamentos encontrados em qualquer data.',
+          'Clique no botão "Ver Dia" para ir diretamente para a visualização detalhada da data encontrada.'
+        ]
+      },
+      {
+        title: 'Como Bloquear Dias ou Períodos para Ausências',
+        steps: [
+          'Clique no botão "Bloquear" no topo da Agenda.',
+          'Selecione o Médico (ou Todos os Médicos), o Período e o Motivo (Férias, Congresso, etc.).',
+          'Confira os agendamentos conflitantes no quadro de aviso e clique em "Bloquear".'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'Como a busca global localiza consultas de anos anteriores ou futuros?',
+        resposta: 'A barra de pesquisa faz uma varredura completa em toda a base de dados de agendamentos em tempo real, sem restrição de data ou mês atual.'
+      },
+      {
+        pergunta: 'O que acontece ao atingir o limite de cotas do mês configurado?',
+        resposta: 'O sistema emite um alerta visual ao atendente no momento de marcar uma nova primeira consulta ou retorno, permitindo remanejar ou registrar como encaixe justificado.'
+      },
+      {
+        pergunta: 'Como o médico visualiza as consultas finalizadas na sua produção?',
+        resposta: 'Todas as consultas concluídas e finalizadas no módulo Agenda entram automaticamente na apuração de honorários do módulo NexaMED.'
+      }
+    ]
+  },
   config: {
     id: 'config',
     name: 'Configurações & T.I.',

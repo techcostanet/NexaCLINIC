@@ -1,3 +1,21 @@
+## [v4.7.56] - 24 de Agosto, 2026
+### NexaCAL — Configuração Anual de Grade, Pesquisa Global Multianual e Legenda Visual
+- **Configuração de Agenda por Ano Inteiro (12 Meses):**
+  - Adicionado seletor de ano (`2026`, `2027`, etc.) no modal de Grade do Médico.
+  - Alternador de escopo entre "Ano Inteiro (12m)" e meses individuais (Jan a Dez), permitindo customizações específicas ou parametrização padrão.
+  - Botão **"Replicar para o Ano Inteiro"** que propaga as cotas de consultas, retornos e procedimentos para todos os 12 meses do ano selecionado em 1 clique.
+  - Painel de **Capacidade Anual** com métricas consolidadas (Total de Primeiras Consultas/Ano, Retornos/Ano, Procedimentos/Ano e Vagas Totais no Ano).
+- **Pesquisa Global Universal em Todos os Anos, Meses e Dias:**
+  - O campo de pesquisa agora realiza busca profunda em todo o banco de agendamentos (passado, presente e futuro).
+  - Suporte à busca por Nome do Paciente, CPF, Telefone, Médico, Sala, Procedimento, Status e Datas em múltiplos formatos (`DD/MM/AAAA`, `DD/MM`, `YYYY-MM-DD`, ano ou mês).
+  - Tela dedicada de **Resultados da Busca Global** exibindo a lista completa de atendimentos encontrados com botão **"Ver Dia"** para salto direto para a grade daquela data.
+- **Legenda Visual Clean:**
+  - Remoção dos nomes das cores dos badges de status (Agendado, Confirmado, Aguardando, Em Consulta, Encaixe, Cancelado), preservando a identificação por marcadores de cor circulares.
+- **Padronização Rigorosa de Rótulos Concisos (1 Palavra):**
+  - Remoção de termos duplos, barras (`/`) e conectivos (`&`) em cabeçalhos, formulários, modais e botões do módulo Agenda (`Agenda`, `Grade`, `Bloquear`, `Agendar`, `Início`, `Fim`, `Limite`, `Parâmetros`, `Salvar`, `Confirmar`).
+
+---
+
 ## [v4.7.55] - 24 de Agosto, 2026
 ### Correção de Permissões de Filial por Usuário (Restrição Individual de Unidades)
 - **Remoção de Sobrecargas Globais em Código:**
