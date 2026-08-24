@@ -27,6 +27,7 @@ import { useHRLogic } from './HR/hooks/useHRLogic';
 import AwardReportModal from './HR/AwardReportModal';
 import HRReportsModal from './HRReportsModal';
 import { STANDARD_ROLES, STANDARD_SECTORS, normalizeSingleWord, normalizeSectorName } from '../data/hrConstants';
+import UnitSelector from './common/UnitSelector';
 
 export const formatDateBR = (dateVal) => {
   if (!dateVal) return '-';
@@ -218,6 +219,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
         </div>
 
         <div style={styles.heroActions}>
+          <UnitSelector compact showLabel={false} />
           <button 
             onClick={handleOpenEmpAdd}
             style={styles.primaryHeroBtn}

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { dbService, authService } from '../../../firebase';
+import { useUnit } from '../../../contexts/UnitContext';
 import { 
   Users, UserPlus, Shield, Lock, Unlock, Edit2, Trash2, Plus, X, 
   Search, FileText, UploadCloud, Download, Calendar, ShieldAlert,
@@ -23,6 +24,7 @@ const DEFAULT_DASHBOARD_LAYOUT = [
 ];
 
 export function useHRLogic(currentUser) {
+  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'employees' | 'users' | 'reports' | 'audit'
   
   // Data States
@@ -306,6 +308,11 @@ export function useHRLogic(currentUser) {
     setShowEmpModal(true);
   };
 
+  // Filtragem de Dados pela Unidade Ativa
+  const currentEmployees = useMemo(() => filterByActiveUnit(employees), [employees, activeUnitId]);
+  const currentUsersList = useMemo(() => filterByActiveUnit(usersList), [usersList, activeUnitId]);
+  const currentTransportVouchers = useMemo(() => filterByActiveUnit(transportVouchers), [transportVouchers, activeUnitId]);
+
   const handleSaveEmployee = async (e) => {
     e.preventDefault();
     if (!empForm.name || !empForm.cpf || !empForm.birthDate) {
@@ -314,9 +321,14 @@ export function useHRLogic(currentUser) {
 
     setActionLoading(true);
     try {
+      const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
       const data = {
         ...empForm,
-        salary: parseFloat(empForm.salary) || 0
+        salary: parseFloat(empForm.salary) || 0,
+        unitId: targetUnitId,
+        unit: targetUnit
       };
 
       if (editingEmp) {
@@ -896,7 +908,7 @@ export function useHRLogic(currentUser) {
 
   const handleExportFullCadaster = () => {
     const headers = ['ID', 'Nome', 'CPF', 'Setor', 'Admissao', 'Cargo', 'Contrato', 'Salario'];
-    const rows = employees.map(e => [
+    const rows = currentEmployees.map(e => [
       e.id, e.name, e.cpf, 
       sectors.find(s => s.id === e.sectorId)?.name || e.sectorId, 
       e.admissionDate, e.role, e.contractType, e.salary
@@ -906,7 +918,7 @@ export function useHRLogic(currentUser) {
 
   const handleExportBirthdays = () => {
     const headers = ['Nome', 'Data Nascimento', 'Setor', 'Telefone'];
-    const rows = employees.map(e => [
+    const rows = currentEmployees.map(e => [
       e.name, e.birthDate, 
       sectors.find(s => s.id === e.sectorId)?.name || e.sectorId, 
       e.phone
@@ -917,7 +929,7 @@ export function useHRLogic(currentUser) {
   const handleExportWarnings = () => {
     const headers = ['Funcionario', 'Data Advertencia', 'Motivo', 'Descricao'];
     const rows = [];
-    employees.forEach(e => {
+    currentEmployees.forEach(e => {
       if (e.warnings) {
         e.warnings.forEach(w => {
           rows.push([e.name, w.date, w.motive, w.text]);
@@ -972,7 +984,7 @@ export function useHRLogic(currentUser) {
   };
 
   const handleOpenEmpByName = (nameOrId) => {
-    const found = employees.find(e => e.id === nameOrId || e.name?.toLowerCase() === (nameOrId || '').toLowerCase());
+    const found = currentEmployees.find(e => e.id === nameOrId || e.name?.toLowerCase() === (nameOrId || '').toLowerCase());
     if (found) {
       handleOpenEmpEdit(found);
     } else {
@@ -1000,7 +1012,7 @@ export function useHRLogic(currentUser) {
   };
 
   const getFilteredEmployees = () => {
-    const filtered = employees.filter(emp => {
+    const filtered = currentEmployees.filter(emp => {
       const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             emp.cpf.includes(searchTerm) ||
                             (emp.role && emp.role.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -1042,7 +1054,7 @@ export function useHRLogic(currentUser) {
 
   const getRecentWarnings = () => {
     const list = [];
-    employees.filter(e => e.status !== 'Inativo').forEach(e => {
+    currentEmployees.filter(e => e.status !== 'Inativo').forEach(e => {
       if (e.warnings) {
         e.warnings.forEach(w => list.push({ empName: e.name, ...w }));
       }
@@ -1052,7 +1064,7 @@ export function useHRLogic(currentUser) {
 
   const getUpcomingVaccines = () => {
     const list = [];
-    employees.filter(e => e.status !== 'Inativo').forEach(e => {
+    currentEmployees.filter(e => e.status !== 'Inativo').forEach(e => {
       if (e.vaccinations) {
         e.vaccinations.forEach(v => {
           if (v.expiryDate) list.push({ empName: e.name, ...v });
@@ -1079,7 +1091,7 @@ export function useHRLogic(currentUser) {
 
   const getExpiringContracts = () => {
     const today = new Date();
-    return employees.filter(e => {
+    return currentEmployees.filter(e => {
       if (!e || e.status === 'Inativo' || !e.admissionDate) return false;
       const admDate = new Date(e.admissionDate);
       if (isNaN(admDate.getTime())) return false;
@@ -1131,7 +1143,7 @@ export function useHRLogic(currentUser) {
     const eligible = [];
     const disqualified = [];
 
-    employees.forEach(emp => {
+    currentEmployees.forEach(emp => {
       // Ignorar desligados antes do período
       if (emp.status === 'Inativo' && emp.terminationDate) {
         const term = new Date(emp.terminationDate);
@@ -1256,7 +1268,7 @@ export function useHRLogic(currentUser) {
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month + 1, 0, 23, 59, 59);
 
-    const activeEmployees = employees.filter(e => {
+    const activeEmployees = currentEmployees.filter(e => {
       if (!e.admissionDate) return false;
       const adm = new Date(e.admissionDate);
       if (adm > endDate) return false;
@@ -1269,13 +1281,13 @@ export function useHRLogic(currentUser) {
 
     const activeCount = activeEmployees.length;
 
-    const hires = employees.filter(e => {
+    const hires = currentEmployees.filter(e => {
       if (!e.admissionDate) return false;
       const adm = new Date(e.admissionDate);
       return adm >= startDate && adm <= endDate;
     }).length;
 
-    const demissions = employees.filter(e => {
+    const demissions = currentEmployees.filter(e => {
       if (e.status === 'Inativo' && e.terminationDate) {
         const term = new Date(e.terminationDate);
         return term >= startDate && term <= endDate;
@@ -1302,7 +1314,7 @@ export function useHRLogic(currentUser) {
     const absenteeismVal = activeCount > 0 ? (missedHours / (activeCount * 176)) * 100 : 0;
 
     const allAbsences = [];
-    employees.forEach(e => {
+    currentEmployees.forEach(e => {
       if (e.absences) {
         e.absences.forEach(abs => {
           allAbsences.push({ empName: e.name, ...abs });
@@ -1316,7 +1328,7 @@ export function useHRLogic(currentUser) {
 
   const getBirthdaysThisMonth = () => {
     const currentMonth = new Date().getMonth();
-    return employees.filter(e => {
+    return currentEmployees.filter(e => {
       if (e.status === 'Inativo') return false;
       if (!e.birthDate) return false;
       const parts = e.birthDate.split('-');
@@ -1348,9 +1360,9 @@ export function useHRLogic(currentUser) {
   return {
     activeTab,
     setActiveTab,
-    employees,
+    employees: currentEmployees,
     setEmployees,
-    usersList,
+    usersList: currentUsersList,
     setUsersList,
     sectors,
     setSectors,
@@ -1408,7 +1420,7 @@ export function useHRLogic(currentUser) {
     setCsvErrors,
     showImportPreview,
     setShowImportPreview,
-    transportVouchers,
+    transportVouchers: currentTransportVouchers,
     setTransportVouchers,
     selectedVtPeriod,
     setSelectedVtPeriod,

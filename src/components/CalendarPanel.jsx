@@ -9,8 +9,11 @@ import { dbService } from '../firebase';
 import { isBrazilianHoliday, getBrazilianHolidays } from '../utils/brazilHolidays';
 import DoctorScheduleModal from './calendar/DoctorScheduleModal';
 import ScheduleBlockModal from './calendar/ScheduleBlockModal';
+import { useUnit } from '../contexts/UnitContext';
+import UnitSelector from './common/UnitSelector';
 
 export default function CalendarPanel({ currentUser }) {
+  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
   // Navigation & View Mode
   const [viewMode, setViewMode] = useState('day'); // 'day' | 'rooms' | 'week' | 'month'
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -373,6 +376,9 @@ export default function CalendarPanel({ currentUser }) {
     // Auto-flag as Encaixe if conflicting with another appointment at same doctor + date + time
     const finalIsEncaixe = Boolean(aptForm.isEncaixe || conflictingAppointments.length > 0);
 
+    const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+    const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
     const appointmentPayload = {
       patientId: aptForm.patientId || 'avulso',
       patientName: patName,
@@ -390,6 +396,8 @@ export default function CalendarPanel({ currentUser }) {
       isEncaixe: finalIsEncaixe,
       whatsappStatus: editingApt?.whatsappStatus || 'Pendente',
       notes: aptForm.notes || '',
+      unitId: targetUnitId,
+      unit: targetUnit,
       updatedAt: new Date().toISOString()
     };
 
@@ -475,6 +483,12 @@ export default function CalendarPanel({ currentUser }) {
     }
   };
 
+  // Filtragem de Dados pela Unidade Ativa
+  const currentAppointments = useMemo(() => filterByActiveUnit(appointments), [appointments, activeUnitId]);
+  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
+  const currentDoctorSchedules = useMemo(() => filterByActiveUnit(doctorSchedules), [doctorSchedules, activeUnitId]);
+  const currentScheduleBlocks = useMemo(() => filterByActiveUnit(scheduleBlocks), [scheduleBlocks, activeUnitId]);
+
   // Filtered Appointments
   const formattedCurrentDate = useMemo(() => {
     return currentDate.toISOString().substring(0, 10);
@@ -487,15 +501,15 @@ export default function CalendarPanel({ currentUser }) {
 
   // Active blocks for current date and current doctor filter
   const currentDayBlocks = useMemo(() => {
-    return scheduleBlocks.filter(b => 
+    return currentScheduleBlocks.filter(b => 
       formattedCurrentDate >= b.startDate && 
       formattedCurrentDate <= b.endDate &&
       (selectedDoctorId === 'all' || b.doctorId === 'all' || b.doctorId === selectedDoctorId)
     );
-  }, [scheduleBlocks, formattedCurrentDate, selectedDoctorId]);
+  }, [currentScheduleBlocks, formattedCurrentDate, selectedDoctorId]);
 
   const filteredAppointments = useMemo(() => {
-    return appointments.filter(apt => {
+    return currentAppointments.filter(apt => {
       if (selectedDoctorId !== 'all' && apt.doctorId !== selectedDoctorId) return false;
       if (selectedRoom !== 'all' && (apt.room || 'Nenhum') !== selectedRoom) return false;
       if (selectedStatusFilter !== 'all') {
@@ -516,7 +530,7 @@ export default function CalendarPanel({ currentUser }) {
       }
       return true;
     });
-  }, [appointments, selectedDoctorId, selectedRoom, selectedStatusFilter, searchTerm]);
+  }, [currentAppointments, selectedDoctorId, selectedRoom, selectedStatusFilter, searchTerm]);
 
   // Current Day KPIs
   const dayAppointments = useMemo(() => {
@@ -543,12 +557,12 @@ export default function CalendarPanel({ currentUser }) {
   const modalFilteredPatients = useMemo(() => {
     if (!patientSearchInModal.trim()) return [];
     const term = patientSearchInModal.toLowerCase();
-    return patients.filter(p => 
+    return currentPatients.filter(p => 
       (p.name || '').toLowerCase().includes(term) || 
       (p.cpf || '').includes(term) ||
       (p.phone || '').includes(term)
     ).slice(0, 6);
-  }, [patients, patientSearchInModal]);
+  }, [currentPatients, patientSearchInModal]);
 
   const currentModalPatientAge = useMemo(() => {
     return calculateAge(aptForm.patientBirthDate);
@@ -1030,6 +1044,7 @@ export default function CalendarPanel({ currentUser }) {
         </div>
 
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <UnitSelector compact showLabel={false} />
           <button 
             onClick={() => setShowDoctorScheduleModal(true)} 
             className="btn btn-secondary" 

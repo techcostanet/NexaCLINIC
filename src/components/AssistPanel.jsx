@@ -6,6 +6,8 @@ import {
   Calendar, MessageSquare
 } from 'lucide-react';
 import DialysisScheduleTab from './assist/DialysisScheduleTab';
+import { useUnit } from '../contexts/UnitContext';
+import UnitSelector from './common/UnitSelector';
 
 const isSamePosts = (a, b) => {
   if (!a || !b || a.length !== b.length) return false;
@@ -22,6 +24,7 @@ const isSamePosts = (a, b) => {
 };
 
 export default function AssistPanel({ currentUser }) {
+  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
   const [activeAssistTab, setActiveAssistTab] = useState('escala'); // 'escala' | 'mural'
   const [posts, setPosts] = useState([]);
   const [patients, setPatients] = useState([]);
@@ -200,14 +203,18 @@ export default function AssistPanel({ currentUser }) {
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
   };
 
+  // Filtragem de Dados pela Unidade Ativa
+  const currentPosts = useMemo(() => filterByActiveUnit(posts), [posts, activeUnitId]);
+  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
+
   // Filtragem por Período de Data
   const dateFilteredPosts = useMemo(() => {
-    if (datePreset === 'all') return posts;
+    if (datePreset === 'all') return currentPosts;
 
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    return posts.filter(post => {
+    return currentPosts.filter(post => {
       if (!post.createdAt) return false;
       const postDate = new Date(post.createdAt);
       if (isNaN(postDate.getTime())) return true;
@@ -241,7 +248,7 @@ export default function AssistPanel({ currentUser }) {
       }
       return true;
     });
-  }, [posts, datePreset, customStartDate, customEndDate]);
+  }, [currentPosts, datePreset, customStartDate, customEndDate]);
 
   // Contagens por categoria baseadas no período
   const categoryCounts = useMemo(() => {
@@ -286,14 +293,14 @@ export default function AssistPanel({ currentUser }) {
 
   // Pacientes filtrados para o modal de autocomplete
   const filteredPatients = useMemo(() => {
-    if (!patientSearchTerm) return patients.slice(0, 8);
+    if (!patientSearchTerm) return currentPatients.slice(0, 8);
     const term = patientSearchTerm.toLowerCase();
-    return patients.filter(p => 
+    return currentPatients.filter(p => 
       p.name?.toLowerCase().includes(term) || 
       p.cpf?.includes(term) ||
       p.room?.toLowerCase().includes(term)
     ).slice(0, 10);
-  }, [patients, patientSearchTerm]);
+  }, [currentPatients, patientSearchTerm]);
 
   // Ações de Criação/Edição
   const handleOpenCreateModal = (patient = null) => {
@@ -354,6 +361,9 @@ export default function AssistPanel({ currentUser }) {
 
     setActionLoading(true);
     try {
+      const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
       const payload = {
         title: postForm.title || `${postForm.category} - ${postForm.patientName || 'Aviso'}`,
         message: postForm.message.trim(),
@@ -365,6 +375,8 @@ export default function AssistPanel({ currentUser }) {
         shift: postForm.shift || 'Geral',
         source: 'native',
         status: 'published',
+        unitId: targetUnitId,
+        unit: targetUnit,
         author: editingPost ? editingPost.author : (currentUser?.name || 'Profissional NexaCLINIC'),
         authorEmail: editingPost ? editingPost.authorEmail : (currentUser?.email || ''),
         authorId: editingPost ? editingPost.authorId : (currentUser?.uid || currentUser?.id || ''),
@@ -499,6 +511,8 @@ export default function AssistPanel({ currentUser }) {
               <span>Mural</span>
             </button>
           </div>
+
+          <UnitSelector compact showLabel={false} />
 
           <button 
             onClick={() => handleOpenCreateModal()}

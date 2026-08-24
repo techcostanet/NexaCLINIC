@@ -678,6 +678,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Impressão A4 da Escala Operacional',
         desc: 'Geração de espelho formatado em A4 da escala diária/semanal para afixação nas pranchetas dos postos de enfermagem dos salões.'
+      },
+      {
+        title: 'Isolamento de Filiais (Betim / MG vs Taguatinga / DF)',
+        desc: 'Escalas de hemodiálise, pontos de diálise e comunicados do mural 100% segregados pela filial ativa, com visualização zerada para novas unidades em fase de implantação.'
       }
     ],
     tutorial: [
@@ -718,6 +722,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Por que ao trocar para Taguatinga a escala de diálise aparece vazia/zerada?',
+        resposta: 'Porque a filial Taguatinga / DF é uma nova unidade sem pacientes legados de Betim. Os novos pacientes e leitos de Taguatinga passarão a aparecer conforme forem admitidos no sistema.'
+      },
       {
         pergunta: 'Como saber o status de manutenção de uma máquina de hemodiálise?',
         resposta: 'Ao lado do número de série no cabeçalho de cada ponto, há uma badge indicando se o equipamento está "Operacional" ou em "Preventiva/Corretiva". Clicando no número de série, abre-se a ficha técnica completa da máquina.'

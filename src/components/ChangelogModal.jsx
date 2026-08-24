@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.54',
+      date: '24/08/2026',
+      title: 'Isolamento Total de Dados por Filial (Taguatinga/DF vs Betim/MG) em Todos os Módulos',
+      description: 'Implementação de chaveamento e filtragem universal em todos os 14 módulos do sistema, garantindo segregação total de pacientes, escalas, estoques, compras, ordens de serviço, RH, financeiro e faturamento por filial ativa.',
+      changes: [
+        { type: 'Isolamento Universal', text: 'Todos os módulos filtram estritamente os dados da filial ativa (Betim ou Taguatinga), garantindo visualização zerada para novas filiais sem registros legados.' },
+        { type: 'Seletor Integrado', text: 'Adicionado o seletor compacto de unidades nos cabeçalhos de todos os módulos para alternância rápida.' },
+        { type: 'Tagging de Novos Registros', text: 'Novos cadastros e solicitações em qualquer módulo recebem automaticamente o identificador da filial ativa.' },
+        { type: 'Modo Consolidado', text: 'Gestores e administradores contam com visão unificada quando selecionado Todas as Unidades.' }
+      ]
+    },
+    {
       version: 'v4.7.53',
       date: '24/08/2026',
       title: 'Arquitetura Multi-Unidade (Betim/MG e Taguatinga/DF) & Integração Financeiro e Estoque',

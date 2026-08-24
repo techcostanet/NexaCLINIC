@@ -6,8 +6,10 @@ import {
   MapPin, Clock, Plus, X, ChevronRight, Eye, Wrench, HeartPulse,
   Sparkles, Layers, Info
 } from 'lucide-react';
+import { useUnit } from '../../contexts/UnitContext';
 
 export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPatient }) {
+  const { activeUnitId, filterByActiveUnit } = useUnit();
   // Navigation State
   const [selectedSalon, setSelectedSalon] = useState('Salão 01');
   const [selectedShift, setSelectedShift] = useState('1º Turno');
@@ -105,34 +107,45 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
     return age > 0 ? `${age} anos` : '';
   };
 
+  // Effective schedule data filtered by active unit
+  const activeScheduleData = useMemo(() => {
+    if (activeUnitId === 'taguatinga') {
+      return { points: [] };
+    }
+    return scheduleData;
+  }, [scheduleData, activeUnitId]);
+
   // Group points by Box
   const groupedBoxes = useMemo(() => {
-    if (!scheduleData || !scheduleData.points) return {};
+    if (!activeScheduleData || !activeScheduleData.points) return {};
     const boxes = {};
-    scheduleData.points.forEach(point => {
+    activeScheduleData.points.forEach(point => {
       const bName = point.box || 'Box Geral';
       if (!boxes[bName]) boxes[bName] = [];
       boxes[bName].push(point);
     });
     return boxes;
-  }, [scheduleData]);
+  }, [activeScheduleData]);
 
   // Equipment lookup map
   const equipmentMap = useMemo(() => {
     const map = new Map();
-    equipments.forEach(eq => {
+    filterByActiveUnit(equipments).forEach(eq => {
       if (eq.serialNumber) {
         map.set(eq.serialNumber.trim().toUpperCase(), eq);
       }
     });
     return map;
-  }, [equipments]);
+  }, [equipments, activeUnitId]);
 
   // Operational metrics
   const metrics = useMemo(() => {
+    if (activeUnitId === 'taguatinga') {
+      return { totalSlots: 0, occupiedSlots: 0, vacantSlots: 0, favCount: 0, needle15: 0, needle16: 0, needle17: 0, cdlCount: 0, permcathCount: 0, isolationCount: 0 };
+    }
     if (!dbService.calculateScheduleMetrics) return {};
     return dbService.calculateScheduleMetrics(scheduleData, cadence);
-  }, [scheduleData, cadence]);
+  }, [scheduleData, cadence, activeUnitId]);
 
   // Handle open machine modal
   const handleOpenMachineDetails = (serial) => {
@@ -397,6 +410,23 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
           <RefreshCw size={32} color="#4f46e5" className="spin" />
           <p style={{ marginTop: '0.75rem', color: '#64748b', fontSize: '0.9rem', fontWeight: '600' }}>
             Carregando leitos e pacientes da hemodiálise...
+          </p>
+        </div>
+      ) : Object.keys(groupedBoxes).length === 0 ? (
+        <div style={{
+          padding: '3.5rem 2rem',
+          textAlign: 'center',
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          border: '1px dashed #cbd5e1',
+          margin: '1rem 0'
+        }}>
+          <Calendar size={48} color="#94a3b8" style={{ margin: '0 auto 1rem' }} />
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1e293b', marginBottom: '0.5rem' }}>
+            Nenhum leito ou paciente cadastrado para {activeUnitId === 'taguatinga' ? 'Taguatinga / DF' : 'esta sala/turno'}
+          </h3>
+          <p style={{ fontSize: '0.88rem', color: '#64748b', maxWidth: '480px', margin: '0 auto' }}>
+            Esta filial ainda não possui pacientes alocados nesta combinação de salão e turno. Novos pacientes podem ser admitidos no módulo de Recepção/Cadastro.
           </p>
         </div>
       ) : (

@@ -13,8 +13,11 @@ import MedicalProceduresTab from './medical/MedicalProceduresTab';
 import MedicalProductionTab from './medical/MedicalProductionTab';
 import MedicalSettingsTab from './medical/MedicalSettingsTab';
 import MedicalStatementModal from './medical/MedicalStatementModal';
+import { useUnit } from '../contexts/UnitContext';
+import UnitSelector from './common/UnitSelector';
 
-export default function MedicalPanel({ currentUser }) {
+export default function MedicalPanel({ currentUser, onBack }) {
+  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
   const [activeTab, setActiveTab] = useState('Escala');
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().substring(0, 7));
   const [loading, setLoading] = useState(false);
@@ -260,6 +263,14 @@ export default function MedicalPanel({ currentUser }) {
     }
   };
 
+  const currentDoctors = React.useMemo(() => (activeUnitId === 'taguatinga' ? [] : doctors), [doctors, activeUnitId]);
+  const currentSchedules = React.useMemo(() => filterByActiveUnit(schedules), [schedules, activeUnitId]);
+  const currentSwaps = React.useMemo(() => filterByActiveUnit(swaps), [swaps, activeUnitId]);
+  const currentProcedures = React.useMemo(() => filterByActiveUnit(procedures), [procedures, activeUnitId]);
+  const currentProductions = React.useMemo(() => filterByActiveUnit(productions), [productions, activeUnitId]);
+  const currentPatients = React.useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
+  const currentAppointments = React.useMemo(() => filterByActiveUnit(appointments), [appointments, activeUnitId]);
+
   const tabs = [
     { id: 'Escala', label: 'Escala', icon: Calendar },
     { id: 'Plantões', label: 'Plantões', icon: UserCheck },
@@ -292,6 +303,9 @@ export default function MedicalPanel({ currentUser }) {
             </p>
           </div>
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <UnitSelector compact showLabel={false} />
+        </div>
       </div>
 
       {/* Navigation Tabs Bar */}
@@ -320,9 +334,9 @@ export default function MedicalPanel({ currentUser }) {
       <div style={styles.contentArea}>
         {activeTab === 'Escala' && (
           <MedicalScheduleTab
-            schedules={schedules}
-            doctors={doctors}
-            swaps={swaps}
+            schedules={currentSchedules}
+            doctors={currentDoctors}
+            swaps={currentSwaps}
             selectedMonth={selectedMonth}
             onChangeMonth={setSelectedMonth}
             onSaveSchedule={handleSaveSchedule}
@@ -334,10 +348,10 @@ export default function MedicalPanel({ currentUser }) {
         {activeTab === 'Plantões' && (
           <MedicalMyShiftsTab
             doctor={currentDoctor}
-            doctors={doctors}
-            patients={patients}
-            schedules={schedules}
-            procedures={procedures}
+            doctors={currentDoctors}
+            patients={currentPatients}
+            schedules={currentSchedules}
+            procedures={currentProcedures}
             onRequestSwap={handleRequestSwap}
             onSaveProcedure={handleSaveProcedure}
             loading={loading}
@@ -346,7 +360,7 @@ export default function MedicalPanel({ currentUser }) {
 
         {activeTab === 'Trocas' && (
           <MedicalSwapsTab
-            swaps={swaps}
+            swaps={currentSwaps}
             currentDoctor={currentDoctor}
             isCoordination={true}
             onRespondSwap={handleRespondSwap}
@@ -357,9 +371,9 @@ export default function MedicalPanel({ currentUser }) {
 
         {activeTab === 'Procedimentos' && (
           <MedicalProceduresTab
-            procedures={procedures}
-            doctors={doctors}
-            patients={patients}
+            procedures={currentProcedures}
+            doctors={currentDoctors}
+            patients={currentPatients}
             settings={settings}
             onSaveProcedure={handleSaveProcedure}
             onDeleteProcedure={handleDeleteProcedure}
@@ -370,11 +384,11 @@ export default function MedicalPanel({ currentUser }) {
         {activeTab === 'Produção' && (
           <MedicalProductionTab
             selectedMonth={selectedMonth}
-            doctors={doctors}
-            schedules={schedules}
-            procedures={procedures}
-            appointments={appointments}
-            productions={productions}
+            doctors={currentDoctors}
+            schedules={currentSchedules}
+            procedures={currentProcedures}
+            appointments={currentAppointments}
+            productions={currentProductions}
             settings={settings}
             onHomologateProduction={handleHomologateProduction}
             onOpenStatement={setStatementData}
@@ -385,7 +399,7 @@ export default function MedicalPanel({ currentUser }) {
         {activeTab === 'Honorários' && (
           <MedicalSettingsTab
             settings={settings}
-            doctors={doctors}
+            doctors={currentDoctors}
             onSaveSettings={handleSaveSettings}
             loading={loading}
           />

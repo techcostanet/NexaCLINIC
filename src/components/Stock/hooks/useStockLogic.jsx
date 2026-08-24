@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../../../firebase';
+import { useUnit } from '../../../contexts/UnitContext';
 import { parseDanfePdf } from '../../../utils/danfePdfParser';
 import { 
   Package, Boxes, Clock, Calendar, Plus, Search, 
@@ -9,6 +10,8 @@ import {
 } from 'lucide-react';
 
 export function useStockLogic(currentUser) {
+  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
+
   const safeArray = (val) => {
     if (Array.isArray(val)) return val;
     if (val && typeof val === 'object') return Object.values(val);
@@ -32,6 +35,16 @@ export function useStockLogic(currentUser) {
   const [productBatches, setProductBatches] = useState([]);
   const [productKits, setProductKits] = useState([]);
   const [tenantSettings, setTenantSettings] = useState({ requisitionTTLHours: 1 });
+
+  // Filtragem de Dados pela Unidade Ativa
+  const currentItems = useMemo(() => filterByActiveUnit(items), [items, activeUnitId]);
+  const currentTransactions = useMemo(() => filterByActiveUnit(transactions), [transactions, activeUnitId]);
+  const currentInvoices = useMemo(() => filterByActiveUnit(invoices), [invoices, activeUnitId]);
+  const currentLoans = useMemo(() => filterByActiveUnit(loans), [loans, activeUnitId]);
+  const currentRequisitions = useMemo(() => filterByActiveUnit(requisitions), [requisitions, activeUnitId]);
+  const currentInventories = useMemo(() => filterByActiveUnit(inventories), [inventories, activeUnitId]);
+  const currentTransfers = useMemo(() => filterByActiveUnit(transfers), [transfers, activeUnitId]);
+  const currentProductBatches = useMemo(() => filterByActiveUnit(productBatches), [productBatches, activeUnitId]);
   
   // Traceability & Recall State
   const [traceabilitySearchTerm, setTraceabilitySearchTerm] = useState('');
@@ -399,6 +412,9 @@ export function useStockLogic(currentUser) {
 
     setActionLoading(true);
     try {
+      const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
       const data = {
         name: itemForm.name,
         category: itemForm.category,
@@ -408,7 +424,9 @@ export function useStockLogic(currentUser) {
         price: parseFloat(itemForm.price) || 0,
         hasBatchControl: !!itemForm.hasBatchControl,
         isControlled: !!itemForm.isControlled,
-        defaultSectorId: itemForm.defaultSectorId
+        defaultSectorId: itemForm.defaultSectorId,
+        unitId: targetUnitId,
+        unit: targetUnit
       };
 
       if (editingItem) {
@@ -1758,8 +1776,8 @@ export function useStockLogic(currentUser) {
   };
 
   const getFilteredItems = () => {
-    if (!Array.isArray(items)) return [];
-    return items.filter(item => {
+    if (!Array.isArray(currentItems)) return [];
+    return currentItems.filter(item => {
       if (!item) return false;
       const name = item.name ? String(item.name).toLowerCase() : '';
       const matchesSearch = name.includes((searchTerm || '').toLowerCase());
@@ -1769,8 +1787,8 @@ export function useStockLogic(currentUser) {
   };
 
   const getLowStockItems = () => {
-    if (!Array.isArray(items)) return [];
-    return items.filter(i => {
+    if (!Array.isArray(currentItems)) return [];
+    return currentItems.filter(i => {
       if (!i) return false;
       const current = parseFloat(i.currentStock) || 0;
       const min = parseFloat(i.minStock) || 0;
@@ -1779,8 +1797,8 @@ export function useStockLogic(currentUser) {
   };
 
   const getExpiryTransactions = () => {
-    if (Array.isArray(productBatches) && productBatches.length > 0) {
-      return productBatches.map(b => ({
+    if (Array.isArray(currentProductBatches) && currentProductBatches.length > 0) {
+      return currentProductBatches.map(b => ({
         id: b.id,
         itemId: b.itemId,
         itemName: b.itemName,
@@ -1800,8 +1818,8 @@ export function useStockLogic(currentUser) {
       });
     }
 
-    if (!Array.isArray(transactions)) return [];
-    return transactions
+    if (!Array.isArray(currentTransactions)) return [];
+    return currentTransactions
       .filter(t => t && t.type === 'Entrada' && t.expiryDate)
       .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
   };
@@ -1813,29 +1831,29 @@ export function useStockLogic(currentUser) {
   return {
     activeTab,
     setActiveTab,
-    items,
+    items: currentItems,
     setItems,
-    transactions,
+    transactions: currentTransactions,
     setTransactions,
     suppliers,
     setSuppliers,
     sectors,
     setSectors,
-    invoices,
+    invoices: currentInvoices,
     setInvoices,
-    loans,
+    loans: currentLoans,
     setLoans,
     categoriesList,
     setCategoriesList,
-    requisitions,
+    requisitions: currentRequisitions,
     setRequisitions,
     stockLocations,
     setStockLocations,
-    inventories,
+    inventories: currentInventories,
     setInventories,
-    transfers,
+    transfers: currentTransfers,
     setTransfers,
-    productBatches,
+    productBatches: currentProductBatches,
     setProductBatches,
     handleDeleteBatch,
     showFulfillModal,

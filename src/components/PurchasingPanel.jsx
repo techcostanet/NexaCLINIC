@@ -6,8 +6,11 @@ import {
   Package, Zap, CheckCircle2, History, Filter, RefreshCw, Layers, Info
 } from 'lucide-react';
 import { dbService } from '../firebase';
+import { useUnit } from '../contexts/UnitContext';
+import UnitSelector from './common/UnitSelector';
 
 export default function PurchasingPanel({ currentUser }) {
+  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
   const [activeTab, setActiveTab] = useState('reposition'); // 'reposition' | 'requests' | 'approvals' | 'quotes' | 'suppliers'
   const [purchases, setPurchases] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
@@ -111,15 +114,20 @@ export default function PurchasingPanel({ currentUser }) {
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
   };
 
+  // Filtragem de Dados pela Unidade Ativa
+  const currentPurchases = useMemo(() => filterByActiveUnit(purchases), [purchases, activeUnitId]);
+  const currentInventoryItems = useMemo(() => filterByActiveUnit(inventoryItems), [inventoryItems, activeUnitId]);
+  const currentRequisitions = useMemo(() => filterByActiveUnit(requisitions), [requisitions, activeUnitId]);
+
   // Itens com Cálculo dos 4 Saldos (Físico, Reservado, Disponível, Trânsito)
   const enrichedInventoryItems = useMemo(() => {
-    return inventoryItems.map(item => {
+    return currentInventoryItems.map(item => {
       const physicalStock = parseFloat(item.currentStock) || 0;
       const minStock = parseFloat(item.minStock) || 0;
       const idealStock = parseFloat(item.idealStock) || (minStock * 2 > 0 ? minStock * 2 : 20);
 
       // Requisições Ativas (Pendente ou Parcial) que comprometem este item
-      const activeReqsForItem = requisitions.filter(r => 
+      const activeReqsForItem = currentRequisitions.filter(r => 
         (r.status === 'Pendente' || r.status === 'Parcial') &&
         r.items && r.items.some(i => i.itemId === item.id || (i.itemName && i.itemName.toLowerCase() === (item.name || '').toLowerCase()))
       );
@@ -153,7 +161,7 @@ export default function PurchasingPanel({ currentUser }) {
       const availableStock = Math.max(0, physicalStock - committedStock);
 
       // Compras em Trânsito (Pedidos de Compra Abertos)
-      const inTransitPurchases = purchases.filter(p => 
+      const inTransitPurchases = currentPurchases.filter(p => 
         (p.productId === item.id || (p.productName && p.productName.toLowerCase() === (item.name || '').toLowerCase())) &&
         p.status !== 'Finalizado' && p.status !== 'Rejeitado'
       );
@@ -182,7 +190,7 @@ export default function PurchasingPanel({ currentUser }) {
         activeReqCount: activeReqsForItem.length
       };
     });
-  }, [inventoryItems, requisitions, purchases]);
+  }, [currentInventoryItems, currentRequisitions, currentPurchases]);
 
   // Itens Críticos do Estoque (Baseados no Saldo Disponível)
   const criticalItems = useMemo(() => {
@@ -219,21 +227,21 @@ export default function PurchasingPanel({ currentUser }) {
   // Categorias únicas dos itens do estoque
   const inventoryCategories = useMemo(() => {
     const set = new Set();
-    inventoryItems.forEach(i => {
+    currentInventoryItems.forEach(i => {
       if (i.category) set.add(i.category);
     });
     return Array.from(set);
-  }, [inventoryItems]);
+  }, [currentInventoryItems]);
 
   // Contagens de Aprovações Pendentes
   const pendingApprovalsCount = useMemo(() => {
-    return purchases.filter(p => p.status === 'Aguardando Gestor' || p.status === 'Aguardando Diretor').length;
-  }, [purchases]);
+    return currentPurchases.filter(p => p.status === 'Aguardando Gestor' || p.status === 'Aguardando Diretor').length;
+  }, [currentPurchases]);
 
   // Contagem de Cotações Pendentes
   const pendingQuotesCount = useMemo(() => {
-    return purchases.filter(p => p.status === 'Aguardando Cotação').length;
-  }, [purchases]);
+    return currentPurchases.filter(p => p.status === 'Aguardando Cotação').length;
+  }, [currentPurchases]);
 
   // Ordenação de Fornecedores Clicável
   const handleSortSuppliers = (field) => {
@@ -310,6 +318,9 @@ export default function PurchasingPanel({ currentUser }) {
         const trans = item.inTransitStock;
         const suggestedQty = item.suggestedQty > 0 ? item.suggestedQty : Math.max(1, Math.round(item.idealStock - avail));
 
+        const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+        const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
         const newRequest = {
           type: 'Reposição',
           productId: item.id,
@@ -321,6 +332,8 @@ export default function PurchasingPanel({ currentUser }) {
           requesterName: currentUser?.name || 'Comprador NexaPROCURE',
           requesterEmail: currentUser?.email || 'compras@dialize.com.br',
           status: 'Aguardando Gestor',
+          unitId: targetUnitId,
+          unit: targetUnit,
           history: [
             { status: 'Aguardando Gestor', date: new Date().toISOString(), message: 'Solicitação gerada via Reposição Crítica em Lote com análise de saldo disponível.' }
           ]
@@ -346,7 +359,7 @@ export default function PurchasingPanel({ currentUser }) {
     e.preventDefault();
     let name = requestForm.newItemName;
     if (requestForm.type === 'Reposição') {
-      const selected = inventoryItems.find(itm => itm.id === requestForm.selectedStockId);
+      const selected = currentInventoryItems.find(itm => itm.id === requestForm.selectedStockId) || inventoryItems.find(itm => itm.id === requestForm.selectedStockId);
       if (!selected) return showAlert('Selecione um produto do estoque.', 'danger');
       name = selected.name;
     }
@@ -355,6 +368,9 @@ export default function PurchasingPanel({ currentUser }) {
 
     setActionLoading(true);
     try {
+      const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
       const newRequest = {
         type: requestForm.type,
         productId: requestForm.selectedStockId || 'novo-item',
@@ -366,6 +382,8 @@ export default function PurchasingPanel({ currentUser }) {
         requesterName: currentUser?.name || 'Funcionário',
         requesterEmail: currentUser?.email || 'funcionario@clinica.com',
         status: 'Aguardando Gestor',
+        unitId: targetUnitId,
+        unit: targetUnit,
         history: [
           { status: 'Aguardando Gestor', date: new Date().toISOString(), message: 'Solicitação de compra criada.' }
         ]
@@ -652,6 +670,7 @@ export default function PurchasingPanel({ currentUser }) {
         </div>
 
         <div style={styles.heroActions}>
+          <UnitSelector compact showLabel={false} />
           {activeTab === 'reposition' && criticalItems.length > 0 && (
             <button 
               onClick={handleBatchRequestAllCritical}
@@ -714,7 +733,7 @@ export default function PurchasingPanel({ currentUser }) {
         >
           <ClipboardList size={16} color={activeTab === 'requests' ? '#0891b2' : 'currentColor'} />
           <span>Solicitações</span>
-          <span style={styles.badgeNeutral}>{purchases.length}</span>
+          <span style={styles.badgeNeutral}>{currentPurchases.length}</span>
         </button>
 
         <button 

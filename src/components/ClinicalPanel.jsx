@@ -14,8 +14,11 @@ import ClinicalApacTab from './clinical/ClinicalApacTab';
 import ClinicalCalculatorsTab from './clinical/ClinicalCalculatorsTab';
 import ClinicalExportModal from './clinical/ClinicalExportModal';
 import ClinicalAiSummaryModal from './clinical/ClinicalAiSummaryModal';
+import { useUnit } from '../contexts/UnitContext';
+import UnitSelector from './common/UnitSelector';
 
 export default function ClinicalPanel() {
+  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
   const [activeTab, setActiveTab] = useState('prescriptions'); 
   // 'prescriptions' | 'medications' | 'monitoring' | 'evolutions' | 'labexams' | 'apac' | 'calculators' | 'dispensations' | 'timeline'
 
@@ -124,11 +127,22 @@ export default function ClinicalPanel() {
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
   };
 
-  const getSelectedPatient = () => patients.find(p => p.id === selectedPatientId);
-  const getPrescriptionForSelected = () => prescriptions.find(p => p.patientId === selectedPatientId);
-  const getMedicationsForSelected = () => medications.filter(m => m.patientId === selectedPatientId);
-  const getLabExamsForSelected = () => labExams.filter(e => e.patientId === selectedPatientId).sort((a, b) => b.date.localeCompare(a.date));
-  const getApacRecordForSelected = () => apacRecords.find(a => a.patientId === selectedPatientId);
+  // Filtragem de Dados pela Unidade Ativa
+  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
+  const currentPrescriptions = useMemo(() => filterByActiveUnit(prescriptions), [prescriptions, activeUnitId]);
+  const currentSessionsLogs = useMemo(() => filterByActiveUnit(sessionsLogs), [sessionsLogs, activeUnitId]);
+  const currentClinicalNotes = useMemo(() => filterByActiveUnit(clinicalNotes), [clinicalNotes, activeUnitId]);
+  const currentAssistPosts = useMemo(() => filterByActiveUnit(assistPosts), [assistPosts, activeUnitId]);
+  const currentMedications = useMemo(() => filterByActiveUnit(medications), [medications, activeUnitId]);
+  const currentLabExams = useMemo(() => filterByActiveUnit(labExams), [labExams, activeUnitId]);
+  const currentApacRecords = useMemo(() => filterByActiveUnit(apacRecords), [apacRecords, activeUnitId]);
+  const currentDispensations = useMemo(() => filterByActiveUnit(patientDispensations), [patientDispensations, activeUnitId]);
+
+  const getSelectedPatient = () => currentPatients.find(p => p.id === selectedPatientId);
+  const getPrescriptionForSelected = () => currentPrescriptions.find(p => p.patientId === selectedPatientId);
+  const getMedicationsForSelected = () => currentMedications.filter(m => m.patientId === selectedPatientId);
+  const getLabExamsForSelected = () => currentLabExams.filter(e => e.patientId === selectedPatientId).sort((a, b) => b.date.localeCompare(a.date));
+  const getApacRecordForSelected = () => currentApacRecords.find(a => a.patientId === selectedPatientId);
 
   // ----------------------------------------------------
   // Prescription Handling
@@ -474,11 +488,11 @@ export default function ClinicalPanel() {
   const activeMeds = getMedicationsForSelected();
   const activeLabs = getLabExamsForSelected();
   const activeApac = getApacRecordForSelected();
-  const activeNotes = clinicalNotes
+  const activeNotes = currentClinicalNotes
     .filter(n => n.patientId === selectedPatientId)
     .filter(n => evolutionFilter === 'Todas' || n.category === evolutionFilter)
     .sort((a, b) => b.date.localeCompare(a.date));
-  const activeAssistPosts = assistPosts
+  const activeAssistPosts = currentAssistPosts
     .filter(p => p.patientId === selectedPatientId)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -490,7 +504,7 @@ export default function ClinicalPanel() {
   };
   const todayWeekday = getTodayWeekday();
 
-  const todayPatients = patients.filter(
+  const todayPatients = currentPatients.filter(
     p => p.dialysisFrequency?.includes(todayWeekday) || p.dialysisFrequency === 'Diário'
   );
 
@@ -498,9 +512,12 @@ export default function ClinicalPanel() {
     <div style={styles.container}>
       {/* Top Main Title Header */}
       <div style={styles.cardHeader}>
-        <div>
-          <h1 style={styles.title}>NexaCLINIC - Módulo Clínico & Assistencial</h1>
-          <p style={styles.subtitle}>Prontuário eletrônico nefrológico, prescrições dialíticas, farmacoterapia e regulação APAC.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h1 style={styles.title}>NexaCLINIC - Módulo Clínico & Assistencial</h1>
+            <p style={styles.subtitle}>Prontuário eletrônico nefrológico, prescrições dialíticas, farmacoterapia e regulação APAC.</p>
+          </div>
+          <UnitSelector compact showLabel={false} />
         </div>
       </div>
 
@@ -790,7 +807,7 @@ export default function ClinicalPanel() {
                       ) : (
                         todayPatients.map(pat => {
                           const todayDate = new Date().toISOString().substring(0, 10);
-                          const log = sessionsLogs.find(l => l.patientId === pat.id && l.date === todayDate);
+                          const log = currentSessionsLogs.find(l => l.patientId === pat.id && l.date === todayDate);
 
                           return (
                             <tr key={pat.id}>
@@ -805,11 +822,15 @@ export default function ClinicalPanel() {
                                     Acompanhado ({log.hourlyData?.length || 0}h) {log.complications?.length > 0 && '⚠️'}
                                   </span>
                                 ) : (
-                                  <span style={styles.badgeIdle}>Aguardando Registro</span>
+                                  <span style={styles.badgePending}>Pendente</span>
                                 )}
                               </td>
                               <td>
-                                <button onClick={() => handleOpenSessionLog(pat)} style={styles.monitorBtn}>
+                                <button 
+                                  onClick={() => handleStartSessionMonitoring(pat)} 
+                                  className="btn btn-sm"
+                                  style={{ backgroundColor: '#8b5cf6', color: '#fff' }}
+                                >
                                   {log ? 'Ver / Editar' : 'Registrar'}
                                 </button>
                               </td>
@@ -838,10 +859,10 @@ export default function ClinicalPanel() {
                   />
                 </div>
                 <div style={styles.sidebarList}>
-                  {patients
+                  {currentPatients
                     .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
                     .map(p => {
-                      const pCount = assistPosts.filter(ap => ap.patientId === p.id).length;
+                      const pCount = currentAssistPosts.filter(ap => ap.patientId === p.id).length;
                       return (
                         <div 
                           key={p.id}
@@ -877,7 +898,7 @@ export default function ClinicalPanel() {
                       patient={activePatient}
                       prescription={activePresc}
                       latestExam={activeLabs[0]}
-                      latestSession={sessionsLogs.find(s => s.patientId === activePatient.id)}
+                      latestSession={currentSessionsLogs.find(s => s.patientId === activePatient.id)}
                       onOpenAiSummary={() => setShowAiModal(true)}
                       onExportPdf={() => setShowExportModal(true)}
                     />

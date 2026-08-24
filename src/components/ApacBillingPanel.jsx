@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   FileText, 
   Clock, 
@@ -8,28 +8,35 @@ import {
   AlertTriangle,
   UploadCloud
 } from 'lucide-react';
+import { useUnit } from '../contexts/UnitContext';
+import UnitSelector from './common/UnitSelector';
 
 export default function ApacBillingPanel() {
+  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
   const [activeTab, setActiveTab] = useState('apacs'); // 'apacs' | 'glosas' | 'remessas'
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  // Simulated dataset for APACs & Billing
+  // Simulated dataset for APACs & Billing (Tagged with betim)
   const [apacList] = useState([
-    { id: '1', patientName: 'ADAIR PRAXEDES MORENO', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-07-28', status: 'Atenção', convenio: 'SUS', valorMes: 2450.00 },
-    { id: '2', patientName: 'ADAO LUCIANO DIAS', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-08-15', status: 'Ativa', convenio: 'SUS', valorMes: 2450.00 },
-    { id: '3', patientName: 'ADRIANO BRANDAO DA SILVA', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-07-20', status: 'Urgente', convenio: 'SUS', valorMes: 2450.00 },
-    { id: '4', patientName: 'AGMAR DE SOUZA TAVARES', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-09-02', status: 'Ativa', convenio: 'SUS', valorMes: 2450.00 },
-    { id: '5', patientName: 'ALAN ALVES DE SOUZA', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-07-22', status: 'Urgente', convenio: 'SUS', valorMes: 2450.00 },
-    { id: '6', patientName: 'CARLOS EDUARDO SILVA', code: '0303020059', procedimiento: 'Hemodiálise High-Flux', expires: '2026-08-30', status: 'Ativa', convenio: 'SUS', valorMes: 2890.00 },
-    { id: '7', patientName: 'FRANCISCA OLIVEIRA SANTOS', code: '0303020059', procedimiento: 'Hemodiálise Contínua', expires: '2026-08-05', status: 'Atenção', convenio: 'SUS', valorMes: 2450.00 }
+    { id: '1', unitId: 'betim', unit: 'Betim', patientName: 'ADAIR PRAXEDES MORENO', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-07-28', status: 'Atenção', convenio: 'SUS', valorMes: 2450.00 },
+    { id: '2', unitId: 'betim', unit: 'Betim', patientName: 'ADAO LUCIANO DIAS', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-08-15', status: 'Ativa', convenio: 'SUS', valorMes: 2450.00 },
+    { id: '3', unitId: 'betim', unit: 'Betim', patientName: 'ADRIANO BRANDAO DA SILVA', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-07-20', status: 'Urgente', convenio: 'SUS', valorMes: 2450.00 },
+    { id: '4', unitId: 'betim', unit: 'Betim', patientName: 'AGMAR DE SOUZA TAVARES', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-09-02', status: 'Ativa', convenio: 'SUS', valorMes: 2450.00 },
+    { id: '5', unitId: 'betim', unit: 'Betim', patientName: 'ALAN ALVES DE SOUZA', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-07-22', status: 'Urgente', convenio: 'SUS', valorMes: 2450.00 },
+    { id: '6', unitId: 'betim', unit: 'Betim', patientName: 'CARLOS EDUARDO SILVA', code: '0303020059', procedimiento: 'Hemodiálise High-Flux', expires: '2026-08-30', status: 'Ativa', convenio: 'SUS', valorMes: 2890.00 },
+    { id: '7', unitId: 'betim', unit: 'Betim', patientName: 'FRANCISCA OLIVEIRA SANTOS', code: '0303020059', procedimiento: 'Hemodiálise Contínua', expires: '2026-08-05', status: 'Atenção', convenio: 'SUS', valorMes: 2450.00 }
   ]);
 
   const [glosaList] = useState([
-    { id: 'g1', lote: 'REM-2026-06', paciente: 'ADRIANO BRANDAO DA SILVA', motivo: 'APAC Vencida durante o ciclo', valorGlosa: 612.50, status: 'Em Recurso', dataGlosa: '2026-07-05' },
-    { id: 'g2', lote: 'REM-2026-05', paciente: 'MARIA APARECIDA COSTA', motivo: 'Divergência no CID de insuficiência renal', valorGlosa: 1225.00, status: 'Deferido', dataGlosa: '2026-06-12' },
-    { id: 'g3', lote: 'REM-2026-06', paciente: 'ROBERTO ALVES PINTO', motivo: 'Assinatura de presença com falta injustificada', valorGlosa: 306.25, status: 'Pendente', dataGlosa: '2026-07-10' }
+    { id: 'g1', unitId: 'betim', unit: 'Betim', lote: 'REM-2026-06', paciente: 'ADRIANO BRANDAO DA SILVA', motivo: 'APAC Vencida durante o ciclo', valorGlosa: 612.50, status: 'Em Recurso', dataGlosa: '2026-07-05' },
+    { id: 'g2', unitId: 'betim', unit: 'Betim', lote: 'REM-2026-05', paciente: 'MARIA APARECIDA COSTA', motivo: 'Divergência no CID de insuficiência renal', valorGlosa: 1225.00, status: 'Deferido', dataGlosa: '2026-06-12' },
+    { id: 'g3', unitId: 'betim', unit: 'Betim', lote: 'REM-2026-06', paciente: 'ROBERTO ALVES PINTO', motivo: 'Assinatura de presença com falta injustificada', valorGlosa: 306.25, status: 'Pendente', dataGlosa: '2026-07-10' }
   ]);
+
+  // Filtragem de Dados pela Unidade Ativa
+  const currentApacList = useMemo(() => filterByActiveUnit(apacList), [apacList, activeUnitId]);
+  const currentGlosaList = useMemo(() => filterByActiveUnit(glosaList), [glosaList, activeUnitId]);
 
   const getApacBadgeStyle = (status) => {
     switch (status) {
@@ -39,15 +46,15 @@ export default function ApacBillingPanel() {
     }
   };
 
-  const filteredApacs = apacList.filter(a => {
+  const filteredApacs = currentApacList.filter(a => {
     const matchesSearch = a.patientName.toLowerCase().includes(searchTerm.toLowerCase()) || a.code.includes(searchTerm);
     const matchesStatus = statusFilter ? a.status === statusFilter : true;
     return matchesSearch && matchesStatus;
   });
 
-  const urgentCount = apacList.filter(a => a.status === 'Urgente').length;
-  const warningCount = apacList.filter(a => a.status === 'Atenção').length;
-  const totalFaturamentoEst = apacList.reduce((acc, c) => acc + c.valorMes, 0);
+  const urgentCount = currentApacList.filter(a => a.status === 'Urgente').length;
+  const warningCount = currentApacList.filter(a => a.status === 'Atenção').length;
+  const totalFaturamentoEst = currentApacList.reduce((acc, c) => acc + c.valorMes, 0);
 
   return (
     <div style={styles.container}>
@@ -60,7 +67,8 @@ export default function ApacBillingPanel() {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <UnitSelector compact showLabel={false} />
           <button onClick={() => alert('Exportação de Remessa BPA/APAC SUS gerada com sucesso!')} style={styles.btnSecondary}>
             <Download size={16} /> Gerar Remessa SUS (BPA/APAC)
           </button>
@@ -74,7 +82,7 @@ export default function ApacBillingPanel() {
             <span style={styles.kpiLabel}>APACs Ativas / Cadastradas</span>
             <FileText size={20} color="var(--primary-color)" />
           </div>
-          <span style={styles.kpiValue}>{apacList.length} Pacientes</span>
+          <span style={styles.kpiValue}>{currentApacList.length} Pacientes</span>
           <span style={styles.kpiSubtext}>Regulados na Nefrologia</span>
         </div>
 
@@ -115,13 +123,13 @@ export default function ApacBillingPanel() {
             onClick={() => setActiveTab('apacs')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'apacs' ? styles.tabBtnActive : {}) }}
           >
-            📋 Validade de APACs ({apacList.length})
+            📋 Validade de APACs ({currentApacList.length})
           </button>
           <button 
             onClick={() => setActiveTab('glosas')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'glosas' ? styles.tabBtnActive : {}) }}
           >
-            ⚠️ Gestão de Glosas ({glosaList.length})
+            ⚠️ Gestão de Glosas ({currentGlosaList.length})
           </button>
           <button 
             onClick={() => setActiveTab('remessas')} 
@@ -172,37 +180,45 @@ export default function ApacBillingPanel() {
               </tr>
             </thead>
             <tbody>
-              {filteredApacs.map(apac => {
-                const today = new Date();
-                const expireDate = new Date(apac.expires);
-                const diffTime = expireDate - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              {filteredApacs.length === 0 ? (
+                <tr>
+                  <td colSpan="8" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    Nenhuma APAC encontrada para a unidade selecionada.
+                  </td>
+                </tr>
+              ) : (
+                filteredApacs.map(apac => {
+                  const today = new Date();
+                  const expireDate = new Date(apac.expires);
+                  const diffTime = expireDate - today;
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-                return (
-                  <tr key={apac.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>{apac.patientName}</td>
-                    <td style={{ padding: '0.875rem 1rem', fontFamily: 'monospace', fontWeight: '600' }}>{apac.code}</td>
-                    <td style={{ padding: '0.875rem 1rem' }}>{apac.procedimiento}</td>
-                    <td style={{ padding: '0.875rem 1rem' }}>{apac.expires.split('-').reverse().join('/')}</td>
-                    <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: diffDays <= 10 ? '#ef4444' : diffDays <= 30 ? '#f59e0b' : 'var(--text-primary)' }}>
-                      {diffDays} dias
-                    </td>
-                    <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: '#10b981' }}>
-                      R$ {apac.valorMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td style={{ padding: '0.875rem 1rem' }}>
-                      <span style={{ padding: '0.25rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '700', ...getApacBadgeStyle(apac.status) }}>
-                        {apac.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.875rem 1rem' }}>
-                      <button onClick={() => alert(`Solicitação de renovação para a APAC ${apac.code} de ${apac.patientName} registrada!`)} style={styles.actionBtn}>
-                        Renovar APAC
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr key={apac.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>{apac.patientName}</td>
+                      <td style={{ padding: '0.875rem 1rem', fontFamily: 'monospace', fontWeight: '600' }}>{apac.code}</td>
+                      <td style={{ padding: '0.875rem 1rem' }}>{apac.procedimiento}</td>
+                      <td style={{ padding: '0.875rem 1rem' }}>{apac.expires.split('-').reverse().join('/')}</td>
+                      <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: diffDays <= 10 ? '#ef4444' : diffDays <= 30 ? '#f59e0b' : 'var(--text-primary)' }}>
+                        {diffDays} dias
+                      </td>
+                      <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: '#10b981' }}>
+                        R$ {apac.valorMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: '0.875rem 1rem' }}>
+                        <span style={{ padding: '0.25rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '700', ...getApacBadgeStyle(apac.status) }}>
+                          {apac.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.875rem 1rem' }}>
+                        <button onClick={() => alert(`Solicitação de renovação para a APAC ${apac.code} de ${apac.patientName} registrada!`)} style={styles.actionBtn}>
+                          Renovar APAC
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -224,34 +240,42 @@ export default function ApacBillingPanel() {
               </tr>
             </thead>
             <tbody>
-              {glosaList.map(g => (
-                <tr key={g.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: '0.875rem 1rem', fontWeight: '700' }}>{g.lote}</td>
-                  <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>{g.paciente}</td>
-                  <td style={{ padding: '0.875rem 1rem' }}>{g.motivo}</td>
-                  <td style={{ padding: '0.875rem 1rem' }}>{g.dataGlosa.split('-').reverse().join('/')}</td>
-                  <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: '#ef4444' }}>
-                    R$ {g.valorGlosa.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </td>
-                  <td style={{ padding: '0.875rem 1rem' }}>
-                    <span style={{
-                      padding: '0.2rem 0.5rem',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: '700',
-                      backgroundColor: g.status === 'Deferido' ? '#dcfce7' : g.status === 'Em Recurso' ? '#fef3c7' : '#fee2e2',
-                      color: g.status === 'Deferido' ? '#166534' : g.status === 'Em Recurso' ? '#b45309' : '#991b1b'
-                    }}>
-                      {g.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: '0.875rem 1rem' }}>
-                    <button onClick={() => alert(`Entrando com recurso para a glosa de ${g.paciente}...`)} style={styles.actionBtn}>
-                      Recorrer Glosa
-                    </button>
+              {currentGlosaList.length === 0 ? (
+                <tr>
+                  <td colSpan="7" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    Nenhum registro de glosa para a unidade selecionada.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                currentGlosaList.map(g => (
+                  <tr key={g.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '0.875rem 1rem', fontWeight: '700' }}>{g.lote}</td>
+                    <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>{g.paciente}</td>
+                    <td style={{ padding: '0.875rem 1rem' }}>{g.motivo}</td>
+                    <td style={{ padding: '0.875rem 1rem' }}>{g.dataGlosa.split('-').reverse().join('/')}</td>
+                    <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: '#ef4444' }}>
+                      R$ {g.valorGlosa.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ padding: '0.875rem 1rem' }}>
+                      <span style={{
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        backgroundColor: g.status === 'Deferido' ? '#dcfce7' : g.status === 'Em Recurso' ? '#fef3c7' : '#fee2e2',
+                        color: g.status === 'Deferido' ? '#166534' : g.status === 'Em Recurso' ? '#b45309' : '#991b1b'
+                      }}>
+                        {g.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.875rem 1rem' }}>
+                      <button onClick={() => alert(`Entrando com recurso para a glosa de ${g.paciente}...`)} style={styles.actionBtn}>
+                        Recorrer Glosa
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

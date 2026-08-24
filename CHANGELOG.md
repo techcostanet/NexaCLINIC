@@ -1,3 +1,26 @@
+## [v4.7.54] - 24 de Agosto, 2026
+### Isolamento Total de Dados por Filial (Taguatinga/DF vs Betim/MG) em Todos os Módulos do Sistema
+- **Isolamento Completo e Rigoroso de Dados por Unidade:**
+  - Implementado chaveamento e filtragem universal em **todos os 14 módulos do sistema**:
+    - **NexaASSIST**: Escalas de hemodiálise, mapa de salões e mural de comunicados isolados por filial, com empty state elegante para unidades novas (Taguatinga / DF).
+    - **NexaCLINICAL & Pacientes**: Listagens, prontuários, registros de diálise, prescrições e contadores 100% segregados por filial ativa.
+    - **NexaCAL (Agenda)**: Agendamentos, escalas de plantão médico e bloqueios de horário filtrados por unidade.
+    - **NexaMED (Gestão Médica)**: Corpo clínico, procedimentos, produção médica e solicitações de troca de plantão isolados por filial.
+    - **NexaHR (Recursos Humanos)**: Colaboradores, vale-transporte, advertências, contratos em experiência e indicadores (turnover/absenteísmo) estritamente por unidade.
+    - **NexaSTOCK (Estoque & Farmácia)**: Saldos físicos, movimentações, notas fiscais, lotes, empréstimos e inventários isolados.
+    - **NexaENG (Manutenção & Engenharia Clínica)**: Parque de máquinas/equipamentos, ordens de serviço e cronograma preventivo filtrados por filial.
+    - **NexaPROCURE (Compras & Cotações)**: Requisições de compra, itens críticos calculados sobre o saldo disponível e cotações isoladas por filial.
+    - **NexaRECEPTION (Recepção & Admissões)**: Admissões, check-ins diários, escala de poltronas e rondas médicas isoladas por filial.
+    - **NexaREQ (Salão de Diálise / Técnicos)**: Requisições de materiais e kits padronizados por salão segregados por filial.
+    - **NexaINDEX (Dashboard Geral de Indicadores)**: Métricas de qualidade, infecção, glosas e mortalidade calculadas dinamicamente por filial ativa ou consolidado.
+    - **NexaAPAC (Faturamento SUS / Convênios)**: APACs ativas, alertas de vencimento e controle de glosas isolados por filial.
+- **Seletor Unificado e Tagging Automático:**
+  - Inserido o componente `UnitSelector` de forma padronizada nos cabeçalhos de todos os módulos.
+  - Novos registros criados em qualquer formulário são automaticamente etiquetados com a `unitId` e `unit` da filial ativa.
+  - Visão limpa e zerada para a nova unidade de Taguatinga / DF, garantindo que nenhum dado histórico de Betim seja apresentado indevidamente.
+
+---
+
 ## [v4.7.53] - 24 de Agosto, 2026
 ### Arquitetura Multi-Unidade (Betim/MG e Taguatinga/DF) & Preparação para SaaS e Integração Financeira/Estoque
 - **Arquitetura Global Multi-Unidade (`UnitContext` & `UnitSelector`):**

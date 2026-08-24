@@ -117,18 +117,27 @@ export function UnitProvider({ children, currentUser }) {
   };
 
   /**
-   * Helper para filtrar arrays de dados (Financeiro, Estoque, Pacientes)
+   * Helper para verificar se um item individual pertence à unidade ativa.
+   * Se não possui unidade explícita, atribui com segurança à unidade 'betim' (retrocompatibilidade).
+   */
+  const matchItemUnit = (item) => {
+    if (!item) return false;
+    if (activeUnitId === 'all') return true;
+    const itemUnit = item.unitId || item.unit || item.filial || item.branch || item.unidade || 'betim';
+    const cleanUnit = String(itemUnit).toLowerCase().trim();
+    if (activeUnitId === 'betim') return cleanUnit === 'betim' || cleanUnit === 'btm';
+    if (activeUnitId === 'taguatinga') return cleanUnit === 'taguatinga' || cleanUnit === 'tag';
+    return cleanUnit === activeUnitId;
+  };
+
+  /**
+   * Helper para filtrar arrays de dados (Financeiro, Estoque, Pacientes, etc.)
    * Garante retrocompatibilidade: registros sem unitId são tratados como 'betim'.
    */
-  const filterByActiveUnit = (items = [], unitField = 'unitId') => {
+  const filterByActiveUnit = (items = []) => {
     if (!Array.isArray(items)) return [];
     if (activeUnitId === 'all') return items;
-
-    return items.filter(item => {
-      if (!item) return false;
-      const itemUnit = item[unitField] || item.filial || 'betim';
-      return String(itemUnit).toLowerCase().trim() === activeUnitId;
-    });
+    return items.filter(matchItemUnit);
   };
 
   const value = {
@@ -141,6 +150,7 @@ export function UnitProvider({ children, currentUser }) {
     isSuperAdmin,
     setActiveUnitId,
     getUnitMeta,
+    matchItemUnit,
     filterByActiveUnit
   };
 

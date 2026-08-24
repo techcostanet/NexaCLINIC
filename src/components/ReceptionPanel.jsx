@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../firebase';
+import { useUnit } from '../contexts/UnitContext';
+import UnitSelector from './common/UnitSelector';
 import { 
   Plus, Search, Edit2, Trash2, User, Calendar, 
   Check, X, FileText, CheckCircle2, AlertCircle, 
@@ -8,6 +10,7 @@ import {
 } from 'lucide-react';
 
 export default function ReceptionPanel() {
+  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
   const [activeTab, setActiveTab] = useState('checkin'); // 'checkin' | 'patients' | 'grid' | 'ronda'
   const [patients, setPatients] = useState([]);
   const [checkins, setCheckins] = useState([]);
@@ -221,6 +224,11 @@ export default function ReceptionPanel() {
     });
   };
 
+  // Filtragem de Dados pela Unidade Ativa
+  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
+  const currentCheckins = useMemo(() => filterByActiveUnit(checkins), [checkins, activeUnitId]);
+  const currentMedicalSchedules = useMemo(() => filterByActiveUnit(medicalSchedules), [medicalSchedules, activeUnitId]);
+
   const handleSavePatient = async (e) => {
     e.preventDefault();
     if (!patientForm.name || !patientForm.cpf || !patientForm.birthDate) {
@@ -229,9 +237,14 @@ export default function ReceptionPanel() {
 
     setActionLoading(true);
     try {
+      const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
       const dataToSave = {
         ...patientForm,
         dryWeight: patientForm.dryWeight ? parseFloat(patientForm.dryWeight) : 0,
+        unitId: targetUnitId,
+        unit: targetUnit
       };
 
       if (editingPatient) {
@@ -283,7 +296,10 @@ export default function ReceptionPanel() {
 
     setActionLoading(true);
     try {
+      const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
       const todayDate = new Date().toISOString().substring(0, 10);
+
       await dbService.saveCheckin({
         patientId: selectedPatientForCheckin.id,
         patientName: selectedPatientForCheckin.name,
@@ -293,7 +309,9 @@ export default function ReceptionPanel() {
         temperature: parseFloat(checkinForm.temperature) || 36.5,
         shift: selectedPatientForCheckin.shift,
         room: selectedPatientForCheckin.room,
-        chairNumber: selectedPatientForCheckin.chairNumber || '1'
+        chairNumber: selectedPatientForCheckin.chairNumber || '1',
+        unitId: targetUnitId,
+        unit: targetUnit
       });
 
       showAlert(`Check-in de ${selectedPatientForCheckin.name} realizado!`, 'success');
@@ -320,7 +338,7 @@ export default function ReceptionPanel() {
   const todayScheduleFilter = getTodayWeekday();
 
   const getFilteredPatients = () => {
-    return patients.filter(p => {
+    return currentPatients.filter(p => {
       const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             p.cpf?.includes(searchTerm) ||
                             p.cns?.includes(searchTerm);
@@ -333,7 +351,7 @@ export default function ReceptionPanel() {
 
   const getPatientsForToday = () => {
     const todayDate = new Date().toISOString().substring(0, 10);
-    return patients.filter(p => {
+    return currentPatients.filter(p => {
       // Filter patients that dialyze today (matching weekday scale) and are active
       const matchesFrequency = p.dialysisFrequency?.includes(todayScheduleFilter) || p.dialysisFrequency === 'Diário';
       const isActive = p.treatmentStatus === 'Ativo';
@@ -348,7 +366,7 @@ export default function ReceptionPanel() {
 
   const getCheckinForPatientToday = (patientId) => {
     const todayDate = new Date().toISOString().substring(0, 10);
-    return checkins.find(c => c.patientId === patientId && c.date === todayDate);
+    return currentCheckins.find(c => c.patientId === patientId && c.date === todayDate);
   };
 
   // Check APAC expirations
@@ -382,7 +400,7 @@ export default function ReceptionPanel() {
         <div style={styles.gridContainer}>
           {shifts.map(sh => {
             // Get patients in this room and this shift
-            const roomShiftPatients = patients.filter(
+            const roomShiftPatients = currentPatients.filter(
               p => p.room === roomName && p.shift === sh.name && p.treatmentStatus === 'Ativo'
             );
 
@@ -437,6 +455,7 @@ export default function ReceptionPanel() {
           <h1 style={styles.title}>NexaCLINIC - Recepção & Cadastro</h1>
           <p style={styles.subtitle}>Gerenciamento de admissões, escalas de poltronas de diálise e check-in presencial diário.</p>
         </div>
+        <UnitSelector compact showLabel={false} />
       </div>
 
       {/* Tabs */}
@@ -451,7 +470,7 @@ export default function ReceptionPanel() {
           onClick={() => setActiveTab('patients')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'patients' ? styles.tabBtnActive : {}) }}
         >
-          <User size={16} /> Pacientes Cadastrados ({patients.length})
+          <User size={16} /> Pacientes Cadastrados ({currentPatients.length})
         </button>
         <button 
           onClick={() => setActiveTab('grid')} 
@@ -463,7 +482,7 @@ export default function ReceptionPanel() {
           onClick={() => setActiveTab('ronda')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'ronda' ? styles.tabBtnActive : {}) }}
         >
-          <UserCheck size={16} /> Ronda Médica ({medicalSchedules.filter(s => s.date === new Date().toISOString().substring(0, 10) && s.checkinStatus === 'Presente').length}/{medicalSchedules.filter(s => s.date === new Date().toISOString().substring(0, 10)).length})
+          <UserCheck size={16} /> Ronda Médica ({currentMedicalSchedules.filter(s => s.date === new Date().toISOString().substring(0, 10) && s.checkinStatus === 'Presente').length}/{currentMedicalSchedules.filter(s => s.date === new Date().toISOString().substring(0, 10)).length})
         </button>
       </div>
 

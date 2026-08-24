@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../firebase';
 import { Plus, Search, Edit2, Trash2, User, Calendar, ShieldCheck, HeartPulse, X, Check, FileText } from 'lucide-react';
+import { useUnit } from '../contexts/UnitContext';
+import UnitSelector from './common/UnitSelector';
 
 export default function PatientsPanel() {
+  const { activeUnitId, filterByActiveUnit } = useUnit();
   const [patients, setPatients] = useState([]);
   const [shifts, setShifts] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -141,6 +144,9 @@ export default function PatientsPanel() {
       return showAlert('Preencha os campos obrigatórios (Nome, Nascimento, Prontuário).', 'warning');
     }
 
+    const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+    const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
     const patientData = {
       name,
       gender,
@@ -157,7 +163,9 @@ export default function PatientsPanel() {
       patientType,
       city,
       state,
-      treatmentType
+      treatmentType,
+      unitId: targetUnitId,
+      unit: targetUnit
     };
 
     setActionLoading(true);
@@ -224,8 +232,11 @@ export default function PatientsPanel() {
     }
   };
 
+  // Filtragem de Pacientes pela Unidade Ativa
+  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
+
   // Filtered Patients List
-  const filteredPatients = patients.filter((pat) => {
+  const filteredPatients = currentPatients.filter((pat) => {
     const matchesName = pat.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                         (pat.chartNumber && pat.chartNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
                         (pat.cpf && pat.cpf.includes(searchTerm));
@@ -237,10 +248,10 @@ export default function PatientsPanel() {
   });
 
   // Calculate statistics
-  const totalCount = patients.length;
-  const activeCount = patients.filter(p => p.treatmentStatus === 'Ativo').length;
-  const transplantCount = patients.filter(p => p.treatmentStatus === 'Transplantado').length;
-  const deathCount = patients.filter(p => p.treatmentStatus === 'Óbito').length;
+  const totalCount = currentPatients.length;
+  const activeCount = currentPatients.filter(p => p.treatmentStatus === 'Ativo').length;
+  const transplantCount = currentPatients.filter(p => p.treatmentStatus === 'Transplantado').length;
+  const deathCount = currentPatients.filter(p => p.treatmentStatus === 'Óbito').length;
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: '3rem' }}>Carregando cadastro de pacientes...</div>;
@@ -254,10 +265,13 @@ export default function PatientsPanel() {
             <h1>Cadastro de Pacientes</h1>
             <p>Gerencie as fichas clínicas dos pacientes em tratamento de hemodiálise, turnos e salas.</p>
           </div>
-          <button className="btn btn-primary" onClick={openAddModal}>
-            <Plus size={18} />
-            <span>Adicionar Paciente</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <UnitSelector compact showLabel={false} />
+            <button className="btn btn-primary" onClick={openAddModal}>
+              <Plus size={18} />
+              <span>Adicionar Paciente</span>
+            </button>
+          </div>
         </div>
       </div>
 

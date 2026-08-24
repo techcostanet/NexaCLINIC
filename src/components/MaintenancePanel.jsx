@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../firebase';
+import { useUnit } from '../contexts/UnitContext';
+import UnitSelector from './common/UnitSelector';
 import { 
   Wrench, Plus, Search, Filter, X, FileText, CheckCircle2, 
   AlertTriangle, Clock, Trash2, Edit, AlertCircle, HardDrive, 
@@ -9,6 +11,7 @@ import {
 } from 'lucide-react';
 
 export default function MaintenancePanel({ currentUser }) {
+  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'equipments' | 'calendar' | 'kpi'
   const [ordersViewMode, setOrdersViewMode] = useState('compact'); // 'compact' | 'normal' | 'card'
   const [equipmentsViewMode, setEquipmentsViewMode] = useState('compact');
@@ -33,6 +36,11 @@ export default function MaintenancePanel({ currentUser }) {
   const [editingEquipment, setEditingEquipment] = useState(null);
   const [isCustomSector, setIsCustomSector] = useState(false);
 
+  // Filtragem de Dados pela Unidade Ativa
+  const currentEquipments = useMemo(() => filterByActiveUnit(equipments), [equipments, activeUnitId]);
+  const currentServiceOrders = useMemo(() => filterByActiveUnit(serviceOrders), [serviceOrders, activeUnitId]);
+  const currentStockItems = useMemo(() => filterByActiveUnit(stockItems), [stockItems, activeUnitId]);
+
   const sectorOptions = useMemo(() => {
     const defaultSectors = [
       "Salão-1",
@@ -52,9 +60,9 @@ export default function MaintenancePanel({ currentUser }) {
       "Administrativo / Diretoria",
       "Copa / Refeitório"
     ];
-    const existingSectors = equipments.map(e => e.sector).filter(Boolean);
+    const existingSectors = currentEquipments.map(e => e.sector).filter(Boolean);
     return Array.from(new Set([...defaultSectors, ...existingSectors]));
-  }, [equipments]);
+  }, [currentEquipments]);
 
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedEqHistory, setSelectedEqHistory] = useState(null);
@@ -201,34 +209,34 @@ export default function MaintenancePanel({ currentUser }) {
 
   // User specific orders (Standard Employees only see their own opened orders)
   const userOrders = useMemo(() => {
-    if (isTechOrAdmin) return serviceOrders;
+    if (isTechOrAdmin) return currentServiceOrders;
     const userEmail = (currentUser?.email || '').trim().toLowerCase();
     const userName = (currentUser?.name || '').trim().toLowerCase();
-    return serviceOrders.filter(o => {
+    return currentServiceOrders.filter(o => {
       const osEmail = (o.requesterEmail || '').trim().toLowerCase();
       const osName = (o.requesterName || '').trim().toLowerCase();
       return (userEmail && osEmail === userEmail) || (userName && osName === userName);
     });
-  }, [serviceOrders, isTechOrAdmin, currentUser]);
+  }, [currentServiceOrders, isTechOrAdmin, currentUser]);
 
   // KPI Calculations
   const kpis = useMemo(() => {
-    const totalEq = equipments.length;
-    const bioEq = equipments.filter(e => e.category === 'Biomédico').length;
+    const totalEq = currentEquipments.length;
+    const bioEq = currentEquipments.filter(e => e.category === 'Biomédico').length;
 
-    const predEq = equipments.filter(e => e.category === 'Infraestrutura').length;
-    const inopEq = equipments.filter(e => e.status === 'Inoperante' || e.status === 'Em Manutenção').length;
+    const predEq = currentEquipments.filter(e => e.category === 'Infraestrutura').length;
+    const inopEq = currentEquipments.filter(e => e.status === 'Inoperante' || e.status === 'Em Manutenção').length;
 
-    const openOrders = serviceOrders.filter(o => o.status === 'Aberta' || o.status === 'Em Diagnóstico' || o.status === 'Em Execução' || o.status === 'Aguardando Peça').length;
-    const completedOrders = serviceOrders.filter(o => o.status === 'Concluída' || o.status === 'Encerrada').length;
+    const openOrders = currentServiceOrders.filter(o => o.status === 'Aberta' || o.status === 'Em Diagnóstico' || o.status === 'Em Execução' || o.status === 'Aguardando Peça').length;
+    const completedOrders = currentServiceOrders.filter(o => o.status === 'Concluída' || o.status === 'Encerrada').length;
     
     const myOpenOrders = userOrders.filter(o => o.status === 'Aberta' || o.status === 'Em Diagnóstico' || o.status === 'Em Execução' || o.status === 'Aguardando Peça').length;
     const myCompletedOrders = userOrders.filter(o => o.status === 'Concluída' || o.status === 'Encerrada').length;
 
-    const totalCost = serviceOrders.reduce((sum, o) => sum + (Number(o.totalCost) || 0), 0);
+    const totalCost = currentServiceOrders.reduce((sum, o) => sum + (Number(o.totalCost) || 0), 0);
 
     const todayStr = new Date().toISOString().split('T')[0];
-    const overduePreventives = equipments.filter(e => e.nextPreventiveDate && e.nextPreventiveDate < todayStr).length;
+    const overduePreventives = currentEquipments.filter(e => e.nextPreventiveDate && e.nextPreventiveDate < todayStr).length;
 
     return { 
       totalEq, bioEq, predEq, inopEq, 
@@ -236,7 +244,7 @@ export default function MaintenancePanel({ currentUser }) {
       myOpenOrders, myCompletedOrders,
       totalCost, overduePreventives 
     };
-  }, [equipments, serviceOrders, userOrders]);
+  }, [currentEquipments, currentServiceOrders, userOrders]);
 
   // Filtering Service Orders
   const filteredOrders = useMemo(() => {
@@ -257,7 +265,7 @@ export default function MaintenancePanel({ currentUser }) {
 
   // Filtering Equipments
   const filteredEquipments = useMemo(() => {
-    return equipments.filter(eq => {
+    return currentEquipments.filter(eq => {
       const matchesSearch = 
         (eq.code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (eq.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -270,7 +278,7 @@ export default function MaintenancePanel({ currentUser }) {
 
       return matchesSearch && matchesCategory && matchesStatus;
     });
-  }, [equipments, searchTerm, categoryFilter, statusFilter]);
+  }, [currentEquipments, searchTerm, categoryFilter, statusFilter]);
 
   // Handle Equipment Save
   const handleSaveEquipment = async (e) => {
@@ -281,10 +289,15 @@ export default function MaintenancePanel({ currentUser }) {
     }
 
     try {
+      const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
       const payload = {
         ...eqForm,
         id: editingEquipment ? editingEquipment.id : undefined,
-        code: eqForm.code.trim() || `PAT-${Math.floor(1000 + Math.random() * 9000)}`
+        code: eqForm.code.trim() || `PAT-${Math.floor(1000 + Math.random() * 9000)}`,
+        unitId: targetUnitId,
+        unit: targetUnit
       };
 
       await dbService.saveEquipment(payload);
@@ -306,13 +319,16 @@ export default function MaintenancePanel({ currentUser }) {
       return;
     }
 
-    const selectedEq = equipments.find(e => e.id === orderForm.equipmentId);
+    const selectedEq = currentEquipments.find(e => e.id === orderForm.equipmentId) || equipments.find(e => e.id === orderForm.equipmentId);
     
     // Calculate total cost (labor + parts)
     const partsTotal = orderForm.partsUsed.reduce((acc, p) => acc + (Number(p.unitCost || 0) * Number(p.quantity || 1)), 0);
     const totalCost = partsTotal + Number(orderForm.laborCost || 0);
 
     const isNew = !editingOrder;
+    const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+    const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
     const payload = {
       ...orderForm,
       id: editingOrder ? editingOrder.id : undefined,
@@ -323,7 +339,9 @@ export default function MaintenancePanel({ currentUser }) {
       equipmentCategory: selectedEq ? selectedEq.category : 'Outros',
       sector: selectedEq ? selectedEq.sector : orderForm.requesterSector,
       totalCost,
-      completionDate: (orderForm.status === 'Concluída' || orderForm.status === 'Encerrada') ? new Date().toISOString() : null
+      completionDate: (orderForm.status === 'Concluída' || orderForm.status === 'Encerrada') ? new Date().toISOString() : null,
+      unitId: targetUnitId,
+      unit: targetUnit
     };
 
     try {
@@ -646,6 +664,7 @@ export default function MaintenancePanel({ currentUser }) {
         </div>
 
         <div style={styles.headerActions}>
+          <UnitSelector compact showLabel={false} />
           <button onClick={() => handleOpenNewOrder()} style={styles.btnPrimary}>
             <Plus size={16} /> Solicitar Reparo / Nova OS
           </button>
@@ -736,7 +755,7 @@ export default function MaintenancePanel({ currentUser }) {
           style={{ ...styles.tabButton, ...(activeTab === 'orders' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('orders')}
         >
-          <FileText size={16} /> {isTechOrAdmin ? `Ordens de Serviço (${serviceOrders.length})` : `Meus Chamados (${userOrders.length})`}
+          <FileText size={16} /> {isTechOrAdmin ? `Ordens de Serviço (${currentServiceOrders.length})` : `Meus Chamados (${userOrders.length})`}
         </button>
 
         {isTechOrAdmin && (
@@ -745,7 +764,7 @@ export default function MaintenancePanel({ currentUser }) {
               style={{ ...styles.tabButton, ...(activeTab === 'equipments' ? styles.tabActive : {}) }}
               onClick={() => setActiveTab('equipments')}
             >
-              <HardDrive size={16} /> Equipamentos & Ativos ({equipments.length})
+              <HardDrive size={16} /> Equipamentos & Ativos ({currentEquipments.length})
             </button>
             <button 
               style={{ ...styles.tabButton, ...(activeTab === 'calendar' ? styles.tabActive : {}) }}

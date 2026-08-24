@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../firebase';
+import { useUnit } from '../contexts/UnitContext';
+import UnitSelector from './common/UnitSelector';
 import { BarChart3, Calendar, Filter, CheckCircle, AlertCircle, HelpCircle, ShieldAlert, Printer, FileText } from 'lucide-react';
 import AtaPsicologiaModal from './AtaPsicologiaModal';
 
@@ -232,6 +234,7 @@ function DynamicChart({ history, target, unit, lowerIsBetter, chartType = 'line'
 }
 
 export default function Dashboard({ currentUser }) {
+  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
   const [sectors, setSectors] = useState([]);
   const [indicators, setIndicators] = useState([]);
   const [indicatorData, setIndicatorData] = useState([]);
@@ -243,6 +246,23 @@ export default function Dashboard({ currentUser }) {
   const [availablePeriods, setAvailablePeriods] = useState([]);
   const [chartTypes, setChartTypes] = useState({});
   const [showAtaModal, setShowAtaModal] = useState(false);
+
+  // Filtragem de Dados pela Unidade Ativa
+  const currentIndicatorData = useMemo(() => filterByActiveUnit(indicatorData), [indicatorData, activeUnitId]);
+
+  const currentPeriods = useMemo(() => {
+    return [...new Set(currentIndicatorData.map(d => d.period))].sort((a, b) => b.localeCompare(a));
+  }, [currentIndicatorData]);
+
+  useEffect(() => {
+    if (currentPeriods.length > 0) {
+      if (!currentPeriods.includes(selectedPeriod)) {
+        setSelectedPeriod(currentPeriods[0]);
+      }
+    } else {
+      setSelectedPeriod('2026-07');
+    }
+  }, [currentPeriods, selectedPeriod]);
 
   const handlePrint = (metricId, layout) => {
     const style = document.createElement('style');
@@ -317,7 +337,6 @@ export default function Dashboard({ currentUser }) {
     } catch (err) {
       console.error('Erro ao buscar dados do dashboard:', err);
     } finally {
-      setLoading(true); // Wait, set to false
       setLoading(false);
     }
   };
@@ -338,11 +357,11 @@ export default function Dashboard({ currentUser }) {
   
   const metricsForPeriod = filteredIndicators.map(ind => {
     // Current period value
-    const currentRecord = indicatorData.find(d => d.indicatorId === ind.id && d.period === selectedPeriod);
+    const currentRecord = currentIndicatorData.find(d => d.indicatorId === ind.id && d.period === selectedPeriod);
     const currentValue = currentRecord ? currentRecord.value : null;
 
     // Historical records for this indicator
-    const history = indicatorData.filter(d => d.indicatorId === ind.id);
+    const history = currentIndicatorData.filter(d => d.indicatorId === ind.id);
 
     const lowerIsBetter = isLowerBetter(ind.id, ind.name);
     
@@ -381,13 +400,16 @@ export default function Dashboard({ currentUser }) {
             Abaixo estão os indicadores de hemodiálise vinculados à sua permissão de acesso.
           </p>
         </div>
-        <div style={styles.userInfo}>
-          <span className="badge badge-prof" style={{ marginRight: '0.5rem', backgroundColor: '#e0f2fe', color: '#0284c7' }}>
-            Setores Liberados: {sectors.length}
-          </span>
-          <span className={`badge ${currentUser.role === 'admin' ? 'badge-admin' : 'badge-prof'}`}>
-            {currentUser.role === 'admin' ? 'Acesso Global' : 'Acesso Restrito'}
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <UnitSelector compact showLabel={false} />
+          <div style={styles.userInfo}>
+            <span className="badge badge-prof" style={{ marginRight: '0.5rem', backgroundColor: '#e0f2fe', color: '#0284c7' }}>
+              Setores Liberados: {sectors.length}
+            </span>
+            <span className={`badge ${currentUser.role === 'admin' ? 'badge-admin' : 'badge-prof'}`}>
+              {currentUser.role === 'admin' ? 'Acesso Global' : 'Acesso Restrito'}
+            </span>
+          </div>
         </div>
       </div>
 

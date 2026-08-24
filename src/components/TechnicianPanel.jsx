@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../firebase';
+import { useUnit } from '../contexts/UnitContext';
+import UnitSelector from './common/UnitSelector';
 import { 
   ClipboardList, Plus, Search, Filter, X, CheckCircle2, 
   AlertTriangle, Clock, Trash2, Edit, AlertCircle, User, Package, 
@@ -7,6 +9,7 @@ import {
 } from 'lucide-react';
 
 export default function TechnicianPanel({ currentUser }) {
+  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
   const [requisitions, setRequisitions] = useState([]);
   const [patients, setPatients] = useState([]);
   const [stockItems, setStockItems] = useState([]);
@@ -48,14 +51,19 @@ export default function TechnicianPanel({ currentUser }) {
   const [reqItemsList, setReqItemsList] = useState([]);
   const [itemStockAlert, setItemStockAlert] = useState('');
 
+  // Filtragem de Dados pela Unidade Ativa
+  const currentRequisitions = useMemo(() => filterByActiveUnit(requisitions), [requisitions, activeUnitId]);
+  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
+  const currentStockItems = useMemo(() => filterByActiveUnit(stockItems), [stockItems, activeUnitId]);
+
   // Sorted items and patients A-Z
   const sortedStockItems = useMemo(() => {
-    return [...stockItems].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
-  }, [stockItems]);
+    return [...currentStockItems].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+  }, [currentStockItems]);
 
   const sortedPatients = useMemo(() => {
-    return [...patients].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
-  }, [patients]);
+    return [...currentPatients].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+  }, [currentPatients]);
 
   const filteredStockItems = useMemo(() => {
     if (!itemSearchText.trim()) return sortedStockItems;
@@ -172,7 +180,7 @@ export default function TechnicianPanel({ currentUser }) {
       setPatientName('');
     } else {
       setIsGeneralUse(false);
-      const found = patients.find(p => p.id === pId);
+      const found = currentPatients.find(p => p.id === pId) || patients.find(p => p.id === pId);
       setPatientName(found ? found.name : '');
     }
   };
@@ -286,7 +294,10 @@ export default function TechnicianPanel({ currentUser }) {
     setActionLoading(true);
     try {
       const operatorName = currentUser?.name || currentUser?.email || 'Técnica de Enfermagem';
-      const hasControlled = reqItemsList.some(i => i.isControlled || stockItems.find(it => it.id === i.itemId)?.isControlled);
+      const hasControlled = reqItemsList.some(i => i.isControlled || currentStockItems.find(it => it.id === i.itemId)?.isControlled || stockItems.find(it => it.id === i.itemId)?.isControlled);
+
+      const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
 
       const reqPayload = {
         id: editingReq ? editingReq.id : undefined,
@@ -302,6 +313,8 @@ export default function TechnicianPanel({ currentUser }) {
         status: editingReq ? editingReq.status : 'Pendente',
         notes: notes,
         items: reqItemsList,
+        unitId: targetUnitId,
+        unit: targetUnit,
         createdAt: editingReq ? editingReq.createdAt : new Date().toISOString()
       };
 
@@ -351,11 +364,11 @@ export default function TechnicianPanel({ currentUser }) {
   };
 
   // Stats calculation
-  const totalCount = requisitions.length;
-  const pendingCount = requisitions.filter(r => r.status === 'Pendente').length;
-  const partialCount = requisitions.filter(r => r.status === 'Parcial').length;
-  const deliveredCount = requisitions.filter(r => r.status === 'Entregue').length;
-  const expiredCount = requisitions.filter(r => r.status === 'Expirada').length;
+  const totalCount = currentRequisitions.length;
+  const pendingCount = currentRequisitions.filter(r => r.status === 'Pendente').length;
+  const partialCount = currentRequisitions.filter(r => r.status === 'Parcial').length;
+  const deliveredCount = currentRequisitions.filter(r => r.status === 'Entregue').length;
+  const expiredCount = currentRequisitions.filter(r => r.status === 'Expirada').length;
 
   const getTimeRemaining = (createdAt) => {
     if (!createdAt) return null;
@@ -377,6 +390,9 @@ export default function TechnicianPanel({ currentUser }) {
     setActionLoading(true);
     try {
       const operatorName = currentUser?.name || currentUser?.email || 'Técnica de Enfermagem';
+      const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
       const newReqPayload = {
         requestedBy: operatorName,
         userId: currentUser?.uid || 'user-tech',
@@ -389,6 +405,8 @@ export default function TechnicianPanel({ currentUser }) {
         status: 'Pendente',
         notes: req.notes ? `[Renovação de ${req.requisitionCode}] ${req.notes}` : `Renovação de ${req.requisitionCode}`,
         items: (req.items || []).map(i => ({ ...i, deliveredQuantity: 0 })),
+        unitId: targetUnitId,
+        unit: targetUnit,
         createdAt: new Date().toISOString()
       };
       const saved = await dbService.saveMaterialRequisition(newReqPayload);
@@ -405,7 +423,7 @@ export default function TechnicianPanel({ currentUser }) {
 
   // Filtered List
   const filteredRequisitions = useMemo(() => {
-    return requisitions.filter(r => {
+    return currentRequisitions.filter(r => {
       const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
       const matchesSalon = salonFilter === 'all' || r.salonLocation === salonFilter;
       const searchLower = searchTerm.toLowerCase();
@@ -419,7 +437,7 @@ export default function TechnicianPanel({ currentUser }) {
       
       return matchesStatus && matchesSalon && matchesSearch;
     });
-  }, [requisitions, statusFilter, salonFilter, searchTerm]);
+  }, [currentRequisitions, statusFilter, salonFilter, searchTerm]);
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -455,6 +473,7 @@ export default function TechnicianPanel({ currentUser }) {
         </div>
 
         <div style={styles.heroActions}>
+          <UnitSelector compact showLabel={false} />
           <button 
             style={styles.secondaryHeroBtn} 
             onClick={fetchData} 
