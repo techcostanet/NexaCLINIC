@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.50',
+      date: '24/08/2026',
+      title: 'NexaASSIST — Escala Operacional de Hemodiálise por Salões & Turnos e Vínculo com Manutenção',
+      description: 'Implementação do mapa visual interativo dos salões e turnos de hemodiálise, unificação de 570 pacientes, integração de 100% dos números de série de máquinas com o módulo de manutenção e substituição integral das planilhas manuais.',
+      changes: [
+        { type: 'Mapa de Salões', text: 'Visualização interativa por Salão (01, 02, 03) e Turnos (1º, 2º, 3º), organizado por Boxes (01 a 08 e Sala Amarela) e cadências Seg/Qua/Sex e Ter/Qui/Sáb.' },
+        { type: 'Unificação de Pacientes', text: '570 pacientes únicos integrados, enriquecendo 503 registros existentes e cadastrando 67 novos pacientes com perfis clínicos completos.' },
+        { type: 'Vínculo com Manutenção', text: 'Rastreabilidade de 90 máquinas Nipro Diamax 220F com status em tempo real e atalho direto para ficha técnica.' },
+        { type: 'Acessos & Isolamento', text: 'Badges visuais para FAV (calibres 15, 16 e 17), CDL, Permcath e protocolos de Uso Único / HIV e Hepatite C.' },
+        { type: 'Localizador & Trocas', text: 'Busca rápida global de pacientes e ferramenta ágil de remanejamento e alocação de vagas livres.' }
+      ]
+    },
+    {
       version: 'v4.7.49',
       date: '23/08/2026',
       title: 'NexaMED — Matriz Semanal de Salões, Mapa de Cores de Trocas e Impressão A4 Paisagem',

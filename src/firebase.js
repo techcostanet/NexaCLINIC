@@ -11,6 +11,7 @@ import * as maintenanceFunctions from './services/firebase/maintenanceService';
 import * as sesmtFunctions from './services/firebase/sesmtService';
 import * as assistFunctions from './services/firebase/assistService';
 import * as medicalFunctions from './services/firebase/medicalService';
+import * as dialysisScheduleFunctions from './services/firebase/dialysisScheduleService';
 
 // Standard exports for the rest of the application
 export const authService = {
@@ -29,5 +30,6 @@ export const dbService = {
   ...sesmtFunctions,
   ...assistFunctions,
   ...medicalFunctions,
+  ...dialysisScheduleFunctions,
 };
 

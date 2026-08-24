@@ -2,8 +2,10 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { dbService } from '../firebase';
 import { 
   Megaphone, Search, Plus, Clock, User, RefreshCw, Building2, 
-  Trash2, Edit3, AlertTriangle, List, LayoutList, LayoutGrid, X
+  Trash2, Edit3, AlertTriangle, List, LayoutList, LayoutGrid, X,
+  Calendar, MessageSquare
 } from 'lucide-react';
+import DialysisScheduleTab from './assist/DialysisScheduleTab';
 
 const isSamePosts = (a, b) => {
   if (!a || !b || a.length !== b.length) return false;
@@ -20,6 +22,7 @@ const isSamePosts = (a, b) => {
 };
 
 export default function AssistPanel({ currentUser }) {
+  const [activeAssistTab, setActiveAssistTab] = useState('escala'); // 'escala' | 'mural'
   const [posts, setPosts] = useState([]);
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -433,12 +436,57 @@ export default function AssistPanel({ currentUser }) {
           <div>
             <h1 style={styles.heroTitle}>NexaASSIST</h1>
             <p style={styles.heroSubtitle}>
-              Mural de comunicados clínicos rápidos, categorização e histórico assistencial.
+              Gestão assistencial de enfermagem, mapa de leitos por salões e mural clínico.
             </p>
           </div>
         </div>
 
         <div style={styles.heroActions}>
+          <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.15)', padding: '3px', borderRadius: '12px', gap: '4px' }}>
+            <button
+              onClick={() => setActiveAssistTab('escala')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                borderRadius: '9px',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: activeAssistTab === 'escala' ? '700' : '500',
+                fontSize: '0.85rem',
+                backgroundColor: activeAssistTab === 'escala' ? '#ffffff' : 'transparent',
+                color: activeAssistTab === 'escala' ? '#4f46e5' : '#ffffff',
+                boxShadow: activeAssistTab === 'escala' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Calendar size={16} />
+              <span>Escala</span>
+            </button>
+            <button
+              onClick={() => setActiveAssistTab('mural')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                borderRadius: '9px',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: activeAssistTab === 'mural' ? '700' : '500',
+                fontSize: '0.85rem',
+                backgroundColor: activeAssistTab === 'mural' ? '#ffffff' : 'transparent',
+                color: activeAssistTab === 'mural' ? '#4f46e5' : '#ffffff',
+                boxShadow: activeAssistTab === 'mural' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <MessageSquare size={16} />
+              <span>Mural</span>
+            </button>
+          </div>
+
           <button 
             onClick={() => handleOpenCreateModal()}
             style={styles.primaryBtn}
@@ -449,436 +497,416 @@ export default function AssistPanel({ currentUser }) {
         </div>
       </div>
 
-      {/* Grade de Cards de Categorias (Sem cortes nos nomes) */}
-      <div style={styles.compactCategoryGrid}>
-        {/* Card Todos */}
-        <div
-          onClick={() => setSelectedCategory('all')}
-          style={{
-            ...styles.compactCategoryCard,
-            borderColor: selectedCategory === 'all' ? 'var(--primary-color)' : 'var(--border-color)',
-            backgroundColor: selectedCategory === 'all' ? '#f5f3ff' : '#fff',
-            boxShadow: selectedCategory === 'all' ? '0 0 0 2px rgba(109, 40, 217, 0.2), 0 2px 6px rgba(0,0,0,0.04)' : '0 1px 2px rgba(0,0,0,0.03)'
-          }}
-          title="Exibir todos os comunicados"
-        >
-          <div style={styles.compactCardLeft}>
-            <span style={{ fontSize: '0.95rem' }}>📋</span>
-            <span style={{ 
-              ...styles.compactCardLabel, 
-              fontWeight: selectedCategory === 'all' ? '700' : '600',
-              color: selectedCategory === 'all' ? 'var(--primary-color)' : 'var(--text-primary)'
-            }}>
-              Todos
-            </span>
-          </div>
-          <span style={{
-            ...styles.compactCardBadge,
-            backgroundColor: selectedCategory === 'all' ? 'var(--primary-color)' : '#f3f4f6',
-            color: selectedCategory === 'all' ? '#fff' : 'var(--text-secondary)'
-          }}>
-            {categoryCounts.all}
-          </span>
-        </div>
-
-        {/* Cards por Categoria (Nomes Completos) */}
-        {categories.map(cat => {
-          const isSelected = selectedCategory === cat.id;
-          const count = categoryCounts[cat.id] || 0;
-
-          return (
+      {activeAssistTab === 'escala' ? (
+        <DialysisScheduleTab
+          currentUser={currentUser}
+          onOpenPostModalWithPatient={(pData) => handleOpenCreateModal(pData)}
+        />
+      ) : (
+        <>
+          {/* Grade de Cards de Categorias (Sem cortes nos nomes) */}
+          <div style={styles.compactCategoryGrid}>
+            {/* Card Todos */}
             <div
-              key={cat.id}
-              onClick={() => setSelectedCategory(isSelected ? 'all' : cat.id)}
+              onClick={() => setSelectedCategory('all')}
               style={{
                 ...styles.compactCategoryCard,
-                borderColor: isSelected ? cat.color : 'var(--border-color)',
-                backgroundColor: isSelected ? cat.bg : '#fff',
-                boxShadow: isSelected ? `0 0 0 2px ${cat.border}, 0 2px 6px rgba(0,0,0,0.04)` : '0 1px 2px rgba(0,0,0,0.03)'
+                borderColor: selectedCategory === 'all' ? 'var(--primary-color)' : 'var(--border-color)',
+                backgroundColor: selectedCategory === 'all' ? '#f5f3ff' : '#fff',
+                boxShadow: selectedCategory === 'all' ? '0 0 0 2px rgba(109, 40, 217, 0.2), 0 2px 6px rgba(0,0,0,0.04)' : '0 1px 2px rgba(0,0,0,0.03)'
               }}
-              title={`Filtrar por ${cat.label}`}
+              title="Exibir todos os comunicados"
             >
               <div style={styles.compactCardLeft}>
-                <span style={{ fontSize: '0.9rem' }}>{cat.icon}</span>
+                <span style={{ fontSize: '0.95rem' }}>📋</span>
                 <span style={{ 
                   ...styles.compactCardLabel, 
-                  fontWeight: isSelected ? '700' : '500',
-                  color: isSelected ? cat.color : 'var(--text-primary)'
+                  fontWeight: selectedCategory === 'all' ? '700' : '600',
+                  color: selectedCategory === 'all' ? 'var(--primary-color)' : 'var(--text-primary)'
                 }}>
-                  {cat.label}
+                  Todos
                 </span>
               </div>
               <span style={{
                 ...styles.compactCardBadge,
-                backgroundColor: isSelected ? cat.color : '#f3f4f6',
-                color: isSelected ? '#fff' : count > 0 ? 'var(--text-primary)' : '#9ca3af'
+                backgroundColor: selectedCategory === 'all' ? 'var(--primary-color)' : '#f3f4f6',
+                color: selectedCategory === 'all' ? '#fff' : 'var(--text-secondary)'
               }}>
-                {count}
+                {categoryCounts.all}
               </span>
             </div>
-          );
-        })}
-      </div>
 
-      {/* Barra de Filtros e Modos de Visualização */}
-      <div style={styles.filterBar}>
-        <div style={styles.searchBox}>
-          <Search size={18} color="var(--text-secondary)" />
-          <input 
-            type="text"
-            placeholder="Buscar por paciente, assunto, texto ou autor..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={styles.searchInput}
-          />
-          {searchTerm && (
-            <button onClick={() => setSearchTerm('')} style={styles.clearSearchBtn}>×</button>
-          )}
-        </div>
+            {/* Cards por Categoria (Nomes Completos) */}
+            {categories.map(cat => {
+              const isSelected = selectedCategory === cat.id;
+              const count = categoryCounts[cat.id] || 0;
 
-        <div style={styles.filterSelects}>
-          {/* Seletor de Modo de Visualização (Compacta / Normal / Grade) */}
-          <div style={styles.viewModeGroup}>
-            <button
-              onClick={() => setViewMode('compact')}
-              style={{
-                ...styles.viewModeBtn,
-                backgroundColor: viewMode === 'compact' ? 'var(--primary-color)' : '#fff',
-                color: viewMode === 'compact' ? '#fff' : 'var(--text-secondary)',
-                borderColor: viewMode === 'compact' ? 'var(--primary-color)' : '#e5e7eb'
-              }}
-              title="Visualização Compacta (Lista Ágil)"
-            >
-              <List size={15} />
-              <span style={{ fontSize: '0.78rem' }}>Compacta</span>
-            </button>
-
-            <button
-              onClick={() => setViewMode('normal')}
-              style={{
-                ...styles.viewModeBtn,
-                backgroundColor: viewMode === 'normal' ? 'var(--primary-color)' : '#fff',
-                color: viewMode === 'normal' ? '#fff' : 'var(--text-secondary)',
-                borderColor: viewMode === 'normal' ? 'var(--primary-color)' : '#e5e7eb'
-              }}
-              title="Visualização Normal (Cards Padrão)"
-            >
-              <LayoutList size={15} />
-              <span style={{ fontSize: '0.78rem' }}>Normal</span>
-            </button>
-
-            <button
-              onClick={() => setViewMode('grid')}
-              style={{
-                ...styles.viewModeBtn,
-                backgroundColor: viewMode === 'grid' ? 'var(--primary-color)' : '#fff',
-                color: viewMode === 'grid' ? '#fff' : 'var(--text-secondary)',
-                borderColor: viewMode === 'grid' ? 'var(--primary-color)' : '#e5e7eb'
-              }}
-              title="Visualização em Grade (Colunas / Mural)"
-            >
-              <LayoutGrid size={15} />
-              <span style={{ fontSize: '0.78rem' }}>Grade</span>
-            </button>
+              return (
+                <div
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(isSelected ? 'all' : cat.id)}
+                  style={{
+                    ...styles.compactCategoryCard,
+                    borderColor: isSelected ? cat.color : 'var(--border-color)',
+                    backgroundColor: isSelected ? cat.bg : '#fff',
+                    boxShadow: isSelected ? `0 0 0 2px ${cat.border}, 0 2px 6px rgba(0,0,0,0.04)` : '0 1px 2px rgba(0,0,0,0.03)'
+                  }}
+                  title={`Filtrar por ${cat.label}`}
+                >
+                  <div style={styles.compactCardLeft}>
+                    <span style={{ fontSize: '0.9rem' }}>{cat.icon}</span>
+                    <span style={{ 
+                      ...styles.compactCardLabel, 
+                      fontWeight: isSelected ? '700' : '500',
+                      color: isSelected ? cat.color : 'var(--text-primary)'
+                    }}>
+                      {cat.label}
+                    </span>
+                  </div>
+                  <span style={{
+                    ...styles.compactCardBadge,
+                    backgroundColor: isSelected ? cat.color : '#f3f4f6',
+                    color: isSelected ? '#fff' : count > 0 ? 'var(--text-primary)' : '#9ca3af'
+                  }}>
+                    {count}
+                  </span>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Filtro de Período / Data */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <select 
-              value={datePreset} 
-              onChange={(e) => setDatePreset(e.target.value)}
-              style={styles.selectInput}
-              title="Período de referência dos comunicados"
-            >
-              <option value="all">📅 Todos</option>
-              <option value="today">📅 Hoje</option>
-              <option value="yesterday">📅 Ontem</option>
-              <option value="7days">📅 7 Dias</option>
-              <option value="30days">📅 30 Dias</option>
-              <option value="month">📅 Este Mês</option>
-              <option value="custom">📅 Personalizado</option>
-            </select>
+          {/* Barra de Filtros e Modos de Visualização */}
+          <div style={styles.filterBar}>
+            <div style={styles.searchBox}>
+              <Search size={18} color="var(--text-secondary)" />
+              <input 
+                type="text"
+                placeholder="Buscar por paciente, assunto, texto ou autor..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={styles.searchInput}
+              />
+              {searchTerm && (
+                <button onClick={() => setSearchTerm('')} style={styles.clearSearchBtn}>×</button>
+              )}
+            </div>
 
-            {datePreset === 'custom' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <input 
-                  type="date"
-                  value={customStartDate}
-                  onChange={(e) => setCustomStartDate(e.target.value)}
-                  style={styles.dateInput}
-                  title="Data Inicial"
-                />
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>até</span>
-                <input 
-                  type="date"
-                  value={customEndDate}
-                  onChange={(e) => setCustomEndDate(e.target.value)}
-                  style={styles.dateInput}
-                  title="Data Final"
-                />
+            <div style={styles.filterSelects}>
+              {/* Seletor de Modo de Visualização (Compacta / Normal / Grade) */}
+              <div style={styles.viewModeGroup}>
+                <button
+                  onClick={() => setViewMode('compact')}
+                  style={{
+                    ...styles.viewModeBtn,
+                    backgroundColor: viewMode === 'compact' ? 'var(--primary-color)' : '#fff',
+                    color: viewMode === 'compact' ? '#fff' : 'var(--text-secondary)',
+                    borderColor: viewMode === 'compact' ? 'var(--primary-color)' : '#e5e7eb'
+                  }}
+                  title="Visualização Compacta (Lista Ágil)"
+                >
+                  <List size={15} />
+                  <span style={{ fontSize: '0.78rem' }}>Compacta</span>
+                </button>
+
+                <button
+                  onClick={() => setViewMode('normal')}
+                  style={{
+                    ...styles.viewModeBtn,
+                    backgroundColor: viewMode === 'normal' ? 'var(--primary-color)' : '#fff',
+                    color: viewMode === 'normal' ? '#fff' : 'var(--text-secondary)',
+                    borderColor: viewMode === 'normal' ? 'var(--primary-color)' : '#e5e7eb'
+                  }}
+                  title="Visualização Normal (Cards Padrão)"
+                >
+                  <LayoutList size={15} />
+                  <span style={{ fontSize: '0.78rem' }}>Normal</span>
+                </button>
+
+                <button
+                  onClick={() => setViewMode('grid')}
+                  style={{
+                    ...styles.viewModeBtn,
+                    backgroundColor: viewMode === 'grid' ? 'var(--primary-color)' : '#fff',
+                    color: viewMode === 'grid' ? '#fff' : 'var(--text-secondary)',
+                    borderColor: viewMode === 'grid' ? 'var(--primary-color)' : '#e5e7eb'
+                  }}
+                  title="Visualização em Grade (Colunas / Mural)"
+                >
+                  <LayoutGrid size={15} />
+                  <span style={{ fontSize: '0.78rem' }}>Grade</span>
+                </button>
               </div>
-            )}
+
+              {/* Filtro de Período / Data */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <select 
+                  value={datePreset} 
+                  onChange={(e) => setDatePreset(e.target.value)}
+                  style={styles.selectInput}
+                  title="Período de referência dos comunicados"
+                >
+                  <option value="all">📅 Todos</option>
+                  <option value="today">📅 Hoje</option>
+                  <option value="yesterday">📅 Ontem</option>
+                  <option value="7days">📅 7 Dias</option>
+                  <option value="30days">📅 30 Dias</option>
+                  <option value="month">📅 Este Mês</option>
+                  <option value="custom">📅 Personalizado</option>
+                </select>
+
+                {datePreset === 'custom' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <input 
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      style={{ ...styles.selectInput, padding: '0.45rem' }}
+                      title="Data Inicial"
+                    />
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>até</span>
+                    <input 
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      style={{ ...styles.selectInput, padding: '0.45rem' }}
+                      title="Data Final"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <select 
+                value={selectedRoom} 
+                onChange={(e) => setSelectedRoom(e.target.value)}
+                style={styles.selectInput}
+              >
+                <option value="all">🏢 Todos os Salões</option>
+                <option value="Salão 1">Salão 1</option>
+                <option value="Salão 2">Salão 2</option>
+                <option value="Salão 3">Salão 3</option>
+              </select>
+
+              <select 
+                value={selectedShift} 
+                onChange={(e) => setSelectedShift(e.target.value)}
+                style={styles.selectInput}
+              >
+                <option value="all">⏰ Todos os Turnos</option>
+                <option value="1º Turno">1º Turno</option>
+                <option value="2º Turno">2º Turno</option>
+                <option value="3º Turno">3º Turno</option>
+              </select>
+            </div>
           </div>
 
-          {/* Filtro de Salão */}
-          <select 
-            value={selectedRoom} 
-            onChange={(e) => setSelectedRoom(e.target.value)}
-            style={styles.selectInput}
-          >
-            <option value="all">🏢 Salões</option>
-            <option value="Salão 1">Salão 1</option>
-            <option value="Salão 2">Salão 2</option>
-            <option value="Salão 3">Salão 3</option>
-            <option value="DP">DP</option>
-            <option value="Geral">Geral</option>
-          </select>
-
-          {/* Filtro de Turno */}
-          <select 
-            value={selectedShift} 
-            onChange={(e) => setSelectedShift(e.target.value)}
-            style={styles.selectInput}
-          >
-            <option value="all">⏰ Turnos</option>
-            <option value="1º Turno">1º Turno</option>
-            <option value="2º Turno">2º Turno</option>
-            <option value="3º Turno">3º Turno</option>
-          </select>
-
-          <button onClick={() => fetchData(true)} style={styles.refreshBtn} title="Atualizar feed">
-            <RefreshCw size={16} className={loading ? 'spin' : ''} />
-          </button>
-        </div>
-      </div>
-
-      {/* FEED DE COMUNICADOS */}
-      {loading ? (
-        <div style={styles.emptyState}>
-          <RefreshCw size={30} color="var(--primary-color)" className="spin" />
-          <p style={{ marginTop: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            Carregando comunicados...
-          </p>
-        </div>
-      ) : filteredPosts.length === 0 ? (
-        <div style={styles.emptyState}>
-          <Megaphone size={44} color="var(--text-secondary)" style={{ opacity: 0.4 }} />
-          <h3 style={{ marginTop: '1rem', color: 'var(--text-primary)', fontSize: '1.1rem' }}>
-            Nenhum comunicado encontrado
-          </h3>
-          <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', margin: '0.5rem auto 1.25rem auto', fontSize: '0.85rem' }}>
-            Não há comunicados correspondentes aos filtros selecionados.
-          </p>
-          <button onClick={() => handleOpenCreateModal()} style={styles.primaryBtn}>
-            <Plus size={16} />
-            <span>Criar Primeiro Comunicado</span>
-          </button>
-        </div>
-      ) : viewMode === 'compact' ? (
-        /* VISUALIZAÇÃO COMPACTA (Lista Ágil) */
-        <div style={styles.compactTableContainer}>
-          <table style={styles.compactTable}>
-            <thead>
-              <tr style={styles.compactTheadRow}>
-                <th style={styles.compactTh}>Categoria</th>
-                <th style={styles.compactTh}>Paciente</th>
-                <th style={styles.compactTh}>Local</th>
-                <th style={styles.compactTh}>Mensagem</th>
-                <th style={styles.compactTh}>Data</th>
-                <th style={styles.compactTh}>Autor</th>
-                <th style={{ ...styles.compactTh, textAlign: 'right' }}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
+          {/* Estado de Carregamento */}
+          {loading ? (
+            <div style={styles.loadingContainer}>
+              <RefreshCw size={32} color="var(--primary-color)" className="animate-spin" />
+              <p style={{ marginTop: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                Carregando comunicados...
+              </p>
+            </div>
+          ) : filteredPosts.length === 0 ? (
+            <div style={styles.emptyContainer}>
+              <Megaphone size={48} color="#d1d5db" />
+              <h3 style={styles.emptyTitle}>Nenhum comunicado encontrado</h3>
+              <p style={styles.emptyDesc}>
+                {searchTerm || selectedCategory !== 'all' || selectedRoom !== 'all' || selectedShift !== 'all'
+                  ? 'Tente ajustar os filtros acima para encontrar registros.'
+                  : 'Nenhum comunicado clínico registrado no momento.'}
+              </p>
+              <button 
+                onClick={() => handleOpenCreateModal()}
+                style={{ ...styles.primaryBtn, marginTop: '1rem' }}
+              >
+                <Plus size={16} />
+                <span>Registrar Comunicado</span>
+              </button>
+            </div>
+          ) : (
+            <div style={
+              viewMode === 'compact' 
+                ? styles.postsContainerCompact 
+                : viewMode === 'grid' 
+                ? styles.postsContainerGrid 
+                : styles.postsContainerNormal
+            }>
               {filteredPosts.map(post => {
                 const catMeta = getCategoryMeta(post.category);
                 const canManage = canManagePost(post);
 
-                return (
-                  <tr key={post.id} style={styles.compactTr}>
-                    <td style={styles.compactTd}>
-                      <span style={{
-                        ...styles.compactCatPill,
-                        backgroundColor: catMeta.bg,
-                        color: catMeta.color,
-                        borderColor: catMeta.border
-                      }}>
-                        {catMeta.icon} {post.category}
-                      </span>
-                      {post.urgency === 'Urgente' && (
-                        <span style={styles.compactUrgentBadge}>🔴</span>
-                      )}
-                    </td>
-                    <td style={styles.compactTd}>
-                      {post.patientName ? (
-                        <strong style={{ color: 'var(--text-primary)', fontSize: '0.82rem' }}>
-                          {post.patientName}
-                        </strong>
-                      ) : (
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>-</span>
-                      )}
-                    </td>
-                    <td style={styles.compactTd}>
-                      {post.room && post.room !== 'Geral' ? (
-                        <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                          {post.room} {post.shift ? `• ${post.shift}` : ''}
+                if (viewMode === 'compact') {
+                  return (
+                    <div 
+                      key={post.id} 
+                      style={{
+                        ...styles.compactRow,
+                        borderLeftColor: catMeta.color
+                      }}
+                    >
+                      <div style={styles.compactRowLeft}>
+                        <span 
+                          style={{
+                            ...styles.categoryTag,
+                            backgroundColor: catMeta.bg,
+                            color: catMeta.color,
+                            borderColor: catMeta.border,
+                            padding: '0.15rem 0.5rem',
+                            fontSize: '0.7rem'
+                          }}
+                        >
+                          {catMeta.icon} {catMeta.label}
                         </span>
-                      ) : (
-                        <span style={{ color: '#9ca3af', fontSize: '0.78rem' }}>Geral</span>
-                      )}
-                    </td>
-                    <td style={{ ...styles.compactTd, maxWidth: '400px' }}>
-                      <div style={styles.compactMessageText} title={post.message}>
-                        {post.message}
+                        
+                        {post.patientName && (
+                          <span style={styles.compactPatientBadge}>
+                            <User size={12} />
+                            <strong>{post.patientName}</strong>
+                          </span>
+                        )}
+
+                        <span style={styles.compactMessageText}>
+                          {post.message}
+                        </span>
                       </div>
-                    </td>
-                    <td style={styles.compactTd}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                        {formatDate(post.createdAt)}
-                      </span>
-                    </td>
-                    <td style={styles.compactTd}>
-                      <span style={{ fontSize: '0.78rem', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                        {post.author || 'Assistencial'}
-                      </span>
-                    </td>
-                    <td style={{ ...styles.compactTd, textAlign: 'right' }}>
-                      {canManage ? (
-                        <div style={{ display: 'inline-flex', gap: '0.2rem' }}>
-                          <button 
-                            onClick={() => handleOpenEditModal(post)} 
-                            style={styles.cardActionBtn} 
-                            title="Editar comunicado"
-                          >
-                            <Edit3 size={14} />
-                          </button>
-                          <button 
-                            onClick={() => handleDeletePost(post)} 
-                            style={{ ...styles.cardActionBtn, color: '#ef4444' }} 
-                            title="Excluir comunicado"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+
+                      <div style={styles.compactRowRight}>
+                        {(post.room || post.shift) && (
+                          <span style={styles.compactMetaBadge}>
+                            {post.room} {post.shift && `• ${post.shift}`}
+                          </span>
+                        )}
+                        <span style={styles.compactDateBadge}>
+                          <Clock size={11} />
+                          {formatDate(post.createdAt)}
+                        </span>
+                        <span style={styles.compactAuthorBadge}>
+                          {post.author || 'Equipe'}
+                        </span>
+
+                        {canManage && (
+                          <div style={styles.compactActions}>
+                            <button 
+                              onClick={() => handleOpenEditModal(post)} 
+                              style={styles.compactActionBtn}
+                              title="Editar comunicado"
+                            >
+                              <Edit3 size={13} color="var(--primary-color)" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeletePost(post)} 
+                              style={styles.compactActionBtn}
+                              title="Excluir comunicado"
+                            >
+                              <Trash2 size={13} color="#ef4444" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div 
+                    key={post.id} 
+                    style={{
+                      ...styles.postCard,
+                      borderTopColor: catMeta.color,
+                      borderTopWidth: '4px'
+                    }}
+                  >
+                    <div style={styles.cardHeader}>
+                      <div style={styles.cardHeaderBadges}>
+                        <span 
+                          style={{
+                            ...styles.categoryTag,
+                            backgroundColor: catMeta.bg,
+                            color: catMeta.color,
+                            borderColor: catMeta.border
+                          }}
+                        >
+                          {catMeta.icon} {catMeta.label}
+                        </span>
+
+                        {post.urgency === 'Urgente' && (
+                          <span style={styles.urgencyTag}>
+                            <AlertTriangle size={12} />
+                            Urgente
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={styles.headerRightArea}>
+                        <div style={styles.postDate}>
+                          <Clock size={13} />
+                          <span>{formatDate(post.createdAt)}</span>
                         </div>
-                      ) : (
-                        <span style={{ fontSize: '0.72rem', color: '#9ca3af' }}>-</span>
+
+                        {canManage && (
+                          <div style={styles.cardActions}>
+                            <button 
+                              onClick={() => handleOpenEditModal(post)}
+                              style={styles.iconBtn}
+                              title="Editar comunicado"
+                            >
+                              <Edit3 size={15} color="var(--text-secondary)" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeletePost(post)}
+                              style={styles.iconBtn}
+                              title="Excluir comunicado"
+                            >
+                              <Trash2 size={15} color="#ef4444" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {post.patientName && (
+                      <div style={styles.patientInfoBox}>
+                        <div style={styles.patientNameWrapper}>
+                          <User size={15} color="var(--primary-color)" />
+                          <span style={styles.patientNameText}>{post.patientName}</span>
+                        </div>
+                        {(post.room || post.shift) && (
+                          <div style={styles.locationBadge}>
+                            <Building2 size={13} />
+                            <span>{post.room}</span>
+                            {post.shift && <span>• {post.shift}</span>}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div style={styles.cardBody}>
+                      {post.title && post.title !== post.patientName && !post.title.startsWith(`${post.category} -`) && (
+                        <h4 style={styles.postTitle}>{post.title}</h4>
                       )}
-                    </td>
-                  </tr>
+                      <p style={styles.postMessage}>{post.message}</p>
+                    </div>
+
+                    <div style={styles.cardFooter}>
+                      <div style={styles.authorInfo}>
+                        <div style={styles.authorAvatar}>
+                          {post.author ? post.author.charAt(0).toUpperCase() : 'P'}
+                        </div>
+                        <div>
+                          <div style={styles.authorName}>{post.author}</div>
+                          <div style={styles.authorRole}>{post.authorRole || 'Assistencial'}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        /* VISUALIZAÇÃO NORMAL (Cards) & GRADE (Colunas) */
-        <div style={viewMode === 'grid' ? styles.feedGrid : styles.feedTimeline}>
-          {filteredPosts.map(post => {
-            const catMeta = getCategoryMeta(post.category);
-            const canManage = canManagePost(post);
-
-            return (
-              <div 
-                key={post.id} 
-                style={{
-                  ...styles.postCard,
-                  borderLeft: `4px solid ${catMeta.color}`,
-                  backgroundColor: post.urgency === 'Urgente' ? '#fffafb' : '#fff'
-                }}
-              >
-                {/* Cabeçalho do Card */}
-                <div style={styles.cardHeader}>
-                  <div style={styles.cardMetaLeft}>
-                    <span style={{
-                      ...styles.catBadge,
-                      backgroundColor: catMeta.bg,
-                      color: catMeta.color,
-                      borderColor: catMeta.border
-                    }}>
-                      {catMeta.icon} {post.category}
-                    </span>
-
-                    {post.urgency === 'Urgente' && (
-                      <span style={styles.urgentBadge}>
-                        <AlertTriangle size={12} /> Urgente
-                      </span>
-                    )}
-
-                    {post.room && post.room !== 'Geral' && (
-                      <span style={styles.roomBadge}>
-                        <Building2 size={12} /> {post.room} {post.shift ? `• ${post.shift}` : ''}
-                      </span>
-                    )}
-                  </div>
-
-                  <div style={styles.cardMetaRight}>
-                    <span style={styles.dateLabel}>
-                      <Clock size={13} style={{ marginRight: '4px' }} />
-                      {formatDate(post.createdAt)}
-                    </span>
-
-                    {canManage && (
-                      <div style={styles.cardActions}>
-                        <button 
-                          onClick={() => handleOpenEditModal(post)} 
-                          style={styles.cardActionBtn} 
-                          title="Editar comunicado"
-                        >
-                          <Edit3 size={15} />
-                        </button>
-                        <button 
-                          onClick={() => handleDeletePost(post)} 
-                          style={{ ...styles.cardActionBtn, color: '#ef4444' }} 
-                          title="Excluir comunicado"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Banner de Paciente Vinculado */}
-                {post.patientName && (
-                  <div style={styles.patientBanner}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <User size={15} color="var(--primary-color)" />
-                      <span style={styles.patientNameHighlight}>{post.patientName}</span>
-                    </div>
-                    {post.room && post.room !== 'Geral' && (
-                      <div style={styles.patientSubinfo}>
-                        <span>{post.room}</span>
-                        {post.shift && <span>• {post.shift}</span>}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Conteúdo da Mensagem */}
-                <div style={styles.cardBody}>
-                  {post.title && post.title !== post.patientName && !post.title.startsWith(`${post.category} -`) && (
-                    <h4 style={styles.postTitle}>{post.title}</h4>
-                  )}
-                  <p style={styles.postMessage}>{post.message}</p>
-                </div>
-
-                {/* Rodapé: Autor do Comunicado */}
-                <div style={styles.cardFooter}>
-                  <div style={styles.authorInfo}>
-                    <div style={styles.authorAvatar}>
-                      {post.author ? post.author.charAt(0).toUpperCase() : 'P'}
-                    </div>
-                    <div>
-                      <div style={styles.authorName}>{post.author}</div>
-                      <div style={styles.authorRole}>{post.authorRole || 'Assistencial'}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+            </div>
+          )}
+        </>
       )}
+
 
       {/* MODAL: COMUNICADO (Criar / Editar) */}
       {showPostModal && (

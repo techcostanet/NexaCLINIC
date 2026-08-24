@@ -1,3 +1,25 @@
+## [v4.7.50] - 24 de Agosto, 2026
+### NexaASSIST — Escala Operacional de Hemodiálise por Salões & Turnos, Unificação de 570 Pacientes e Vínculo com Manutenção
+- **Escala de Hemodiálise por Salões e Turnos (NexaASSIST):**
+  - Implementado mapa visual interativo e em tempo real dos leitos/cadeiras por **Salão 01**, **Salão 02** e **Salão 03** nos **3 Turnos diários (1ºT, 2ºT e 3ºT)**, organizado por **Boxes (01 a 08 e Sala Amarela)**, eliminando 100% o uso das planilhas manuais.
+  - Alternância instantânea de cadência dialítica entre **Segunda/Quarta/Sexta (SQS)** e **Terça/Quinta/Sábado (TQS)** com detecção automática do dia da semana atual.
+- **Unificação e Cadastro de Pacientes:**
+  - Cruzamento de dados de **570 pacientes únicos** parseados das 9 matrizes de salões:
+    - 503 pacientes existentes enriquecidos com localização física de diálise (Salão, Turno, Box, Ponto, Máquina), acesso vascular exato, calibre de agulha e isolamento.
+    - 67 novos pacientes cadastrados com perfis clínicos completos no sistema.
+- **Integração com o Módulo de Manutenção (NexaSERVICE):**
+  - Rastreabilidade de **100% dos 90 números de série de máquinas de hemodiálise Nipro Diamax 220F** da escala aos equipamentos da engenharia clínica, com badges visuais de status (*Operacional*, *Preventiva*, *Corretiva*) e atalho para ficha técnica da máquina com 1 clique direto no leito.
+- **Detalhamento de Acesso Vascular, Calibre de Agulhas e Isolamentos:**
+  - Badges cromáticas diferenciadas: 🟢 FAV com especificação de calibre (Ag. 15, Ag. 16, Ag. 17), 🟡 CDL (Cateter Duplo Lúmen), 🟣 Permcath e alertas de segurança para 🔴 Uso Único / HIV e Hepatite C (HCV).
+- **Localizador Global de Paciente & Máquina:**
+  - Mecanismo de busca rápida global para localização instantânea de qualquer paciente ou máquina em qualquer salão e turno.
+- **Remanejamento & Ocupação de Vagas:**
+  - Gestão ágil de vagas livres com botão `+ Alocar` e ferramenta de troca/remanejamento de pacientes entre pontos e turnos.
+- **Impressão A4 da Escala Diária:**
+  - Layout limpo e padronizado em A4 para impressão e afixação nas pranchetas dos postos de enfermagem dos salões.
+
+---
+
 ## [v4.7.49] - 23 de Agosto, 2026
 ### NexaMED — Matriz Semanal de Salões, Mapa de Cores de Trocas e Impressão A4 Paisagem
 - **Modo Matriz Semanal (Visualização Planilha Interativa):**

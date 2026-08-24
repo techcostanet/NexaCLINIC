@@ -630,54 +630,88 @@ export const MODULE_GUIDES = {
 
   assist: {
     id: 'assist',
-    name: 'Feed Assistencial & Alertas',
-    subtitle: 'NexaASSIST — Comunicação Integrada & IA',
+    name: 'Assistência Clínica & Escalas',
+    subtitle: 'NexaASSIST — Gestão de Enfermagem & Mural',
     color: '#ec4899',
     recursos: [
       {
+        title: 'Escala de Hemodiálise por Salões & Turnos',
+        desc: 'Mapa visual interativo dos leitos/cadeiras por Salão (01, 02, 03) e Turno (1º, 2º, 3º), organizado por Boxes (01 a 08 e Sala Amarela) substituindo integralmente as planilhas manuais.'
+      },
+      {
+        title: 'Rastreabilidade de Máquinas & Manutenção',
+        desc: 'Vínculo direto de cada ponto ao número de série da máquina de hemodiálise com status de manutenção clínica (Operacional, Preventiva ou Corretiva) em tempo real.'
+      },
+      {
+        title: 'Detalhamento de Acesso Vascular & Calibre de Agulhas',
+        desc: 'Identificação visual instantânea do tipo de acesso (FAV com calibre de agulha 15, 16 ou 17, Cateter Duplo Lúmen e Permcath) e alertas de Isolamento (HIV / Uso Único e Hepatite).'
+      },
+      {
+        title: 'Localizador Global de Paciente & Máquina',
+        desc: 'Busca rápida que localiza instantaneamente qualquer paciente ou número de série em todos os salões, turnos e boxes da clínica.'
+      },
+      {
+        title: 'Remanejamento & Alocação Dinâmica de Vagas',
+        desc: 'Ferramenta ágil para alocar novos pacientes em vagas livres ou realizar troca/remanejamento de leito com validação de conflito.'
+      },
+      {
         title: 'Mural de Comunicados Clínicos',
-        desc: 'Feed em tempo real de avisos assistenciais, comunicados da diretoria médica e recados de plantão.'
+        desc: 'Feed ágil categorizado (Internação, Alta, Intercorrência, Transferência, Nutrição, Psicologia, Serviço Social, Óbito e Geral) com 3 modos de visualização (Compacta, Normal e Grade).'
       },
       {
-        title: 'Alertas de Altas e Internações',
-        desc: 'Notificação imediata de pacientes internados em hospitais parceiros ou que receberam alta para retorno à diálise.'
-      },
-      {
-        title: 'Classificação por Salão & Turno',
-        desc: 'Filtros rápidos para visualização de alertas específicos do 1º, 2º, 3º ou 4º turno de atendimento.'
-      },
-      {
-        title: 'Leitor de E-mails e Documentos com IA',
-        desc: 'Assistente inteligente que resume laudos médicos externos, e-mails de secretarias de saúde e relatórios longos.'
+        title: 'Impressão A4 da Escala Operacional',
+        desc: 'Geração de espelho formatado em A4 da escala diária/semanal para afixação nas pranchetas dos postos de enfermagem dos salões.'
       }
     ],
     tutorial: [
       {
-        title: 'Como Publicar um Comunicado no Feed',
+        title: 'Como Navegar no Mapa de Salões da Hemodiálise',
         steps: [
-          'No painel do Feed Assistencial, clique em "+ Novo Comunicado".',
-          'Selecione o público-alvo (Geral, Enfermagem, Médicos, Recepção) e a urgência.',
-          'Digite a mensagem ou instruções de plantão e anexe fotos/documentos se necessário.',
-          'Clique em "Publicar". O card aparecerá imediatamente no topo do feed para toda a equipe.'
+          'No topo do módulo NexaASSIST, clique na aba "Escala".',
+          'Selecione o Salão desejado (Salão 01, Salão 02 ou Salão 03).',
+          'Selecione o Turno (1º Turno, 2º Turno ou 3º Turno).',
+          'Alterne entre as cadências "Segunda • Quarta • Sexta" e "Terça • Quinta • Sábado".',
+          'O grid exibirá os boxes e as máquinas com seus respectivos pacientes e status.'
         ]
       },
       {
-        title: 'Como Usar o Leitor Inteligente de E-mails com IA',
+        title: 'Como Localizar um Paciente em Qualquer Salão',
         steps: [
-          'Clique no botão "Analisar com IA".',
-          'Cole o texto do e-mail, laudo ou aviso recebido da Secretaria de Saúde/Hospital.',
-          'A IA processará o documento e extrairá os pontos de ação, prazos e impactos clínicos de forma resumida.'
+          'Clique no botão "Localizar" na barra superior da Escala.',
+          'Digite o nome do paciente ou o número de série da máquina.',
+          'Clique no resultado para abrir diretamente o salão, turno e ponto correspondentes.'
+        ]
+      },
+      {
+        title: 'Como Remanejar um Paciente ou Ocupar Vaga Livre',
+        steps: [
+          'Localize o ponto desejado no mapa de leitos.',
+          'Em vagas livres, clique em "+ Alocar" e selecione o paciente cadastrado.',
+          'Em pontos já ocupados, clique em "Remanejar" para trocar de leito ou liberar a vaga.',
+          'Confirme a operação para atualizar a escala imediatamente.'
+        ]
+      },
+      {
+        title: 'Como Publicar um Comunicado a Partir do Mapa de Leitos',
+        steps: [
+          'No card do paciente na escala, clique no botão "Comunicado".',
+          'O modal abrirá já pré-preenchido com o nome do paciente, salão e turno.',
+          'Selecione a categoria clínica, digite o aviso e clique em "Publicar".'
         ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'Quem pode publicar comunicados no feed?',
-        resposta: 'Profissionais clínicos, enfermeiros líderes, coordenadores de setor e administradores do sistema.'
+        pergunta: 'Como saber o status de manutenção de uma máquina de hemodiálise?',
+        resposta: 'Ao lado do número de série no cabeçalho de cada ponto, há uma badge indicando se o equipamento está "Operacional" ou em "Preventiva/Corretiva". Clicando no número de série, abre-se a ficha técnica completa da máquina.'
       },
       {
-        pergunta: 'Como fixar um comunicado importante no topo?',
-        resposta: 'Ao criar ou editar o comunicado, marque a opção "Fixar no Topo do Mural" para mantê-lo em destaque.'
+        pergunta: 'O que indicam as cores das badges de acesso vascular?',
+        resposta: 'Verde (🟢) representa FAV (Fístula Arteriovenosa com calibre de agulha 15, 16 ou 17), Amarelo (🟡) representa CDL (Cateter Duplo Lúmen), Roxo (🟣) representa Permcath e Vermelho (🔴) indica protocolo de Uso Único / Isolamento (HIV/Hepatite).'
+      },
+      {
+        pergunta: 'As alterações na escala são salvas em tempo real?',
+        resposta: 'Sim. Qualquer remanejamento, alocação de vaga ou troca é sincronizado instantaneamente na base de dados para toda a equipe assistencial.'
       }
     ]
   },
