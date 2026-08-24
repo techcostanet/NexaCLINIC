@@ -1,3 +1,21 @@
+## [v4.7.52] - 24 de Agosto, 2026
+### NexaASSIST — Novas Categorias Clínicas no Mural e Correção de Alinhamento/Espaçamento Visual de Cards
+- **5 Novas Categorias Clínicas Especializadas:**
+  - Adicionadas categorias fundamentais para a rotina de hemodiálise:
+    - ⚡ **Evento Adverso** (destaque âmbar `#d97706`)
+    - 🩸 **Hemotransfusão** (destaque rubi `#e11d48`)
+    - 🦠 **Infecção** (destaque púrpura `#9333ea`)
+    - 💉 **Acesso Vascular** (destaque ciano/teal `#0d9488`)
+    - 🛑 **Precaução de Contato** (destaque terracota `#c2410c`)
+  - Totalizando 14 categorias com contagens em tempo real e filtros instantâneos no topo do mural.
+- **Correção e Harmonização Visual dos Cards do Mural:**
+  - Resolução dos estilos que estavam desconfigurados: badges de categoria e urgência (`⚠️ Urgente`) agora possuem espaçamento, padding, bordas arredondadas e cores distintas.
+  - Ícones de paciente (`User`), localização (`Building2`) e horário (`Clock`) com alinhamento flexível e margens precisas, eliminando sobreposições.
+  - Botões de ação (Editar e Excluir) convertidos em ícones elegantes (`iconBtn`) com hover sutil, substituindo botões padrão de navegador.
+  - Grade e lista do mural padronizadas em todos os modos (`Normal`, `Grade` e `Compacta`).
+
+---
+
 ## [v4.7.51] - 24 de Agosto, 2026
 ### NexaASSIST — Refatoração de Design System Vanilla CSS no Mapa de Salões e Header de Abas
 - **Padronização Visual Completa (Vanilla CSS):**

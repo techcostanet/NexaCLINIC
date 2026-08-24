@@ -656,7 +656,7 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Mural de Comunicados Clínicos',
-        desc: 'Feed ágil categorizado (Internação, Alta, Intercorrência, Transferência, Nutrição, Psicologia, Serviço Social, Óbito e Geral) com 3 modos de visualização (Compacta, Normal e Grade).'
+        desc: 'Feed ágil categorizado com 14 tipos clínicos (Internação, Alta, Intercorrência, Evento Adverso, Hemotransfusão, Infecção, Acesso Vascular, Precaução de Contato, Transferência, Nutrição, Psicologia, Serviço Social, Óbito e Geral) com 3 modos de visualização (Compacta, Normal e Grade).'
       },
       {
         title: 'Impressão A4 da Escala Operacional',

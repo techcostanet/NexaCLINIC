@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.52',
+      date: '24/08/2026',
+      title: 'NexaASSIST — Novas Categorias Clínicas no Mural e Correção de Alinhamento/Espaçamento Visual de Cards',
+      description: 'Adição de 5 novas categorias clínicas especializadas para hemodiálise e resolução completa das sobreposições de ícones, badges e botões de ação nos comunicados do mural.',
+      changes: [
+        { type: 'Novas Categorias', text: 'Adicionadas: Evento Adverso, Hemotransfusão, Infecção, Acesso Vascular e Precaução de Contato com cores e ícones distintos.' },
+        { type: 'Badges e Espaçamento', text: 'Correção de espaçamento entre badges de categoria e urgência, garantindo legibilidade e alinhamento.' },
+        { type: 'Botões de Ação', text: 'Estilização premium para botões de edição e exclusão de comunicados com feedback visual em hover.' }
+      ]
+    },
+    {
       version: 'v4.7.51',
       date: '24/08/2026',
       title: 'NexaASSIST — Refatoração de Design System Vanilla CSS no Mapa de Salões e Header de Abas',

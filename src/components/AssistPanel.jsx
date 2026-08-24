@@ -64,6 +64,11 @@ export default function AssistPanel({ currentUser }) {
     { id: 'Internação', label: 'Internação', color: '#ef4444', bg: '#fef2f2', border: '#fecaca', icon: '🔴' },
     { id: 'Alta', label: 'Alta', color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0', icon: '🟢' },
     { id: 'Intercorrência', label: 'Intercorrência', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', icon: '🟡' },
+    { id: 'Evento Adverso', label: 'Evento Adverso', color: '#d97706', bg: '#fffbeb', border: '#fcd34d', icon: '⚡' },
+    { id: 'Hemotransfusão', label: 'Hemotransfusão', color: '#e11d48', bg: '#fff1f2', border: '#fecdd3', icon: '🩸' },
+    { id: 'Infecção', label: 'Infecção', color: '#9333ea', bg: '#faf5ff', border: '#e9d5ff', icon: '🦠' },
+    { id: 'Acesso Vascular', label: 'Acesso Vascular', color: '#0d9488', bg: '#f0fdfa', border: '#99f6e4', icon: '💉' },
+    { id: 'Precaução de Contato', label: 'Precaução de Contato', color: '#c2410c', bg: '#fff7ed', border: '#ffedd5', icon: '🛑' },
     { id: 'Transferência', label: 'Transferência', color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe', icon: '🔵' },
     { id: 'Nutrição', label: 'Nutrição', color: '#059669', bg: '#ecfdf5', border: '#6ee7b7', icon: '🥗' },
     { id: 'Psicologia', label: 'Psicologia', color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe', icon: '🧠' },
@@ -835,20 +840,21 @@ export default function AssistPanel({ currentUser }) {
                             borderColor: catMeta.border
                           }}
                         >
-                          {catMeta.icon} {catMeta.label}
+                          <span style={{ marginRight: '4px' }}>{catMeta.icon}</span>
+                          <span>{catMeta.label}</span>
                         </span>
 
                         {post.urgency === 'Urgente' && (
                           <span style={styles.urgencyTag}>
-                            <AlertTriangle size={12} />
-                            Urgente
+                            <AlertTriangle size={12} style={{ marginRight: '4px' }} />
+                            <span>Urgente</span>
                           </span>
                         )}
                       </div>
 
                       <div style={styles.headerRightArea}>
                         <div style={styles.postDate}>
-                          <Clock size={13} />
+                          <Clock size={13} style={{ marginRight: '4px', color: '#94a3b8' }} />
                           <span>{formatDate(post.createdAt)}</span>
                         </div>
 
@@ -859,14 +865,14 @@ export default function AssistPanel({ currentUser }) {
                               style={styles.iconBtn}
                               title="Editar comunicado"
                             >
-                              <Edit3 size={15} color="var(--text-secondary)" />
+                              <Edit3 size={14} color="#475569" />
                             </button>
                             <button 
                               onClick={() => handleDeletePost(post)}
-                              style={styles.iconBtn}
+                              style={{ ...styles.iconBtn, color: '#ef4444' }}
                               title="Excluir comunicado"
                             >
-                              <Trash2 size={15} color="#ef4444" />
+                              <Trash2 size={14} color="#ef4444" />
                             </button>
                           </div>
                         )}
@@ -876,12 +882,12 @@ export default function AssistPanel({ currentUser }) {
                     {post.patientName && (
                       <div style={styles.patientInfoBox}>
                         <div style={styles.patientNameWrapper}>
-                          <User size={15} color="var(--primary-color)" />
+                          <User size={15} color="var(--primary-color)" style={{ flexShrink: 0 }} />
                           <span style={styles.patientNameText}>{post.patientName}</span>
                         </div>
                         {(post.room || post.shift) && (
                           <div style={styles.locationBadge}>
-                            <Building2 size={13} />
+                            <Building2 size={13} style={{ color: '#64748b', flexShrink: 0 }} />
                             <span>{post.room}</span>
                             {post.shift && <span>• {post.shift}</span>}
                           </div>
@@ -1299,22 +1305,27 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center'
   },
-  feedTimeline: {
+  postsContainerNormal: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.85rem'
-  },
-  feedGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
     gap: '1rem'
+  },
+  postsContainerGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+    gap: '1rem'
+  },
+  postsContainerCompact: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem'
   },
   postCard: {
     backgroundColor: '#fff',
     borderRadius: '12px',
     padding: '1.15rem 1.35rem',
     boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-    border: '1px solid var(--border-color)',
+    border: '1px solid #e2e8f0',
     transition: 'all 0.15s ease',
     display: 'flex',
     flexDirection: 'column',
@@ -1326,90 +1337,98 @@ const styles = {
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: '0.5rem',
-    marginBottom: '0.65rem'
+    marginBottom: '0.75rem'
   },
-  cardMetaLeft: {
+  cardHeaderBadges: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.45rem',
+    gap: '0.5rem',
     flexWrap: 'wrap'
   },
-  catBadge: {
+  categoryTag: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
     fontSize: '0.75rem',
     fontWeight: '700',
-    padding: '0.2rem 0.55rem',
-    borderRadius: '6px',
-    border: '1px solid'
+    padding: '0.25rem 0.65rem',
+    borderRadius: '8px',
+    border: '1px solid',
+    lineHeight: '1.2'
   },
-  urgentBadge: {
-    display: 'flex',
+  urgencyTag: {
+    display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.25rem',
-    fontSize: '0.7rem',
+    gap: '0.3rem',
+    fontSize: '0.72rem',
     fontWeight: '700',
     backgroundColor: '#fef2f2',
     color: '#ef4444',
-    padding: '0.2rem 0.5rem',
-    borderRadius: '6px',
-    border: '1px solid #fecaca'
+    padding: '0.25rem 0.6rem',
+    borderRadius: '8px',
+    border: '1px solid #fecaca',
+    lineHeight: '1.2'
   },
-  roomBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    fontSize: '0.7rem',
-    fontWeight: '600',
-    backgroundColor: '#f0fdf4',
-    color: '#166534',
-    padding: '0.2rem 0.5rem',
-    borderRadius: '6px',
-    border: '1px solid #bbf7d0'
-  },
-  cardMetaRight: {
+  headerRightArea: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.65rem'
   },
-  dateLabel: {
-    display: 'flex',
+  postDate: {
+    display: 'inline-flex',
     alignItems: 'center',
+    gap: '0.35rem',
     fontSize: '0.75rem',
-    color: 'var(--text-secondary)',
+    color: '#64748b',
     fontWeight: '500'
   },
   cardActions: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.2rem'
+    gap: '0.35rem'
   },
-  cardActionBtn: {
-    background: 'none',
-    border: 'none',
-    padding: '0.25rem',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    color: 'var(--text-secondary)'
-  },
-  patientBanner: {
-    display: 'flex',
-    justifyContent: 'space-between',
+  iconBtn: {
+    display: 'inline-flex',
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '28px',
+    height: '28px',
+    borderRadius: '6px',
+    border: '1px solid #e2e8f0',
+    backgroundColor: '#f8fafc',
+    cursor: 'pointer',
+    color: '#64748b',
+    padding: 0,
+    transition: 'all 0.15s ease'
+  },
+  patientInfoBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
     backgroundColor: '#f8fafc',
     border: '1px solid #e2e8f0',
-    padding: '0.45rem 0.75rem',
-    borderRadius: '8px',
-    marginBottom: '0.65rem'
+    padding: '0.6rem 0.85rem',
+    borderRadius: '10px',
+    marginBottom: '0.75rem'
   },
-  patientNameHighlight: {
+  patientNameWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem'
+  },
+  patientNameText: {
     fontSize: '0.85rem',
     fontWeight: '700',
-    color: 'var(--text-primary)'
+    color: '#0f172a',
+    letterSpacing: '0.01em'
   },
-  patientSubinfo: {
+  locationBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
     fontSize: '0.75rem',
-    color: 'var(--text-secondary)',
-    display: 'flex',
-    gap: '0.35rem'
+    color: '#475569',
+    fontWeight: '600'
   },
   cardBody: {
     marginBottom: '0.75rem',
@@ -1418,13 +1437,13 @@ const styles = {
   postTitle: {
     fontSize: '0.95rem',
     fontWeight: '700',
-    color: 'var(--text-primary)',
+    color: '#0f172a',
     margin: '0 0 0.35rem 0'
   },
   postMessage: {
     fontSize: '0.88rem',
-    lineHeight: '1.5',
-    color: '#374151',
+    lineHeight: '1.55',
+    color: '#334155',
     margin: 0,
     whiteSpace: 'pre-line'
   },
@@ -1433,7 +1452,7 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: '0.65rem',
-    borderTop: '1px solid #f3f4f6'
+    borderTop: '1px solid #f1f5f9'
   },
   authorInfo: {
     display: 'flex',
@@ -1441,11 +1460,11 @@ const styles = {
     gap: '0.5rem'
   },
   authorAvatar: {
-    width: '26px',
-    height: '26px',
+    width: '28px',
+    height: '28px',
     borderRadius: '50%',
-    backgroundColor: '#e5e7eb',
-    color: '#4b5563',
+    backgroundColor: '#e0e7ff',
+    color: '#4338ca',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1455,62 +1474,93 @@ const styles = {
   authorName: {
     fontSize: '0.8rem',
     fontWeight: '600',
-    color: 'var(--text-primary)'
+    color: '#1e293b'
   },
   authorRole: {
     fontSize: '0.7rem',
-    color: 'var(--text-secondary)'
+    color: '#64748b'
   },
-  /* Tabela Compacta */
-  compactTableContainer: {
+  compactRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0.75rem 1rem',
     backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid var(--border-color)',
-    overflowX: 'auto',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+    borderRadius: '10px',
+    border: '1px solid #e2e8f0',
+    borderLeftWidth: '4px',
+    gap: '1rem',
+    flexWrap: 'wrap'
   },
-  compactTable: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    textAlign: 'left'
+  compactRowLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    flex: '1 1 500px',
+    minWidth: 0
   },
-  compactTheadRow: {
-    backgroundColor: '#f9fafb',
-    borderBottom: '1px solid #e5e7eb'
-  },
-  compactTh: {
-    padding: '0.65rem 0.85rem',
-    fontSize: '0.78rem',
-    fontWeight: '700',
-    color: 'var(--text-secondary)'
-  },
-  compactTr: {
-    borderBottom: '1px solid #f3f4f6',
-    transition: 'background-color 0.15s ease'
-  },
-  compactTd: {
-    padding: '0.6rem 0.85rem',
-    fontSize: '0.82rem',
-    verticalAlign: 'middle'
-  },
-  compactCatPill: {
-    fontSize: '0.72rem',
-    fontWeight: '700',
-    padding: '0.15rem 0.45rem',
-    borderRadius: '6px',
-    border: '1px solid',
+  compactPatientBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    fontSize: '0.8rem',
+    color: '#1e293b',
     whiteSpace: 'nowrap'
   },
-  compactUrgentBadge: {
-    marginLeft: '0.3rem',
-    fontSize: '0.65rem'
-  },
   compactMessageText: {
+    fontSize: '0.82rem',
+    color: '#475569',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    color: '#374151',
-    fontSize: '0.82rem'
+    flex: 1
+  },
+  compactRowRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    whiteSpace: 'nowrap'
+  },
+  compactMetaBadge: {
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    color: '#64748b',
+    backgroundColor: '#f1f5f9',
+    padding: '2px 8px',
+    borderRadius: '6px'
+  },
+  compactDateBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    fontSize: '0.75rem',
+    color: '#94a3b8'
+  },
+  compactAuthorBadge: {
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    color: '#475569',
+    backgroundColor: '#f8fafc',
+    padding: '2px 8px',
+    borderRadius: '6px',
+    border: '1px solid #e2e8f0'
+  },
+  compactActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem'
+  },
+  compactActionBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '26px',
+    height: '26px',
+    borderRadius: '6px',
+    border: '1px solid #e2e8f0',
+    backgroundColor: '#f8fafc',
+    cursor: 'pointer',
+    padding: 0
   },
   emptyState: {
     textAlign: 'center',
@@ -1603,16 +1653,20 @@ const styles = {
   },
   categorySelectGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
-    gap: '0.4rem'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(135px, 1fr))',
+    gap: '0.45rem'
   },
   catSelectBtn: {
-    padding: '0.45rem 0.5rem',
-    borderRadius: '6px',
+    padding: '0.5rem 0.6rem',
+    borderRadius: '8px',
     border: '1px solid',
-    fontSize: '0.75rem',
+    fontSize: '0.78rem',
     cursor: 'pointer',
     textAlign: 'center',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.35rem',
     transition: 'all 0.15s ease'
   },
   patientDropdown: {
