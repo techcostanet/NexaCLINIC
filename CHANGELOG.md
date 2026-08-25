@@ -1,3 +1,18 @@
+## [v4.7.66] - 25 de Agosto, 2026
+### Módulo RH — Controle de Exames Ocupacionais (ASO) e Alertas de Vencimento (30d, 14d, 7d)
+- **Aba Dedicada "Exames" no NexaHR:**
+  - Gerenciamento completo de exames médicos ocupacionais (Admissional, Periódico, Demissional, Mudança de Função e Retorno ao Trabalho) para colaboradores CLT e prestadores PJ.
+- **Alertas Preditivos na Dashboard:**
+  - Cards e widgets dinâmicos de alerta com contagem regressiva para exames Vencidos, Próximos 7 Dias (Crítico), Próximos 14 Dias (Atenção) e Próximos 30 Dias (Alerta), com atalho de renovação direta.
+- **Cálculo Automático de Periodicidade (+1 ano):**
+  - Projeção automatizada do próximo vencimento para 12 meses a partir do último exame ou da data de admissão do colaborador.
+- **Modal de Lançamento de ASO & Upload:**
+  - Cadastro estruturado de laudos com Parecer (Apto/Inapto/Restrições), CRM/Médico, Clínica/Laboratório, observações e anexos em Base64/arquivo.
+- **Filtros e Ações Rápidas:**
+  - Tabela com filtros por tipo de contrato (CLT/PJ), modalidade de exame, nível de urgência, busca em tempo real e botão de renovação em 1 clique.
+
+---
+
 ## [v4.7.63] - 25 de Agosto, 2026
 ### Importação do Catálogo de Fornecedores de Taguatinga e Autocompletar no Contas a Pagar
 - **Carga e Conciliação de Fornecedores:**

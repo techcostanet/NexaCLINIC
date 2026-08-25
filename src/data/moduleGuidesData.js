@@ -123,6 +123,14 @@ export const MODULE_GUIDES = {
         desc: 'Relatórios completos em PDF e Excel (Cadastro Geral, VT, Presença Premiada, Aniversariantes, Advertências, Absenteísmo, Turnover, Experiência, Vacinas, Dependentes, Folha Sintética, Dados Bancários/PIX, Documentos/CNH, Efetivo e Auditoria LGPD).'
       },
       {
+        title: 'Gestão de Exames Ocupacionais (ASO)',
+        desc: 'Controle de exames médicos para colaboradores CLT e prestadores PJ (Admissional, Periódico, Demissional, Mudança de Função e Retorno ao Trabalho) com cálculo automático de renovação anual (+1 ano).'
+      },
+      {
+        title: 'Alertas Preditivos de Vencimento (30d, 14d, 7d)',
+        desc: 'Monitoramento em tempo real com contagem regressiva e alertas no painel de controle para exames vencidos, em até 7 dias (crítico), 14 dias (atenção) e 30 dias (alerta).'
+      },
+      {
         title: 'Cargos e Setores Padronizados (1 Palavra A-Z)',
         desc: 'Catálogo de cargos e 25 setores hospitalares padronizados estritamente com termo único, primeira letra maiúscula e ordenação alfabética (A-Z), com normalização automática de cadastros legados.'
       },
@@ -144,6 +152,24 @@ export const MODULE_GUIDES = {
       }
     ],
     tutorial: [
+      {
+        title: 'Como Lançar e Renovar Exames Ocupacionais (ASO)',
+        steps: [
+          'Acesse a aba "Exames" no painel NexaHR.',
+          'Clique no botão "+ Lançar ASO" ou localize o colaborador e clique em "Renovar".',
+          'Selecione o Colaborador (CLT ou PJ), Tipo de Exame (Admissional, Periódico, etc.) e a Data do Exame.',
+          'O sistema calculará automaticamente o próximo vencimento para +1 ano (para Admissionais e Periódicos).',
+          'Informe o Resultado (Apto / Inapto), Médico/CRM, Clínica/Local, anexe o arquivo comprobatório se houver e clique em "Salvar ASO".'
+        ]
+      },
+      {
+        title: 'Como Monitorar Alertas de Exames na Dashboard',
+        steps: [
+          'Acesse o "Painel de Controle" do NexaHR.',
+          'Consulte o card "Alertas de Exames Periódicos (ASO)" para conferir o resumo de exames vencidos, em 7d, 14d e 30d.',
+          'Clique no botão "Lançar" diretamente na lista de alertas para realizar a renovação imediata do colaborador prestes a vencer.'
+        ]
+      },
       {
         title: 'Como Alternar a Visualização de Funcionários',
         steps: [
@@ -180,6 +206,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Os exames periódicos aplicam-se a profissionais PJ além de CLT?',
+        resposta: 'Sim. O sistema monitora o ciclo ocupacional tanto de colaboradores CLT quanto de prestadores e profissionais PJ, garantindo total conformidade operacional na clínica.'
+      },
+      {
+        pergunta: 'Como é calculada a periodicidade do exame anual?',
+        resposta: 'Ao registrar um exame Admissional ou Periódico, o sistema agenda automaticamente o próximo vencimento para 1 ano (12 meses) após a realização do exame. Para funcionários recém-admitidos sem ASO lançado, o sistema calcula a data com base na data de admissão.'
+      },
       {
         pergunta: 'Qual o modo padrão de visualização da lista de colaboradores?',
         resposta: 'O modo padrão é a "Visualização Compacta", focada em velocidade e alta densidade de registros na tela.'

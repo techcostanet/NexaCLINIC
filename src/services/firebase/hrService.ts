@@ -218,3 +218,80 @@ export const importTransportVouchersBatch = async (period: string, vouchersList:
     return results;
   };
 
+// ----------------------------------------------------
+// Occupational Exams / ASO (Exames Ocupacionais & Periódicos)
+// ----------------------------------------------------
+export interface OccupationalExam {
+  id?: string;
+  employeeId: string;
+  employeeName: string;
+  cpf?: string;
+  role?: string;
+  contractType?: 'CLT' | 'PJ' | 'Estagiário' | 'Temporário';
+  examType: 'Admissional' | 'Periódico' | 'Demissional' | 'Mudança de Função' | 'Retorno ao Trabalho';
+  examDate: string; // YYYY-MM-DD
+  nextDueDate?: string; // YYYY-MM-DD
+  result?: 'Apto' | 'Inapto' | 'Apto com Restrições';
+  doctorName?: string;
+  clinicName?: string;
+  docUrl?: string;
+  notes?: string;
+  unitId?: string;
+  unit?: string;
+  units?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const getOccupationalExams = async (): Promise<OccupationalExam[]> => {
+  if (USE_MOCK) return [];
+  try {
+    const { getFirestore, collection, getDocs, orderBy, query } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const q = query(collection(db, 'occupational_exams'), orderBy('examDate', 'desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as OccupationalExam));
+  } catch (e) {
+    try {
+      // Fallback without ordering if index is not ready
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'occupational_exams'));
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as OccupationalExam));
+    } catch (err) {
+      console.error('Erro ao buscar occupational_exams do Firestore:', err);
+      return [];
+    }
+  }
+};
+
+export const createOccupationalExam = async (examData: Omit<OccupationalExam, 'id'>): Promise<OccupationalExam> => {
+  const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  const dataToSave = {
+    ...examData,
+    createdAt: new Date().toISOString()
+  };
+  const docRef = await addDoc(collection(db, 'occupational_exams'), dataToSave);
+  return { id: docRef.id, ...dataToSave } as OccupationalExam;
+};
+
+export const updateOccupationalExam = async (id: string, examData: Partial<OccupationalExam>): Promise<Partial<OccupationalExam> & { id: string }> => {
+  const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  const dataToUpdate = {
+    ...examData,
+    updatedAt: new Date().toISOString()
+  };
+  await updateDoc(doc(db, 'occupational_exams', id), dataToUpdate);
+  return { id, ...dataToUpdate };
+};
+
+export const deleteOccupationalExam = async (id: string): Promise<any> => {
+  const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  await deleteDoc(doc(db, 'occupational_exams', id));
+  return { success: true };
+};
+
+

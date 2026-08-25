@@ -6,15 +6,18 @@ import {
   Search, FileText, UploadCloud, Download, Calendar, ShieldAlert,
   CheckCircle2, AlertTriangle, Eye, Award, Check, UserCheck, HelpCircle,
   Gift, Bus, ArrowUp, ArrowDown, ArrowUpDown, Move, Settings, Save, 
-  RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2
+  RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Stethoscope,
+  Activity, FileCheck, Clock
 } from 'lucide-react';
 
 const DEFAULT_DASHBOARD_LAYOUT = [
   { id: 'total_employees', title: 'Total de Funcionários', size: 'small' },
+  { id: 'exams_kpi', title: 'Exames Ocupacionais (ASO)', size: 'small' },
   { id: 'turnover', title: 'Turnover (Mensal)', size: 'small' },
   { id: 'absenteeism', title: 'Absenteísmo (Mensal)', size: 'small' },
   { id: 'warnings_kpi', title: 'Advertências Registradas', size: 'small' },
   { id: 'experience_kpi', title: 'Em Experiência', size: 'small' },
+  { id: 'exams_alerts_list', title: 'Alertas de Exames Periódicos (ASO)', size: 'medium' },
   { id: 'presenca_premiada', title: 'Presença Premiada', size: 'medium' },
   { id: 'birthdays', title: 'Aniversariantes do Mês', size: 'medium' },
   { id: 'expiring_contracts', title: 'Contratos em Experiência', size: 'medium' },
@@ -25,13 +28,14 @@ const DEFAULT_DASHBOARD_LAYOUT = [
 
 export function useHRLogic(currentUser) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'employees' | 'users' | 'reports' | 'audit'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'employees' | 'exams' | 'transport' | 'audit'
   
   // Data States
   const [employees, setEmployees] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [sectors, setSectors] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [occupationalExams, setOccupationalExams] = useState([]);
   
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -136,6 +140,31 @@ export function useHRLogic(currentUser) {
   const [awardPeriod, setAwardPeriod] = useState('2026-08');
   const [showAwardReportModal, setShowAwardReportModal] = useState(false);
 
+  // Occupational Exams (ASO) States
+  const [showExamModal, setShowExamModal] = useState(false);
+  const [editingExam, setEditingExam] = useState(null);
+  const [examForm, setExamForm] = useState({
+    employeeId: '',
+    employeeName: '',
+    cpf: '',
+    role: '',
+    contractType: 'CLT',
+    examType: 'Periódico',
+    examDate: new Date().toISOString().substring(0, 10),
+    nextDueDate: '',
+    result: 'Apto',
+    doctorName: '',
+    clinicName: '',
+    docUrl: '',
+    notes: ''
+  });
+
+  const [examSearchTerm, setExamSearchTerm] = useState('');
+  const [examFilterType, setExamFilterType] = useState('all');
+  const [examFilterContract, setExamFilterContract] = useState('all');
+  const [examFilterStatus, setExamFilterStatus] = useState('all'); // 'all' | 'expired' | '7d' | '14d' | '30d' | 'urgent_all' | 'ok'
+  const [examSortConfig, setExamSortConfig] = useState({ key: 'nextDueDate', direction: 'asc' });
+
   useEffect(() => {
     fetchData();
     // Resolve operator name from currentUser or session
@@ -175,18 +204,20 @@ export function useHRLogic(currentUser) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [empList, userList, secList, logList, vtList] = await Promise.all([
+      const [empList, userList, secList, logList, vtList, examsList] = await Promise.all([
         dbService.getEmployees(),
         dbService.getUsers(),
         dbService.getSectors(),
         dbService.getAuditLogs(),
-        dbService.getTransportVouchers()
+        dbService.getTransportVouchers(),
+        dbService.getOccupationalExams ? dbService.getOccupationalExams() : []
       ]);
       setEmployees(empList);
       setUsersList(userList);
       setSectors(secList);
       setAuditLogs(logList);
       setTransportVouchers(vtList);
+      setOccupationalExams(examsList || []);
 
       if (secList.length > 0) {
         setEmpForm(f => ({ ...f, sectorId: secList[0].id }));
@@ -312,6 +343,7 @@ export function useHRLogic(currentUser) {
   const currentEmployees = useMemo(() => filterByActiveUnit(employees), [employees, activeUnitId]);
   const currentUsersList = useMemo(() => filterByActiveUnit(usersList), [usersList, activeUnitId]);
   const currentTransportVouchers = useMemo(() => filterByActiveUnit(transportVouchers), [transportVouchers, activeUnitId]);
+  const currentOccupationalExams = useMemo(() => filterByActiveUnit(occupationalExams), [occupationalExams, activeUnitId]);
 
   const handleSaveEmployee = async (e) => {
     e.preventDefault();
@@ -963,7 +995,8 @@ export function useHRLogic(currentUser) {
     setDashboardLayout(DEFAULT_DASHBOARD_LAYOUT);
     const userKey = currentUser?.uid || currentUser?.email || 'default';
     localStorage.removeItem(`hr_dashboard_layout_${userKey}`);
-    showAlert('Layout restaurado para o padrão pequeno!', 'success');
+    showAlert('Layout padrão restaurado!', 'success');
+    logAuditAction('Personalização de Dashboard', 'Restaurou layout padrão das caixas do painel de controle.');
   };
 
   const handleMoveCard = (index, direction) => {
@@ -981,6 +1014,310 @@ export function useHRLogic(currentUser) {
       card.id === id ? { ...card, size: newSize } : card
     );
     setDashboardLayout(newLayout);
+  };
+
+  // ----------------------------------------------------
+  // Occupational Exams (ASO) Methods & Calculations
+  // ----------------------------------------------------
+  const addOneYear = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const clean = dateStr.trim();
+      const parts = clean.split('-');
+      if (parts.length === 3) {
+        const yyyy = parseInt(parts[0], 10) + 1;
+        return `${yyyy}-${parts[1]}-${parts[2]}`;
+      }
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      d.setFullYear(d.getFullYear() + 1);
+      return d.toISOString().substring(0, 10);
+    } catch {
+      return '';
+    }
+  };
+
+  const calculateDaysRemaining = (dueDateStr) => {
+    if (!dueDateStr) return null;
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const target = new Date(dueDateStr + 'T00:00:00');
+      if (isNaN(target.getTime())) return null;
+      const diffMs = target.getTime() - today.getTime();
+      return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    } catch {
+      return null;
+    }
+  };
+
+  const employeesExamOverview = useMemo(() => {
+    const activeEmps = currentEmployees.filter(e => e.status !== 'Inativo');
+    
+    return activeEmps.map(emp => {
+      const empExams = currentOccupationalExams.filter(
+        x => x.employeeId === emp.id || (x.cpf && emp.cpf && x.cpf.replace(/\D/g, '') === emp.cpf.replace(/\D/g, ''))
+      ).sort((a, b) => new Date(b.examDate || b.createdAt || 0) - new Date(a.examDate || a.createdAt || 0));
+
+      const lastExam = empExams.length > 0 ? empExams[0] : null;
+      
+      let nextDueDate = '';
+      let isAutomaticFromAdmission = false;
+
+      if (lastExam && lastExam.nextDueDate) {
+        nextDueDate = lastExam.nextDueDate;
+      } else if (lastExam && lastExam.examDate) {
+        nextDueDate = addOneYear(lastExam.examDate);
+      } else if (emp.admissionDate) {
+        nextDueDate = addOneYear(emp.admissionDate);
+        isAutomaticFromAdmission = true;
+      }
+
+      const daysRemaining = calculateDaysRemaining(nextDueDate);
+
+      let urgencyLevel = 'none'; // 'expired' | '7d' | '14d' | '30d' | 'ok' | 'no_date'
+      let statusLabel = 'Sem Data';
+      let statusColor = '#94a3b8';
+      let badgeBg = '#f1f5f9';
+
+      if (daysRemaining !== null) {
+        if (daysRemaining < 0) {
+          urgencyLevel = 'expired';
+          statusLabel = `Vencido há ${Math.abs(daysRemaining)}d`;
+          statusColor = '#ef4444';
+          badgeBg = '#fee2e2';
+        } else if (daysRemaining <= 7) {
+          urgencyLevel = '7d';
+          statusLabel = daysRemaining === 0 ? 'Vence Hoje' : `Vence em ${daysRemaining}d`;
+          statusColor = '#dc2626';
+          badgeBg = '#fecaca';
+        } else if (daysRemaining <= 14) {
+          urgencyLevel = '14d';
+          statusLabel = `Vence em ${daysRemaining}d`;
+          statusColor = '#ea580c';
+          badgeBg = '#ffedd5';
+        } else if (daysRemaining <= 30) {
+          urgencyLevel = '30d';
+          statusLabel = `Vence em ${daysRemaining}d`;
+          statusColor = '#d97706';
+          badgeBg = '#fef3c7';
+        } else {
+          urgencyLevel = 'ok';
+          statusLabel = `Em dia (${daysRemaining}d)`;
+          statusColor = '#10b981';
+          badgeBg = '#d1fae5';
+        }
+      }
+
+      return {
+        employee: emp,
+        employeeId: emp.id,
+        employeeName: emp.name,
+        cpf: emp.cpf || '',
+        role: emp.role || '',
+        sectorId: emp.sectorId || '',
+        contractType: emp.contractType || 'CLT',
+        admissionDate: emp.admissionDate || '',
+        lastExam,
+        lastExamDate: lastExam ? lastExam.examDate : (isAutomaticFromAdmission ? emp.admissionDate : ''),
+        lastExamType: lastExam ? lastExam.examType : (isAutomaticFromAdmission ? 'Admissional (Estimado)' : 'Pendente'),
+        lastExamResult: lastExam ? (lastExam.result || 'Apto') : (isAutomaticFromAdmission ? 'Pendente ASO' : '-'),
+        nextDueDate,
+        daysRemaining,
+        urgencyLevel,
+        statusLabel,
+        statusColor,
+        badgeBg,
+        isAutomaticFromAdmission,
+        examsCount: empExams.length,
+        examsHistory: empExams
+      };
+    });
+  }, [currentEmployees, currentOccupationalExams]);
+
+  const examAlertMetrics = useMemo(() => {
+    let expired = 0;
+    let upTo7 = 0;
+    let upTo14 = 0;
+    let upTo30 = 0;
+    let upToDate = 0;
+
+    employeesExamOverview.forEach(item => {
+      if (item.urgencyLevel === 'expired') expired++;
+      else if (item.urgencyLevel === '7d') upTo7++;
+      else if (item.urgencyLevel === '14d') upTo14++;
+      else if (item.urgencyLevel === '30d') upTo30++;
+      else if (item.urgencyLevel === 'ok') upToDate++;
+    });
+
+    const urgentAlertsList = employeesExamOverview
+      .filter(item => ['expired', '7d', '14d', '30d'].includes(item.urgencyLevel))
+      .sort((a, b) => (a.daysRemaining ?? 9999) - (b.daysRemaining ?? 9999));
+
+    return {
+      total: employeesExamOverview.length,
+      expired,
+      upTo7,
+      upTo14,
+      upTo30,
+      upToDate,
+      totalPendingOrAlert: expired + upTo7 + upTo14 + upTo30,
+      urgentAlertsList
+    };
+  }, [employeesExamOverview]);
+
+  const filteredExamOverview = useMemo(() => {
+    return employeesExamOverview.filter(item => {
+      const matchesSearch = 
+        !examSearchTerm ||
+        item.employeeName.toLowerCase().includes(examSearchTerm.toLowerCase()) ||
+        item.cpf.includes(examSearchTerm) ||
+        (item.role && item.role.toLowerCase().includes(examSearchTerm.toLowerCase())) ||
+        (item.lastExam?.clinicName && item.lastExam.clinicName.toLowerCase().includes(examSearchTerm.toLowerCase())) ||
+        (item.lastExam?.doctorName && item.lastExam.doctorName.toLowerCase().includes(examSearchTerm.toLowerCase()));
+
+      const matchesContract = examFilterContract === 'all' || item.contractType === examFilterContract;
+      
+      const matchesType = examFilterType === 'all' || item.lastExamType === examFilterType || (item.lastExam && item.lastExam.examType === examFilterType);
+      
+      const matchesStatus = 
+        examFilterStatus === 'all' ||
+        (examFilterStatus === 'expired' && item.urgencyLevel === 'expired') ||
+        (examFilterStatus === '7d' && item.urgencyLevel === '7d') ||
+        (examFilterStatus === '14d' && item.urgencyLevel === '14d') ||
+        (examFilterStatus === '30d' && item.urgencyLevel === '30d') ||
+        (examFilterStatus === 'urgent_all' && ['expired', '7d', '14d', '30d'].includes(item.urgencyLevel)) ||
+        (examFilterStatus === 'ok' && item.urgencyLevel === 'ok');
+
+      return matchesSearch && matchesContract && matchesType && matchesStatus;
+    }).sort((a, b) => {
+      let valA = a[examSortConfig.key] || '';
+      let valB = b[examSortConfig.key] || '';
+      if (examSortConfig.key === 'nextDueDate' || examSortConfig.key === 'lastExamDate') {
+        valA = valA || (examSortConfig.direction === 'asc' ? '9999-99-99' : '0000-00-00');
+        valB = valB || (examSortConfig.direction === 'asc' ? '9999-99-99' : '0000-00-00');
+      }
+      if (valA < valB) return examSortConfig.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return examSortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [employeesExamOverview, examSearchTerm, examFilterType, examFilterContract, examFilterStatus, examSortConfig]);
+
+  const handleExamSort = (key) => {
+    setExamSortConfig(prev => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
+  const renderExamSortIcon = (key) => {
+    if (examSortConfig.key !== key) return <ArrowUpDown size={14} style={{ opacity: 0.4 }} />;
+    return examSortConfig.direction === 'asc' 
+      ? <ArrowUp size={14} style={{ color: '#0284c7' }} /> 
+      : <ArrowDown size={14} style={{ color: '#0284c7' }} />;
+  };
+
+  const handleOpenExamAdd = (empOrOverview = null) => {
+    setEditingExam(null);
+    const targetEmp = empOrOverview?.employee || empOrOverview || currentEmployees[0];
+    const today = new Date().toISOString().substring(0, 10);
+    const defaultNext = addOneYear(today);
+
+    setExamForm({
+      employeeId: targetEmp ? targetEmp.id : '',
+      employeeName: targetEmp ? targetEmp.name : '',
+      cpf: targetEmp ? (targetEmp.cpf || '') : '',
+      role: targetEmp ? (targetEmp.role || '') : '',
+      contractType: targetEmp ? (targetEmp.contractType || 'CLT') : 'CLT',
+      examType: 'Periódico',
+      examDate: today,
+      nextDueDate: defaultNext,
+      result: 'Apto',
+      doctorName: '',
+      clinicName: '',
+      docUrl: '',
+      notes: ''
+    });
+    setShowExamModal(true);
+  };
+
+  const handleOpenExamEdit = (examItem) => {
+    setEditingExam(examItem);
+    setExamForm({
+      employeeId: examItem.employeeId || '',
+      employeeName: examItem.employeeName || '',
+      cpf: examItem.cpf || '',
+      role: examItem.role || '',
+      contractType: examItem.contractType || 'CLT',
+      examType: examItem.examType || 'Periódico',
+      examDate: examItem.examDate || new Date().toISOString().substring(0, 10),
+      nextDueDate: examItem.nextDueDate || addOneYear(examItem.examDate),
+      result: examItem.result || 'Apto',
+      doctorName: examItem.doctorName || '',
+      clinicName: examItem.clinicName || '',
+      docUrl: examItem.docUrl || '',
+      notes: examItem.notes || ''
+    });
+    setShowExamModal(true);
+  };
+
+  const handleSaveExam = async (e) => {
+    e.preventDefault();
+    if (!examForm.employeeId) return showAlert('Selecione um colaborador.', 'warning');
+    if (!examForm.examDate) return showAlert('Informe a data do exame.', 'warning');
+
+    setActionLoading(true);
+    try {
+      const selectedEmp = currentEmployees.find(emp => emp.id === examForm.employeeId);
+      const dataToSave = {
+        ...examForm,
+        employeeName: selectedEmp ? selectedEmp.name : examForm.employeeName,
+        cpf: selectedEmp ? (selectedEmp.cpf || examForm.cpf) : examForm.cpf,
+        role: selectedEmp ? (selectedEmp.role || examForm.role) : examForm.role,
+        contractType: selectedEmp ? (selectedEmp.contractType || examForm.contractType) : examForm.contractType,
+        unitId: activeUnitId,
+        unit: activeUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim',
+        units: [activeUnitId]
+      };
+
+      if (editingExam && editingExam.id) {
+        await dbService.updateOccupationalExam(editingExam.id, dataToSave);
+        showAlert('Exame ocupacional atualizado com sucesso!', 'success');
+        logAuditAction('Editar Exame ASO', `Atualizou ASO de ${dataToSave.employeeName} (${dataToSave.examType})`);
+      } else {
+        await dbService.createOccupationalExam(dataToSave);
+        showAlert('Exame ocupacional registrado com sucesso!', 'success');
+        logAuditAction('Cadastrar Exame ASO', `Registrou novo ASO para ${dataToSave.employeeName} (${dataToSave.examType})`);
+      }
+
+      setShowExamModal(false);
+      const updatedExams = await dbService.getOccupationalExams();
+      setOccupationalExams(updatedExams || []);
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao salvar exame ocupacional.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteExam = async (examId) => {
+    if (!window.confirm('Tem certeza que deseja excluir este registro de ASO?')) return;
+    setActionLoading(true);
+    try {
+      await dbService.deleteOccupationalExam(examId);
+      showAlert('Registro de exame excluído!', 'success');
+      logAuditAction('Excluir Exame ASO', `Excluiu exame ID ${examId}`);
+      const updatedExams = await dbService.getOccupationalExams();
+      setOccupationalExams(updatedExams || []);
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao excluir registro de exame.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleOpenEmpByName = (nameOrId) => {
@@ -1502,6 +1839,36 @@ export function useHRLogic(currentUser) {
     presencaPremiada,
     turnover,
     absenteeism,
-    recentAbsences
+    recentAbsences,
+    // Occupational Exams Exports
+    occupationalExams,
+    setOccupationalExams,
+    showExamModal,
+    setShowExamModal,
+    editingExam,
+    setEditingExam,
+    examForm,
+    setExamForm,
+    examSearchTerm,
+    setExamSearchTerm,
+    examFilterType,
+    setExamFilterType,
+    examFilterContract,
+    setExamFilterContract,
+    examFilterStatus,
+    setExamFilterStatus,
+    examSortConfig,
+    setExamSortConfig,
+    handleExamSort,
+    renderExamSortIcon,
+    handleOpenExamAdd,
+    handleOpenExamEdit,
+    handleSaveExam,
+    handleDeleteExam,
+    employeesExamOverview,
+    examAlertMetrics,
+    filteredExamOverview,
+    addOneYear,
+    calculateDaysRemaining
   };
 }

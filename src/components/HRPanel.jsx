@@ -6,15 +6,17 @@ import {
   CheckCircle2, AlertTriangle, Eye, Award, Check, UserCheck, HelpCircle,
   Gift, Bus, ArrowUp, ArrowDown, ArrowUpDown, Move, Settings, Save, 
   RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Trophy, Printer, Clock,
-  AlignJustify, Table, LayoutGrid, Phone, Mail, ExternalLink
+  AlignJustify, Table, LayoutGrid, Phone, Mail, ExternalLink, Stethoscope, Activity, FileCheck
 } from 'lucide-react';
 
 const DEFAULT_DASHBOARD_LAYOUT = [
   { id: 'total_employees', title: 'Total de Funcionários', size: 'small' },
   { id: 'turnover', title: 'Turnover (Mensal)', size: 'small' },
   { id: 'absenteeism', title: 'Absenteísmo (Mensal)', size: 'small' },
+  { id: 'exams_kpi', title: 'Exames Ocupacionais (ASO)', size: 'small' },
   { id: 'warnings_kpi', title: 'Advertências Registradas', size: 'small' },
   { id: 'experience_kpi', title: 'Em Experiência', size: 'small' },
+  { id: 'exams_alerts_list', title: 'Alertas de Exames Periódicos (ASO)', size: 'medium' },
   { id: 'presenca_premiada', title: 'Presença Premiada', size: 'medium' },
   { id: 'birthdays', title: 'Aniversariantes do Mês', size: 'medium' },
   { id: 'expiring_contracts', title: 'Contratos em Experiência', size: 'medium' },
@@ -196,7 +198,37 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
     presencaPremiada,
     turnover,
     absenteeism,
-    recentAbsences
+    recentAbsences,
+    // Occupational Exams
+    occupationalExams,
+    setOccupationalExams,
+    showExamModal,
+    setShowExamModal,
+    editingExam,
+    setEditingExam,
+    examForm,
+    setExamForm,
+    examSearchTerm,
+    setExamSearchTerm,
+    examFilterType,
+    setExamFilterType,
+    examFilterContract,
+    setExamFilterContract,
+    examFilterStatus,
+    setExamFilterStatus,
+    examSortConfig,
+    setExamSortConfig,
+    handleExamSort,
+    renderExamSortIcon,
+    handleOpenExamAdd,
+    handleOpenExamEdit,
+    handleSaveExam,
+    handleDeleteExam,
+    employeesExamOverview,
+    examAlertMetrics,
+    filteredExamOverview,
+    addOneYear,
+    calculateDaysRemaining
   } = logic;
 
   // View Mode: 'compact' (Padrão) | 'normal' | 'cards'
@@ -237,6 +269,22 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
         </button>
         <button onClick={() => setActiveTab('employees')} style={{ ...styles.tabBtn, ...(activeTab === 'employees' ? styles.tabBtnActive : {}) }}>
           <Users size={16} /> Funcionários ({employees.filter(e => e.status !== 'Inativo').length})
+        </button>
+        <button onClick={() => setActiveTab('exams')} style={{ ...styles.tabBtn, ...(activeTab === 'exams' ? styles.tabBtnActive : {}) }}>
+          <Stethoscope size={16} /> Exames
+          {examAlertMetrics.totalPendingOrAlert > 0 && (
+            <span style={{ 
+              backgroundColor: examAlertMetrics.expired > 0 ? '#ef4444' : '#f59e0b', 
+              color: '#fff', 
+              fontSize: '0.7rem', 
+              padding: '0.1rem 0.45rem', 
+              borderRadius: '10px', 
+              fontWeight: '700',
+              marginLeft: '0.35rem'
+            }}>
+              {examAlertMetrics.totalPendingOrAlert}
+            </span>
+          )}
         </button>
         <button onClick={() => setActiveTab('transport')} style={{ ...styles.tabBtn, ...(activeTab === 'transport' ? styles.tabBtnActive : {}) }}>
           <Bus size={16} /> Vale-Transporte
@@ -416,6 +464,41 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                         </div>
                       )}
 
+                      {card.id === 'exams_kpi' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={styles.kpiLabel}>Exames Ocupacionais (ASO)</span>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(2,132,199,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Stethoscope size={17} color="#0284c7" />
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+                              <span style={{ ...styles.kpiVal, color: '#0284c7' }}>{examAlertMetrics.total}</span>
+                              {examAlertMetrics.expired > 0 && (
+                                <span style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: '700' }}>
+                                  ({examAlertMetrics.expired} vencidos)
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.4rem' }}>
+                              <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: '#fef3c7', color: '#d97706', fontWeight: '700' }}>
+                                30d: {examAlertMetrics.upTo30}
+                              </span>
+                              <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: '#ffedd5', color: '#ea580c', fontWeight: '700' }}>
+                                14d: {examAlertMetrics.upTo14}
+                              </span>
+                              <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: '#fecaca', color: '#dc2626', fontWeight: '700' }}>
+                                7d: {examAlertMetrics.upTo7}
+                              </span>
+                              <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: '#d1fae5', color: '#10b981', fontWeight: '700' }}>
+                                Em dia: {examAlertMetrics.upToDate}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {card.id === 'warnings_kpi' && (
                         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -494,6 +577,99 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                                 </div>
                               ))
                             )}
+                          </div>
+                        </div>
+                      )}
+
+                      {card.id === 'exams_alerts_list' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                              <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '700' }}>
+                                <Stethoscope size={16} color="#0284c7" /> Alertas de Exames Periódicos (ASO)
+                              </h3>
+                              <button 
+                                onClick={() => setActiveTab('exams')}
+                                style={{ border: 'none', background: 'none', color: '#0284c7', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                              >
+                                Ver todos <ExternalLink size={12} />
+                              </button>
+                            </div>
+
+                            {/* Alert status ribbon */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.35rem', marginBottom: '0.5rem' }}>
+                              <div style={{ backgroundColor: '#fee2e2', padding: '0.35rem 0.45rem', borderRadius: '6px', textAlign: 'center' }}>
+                                <span style={{ fontSize: '0.68rem', color: '#991b1b', fontWeight: '700', display: 'block' }}>Vencidos</span>
+                                <span style={{ fontSize: '0.95rem', color: '#ef4444', fontWeight: '800' }}>{examAlertMetrics.expired}</span>
+                              </div>
+                              <div style={{ backgroundColor: '#fecaca', padding: '0.35rem 0.45rem', borderRadius: '6px', textAlign: 'center' }}>
+                                <span style={{ fontSize: '0.68rem', color: '#991b1b', fontWeight: '700', display: 'block' }}>7 Dias</span>
+                                <span style={{ fontSize: '0.95rem', color: '#dc2626', fontWeight: '800' }}>{examAlertMetrics.upTo7}</span>
+                              </div>
+                              <div style={{ backgroundColor: '#ffedd5', padding: '0.35rem 0.45rem', borderRadius: '6px', textAlign: 'center' }}>
+                                <span style={{ fontSize: '0.68rem', color: '#9a3412', fontWeight: '700', display: 'block' }}>14 Dias</span>
+                                <span style={{ fontSize: '0.95rem', color: '#ea580c', fontWeight: '800' }}>{examAlertMetrics.upTo14}</span>
+                              </div>
+                              <div style={{ backgroundColor: '#fef3c7', padding: '0.35rem 0.45rem', borderRadius: '6px', textAlign: 'center' }}>
+                                <span style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: '700', display: 'block' }}>30 Dias</span>
+                                <span style={{ fontSize: '0.95rem', color: '#d97706', fontWeight: '800' }}>{examAlertMetrics.upTo30}</span>
+                              </div>
+                            </div>
+
+                            <div style={styles.listWrapper}>
+                              {examAlertMetrics.urgentAlertsList.length === 0 ? (
+                                <p style={styles.noDataMini}>Nenhum exame ASO vencido ou a vencer nos próximos 30 dias. Todos em dia!</p>
+                              ) : (
+                                examAlertMetrics.urgentAlertsList.slice(0, 4).map((item, idx) => (
+                                  <div key={idx} style={{ ...styles.listItem, padding: '0.45rem 0.6rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                        <strong onClick={() => handleOpenExamAdd(item)} style={{ color: '#0284c7', cursor: 'pointer', fontSize: '0.82rem' }} title="Clique para lançar novo ASO">{item.employeeName}</strong>
+                                        <span style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem', borderRadius: '4px', backgroundColor: item.contractType === 'PJ' ? '#ede9fe' : '#e0f2fe', color: item.contractType === 'PJ' ? '#6d28d9' : '#0369a1', fontWeight: '700' }}>
+                                          {item.contractType}
+                                        </span>
+                                      </div>
+                                      <span style={styles.listSubText}>
+                                        {item.role || 'Geral'} • Último: {item.lastExamDate ? formatDateBR(item.lastExamDate) : 'Sem ASO prévio'}
+                                      </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                      <span style={{ ...styles.listBadge, backgroundColor: item.badgeBg, color: item.statusColor, fontWeight: '700' }}>
+                                        {item.statusLabel}
+                                      </span>
+                                      <button 
+                                        onClick={() => handleOpenExamAdd(item)}
+                                        style={{ border: 'none', backgroundColor: '#0284c7', color: '#fff', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: '700', cursor: 'pointer' }}
+                                        title="Registrar Renovação de ASO"
+                                      >
+                                        Lançar
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                            <button
+                              onClick={() => { setActiveTab('exams'); handleOpenExamAdd(); }}
+                              style={{
+                                padding: '0.35rem 0.75rem',
+                                fontSize: '0.75rem',
+                                fontWeight: '700',
+                                backgroundColor: '#0284c7',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.35rem'
+                              }}
+                            >
+                              <Plus size={13} /> Novo Exame ASO
+                            </button>
                           </div>
                         </div>
                       )}
@@ -1404,6 +1580,319 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
             );
           })()}
 
+          {/* TAB 3: Occupational Exams (ASO) */}
+          {activeTab === 'exams' && (() => {
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                {/* Top Metrics Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.85rem' }}>
+                  <div style={{ ...styles.kpiCard, borderLeft: '4px solid #0284c7', padding: '1rem' }}>
+                    <span style={styles.kpiLabel}>Total</span>
+                    <span style={{ ...styles.kpiVal, color: '#0284c7', fontSize: '1.6rem' }}>{examAlertMetrics.total}</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>CLT e PJ monitorados</span>
+                  </div>
+
+                  <div 
+                    onClick={() => setExamFilterStatus(examFilterStatus === 'expired' ? 'all' : 'expired')}
+                    style={{ ...styles.kpiCard, borderLeft: '4px solid #ef4444', padding: '1rem', cursor: 'pointer', backgroundColor: examFilterStatus === 'expired' ? '#fee2e2' : '#fff' }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ ...styles.kpiLabel, color: '#ef4444' }}>Vencidos</span>
+                      <ShieldAlert size={16} color="#ef4444" />
+                    </div>
+                    <span style={{ ...styles.kpiVal, color: '#ef4444', fontSize: '1.6rem' }}>{examAlertMetrics.expired}</span>
+                    <span style={{ fontSize: '0.72rem', color: '#991b1b', marginTop: '0.2rem' }}>Exames expirados</span>
+                  </div>
+
+                  <div 
+                    onClick={() => setExamFilterStatus(examFilterStatus === '7d' ? 'all' : '7d')}
+                    style={{ ...styles.kpiCard, borderLeft: '4px solid #dc2626', padding: '1rem', cursor: 'pointer', backgroundColor: examFilterStatus === '7d' ? '#fecaca' : '#fff' }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ ...styles.kpiLabel, color: '#dc2626' }}>7 Dias</span>
+                      <Clock size={16} color="#dc2626" />
+                    </div>
+                    <span style={{ ...styles.kpiVal, color: '#dc2626', fontSize: '1.6rem' }}>{examAlertMetrics.upTo7}</span>
+                    <span style={{ fontSize: '0.72rem', color: '#991b1b', marginTop: '0.2rem' }}>Vencem em até 7d</span>
+                  </div>
+
+                  <div 
+                    onClick={() => setExamFilterStatus(examFilterStatus === '14d' ? 'all' : '14d')}
+                    style={{ ...styles.kpiCard, borderLeft: '4px solid #ea580c', padding: '1rem', cursor: 'pointer', backgroundColor: examFilterStatus === '14d' ? '#ffedd5' : '#fff' }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ ...styles.kpiLabel, color: '#ea580c' }}>14 Dias</span>
+                      <AlertTriangle size={16} color="#ea580c" />
+                    </div>
+                    <span style={{ ...styles.kpiVal, color: '#ea580c', fontSize: '1.6rem' }}>{examAlertMetrics.upTo14}</span>
+                    <span style={{ fontSize: '0.72rem', color: '#9a3412', marginTop: '0.2rem' }}>Vencem em até 14d</span>
+                  </div>
+
+                  <div 
+                    onClick={() => setExamFilterStatus(examFilterStatus === '30d' ? 'all' : '30d')}
+                    style={{ ...styles.kpiCard, borderLeft: '4px solid #d97706', padding: '1rem', cursor: 'pointer', backgroundColor: examFilterStatus === '30d' ? '#fef3c7' : '#fff' }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ ...styles.kpiLabel, color: '#d97706' }}>30 Dias</span>
+                      <Calendar size={16} color="#d97706" />
+                    </div>
+                    <span style={{ ...styles.kpiVal, color: '#d97706', fontSize: '1.6rem' }}>{examAlertMetrics.upTo30}</span>
+                    <span style={{ fontSize: '0.72rem', color: '#92400e', marginTop: '0.2rem' }}>Vencem em até 30d</span>
+                  </div>
+
+                  <div 
+                    onClick={() => setExamFilterStatus(examFilterStatus === 'ok' ? 'all' : 'ok')}
+                    style={{ ...styles.kpiCard, borderLeft: '4px solid #10b981', padding: '1rem', cursor: 'pointer', backgroundColor: examFilterStatus === 'ok' ? '#d1fae5' : '#fff' }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ ...styles.kpiLabel, color: '#10b981' }}>Em Dia</span>
+                      <CheckCircle2 size={16} color="#10b981" />
+                    </div>
+                    <span style={{ ...styles.kpiVal, color: '#10b981', fontSize: '1.6rem' }}>{examAlertMetrics.upToDate}</span>
+                    <span style={{ fontSize: '0.72rem', color: '#065f46', marginTop: '0.2rem' }}>Conformes (&gt; 30d)</span>
+                  </div>
+                </div>
+
+                {/* Filters Toolbar */}
+                <div style={styles.filtersBar}>
+                  <div style={styles.searchWrapper}>
+                    <Search size={18} style={styles.searchIcon} />
+                    <input 
+                      type="text" 
+                      placeholder="Pesquisar por colaborador, CPF, cargo, clínica ou médico..."
+                      value={examSearchTerm}
+                      onChange={e => setExamSearchTerm(e.target.value)}
+                      style={styles.searchInput}
+                    />
+                  </div>
+
+                  <div style={{ ...styles.selectsWrapper, display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <select value={examFilterContract} onChange={e => setExamFilterContract(e.target.value)} style={styles.filterSelect}>
+                      <option value="all">Vínculo: Todos</option>
+                      <option value="CLT">Apenas CLT</option>
+                      <option value="PJ">Apenas PJ</option>
+                    </select>
+
+                    <select value={examFilterType} onChange={e => setExamFilterType(e.target.value)} style={styles.filterSelect}>
+                      <option value="all">Exame: Todos</option>
+                      <option value="Admissional">Admissional</option>
+                      <option value="Periódico">Periódico</option>
+                      <option value="Demissional">Demissional</option>
+                      <option value="Mudança de Função">Mudança de Função</option>
+                      <option value="Retorno ao Trabalho">Retorno ao Trabalho</option>
+                    </select>
+
+                    <select value={examFilterStatus} onChange={e => setExamFilterStatus(e.target.value)} style={styles.filterSelect}>
+                      <option value="all">Status: Todos ({employeesExamOverview.length})</option>
+                      <option value="urgent_all">⚠️ Todos Alertas (Vencidos + &lt;30d)</option>
+                      <option value="expired">🚨 Vencidos ({examAlertMetrics.expired})</option>
+                      <option value="7d">🔴 7 Dias ({examAlertMetrics.upTo7})</option>
+                      <option value="14d">🟠 14 Dias ({examAlertMetrics.upTo14})</option>
+                      <option value="30d">🟡 30 Dias ({examAlertMetrics.upTo30})</option>
+                      <option value="ok">🟢 Em Dia ({examAlertMetrics.upToDate})</option>
+                    </select>
+
+                    <button 
+                      onClick={() => handleOpenExamAdd()}
+                      style={{ ...styles.addBtn, backgroundColor: '#0284c7' }}
+                    >
+                      <Plus size={16} /> Lançar ASO
+                    </button>
+                  </div>
+                </div>
+
+                {/* Exams Table */}
+                <div style={styles.tableWrapper}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={{ cursor: 'pointer' }} onClick={() => handleExamSort('employeeName')}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            Colaborador {renderExamSortIcon('employeeName')}
+                          </div>
+                        </th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => handleExamSort('contractType')}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            Vínculo {renderExamSortIcon('contractType')}
+                          </div>
+                        </th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => handleExamSort('role')}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            Cargo {renderExamSortIcon('role')}
+                          </div>
+                        </th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => handleExamSort('lastExamDate')}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            Exame {renderExamSortIcon('lastExamDate')}
+                          </div>
+                        </th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => handleExamSort('nextDueDate')}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            Vencimento {renderExamSortIcon('nextDueDate')}
+                          </div>
+                        </th>
+                        <th>Resultado</th>
+                        <th>Local</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredExamOverview.length === 0 ? (
+                        <tr>
+                          <td colSpan="8" style={styles.noDataCell}>
+                            Nenhum registro de exame ocupacional encontrado para os filtros selecionados.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredExamOverview.map((item) => {
+                          return (
+                            <tr key={item.employeeId}>
+                              <td>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                                  {item.employee?.photo ? (
+                                    <img src={item.employee.photo} alt={item.employeeName} style={styles.tablePhoto} />
+                                  ) : (
+                                    <div style={{ ...styles.tablePhotoPlaceholder, backgroundColor: 'rgba(2,132,199,0.1)', color: '#0284c7', borderColor: 'rgba(2,132,199,0.2)' }}>
+                                      {item.employeeName.substring(0, 2).toUpperCase()}
+                                    </div>
+                                  )}
+                                  <div>
+                                    <strong 
+                                      onClick={() => handleOpenEmpByName(item.employeeName)} 
+                                      style={{ color: '#0284c7', cursor: 'pointer', textDecoration: 'underline' }}
+                                      title="Abrir ficha do colaborador"
+                                    >
+                                      {item.employeeName}
+                                    </strong>
+                                    <span style={styles.listSubText}>CPF: {item.cpf || '-'}</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td>
+                                <span style={{
+                                  fontSize: '0.72rem',
+                                  padding: '0.15rem 0.5rem',
+                                  borderRadius: '6px',
+                                  backgroundColor: item.contractType === 'PJ' ? '#ede9fe' : '#e0f2fe',
+                                  color: item.contractType === 'PJ' ? '#6d28d9' : '#0369a1',
+                                  fontWeight: '700'
+                                }}>
+                                  {item.contractType}
+                                </span>
+                              </td>
+                              <td style={{ fontSize: '0.85rem' }}>
+                                <div>{item.role || 'Geral'}</div>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                  {sectors.find(s => s.id === item.sectorId)?.name || ''}
+                                </span>
+                              </td>
+                              <td>
+                                <div>
+                                  <strong style={{ fontSize: '0.85rem' }}>{item.lastExamType}</strong>
+                                </div>
+                                <span style={styles.listSubText}>
+                                  {item.lastExamDate ? formatDateBR(item.lastExamDate) : 'Não realizado'}
+                                </span>
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                  <span style={{ fontSize: '0.85rem', fontWeight: '700' }}>
+                                    {item.nextDueDate ? formatDateBR(item.nextDueDate) : '-'}
+                                  </span>
+                                  <span style={{
+                                    fontSize: '0.72rem',
+                                    fontWeight: '700',
+                                    padding: '0.15rem 0.45rem',
+                                    borderRadius: '4px',
+                                    backgroundColor: item.badgeBg,
+                                    color: item.statusColor,
+                                    display: 'inline-block',
+                                    width: 'fit-content'
+                                  }}>
+                                    {item.statusLabel}
+                                  </span>
+                                </div>
+                              </td>
+                              <td>
+                                <span style={{
+                                  fontSize: '0.75rem',
+                                  fontWeight: '700',
+                                  padding: '0.2rem 0.5rem',
+                                  borderRadius: '4px',
+                                  backgroundColor: item.lastExamResult === 'Inapto' ? '#fee2e2' : item.lastExamResult === 'Apto com Restrições' ? '#fef3c7' : '#d1fae5',
+                                  color: item.lastExamResult === 'Inapto' ? '#dc2626' : item.lastExamResult === 'Apto com Restrições' ? '#d97706' : '#059669'
+                                }}>
+                                  {item.lastExamResult}
+                                </span>
+                              </td>
+                              <td style={{ fontSize: '0.8rem' }}>
+                                <div>{item.lastExam?.clinicName || '-'}</div>
+                                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                  {item.lastExam?.doctorName || ''}
+                                </span>
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                                  <button
+                                    onClick={() => handleOpenExamAdd(item)}
+                                    style={{
+                                      border: 'none',
+                                      backgroundColor: '#0284c7',
+                                      color: '#fff',
+                                      padding: '0.3rem 0.6rem',
+                                      borderRadius: '4px',
+                                      fontSize: '0.75rem',
+                                      fontWeight: '700',
+                                      cursor: 'pointer'
+                                    }}
+                                    title="Lançar nova renovação de ASO"
+                                  >
+                                    Renovar
+                                  </button>
+
+                                  {item.lastExam && (
+                                    <>
+                                      <button
+                                        onClick={() => handleOpenExamEdit(item.lastExam)}
+                                        style={styles.actionEditBtn}
+                                        title="Editar último ASO"
+                                      >
+                                        <Edit2 size={13} />
+                                      </button>
+
+                                      {item.lastExam.docUrl && (
+                                        <a
+                                          href={item.lastExam.docUrl}
+                                          download={`ASO-${item.employeeName}-${item.lastExamDate}.png`}
+                                          style={{ ...styles.actionEditBtn, color: '#0284c7', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                                          title="Baixar ASO"
+                                        >
+                                          <Download size={13} />
+                                        </a>
+                                      )}
+
+                                      <button
+                                        onClick={() => handleDeleteExam(item.lastExam.id)}
+                                        style={{ ...styles.actionEditBtn, color: 'var(--danger-color)' }}
+                                        title="Excluir ASO"
+                                      >
+                                        <Trash2 size={13} />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* TAB 4: Audit Logs */}
           {activeTab === 'audit' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -2206,6 +2695,194 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
           </div>
         </div>
       )})()}
+
+      {/* Occupational Exam (ASO) Modal */}
+      {showExamModal && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalCard, maxWidth: '650px', width: '95%' }}>
+            <div style={styles.modalHeader}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Stethoscope size={20} color="#0284c7" />
+                {editingExam ? 'Editar Exame Ocupacional (ASO)' : 'Registrar Exame Ocupacional (ASO)'}
+              </h2>
+              <button onClick={() => setShowExamModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleSaveExam} style={styles.modalForm}>
+              <div style={{ maxHeight: '75vh', overflowY: 'auto', padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="form-group">
+                  <label>Colaborador *</label>
+                  <select
+                    className="form-control"
+                    required
+                    value={examForm.employeeId}
+                    onChange={e => {
+                      const empId = e.target.value;
+                      const emp = employees.find(x => x.id === empId);
+                      setExamForm(prev => ({
+                        ...prev,
+                        employeeId: empId,
+                        employeeName: emp ? emp.name : '',
+                        cpf: emp ? (emp.cpf || '') : '',
+                        role: emp ? (emp.role || '') : '',
+                        contractType: emp ? (emp.contractType || 'CLT') : 'CLT'
+                      }));
+                    }}
+                  >
+                    <option value="">Selecione um colaborador...</option>
+                    {employees
+                      .filter(e => e.status !== 'Inativo')
+                      .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'))
+                      .map(emp => (
+                        <option key={emp.id} value={emp.id}>
+                          {emp.name} ({emp.contractType || 'CLT'} - {normalizeSingleWord(emp.role)})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label>Tipo *</label>
+                    <select
+                      className="form-control"
+                      required
+                      value={examForm.examType}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setExamForm(prev => ({
+                          ...prev,
+                          examType: val,
+                          nextDueDate: ['Admissional', 'Periódico'].includes(val) ? addOneYear(prev.examDate) : ''
+                        }));
+                      }}
+                    >
+                      <option value="Admissional">Admissional</option>
+                      <option value="Periódico">Periódico (Anual)</option>
+                      <option value="Demissional">Demissional</option>
+                      <option value="Mudança de Função">Mudança de Função</option>
+                      <option value="Retorno ao Trabalho">Retorno ao Trabalho</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Resultado *</label>
+                    <select
+                      className="form-control"
+                      required
+                      value={examForm.result}
+                      onChange={e => setExamForm(prev => ({ ...prev, result: e.target.value }))}
+                    >
+                      <option value="Apto">Apto</option>
+                      <option value="Inapto">Inapto</option>
+                      <option value="Apto com Restrições">Apto com Restrições</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label>Exame *</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      required
+                      value={examForm.examDate}
+                      onChange={e => {
+                        const dt = e.target.value;
+                        setExamForm(prev => ({
+                          ...prev,
+                          examDate: dt,
+                          nextDueDate: ['Admissional', 'Periódico'].includes(prev.examType) ? addOneYear(dt) : prev.nextDueDate
+                        }));
+                      }}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Vencimento</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={examForm.nextDueDate}
+                      onChange={e => setExamForm(prev => ({ ...prev, nextDueDate: e.target.value }))}
+                    />
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      Preenchido com +1 ano automaticamente.
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label>Médico</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Ex: Dr. Carlos - CRM/MG 12345"
+                      value={examForm.doctorName}
+                      onChange={e => setExamForm(prev => ({ ...prev, doctorName: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Clínica</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Ex: Climed Saúde Ocupacional"
+                      value={examForm.clinicName}
+                      onChange={e => setExamForm(prev => ({ ...prev, clinicName: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Anexo</label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    onChange={e => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => setExamForm(prev => ({ ...prev, docUrl: reader.result }));
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    style={{ fontSize: '0.8rem' }}
+                  />
+                  {examForm.docUrl && (
+                    <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: '600', marginTop: '0.25rem', display: 'block' }}>
+                      ✓ Arquivo anexado pronto para salvar
+                    </span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Observações</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    placeholder="Informações adicionais, orientações médicas ou restrições..."
+                    value={examForm.notes}
+                    onChange={e => setExamForm(prev => ({ ...prev, notes: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div style={styles.modalFooter}>
+                <button type="button" onClick={() => setShowExamModal(false)} className="btn btn-secondary">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: '#0284c7' }}>
+                  {actionLoading ? 'Salvando...' : 'Salvar ASO'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Award Report Modal (Presença Premiada) */}
       <AwardReportModal

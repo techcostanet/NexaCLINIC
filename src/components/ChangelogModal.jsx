@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.66',
+      date: '25/08/2026',
+      title: 'Módulo RH — Controle de Exames Ocupacionais (ASO) e Alertas de Vencimento (30d, 14d, 7d)',
+      description: 'Implementação de aba dedicada "Exames" no NexaHR para controle completo do ciclo de Saúde Ocupacional (ASO) para colaboradores CLT e prestadores PJ, com cálculo anual automático e widgets de alertas preditivos na dashboard.',
+      changes: [
+        { type: 'Aba Exames Ocupacionais', text: 'Nova aba dedicada no NexaHR com acompanhamento completo de exames (Admissional, Periódico, Demissional, Mudança de Função e Retorno ao Trabalho) para CLT e PJ.' },
+        { type: 'Alertas Preditivos na Dashboard', text: 'Widgets interativos na Dashboard com contagem regressiva e badges coloridos para exames Vencidos, Próximos 7 Dias (Crítico), 14 Dias (Atenção) e 30 Dias (Alerta).' },
+        { type: 'Cálculo Anual Automático (+1 ano)', text: 'Agendamento e projeção automática de vencimento de 1 em 1 ano a partir da data do último exame ou data de admissão.' },
+        { type: 'Modal de ASO & Anexos', text: 'Formulário completo para registro e renovação de ASOs com parecer (Apto/Inapto/Restrições), médico examinador/CRM, clínica e upload de laudos.' },
+        { type: 'Filtros & Ações Rápidas', text: 'Filtros por vínculo (CLT/PJ), tipo de exame, urgência e botões diretos de "Renovar" com 1 clique.' }
+      ]
+    },
+    {
       version: 'v4.7.63',
       date: '25/08/2026',
       title: 'Importação do Catálogo de Fornecedores de Taguatinga e Autocompletar no Contas a Pagar',
