@@ -90,8 +90,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const [costCenters, setCostCenters] = useState([]);
   const [budgetPlans, setBudgetPlans] = useState([]);
   const [agreementsList, setAgreementsList] = useState([]);
-  const [selectedUnit, setSelectedUnit] = useState('Betim'); // 'Betim' | 'Contagem' | 'Matriz' | 'Todas'
+  const [selectedUnit, setSelectedUnit] = useState(() => activeUnit?.shortName || (activeUnitId === 'all' ? 'Todas' : (activeUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim')));
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setSelectedUnit(activeUnit?.shortName || (activeUnitId === 'all' ? 'Todas' : (activeUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim')));
+  }, [activeUnitId, activeUnit]);
 
   // States for new Budget & Agreement Modals / Forms
   const [showAddBudget, setShowAddBudget] = useState(false);
@@ -917,6 +921,10 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   // Calculate Metrics based on active unit filter (or consolidated if all)
   const currentPayableList = useMemo(() => payableList.filter(matchItemUnit), [payableList, activeUnitId]);
   const currentReceivableList = useMemo(() => receivableList.filter(matchItemUnit), [receivableList, activeUnitId]);
+  const currentDebtsList = useMemo(() => debtsList.filter(matchItemUnit), [debtsList, activeUnitId]);
+  const currentBankStatements = useMemo(() => bankStatements.filter(matchItemUnit), [bankStatements, activeUnitId]);
+  const currentBudgetPlans = useMemo(() => budgetPlans.filter(matchItemUnit), [budgetPlans, activeUnitId]);
+  const currentAgreementsList = useMemo(() => agreementsList.filter(matchItemUnit), [agreementsList, activeUnitId]);
 
   const totalReceivables = currentReceivableList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   const receivedAmount = currentReceivableList.filter(r => isItemPaid(r)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
@@ -1001,7 +1009,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const overdueReceivables = currentReceivableList.filter(r => !isItemPaid(r) && (r.dueDate || '') < todayStr);
   const totalOverdueAmount = overduePayables.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0) + overdueReceivables.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
 
-  // 7 Days & 15 Days Payables Calculations
+  // 7 Days & 15 Days Payables Calculations (Strictly Unit Filtered)
   const todayObj = new Date();
   todayObj.setHours(0, 0, 0, 0);
 
@@ -1013,14 +1021,14 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   date15Days.setDate(date15Days.getDate() + 15);
   const date15DaysStr = date15Days.toISOString().substring(0, 10);
 
-  const payables7DaysList = payableList.filter(p => !isItemPaid(p) && (p.dueDate || '') >= todayStr && (p.dueDate || '') <= date7DaysStr);
+  const payables7DaysList = currentPayableList.filter(p => !isItemPaid(p) && (p.dueDate || '') >= todayStr && (p.dueDate || '') <= date7DaysStr);
   const totalPayables7Days = payables7DaysList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
-  const payables15DaysList = payableList.filter(p => !isItemPaid(p) && (p.dueDate || '') >= todayStr && (p.dueDate || '') <= date15DaysStr);
+  const payables15DaysList = currentPayableList.filter(p => !isItemPaid(p) && (p.dueDate || '') >= todayStr && (p.dueDate || '') <= date15DaysStr);
   const totalPayables15Days = payables15DaysList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
-  // Simulated APAC alert list
-  const mockApacs = [
+  // Simulated APAC alert list (Only for Betim / Global, Empty for other units)
+  const mockApacs = (activeUnitId === 'taguatinga') ? [] : [
     { id: '1', patientName: 'ADAIR PRAXEDES MORENO', code: '0303020059', expires: '2026-07-28', status: 'Atenção' },
     { id: '2', patientName: 'ADAO LUCIANO DIAS', code: '0303020059', expires: '2026-08-15', status: 'Ativa' },
     { id: '3', patientName: 'ADRIANO BRANDAO DA SILVA', code: '0303020059', expires: '2026-07-20', status: 'Urgente' },
@@ -1086,13 +1094,13 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             onClick={() => setActiveTab('agreements')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'agreements' ? styles.tabBtnActive : {}) }}
           >
-            🤝 Acordos & Renegociações ({agreementsList.length})
+            🤝 Acordos & Renegociações ({currentAgreementsList.length})
           </button>
           <button 
             onClick={() => setActiveTab('installments')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'installments' ? styles.tabBtnActive : {}) }}
           >
-            Dívidas Longo Prazo ({debtsList.length})
+            Dívidas Longo Prazo ({currentDebtsList.length})
           </button>
           <button 
             onClick={() => setActiveTab('reconciliation')} 
@@ -1916,7 +1924,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                         <div>
                           <h4 style={{ margin: '0 0 0.5rem 0', color: '#166534' }}>🟢 Entradas Quitadas (Recebidas)</h4>
                           <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem' }}>
-                            {receivableList.filter(r => isItemPaid(r)).slice(0, 10).map(r => (
+                            {currentReceivableList.filter(r => isItemPaid(r)).slice(0, 10).map(r => (
                               <li key={r.id} style={{ padding: '0.35rem 0', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
                                 <span>{r.client}</span>
                                 <strong>R$ {r.amount.toLocaleString('pt-BR')}</strong>
@@ -1927,7 +1935,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                         <div>
                           <h4 style={{ margin: '0 0 0.5rem 0', color: '#991b1b' }}>🔴 Saídas Quitadas (Pagas)</h4>
                           <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem' }}>
-                            {payableList.filter(p => isItemPaid(p)).slice(0, 10).map(p => (
+                            {currentPayableList.filter(p => isItemPaid(p)).slice(0, 10).map(p => (
                               <li key={p.id} style={{ padding: '0.35rem 0', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
                                 <span>{p.supplier}</span>
                                 <strong>R$ {p.amount.toLocaleString('pt-BR')}</strong>
@@ -2947,14 +2955,14 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 </tr>
               </thead>
               <tbody>
-                {debtsList.length === 0 ? (
+                {currentDebtsList.length === 0 ? (
                   <tr style={styles.tr}>
                     <td colSpan="8" style={{ ...styles.td, textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                       Nenhum contrato de dívida ou parcelamento cadastrado. Clique no botão acima para adicionar.
                     </td>
                   </tr>
                 ) : (
-                  sortList(debtsList, debtSort).map(debt => (
+                  sortList(currentDebtsList, debtSort).map(debt => (
                     <tr key={debt.id} style={styles.tr}>
                       <td style={styles.td}>
                         <strong>{debt.creditor}</strong>
@@ -3017,7 +3025,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.5rem' }}>
-                {payableList
+                {currentPayableList
                   .filter(p => p.debtId === selectedDebtDetail.id || p.description?.includes(selectedDebtDetail.creditor))
                   .map((p, idx) => (
                     <div key={p.id || idx} style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: p.status === 'Pago' ? '#f0fdf4' : '#fffbbd', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
@@ -3045,7 +3053,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>🟢 Conciliados (Match)</span>
               <h3 style={{ margin: '0.35rem 0 0 0', color: '#10b981', fontSize: '1.2rem' }}>
-                {bankStatements.filter(s => s.status === 'Conciliado').length} lançamentos
+                {currentBankStatements.filter(s => s.status === 'Conciliado').length} lançamentos
               </h3>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Batimento com extrato</span>
             </div>
@@ -3053,7 +3061,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>🟡 Divergências de Valor</span>
               <h3 style={{ margin: '0.35rem 0 0 0', color: '#f59e0b', fontSize: '1.2rem' }}>
-                {bankStatements.filter(s => s.status === 'Divergente').length} divergência(s)
+                {currentBankStatements.filter(s => s.status === 'Divergente').length} divergência(s)
               </h3>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Requer ajuste de tarifas/juros</span>
             </div>
@@ -3061,7 +3069,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>🔴 Não Lançado no Financeiro</span>
               <h3 style={{ margin: '0.35rem 0 0 0', color: '#ef4444', fontSize: '1.2rem' }}>
-                {bankStatements.filter(s => s.status === 'Divergente' && s.note?.includes('não registrada')).length} débito(s)
+                {currentBankStatements.filter(s => s.status === 'Divergente' && s.note?.includes('não registrada')).length} débito(s)
               </h3>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Tarifas/PIX pendentes de lançamento</span>
             </div>
@@ -3185,7 +3193,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 </tr>
               </thead>
               <tbody>
-                {sortList(bankStatements, reconciliationSort).map(stmt => {
+                {sortList(currentBankStatements, reconciliationSort).map(stmt => {
                   const isConciled = stmt.status === 'Conciliado';
                   return (
                     <tr key={stmt.id} style={styles.tr}>
@@ -3259,30 +3267,30 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       {/* DRE Gerencial (Demonstração do Resultado do Exercício) View */}
       {activeTab === 'dre' && (() => {
         // Dynamic DRE Calculations
-        const recListUnit = receivableList.filter(r => selectedUnit === 'Todas' || r.unit === selectedUnit);
-        const payListUnit = payableList.filter(p => selectedUnit === 'Todas' || p.unit === selectedUnit);
+        const recListUnit = currentReceivableList;
+        const payListUnit = currentPayableList;
 
-        const receitaBruta = recListUnit.reduce((acc, r) => acc + (parseFloat(r.amount) || 0), 0) || 540000;
+        const receitaBruta = recListUnit.reduce((acc, r) => acc + (parseFloat(r.amount) || 0), 0);
         const impostosDeducoes = receitaBruta * 0.06; // 6% Impostos Médios de Serviços (ISS / PIS / COFINS)
-        const receitaLiquida = receitaBruta - impostosDeducoes;
+        const receitaLiquida = Math.max(0, receitaBruta - impostosDeducoes);
 
         const custosVariaveis = payListUnit
-          .filter(p => ['Insumo Clínico', 'Medicamento', 'Concentrado'].includes(p.category) || p.natureType === 'Custo Variável / Operacional')
-          .reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0) || (receitaLiquida * 0.32);
+          .filter(p => ['Insumo Clínico', 'Medicamento', 'Concentrado', 'Material Médico-Hospitalar (MatMed)'].includes(p.category) || p.natureType === 'Custo Variável / Operacional')
+          .reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
 
         const margemContribui = receitaLiquida - custosVariaveis;
         const pctMargemContribui = receitaLiquida > 0 ? (margemContribui / receitaLiquida) * 100 : 0;
 
         const custosFixos = payListUnit
-          .filter(p => (!['Insumo Clínico', 'Medicamento', 'Concentrado'].includes(p.category)) || p.natureType === 'Custo Fixo Recorrente')
-          .reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0) || (receitaLiquida * 0.45);
+          .filter(p => (!['Insumo Clínico', 'Medicamento', 'Concentrado', 'Material Médico-Hospitalar (MatMed)'].includes(p.category)) || p.natureType === 'Custo Fixo Recorrente')
+          .reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
 
         const ebitda = margemContribui - custosFixos;
         const pctEbitda = receitaLiquida > 0 ? (ebitda / receitaLiquida) * 100 : 0;
 
-        const despesasFinanceiras = bankStatements
+        const despesasFinanceiras = currentBankStatements
           .filter(s => s.type === 'Débito')
-          .reduce((acc, s) => acc + Math.abs(parseFloat(s.amount) || 0), 0) || (receitaBruta * 0.015);
+          .reduce((acc, s) => acc + Math.abs(parseFloat(s.amount) || 0), 0);
 
         const resultadoLiquido = ebitda - despesasFinanceiras;
         const pctResultadoLiquido = receitaLiquida > 0 ? (resultadoLiquido / receitaLiquida) * 100 : 0;
@@ -3466,7 +3474,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 <Target size={16} color="#3b82f6" />
               </div>
               <h3 style={{ margin: '0.4rem 0 0 0', color: '#1e293b', fontSize: '1.3rem', fontWeight: '800' }}>
-                R$ {budgetPlans.reduce((acc, b) => acc + (parseFloat(b.plannedAmount) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {currentBudgetPlans.reduce((acc, b) => acc + (parseFloat(b.plannedAmount) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </h3>
               <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Planejamento Julho/2026 ({selectedUnit})</span>
             </div>
@@ -3477,8 +3485,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 <DollarSign size={16} color="#10b981" />
               </div>
               <h3 style={{ margin: '0.4rem 0 0 0', color: '#10b981', fontSize: '1.3rem', fontWeight: '800' }}>
-                R$ {payableList
-                  .filter(p => (selectedUnit === 'Todas' || p.unit === selectedUnit) && isItemPaid(p))
+                R$ {currentPayableList
+                  .filter(p => isItemPaid(p))
                   .reduce((acc, p) => acc + (parseFloat(p.amountPaid || p.amount) || 0), 0)
                   .toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </h3>
@@ -3491,8 +3499,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 <Clock size={16} color="#f59e0b" />
               </div>
               <h3 style={{ margin: '0.4rem 0 0 0', color: '#f59e0b', fontSize: '1.3rem', fontWeight: '800' }}>
-                R$ {payableList
-                  .filter(p => (selectedUnit === 'Todas' || p.unit === selectedUnit))
+                R$ {currentPayableList
                   .reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0)
                   .toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </h3>
@@ -3619,11 +3626,11 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               </thead>
               <tbody>
                 {sortList(costCenters.map(cc => {
-                  const bPlan = budgetPlans.find(b => b.costCenterId === cc.id);
+                  const bPlan = currentBudgetPlans.find(b => b.costCenterId === cc.id);
                   const planned = parseFloat(bPlan?.plannedAmount) || 0;
 
                   // Compute actual paid and due for this cost center
-                  const payablesCC = payableList.filter(p => (selectedUnit === 'Todas' || p.unit === selectedUnit) && p.costCenterId === cc.id);
+                  const payablesCC = currentPayableList.filter(p => p.costCenterId === cc.id);
                   const due = payablesCC.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
                   const realized = payablesCC
                     .filter(p => isItemPaid(p))
@@ -3733,155 +3740,207 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       )}
 
       {/* Projeção de Saldo Fluxo (Cash Flow Projection) View */}
-      {activeTab === 'cashflow_projection' && (
-        <div style={styles.tabContent}>
-          {/* Executive Warning Alert Banner for Betim */}
-          <div style={{ backgroundColor: '#fef2f2', border: '2px solid #fca5a5', borderRadius: '12px', padding: '1.25rem', marginBottom: '1rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-            <AlertTriangle size={28} color="#dc2626" style={{ flexShrink: 0, marginTop: '2px' }} />
-            <div>
-              <h3 style={{ margin: 0, color: '#991b1b', fontSize: '1.1rem', fontWeight: '800' }}>
-                ⚠️ Projeção Executiva de Liquidez - Saldo Fluxo Acumulado ({selectedUnit})
-              </h3>
-              <p style={{ margin: '0.4rem 0 0 0', color: '#7f1d1d', fontSize: '0.875rem', lineHeight: '1.4' }}>
-                De acordo com a planilha de Contas a Pagar de Betim 2026, o rombo acumulado atinge <strong>-R$ 1.899.979,34 em Agosto/2026</strong> devido ao acúmulo de títulos vencidos desde Setembro/2025. 
-                Recomenda-se migrar <strong>R$ 1.222.310,85</strong> em passivos de fornecedores para a aba de <strong>Acordos & Renegociações</strong> para restaurar o fluxo positivo de caixa.
-              </p>
+      {activeTab === 'cashflow_projection' && (() => {
+        // Group transactions by month for the active unit
+        const monthsMap = {};
+        currentPayableList.forEach(p => {
+          if (!p.dueDate) return;
+          const ym = p.dueDate.substring(0, 7); // "YYYY-MM"
+          if (!monthsMap[ym]) {
+            monthsMap[ym] = { ym, devido: 0, pago: 0 };
+          }
+          const amt = parseFloat(p.amount) || 0;
+          const paid = isItemPaid(p) ? (parseFloat(p.amountPaid || p.amount) || 0) : 0;
+          monthsMap[ym].devido += amt;
+          monthsMap[ym].pago += paid;
+        });
+
+        const sortedYMs = Object.keys(monthsMap).sort();
+        let runningBalance = initialCashBalance;
+        const monthNames = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+
+        const dynamicProjectionRows = sortedYMs.map((ym, index) => {
+          const [y, m] = ym.split('-');
+          const mName = monthNames[parseInt(m, 10) - 1] || m;
+          const mData = monthsMap[ym];
+          const saldo = mData.pago - mData.devido;
+          runningBalance += saldo;
+
+          const isPast = ym < todayStr.substring(0, 7);
+          const isCurrent = ym === todayStr.substring(0, 7);
+          const status = isPast ? 'ATRASADO' : (isCurrent ? 'MÊS CORRENTE' : 'A VENCER');
+
+          return {
+            monthIndex: index + 1,
+            month: `${mName}/${y}`,
+            status,
+            devido: mData.devido,
+            pago: mData.pago,
+            saldo,
+            fluxo: runningBalance
+          };
+        });
+
+        const hasDeficit = dynamicProjectionRows.some(r => r.fluxo < 0 || r.saldo < 0);
+
+        return (
+          <div style={styles.tabContent}>
+            {/* Executive Warning / Status Banner */}
+            {hasDeficit ? (
+              <div style={{ backgroundColor: '#fef2f2', border: '2px solid #fca5a5', borderRadius: '12px', padding: '1.25rem', marginBottom: '1rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                <AlertTriangle size={28} color="#dc2626" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <h3 style={{ margin: 0, color: '#991b1b', fontSize: '1.1rem', fontWeight: '800' }}>
+                    ⚠️ Projeção Executiva de Liquidez - Saldo Fluxo Acumulado ({selectedUnit})
+                  </h3>
+                  <p style={{ margin: '0.4rem 0 0 0', color: '#7f1d1d', fontSize: '0.875rem', lineHeight: '1.4' }}>
+                    Existem compromissos pendentes ou passivos acumulados para esta unidade. Recomenda-se migrar passivos de fornecedores para a aba de <strong>Acordos & Renegociações</strong> para restaurar o fluxo positivo de caixa.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '1rem 1.25rem', marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <CheckCircle2 size={24} color="#16a34a" style={{ flexShrink: 0 }} />
+                <div>
+                  <h4 style={{ margin: 0, color: '#166534', fontSize: '1rem', fontWeight: '700' }}>
+                    Situação Regular de Liquidez - Unidade {selectedUnit}
+                  </h4>
+                  <p style={{ margin: '0.2rem 0 0 0', color: '#15803d', fontSize: '0.825rem' }}>
+                    Não foram identificados déficits projetados ou rombos de caixa acumulados para os períodos consultados.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Action Bar with Initial Cash Balance Adjustment */}
+            <div style={{ ...styles.actionsBar, marginBottom: '1.25rem' }}>
+              <div>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.95rem' }}>
+                  💵 Saldo Inicial de Caixa Definido: <span style={{ color: '#059669', fontWeight: '800' }}>R$ {initialCashBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                </h4>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Ponto de partida do saldo bancário para a projeção de liquidez da Unidade {selectedUnit}
+                </span>
+              </div>
+
+              <button 
+                onClick={() => {
+                  setTempCashBalance(String(initialCashBalance));
+                  setShowEditCashBalance(!showEditCashBalance);
+                }} 
+                style={styles.btnSecondary}
+              >
+                <Sliders size={14} />
+                <span>Ajustar Saldo Inicial de Caixa</span>
+              </button>
             </div>
-          </div>
 
-          {/* Action Bar with Initial Cash Balance Adjustment */}
-          <div style={{ ...styles.actionsBar, marginBottom: '1.25rem' }}>
-            <div>
-              <h4 style={{ margin: 0, color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.95rem' }}>
-                💵 Saldo Inicial de Caixa Definido: <span style={{ color: '#059669', fontWeight: '800' }}>R$ {initialCashBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-              </h4>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Ponto de partida do saldo bancário para a projeção de liquidez da Unidade {selectedUnit}
-              </span>
-            </div>
+            {/* Modal to Adjust Initial Cash Balance */}
+            {showEditCashBalance && (
+              <form onSubmit={handleSaveInitialCashBalance} style={{ ...styles.formContainer, border: '2px solid #3b82f6', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>💵 Ajustar Saldo Inicial de Caixa da Clínica</h4>
+                  <button type="button" onClick={() => setShowEditCashBalance(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+                    <X size={18} />
+                  </button>
+                </div>
 
-            <button 
-              onClick={() => {
-                setTempCashBalance(String(initialCashBalance));
-                setShowEditCashBalance(!showEditCashBalance);
-              }} 
-              style={styles.btnSecondary}
-            >
-              <Sliders size={14} />
-              <span>Ajustar Saldo Inicial de Caixa</span>
-            </button>
-          </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Valor do Saldo Inicial em Caixa (R$)</label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    value={tempCashBalance} 
+                    onChange={e => setTempCashBalance(e.target.value)}
+                    placeholder="Ex: 150000.00"
+                    style={styles.input}
+                    required
+                  />
+                </div>
 
-          {/* Modal to Adjust Initial Cash Balance */}
-          {showEditCashBalance && (
-            <form onSubmit={handleSaveInitialCashBalance} style={{ ...styles.formContainer, border: '2px solid #3b82f6', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>💵 Ajustar Saldo Inicial de Caixa da Clínica</h4>
-                <button type="button" onClick={() => setShowEditCashBalance(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
-                  <X size={18} />
-                </button>
-              </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+                  <button type="button" onClick={() => setShowEditCashBalance(false)} style={styles.btnSecondary}>Cancelar</button>
+                  <button type="submit" style={styles.btnSave}>Salvar Saldo Inicial</button>
+                </div>
+              </form>
+            )}
 
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Valor do Saldo Inicial em Caixa (R$)</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  value={tempCashBalance} 
-                  onChange={e => setTempCashBalance(e.target.value)}
-                  placeholder="Ex: 150000.00"
-                  style={styles.input}
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
-                <button type="button" onClick={() => setShowEditCashBalance(false)} style={styles.btnSecondary}>Cancelar</button>
-                <button type="submit" style={styles.btnSave}>Salvar Saldo Inicial</button>
-              </div>
-            </form>
-          )}
-
-          {/* Timeline Monthly Projections Table */}
-          <div style={styles.tableWrapper}>
-            <table style={styles.table}>
-              <thead>
-                <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                  {renderSortableHeader('Competência', 'monthIndex', projectionSort, setProjectionSort)}
-                  {renderSortableHeader('Situação', 'status', projectionSort, setProjectionSort)}
-                  {renderSortableHeader('Devido', 'devido', projectionSort, setProjectionSort)}
-                  {renderSortableHeader('Pago', 'pago', projectionSort, setProjectionSort)}
-                  {renderSortableHeader('Saldo', 'saldo', projectionSort, setProjectionSort)}
-                  {renderSortableHeader('Acumulado', 'fluxo', projectionSort, setProjectionSort)}
-                </tr>
-              </thead>
-              <tbody>
-                {sortList([
-                  { monthIndex: 1, month: 'JUN/2025', status: 'ATRASADO', devido: 0, pago: 0, saldo: 0, fluxo: initialCashBalance + 0 },
-                  { monthIndex: 2, month: 'SET/2025', status: 'ATRASADO', devido: 52940.94, pago: 0, saldo: -52940.94, fluxo: initialCashBalance - 52940.94 },
-                  { monthIndex: 3, month: 'OUT/2025', status: 'ATRASADO', devido: 56828.78, pago: 0, saldo: -56828.78, fluxo: initialCashBalance - 109769.72 },
-                  { monthIndex: 4, month: 'NOV/2025', status: 'ATRASADO', devido: 50010.72, pago: 0, saldo: -50010.72, fluxo: initialCashBalance - 159780.44 },
-                  { monthIndex: 5, month: 'DEZ/2025', status: 'ATRASADO', devido: 54472.12, pago: 0, saldo: -54472.12, fluxo: initialCashBalance - 214252.56 },
-                  { monthIndex: 6, month: 'JAN/2026', status: 'ATRASADO', devido: 53056.61, pago: 0, saldo: -53056.61, fluxo: initialCashBalance - 267309.17 },
-                  { monthIndex: 7, month: 'FEV/2026', status: 'ATRASADO', devido: 104417.71, pago: 0, saldo: -104417.71, fluxo: initialCashBalance - 371726.88 },
-                  { monthIndex: 8, month: 'MAR/2026', status: 'ATRASADO', devido: 49200.00, pago: 0, saldo: -49200.00, fluxo: initialCashBalance - 420926.88 },
-                  { monthIndex: 9, month: 'ABR/2026', status: 'ATRASADO', devido: 198115.05, pago: 0, saldo: -198115.05, fluxo: initialCashBalance - 619041.93 },
-                  { monthIndex: 10, month: 'MAI/2026', status: 'ATRASADO', devido: 45403.04, pago: 1340.00, saldo: -44063.04, fluxo: initialCashBalance - 663104.97 },
-                  { monthIndex: 11, month: 'JUN/2026', status: 'ATRASADO', devido: 126532.07, pago: 0, saldo: -126532.07, fluxo: initialCashBalance - 795139.42 },
-                  { monthIndex: 12, month: 'JUL/2026', status: 'ATRASADO / BAIXAS', devido: 477151.10, pago: 57445.95, saldo: -419705.15, fluxo: initialCashBalance - 1222310.85 },
-                  { monthIndex: 13, month: 'AGO/2026', status: 'A VENCER', devido: 677668.49, pago: 392644.50, saldo: -285023.99, fluxo: initialCashBalance - 1899979.34 }
-                ], projectionSort).map((row, i) => (
-                  <tr key={i} style={{ ...styles.tr, backgroundColor: row.fluxo < 0 ? '#fff5f5' : '#ffffff' }}>
-                    <td style={styles.td}><strong style={{ color: '#0f172a' }}>{row.month}</strong></td>
-                    <td style={styles.td}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem', borderRadius: '4px', backgroundColor: row.status.includes('VENCER') ? '#e0f2fe' : '#fee2e2', color: row.status.includes('VENCER') ? '#0369a1' : '#991b1b' }}>
-                        {row.status}
-                      </span>
-                    </td>
-                    <td style={{ ...styles.td, fontWeight: '700' }}>
-                      R$ {row.devido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td style={{ ...styles.td, fontWeight: '700', color: '#059669' }}>
-                      R$ {row.pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td style={{ ...styles.td, fontWeight: '700', color: row.saldo < 0 ? '#dc2626' : '#059669' }}>
-                      {row.saldo < 0 ? `-R$ ${Math.abs(row.saldo).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : `R$ ${row.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                    </td>
-                    <td style={{ ...styles.td, fontWeight: '900', color: row.fluxo < 0 ? '#b91c1c' : '#059669', fontSize: '0.9rem' }}>
-                      {row.fluxo < 0 ? `-R$ ${Math.abs(row.fluxo).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : `R$ ${row.fluxo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                    </td>
+            {/* Timeline Monthly Projections Table */}
+            <div style={styles.tableWrapper}>
+              <table style={styles.table}>
+                <thead>
+                  <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                    {renderSortableHeader('Competência', 'monthIndex', projectionSort, setProjectionSort)}
+                    {renderSortableHeader('Situação', 'status', projectionSort, setProjectionSort)}
+                    {renderSortableHeader('Devido', 'devido', projectionSort, setProjectionSort)}
+                    {renderSortableHeader('Pago', 'pago', projectionSort, setProjectionSort)}
+                    {renderSortableHeader('Saldo', 'saldo', projectionSort, setProjectionSort)}
+                    {renderSortableHeader('Acumulado', 'fluxo', projectionSort, setProjectionSort)}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {dynamicProjectionRows.length === 0 ? (
+                    <tr style={styles.tr}>
+                      <td colSpan="6" style={{ ...styles.td, textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                        Nenhum lançamento financeiro encontrado para projetar o fluxo desta unidade.
+                      </td>
+                    </tr>
+                  ) : (
+                    sortList(dynamicProjectionRows, projectionSort).map((row, i) => (
+                      <tr key={i} style={{ ...styles.tr, backgroundColor: row.fluxo < 0 ? '#fff5f5' : '#ffffff' }}>
+                        <td style={styles.td}><strong style={{ color: '#0f172a' }}>{row.month}</strong></td>
+                        <td style={styles.td}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem', borderRadius: '4px', backgroundColor: row.status.includes('VENCER') ? '#e0f2fe' : '#fee2e2', color: row.status.includes('VENCER') ? '#0369a1' : '#991b1b' }}>
+                            {row.status}
+                          </span>
+                        </td>
+                        <td style={{ ...styles.td, fontWeight: '700' }}>
+                          R$ {row.devido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td style={{ ...styles.td, fontWeight: '700', color: '#059669' }}>
+                          R$ {row.pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td style={{ ...styles.td, fontWeight: '700', color: row.saldo < 0 ? '#dc2626' : '#059669' }}>
+                          {row.saldo < 0 ? `-R$ ${Math.abs(row.saldo).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : `R$ ${row.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                        </td>
+                        <td style={{ ...styles.td, fontWeight: '900', color: row.fluxo < 0 ? '#b91c1c' : '#059669', fontSize: '0.9rem' }}>
+                          {row.fluxo < 0 ? `-R$ ${Math.abs(row.fluxo).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : `R$ ${row.fluxo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
-      {/* Acordos & Renegociações (Agreements) View */}
+      {/* Acordos e Renegociações (Agreements) View */}
       {activeTab === 'agreements' && (
         <div style={styles.tabContent}>
+          {/* Action Bar */}
           <div style={styles.actionsBar}>
             <div>
               <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: '700' }}>
-                🤝 Gestão de Acordos e Renegociações de Dívidas ({selectedUnit})
+                Acordos e Renegociações de Dívidas / Passivos ({selectedUnit})
               </h3>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Controle de passivos faturados em parcelas de longo prazo com fornecedores
+                Gestão estratégica de parcelamentos e alongamento de passivos de fornecedores para equalização do fluxo.
               </span>
             </div>
 
             <button onClick={() => setShowAddAgreement(true)} style={styles.btnPrimary}>
               <Plus size={14} />
-              <span>Registrar Novo Acordo</span>
+              <span>Novo Acordo com Fornecedor</span>
             </button>
           </div>
 
-          {/* Form Modal for Add Agreement */}
+          {/* Form Modal for New Agreement */}
           {showAddAgreement && (
-            <form onSubmit={handleSaveAgreement} style={{ ...styles.formContainer, border: '2px solid #3b82f6' }}>
+            <form onSubmit={handleSaveAgreement} style={{ ...styles.formContainer, border: '2px solid #8b5cf6', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>🤝 Novo Acordo de Pagamento</h4>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>Novo Acordo de Renegociação</h4>
                 <button type="button" onClick={() => setShowAddAgreement(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
                   <X size={18} />
                 </button>
@@ -3889,61 +3948,75 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
               <div style={styles.formGrid}>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Fornecedor Credor</label>
+                  <label style={styles.label}>Fornecedor / Credor</label>
                   <input 
                     type="text" 
                     value={newAgreement.supplier} 
                     onChange={e => setNewAgreement({ ...newAgreement, supplier: e.target.value })}
-                    placeholder="Ex: LACERDA ALIMENTAÇÃO"
+                    placeholder="Ex: Farmarin Indústria Farmacêutica"
                     style={styles.input}
                     required
                   />
                 </div>
 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Valor Total Acordado (R$)</label>
+                  <label style={styles.label}>Valor Total Renegociado (R$)</label>
                   <input 
                     type="number" 
                     step="0.01" 
                     value={newAgreement.totalAmount} 
                     onChange={e => setNewAgreement({ ...newAgreement, totalAmount: e.target.value })}
-                    placeholder="Ex: 152185.80"
+                    placeholder="Ex: 50000.00"
                     style={styles.input}
                     required
                   />
                 </div>
 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Nº de Parcelas</label>
+                  <label style={styles.label}>Quantidade de Parcelas</label>
                   <input 
                     type="number" 
                     value={newAgreement.installmentCount} 
                     onChange={e => setNewAgreement({ ...newAgreement, installmentCount: e.target.value })}
+                    placeholder="Ex: 6"
                     style={styles.input}
                     required
                   />
                 </div>
 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Valor da Parcela Mensal (R$)</label>
+                  <label style={styles.label}>Data da 1ª Parcela</label>
                   <input 
-                    type="number" 
-                    step="0.01" 
-                    value={newAgreement.installmentAmount} 
-                    onChange={e => setNewAgreement({ ...newAgreement, installmentAmount: e.target.value })}
-                    placeholder="Calculado automaticamente se vazio"
+                    type="date" 
+                    value={newAgreement.firstDueDate} 
+                    onChange={e => setNewAgreement({ ...newAgreement, firstDueDate: e.target.value })}
                     style={styles.input}
+                    required
                   />
                 </div>
 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Dia de Vencimento</label>
-                  <input 
-                    type="number" 
-                    value={newAgreement.dueDay} 
-                    onChange={e => setNewAgreement({ ...newAgreement, dueDay: e.target.value })}
+                  <label style={styles.label}>Unidade</label>
+                  <select 
+                    value={newAgreement.unit} 
+                    onChange={e => setNewAgreement({ ...newAgreement, unit: e.target.value })}
                     style={styles.input}
-                    min="1" max="31"
+                  >
+                    <option value="Betim">Betim</option>
+                    <option value="Contagem">Contagem</option>
+                    <option value="Taguatinga">Taguatinga</option>
+                    <option value="Matriz">Matriz</option>
+                  </select>
+                </div>
+
+                <div style={{ ...styles.inputGroup, gridColumn: 'span 2' }}>
+                  <label style={styles.label}>Observações / Condições Comerciais</label>
+                  <input 
+                    type="text" 
+                    value={newAgreement.notes} 
+                    onChange={e => setNewAgreement({ ...newAgreement, notes: e.target.value })}
+                    placeholder="Ex: Desconto de juros mediante pagamento pontual"
+                    style={styles.input}
                   />
                 </div>
               </div>
@@ -3955,11 +4028,11 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             </form>
           )}
 
-          {/* Agreements List Table */}
+          {/* Agreements Table */}
           <div style={styles.tableWrapper}>
             <table style={styles.table}>
               <thead>
-                <tr style={{ backgroundColor: '#f8fafc' }}>
+                <tr>
                   {renderSortableHeader('Fornecedor', 'supplier', agreementSort, setAgreementSort)}
                   {renderSortableHeader('Unidade', 'unit', agreementSort, setAgreementSort)}
                   {renderSortableHeader('Total', 'totalAmount', agreementSort, setAgreementSort)}
@@ -3971,50 +4044,58 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 </tr>
               </thead>
               <tbody>
-                {sortList(agreementsList, agreementSort).map(agr => (
-                  <tr key={agr.id} style={styles.tr}>
-                    <td style={styles.td}>
-                      <strong style={{ color: '#0f172a' }}>{agr.supplier}</strong>
-                      {agr.notes && <div style={styles.subtext}>{agr.notes}</div>}
-                    </td>
-                    <td style={styles.td}>📍 {agr.unit || 'Betim'}</td>
-                    <td style={{ ...styles.td, fontWeight: '700', color: '#1e293b' }}>
-                      R$ {(parseFloat(agr.totalAmount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
-                        {agr.installmentCount}x
-                      </span>
-                    </td>
-                    <td style={{ ...styles.td, fontWeight: '700', color: '#059669' }}>
-                      R$ {(parseFloat(agr.installmentAmount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#475569' }}>
-                        {agr.paidInstallments || 0} de {agr.installmentCount} pagas
-                      </span>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem', borderRadius: '12px', backgroundColor: '#d1fae5', color: '#065f46' }}>
-                        {agr.status || 'Ativo'}
-                      </span>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <button 
-                          onClick={() => handleEditAgreementClick(agr)} 
-                          style={{ ...styles.actionBtnCheck, backgroundColor: '#f1f5f9', color: '#334155' }} 
-                          title="Editar Acordo"
-                        >
-                          <Edit size={14} />
-                        </button>
-                        <button onClick={() => handleDeleteAgreement(agr.id)} style={styles.actionBtnDelete} title="Excluir Acordo">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                {currentAgreementsList.length === 0 ? (
+                  <tr style={styles.tr}>
+                    <td colSpan="8" style={{ ...styles.td, textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                      Nenhum acordo ou renegociação cadastrado para esta unidade.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  sortList(currentAgreementsList, agreementSort).map(agr => (
+                    <tr key={agr.id} style={styles.tr}>
+                      <td style={styles.td}>
+                        <strong style={{ color: '#0f172a' }}>{agr.supplier}</strong>
+                        {agr.notes && <div style={styles.subtext}>{agr.notes}</div>}
+                      </td>
+                      <td style={styles.td}>📍 {agr.unit || 'Betim'}</td>
+                      <td style={{ ...styles.td, fontWeight: '700', color: '#1e293b' }}>
+                        R$ {(parseFloat(agr.totalAmount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={styles.td}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
+                          {agr.installmentCount}x
+                        </span>
+                      </td>
+                      <td style={{ ...styles.td, fontWeight: '700', color: '#059669' }}>
+                        R$ {(parseFloat(agr.installmentAmount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={styles.td}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#475569' }}>
+                          {agr.paidInstallments || 0} de {agr.installmentCount} pagas
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.2rem 0.5rem', borderRadius: '12px', backgroundColor: '#d1fae5', color: '#065f46' }}>
+                          {agr.status || 'Ativo'}
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                          <button 
+                            onClick={() => handleEditAgreementClick(agr)} 
+                            style={{ ...styles.actionBtnCheck, backgroundColor: '#f1f5f9', color: '#334155' }} 
+                            title="Editar Acordo"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button onClick={() => handleDeleteAgreement(agr.id)} style={styles.actionBtnDelete} title="Excluir Acordo">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -4119,8 +4200,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       {isReportsOpen && (
         <FinanceReportsModal 
           onClose={() => setIsReportsOpen(false)}
-          payableList={payableList}
-          receivableList={receivableList}
+          payableList={currentPayableList}
+          receivableList={currentReceivableList}
           costCenters={costCenters}
           // Assuming tenantSettings might be globally fetched, pass default for now
         />

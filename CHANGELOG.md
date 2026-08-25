@@ -1,3 +1,18 @@
+## [v4.7.61] - 25 de Agosto, 2026
+### Isolamento Rigoroso de Métricas e Saldos Financeiros por Filial (Taguatinga vs Betim)
+- **Correção de Escopo e Métricas em Cards Operacionais:**
+  - Os cards operacionais **"A PAGAR (PRÓXIMOS 7 DIAS)"** e **"A PAGAR (PRÓXIMOS 15 DIAS)"** agora filtram estritamente sobre a lista de títulos da filial ativa (`currentPayableList`), corrigindo o vazamento de valores de Betim na visualização de Taguatinga.
+  - Alertas simulados de APAC foram configurados para exibir registros apenas na filial Betim / visão global, apresentando lista limpa e sem ruídos em Taguatinga.
+- **DRE Gerencial e Projeção de Saldo Fluxo Dinâmicos:**
+  - O **DRE Gerencial** foi refatorado para remover valores fixos de fallback (`540000`, etc.), refletindo com precisão matemática o faturamento, custos variáveis, custos fixos e despesas bancárias da filial ativa (apresentando R$ 0,00 quando a unidade não possui lançamentos).
+  - A **Projeção de Saldo Fluxo** agora agrupa e projeta os saldos mensalmente de forma dinâmica com base nas datas reais de vencimento e quitação da filial ativa, substituindo tabelas e avisos estáticos de Betim por diagnóstico de liquidez contextualizado.
+- **Segregação de Dívidas, Acordos e Conciliação Bancária:**
+  - Abas de **Dívidas de Longo Prazo**, **Acordos & Renegociações** e **Conciliação Bancária** conectadas às listas filtradas por unidade (`currentDebtsList`, `currentAgreementsList`, `currentBankStatements`), com contadores de abas e gavetas de parcelas 100% consistentes.
+- **Sincronização de Estado de Filial:**
+  - O estado do seletor interno do painel financeiro agora reage dinamicamente às trocas de filial realizadas no `UnitContext` global.
+
+---
+
 ## [v4.7.60] - 24 de Agosto, 2026
 ### Aba Dedicada "Profissionais" no NexaMED para Gestão e Complementação do Corpo Clínico
 - **Aba Exclusiva "Profissionais":**

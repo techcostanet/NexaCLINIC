@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.61',
+      date: '25/08/2026',
+      title: 'Isolamento Rigoroso de Métricas e Saldos Financeiros por Filial (Taguatinga vs Betim)',
+      description: 'Correção de vazamento de dados em cards operacionais, DRE, Projeção de Fluxo e Dívidas no Painel Financeiro para a filial Taguatinga, garantindo dashboard 100% isolado e zerado para novas unidades.',
+      changes: [
+        { type: 'Cards de Vencimento', text: 'Os cards A Pagar (7 Dias) e A Pagar (15 Dias) agora utilizam estritamente a lista filtrada pela filial ativa (currentPayableList), eliminando valores residuais de Betim na visão de Taguatinga.' },
+        { type: 'DRE & Projeção Dinâmica', text: 'O DRE Gerencial e a Projeção de Saldo Fluxo agora calculam dinamicamente a partir dos registros da filial ativa e removem fallbacks estáticos, exibindo R$ 0,00 quando não houver movimentações.' },
+        { type: 'Dívidas, Acordos & Conciliação', text: 'Abas de Dívidas de Longo Prazo, Acordos e Conciliação Bancária passam a utilizar coleções estritamente segregadas por filial ativa.' },
+        { type: 'Sincronização de Filial', text: 'Sincronização automática do seletor financeiro com o estado global da filial ativa no UnitContext.' }
+      ]
+    },
+    {
       version: 'v4.7.60',
       date: '24/08/2026',
       title: 'Aba Dedicada "Profissionais" no NexaMED para Gestão e Complementação Cadastral do Corpo Clínico',

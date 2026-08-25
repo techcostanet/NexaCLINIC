@@ -1,8 +1,4 @@
-import puppeteer from 'puppeteer';
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import path from 'path';
 
-const htmlContent = `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -907,56 +903,3 @@ const htmlContent = `
 
 </body>
 </html>
-`;
-
-async function generatePDF() {
-  console.log('Iniciando geração do PDF de apresentação do módulo de agenda...');
-  
-  const docsDir = path.resolve('./docs');
-  const publicDocsDir = path.resolve('./public/docs');
-  
-  if (!existsSync(docsDir)) mkdirSync(docsDir, { recursive: true });
-  if (!existsSync(publicDocsDir)) mkdirSync(publicDocsDir, { recursive: true });
-
-  const htmlPath = path.join(docsDir, 'apresentacao_modulo_agenda_nexa_clinic.html');
-  const pdfPath = path.join(docsDir, 'apresentacao_modulo_agenda_nexa_clinic.pdf');
-  const publicPdfPath = path.join(publicDocsDir, 'apresentacao_modulo_agenda_nexa_clinic.pdf');
-
-  writeFileSync(htmlPath, htmlContent, 'utf-8');
-  console.log('HTML salvo em:', htmlPath);
-
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
-
-  const page = await browser.newPage();
-  await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-
-  // Generate PDF with exact A4 print specifications
-  const pdfBuffer = await page.pdf({
-    format: 'A4',
-    printBackground: true,
-    margin: {
-      top: '0mm',
-      right: '0mm',
-      bottom: '0mm',
-      left: '0mm'
-    },
-    preferCSSPageSize: true
-  });
-
-  await browser.close();
-
-  writeFileSync(pdfPath, pdfBuffer);
-  writeFileSync(publicPdfPath, pdfBuffer);
-
-  console.log('PDF gerado com sucesso em:');
-  console.log(' -', pdfPath);
-  console.log(' -', publicPdfPath);
-}
-
-generatePDF().catch(err => {
-  console.error('Erro ao gerar PDF:', err);
-  process.exit(1);
-});
