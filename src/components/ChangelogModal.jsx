@@ -6,7 +6,7 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v4.7.61',
+      version: 'v4.7.62',
       date: '25/08/2026',
       title: 'Isolamento Rigoroso de Métricas e Saldos Financeiros por Filial (Taguatinga vs Betim)',
       description: 'Correção de vazamento de dados em cards operacionais, DRE, Projeção de Fluxo e Dívidas no Painel Financeiro para a filial Taguatinga, garantindo dashboard 100% isolado e zerado para novas unidades.',

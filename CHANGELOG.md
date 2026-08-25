@@ -1,4 +1,4 @@
-## [v4.7.61] - 25 de Agosto, 2026
+## [v4.7.62] - 25 de Agosto, 2026
 ### Isolamento Rigoroso de Métricas e Saldos Financeiros por Filial (Taguatinga vs Betim)
 - **Correção de Escopo e Métricas em Cards Operacionais:**
   - Os cards operacionais **"A PAGAR (PRÓXIMOS 7 DIAS)"** e **"A PAGAR (PRÓXIMOS 15 DIAS)"** agora filtram estritamente sobre a lista de títulos da filial ativa (`currentPayableList`), corrigindo o vazamento de valores de Betim na visualização de Taguatinga.
