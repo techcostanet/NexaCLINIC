@@ -1,3 +1,16 @@
+## [v4.7.60] - 24 de Agosto, 2026
+### Aba Dedicada "Profissionais" no NexaMED para Gestão e Complementação do Corpo Clínico
+- **Aba Exclusiva "Profissionais":**
+  - Adicionado menu e aba dedicada **Profissionais** diretamente na barra superior do **NexaMED** para facilitar a localização e gerenciamento de todos os médicos cadastrados.
+- **Painel de Indicadores & Métricas:**
+  - Cards no topo da aba exibindo o total de médicos, cadastros completos e cadastros pendentes de complementação.
+- **Barra de Pesquisa e Filtros Rápidos:**
+  - Busca instantânea por Nome, CRM, CPF, E-mail, Celular ou Especialidade, com filtros rápidos por status (Todos, Pendentes e Ativos).
+- **Ação Direta "Completar / Editar":**
+  - Botão destacado na tabela que abre o modal completo de edição para preencher ou atualizar CPF, Cartão SUS, Celular, CRM/UF, Especialidade, Vínculo, PIX e Dados Bancários.
+
+---
+
 ## [v4.7.59] - 24 de Agosto, 2026
 ### Perfil RBAC Médico e Cadastro Completo no NexaMED (CPF, SUS, Celular, CRM, PIX e Banco)
 - **Novo Perfil RBAC "Médico / Corpo Clínico" (`doctor`):**

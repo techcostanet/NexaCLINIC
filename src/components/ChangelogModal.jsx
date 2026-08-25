@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.60',
+      date: '24/08/2026',
+      title: 'Aba Dedicada "Profissionais" no NexaMED para Gestão e Complementação Cadastral do Corpo Clínico',
+      description: 'Adição de uma aba exclusiva "Profissionais" no menu principal do NexaMED com cards de indicadores (Total, Completos e Pendentes), busca rápida em tempo real, filtros por status e botão direto de ação "Completar / Editar" para preenchimento de CRM, CPF, Cartão SUS, Celular, E-mail, Vínculo, PIX e Banco.',
+      changes: [
+        { type: 'Aba Profissionais', text: 'Aba visível e direta no topo do NexaMED dedicada exclusivamente à gestão do corpo clínico e médicos da instituição.' },
+        { type: 'Cards de Status', text: 'Totalizadores no topo da aba exibindo médicos com cadastro 100% preenchido e pendentes de complementação.' },
+        { type: 'Filtro e Busca em Tempo Real', text: 'Barra de pesquisa rápida por nome, CRM, CPF, e-mail, celular ou especialidade com alternância entre Todos, Pendentes e Ativos.' },
+        { type: 'Ação Rápida "Completar"', text: 'Botão destacado em âmbar na linha do médico para abrir o modal e preencher os dados restantes com 1 clique.' }
+      ]
+    },
+    {
       version: 'v4.7.59',
       date: '24/08/2026',
       title: 'Perfil RBAC Médico e Cadastro Completo no NexaMED (CPF, SUS, Celular, CRM, PIX e Banco)',

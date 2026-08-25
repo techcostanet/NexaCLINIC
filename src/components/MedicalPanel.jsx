@@ -11,6 +11,7 @@ import MedicalMyShiftsTab from './medical/MedicalMyShiftsTab';
 import MedicalSwapsTab from './medical/MedicalSwapsTab';
 import MedicalProceduresTab from './medical/MedicalProceduresTab';
 import MedicalProductionTab from './medical/MedicalProductionTab';
+import MedicalDoctorsTab from './medical/MedicalDoctorsTab';
 import MedicalSettingsTab from './medical/MedicalSettingsTab';
 import MedicalStatementModal from './medical/MedicalStatementModal';
 import { useUnit } from '../contexts/UnitContext';
@@ -277,7 +278,10 @@ export default function MedicalPanel({ currentUser, onBack }) {
     }
   };
 
-  const currentDoctors = React.useMemo(() => (activeUnitId === 'taguatinga' ? [] : doctors), [doctors, activeUnitId]);
+  const currentDoctors = React.useMemo(() => {
+    if (!doctors || doctors.length === 0) return [];
+    return doctors;
+  }, [doctors]);
   const currentSchedules = React.useMemo(() => filterByActiveUnit(schedules), [schedules, activeUnitId]);
   const currentSwaps = React.useMemo(() => filterByActiveUnit(swaps), [swaps, activeUnitId]);
   const currentProcedures = React.useMemo(() => filterByActiveUnit(procedures), [procedures, activeUnitId]);
@@ -291,6 +295,7 @@ export default function MedicalPanel({ currentUser, onBack }) {
     { id: 'Trocas', label: 'Trocas', icon: RefreshCw },
     { id: 'Procedimentos', label: 'Procedimentos', icon: Activity },
     { id: 'Produção', label: 'Produção', icon: DollarSign },
+    { id: 'Profissionais', label: 'Profissionais', icon: Users },
     { id: 'Honorários', label: 'Honorários', icon: Settings },
   ];
 
@@ -406,6 +411,14 @@ export default function MedicalPanel({ currentUser, onBack }) {
             settings={settings}
             onHomologateProduction={handleHomologateProduction}
             onOpenStatement={setStatementData}
+            loading={loading}
+          />
+        )}
+
+        {activeTab === 'Profissionais' && (
+          <MedicalDoctorsTab
+            doctors={currentDoctors}
+            onSaveDoctor={handleSaveDoctor}
             loading={loading}
           />
         )}
