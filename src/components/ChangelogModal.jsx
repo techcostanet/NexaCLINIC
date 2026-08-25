@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.63',
+      date: '25/08/2026',
+      title: 'Importação do Catálogo de Fornecedores de Taguatinga e Autocompletar no Contas a Pagar',
+      description: 'Importação e conciliação de 158 fornecedores de Taguatinga para a base do sistema, suporte a multi-filial e preenchimento inteligente com autocompletar na emissão de contas a pagar.',
+      changes: [
+        { type: 'Importação Taguatinga', text: 'Carga de 158 fornecedores (126 novos cadastros e 32 vinculados com escopo multi-unidade) com dados completos de Razão Social, CNPJ, Nome Fantasia e Município.' },
+        { type: 'Autocompletar Inteligente', text: 'Campo Fornecedor no formulário de Nova Despesa (Contas a Pagar) agora conta com datalist inteligente filtrado pela filial ativa.' },
+        { type: 'Suporte Multi-Filial', text: 'UnitContext e módulo de Estoque/Fornecedores atualizados para suportar filtros por filial e multi-unidades.' }
+      ]
+    },
+    {
       version: 'v4.7.62',
       date: '25/08/2026',
       title: 'Isolamento Rigoroso de Métricas e Saldos Financeiros por Filial (Taguatinga vs Betim)',

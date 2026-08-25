@@ -39,6 +39,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Gestão Multi-Unidade (Betim & Taguatinga)',
         desc: 'Visão consolidada de receitas, despesas, fluxo de caixa e DRE para a diretoria, com possibilidade de isolar cada filial (Betim/MG ou Taguatinga/DF) com 1 clique no seletor do cabeçalho.'
+      },
+      {
+        title: 'Catálogo de Fornecedores',
+        desc: 'Autocompletar inteligente com mais de 480 parceiros e credores cadastrados e segmentados por filial (Betim e Taguatinga) para agilizar o preenchimento de lançamentos de despesas.'
       }
     ],
     tutorial: [

@@ -118,6 +118,9 @@ export function UnitProvider({ children, currentUser }) {
   const matchItemUnit = (item) => {
     if (!item) return false;
     if (activeUnitId === 'all') return true;
+    if (Array.isArray(item.units)) {
+      return item.units.includes(activeUnitId) || (activeUnitId === 'betim' && item.units.includes('btm')) || (activeUnitId === 'taguatinga' && item.units.includes('tag'));
+    }
     const itemUnit = item.unitId || item.unit || item.filial || item.branch || item.unidade || 'betim';
     const cleanUnit = String(itemUnit).toLowerCase().trim();
     if (activeUnitId === 'betim') return cleanUnit === 'betim' || cleanUnit === 'btm';

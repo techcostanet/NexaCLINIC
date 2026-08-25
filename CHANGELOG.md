@@ -1,3 +1,15 @@
+## [v4.7.63] - 25 de Agosto, 2026
+### Importação do Catálogo de Fornecedores de Taguatinga e Autocompletar no Contas a Pagar
+- **Carga e Conciliação de Fornecedores:**
+  - Importação de 158 fornecedores de Taguatinga a partir do relatório oficial com decodificação perfeita de caracteres, CNPJ, Razão Social, Nome Fantasia e Município.
+  - Conciliação inteligente: 126 novos cadastros criados e 32 parceiros existentes enriquecidos com suporte multi-filial (`units: ['betim', 'taguatinga']`).
+- **Autocompletar Inteligente em Despesas:**
+  - Campo "Fornecedor" no formulário de Nova Despesa (Contas a Pagar) integrado a datalist interativo filtrado em tempo real pela filial ativa.
+- **Suporte Multi-Filial no Estoque e Unidades:**
+  - `UnitContext` e módulo de Estoque aprimorados para suportar fornecedores vinculados a múltiplas filiais simultâneas.
+
+---
+
 ## [v4.7.62] - 25 de Agosto, 2026
 ### Isolamento Rigoroso de Métricas e Saldos Financeiros por Filial (Taguatinga vs Betim)
 - **Correção de Escopo e Métricas em Cards Operacionais:**

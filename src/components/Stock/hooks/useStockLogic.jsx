@@ -45,6 +45,7 @@ export function useStockLogic(currentUser) {
   const currentInventories = useMemo(() => filterByActiveUnit(inventories), [inventories, activeUnitId]);
   const currentTransfers = useMemo(() => filterByActiveUnit(transfers), [transfers, activeUnitId]);
   const currentProductBatches = useMemo(() => filterByActiveUnit(productBatches), [productBatches, activeUnitId]);
+  const currentSuppliers = useMemo(() => filterByActiveUnit(suppliers), [suppliers, activeUnitId]);
   
   // Traceability & Recall State
   const [traceabilitySearchTerm, setTraceabilitySearchTerm] = useState('');
@@ -504,7 +505,12 @@ export function useStockLogic(currentUser) {
         await dbService.updateSupplier(editingSupplier.id, supplierForm);
         showAlert('Fornecedor atualizado!', 'success');
       } else {
-        await dbService.createSupplier(supplierForm);
+        await dbService.createSupplier({
+          ...supplierForm,
+          unitId: activeUnitId,
+          unit: activeUnit?.name || (activeUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim'),
+          units: [activeUnitId]
+        });
         showAlert('Fornecedor cadastrado!', 'success');
       }
       setShowSupplierModal(false);
@@ -1835,7 +1841,7 @@ export function useStockLogic(currentUser) {
     setItems,
     transactions: currentTransactions,
     setTransactions,
-    suppliers,
+    suppliers: currentSuppliers,
     setSuppliers,
     sectors,
     setSectors,

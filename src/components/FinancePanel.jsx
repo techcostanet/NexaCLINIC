@@ -90,6 +90,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const [costCenters, setCostCenters] = useState([]);
   const [budgetPlans, setBudgetPlans] = useState([]);
   const [agreementsList, setAgreementsList] = useState([]);
+  const [suppliersList, setSuppliersList] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState(() => activeUnit?.shortName || (activeUnitId === 'all' ? 'Todas' : (activeUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim')));
   const [loading, setLoading] = useState(true);
 
@@ -380,6 +381,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       const cCenters = dbService.getCostCenters ? await dbService.getCostCenters() : [];
       const bPlans = dbService.getBudgetPlans ? await dbService.getBudgetPlans() : [];
       const agrs = dbService.getAgreements ? await dbService.getAgreements() : [];
+      const sups = dbService.getSuppliers ? await dbService.getSuppliers() : [];
 
       setPayableList(pay);
       setReceivableList(rec);
@@ -388,6 +390,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       setCostCenters(cCenters);
       setBudgetPlans(bPlans);
       setAgreementsList(agrs);
+      setSuppliersList(sups);
     } catch (err) {
       console.error('Erro ao buscar dados financeiros:', err);
     } finally {
@@ -925,6 +928,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const currentBankStatements = useMemo(() => bankStatements.filter(matchItemUnit), [bankStatements, activeUnitId]);
   const currentBudgetPlans = useMemo(() => budgetPlans.filter(matchItemUnit), [budgetPlans, activeUnitId]);
   const currentAgreementsList = useMemo(() => agreementsList.filter(matchItemUnit), [agreementsList, activeUnitId]);
+  const currentSuppliersList = useMemo(() => suppliersList.filter(matchItemUnit), [suppliersList, activeUnitId]);
 
   const totalReceivables = currentReceivableList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   const receivedAmount = currentReceivableList.filter(r => isItemPaid(r)).reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || curr.amount) || 0), 0);
@@ -2121,15 +2125,23 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   <label style={styles.label}>Fornecedor</label>
                   <input 
                     type="text" 
+                    list="suppliers-payable-datalist"
                     value={editingPayable ? editingPayable.supplier : newPayable.supplier} 
                     onChange={e => {
                       if (editingPayable) setEditingPayable({ ...editingPayable, supplier: e.target.value });
                       else setNewPayable({ ...newPayable, supplier: e.target.value });
                     }} 
-                    placeholder="Nome do fornecedor / credor"
+                    placeholder="Nome do fornecedor"
                     style={styles.input} 
                     required 
                   />
+                  <datalist id="suppliers-payable-datalist">
+                    {currentSuppliersList.map(s => (
+                      <option key={s.id} value={s.name}>
+                        {s.cnpj ? `${s.cnpj}${s.city ? ' - ' + s.city : ''}` : (s.fantasia || '')}
+                      </option>
+                    ))}
+                  </datalist>
                 </div>
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Valor</label>
