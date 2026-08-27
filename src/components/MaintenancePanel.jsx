@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../firebase';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
+import ITServiceOrdersTab from './maintenance/ITServiceOrdersTab';
 import { 
   Wrench, Plus, Search, Filter, X, FileText, CheckCircle2, 
   AlertTriangle, Clock, Trash2, Edit, AlertCircle, HardDrive, 
@@ -12,7 +13,7 @@ import {
 
 export default function MaintenancePanel({ currentUser }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'equipments' | 'calendar' | 'kpi'
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'it_orders' | 'equipments' | 'calendar' | 'kpi'
   const [ordersViewMode, setOrdersViewMode] = useState('compact'); // 'compact' | 'normal' | 'card'
   const [equipmentsViewMode, setEquipmentsViewMode] = useState('compact');
   const [calendarViewMode, setCalendarViewMode] = useState('compact');
@@ -666,7 +667,7 @@ export default function MaintenancePanel({ currentUser }) {
         <div style={styles.headerActions}>
           <UnitSelector compact showLabel={false} />
           <button onClick={() => handleOpenNewOrder()} style={styles.btnPrimary}>
-            <Plus size={16} /> Solicitar Reparo / Nova OS
+            <Plus size={16} /> Nova OS
           </button>
           {isTechOrAdmin && (
             <button onClick={handleOpenNewEquipment} style={styles.btnSecondary}>
@@ -685,69 +686,71 @@ export default function MaintenancePanel({ currentUser }) {
       )}
 
       {/* KPI Cards Row */}
-      <div style={styles.kpiGrid}>
-        {!isTechOrAdmin ? (
-          <>
-            <div style={styles.kpiCard}>
-              <div style={styles.kpiHeader}>
-                <span style={styles.kpiLabel}>Meus Chamados em Aberto</span>
-                <Clock size={18} color="#f59e0b" />
+      {activeTab !== 'it_orders' && (
+        <div style={styles.kpiGrid}>
+          {!isTechOrAdmin ? (
+            <>
+              <div style={styles.kpiCard}>
+                <div style={styles.kpiHeader}>
+                  <span style={styles.kpiLabel}>Meus Chamados</span>
+                  <Clock size={18} color="#f59e0b" />
+                </div>
+                <div style={{ ...styles.kpiValue, color: '#f59e0b' }}>{kpis.myOpenOrders}</div>
+                <span style={styles.kpiSub}>Em atendimento técnico</span>
               </div>
-              <div style={{ ...styles.kpiValue, color: '#f59e0b' }}>{kpis.myOpenOrders}</div>
-              <span style={styles.kpiSub}>Em triagem / atendimento técnico</span>
-            </div>
 
-            <div style={styles.kpiCard}>
-              <div style={styles.kpiHeader}>
-                <span style={styles.kpiLabel}>Meus Chamados Concluídos</span>
-                <CheckCircle2 size={18} color="#10b981" />
+              <div style={styles.kpiCard}>
+                <div style={styles.kpiHeader}>
+                  <span style={styles.kpiLabel}>Concluídos</span>
+                  <CheckCircle2 size={18} color="#10b981" />
+                </div>
+                <div style={{ ...styles.kpiValue, color: '#10b981' }}>{kpis.myCompletedOrders}</div>
+                <span style={styles.kpiSub}>Resolvidos</span>
               </div>
-              <div style={{ ...styles.kpiValue, color: '#10b981' }}>{kpis.myCompletedOrders}</div>
-              <span style={styles.kpiSub}>Resolvidos com sucesso</span>
-            </div>
-          </>
-        ) : (
-          <>
-            <div style={styles.kpiCard}>
-              <div style={styles.kpiHeader}>
-                <span style={styles.kpiLabel}>Total de Ativos</span>
-                <HardDrive size={18} color="#0891b2" />
+            </>
+          ) : (
+            <>
+              <div style={styles.kpiCard}>
+                <div style={styles.kpiHeader}>
+                  <span style={styles.kpiLabel}>Ativos</span>
+                  <HardDrive size={18} color="#0891b2" />
+                </div>
+                <div style={styles.kpiValue}>{kpis.totalEq}</div>
+                <span style={styles.kpiSub}>Bio: {kpis.bioEq} | Predial: {kpis.predEq}</span>
               </div>
-              <div style={styles.kpiValue}>{kpis.totalEq}</div>
-              <span style={styles.kpiSub}>Bio: {kpis.bioEq} | Predial: {kpis.predEq}</span>
-            </div>
 
-            <div style={styles.kpiCard}>
-              <div style={styles.kpiHeader}>
-                <span style={styles.kpiLabel}>OS em Aberto / Andamento</span>
-                <Clock size={18} color="#f59e0b" />
+              <div style={styles.kpiCard}>
+                <div style={styles.kpiHeader}>
+                  <span style={styles.kpiLabel}>OS em Aberto</span>
+                  <Clock size={18} color="#f59e0b" />
+                </div>
+                <div style={{ ...styles.kpiValue, color: '#f59e0b' }}>{kpis.openOrders}</div>
+                <span style={styles.kpiSub}>{kpis.completedOrders} Concluídas</span>
               </div>
-              <div style={{ ...styles.kpiValue, color: '#f59e0b' }}>{kpis.openOrders}</div>
-              <span style={styles.kpiSub}>{kpis.completedOrders} Ordens Concluídas</span>
-            </div>
 
-            <div style={styles.kpiCard}>
-              <div style={styles.kpiHeader}>
-                <span style={styles.kpiLabel}>Equipamentos em Manutenção</span>
-                <AlertTriangle size={18} color="#ef4444" />
+              <div style={styles.kpiCard}>
+                <div style={styles.kpiHeader}>
+                  <span style={styles.kpiLabel}>Em Manutenção</span>
+                  <AlertTriangle size={18} color="#ef4444" />
+                </div>
+                <div style={{ ...styles.kpiValue, color: '#ef4444' }}>{kpis.inopEq}</div>
+                <span style={styles.kpiSub}>{kpis.overduePreventives} Atrasadas</span>
               </div>
-              <div style={{ ...styles.kpiValue, color: '#ef4444' }}>{kpis.inopEq}</div>
-              <span style={styles.kpiSub}>{kpis.overduePreventives} Preventivas Atrasadas</span>
-            </div>
 
-            <div style={styles.kpiCard}>
-              <div style={styles.kpiHeader}>
-                <span style={styles.kpiLabel}>Custo Acumulado Manutenção</span>
-                <DollarSign size={18} color="#10b981" />
+              <div style={styles.kpiCard}>
+                <div style={styles.kpiHeader}>
+                  <span style={styles.kpiLabel}>Custo Acumulado</span>
+                  <DollarSign size={18} color="#10b981" />
+                </div>
+                <div style={{ ...styles.kpiValue, color: '#10b981' }}>
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(kpis.totalCost)}
+                </div>
+                <span style={styles.kpiSub}>Manutenção Clínica</span>
               </div>
-              <div style={{ ...styles.kpiValue, color: '#10b981' }}>
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(kpis.totalCost)}
-              </div>
-              <span style={styles.kpiSub}>Peças + Serviços Terceiros</span>
-            </div>
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Navigation Tabs */}
       <div style={styles.tabContainer}>
@@ -755,7 +758,14 @@ export default function MaintenancePanel({ currentUser }) {
           style={{ ...styles.tabButton, ...(activeTab === 'orders' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('orders')}
         >
-          <FileText size={16} /> {isTechOrAdmin ? `Ordens de Serviço (${currentServiceOrders.length})` : `Meus Chamados (${userOrders.length})`}
+          <FileText size={16} /> {isTechOrAdmin ? `OS Clínica (${currentServiceOrders.length})` : `Meus Chamados Clínicos (${userOrders.length})`}
+        </button>
+
+        <button 
+          style={{ ...styles.tabButton, ...(activeTab === 'it_orders' ? styles.tabActive : {}) }}
+          onClick={() => setActiveTab('it_orders')}
+        >
+          <Laptop size={16} /> {isTechOrAdmin ? 'Chamados T.I.' : 'Meus Chamados T.I.'}
         </button>
 
         {isTechOrAdmin && (
@@ -764,87 +774,98 @@ export default function MaintenancePanel({ currentUser }) {
               style={{ ...styles.tabButton, ...(activeTab === 'equipments' ? styles.tabActive : {}) }}
               onClick={() => setActiveTab('equipments')}
             >
-              <HardDrive size={16} /> Equipamentos & Ativos ({currentEquipments.length})
+              <HardDrive size={16} /> Equipamentos ({currentEquipments.length})
             </button>
             <button 
               style={{ ...styles.tabButton, ...(activeTab === 'calendar' ? styles.tabActive : {}) }}
               onClick={() => setActiveTab('calendar')}
             >
-              <Calendar size={16} /> Cronograma de Preventivas
+              <Calendar size={16} /> Cronograma
             </button>
             <button 
               style={{ ...styles.tabButton, ...(activeTab === 'kpi' ? styles.tabActive : {}) }}
               onClick={() => setActiveTab('kpi')}
             >
-              <BarChart3 size={16} /> Indicadores & BI
+              <BarChart3 size={16} /> Indicadores
             </button>
           </>
         )}
       </div>
 
-      {/* Search and Filters Bar */}
-      <div style={styles.filterBar}>
-        <div style={styles.searchBox}>
-          <Search size={16} color="#94a3b8" />
-          <input 
-            type="text" 
-            placeholder={activeTab === 'orders' ? "Buscar por código da OS, equipamento, problema..." : "Buscar por patrimônio, nome, marca, setor..."}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={styles.searchInput}
-          />
-        </div>
+      {/* Search and Filters Bar (Only for orders and equipments tabs) */}
+      {(activeTab === 'orders' || activeTab === 'equipments') && (
+        <div style={styles.filterBar}>
+          <div style={styles.searchBox}>
+            <Search size={16} color="#94a3b8" />
+            <input 
+              type="text" 
+              placeholder={activeTab === 'orders' ? "Buscar por código, equipamento, problema..." : "Buscar por patrimônio, nome, setor..."}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={styles.searchInput}
+            />
+          </div>
 
-        <div style={styles.filterGroup}>
-          <select 
-            value={categoryFilter} 
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            style={styles.selectFilter}
-          >
-            <option value="all">Todas as Categorias (Biomédico, Predial)</option>
-            <option value="Biomédico">Biomédico & Clínico</option>
-            <option value="Infraestrutura">Infraestrutura & Predial</option>
-          </select>
-
-          {activeTab === 'orders' && (
+          <div style={styles.filterGroup}>
             <select 
-              value={typeFilter} 
-              onChange={(e) => setTypeFilter(e.target.value)}
+              value={categoryFilter} 
+              onChange={(e) => setCategoryFilter(e.target.value)}
               style={styles.selectFilter}
             >
-              <option value="all">Todos os Tipos de OS</option>
-              <option value="Corretiva">Corretiva</option>
-              <option value="Preventiva">Preventiva</option>
-              <option value="Calibração">Calibração / Preditiva</option>
-              <option value="Instalação">Instalação / Comissionamento</option>
+              <option value="all">Categoria</option>
+              <option value="Biomédico">Biomédico</option>
+              <option value="Infraestrutura">Infraestrutura</option>
             </select>
-          )}
 
-          <select 
-            value={statusFilter} 
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={styles.selectFilter}
-          >
-            <option value="all">Todos os Status</option>
-            {activeTab === 'orders' ? (
-              <>
-                <option value="Aberta">Aberta</option>
-                <option value="Em Diagnóstico">Em Diagnóstico</option>
-                <option value="Aguardando Peça">Aguardando Peça</option>
-                <option value="Em Execução">Em Execução</option>
-                <option value="Concluída">Concluída</option>
-              </>
-            ) : (
-              <>
-                <option value="Em Operação">Em Operação</option>
-                <option value="Em Manutenção">Em Manutenção</option>
-                <option value="Inoperante">Inoperante</option>
-                <option value="Desativado">Desativado</option>
-              </>
+            {activeTab === 'orders' && (
+              <select 
+                value={typeFilter} 
+                onChange={(e) => setTypeFilter(e.target.value)}
+                style={styles.selectFilter}
+              >
+                <option value="all">Tipo</option>
+                <option value="Corretiva">Corretiva</option>
+                <option value="Preventiva">Preventiva</option>
+                <option value="Calibração">Calibração</option>
+                <option value="Instalação">Instalação</option>
+              </select>
             )}
-          </select>
+
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={styles.selectFilter}
+            >
+              <option value="all">Status</option>
+              {activeTab === 'orders' ? (
+                <>
+                  <option value="Aberta">Aberta</option>
+                  <option value="Em Diagnóstico">Em Diagnóstico</option>
+                  <option value="Aguardando Peça">Aguardando Peça</option>
+                  <option value="Em Execução">Em Execução</option>
+                  <option value="Concluída">Concluída</option>
+                </>
+              ) : (
+                <>
+                  <option value="Em Operação">Em Operação</option>
+                  <option value="Em Manutenção">Em Manutenção</option>
+                  <option value="Inoperante">Inoperante</option>
+                  <option value="Desativado">Desativado</option>
+                </>
+              )}
+            </select>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* TAB CONTENT: IT SERVICE ORDERS */}
+      {activeTab === 'it_orders' && (
+        <ITServiceOrdersTab 
+          currentUser={currentUser}
+          activeUnitId={activeUnitId}
+          filterByActiveUnit={filterByActiveUnit}
+        />
+      )}
 
       {/* TAB CONTENT 1: SERVICE ORDERS (KANBAN & LIST) */}
       {activeTab === 'orders' && (

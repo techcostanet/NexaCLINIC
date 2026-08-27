@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.68',
+      date: '27/08/2026',
+      title: 'Módulo de Manutenção — Sistema de Ordem de Serviço de T.I. com SLA e Gestão por Setores',
+      description: 'Implementação de aba dedicada "Chamados T.I." no NexaSERVICE com segregação de acessos (colaborador visualiza exclusivamente suas O.S., enquanto Admin/T.I. possui visão gerencial completa), classificação por categorias especializadas, vinculação por setores hospitalares e painel executivo de SLA.',
+      changes: [
+        { type: 'Aba Chamados T.I.', text: 'Nova aba integrada ao módulo de Manutenção acessível para todos os colaboradores com alternância de visualização em Tabela Compacta, Cards e Painel SLA.' },
+        { type: 'Segregação RBAC', text: 'Usuários comuns acompanham apenas suas próprias solicitações de T.I., enquanto Administradores e equipe de T.I. gerenciam todos os chamados da instituição.' },
+        { type: 'Painel & Controle de SLA', text: 'Cálculo dinâmico de prazos contratuais (Crítico 2h, Alta 8h, Média 24h, Baixa 48h) com semáforo visual de conformidade e contagem regressiva.' },
+        { type: 'Categorias & Setores', text: 'Classificação estruturada por incidentes (Hardware, Sistemas, Rede, Impressoras, Acessos, Telefonia, Segurança) e setores hospitalares da clínica.' },
+        { type: 'Atendimento & Linha do Tempo', text: 'Laudo técnico, diagnóstico, registro de solução aplicada, peças substituídas e timeline de comentários em tempo real.' },
+        { type: 'Impressão de O.S. A4', text: 'Emissão formatada de Ordem de Serviço de T.I. com laudo técnico e campos de assinatura para homologação.' }
+      ]
+    },
+    {
       version: 'v4.7.66',
       date: '25/08/2026',
       title: 'Módulo RH — Controle de Exames Ocupacionais (ASO) e Alertas de Vencimento (30d, 14d, 7d)',

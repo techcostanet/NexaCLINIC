@@ -817,16 +817,98 @@ export const MODULE_GUIDES = {
   maintenance: {
     id: 'maintenance',
     name: 'Manutenção & Engenharia Clínica',
-    subtitle: 'NexaSERVICE — Ordem de Serviço & Ativos',
+    subtitle: 'NexaSERVICE — Ativos, T.I. & SLA',
     color: '#0891b2',
     recursos: [
-      { title: 'Chamados de Ordem de Serviço', desc: 'Abertura e atendimento de chamados para máquinas de diálise, osmose e predial.' }
+      {
+        title: 'Central de Chamados de T.I. (Helpdesk)',
+        desc: 'Abertura, acompanhamento e triagem de solicitações técnicas para computadores, sistemas, conectividade de rede, impressoras e acessos.'
+      },
+      {
+        title: 'Painel Executivo de SLA em Tempo Real',
+        desc: 'Controle dinâmico de prazos limites por prioridade (Crítico 2h, Alta 8h, Média 24h e Baixa 48h) com semáforo visual de conformidade e contagem regressiva.'
+      },
+      {
+        title: 'Categorias e Subcategorias Especializadas de T.I.',
+        desc: 'Classificação estruturada em Hardware, Sistemas/NexaCLINIC, Rede/Wi-Fi, Impressoras Zebra/Laser, Acessos/Contas, Telefonia, Segurança e Servidores.'
+      },
+      {
+        title: 'Roteamento por Setores Hospitalares',
+        desc: 'Vínculo obrigatório do chamado ao setor físico afetado (Salões de Hemodiálise, Recepção, Farmácia, Consultório, CME, CTA, Faturamento, RH, etc.).'
+      },
+      {
+        title: 'Segregação de Acessos e Segurança (RBAC)',
+        desc: 'Colaboradores comuns visualizam exclusivamente os seus próprios chamados, enquanto a equipe de T.I. e Administradores possuem visão 100% ampla de toda a clínica.'
+      },
+      {
+        title: 'Histórico & Interações na Linha do Tempo',
+        desc: 'Registro cronológico rastreável de todas as mensagens, diagnósticos técnicos, trocas de status e réplicas entre solicitante e técnico.'
+      },
+      {
+        title: 'Impressão de O.S. Formatada em A4',
+        desc: 'Emissão com 1 clique de espelho técnico contendo laudo, solução aplicada e campos de assinatura e carimbo para guarda documental.'
+      },
+      {
+        title: 'Gestão de Ativos Clínicos & Engenharia',
+        desc: 'Prontuário técnico de máquinas de hemodiálise, sistemas de osmose reversa, geradores e cronograma de manutenções preventivas.'
+      }
     ],
     tutorial: [
-      { title: 'Abertura de Chamados', steps: ['Consulte a engenharia clínica para protocolos de manutenção preventiva.'] }
+      {
+        title: 'Como Abrir um Chamado de T.I.',
+        steps: [
+          'Acesse o módulo "Manutenção" e clique na aba "Chamados T.I." (ou "Meus Chamados T.I.").',
+          'Clique no botão "+ Novo Chamado".',
+          'Selecione a Categoria (ex: Hardware, Rede, Impressoras), a Subcategoria e o Setor onde o problema está ocorrendo.',
+          'Escolha o nível de Prioridade (verifique a descrição do prazo SLA correspondente).',
+          'Informe o Título e descreva detalhadamente a falha ou mensagem de erro observada.',
+          'Clique em "Abrir Chamado". O sistema gerará o código sequencial e iniciará a contagem do SLA.'
+        ]
+      },
+      {
+        title: 'Como o Suporte Técnico de T.I. Atende uma Solicitação',
+        steps: [
+          'Na aba "Chamados T.I.", localize o chamado na lista ou filtre por Status / Prioridade.',
+          'Clique no botão "Atender" na linha correspondente.',
+          'Altere o Status para "Em Atendimento" e preencha seu nome no campo Técnico.',
+          'Adicione o Diagnóstico Técnico preliminar e salve.',
+          'Ao finalizar o reparo, insira a Solução Aplicada, mude o status para "Resolvida" e salve para notificar o usuário e registrar o cumprimento do SLA.'
+        ]
+      },
+      {
+        title: 'Como Acompanhar Prazos no Painel de SLA',
+        steps: [
+          'No topo da aba de T.I., clique no botão "Painel SLA".',
+          'Consulte o percentual de conformidade geral da clínica (chamados entregues no prazo).',
+          'Monitore os cards de chamados com status 🟡 "Alerta" (próximos do vencimento) e 🔴 "Atrasado" para priorização imediata.'
+        ]
+      },
+      {
+        title: 'Como Imprimir a Ordem de Serviço de T.I.',
+        steps: [
+          'Localize a O.S. na tabela ou abra o modal de detalhes.',
+          'Clique no ícone ou botão "Imprimir".',
+          'Uma janela formatada em padrão A4 abrirá com os dados cadastrais, laudo técnico e campos de assinatura prontos para impressão ou salvamento em PDF.'
+        ]
+      }
     ],
     duvidas: [
-      { pergunta: 'Manual em finalização', resposta: 'Instruções técnicas em consolidação.' }
+      {
+        pergunta: 'Colaboradores comuns podem visualizar os chamados abertos por outros colegas?',
+        resposta: 'Não. Para garantir privacidade e foco operacional, os colaboradores padrão visualizam estritamente as suas próprias ordens de serviço. Somente a equipe de T.I., técnicos e administradores possuem visualização ampla de todos os chamados da clínica.'
+      },
+      {
+        pergunta: 'Quais são as metas de tempo de cada nível de SLA?',
+        resposta: 'Crítico: meta de 2 horas (parada de salão/servidor/PEP). Alta: meta de 8 horas (impacto setorial ou impressoras de prescrição). Média: meta de 24 horas (solicitações e problemas rotineiros). Baixa: meta de 48 horas (dúvidas, melhorias e novos acessos).'
+      },
+      {
+        pergunta: 'O que acontece quando o prazo de atendimento expira?',
+        resposta: 'O chamado recebe a sinalização visual em vermelho "Atrasado / Estourado" com a indicação exata das horas de estouro, sendo destacado no topo do painel executivo para intervenção da gerência de T.I.'
+      },
+      {
+        pergunta: 'É possível enviar mensagens ou esclarecer dúvidas dentro do chamado?',
+        resposta: 'Sim. Tanto o solicitante quanto o técnico de T.I. podem utilizar a seção "Histórico & Interações" no modal do chamado para enviar mensagens e registrar o andamento em tempo real.'
+      }
     ]
   },
 

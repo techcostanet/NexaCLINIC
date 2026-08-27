@@ -2996,3 +2996,401 @@ export const subscribeToEquipments = (callback) => {
 
   return () => unsubscribe();
 };
+
+// ----------------------------------------------------------------------
+// IT SERVICE ORDERS (ORDENS DE SERVIÇO & SUPORTE DE T.I.) APIS
+// ----------------------------------------------------------------------
+
+const LOCAL_STORAGE_IT_ORDERS_KEY = 'nexa_it_service_orders';
+
+export const SLA_HOURS_MAP = {
+  'Crítico': 2,
+  'Alta': 8,
+  'Média': 24,
+  'Baixa': 48
+};
+
+export const calculateSlaDeadline = (priority, startDateStr = null) => {
+  const hours = SLA_HOURS_MAP[priority] || 24;
+  const start = startDateStr ? new Date(startDateStr) : new Date();
+  const deadline = new Date(start.getTime() + hours * 60 * 60 * 1000);
+  return deadline.toISOString();
+};
+
+export const INITIAL_IT_SERVICE_ORDERS = [
+  {
+    id: 'OS-TI-2026-0001',
+    code: 'TI-2026-0001',
+    title: 'Impressora Zebra não imprime etiquetas de tubo',
+    category: 'Impressoras',
+    subcategory: 'Zebra / Etiquetadora',
+    sector: 'Recepção',
+    unitId: 'betim',
+    unit: 'Betim',
+    priority: 'Alta',
+    slaHours: 8,
+    status: 'Em Atendimento',
+    requesterName: 'Patrícia Souza',
+    requesterEmail: 'recepcao@dialize.com.br',
+    requesterSector: 'Recepção',
+    assignedTechnician: 'Lucas T.I.',
+    description: 'A impressora de código de barras da recepção 1 está travando a fita ribbon e acusando erro de mídia vermelha.',
+    diagnostic: 'Sensor de mídia desalinhado e rolete de tração sujo com resíduo de cola adesiva.',
+    solutionApplied: 'Realizado alinhamento do sensor de gap, limpeza técnica do rolete com álcool isopropílico e recalibração automática de mídia.',
+    openDate: '2026-08-27T08:15:00.000Z',
+    slaDeadline: '2026-08-27T16:15:00.000Z',
+    completionDate: null,
+    totalCost: 0,
+    partsUsed: [],
+    timelineLogs: [
+      {
+        id: 'log-1',
+        date: '2026-08-27T08:15:00.000Z',
+        author: 'Patrícia Souza',
+        status: 'Aberta',
+        note: 'Chamado aberto no sistema.'
+      },
+      {
+        id: 'log-2',
+        date: '2026-08-27T08:30:00.000Z',
+        author: 'Lucas T.I.',
+        status: 'Em Atendimento',
+        note: 'Atendimento presencial iniciado na recepção.'
+      }
+    ]
+  },
+  {
+    id: 'OS-TI-2026-0002',
+    code: 'TI-2026-0002',
+    title: 'Lentidão e queda intermitente de Wi-Fi no Salão A',
+    category: 'Rede',
+    subcategory: 'Wi-Fi / Conectividade',
+    sector: 'Salão A de Hemodiálise',
+    unitId: 'betim',
+    unit: 'Betim',
+    priority: 'Crítico',
+    slaHours: 2,
+    status: 'Em Atendimento',
+    requesterName: 'Enf. Juliana Castro',
+    requesterEmail: 'enfermagem@dialize.com.br',
+    requesterSector: 'Posto de Enfermagem',
+    assignedTechnician: 'Administrador TechCosta',
+    description: 'Os tablets de evolução da enfermagem estão desconectando da rede sem fio durante o turno.',
+    diagnostic: 'Access Point Ubiquiti do corredor central reiniciando devido a oscilação na porta PoE do switch.',
+    solutionApplied: 'Substituída a porta PoE e atualizado o firmware do Access Point para versão estável.',
+    openDate: '2026-08-27T09:00:00.000Z',
+    slaDeadline: '2026-08-27T11:00:00.000Z',
+    completionDate: null,
+    totalCost: 0,
+    partsUsed: [],
+    timelineLogs: [
+      {
+        id: 'log-1',
+        date: '2026-08-27T09:00:00.000Z',
+        author: 'Enf. Juliana Castro',
+        status: 'Aberta',
+        note: 'Chamado urgente aberto pela enfermagem.'
+      },
+      {
+        id: 'log-2',
+        date: '2026-08-27T09:10:00.000Z',
+        author: 'Administrador TechCosta',
+        status: 'Em Atendimento',
+        note: 'Verificação dos switches e análise de tráfego de rede em andamento.'
+      }
+    ]
+  },
+  {
+    id: 'OS-TI-2026-0003',
+    code: 'TI-2026-0003',
+    title: 'Instalação de Certificado Digital A1 no Consultório 2',
+    category: 'Sistemas',
+    subcategory: 'Certificado Digital',
+    sector: 'Consultório Médico',
+    unitId: 'betim',
+    unit: 'Betim',
+    priority: 'Média',
+    slaHours: 24,
+    status: 'Resolvida',
+    requesterName: 'Dr. Roberto Mendes',
+    requesterEmail: 'medico@dialize.com.br',
+    requesterSector: 'Consultório Médico',
+    assignedTechnician: 'Lucas T.I.',
+    description: 'Necessário instalar e configurar o novo certificado digital A1 para assinatura eletrônica de prescrições e laudos.',
+    diagnostic: 'Certificado A1 importado com sucesso no repositório pessoal do Windows e integrado ao NexaCLINIC.',
+    solutionApplied: 'Certificado instalado, permissões validadas e teste de assinatura em PDF executado com sucesso.',
+    openDate: '2026-08-26T10:00:00.000Z',
+    slaDeadline: '2026-08-27T10:00:00.000Z',
+    completionDate: '2026-08-26T14:30:00.000Z',
+    totalCost: 0,
+    partsUsed: [],
+    timelineLogs: [
+      {
+        id: 'log-1',
+        date: '2026-08-26T10:00:00.000Z',
+        author: 'Dr. Roberto Mendes',
+        status: 'Aberta',
+        note: 'Solicitação de instalação de certificado digital.'
+      },
+      {
+        id: 'log-2',
+        date: '2026-08-26T14:30:00.000Z',
+        author: 'Lucas T.I.',
+        status: 'Resolvida',
+        note: 'Certificado instalado e testado com sucesso junto ao médico.'
+      }
+    ]
+  },
+  {
+    id: 'OS-TI-2026-0004',
+    code: 'TI-2026-0004',
+    title: 'Computador do Faturamento não liga após chuva',
+    category: 'Hardware',
+    subcategory: 'Desktop / Fonte',
+    sector: 'Faturamento / APAC',
+    unitId: 'betim',
+    unit: 'Betim',
+    priority: 'Alta',
+    slaHours: 8,
+    status: 'Resolvida',
+    requesterName: 'Dália Moraes',
+    requesterEmail: 'daliam@nexa.com',
+    requesterSector: 'Faturamento / APAC',
+    assignedTechnician: 'Lucas T.I.',
+    description: 'A máquina principal de faturamento SUS não dá sinal de energia.',
+    diagnostic: 'Fonte de alimentação ATX 500W queimada devido a surto elétrico na rede.',
+    solutionApplied: 'Substituída a fonte ATX queimada por fonte bivolt nova de 500W e conectado a nobreak protegido.',
+    openDate: '2026-08-25T08:00:00.000Z',
+    slaDeadline: '2026-08-25T16:00:00.000Z',
+    completionDate: '2026-08-25T11:20:00.000Z',
+    totalCost: 180,
+    partsUsed: [
+      { itemId: 'TI-FNT-500', name: 'Fonte ATX 500W 80 Plus', quantity: 1, unitCost: 180.00 }
+    ],
+    timelineLogs: [
+      {
+        id: 'log-1',
+        date: '2026-08-25T08:00:00.000Z',
+        author: 'Dália Moraes',
+        status: 'Aberta',
+        note: 'Chamado aberto com urgência.'
+      },
+      {
+        id: 'log-2',
+        date: '2026-08-25T11:20:00.000Z',
+        author: 'Lucas T.I.',
+        status: 'Resolvida',
+        note: 'Fonte trocada e computador operacional.'
+      }
+    ]
+  }
+];
+
+const getStoredITOrders = () => {
+  try {
+    const data = localStorage.getItem(LOCAL_STORAGE_IT_ORDERS_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.warn('Erro ao ler IT service orders do localStorage:', e);
+  }
+  localStorage.setItem(LOCAL_STORAGE_IT_ORDERS_KEY, JSON.stringify(INITIAL_IT_SERVICE_ORDERS));
+  return INITIAL_IT_SERVICE_ORDERS;
+};
+
+const saveStoredITOrders = (orders) => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_IT_ORDERS_KEY, JSON.stringify(orders));
+  } catch (e) {
+    console.warn('Erro ao salvar IT service orders no localStorage:', e);
+  }
+};
+
+export const getITServiceOrders = async () => {
+  if (USE_MOCK) return getStoredITOrders();
+  try {
+    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const snap = await getDocs(collection(db, 'it_service_orders'));
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (items.length === 0) {
+      const { doc, writeBatch } = await import('firebase/firestore');
+      const batch = writeBatch(db);
+      const colRef = collection(db, 'it_service_orders');
+      for (const os of INITIAL_IT_SERVICE_ORDERS) {
+        const newRef = doc(colRef, os.id);
+        batch.set(newRef, { ...os, createdAt: new Date().toISOString() });
+      }
+      await batch.commit();
+      const newSnap = await getDocs(collection(db, 'it_service_orders'));
+      return newSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+    return items;
+  } catch (err) {
+    console.error('Erro ao carregar it_service_orders do Firestore:', err);
+    return getStoredITOrders();
+  }
+};
+
+export const saveITServiceOrder = async (orderData, updateNote = '', notifyEmail = true) => {
+  const isNew = !orderData.id;
+  const now = new Date().toISOString();
+
+  if (isNew) {
+    const dateStr = new Date().getFullYear();
+    const existing = getStoredITOrders();
+    const count = existing.length + 1;
+    const seqStr = String(count).padStart(4, '0');
+    orderData.code = orderData.code || `TI-${dateStr}-${seqStr}`;
+    orderData.openDate = orderData.openDate || now;
+    orderData.status = orderData.status || 'Aberta';
+    orderData.priority = orderData.priority || 'Média';
+    orderData.category = orderData.category || 'Hardware';
+    orderData.subcategory = orderData.subcategory || 'Geral';
+    orderData.sector = orderData.sector || 'Geral';
+    orderData.slaHours = SLA_HOURS_MAP[orderData.priority] || 24;
+    orderData.slaDeadline = orderData.slaDeadline || calculateSlaDeadline(orderData.priority, orderData.openDate);
+    orderData.partsUsed = orderData.partsUsed || [];
+    orderData.laborCost = Number(orderData.laborCost || 0);
+    orderData.totalCost = Number(orderData.totalCost || 0);
+    orderData.timelineLogs = [
+      {
+        id: `log-${Date.now()}`,
+        date: now,
+        author: orderData.requesterName || 'Solicitante',
+        status: orderData.status,
+        note: 'Chamado de T.I. aberto no sistema.'
+      }
+    ];
+  } else {
+    orderData.timelineLogs = orderData.timelineLogs || [];
+    if (updateNote || orderData.status) {
+      orderData.timelineLogs.unshift({
+        id: `log-${Date.now()}`,
+        date: now,
+        author: orderData.lastUpdatedBy || 'Técnico T.I.',
+        status: orderData.status,
+        note: updateNote || `Status alterado para: ${orderData.status}`
+      });
+    }
+    if (orderData.priority && !orderData.slaDeadline) {
+      orderData.slaDeadline = calculateSlaDeadline(orderData.priority, orderData.openDate || now);
+    }
+    if (['Resolvida', 'Cancelada', 'Concluída'].includes(orderData.status) && !orderData.completionDate) {
+      orderData.completionDate = now;
+    }
+  }
+
+  // Handle Automatic Email Notification
+  if (notifyEmail && orderData.requesterEmail) {
+    const notification = {
+      date: now,
+      recipientEmail: orderData.requesterEmail,
+      subject: `[NexaT.I.] Chamado ${orderData.code} - ${orderData.status}`,
+      status: orderData.status,
+      title: orderData.title,
+      note: updateNote || (isNew ? 'Seu chamado de T.I. foi aberto e está na fila de atendimento.' : `Status atualizado para: ${orderData.status}`),
+      sent: true
+    };
+    orderData.emailNotifications = orderData.emailNotifications || [];
+    orderData.emailNotifications.unshift(notification);
+    console.log(`📧 [Notificação T.I. para ${orderData.requesterEmail}]:`, notification.subject, notification.note);
+  }
+
+  if (USE_MOCK) {
+    const list = getStoredITOrders();
+    if (!isNew) {
+      const idx = list.findIndex(o => o.id === orderData.id);
+      if (idx >= 0) list[idx] = { ...list[idx], ...orderData, updatedAt: now };
+      else list.push({ ...orderData, createdAt: now });
+    } else {
+      const newId = `OS-TI-${Date.now().toString(36).toUpperCase()}`;
+      orderData = { id: newId, ...orderData, createdAt: now };
+      list.unshift(orderData);
+    }
+    saveStoredITOrders(list);
+    return orderData;
+  }
+
+  try {
+    const { getFirestore, collection, doc, setDoc, addDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (!isNew) {
+      await setDoc(doc(db, 'it_service_orders', orderData.id), {
+        ...orderData,
+        updatedAt: now
+      }, { merge: true });
+      return orderData;
+    } else {
+      const docRef = await addDoc(collection(db, 'it_service_orders'), {
+        ...orderData,
+        createdAt: now
+      });
+      return { id: docRef.id, ...orderData };
+    }
+  } catch (err) {
+    console.error('Erro ao salvar it_service_orders no Firestore, utilizando salvamento resiliente:', err);
+    const list = getStoredITOrders();
+    if (!isNew) {
+      const idx = list.findIndex(o => o.id === orderData.id);
+      if (idx >= 0) list[idx] = { ...list[idx], ...orderData, updatedAt: now };
+      else list.push({ ...orderData, createdAt: now });
+    } else {
+      const newId = `OS-TI-${Date.now().toString(36).toUpperCase()}`;
+      orderData = { id: newId, ...orderData, createdAt: now };
+      list.unshift(orderData);
+    }
+    saveStoredITOrders(list);
+    return orderData;
+  }
+};
+
+export const deleteITServiceOrder = async (id) => {
+  if (USE_MOCK) {
+    const list = getStoredITOrders().filter(o => o.id !== id);
+    saveStoredITOrders(list);
+    return { success: true, id };
+  }
+  try {
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'it_service_orders', id));
+    return { success: true, id };
+  } catch (err) {
+    console.error('Erro ao deletar IT service order no Firestore:', err);
+    const list = getStoredITOrders().filter(o => o.id !== id);
+    saveStoredITOrders(list);
+    return { success: true, id };
+  }
+};
+
+export const subscribeToITServiceOrders = (callback) => {
+  if (USE_MOCK) {
+    callback(getStoredITOrders());
+    return () => {};
+  }
+  let unsubscribe = () => {};
+  import('firebase/firestore').then(({ getFirestore, collection, onSnapshot }) => {
+    const db = getFirestore(app);
+    unsubscribe = onSnapshot(collection(db, 'it_service_orders'), (snap) => {
+      const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (items.length > 0) {
+        items.sort((a, b) => new Date(b.createdAt || b.openDate || 0) - new Date(a.createdAt || a.openDate || 0));
+        callback(items);
+      } else {
+        getITServiceOrders().then(callback);
+      }
+    }, (err) => {
+      console.error("Erro no listener real-time de it_service_orders:", err);
+      callback(getStoredITOrders());
+    });
+  }).catch(err => {
+    console.error("Erro ao carregar Firestore no listener de it_service_orders:", err);
+  });
+
+  return () => unsubscribe();
+};
+

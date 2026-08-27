@@ -1,3 +1,20 @@
+## [v4.7.68] - 27 de Agosto, 2026
+### Módulo de Manutenção — Sistema de Ordem de Serviço de T.I. com SLA e Gestão por Setores
+- **Aba Dedicada "Chamados T.I." no NexaSERVICE:**
+  - Sistema completo de Service Desk / Helpdesk integrado ao módulo de Manutenção acessível para todos os colaboradores da clínica.
+- **Segregação Rigorosa de Acessos (RBAC):**
+  - Colaboradores comuns visualizam exclusivamente os seus próprios chamados, enquanto o Administrador e equipe de T.I. gerenciam 100% de todos os chamados da instituição.
+- **Painel Executivo de SLA em Tempo Real:**
+  - Metas contratuais de atendimento (Crítico 2h, Alta 8h, Média 24h, Baixa 48h) com cálculo automático, semáforo visual (No Prazo, Alerta, Estourado, Cumprido) e taxas de cumprimento %.
+- **Categorização & Setores Hospitalares:**
+  - Classificação técnica por incidentes (Hardware, Sistemas, Rede, Impressoras Zebra/Laser, Acessos, Telefonia, Segurança, Servidores) e setores da clínica (Salões de Hemodiálise, Recepção, Farmácia, Consultório, CME, CTA, etc.).
+- **Atendimento Técnico & Linha do Tempo:**
+  - Atribuição de técnico, diagnóstico, registro de solução aplicada, peças substituídas e timeline interativa com mensagens entre solicitante e suporte.
+- **Impressão de O.S. Formatada em A4:**
+  - Geração de documento de Ordem de Serviço de T.I. com laudo técnico e campos de assinatura para homologação.
+
+---
+
 ## [v4.7.66] - 25 de Agosto, 2026
 ### Módulo RH — Controle de Exames Ocupacionais (ASO) e Alertas de Vencimento (30d, 14d, 7d)
 - **Aba Dedicada "Exames" no NexaHR:**
