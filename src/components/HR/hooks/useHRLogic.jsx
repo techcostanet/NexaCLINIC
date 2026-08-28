@@ -143,6 +143,8 @@ export function useHRLogic(currentUser) {
   // Occupational Exams (ASO) States
   const [showExamModal, setShowExamModal] = useState(false);
   const [editingExam, setEditingExam] = useState(null);
+  const [examFile, setExamFile] = useState(null);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [examForm, setExamForm] = useState({
     employeeId: '',
     employeeName: '',
@@ -156,6 +158,8 @@ export function useHRLogic(currentUser) {
     doctorName: '',
     clinicName: '',
     docUrl: '',
+    fileName: '',
+    fileSize: null,
     notes: ''
   });
 
@@ -1221,6 +1225,8 @@ export function useHRLogic(currentUser) {
 
   const handleOpenExamAdd = (empOrOverview = null) => {
     setEditingExam(null);
+    setExamFile(null);
+    setIsUploadingFile(false);
     const targetEmp = empOrOverview?.employee || empOrOverview || currentEmployees[0];
     const today = new Date().toISOString().substring(0, 10);
     const defaultNext = addOneYear(today);
@@ -1238,6 +1244,8 @@ export function useHRLogic(currentUser) {
       doctorName: '',
       clinicName: '',
       docUrl: '',
+      fileName: '',
+      fileSize: null,
       notes: ''
     });
     setShowExamModal(true);
@@ -1245,6 +1253,8 @@ export function useHRLogic(currentUser) {
 
   const handleOpenExamEdit = (examItem) => {
     setEditingExam(examItem);
+    setExamFile(null);
+    setIsUploadingFile(false);
     setExamForm({
       employeeId: examItem.employeeId || '',
       employeeName: examItem.employeeName || '',
@@ -1258,6 +1268,8 @@ export function useHRLogic(currentUser) {
       doctorName: examItem.doctorName || '',
       clinicName: examItem.clinicName || '',
       docUrl: examItem.docUrl || '',
+      fileName: examItem.fileName || '',
+      fileSize: examItem.fileSize || null,
       notes: examItem.notes || ''
     });
     setShowExamModal(true);
@@ -1271,8 +1283,36 @@ export function useHRLogic(currentUser) {
     setActionLoading(true);
     try {
       const selectedEmp = currentEmployees.find(emp => emp.id === examForm.employeeId);
+      let cloudDocUrl = examForm.docUrl || '';
+      let cloudFileName = examForm.fileName || '';
+      let cloudFileSize = examForm.fileSize || null;
+
+      // Upload do documento para Firebase Cloud Storage
+      if (examFile) {
+        setIsUploadingFile(true);
+        try {
+          const uploadedUrl = await dbService.uploadOccupationalExamDoc(
+            examFile,
+            examForm.employeeId,
+            examForm.examType
+          );
+          cloudDocUrl = uploadedUrl;
+          cloudFileName = examFile.name;
+          cloudFileSize = examFile.size;
+        } catch (uploadErr) {
+          console.error('Erro no upload para a nuvem:', uploadErr);
+          showAlert('Erro ao enviar arquivo para o Cloud Storage. Verifique a conexão.', 'danger');
+          setActionLoading(false);
+          setIsUploadingFile(false);
+          return;
+        }
+      }
+
       const dataToSave = {
         ...examForm,
+        docUrl: cloudDocUrl,
+        fileName: cloudFileName,
+        fileSize: cloudFileSize,
         employeeName: selectedEmp ? selectedEmp.name : examForm.employeeName,
         cpf: selectedEmp ? (selectedEmp.cpf || examForm.cpf) : examForm.cpf,
         role: selectedEmp ? (selectedEmp.role || examForm.role) : examForm.role,
@@ -1284,15 +1324,16 @@ export function useHRLogic(currentUser) {
 
       if (editingExam && editingExam.id) {
         await dbService.updateOccupationalExam(editingExam.id, dataToSave);
-        showAlert('Exame ocupacional atualizado com sucesso!', 'success');
+        showAlert('Exame ocupacional e documentos salvos com sucesso na nuvem!', 'success');
         logAuditAction('Editar Exame ASO', `Atualizou ASO de ${dataToSave.employeeName} (${dataToSave.examType})`);
       } else {
         await dbService.createOccupationalExam(dataToSave);
-        showAlert('Exame ocupacional registrado com sucesso!', 'success');
+        showAlert('Exame ocupacional e documentos salvos com sucesso na nuvem!', 'success');
         logAuditAction('Cadastrar Exame ASO', `Registrou novo ASO para ${dataToSave.employeeName} (${dataToSave.examType})`);
       }
 
       setShowExamModal(false);
+      setExamFile(null);
       const updatedExams = await dbService.getOccupationalExams();
       setOccupationalExams(updatedExams || []);
     } catch (err) {
@@ -1300,6 +1341,7 @@ export function useHRLogic(currentUser) {
       showAlert('Erro ao salvar exame ocupacional.', 'danger');
     } finally {
       setActionLoading(false);
+      setIsUploadingFile(false);
     }
   };
 
@@ -1307,6 +1349,14 @@ export function useHRLogic(currentUser) {
     if (!window.confirm('Tem certeza que deseja excluir este registro de ASO?')) return;
     setActionLoading(true);
     try {
+      const examToDelete = occupationalExams.find(e => e.id === examId);
+      if (examToDelete && examToDelete.docUrl && examToDelete.docUrl.startsWith('http')) {
+        try {
+          await dbService.deleteFileFromStorage(examToDelete.docUrl);
+        } catch (delErr) {
+          console.warn('Erro ao remover arquivo da nuvem:', delErr);
+        }
+      }
       await dbService.deleteOccupationalExam(examId);
       showAlert('Registro de exame excluído!', 'success');
       logAuditAction('Excluir Exame ASO', `Excluiu exame ID ${examId}`);
@@ -1849,6 +1899,9 @@ export function useHRLogic(currentUser) {
     setEditingExam,
     examForm,
     setExamForm,
+    examFile,
+    setExamFile,
+    isUploadingFile,
     examSearchTerm,
     setExamSearchTerm,
     examFilterType,

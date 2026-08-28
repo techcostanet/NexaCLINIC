@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.71',
+      date: '28/08/2026',
+      title: 'Módulo RH — Armazenamento em Nuvem (Firebase Cloud Storage) e Visualização de Exames Ocupacionais (ASO)',
+      description: 'Correção do salvamento de exames ocupacionais com arquivos anexos, permissões do banco de dados e integração nativa com Firebase Cloud Storage para visualização remota e download em qualquer dispositivo.',
+      changes: [
+        { type: 'Firebase Cloud Storage', text: 'Upload automático de documentos e comprovantes de ASO (PDFs e Imagens) diretamente no Firebase Cloud Storage com links HTTPS seguros.' },
+        { type: 'Visualização Remota', text: 'Botão de visualização direta (ícone do Olho) na tabela de exames para abertura imediata do ASO em nova aba do navegador a partir de qualquer lugar.' },
+        { type: 'Correção de Permissões', text: 'Declaração e liberação de regras de segurança para a coleção occupational_exams e buckets do Firebase Storage.' },
+        { type: 'Upload Otimizado', text: 'Eliminação de sobrecarga de dados no Firestore através do desacoplamento de arquivos pesados, garantindo estabilidade e salvamento instantâneo.' },
+        { type: 'Experiência de Usuário', text: 'Novo componente de anexo com indicação de arquivo na nuvem, tamanho em KB/MB, opção de substituição/remoção e feedback visual de progresso.' }
+      ]
+    },
+    {
       version: 'v4.7.68',
       date: '27/08/2026',
       title: 'Módulo de Manutenção — Sistema de Ordem de Serviço de T.I. com SLA e Gestão por Setores',

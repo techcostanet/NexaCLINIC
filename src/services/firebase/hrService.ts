@@ -235,6 +235,8 @@ export interface OccupationalExam {
   doctorName?: string;
   clinicName?: string;
   docUrl?: string;
+  fileName?: string;
+  fileSize?: number;
   notes?: string;
   unitId?: string;
   unit?: string;

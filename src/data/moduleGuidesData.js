@@ -123,8 +123,8 @@ export const MODULE_GUIDES = {
         desc: 'Relatórios completos em PDF e Excel (Cadastro Geral, VT, Presença Premiada, Aniversariantes, Advertências, Absenteísmo, Turnover, Experiência, Vacinas, Dependentes, Folha Sintética, Dados Bancários/PIX, Documentos/CNH, Efetivo e Auditoria LGPD).'
       },
       {
-        title: 'Gestão de Exames Ocupacionais (ASO)',
-        desc: 'Controle de exames médicos para colaboradores CLT e prestadores PJ (Admissional, Periódico, Demissional, Mudança de Função e Retorno ao Trabalho) com cálculo automático de renovação anual (+1 ano).'
+        title: 'Gestão de Exames Ocupacionais (ASO) & Nuvem',
+        desc: 'Controle completo de exames ocupacionais para colaboradores CLT e prestadores PJ com upload de comprovantes (PDF/Imagens) diretamente no Firebase Cloud Storage, permitindo visualização e download em alta resolução de qualquer dispositivo.'
       },
       {
         title: 'Alertas Preditivos de Vencimento (30d, 14d, 7d)',
@@ -209,6 +209,10 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Os exames periódicos aplicam-se a profissionais PJ além de CLT?',
         resposta: 'Sim. O sistema monitora o ciclo ocupacional tanto de colaboradores CLT quanto de prestadores e profissionais PJ, garantindo total conformidade operacional na clínica.'
+      },
+      {
+        pergunta: 'Onde ficam armazenados os arquivos e laudos de ASO anexados?',
+        resposta: 'Os documentos são enviados diretamente para o Firebase Cloud Storage em servidores seguros na nuvem. Você pode visualizá-los e baixá-los de qualquer dispositivo clicando no ícone do olho na tabela de exames.'
       },
       {
         pergunta: 'Como é calculada a periodicidade do exame anual?',

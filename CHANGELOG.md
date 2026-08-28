@@ -1,3 +1,18 @@
+## [v4.7.71] - 28 de Agosto, 2026
+### Módulo RH — Armazenamento em Nuvem (Firebase Cloud Storage) e Visualização de Exames Ocupacionais (ASO)
+- **Integração com Firebase Cloud Storage:**
+  - Upload automático e seguro de laudos e comprovantes de ASO (arquivos PDF, PNG, JPG, DOCX) diretamente no bucket de armazenamento em nuvem.
+- **Visualização Remota e Download em Qualquer Lugar:**
+  - Inclusão do botão de visualização com link direto para abertura em nova aba de alta definição, permitindo consulta remota e download por médicos, gestores e colaboradores.
+- **Desacoplamento e Estabilidade do Banco de Dados:**
+  - Eliminação do armazenamento de arquivos em Base64 no corpo dos documentos do Firestore, contornando o limite de 1 MB e prevenindo qualquer falha de gravação.
+- **Correção de Permissões de Segurança (RBAC):**
+  - Atualização do `firestore.rules` com a declaração da coleção `occupational_exams` e do `storage.rules` para autorização de leitura e escrita nos buckets.
+- **Interface & Experiência de Usuário:**
+  - Componente moderno de upload com dropzone, indicador de tamanho de arquivo (KB/MB), badge de arquivo na nuvem, botão para remoção/substituição e feedback de progresso durante o envio.
+
+---
+
 ## [v4.7.68] - 27 de Agosto, 2026
 ### Módulo de Manutenção — Sistema de Ordem de Serviço de T.I. com SLA e Gestão por Setores
 - **Aba Dedicada "Chamados T.I." no NexaSERVICE:**

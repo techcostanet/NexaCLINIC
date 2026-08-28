@@ -208,6 +208,9 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
     setEditingExam,
     examForm,
     setExamForm,
+    examFile,
+    setExamFile,
+    isUploadingFile,
     examSearchTerm,
     setExamSearchTerm,
     examFilterType,
@@ -1861,14 +1864,25 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                                       </button>
 
                                       {item.lastExam.docUrl && (
-                                        <a
-                                          href={item.lastExam.docUrl}
-                                          download={`ASO-${item.employeeName}-${item.lastExamDate}.png`}
-                                          style={{ ...styles.actionEditBtn, color: '#0284c7', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-                                          title="Baixar ASO"
-                                        >
-                                          <Download size={13} />
-                                        </a>
+                                        <>
+                                          <a
+                                            href={item.lastExam.docUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{ ...styles.actionEditBtn, color: '#0284c7', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                                            title="Visualizar documento na nuvem"
+                                          >
+                                            <Eye size={13} />
+                                          </a>
+                                          <a
+                                            href={item.lastExam.docUrl}
+                                            download={item.lastExam.fileName || `ASO-${item.employeeName}-${item.lastExamDate}`}
+                                            style={{ ...styles.actionEditBtn, color: '#059669', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                                            title="Baixar ASO"
+                                          >
+                                            <Download size={13} />
+                                          </a>
+                                        </>
                                       )}
 
                                       <button
@@ -1905,10 +1919,10 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                 <table style={styles.table}>
                   <thead>
                     <tr>
-                      <th>Data/Hora</th>
+                      <th>Data</th>
                       <th>Operador</th>
-                      <th>Ação Executada</th>
-                      <th>Histórico / Alterações</th>
+                      <th>Ação</th>
+                      <th>Histórico</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2838,24 +2852,152 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                 </div>
 
                 <div className="form-group">
-                  <label>Anexo</label>
-                  <input
-                    type="file"
-                    className="form-control"
-                    onChange={e => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => setExamForm(prev => ({ ...prev, docUrl: reader.result }));
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    style={{ fontSize: '0.8rem' }}
-                  />
-                  {examForm.docUrl && (
-                    <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: '600', marginTop: '0.25rem', display: 'block' }}>
-                      ✓ Arquivo anexado pronto para salvar
-                    </span>
+                  <label>Anexo (Nuvem)</label>
+                  
+                  {/* Se já existe arquivo na nuvem */}
+                  {examForm.docUrl && !examFile && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0.75rem',
+                      backgroundColor: 'rgba(2, 132, 199, 0.08)',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(2, 132, 199, 0.25)',
+                      marginBottom: '0.5rem'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+                        <UploadCloud size={18} color="#0284c7" />
+                        <div>
+                          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#0369a1', display: 'block' }}>
+                            {examForm.fileName || 'Documento ASO na Nuvem'}
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: '#0284c7' }}>Armazenado no Cloud Storage</span>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <a
+                          href={examForm.docUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm"
+                          style={{
+                            backgroundColor: '#0284c7',
+                            color: '#fff',
+                            fontSize: '0.72rem',
+                            padding: '0.2rem 0.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            textDecoration: 'none',
+                            borderRadius: '4px',
+                            fontWeight: '600'
+                          }}
+                          title="Visualizar arquivo em nova aba"
+                        >
+                          <Eye size={12} /> Visualizar
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => setExamForm(prev => ({ ...prev, docUrl: '', fileName: '', fileSize: null }))}
+                          className="btn btn-sm"
+                          style={{
+                            fontSize: '0.72rem',
+                            padding: '0.2rem 0.4rem',
+                            borderRadius: '4px',
+                            color: '#dc2626',
+                            borderColor: '#dc2626',
+                            backgroundColor: '#fee2e2',
+                            border: '1px solid #fecaca',
+                            cursor: 'pointer'
+                          }}
+                          title="Remover anexo"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Se um novo arquivo foi selecionado localmente */}
+                  {examFile ? (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0.75rem',
+                      backgroundColor: '#ecfdf5',
+                      borderRadius: '8px',
+                      border: '1px solid #10b981',
+                      marginBottom: '0.5rem'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+                        <CheckCircle2 size={18} color="#10b981" />
+                        <div>
+                          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#065f46', display: 'block', maxWidth: '280px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            {examFile.name}
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: '#047857' }}>
+                            {(examFile.size / 1024).toFixed(1)} KB • Pronto para upload na nuvem
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setExamFile(null)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#dc2626',
+                          cursor: 'pointer',
+                          padding: '0.2rem',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                        title="Cancelar seleção deste arquivo"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{
+                      border: '2px dashed var(--border-color)',
+                      borderRadius: '8px',
+                      padding: '0.75rem',
+                      textAlign: 'center',
+                      backgroundColor: 'var(--bg-body)',
+                      cursor: 'pointer',
+                      position: 'relative'
+                    }}>
+                      <input
+                        type="file"
+                        accept="application/pdf,image/*,.doc,.docx"
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setExamFile(file);
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          opacity: 0,
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', pointerEvents: 'none' }}>
+                        <UploadCloud size={24} color="#0284c7" />
+                        <span style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                          {examForm.docUrl ? 'Clique para substituir o documento' : 'Clique ou arraste o comprovante / laudo (PDF ou Imagem)'}
+                        </span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                          O arquivo será salvo automaticamente no Firebase Cloud Storage
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </div>
 
@@ -2875,8 +3017,8 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                 <button type="button" onClick={() => setShowExamModal(false)} className="btn btn-secondary">
                   Cancelar
                 </button>
-                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: '#0284c7' }}>
-                  {actionLoading ? 'Salvando...' : 'Salvar ASO'}
+                <button type="submit" disabled={actionLoading || isUploadingFile} className="btn btn-primary" style={{ backgroundColor: '#0284c7' }}>
+                  {isUploadingFile ? 'Enviando para nuvem...' : actionLoading ? 'Salvando...' : 'Salvar ASO'}
                 </button>
               </div>
             </form>
