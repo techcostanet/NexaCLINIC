@@ -1,3 +1,21 @@
+## [v4.7.80] - 28 de Agosto, 2026
+### Módulo Compras / Cotação Web (NexaPROCURE) — Busca Alfabética por Digitação de Insumos & Layout Responsivo com Rodapé Fixo
+- **Busca por Digitação em Ordem Alfabética:**
+  - Adição de campo de busca inteligente por digitação com autocomplete em tempo real para os insumos do catálogo de estoque, listados rigorosamente em ordem alfabética.
+  - Exibição de informações vitais no menu flutuante: nome, código (`#code`), categoria, subgrupo, saldo atual em estoque, nível mínimo e último preço praticado.
+  - Ao clicar no insumo, ele é adicionado instantaneamente à cesta da cotação com cálculo automático de necessidade (`Estoque Ideal - Estoque Atual`), limpando o campo de busca pronto para o próximo insumo.
+- **Layout Responsivo com Barra de Rolagem Interna e Rodapé Fixo:**
+  - O modal de Nova Cotação foi reestruturado com barra de rolagem vertical independente no corpo do formulário (`overflowY: auto`), impedindo que o conteúdo fique apertado ou corte elementos na tela.
+  - O rodapé com os botões "Cancelar" e "Publicar Cotação e Gerar Links" fica permanentemente fixo na base do modal, eliminando qualquer necessidade de reduzir o zoom do navegador para visualizar a ação final.
+- **Gestão Ágil de Fornecedores na Cotação:**
+  - Barra de filtro por digitação de fornecedores (por nome, razão social, CNPJ, telefone ou contato).
+  - Botões de ação rápida "Selecionar Todos" e "Desmarcar Todos".
+  - Grade de fornecedores com rolagem vertical independente e cartões clicáveis com indicação visual de seleção.
+- **Insumos Livres e Estoque Crítico:**
+  - Botão "+ Insumo Livre" para inclusão de itens pontuais não cadastrados no catálogo e botão "Importar Estoque Crítico" para reposição automática de itens abaixo do ponto de pedido.
+
+---
+
 ## [v4.7.78] - 28 de Agosto, 2026
 ### Módulo de Compras (NexaPROCURE) — Busca com Digitação (Autocomplete) de Insumos do Estoque & Correção de Unidade
 - **Busca por Digitação em Tempo Real (Autocomplete):**

@@ -1572,8 +1572,9 @@ export const MODULE_GUIDES = {
         title: 'Como Criar uma Cotação Web e Homologar',
         steps: [
           'Acesse a aba "Cotações" no NexaPROCURE e clique no botão "+ Nova Cotação".',
-          'Informe o Título, o Prazo Limite e adicione os insumos desejados através da busca ou importando o estoque crítico.',
-          'Selecione os fornecedores e clique em "Publicar Cotação e Gerar Links".',
+          'Informe o Título, o Prazo Limite e adicione os insumos digitando no campo de busca com autocomplete (ordenado alfabeticamente) ou importando o estoque crítico.',
+          'Filtre e selecione os distribuidores desejados (com apoio dos botões "Selecionar Todos" / "Desmarcar Todos") na grade com rolagem independente.',
+          'Clique em "Publicar Cotação e Gerar Links" no rodapé fixo do modal.',
           'Dispare os links via WhatsApp para os representantes comerciais.',
           'No "Mapa Comparativo", analise as propostas e clique em "Homologar" para fechar a compra.'
         ]

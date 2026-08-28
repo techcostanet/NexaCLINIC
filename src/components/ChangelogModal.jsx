@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.80',
+      date: '28/08/2026',
+      title: 'Módulo Compras / Cotação Web (NexaPROCURE) — Busca Alfabética por Digitação de Insumos & Layout Responsivo com Rodapé Fixo',
+      description: 'Aprimoramento do modal de criação de cotações web: busca com autocomplete em tempo real em ordem alfabética para insumos do catálogo de estoque, correção da área rolável do formulário com rodapé de botões fixo e ferramentas de filtro e seleção em lote de fornecedores.',
+      changes: [
+        { type: 'Busca Alfabética de Insumos', text: 'Campo de busca por digitação para o catálogo de insumos, ordenado rigorosamente em ordem alfabética com exibição de saldo, mínimo e último preço pago.' },
+        { type: 'Layout com Scroll Interno', text: 'Reestruturação do modal com barra de rolagem vertical independente no corpo do formulário, eliminando aperto visual e necessidade de ajuste de zoom.' },
+        { type: 'Rodapé Fixo', text: 'Botões "Cancelar" e "Publicar Cotação e Gerar Links" fixados na base do modal para visualização e acionamento instantâneo.' },
+        { type: 'Gestão de Fornecedores', text: 'Filtro por digitação de fornecedores (nome, CNPJ, contato) com botões rápidos de "Selecionar Todos" e "Desmarcar Todos" em grade rolável.' },
+        { type: 'Insumo Livre', text: 'Opção de inclusão rápida de insumos não cadastrados ou itens pontuais diretamente na cesta da cotação.' }
+      ]
+    },
+    {
       version: 'v4.7.78',
       date: '28/08/2026',
       title: 'Módulo de Compras (NexaPROCURE) — Busca com Digitação (Autocomplete) de Insumos do Estoque & Correção de Unidade',

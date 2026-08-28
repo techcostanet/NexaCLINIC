@@ -1,12 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Plus, Search, Building2, Clock, CheckCircle2, AlertTriangle, 
   ExternalLink, Copy, Send, Check, Eye, Trash2, Award, Printer, 
   FileText, Truck, DollarSign, Package, ArrowUpDown, ChevronRight,
-  Filter, Layers, X, Calendar, Share2
+  Filter, Layers, X, Calendar, Share2, ChevronDown, CheckSquare,
+  Square, Sparkles
 } from 'lucide-react';
 import { dbService } from '../../firebase';
 import { generateQuoteToken, generateQuotationCode } from '../../services/firebase/purchasingService';
+
+const normalizeText = (str) => {
+  return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+};
 
 export default function WebQuotationsTab({ 
   currentUser, 
@@ -43,6 +48,31 @@ export default function WebQuotationsTab({
     selectedSuppliers: []
   });
 
+  // Product Autocomplete & Supplier Search States
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
+  const [supplierSearchQuery, setSupplierSearchQuery] = useState('');
+  const [showCustomItemInput, setShowCustomItemInput] = useState(false);
+  const [customItemForm, setCustomItemForm] = useState({
+    productName: '',
+    quantity: 1,
+    unit: 'un',
+    specification: ''
+  });
+
+  const productSearchRef = useRef(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (productSearchRef.current && !productSearchRef.current.contains(event.target)) {
+        setIsProductDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Share Links Modal
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedQuotationForShare, setSelectedQuotationForShare] = useState(null);
@@ -67,6 +97,62 @@ export default function WebQuotationsTab({
       setLoading(false);
     }
   };
+
+  // Itens de Estoque estritamente em Ordem Alfabética
+  const sortedInventoryItems = useMemo(() => {
+    if (!Array.isArray(inventoryItems)) return [];
+    return [...inventoryItems].sort((a, b) => 
+      (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' })
+    );
+  }, [inventoryItems]);
+
+  // Filtro Dinâmico por Digitação para Insumos na Cotação
+  const filteredQuoteInventoryItems = useMemo(() => {
+    const query = normalizeText(productSearchQuery);
+    if (!query) {
+      return sortedInventoryItems.slice(0, 50);
+    }
+
+    const matches = sortedInventoryItems.filter(item => {
+      const name = normalizeText(item.name);
+      const code = normalizeText(item.code);
+      const category = normalizeText(item.category);
+      const subgroup = normalizeText(item.subgroup);
+      const barcode = normalizeText(item.barcode);
+      return name.includes(query) || code.includes(query) || category.includes(query) || subgroup.includes(query) || barcode.includes(query);
+    });
+
+    return matches.sort((a, b) => {
+      const aStarts = normalizeText(a.name).startsWith(query);
+      const bStarts = normalizeText(b.name).startsWith(query);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      return (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' });
+    }).slice(0, 60);
+  }, [sortedInventoryItems, productSearchQuery]);
+
+  // Fornecedores em Ordem Alfabética e com Filtro de Busca
+  const sortedSuppliers = useMemo(() => {
+    if (!Array.isArray(suppliers)) return [];
+    return [...suppliers].sort((a, b) => 
+      (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' })
+    );
+  }, [suppliers]);
+
+  const filteredSuppliers = useMemo(() => {
+    const query = normalizeText(supplierSearchQuery);
+    if (!query) return sortedSuppliers;
+
+    return sortedSuppliers.filter(s => {
+      const name = normalizeText(s.name);
+      const trade = normalizeText(s.tradeName);
+      const cnpj = normalizeText(s.cnpj);
+      const email = normalizeText(s.email);
+      const phone = normalizeText(s.phone);
+      const contact = normalizeText(s.contactPerson);
+      return name.includes(query) || trade.includes(query) || cnpj.includes(query) || email.includes(query) || phone.includes(query) || contact.includes(query);
+    });
+  }, [sortedSuppliers, supplierSearchQuery]);
 
   const handleOpenComparison = async (quote) => {
     setActiveQuotation(quote);
@@ -115,13 +201,19 @@ export default function WebQuotationsTab({
 
     const formattedDeadline = tomorrow.toISOString().slice(0, 16);
 
+    setProductSearchQuery('');
+    setIsProductDropdownOpen(false);
+    setSupplierSearchQuery('');
+    setShowCustomItemInput(false);
+    setCustomItemForm({ productName: '', quantity: 1, unit: 'un', specification: '' });
+
     setNewQuoteForm({
       code: nextCode,
-      title: `Cotação Semanal de Insumos #${nextCode}`,
+      title: `Cotação de Insumos #${nextCode}`,
       deadline: formattedDeadline,
       notes: 'Frete CIF prioritário. Pagamento via Boleto 28 dias. Enviar Registro ANVISA para insumos estéreis.',
       items: [],
-      selectedSuppliers: suppliers.slice(0, 3).map(s => ({
+      selectedSuppliers: sortedSuppliers.slice(0, 4).map(s => ({
         supplierId: s.id,
         name: s.name,
         tradeName: s.tradeName || s.name,
@@ -139,7 +231,12 @@ export default function WebQuotationsTab({
   // Add Item to Quotation
   const handleAddItemToQuote = (stockItem) => {
     const exists = newQuoteForm.items.some(i => i.productId === stockItem.id);
-    if (exists) return;
+    if (exists) {
+      alert(`O insumo "${stockItem.name}" já está na cesta da cotação.`);
+      setProductSearchQuery('');
+      setIsProductDropdownOpen(false);
+      return;
+    }
 
     const newItem = {
       id: 'item_' + Date.now() + Math.random().toString(36).substr(2, 4),
@@ -155,11 +252,45 @@ export default function WebQuotationsTab({
       ...prev,
       items: [...prev.items, newItem]
     }));
+
+    setProductSearchQuery('');
+    setIsProductDropdownOpen(false);
+  };
+
+  // Add Custom Item (Unlisted) to Quotation
+  const handleAddCustomItem = () => {
+    if (!customItemForm.productName.trim()) {
+      alert('Informe o nome do insumo.');
+      return;
+    }
+    const qty = parseInt(customItemForm.quantity) || 1;
+    if (qty <= 0) {
+      alert('A quantidade deve ser maior que zero.');
+      return;
+    }
+
+    const newItem = {
+      id: 'item_' + Date.now() + Math.random().toString(36).substr(2, 4),
+      productId: 'custom_' + Date.now(),
+      productName: customItemForm.productName.trim(),
+      quantity: qty,
+      unit: customItemForm.unit.trim() || 'un',
+      specification: customItemForm.specification.trim(),
+      lastPricePaid: 0
+    };
+
+    setNewQuoteForm(prev => ({
+      ...prev,
+      items: [...prev.items, newItem]
+    }));
+
+    setCustomItemForm({ productName: '', quantity: 1, unit: 'un', specification: '' });
+    setShowCustomItemInput(false);
   };
 
   // Import Critical Items from Stock
   const handleImportCriticalStock = () => {
-    const critical = inventoryItems.filter(item => {
+    const critical = sortedInventoryItems.filter(item => {
       const curr = parseFloat(item.currentStock) || 0;
       const min = parseFloat(item.minStock) || 0;
       return curr <= min;
@@ -229,6 +360,39 @@ export default function WebQuotationsTab({
         ]
       }));
     }
+  };
+
+  // Select All Filtered Suppliers
+  const handleSelectAllSuppliers = () => {
+    const toAdd = filteredSuppliers.map(supplier => ({
+      supplierId: supplier.id,
+      name: supplier.name,
+      tradeName: supplier.tradeName || supplier.name,
+      cnpj: supplier.cnpj || '',
+      contactPerson: supplier.contactPerson || '',
+      phone: supplier.phone || '',
+      email: supplier.email || '',
+      token: generateQuoteToken(),
+      status: 'Pendente'
+    }));
+
+    setNewQuoteForm(prev => {
+      const existingIds = new Set(prev.selectedSuppliers.map(s => s.supplierId));
+      const newOnly = toAdd.filter(s => !existingIds.has(s.supplierId));
+      return {
+        ...prev,
+        selectedSuppliers: [...prev.selectedSuppliers, ...newOnly]
+      };
+    });
+  };
+
+  // Deselect All Filtered Suppliers
+  const handleDeselectAllSuppliers = () => {
+    const removeIds = new Set(filteredSuppliers.map(s => s.id));
+    setNewQuoteForm(prev => ({
+      ...prev,
+      selectedSuppliers: prev.selectedSuppliers.filter(s => !removeIds.has(s.supplierId))
+    }));
   };
 
   // Save / Publish New Quotation
@@ -531,6 +695,7 @@ export default function WebQuotationsTab({
       {showNewModal && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContentLarge}>
+            {/* Cabeçalho Fixo */}
             <div style={styles.modalHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Plus size={20} color="#0284c7" />
@@ -539,205 +704,456 @@ export default function WebQuotationsTab({
               <button onClick={() => setShowNewModal(false)} style={styles.closeBtn}>×</button>
             </div>
 
-            <form onSubmit={handleSaveQuotation} style={{ padding: '1.25rem' }}>
-              
-              {/* Top Details */}
-              <div style={styles.formRow3}>
-                <div className="form-group">
-                  <label style={styles.label}>Código</label>
-                  <input type="text" readOnly value={newQuoteForm.code} style={{ ...styles.input, backgroundColor: '#f1f5f9' }} />
-                </div>
-                <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label style={styles.label}>Título *</label>
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder="Ex: Cotação de Insumos de Hemodiálise e Farmácia" 
-                    value={newQuoteForm.title} 
-                    onChange={e => setNewQuoteForm({ ...newQuoteForm, title: e.target.value })} 
-                    style={styles.input} 
-                  />
-                </div>
-              </div>
-
-              <div style={styles.formRow2}>
-                <div className="form-group">
-                  <label style={styles.label}>Prazo Limite *</label>
-                  <input 
-                    type="datetime-local" 
-                    required 
-                    value={newQuoteForm.deadline} 
-                    onChange={e => setNewQuoteForm({ ...newQuoteForm, deadline: e.target.value })} 
-                    style={styles.input} 
-                  />
-                </div>
-                <div className="form-group">
-                  <label style={styles.label}>Observações para Fornecedores</label>
-                  <input 
-                    type="text" 
-                    placeholder="Orientações de entrega, tipo de frete..." 
-                    value={newQuoteForm.notes} 
-                    onChange={e => setNewQuoteForm({ ...newQuoteForm, notes: e.target.value })} 
-                    style={styles.input} 
-                  />
-                </div>
-              </div>
-
-              {/* Step 2: Cesta de Itens */}
-              <div style={styles.sectionBox}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <Package size={16} color="#0284c7" />
-                    <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>Cesta de Insumos ({newQuoteForm.items.length})</strong>
+            {/* Formulário com Scroll Interno e Rodapé Fixo */}
+            <form 
+              onSubmit={handleSaveQuotation} 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                flex: 1, 
+                overflow: 'hidden',
+                minHeight: 0 
+              }}
+            >
+              <div style={{ 
+                padding: '1.25rem 1.5rem', 
+                overflowY: 'auto', 
+                flex: 1, 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '1rem' 
+              }}>
+                {/* Step 1: Informações Gerais */}
+                <div style={styles.sectionBox}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.75rem' }}>
+                    <FileText size={16} color="#0284c7" />
+                    <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>1. Informações da Cotação</strong>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button 
-                      type="button" 
-                      onClick={handleImportCriticalStock} 
-                      style={styles.btnOutlineSecondary}
-                    >
-                      ⚡ Importar Estoque Crítico
-                    </button>
+
+                  <div style={styles.formRow3}>
+                    <div className="form-group">
+                      <label style={styles.label}>Código</label>
+                      <input type="text" readOnly value={newQuoteForm.code} style={{ ...styles.input, backgroundColor: '#f1f5f9', fontWeight: '700' }} />
+                    </div>
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label style={styles.label}>Título *</label>
+                      <input 
+                        type="text" 
+                        required 
+                        placeholder="Ex: Cotação Semanal de Insumos de Hemodiálise" 
+                        value={newQuoteForm.title} 
+                        onChange={e => setNewQuoteForm({ ...newQuoteForm, title: e.target.value })} 
+                        style={styles.input} 
+                      />
+                    </div>
+                  </div>
+
+                  <div style={styles.formRow2}>
+                    <div className="form-group">
+                      <label style={styles.label}>Prazo Limite *</label>
+                      <input 
+                        type="datetime-local" 
+                        required 
+                        value={newQuoteForm.deadline} 
+                        onChange={e => setNewQuoteForm({ ...newQuoteForm, deadline: e.target.value })} 
+                        style={styles.input} 
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label style={styles.label}>Observações para Fornecedores</label>
+                      <input 
+                        type="text" 
+                        placeholder="Orientações de entrega, tipo de frete..." 
+                        value={newQuoteForm.notes} 
+                        onChange={e => setNewQuoteForm({ ...newQuoteForm, notes: e.target.value })} 
+                        style={styles.input} 
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Quick Add from inventory dropdown */}
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                  <select 
-                    style={{ ...styles.select, flex: 1 }}
-                    onChange={e => {
-                      const sel = inventoryItems.find(i => i.id === e.target.value);
-                      if (sel) handleAddItemToQuote(sel);
-                      e.target.value = '';
-                    }}
-                    defaultValue=""
-                  >
-                    <option value="" disabled>+ Adicionar item do catálogo de estoque...</option>
-                    {inventoryItems.map(item => (
-                      <option key={item.id} value={item.id}>
-                        {item.name} (Atual: {item.currentStock || 0} {item.unit || 'un'} | Mín: {item.minStock || 0})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Items Table in Modal */}
-                <div style={{ maxHeight: '220px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
-                  <table style={styles.table}>
-                    <thead>
-                      <tr style={styles.theadRow}>
-                        <th style={styles.th}>Insumo</th>
-                        <th style={{ ...styles.th, width: '110px' }}>Quantidade</th>
-                        <th style={{ ...styles.th, width: '90px' }}>Unidade</th>
-                        <th style={{ ...styles.th, width: '130px' }}>Último Preço</th>
-                        <th style={{ ...styles.th, width: '40px' }}></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {newQuoteForm.items.length === 0 ? (
-                        <tr>
-                          <td colSpan="5" style={{ textAlign: 'center', padding: '1.5rem', color: '#64748b', fontSize: '0.8rem' }}>
-                            Nenhum insumo adicionado. Selecione no menu acima ou clique em "Importar Estoque Crítico".
-                          </td>
-                        </tr>
-                      ) : (
-                        newQuoteForm.items.map(item => (
-                          <tr key={item.id} style={styles.trRow}>
-                            <td style={styles.td}>
-                              <input 
-                                type="text" 
-                                value={item.productName} 
-                                onChange={e => handleUpdateQuoteItem(item.id, 'productName', e.target.value)}
-                                style={{ ...styles.input, fontWeight: '600' }}
-                              />
-                            </td>
-                            <td style={styles.td}>
-                              <input 
-                                type="number" 
-                                value={item.quantity} 
-                                onChange={e => handleUpdateQuoteItem(item.id, 'quantity', parseFloat(e.target.value) || 1)}
-                                style={styles.input}
-                              />
-                            </td>
-                            <td style={styles.td}>
-                              <input 
-                                type="text" 
-                                value={item.unit} 
-                                onChange={e => handleUpdateQuoteItem(item.id, 'unit', e.target.value)}
-                                style={styles.input}
-                              />
-                            </td>
-                            <td style={styles.td}>
-                              <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                                {item.lastPricePaid ? item.lastPricePaid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
-                              </span>
-                            </td>
-                            <td style={styles.td}>
-                              <button 
-                                type="button" 
-                                onClick={() => handleRemoveItemFromQuote(item.id)}
-                                style={styles.deleteIconBtn}
-                              >
-                                <Trash2 size={14} color="#ef4444" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Step 3: Fornecedores Convidados */}
-              <div style={styles.sectionBox}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.75rem' }}>
-                  <Building2 size={16} color="#0284c7" />
-                  <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>
-                    Fornecedores Convidados ({newQuoteForm.selectedSuppliers.length})
-                  </strong>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '0.5rem', maxHeight: '160px', overflowY: 'auto' }}>
-                  {suppliers.map(s => {
-                    const isSelected = newQuoteForm.selectedSuppliers.some(sel => sel.supplierId === s.id);
-                    return (
-                      <div 
-                        key={s.id} 
-                        onClick={() => handleToggleSupplier(s)}
+                {/* Step 2: Cesta de Itens */}
+                <div style={styles.sectionBox}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Package size={16} color="#0284c7" />
+                      <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>2. Cesta de Insumos ({newQuoteForm.items.length})</strong>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button 
+                        type="button" 
+                        onClick={handleImportCriticalStock} 
+                        style={styles.btnOutlineSecondary}
+                        title="Importar todos os insumos abaixo do estoque mínimo"
+                      >
+                        ⚡ Importar Estoque Crítico
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowCustomItemInput(!showCustomItemInput)}
                         style={{
-                          ...styles.supplierCheckCard,
-                          backgroundColor: isSelected ? '#f0f9ff' : '#fff',
-                          borderColor: isSelected ? '#0284c7' : '#cbd5e1'
+                          ...styles.btnOutlineSecondary,
+                          backgroundColor: showCustomItemInput ? '#f0f9ff' : '#fff',
+                          borderColor: showCustomItemInput ? '#0284c7' : '#bae6fd'
                         }}
                       >
-                        <input 
-                          type="checkbox" 
-                          checked={isSelected} 
-                          onChange={() => {}} 
-                          style={{ cursor: 'pointer' }}
-                        />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <strong style={{ fontSize: '0.8rem', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {s.name}
-                          </strong>
-                          <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>
-                            {s.phone ? `📱 ${s.phone}` : s.email || 'Sem contato'}
-                          </span>
+                        <Sparkles size={13} style={{ marginRight: '3px' }} />
+                        + Insumo Livre
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Campo de Busca Inteligente com Digitação e Ordem Alfabética */}
+                  <div style={{ position: 'relative', marginBottom: '0.75rem' }} ref={productSearchRef}>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', pointerEvents: 'none' }} />
+                      <input 
+                        type="text"
+                        placeholder="Digite para buscar insumo por nome, código ou categoria (ordem alfabética)..."
+                        value={productSearchQuery}
+                        onChange={e => {
+                          setProductSearchQuery(e.target.value);
+                          setIsProductDropdownOpen(true);
+                        }}
+                        onFocus={() => setIsProductDropdownOpen(true)}
+                        style={{
+                          ...styles.input,
+                          paddingLeft: '36px',
+                          paddingRight: productSearchQuery ? '60px' : '36px',
+                          height: '38px',
+                          fontSize: '0.85rem'
+                        }}
+                      />
+                      
+                      <div style={{ position: 'absolute', right: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        {productSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProductSearchQuery('');
+                              setIsProductDropdownOpen(false);
+                            }}
+                            style={styles.deleteIconBtn}
+                            title="Limpar busca"
+                          >
+                            <X size={14} color="#94a3b8" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setIsProductDropdownOpen(!isProductDropdownOpen)}
+                          style={styles.deleteIconBtn}
+                          title="Abrir lista de insumos"
+                        >
+                          <ChevronDown size={16} color="#64748b" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Dropdown Flutuante de Insumos em Ordem Alfabética */}
+                    {isProductDropdownOpen && (
+                      <div style={styles.autocompleteDropdown}>
+                        {filteredQuoteInventoryItems.length === 0 ? (
+                          <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.82rem' }}>
+                            Nenhum insumo encontrado para "{productSearchQuery}".
+                          </div>
+                        ) : (
+                          <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                            <div style={{ padding: '0.4rem 0.75rem', fontSize: '0.72rem', color: '#94a3b8', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontWeight: '700', textTransform: 'uppercase' }}>
+                              {filteredQuoteInventoryItems.length} insumos em ordem alfabética (clique para adicionar):
+                            </div>
+                            {filteredQuoteInventoryItems.map(item => {
+                              const isAlreadyAdded = newQuoteForm.items.some(i => i.productId === item.id);
+                              const stockNum = parseFloat(item.currentStock) || 0;
+                              const minNum = parseFloat(item.minStock) || 0;
+                              const isBelowMin = stockNum <= minNum;
+
+                              return (
+                                <div
+                                  key={item.id}
+                                  onClick={() => handleAddItemToQuote(item)}
+                                  style={{
+                                    ...styles.autocompleteItem,
+                                    backgroundColor: isAlreadyAdded ? '#f0fdf4' : '#fff'
+                                  }}
+                                >
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                                      <strong style={{ fontSize: '0.84rem', color: isAlreadyAdded ? '#15803d' : '#1e293b' }}>
+                                        {item.name}
+                                      </strong>
+                                      {item.code && (
+                                        <span style={styles.itemCodeBadge}>
+                                          #{item.code}
+                                        </span>
+                                      )}
+                                      {isAlreadyAdded && (
+                                        <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: '700' }}>
+                                          ✓ Na Cesta
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '0.65rem', marginTop: '0.2rem', fontSize: '0.74rem', color: '#64748b' }}>
+                                      {item.category && <span>🏷️ {item.category}</span>}
+                                      {item.subgroup && <span>📁 {item.subgroup}</span>}
+                                    </div>
+                                  </div>
+
+                                  <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                                    <span style={{
+                                      fontSize: '0.74rem',
+                                      fontWeight: '700',
+                                      padding: '0.12rem 0.45rem',
+                                      borderRadius: '6px',
+                                      backgroundColor: isBelowMin ? '#fef2f2' : '#ecfdf5',
+                                      color: isBelowMin ? '#b91c1c' : '#15803d',
+                                      border: `1px solid ${isBelowMin ? '#fecaca' : '#bbf7d0'}`
+                                    }}>
+                                      Saldo: {stockNum} {item.unit || 'un'}
+                                    </span>
+                                    {item.lastPrice || item.averageCost ? (
+                                      <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                                        Último: {parseFloat(item.lastPrice || item.averageCost).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Form de Adição de Item Livre / Personalizado */}
+                  {showCustomItemInput && (
+                    <div style={{ backgroundColor: '#fff', border: '1px dashed #0284c7', borderRadius: '8px', padding: '0.75rem', marginBottom: '0.75rem' }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#0369a1', display: 'block', marginBottom: '0.45rem' }}>
+                        Adicionar Insumo Não Cadastrado / Livre:
+                      </span>
+                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 100px 90px 2fr auto', gap: '0.5rem', alignItems: 'flex-end' }}>
+                        <div>
+                          <label style={styles.label}>Nome do Insumo *</label>
+                          <input 
+                            type="text" 
+                            placeholder="Descrição do insumo..." 
+                            value={customItemForm.productName} 
+                            onChange={e => setCustomItemForm({ ...customItemForm, productName: e.target.value })}
+                            style={styles.input}
+                          />
+                        </div>
+                        <div>
+                          <label style={styles.label}>Quantidade</label>
+                          <input 
+                            type="number" 
+                            min="1" 
+                            value={customItemForm.quantity} 
+                            onChange={e => setCustomItemForm({ ...customItemForm, quantity: e.target.value })}
+                            style={styles.input}
+                          />
+                        </div>
+                        <div>
+                          <label style={styles.label}>Unidade</label>
+                          <input 
+                            type="text" 
+                            placeholder="un, cx..." 
+                            value={customItemForm.unit} 
+                            onChange={e => setCustomItemForm({ ...customItemForm, unit: e.target.value })}
+                            style={styles.input}
+                          />
+                        </div>
+                        <div>
+                          <label style={styles.label}>Especificação</label>
+                          <input 
+                            type="text" 
+                            placeholder="Marca, modelo..." 
+                            value={customItemForm.specification} 
+                            onChange={e => setCustomItemForm({ ...customItemForm, specification: e.target.value })}
+                            style={styles.input}
+                          />
+                        </div>
+                        <div>
+                          <button
+                            type="button"
+                            onClick={handleAddCustomItem}
+                            style={styles.btnPrimary}
+                          >
+                            + Adicionar
+                          </button>
                         </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
+
+                  {/* Items Table in Modal */}
+                  <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', backgroundColor: '#fff' }}>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr style={styles.theadRow}>
+                          <th style={styles.th}>Insumo</th>
+                          <th style={{ ...styles.th, width: '100px' }}>Quantidade</th>
+                          <th style={{ ...styles.th, width: '85px' }}>Unidade</th>
+                          <th style={{ ...styles.th, width: '120px' }}>Último Preço</th>
+                          <th style={{ ...styles.th, width: '40px', textAlign: 'center' }}></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {newQuoteForm.items.length === 0 ? (
+                          <tr>
+                            <td colSpan="5" style={{ textAlign: 'center', padding: '1.5rem', color: '#64748b', fontSize: '0.8rem' }}>
+                              Nenhum insumo adicionado. Digite no campo acima ou clique em "Importar Estoque Crítico".
+                            </td>
+                          </tr>
+                        ) : (
+                          newQuoteForm.items.map(item => (
+                            <tr key={item.id} style={styles.trRow}>
+                              <td style={styles.td}>
+                                <input 
+                                  type="text" 
+                                  value={item.productName} 
+                                  onChange={e => handleUpdateQuoteItem(item.id, 'productName', e.target.value)}
+                                  style={{ ...styles.input, fontWeight: '600' }}
+                                />
+                              </td>
+                              <td style={styles.td}>
+                                <input 
+                                  type="number" 
+                                  value={item.quantity} 
+                                  onChange={e => handleUpdateQuoteItem(item.id, 'quantity', parseFloat(e.target.value) || 1)}
+                                  style={styles.input}
+                                />
+                              </td>
+                              <td style={styles.td}>
+                                <input 
+                                  type="text" 
+                                  value={item.unit} 
+                                  onChange={e => handleUpdateQuoteItem(item.id, 'unit', e.target.value)}
+                                  style={styles.input}
+                                />
+                              </td>
+                              <td style={styles.td}>
+                                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                  {item.lastPricePaid ? item.lastPricePaid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                                </span>
+                              </td>
+                              <td style={{ ...styles.td, textAlign: 'center' }}>
+                                <button 
+                                  type="button" 
+                                  onClick={() => handleRemoveItemFromQuote(item.id)}
+                                  style={styles.deleteIconBtn}
+                                  title="Remover insumo"
+                                >
+                                  <Trash2 size={14} color="#ef4444" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Step 3: Fornecedores Convidados */}
+                <div style={styles.sectionBox}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Building2 size={16} color="#0284c7" />
+                      <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>
+                        3. Fornecedores Convidados ({newQuoteForm.selectedSuppliers.length} selecionados)
+                      </strong>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                      <button
+                        type="button"
+                        onClick={handleSelectAllSuppliers}
+                        style={styles.actionBtnSecondary}
+                        title="Selecionar todos os fornecedores visíveis"
+                      >
+                        <CheckSquare size={13} color="#0284c7" />
+                        <span>Selecionar Todos</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDeselectAllSuppliers}
+                        style={styles.actionBtnSecondary}
+                        title="Desmarcar fornecedores"
+                      >
+                        <Square size={13} color="#94a3b8" />
+                        <span>Desmarcar Todos</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Filtro Rápido de Fornecedores */}
+                  <div style={{ position: 'relative', marginBottom: '0.65rem' }}>
+                    <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '10px', pointerEvents: 'none' }} />
+                    <input 
+                      type="text" 
+                      placeholder="Filtrar fornecedores por nome, CNPJ ou contato..." 
+                      value={supplierSearchQuery} 
+                      onChange={e => setSupplierSearchQuery(e.target.value)}
+                      style={{ ...styles.input, paddingLeft: '32px', height: '34px', fontSize: '0.8rem' }}
+                    />
+                  </div>
+
+                  {/* Grade Rolável e Responsiva de Fornecedores */}
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', 
+                    gap: '0.5rem', 
+                    maxHeight: '200px', 
+                    overflowY: 'auto',
+                    padding: '2px'
+                  }}>
+                    {filteredSuppliers.length === 0 ? (
+                      <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '1rem', color: '#64748b', fontSize: '0.8rem' }}>
+                        Nenhum fornecedor encontrado para o filtro digitado.
+                      </div>
+                    ) : (
+                      filteredSuppliers.map(s => {
+                        const isSelected = newQuoteForm.selectedSuppliers.some(sel => sel.supplierId === s.id);
+                        return (
+                          <div 
+                            key={s.id} 
+                            onClick={() => handleToggleSupplier(s)}
+                            style={{
+                              ...styles.supplierCheckCard,
+                              backgroundColor: isSelected ? '#f0f9ff' : '#fff',
+                              borderColor: isSelected ? '#0284c7' : '#cbd5e1'
+                            }}
+                          >
+                            <input 
+                              type="checkbox" 
+                              checked={isSelected} 
+                              onChange={() => {}} 
+                              style={{ cursor: 'pointer' }}
+                            />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <strong style={{ fontSize: '0.8rem', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: isSelected ? '#0369a1' : '#1e293b' }}>
+                                {s.name}
+                              </strong>
+                              <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {s.phone ? `📱 ${s.phone}` : s.email || 'Sem contato'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Modal Actions */}
+              {/* Modal Actions FIXO no rodapé */}
               <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setShowNewModal(false)} style={styles.btnSecondary}>
                   Cancelar
                 </button>
                 <button type="submit" disabled={actionLoading} style={styles.btnPrimary}>
-                  {actionLoading ? 'Gerando Cotação...' : 'Publicar Cotação e Gerar Links'}
+                  {actionLoading ? 'Gerando Cotação...' : `Publicar Cotação (${newQuoteForm.items.length} itens • ${newQuoteForm.selectedSuppliers.length} fornecedores)`}
                 </button>
               </div>
             </form>
@@ -1487,5 +1903,36 @@ const styles = {
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
     margin: '0 auto'
+  },
+  autocompleteDropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    marginTop: '4px',
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+    border: '1px solid #cbd5e1',
+    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+    zIndex: 1050,
+    overflow: 'hidden'
+  },
+  autocompleteItem: {
+    padding: '0.6rem 0.85rem',
+    borderBottom: '1px solid #f1f5f9',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    cursor: 'pointer',
+    transition: 'background-color 0.15s ease',
+    gap: '0.75rem'
+  },
+  itemCodeBadge: {
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    color: '#0369a1',
+    backgroundColor: '#e0f2fe',
+    padding: '0.1rem 0.35rem',
+    borderRadius: '4px'
   }
 };
