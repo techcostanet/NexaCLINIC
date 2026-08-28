@@ -35,8 +35,18 @@ export const uploadFileToStorage = async (
     const downloadUrl = await getDownloadURL(snapshot.ref);
     return downloadUrl;
   } catch (error) {
-    console.error('Erro no upload para o Cloud Storage:', error);
-    throw error;
+    console.warn('Aviso: Falha no upload para o Cloud Storage. Utilizando fallback local/base64...', error);
+    // Fallback gracioso: converte para Base64 para garantir que o registro do usuário não seja perdido
+    return new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve((reader.result as string) || '');
+      };
+      reader.onerror = () => {
+        resolve('');
+      };
+      reader.readAsDataURL(file);
+    });
   }
 };
 

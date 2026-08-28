@@ -6,7 +6,7 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v4.7.71',
+      version: 'v4.7.72',
       date: '28/08/2026',
       title: 'Módulo RH — Armazenamento em Nuvem (Firebase Cloud Storage) e Visualização de Exames Ocupacionais (ASO)',
       description: 'Correção do salvamento de exames ocupacionais com arquivos anexos, permissões do banco de dados e integração nativa com Firebase Cloud Storage para visualização remota e download em qualquer dispositivo.',

@@ -1,4 +1,4 @@
-## [v4.7.71] - 28 de Agosto, 2026
+## [v4.7.72] - 28 de Agosto, 2026
 ### Módulo RH — Armazenamento em Nuvem (Firebase Cloud Storage) e Visualização de Exames Ocupacionais (ASO)
 - **Integração com Firebase Cloud Storage:**
   - Upload automático e seguro de laudos e comprovantes de ASO (arquivos PDF, PNG, JPG, DOCX) diretamente no bucket de armazenamento em nuvem.
