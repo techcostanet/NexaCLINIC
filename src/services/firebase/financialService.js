@@ -176,6 +176,20 @@ export const updatePurchase = async (id, purchaseData) => {
     return { id, ...purchaseData };
   };
 
+export const deletePurchase = async (id) => {
+    if (USE_MOCK) {
+      const data = localStorage.getItem('sistema_indicadores_purchases');
+      let list = data ? JSON.parse(data) : [];
+      list = list.filter(item => item.id !== id);
+      localStorage.setItem('sistema_indicadores_purchases', JSON.stringify(list));
+      return { id, success: true };
+    }
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'purchases', id));
+    return { id, success: true };
+  };
+
 export const getPurchaseInvoices = async () => {
     if (USE_MOCK) return mockFirestore.getPurchaseInvoices();
     try {

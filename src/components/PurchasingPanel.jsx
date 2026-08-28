@@ -3,12 +3,15 @@ import {
   ShoppingBag, ClipboardList, CheckSquare, DollarSign, Truck, Plus, 
   Search, Building2, User, Clock, ArrowRight, ShieldAlert, Award,
   Edit, Trash2, X, AlertTriangle, ArrowUpDown, ChevronUp, ChevronDown,
-  Package, Zap, CheckCircle2, History, Filter, RefreshCw, Layers, Info
+  Package, Zap, CheckCircle2, History, Filter, RefreshCw, Layers, Info,
+  ListFilter, Maximize2, Eye, FileText, Tag, Sparkles
 } from 'lucide-react';
 import { dbService } from '../firebase';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
 import WebQuotationsTab from './purchasing/WebQuotationsTab';
+import PurchaseRequestModal from './purchasing/PurchaseRequestModal';
+import PurchaseDetailsModal from './purchasing/PurchaseDetailsModal';
 
 export default function PurchasingPanel({ currentUser }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
@@ -30,17 +33,26 @@ export default function PurchasingPanel({ currentUser }) {
   const [repositionCategory, setRepositionCategory] = useState('all');
   const [repositionSeverity, setRepositionSeverity] = useState('all'); // 'all' | 'zero' | 'below_min'
 
-  // Modais de Solicitação
-  const [showRequestModal, setShowRequestModal] = useState(false);
-  const [requestForm, setRequestForm] = useState({
-    type: 'Reposição', // 'Reposição' | 'Novo'
-    selectedStockId: '',
-    newItemName: '',
-    quantity: 10,
-    unit: 'Unidade',
-    justification: '',
-    sector: 'farmacia'
+  // Modos de Visualização das Solicitações (Compacta como Padrão)
+  const [requestsViewMode, setRequestsViewMode] = useState(() => {
+    return localStorage.getItem('nexa_purchases_view_mode') || 'compact';
   });
+
+  const handleSetViewMode = (mode) => {
+    setRequestsViewMode(mode);
+    localStorage.setItem('nexa_purchases_view_mode', mode);
+  };
+
+  // Filtros da Esteira de Solicitações
+  const [requestsSearch, setRequestsSearch] = useState('');
+  const [requestsStatusFilter, setRequestsStatusFilter] = useState('all');
+  const [myRequestsOnly, setMyRequestsOnly] = useState(false);
+
+  // Modais de Solicitação (Multi-Item e Detalhes)
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [editingRequest, setEditingRequest] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedRequestDetails, setSelectedRequestDetails] = useState(null);
 
   // Sala de Cotações
   const [quoteForm, setQuoteForm] = useState({
@@ -115,6 +127,32 @@ export default function PurchasingPanel({ currentUser }) {
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
   };
 
+  // Helper para normalizar insumos da solicitação (Multi-Item vs Legado)
+  const getRequestItems = (req) => {
+    if (req.items && Array.isArray(req.items) && req.items.length > 0) {
+      return req.items;
+    }
+    if (req.productName) {
+      return [{
+        id: 'legacy_1',
+        type: req.type || 'Reposição',
+        productId: req.productId || '',
+        productName: req.productName,
+        quantity: req.quantity || 1,
+        unit: req.unit || 'Unidade',
+        specification: req.justification || ''
+      }];
+    }
+    return [];
+  };
+
+  // Helper de Código Amigável (SOL-2026-001)
+  const generatePurchaseCode = (existingList = []) => {
+    const year = new Date().getFullYear();
+    const seq = String((existingList?.length || 0) + 1).padStart(3, '0');
+    return `SOL-${year}-${seq}`;
+  };
+
   // Permissões e Níveis de Acesso no NexaPROCURE (RBAC)
   const isPurchasingAdmin = useMemo(() => {
     if (!user) return false;
@@ -144,6 +182,22 @@ export default function PurchasingPanel({ currentUser }) {
 
   const isRequesterOnly = !isPurchasingAdmin && !isPurchasingApprover;
 
+  // Permissão para editar solicitação (solicitante no status inicial ou admin)
+  const canUserEditRequest = (req) => {
+    if (!user || !req) return false;
+    if (isPurchasingAdmin) return true;
+    const userEmail = (user.email || '').toLowerCase().trim();
+    const userName = (user.name || '').toLowerCase().trim();
+    const isOwner = (req.requesterEmail && req.requesterEmail.toLowerCase() === userEmail) ||
+                    (req.requesterName && req.requesterName.toLowerCase() === userName);
+    const isInitialStatus = req.status === 'Aguardando Gestor' || (req.status && req.status.toLowerCase().includes('recusad'));
+    return isOwner && isInitialStatus;
+  };
+
+  const canUserDeleteRequest = (req) => {
+    return canUserEditRequest(req);
+  };
+
   // Redirecionamento automático de aba baseado no perfil
   useEffect(() => {
     if (isRequesterOnly && activeTab !== 'requests') {
@@ -153,16 +207,16 @@ export default function PurchasingPanel({ currentUser }) {
     }
   }, [isRequesterOnly, isPurchasingApprover, isPurchasingAdmin, activeTab]);
 
-  const [myRequestsOnly, setMyRequestsOnly] = useState(false);
-
   // Filtragem de Dados pela Unidade Ativa
   const currentPurchases = useMemo(() => filterByActiveUnit(purchases), [purchases, activeUnitId]);
   const currentInventoryItems = useMemo(() => filterByActiveUnit(inventoryItems), [inventoryItems, activeUnitId]);
   const currentRequisitions = useMemo(() => filterByActiveUnit(requisitions), [requisitions, activeUnitId]);
 
-  // Solicitações Exibidas (com filtro Minhas Solicitações para solicitantes)
+  // Solicitações Exibidas com Filtros de Busca, Status e Minhas Solicitações
   const displayedPurchases = useMemo(() => {
     let list = currentPurchases;
+
+    // Filtro Minhas Solicitações
     if (isRequesterOnly && myRequestsOnly && user) {
       const userEmail = (user.email || '').toLowerCase().trim();
       const userName = (user.name || '').toLowerCase().trim();
@@ -171,8 +225,33 @@ export default function PurchasingPanel({ currentUser }) {
         (p.requesterName && p.requesterName.toLowerCase() === userName)
       );
     }
-    return list;
-  }, [currentPurchases, isRequesterOnly, myRequestsOnly, user]);
+
+    // Filtro de Status
+    if (requestsStatusFilter !== 'all') {
+      if (requestsStatusFilter === 'Recusado') {
+        list = list.filter(p => p.status && p.status.toLowerCase().includes('recusad'));
+      } else {
+        list = list.filter(p => p.status === requestsStatusFilter);
+      }
+    }
+
+    // Busca textual (código, produto, itens, solicitante, justificativa)
+    if (requestsSearch.trim()) {
+      const term = requestsSearch.toLowerCase().trim();
+      list = list.filter(p => {
+        const matchCode = p.code?.toLowerCase().includes(term);
+        const matchProd = p.productName?.toLowerCase().includes(term);
+        const matchReq = p.requesterName?.toLowerCase().includes(term);
+        const matchJust = p.justification?.toLowerCase().includes(term);
+        const matchSector = p.sector?.toLowerCase().includes(term);
+        const matchItems = p.items && Array.isArray(p.items) && p.items.some(i => i.productName?.toLowerCase().includes(term));
+        return matchCode || matchProd || matchReq || matchJust || matchSector || matchItems;
+      });
+    }
+
+    // Ordenar pelas mais recentes
+    return list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  }, [currentPurchases, isRequesterOnly, myRequestsOnly, user, requestsStatusFilter, requestsSearch]);
 
   // Itens com Cálculo dos 4 Saldos (Físico, Reservado, Disponível, Trânsito)
   const enrichedInventoryItems = useMemo(() => {
@@ -215,13 +294,21 @@ export default function PurchasingPanel({ currentUser }) {
       // Saldo Disponível Real (Físico - Reservado)
       const availableStock = Math.max(0, physicalStock - committedStock);
 
-      // Compras em Trânsito (Pedidos de Compra Abertos)
+      // Compras em Trânsito (Pedidos de Compra Abertos com suporte Multi-Item)
       const inTransitPurchases = currentPurchases.filter(p => 
-        (p.productId === item.id || (p.productName && p.productName.toLowerCase() === (item.name || '').toLowerCase())) &&
-        p.status !== 'Finalizado' && p.status !== 'Rejeitado'
+        p.status !== 'Finalizado' && p.status !== 'Rejeitado' && !p.status?.toLowerCase().includes('recusad')
       );
 
-      const inTransitStock = inTransitPurchases.reduce((acc, p) => acc + (parseFloat(p.quantity) || 0), 0);
+      let inTransitStock = 0;
+      inTransitPurchases.forEach(p => {
+        const pItems = getRequestItems(p);
+        pItems.forEach(pi => {
+          if (pi.productId === item.id || (pi.productName && pi.productName.toLowerCase() === (item.name || '').toLowerCase())) {
+            inTransitStock += (parseFloat(pi.quantity) || 0);
+          }
+        });
+      });
+
       const projectedStock = availableStock + inTransitStock;
 
       // Sugestão de Compra Inteligente
@@ -330,6 +417,33 @@ export default function PurchasingPanel({ currentUser }) {
     });
   }, [suppliers, supplierSearch, supplierSortField, supplierSortDirection]);
 
+  // Abertura do Modal de Nova Solicitação (com suporte a pré-preenchimento)
+  const handleOpenNewRequest = (prepopulatedItem = null) => {
+    if (prepopulatedItem) {
+      setEditingRequest({
+        items: [prepopulatedItem],
+        sector: prepopulatedItem.sector || 'farmacia',
+        justification: prepopulatedItem.justification || '',
+        priority: 'Normal'
+      });
+    } else {
+      setEditingRequest(null);
+    }
+    setShowRequestModal(true);
+  };
+
+  // Abertura do Modal de Edição de Solicitação Existente
+  const handleOpenEditRequest = (req) => {
+    setEditingRequest(req);
+    setShowRequestModal(true);
+  };
+
+  // Abrir Detalhes da Solicitação
+  const handleOpenDetails = (req) => {
+    setSelectedRequestDetails(req);
+    setShowDetailsModal(true);
+  };
+
   // Abrir Modal de Solicitação Rápida para Item Crítico Específico
   const handleQuickRequestItem = (item) => {
     const avail = item.availableStock;
@@ -339,33 +453,36 @@ export default function PurchasingPanel({ currentUser }) {
     const trans = item.inTransitStock;
     const suggestedQty = item.suggestedQty > 0 ? item.suggestedQty : Math.max(1, Math.round(item.idealStock - avail));
 
-    setRequestForm({
+    handleOpenNewRequest({
+      id: 'item_quick_' + Date.now(),
       type: 'Reposição',
-      selectedStockId: item.id,
-      newItemName: item.name,
+      productId: item.id,
+      productName: item.name,
       quantity: suggestedQty,
       unit: item.unit || 'Unidade',
-      justification: `Reposição Inteligente: Saldo Disponível (${avail} ${item.unit || 'un'}) crítico perante o mínimo (${min} ${item.unit || 'un'}). [Físico: ${phys}, Reservado: ${res}, Trânsito: ${trans}].`,
-      sector: item.category === 'Medicamento' ? 'farmacia' : 'enfermagem'
+      specification: '',
+      sector: item.category === 'Medicamento' ? 'farmacia' : 'enfermagem',
+      justification: `Reposição Inteligente: Saldo Disponível (${avail} ${item.unit || 'un'}) crítico perante o mínimo (${min} ${item.unit || 'un'}). [Físico: ${phys}, Reservado: ${res}, Trânsito: ${trans}].`
     });
-    setShowRequestModal(true);
   };
 
-  // Gerar Solicitação em Lote para TODOS os Itens Críticos
+  // Gerar Solicitação Consolidada em Lote para TODOS os Itens Críticos
   const handleBatchRequestAllCritical = async () => {
     if (criticalItems.length === 0) {
       showAlert('Nenhum item crítico para reposição no momento.', 'warning');
       return;
     }
 
-    if (!window.confirm(`Deseja gerar solicitações de compra automáticas para todos os ${criticalItems.length} itens críticos calculados sobre o saldo disponível?`)) {
+    if (!window.confirm(`Deseja gerar um pedido de compra consolidado contendo todos os ${criticalItems.length} itens críticos calculados sobre o saldo disponível?`)) {
       return;
     }
 
     setActionLoading(true);
     try {
-      let createdCount = 0;
-      for (const item of criticalItems) {
+      const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
+      const batchItems = criticalItems.map((item, idx) => {
         const avail = item.availableStock;
         const phys = item.physicalStock;
         const res = item.committedStock;
@@ -373,93 +490,160 @@ export default function PurchasingPanel({ currentUser }) {
         const trans = item.inTransitStock;
         const suggestedQty = item.suggestedQty > 0 ? item.suggestedQty : Math.max(1, Math.round(item.idealStock - avail));
 
-        const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
-        const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
-
-        const newRequest = {
+        return {
+          id: 'batch_item_' + idx,
           type: 'Reposição',
           productId: item.id,
           productName: item.name,
           quantity: suggestedQty,
           unit: item.unit || 'Unidade',
-          justification: `Reposição em Lote Inteligente: Saldo Disponível (${avail}) crítico perante o mínimo (${min}). [Físico: ${phys}, Reservado: ${res}, Trânsito: ${trans}].`,
-          sector: item.category === 'Medicamento' ? 'farmacia' : 'enfermagem',
-          requesterName: currentUser?.name || 'Comprador NexaPROCURE',
-          requesterEmail: currentUser?.email || 'compras@dialize.com.br',
-          status: 'Aguardando Gestor',
-          unitId: targetUnitId,
-          unit: targetUnit,
-          history: [
-            { status: 'Aguardando Gestor', date: new Date().toISOString(), message: 'Solicitação gerada via Reposição Crítica em Lote com análise de saldo disponível.' }
-          ]
+          specification: `Saldo Disponível: ${avail} / Mín: ${min} [Físico: ${phys}, Reservado: ${res}, Trânsito: ${trans}]`
         };
+      });
 
-        await dbService.createPurchase(newRequest);
-        createdCount++;
-      }
+      const newCode = generatePurchaseCode(purchases);
+      const totalQty = batchItems.reduce((acc, it) => acc + it.quantity, 0);
 
-      showAlert(`Sucesso! ${createdCount} solicitações de compras geradas com base no saldo disponível.`, 'success');
+      const newRequest = {
+        code: newCode,
+        type: 'Reposição',
+        sector: 'farmacia',
+        priority: 'Urgente',
+        productId: 'lote-critico',
+        productName: `Lote Crítico de Reposição (${batchItems.length} insumos)`,
+        quantity: totalQty,
+        unit: 'itens',
+        justification: `Reposição em Lote Inteligente: ${batchItems.length} insumos com saldo disponível abaixo do estoque mínimo.`,
+        items: batchItems,
+        itemsCount: batchItems.length,
+        requesterName: currentUser?.name || 'Comprador NexaPROCURE',
+        requesterEmail: currentUser?.email || 'compras@dialize.com.br',
+        status: 'Aguardando Gestor',
+        unitId: targetUnitId,
+        unit: targetUnit,
+        history: [
+          { 
+            status: 'Aguardando Gestor', 
+            date: new Date().toISOString(), 
+            message: `Pedido #${newCode} gerado via Reposição Crítica em Lote com ${batchItems.length} insumos.` 
+          }
+        ]
+      };
+
+      await dbService.createPurchase(newRequest);
+      showAlert(`Sucesso! Solicitação #${newCode} gerada com ${batchItems.length} insumos críticos.`, 'success');
       fetchData(false);
       setActiveTab('requests');
     } catch (err) {
       console.error(err);
-      showAlert('Erro ao gerar solicitações em lote.', 'danger');
+      showAlert('Erro ao gerar solicitação em lote.', 'danger');
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Criação Individual de Solicitação
-  const handleCreateRequest = async (e) => {
-    e.preventDefault();
-    let name = requestForm.newItemName;
-    if (requestForm.type === 'Reposição') {
-      const selected = currentInventoryItems.find(itm => itm.id === requestForm.selectedStockId) || inventoryItems.find(itm => itm.id === requestForm.selectedStockId);
-      if (!selected) return showAlert('Selecione um produto do estoque.', 'danger');
-      name = selected.name;
-    }
-
-    if (!name) return showAlert('Informe o nome do item.', 'danger');
-
+  // Salvar Solicitação Multi-Item (Criação ou Atualização)
+  const handleSaveRequest = async (formData) => {
     setActionLoading(true);
     try {
       const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
       const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
 
-      const newRequest = {
-        type: requestForm.type,
-        productId: requestForm.selectedStockId || 'novo-item',
-        productName: name,
-        quantity: parseInt(requestForm.quantity) || 1,
-        unit: requestForm.unit || 'Unidade',
-        justification: requestForm.justification,
-        sector: requestForm.sector,
-        requesterName: user?.name || currentUser?.name || 'Profissional',
-        requesterEmail: user?.email || currentUser?.email || '',
-        status: 'Aguardando Gestor',
-        unitId: targetUnitId,
-        unit: targetUnit,
-        history: [
-          { status: 'Aguardando Gestor', date: new Date().toISOString(), message: `Solicitação criada por ${user?.name || 'Profissional'}.` }
-        ]
-      };
+      const items = formData.items || [];
+      const totalQty = items.reduce((acc, it) => acc + (parseFloat(it.quantity) || 0), 0);
+      const primaryProductName = items.length === 1 
+        ? items[0].productName 
+        : `${items[0].productName} (+${items.length - 1} itens)`;
 
-      await dbService.createPurchase(newRequest);
-      showAlert('Solicitação de compra criada com sucesso!', 'success');
+      if (editingRequest && editingRequest.id) {
+        // Modo Edição
+        const updatedHistory = [
+          ...(editingRequest.history || []),
+          {
+            status: editingRequest.status,
+            date: new Date().toISOString(),
+            message: `Solicitação atualizada por ${user?.name || 'Solicitante'}. (${items.length} itens)`
+          }
+        ];
+
+        await dbService.updatePurchase(editingRequest.id, {
+          sector: formData.sector,
+          priority: formData.priority,
+          justification: formData.justification,
+          items: items,
+          itemsCount: items.length,
+          productName: primaryProductName,
+          quantity: totalQty,
+          unit: items[0]?.unit || 'un',
+          history: updatedHistory
+        });
+
+        showAlert(`Solicitação #${editingRequest.code || ''} atualizada com sucesso!`, 'success');
+      } else {
+        // Modo Criação
+        const newCode = generatePurchaseCode(purchases);
+        const newPurchase = {
+          code: newCode,
+          type: items.some(i => i.type === 'Novo') ? 'Misto' : 'Reposição',
+          sector: formData.sector,
+          priority: formData.priority,
+          justification: formData.justification,
+          items: items,
+          itemsCount: items.length,
+          productId: items[0]?.productId || 'multiplo',
+          productName: primaryProductName,
+          quantity: totalQty,
+          unit: items[0]?.unit || 'un',
+          requesterName: user?.name || currentUser?.name || 'Profissional',
+          requesterEmail: user?.email || currentUser?.email || '',
+          status: 'Aguardando Gestor',
+          unitId: targetUnitId,
+          unit: targetUnit,
+          history: [
+            { 
+              status: 'Aguardando Gestor', 
+              date: new Date().toISOString(), 
+              message: `Solicitação #${newCode} criada por ${user?.name || 'Profissional'} com ${items.length} insumos.` 
+            }
+          ]
+        };
+
+        await dbService.createPurchase(newPurchase);
+        showAlert(`Solicitação #${newCode} criada com sucesso (${items.length} insumos)!`, 'success');
+      }
+
       setShowRequestModal(false);
-      setRequestForm({
-        type: 'Reposição',
-        selectedStockId: '',
-        newItemName: '',
-        quantity: 10,
-        unit: 'Unidade',
-        justification: '',
-        sector: 'farmacia'
-      });
+      setEditingRequest(null);
       fetchData(false);
     } catch (err) {
-      console.error(err);
-      showAlert('Erro ao criar solicitação.', 'danger');
+      console.error('Erro ao salvar solicitação:', err);
+      showAlert('Erro ao salvar solicitação.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Excluir Solicitação de Compra
+  const handleDeleteRequest = async (req) => {
+    const reqName = req.code ? `#${req.code}` : `"${req.productName}"`;
+    if (!window.confirm(`Deseja realmente excluir a solicitação ${reqName}?`)) return;
+
+    setActionLoading(true);
+    try {
+      if (dbService.deletePurchase) {
+        await dbService.deletePurchase(req.id);
+      } else {
+        await dbService.updatePurchase(req.id, { status: 'Cancelada', deleted: true });
+      }
+      showAlert(`Solicitação ${reqName} excluída com sucesso!`, 'success');
+      if (selectedRequestDetails?.id === req.id) {
+        setShowDetailsModal(false);
+        setSelectedRequestDetails(null);
+      }
+      fetchData(false);
+    } catch (err) {
+      console.error('Erro ao excluir solicitação:', err);
+      showAlert('Erro ao excluir solicitação.', 'danger');
     } finally {
       setActionLoading(false);
     }
@@ -537,7 +721,7 @@ export default function PurchasingPanel({ currentUser }) {
     return { bestPrice, bestTime };
   };
 
-  // Finalização da Compra com Automação de Estoque e Financeiro
+  // Finalização da Compra com Automação de Estoque Multi-Item e Financeiro
   const handleFinalizePurchase = async (req, selectedSupplierId) => {
     const { supplierA, supplierB, supplierC } = quoteForm;
     const selectedSupplier = selectedSupplierId === 'A' ? supplierA : selectedSupplierId === 'B' ? supplierB : supplierC;
@@ -568,18 +752,21 @@ export default function PurchasingPanel({ currentUser }) {
         paymentStatus: 'Pendente'
       });
 
-      // 1. Entrada Automática no Estoque
+      // 1. Entrada Automática no Estoque para cada item do pedido
       if (dbService.createStockTransaction) {
-        await dbService.createStockTransaction({
-          itemId: req.productId,
-          itemName: req.productName,
-          quantity: req.quantity,
-          type: 'Entrada',
-          batch: 'NEXAPROCURE-' + Math.random().toString(36).substr(2, 5).toUpperCase(),
-          expiryDate: new Date(Date.now() + 365*24*60*60*1000).toISOString().substring(0, 10),
-          operator: currentUser?.name || 'Compras',
-          notes: `Entrada automática via NexaPROCURE. Fornecedor: ${selectedSupplier.name}`
-        });
+        const reqItems = getRequestItems(req);
+        for (const item of reqItems) {
+          await dbService.createStockTransaction({
+            itemId: item.productId || req.productId,
+            itemName: item.productName || req.productName,
+            quantity: item.quantity,
+            type: 'Entrada',
+            batch: 'NEXAPROCURE-' + Math.random().toString(36).substr(2, 5).toUpperCase(),
+            expiryDate: new Date(Date.now() + 365*24*60*60*1000).toISOString().substring(0, 10),
+            operator: currentUser?.name || 'Compras',
+            notes: `Entrada automática via NexaPROCURE. Fornecedor: ${selectedSupplier.name}`
+          });
+        }
       }
 
       // 2. Lançamento Automático no Contas a Pagar
@@ -592,7 +779,7 @@ export default function PurchasingPanel({ currentUser }) {
           costCenterId: '1.1',
           mesCompetencia: new Date().toISOString().substring(0, 7),
           fornecedor: selectedSupplier.name,
-          descricao: `Compra de ${req.quantity}x ${req.productName}`,
+          descricao: `Compra #${req.code || ''}: ${req.productName}`,
           categoria: 'Insumos',
           valorTotal: parseFloat(selectedSupplier.price) * (req.quantity || 1),
           dataVencimento: dueDate.toISOString().substring(0, 10),
@@ -602,7 +789,7 @@ export default function PurchasingPanel({ currentUser }) {
         });
       }
 
-      showAlert(`Compra de "${req.productName}" finalizada! Entrada gerada no Estoque e no Financeiro.`, 'success');
+      showAlert(`Compra #${req.code || ''} finalizada! Entrada gerada no Estoque e no Financeiro.`, 'success');
       setActiveQuoteId(null);
       fetchData(false);
     } catch (err) {
@@ -688,11 +875,11 @@ export default function PurchasingPanel({ currentUser }) {
 
   const getStatusBadgeColor = (status) => {
     switch (status) {
-      case 'Aguardando Gestor': return { bg: '#fffbeb', text: '#b45309' };
-      case 'Aguardando Diretor': return { bg: '#f0f9ff', text: '#0369a1' };
-      case 'Aguardando Cotação': return { bg: '#eff6ff', text: '#1d4ed8' };
-      case 'Finalizado': return { bg: '#ecfdf5', text: '#047857' };
-      default: return { bg: '#fef2f2', text: '#b91c1c' };
+      case 'Aguardando Gestor': return { bg: '#fffbeb', text: '#b45309', border: '#fde68a' };
+      case 'Aguardando Diretor': return { bg: '#f0f9ff', text: '#0369a1', border: '#bae6fd' };
+      case 'Aguardando Cotação': return { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' };
+      case 'Finalizado': return { bg: '#ecfdf5', text: '#047857', border: '#a7f3d0' };
+      default: return { bg: '#fef2f2', text: '#b91c1c', border: '#fecaca' };
     }
   };
 
@@ -733,7 +920,7 @@ export default function PurchasingPanel({ currentUser }) {
               onClick={handleBatchRequestAllCritical}
               disabled={actionLoading}
               style={styles.batchBtn}
-              title="Gerar solicitação de compras para todos os itens abaixo do mínimo"
+              title="Gerar pedido consolidado para todos os itens abaixo do mínimo"
             >
               <Zap size={18} />
               <span>Solicitação em Lote</span>
@@ -741,18 +928,7 @@ export default function PurchasingPanel({ currentUser }) {
           )}
 
           <button 
-            onClick={() => {
-              setRequestForm({
-                type: 'Reposição',
-                selectedStockId: '',
-                newItemName: '',
-                quantity: 10,
-                unit: 'Unidade',
-                justification: '',
-                sector: 'farmacia'
-              });
-              setShowRequestModal(true);
-            }}
+            onClick={() => handleOpenNewRequest()}
             style={styles.primaryBtn}
           >
             <Plus size={18} />
@@ -1083,122 +1259,497 @@ export default function PurchasingPanel({ currentUser }) {
             </div>
           )}
 
-          {/* TAB 2: SOLICITAÇÕES DE COMPRA */}
+          {/* TAB 2: SOLICITAÇÕES DE COMPRA (COM 3 MODOS DE VISUALIZAÇÃO E MULTI-ITEM) */}
           {activeTab === 'requests' && (
             <div style={styles.listCard}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              {/* Barra Superior da Esteira */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>
-                    📋 Esteira de Solicitações de Compras
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    📋 Esteira de Solicitações
                   </h3>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    Acompanhe o andamento dos pedidos, itens solicitados e aprovações em tempo real.
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                  {/* Filtro Setor/Minhas para Solicitantes */}
                   {isRequesterOnly && (
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                      Acompanhe abaixo o andamento de cada solicitação e as aprovações.
-                    </span>
+                    <div style={styles.segmentedToggle}>
+                      <button
+                        onClick={() => setMyRequestsOnly(false)}
+                        style={{
+                          ...styles.segmentedBtn,
+                          backgroundColor: !myRequestsOnly ? '#0891b2' : 'transparent',
+                          color: !myRequestsOnly ? '#fff' : 'var(--text-secondary)',
+                          fontWeight: !myRequestsOnly ? '700' : '500'
+                        }}
+                      >
+                        Setor
+                      </button>
+                      <button
+                        onClick={() => setMyRequestsOnly(true)}
+                        style={{
+                          ...styles.segmentedBtn,
+                          backgroundColor: myRequestsOnly ? '#0891b2' : 'transparent',
+                          color: myRequestsOnly ? '#fff' : 'var(--text-secondary)',
+                          fontWeight: myRequestsOnly ? '700' : '500'
+                        }}
+                      >
+                        Minhas
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Seletor de Modos de Visualização (Compacta, Normal, Estendida) */}
+                  <div style={styles.viewModeToggle}>
+                    <button
+                      onClick={() => handleSetViewMode('compact')}
+                      style={{
+                        ...styles.viewModeBtn,
+                        backgroundColor: requestsViewMode === 'compact' ? '#0891b2' : 'transparent',
+                        color: requestsViewMode === 'compact' ? '#fff' : 'var(--text-secondary)',
+                        fontWeight: requestsViewMode === 'compact' ? '700' : '500'
+                      }}
+                      title="Visualização Compacta (Tabela Padrão)"
+                    >
+                      <ListFilter size={14} />
+                      <span>Compacta</span>
+                    </button>
+                    <button
+                      onClick={() => handleSetViewMode('normal')}
+                      style={{
+                        ...styles.viewModeBtn,
+                        backgroundColor: requestsViewMode === 'normal' ? '#0891b2' : 'transparent',
+                        color: requestsViewMode === 'normal' ? '#fff' : 'var(--text-secondary)',
+                        fontWeight: requestsViewMode === 'normal' ? '700' : '500'
+                      }}
+                      title="Visualização Normal (Cards)"
+                    >
+                      <Layers size={14} />
+                      <span>Normal</span>
+                    </button>
+                    <button
+                      onClick={() => handleSetViewMode('extended')}
+                      style={{
+                        ...styles.viewModeBtn,
+                        backgroundColor: requestsViewMode === 'extended' ? '#0891b2' : 'transparent',
+                        color: requestsViewMode === 'extended' ? '#fff' : 'var(--text-secondary)',
+                        fontWeight: requestsViewMode === 'extended' ? '700' : '500'
+                      }}
+                      title="Visualização Estendida (Cards Completos com Stepper e Itens)"
+                    >
+                      <Maximize2 size={14} />
+                      <span>Estendida</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Barra de Busca e Filtros Rápidos */}
+              <div style={styles.filterBar}>
+                <div style={styles.searchBox}>
+                  <Search size={18} color="var(--text-secondary)" />
+                  <input 
+                    type="text" 
+                    placeholder="Buscar por código (#SOL), insumo, solicitante ou setor..."
+                    value={requestsSearch}
+                    onChange={(e) => setRequestsSearch(e.target.value)}
+                    style={styles.searchInput}
+                  />
+                  {requestsSearch && (
+                    <button onClick={() => setRequestsSearch('')} style={styles.clearSearchBtn}>×</button>
                   )}
                 </div>
 
-                {isRequesterOnly && (
-                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                    <button
-                      onClick={() => setMyRequestsOnly(false)}
-                      style={{
-                        padding: '0.35rem 0.75rem',
-                        borderRadius: '6px',
-                        border: !myRequestsOnly ? '1.5px solid #0891b2' : '1px solid #cbd5e1',
-                        backgroundColor: !myRequestsOnly ? '#ecfeff' : '#fff',
-                        color: !myRequestsOnly ? '#0891b2' : '#64748b',
-                        fontWeight: '700',
-                        fontSize: '0.8rem',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Todas do Setor
-                    </button>
-                    <button
-                      onClick={() => setMyRequestsOnly(true)}
-                      style={{
-                        padding: '0.35rem 0.75rem',
-                        borderRadius: '6px',
-                        border: myRequestsOnly ? '1.5px solid #0891b2' : '1px solid #cbd5e1',
-                        backgroundColor: myRequestsOnly ? '#ecfeff' : '#fff',
-                        color: myRequestsOnly ? '#0891b2' : '#64748b',
-                        fontWeight: '700',
-                        fontSize: '0.8rem',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Minhas Solicitações
-                    </button>
-                  </div>
-                )}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <select 
+                    value={requestsStatusFilter}
+                    onChange={(e) => setRequestsStatusFilter(e.target.value)}
+                    style={styles.selectInput}
+                  >
+                    <option value="all">🔍 Todos os Status</option>
+                    <option value="Aguardando Gestor">⏳ Aguardando Gestor</option>
+                    <option value="Aguardando Diretor">🔑 Aguardando Diretor</option>
+                    <option value="Aguardando Cotação">💰 Aguardando Cotação</option>
+                    <option value="Finalizado">✅ Finalizado</option>
+                    <option value="Recusado">❌ Recusados</option>
+                  </select>
+
+                  <button onClick={() => fetchData(true)} style={styles.refreshBtn} title="Recarregar">
+                    <RefreshCw size={16} />
+                  </button>
+                </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                {displayedPurchases.length === 0 ? (
-                  <p style={styles.noDataText}>
-                    {myRequestsOnly ? 'Você ainda não possui solicitações registradas.' : 'Nenhuma solicitação de compra registrada para esta filial.'}
+              {/* Conteúdo da Esteira nos 3 Modos */}
+              {displayedPurchases.length === 0 ? (
+                <div style={styles.emptyState}>
+                  <ClipboardList size={36} color="#94a3b8" style={{ margin: '0 auto 0.5rem auto' }} />
+                  <p style={{ fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
+                    Nenhuma solicitação encontrada.
                   </p>
-                ) : (
-                  displayedPurchases.map(req => {
-                    const badge = getStatusBadgeColor(req.status);
-                    return (
-                      <div key={req.id} style={styles.purchaseItem}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
-                          <div>
-                            <strong style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}>{req.productName}</strong>
-                            <span style={{ fontSize: '0.78rem', display: 'block', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                              Quantidade: <strong>{req.quantity} {req.unit || 'un'}</strong> | Solicitante: {req.requesterName} ({req.sector?.toUpperCase()})
-                            </span>
-                            {req.justification && (
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic', display: 'block', marginTop: '0.2rem' }}>
-                                "{req.justification}"
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    {requestsSearch || requestsStatusFilter !== 'all' 
+                      ? 'Tente ajustar os filtros de busca ou status.'
+                      : 'Clique em "+ Nova Solicitação" para criar um novo pedido de insumos.'}
+                  </span>
+                </div>
+              ) : (
+                <>
+                  {/* MODO 1: VISUALIZAÇÃO COMPACTA (PADRÃO ⭐ - TABELA DENSA E EFICIENTE) */}
+                  {requestsViewMode === 'compact' && (
+                    <div style={styles.tableCard}>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr style={styles.theadRow}>
+                            <th style={{ ...styles.th, width: '130px' }}>Código</th>
+                            <th style={{ ...styles.th, width: '110px' }}>Data</th>
+                            <th style={{ ...styles.th, width: '110px' }}>Setor</th>
+                            <th style={styles.th}>Solicitante</th>
+                            <th style={styles.th}>Insumos Solicitados</th>
+                            <th style={{ ...styles.th, width: '150px' }}>Status</th>
+                            <th style={{ ...styles.th, textAlign: 'right', width: '130px' }}>Ações</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayedPurchases.map(req => {
+                            const badge = getStatusBadgeColor(req.status);
+                            const items = getRequestItems(req);
+                            const canEdit = canUserEditRequest(req);
+                            const canDelete = canUserDeleteRequest(req);
+
+                            return (
+                              <tr key={req.id} style={styles.tr}>
+                                <td style={styles.td}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                    <strong style={{ color: '#0891b2', fontSize: '0.85rem' }}>
+                                      {req.code ? `#${req.code}` : `#${req.id.substring(0, 7)}`}
+                                    </strong>
+                                    {req.priority === 'Urgente' && (
+                                      <span style={styles.urgentMiniBadge}>🚨</span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td style={styles.td}>
+                                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                                    {req.createdAt ? new Date(req.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '-'}
+                                  </span>
+                                </td>
+                                <td style={styles.td}>
+                                  <span style={styles.categoryBadge}>
+                                    {req.sector || 'Geral'}
+                                  </span>
+                                </td>
+                                <td style={styles.td}>
+                                  <div style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.82rem' }}>
+                                    {req.requesterName || 'Profissional'}
+                                  </div>
+                                </td>
+                                <td style={styles.td}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                                    {items.slice(0, 2).map((it, idx) => (
+                                      <span key={idx} style={styles.compactItemPill} title={it.specification || it.productName}>
+                                        <strong>{it.quantity}{it.unit || 'un'}</strong> {it.productName}
+                                      </span>
+                                    ))}
+                                    {items.length > 2 && (
+                                      <span style={styles.compactMorePill} onClick={() => handleOpenDetails(req)}>
+                                        +{items.length - 2} mais
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td style={styles.td}>
+                                  <span style={{
+                                    ...styles.statusBadge,
+                                    backgroundColor: badge.bg,
+                                    color: badge.text,
+                                    borderColor: badge.border
+                                  }}>
+                                    {req.status}
+                                  </span>
+                                </td>
+                                <td style={{ ...styles.td, textAlign: 'right' }}>
+                                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleOpenDetails(req)} 
+                                      style={styles.actionIconBtn}
+                                      title="Visualizar Detalhes"
+                                    >
+                                      <Eye size={15} color="#0891b2" />
+                                    </button>
+                                    {canEdit && (
+                                      <button 
+                                        type="button"
+                                        onClick={() => handleOpenEditRequest(req)} 
+                                        style={styles.actionIconBtn}
+                                        title="Editar Solicitação"
+                                      >
+                                        <Edit size={15} color="#d97706" />
+                                      </button>
+                                    )}
+                                    {canDelete && (
+                                      <button 
+                                        type="button"
+                                        onClick={() => handleDeleteRequest(req)} 
+                                        style={{ ...styles.actionIconBtn, color: '#ef4444' }}
+                                        title="Excluir Solicitação"
+                                      >
+                                        <Trash2 size={15} color="#ef4444" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* MODO 2: VISUALIZAÇÃO NORMAL (CARDS MÉDIOS INFORMATIVOS) */}
+                  {requestsViewMode === 'normal' && (
+                    <div style={styles.normalCardsGrid}>
+                      {displayedPurchases.map(req => {
+                        const badge = getStatusBadgeColor(req.status);
+                        const items = getRequestItems(req);
+                        const canEdit = canUserEditRequest(req);
+                        const canDelete = canUserDeleteRequest(req);
+
+                        return (
+                          <div key={req.id} style={styles.normalCard}>
+                            {/* Topo do Card */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                  <strong style={{ color: '#0891b2', fontSize: '0.95rem' }}>
+                                    {req.code ? `#${req.code}` : `#${req.id.substring(0, 7)}`}
+                                  </strong>
+                                  {req.priority === 'Urgente' && (
+                                    <span style={styles.urgentMiniBadge}>🚨 Urgente</span>
+                                  )}
+                                </div>
+                                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'block', marginTop: '0.15rem' }}>
+                                  {req.createdAt ? new Date(req.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '-'}
+                                </span>
+                              </div>
+                              <span style={{
+                                ...styles.statusBadge,
+                                backgroundColor: badge.bg,
+                                color: badge.text,
+                                borderColor: badge.border
+                              }}>
+                                {req.status}
                               </span>
+                            </div>
+
+                            {/* Solicitante e Setor */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '0.45rem 0.65rem', borderRadius: '6px', fontSize: '0.78rem' }}>
+                              <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
+                                👤 {req.requesterName || 'Profissional'}
+                              </span>
+                              <span style={styles.categoryBadge}>
+                                {req.sector || 'Geral'}
+                              </span>
+                            </div>
+
+                            {/* Insumos */}
+                            <div>
+                              <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                                Insumos ({items.length}):
+                              </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginTop: '0.25rem' }}>
+                                {items.slice(0, 3).map((it, idx) => (
+                                  <div key={idx} style={styles.cardItemRow}>
+                                    <span style={{ fontWeight: '700', color: '#0891b2' }}>{it.quantity} {it.unit || 'un'}</span>
+                                    <span style={{ color: 'var(--text-primary)', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {it.productName}
+                                    </span>
+                                  </div>
+                                ))}
+                                {items.length > 3 && (
+                                  <span style={{ fontSize: '0.72rem', color: '#0891b2', fontWeight: '600', cursor: 'pointer' }} onClick={() => handleOpenDetails(req)}>
+                                    +{items.length - 3} outros itens no pedido...
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Justificativa */}
+                            {req.justification && (
+                              <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                "{req.justification}"
+                              </p>
+                            )}
+
+                            {/* Rodapé de Ações */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', borderTop: '1px solid #f1f5f9', marginTop: 'auto' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenDetails(req)}
+                                style={styles.cardDetailBtn}
+                              >
+                                <Eye size={13} />
+                                <span>Detalhes</span>
+                              </button>
+
+                              <div style={{ display: 'flex', gap: '0.35rem' }}>
+                                {canEdit && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditRequest(req)}
+                                    style={styles.cardEditBtn}
+                                    title="Editar Solicitação"
+                                  >
+                                    <Edit size={13} />
+                                    <span>Editar</span>
+                                  </button>
+                                )}
+                                {canDelete && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteRequest(req)}
+                                    style={styles.cardDeleteBtn}
+                                    title="Excluir Solicitação"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* MODO 3: VISUALIZAÇÃO ESTENDIDA (CARDS AMPLOS COM STEPPER E DETALHES COMPLETOS) */}
+                  {requestsViewMode === 'extended' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {displayedPurchases.map(req => {
+                        const badge = getStatusBadgeColor(req.status);
+                        const items = getRequestItems(req);
+                        const canEdit = canUserEditRequest(req);
+                        const canDelete = canUserDeleteRequest(req);
+
+                        return (
+                          <div key={req.id} style={styles.extendedCard}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                  <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)' }}>
+                                    Solicitação #{req.code || req.id.substring(0, 7)}
+                                  </strong>
+                                  <span style={styles.categoryBadge}>{req.sector?.toUpperCase() || 'GERAL'}</span>
+                                  {req.priority === 'Urgente' && (
+                                    <span style={styles.urgentMiniBadge}>🚨 URGENTE</span>
+                                  )}
+                                </div>
+                                <span style={{ fontSize: '0.78rem', display: 'block', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                                  Solicitante: <strong>{req.requesterName}</strong> | Criado em: {req.createdAt ? new Date(req.createdAt).toLocaleString('pt-BR') : '-'}
+                                </span>
+                              </div>
+
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ ...styles.statusBadge, backgroundColor: badge.bg, color: badge.text, borderColor: badge.border }}>
+                                  {req.status}
+                                </span>
+                                {canEdit && (
+                                  <button onClick={() => handleOpenEditRequest(req)} style={styles.cardEditBtn} title="Editar">
+                                    <Edit size={14} /> <span>Editar</span>
+                                  </button>
+                                )}
+                                {canDelete && (
+                                  <button onClick={() => handleDeleteRequest(req)} style={styles.cardDeleteBtn} title="Excluir">
+                                    <Trash2 size={14} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Stepper Timeline Visual */}
+                            <div style={styles.timelineWrapper}>
+                              <div style={styles.timelineTrack}></div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', width: '100%' }}>
+                                {['Solicitado', 'Gestor', 'Diretor', 'Cotação', 'Finalizado'].map((step, idx) => {
+                                  let isDone = false;
+                                  if (step === 'Solicitado') isDone = true;
+                                  if (step === 'Gestor' && ['Aguardando Diretor', 'Aguardando Cotação', 'Finalizado'].includes(req.status)) isDone = true;
+                                  if (step === 'Diretor' && ['Aguardando Cotação', 'Finalizado'].includes(req.status)) isDone = true;
+                                  if (step === 'Cotação' && req.status === 'Finalizado') isDone = true;
+                                  if (step === 'Finalizado' && req.status === 'Finalizado') isDone = true;
+
+                                  return (
+                                    <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                      <div style={{ 
+                                        ...styles.timelineNode, 
+                                        backgroundColor: isDone ? '#10b981' : '#e2e8f0',
+                                        color: isDone ? '#fff' : '#94a3b8'
+                                      }}>
+                                        {idx + 1}
+                                      </div>
+                                      <span style={{ fontSize: '0.65rem', color: isDone ? '#10b981' : 'var(--text-secondary)', fontWeight: '600', marginTop: '0.25rem' }}>
+                                        {step}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Tabela de Itens Integrada no Card */}
+                            <div style={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                                <thead>
+                                  <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                    <th style={{ padding: '0.45rem 0.75rem', textAlign: 'left', color: '#64748b' }}>Insumo</th>
+                                    <th style={{ padding: '0.45rem 0.75rem', textAlign: 'left', color: '#64748b', width: '110px' }}>Tipo</th>
+                                    <th style={{ padding: '0.45rem 0.75rem', textAlign: 'left', color: '#64748b', width: '120px' }}>Quantidade</th>
+                                    <th style={{ padding: '0.45rem 0.75rem', textAlign: 'left', color: '#64748b' }}>Especificação</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {items.map((it, idx) => (
+                                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                      <td style={{ padding: '0.45rem 0.75rem', fontWeight: '700' }}>{it.productName}</td>
+                                      <td style={{ padding: '0.45rem 0.75rem' }}>
+                                        <span style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem', borderRadius: '4px', backgroundColor: it.type === 'Reposição' ? '#ecfeff' : '#fdf4ff', color: it.type === 'Reposição' ? '#0891b2' : '#a21caf', fontWeight: '700' }}>
+                                          {it.type || 'Reposição'}
+                                        </span>
+                                      </td>
+                                      <td style={{ padding: '0.45rem 0.75rem', fontWeight: '700', color: '#0891b2' }}>
+                                        {it.quantity} {it.unit || 'un'}
+                                      </td>
+                                      <td style={{ padding: '0.45rem 0.75rem', color: 'var(--text-secondary)' }}>
+                                        {it.specification || '-'}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            {/* Justificativa */}
+                            {req.justification && (
+                              <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '0.6rem 0.85rem', fontSize: '0.8rem', color: '#92400e', fontStyle: 'italic' }}>
+                                "{req.justification}"
+                              </div>
                             )}
                           </div>
-                          <span style={{ ...styles.statusBadge, backgroundColor: badge.bg, color: badge.text }}>
-                            {req.status}
-                          </span>
-                        </div>
-
-                        {/* Stepper Timeline */}
-                        <div style={styles.timelineWrapper}>
-                          <div style={styles.timelineTrack}></div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', width: '100%' }}>
-                            {['Solicitado', 'Gestor', 'Diretor', 'Cotação', 'Finalizado'].map((step, idx) => {
-                              let isDone = false;
-                              if (step === 'Solicitado') isDone = true;
-                              if (step === 'Gestor' && ['Aguardando Diretor', 'Aguardando Cotação', 'Finalizado'].includes(req.status)) isDone = true;
-                              if (step === 'Diretor' && ['Aguardando Cotação', 'Finalizado'].includes(req.status)) isDone = true;
-                              if (step === 'Cotação' && req.status === 'Finalizado') isDone = true;
-                              if (step === 'Finalizado' && req.status === 'Finalizado') isDone = true;
-
-                              return (
-                                <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                  <div style={{ 
-                                    ...styles.timelineNode, 
-                                    backgroundColor: isDone ? '#10b981' : '#e2e8f0',
-                                    color: isDone ? '#fff' : '#94a3b8'
-                                  }}>
-                                    {idx + 1}
-                                  </div>
-                                  <span style={{ fontSize: '0.65rem', color: isDone ? '#10b981' : 'var(--text-secondary)', fontWeight: '600', marginTop: '0.25rem' }}>
-                                    {step}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
 
-          {/* TAB 3: APROVAÇÕES PENDENTES */}
+          {/* TAB 3: APROVAÇÕES PENDENTES (MULTI-ITEM AWARE) */}
           {activeTab === 'approvals' && (
             <div style={styles.listCard}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.25rem', color: 'var(--text-primary)' }}>
@@ -1210,34 +1761,59 @@ export default function PurchasingPanel({ currentUser }) {
                 ) : (
                   purchases.filter(p => p.status === 'Aguardando Gestor' || p.status === 'Aguardando Diretor').map(req => {
                     const isManagerLevel = req.status === 'Aguardando Gestor';
-                    
+                    const items = getRequestItems(req);
+
                     return (
                       <div key={req.id} style={styles.approvalRow}>
                         <div style={{ flex: 1 }}>
-                          <span style={{ 
-                            fontSize: '0.7rem', 
-                            padding: '0.15rem 0.5rem', 
-                            borderRadius: '6px', 
-                            backgroundColor: isManagerLevel ? '#fffbeb' : '#f0f9ff', 
-                            color: isManagerLevel ? '#b45309' : '#0369a1',
-                            fontWeight: '700',
-                            textTransform: 'uppercase',
-                            marginRight: '0.5rem'
-                          }}>
-                            {req.status}
-                          </span>
-                          <strong style={{ fontSize: '0.95rem' }}>{req.productName}</strong>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                            Quantidade: <strong>{req.quantity} {req.unit || 'un'}</strong> | Setor: <strong>{req.sector?.toUpperCase()}</strong> | Solicitante: {req.requesterName}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <span style={{ 
+                              fontSize: '0.7rem', 
+                              padding: '0.15rem 0.5rem', 
+                              borderRadius: '6px', 
+                              backgroundColor: isManagerLevel ? '#fffbeb' : '#f0f9ff', 
+                              color: isManagerLevel ? '#b45309' : '#0369a1',
+                              fontWeight: '700',
+                              textTransform: 'uppercase'
+                            }}>
+                              {req.status}
+                            </span>
+                            <strong style={{ fontSize: '0.95rem' }}>
+                              {req.code ? `Pedido #${req.code}` : req.productName}
+                            </strong>
+                            <span style={styles.categoryBadge}>{req.sector?.toUpperCase() || 'GERAL'}</span>
                           </div>
+
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+                            Solicitante: <strong>{req.requesterName}</strong> | Total: <strong>{items.length} insumos</strong> ({req.quantity} unidades)
+                          </div>
+
+                          {/* Preview de Itens */}
+                          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.35rem' }}>
+                            {items.map((it, idx) => (
+                              <span key={idx} style={styles.compactItemPill}>
+                                <strong>{it.quantity}{it.unit || 'un'}</strong> {it.productName}
+                              </span>
+                            ))}
+                          </div>
+
                           {req.justification && (
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginTop: '0.25rem', paddingLeft: '0.5rem', borderLeft: '2px solid #e5e7eb' }}>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginTop: '0.35rem', paddingLeft: '0.5rem', borderLeft: '2px solid #e5e7eb' }}>
                               "{req.justification}"
                             </div>
                           )}
                         </div>
 
                         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDetails(req)}
+                            style={styles.cardDetailBtn}
+                          >
+                            <Eye size={14} />
+                            <span>Ver</span>
+                          </button>
+
                           {isManagerLevel ? (
                             <>
                               <button onClick={() => handleApproveManager(req, false)} style={styles.rejectBtn}>Recusar</button>
@@ -1422,159 +1998,28 @@ export default function PurchasingPanel({ currentUser }) {
         </>
       )}
 
-      {/* MODAL: NOVA / EDITAR SOLICITAÇÃO */}
-      {showRequestModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ShoppingBag size={20} color="#0891b2" />
-                <h3 style={styles.modalTitle}>Nova Solicitação de Compra</h3>
-              </div>
-              <button onClick={() => setShowRequestModal(false)} style={styles.modalCloseBtn}>×</button>
-            </div>
+      {/* MODAL: NOVA / EDITAR SOLICITAÇÃO (MULTI-ITEM) */}
+      <PurchaseRequestModal 
+        show={showRequestModal}
+        onClose={() => { setShowRequestModal(false); setEditingRequest(null); }}
+        onSave={handleSaveRequest}
+        editingRequest={editingRequest}
+        inventoryItems={currentInventoryItems}
+        currentUser={user}
+        actionLoading={actionLoading}
+      />
 
-            <form onSubmit={handleCreateRequest} style={styles.modalForm}>
-              <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Tipo</label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => setRequestForm(prev => ({ ...prev, type: 'Reposição' }))}
-                    style={{
-                      ...styles.catSelectBtn,
-                      backgroundColor: requestForm.type === 'Reposição' ? '#0891b2' : '#f3f4f6',
-                      color: requestForm.type === 'Reposição' ? '#fff' : 'var(--text-primary)',
-                      flex: 1
-                    }}
-                  >
-                    📦 Reposição de Estoque
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRequestForm(prev => ({ ...prev, type: 'Novo' }))}
-                    style={{
-                      ...styles.catSelectBtn,
-                      backgroundColor: requestForm.type === 'Novo' ? '#0891b2' : '#f3f4f6',
-                      color: requestForm.type === 'Novo' ? '#fff' : 'var(--text-primary)',
-                      flex: 1
-                    }}
-                  >
-                    ✨ Novo Item / Extra
-                  </button>
-                </div>
-              </div>
-
-              {requestForm.type === 'Reposição' ? (
-                <div style={styles.formGroup}>
-                  <label style={styles.formLabel}>Produto</label>
-                  <select 
-                    value={requestForm.selectedStockId}
-                    onChange={(e) => {
-                      const sel = inventoryItems.find(i => i.id === e.target.value);
-                      setRequestForm(prev => ({ 
-                        ...prev, 
-                        selectedStockId: e.target.value,
-                        unit: sel?.unit || 'Unidade'
-                      }));
-                    }}
-                    style={styles.modalInput}
-                    required
-                  >
-                    <option value="">Selecione o insumo cadastrado...</option>
-                    {inventoryItems.map(itm => (
-                      <option key={itm.id} value={itm.id}>
-                        {itm.name} (Saldo: {itm.currentStock || 0} / Mín: {itm.minStock || 0})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div style={styles.formGroup}>
-                  <label style={styles.formLabel}>Nome</label>
-                  <input 
-                    type="text" 
-                    placeholder="Descrição completa do item..."
-                    value={requestForm.newItemName}
-                    onChange={(e) => setRequestForm(prev => ({ ...prev, newItemName: e.target.value }))}
-                    style={styles.modalInput}
-                    required
-                  />
-                </div>
-              )}
-
-              <div style={styles.formRow}>
-                <div style={{ flex: 1 }}>
-                  <label style={styles.formLabel}>Quantidade</label>
-                  <input 
-                    type="number" 
-                    min="1"
-                    value={requestForm.quantity}
-                    onChange={(e) => setRequestForm(prev => ({ ...prev, quantity: e.target.value }))}
-                    style={styles.modalInput}
-                    required
-                  />
-                </div>
-
-                <div style={{ flex: 1 }}>
-                  <label style={styles.formLabel}>Unidade</label>
-                  <input 
-                    type="text" 
-                    placeholder="Un, Frasco, Cx..."
-                    value={requestForm.unit}
-                    onChange={(e) => setRequestForm(prev => ({ ...prev, unit: e.target.value }))}
-                    style={styles.modalInput}
-                  />
-                </div>
-
-                <div style={{ flex: 1 }}>
-                  <label style={styles.formLabel}>Setor</label>
-                  <select 
-                    value={requestForm.sector}
-                    onChange={(e) => setRequestForm(prev => ({ ...prev, sector: e.target.value }))}
-                    style={styles.modalInput}
-                  >
-                    <option value="farmacia">Farmácia</option>
-                    <option value="enfermagem">Enfermagem</option>
-                    <option value="manutencao">Manutenção</option>
-                    <option value="recepcao">Recepção</option>
-                    <option value="ti">TI</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Justificativa</label>
-                <textarea 
-                  rows={3}
-                  placeholder="Explique o motivo da compra ou necessidade clínica..."
-                  value={requestForm.justification}
-                  onChange={(e) => setRequestForm(prev => ({ ...prev, justification: e.target.value }))}
-                  style={styles.modalTextarea}
-                  required
-                />
-              </div>
-
-              <div style={styles.modalActions}>
-                <button 
-                  type="button" 
-                  onClick={() => setShowRequestModal(false)}
-                  style={styles.modalCancelBtn}
-                >
-                  Cancelar
-                </button>
-                <button 
-                  type="submit" 
-                  disabled={actionLoading}
-                  style={styles.modalSubmitBtn}
-                >
-                  {actionLoading ? 'Enviando...' : 'Enviar Solicitação'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* MODAL: DETALHES COMPLETOS DA SOLICITAÇÃO */}
+      <PurchaseDetailsModal 
+        show={showDetailsModal}
+        onClose={() => { setShowDetailsModal(false); setSelectedRequestDetails(null); }}
+        request={selectedRequestDetails}
+        onEdit={handleOpenEditRequest}
+        onDelete={handleDeleteRequest}
+        canEdit={canUserEditRequest(selectedRequestDetails)}
+        canDelete={canUserDeleteRequest(selectedRequestDetails)}
+        getStatusBadgeColor={getStatusBadgeColor}
+      />
 
       {/* MODAL: FORNECEDOR */}
       {showSupplierModal && (
@@ -2011,7 +2456,42 @@ const styles = {
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    color: '#64748b'
+  },
+  segmentedToggle: {
+    display: 'inline-flex',
+    backgroundColor: '#f1f5f9',
+    padding: '3px',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0'
+  },
+  segmentedBtn: {
+    border: 'none',
+    padding: '0.35rem 0.75rem',
+    borderRadius: '6px',
+    fontSize: '0.78rem',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  viewModeToggle: {
+    display: 'inline-flex',
+    backgroundColor: '#f1f5f9',
+    padding: '3px',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    gap: '2px'
+  },
+  viewModeBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    border: 'none',
+    padding: '0.35rem 0.65rem',
+    borderRadius: '6px',
+    fontSize: '0.78rem',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
   },
   tableCard: {
     backgroundColor: '#fff',
@@ -2050,7 +2530,8 @@ const styles = {
     backgroundColor: '#f3f4f6',
     color: 'var(--text-primary)',
     padding: '0.15rem 0.5rem',
-    borderRadius: '6px'
+    borderRadius: '6px',
+    display: 'inline-block'
   },
   stockStatusBadge: {
     fontSize: '0.78rem',
@@ -2091,28 +2572,133 @@ const styles = {
     border: '1px solid var(--border-color)',
     boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
   },
-  formCard: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    padding: '1.25rem',
-    border: '1px solid var(--border-color)',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
-  },
-  purchaseItem: {
-    backgroundColor: '#f9fafb',
-    border: '1px solid #e5e7eb',
-    borderRadius: '10px',
-    padding: '1rem 1.25rem'
-  },
   statusBadge: {
     fontSize: '0.75rem',
     fontWeight: '700',
     padding: '0.2rem 0.6rem',
-    borderRadius: '6px'
+    borderRadius: '6px',
+    border: '1px solid transparent',
+    display: 'inline-block',
+    whiteSpace: 'nowrap'
+  },
+  urgentMiniBadge: {
+    fontSize: '0.68rem',
+    fontWeight: '800',
+    backgroundColor: '#fef2f2',
+    color: '#ef4444',
+    border: '1px solid #fecaca',
+    padding: '0.1rem 0.35rem',
+    borderRadius: '4px'
+  },
+  compactItemPill: {
+    fontSize: '0.75rem',
+    padding: '0.15rem 0.5rem',
+    backgroundColor: '#f1f5f9',
+    color: '#334155',
+    borderRadius: '6px',
+    border: '1px solid #e2e8f0',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    whiteSpace: 'nowrap'
+  },
+  compactMorePill: {
+    fontSize: '0.72rem',
+    padding: '0.15rem 0.45rem',
+    backgroundColor: '#ecfeff',
+    color: '#0891b2',
+    borderRadius: '6px',
+    border: '1px solid #cffafe',
+    fontWeight: '700',
+    cursor: 'pointer'
+  },
+  actionIconBtn: {
+    background: 'none',
+    border: '1px solid #e2e8f0',
+    borderRadius: '6px',
+    padding: '0.35rem',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.15s ease'
+  },
+  normalCardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    gap: '1rem'
+  },
+  normalCard: {
+    backgroundColor: '#fff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '1.1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+  },
+  cardItemRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    fontSize: '0.78rem',
+    backgroundColor: '#f8fafc',
+    padding: '0.25rem 0.5rem',
+    borderRadius: '4px'
+  },
+  cardDetailBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    padding: '0.35rem 0.65rem',
+    borderRadius: '6px',
+    border: '1px solid #cffafe',
+    backgroundColor: '#ecfeff',
+    color: '#0891b2',
+    fontWeight: '700',
+    fontSize: '0.75rem',
+    cursor: 'pointer'
+  },
+  cardEditBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    padding: '0.35rem 0.65rem',
+    borderRadius: '6px',
+    border: '1px solid #fed7aa',
+    backgroundColor: '#fffbeb',
+    color: '#d97706',
+    fontWeight: '700',
+    fontSize: '0.75rem',
+    cursor: 'pointer'
+  },
+  cardDeleteBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0.35rem 0.55rem',
+    borderRadius: '6px',
+    border: '1px solid #fecaca',
+    backgroundColor: '#fef2f2',
+    color: '#ef4444',
+    fontWeight: '700',
+    fontSize: '0.75rem',
+    cursor: 'pointer'
+  },
+  extendedCard: {
+    backgroundColor: '#f9fafb',
+    border: '1px solid #e5e7eb',
+    borderRadius: '12px',
+    padding: '1.25rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem'
   },
   timelineWrapper: {
     position: 'relative',
-    marginTop: '1.25rem',
+    marginTop: '0.5rem',
     paddingTop: '0.5rem'
   },
   timelineTrack: {
@@ -2163,43 +2749,6 @@ const styles = {
     border: '1px solid #fecaca',
     padding: '0.45rem 0.85rem',
     borderRadius: '6px',
-    fontSize: '0.82rem',
-    fontWeight: '600',
-    cursor: 'pointer'
-  },
-  quoteSelectableItem: {
-    padding: '0.75rem 1rem',
-    borderRadius: '8px',
-    border: '1px solid var(--border-color)',
-    borderLeftWidth: '4px',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease'
-  },
-  supplierBlock: {
-    backgroundColor: '#f8fafc',
-    padding: '0.75rem',
-    borderRadius: '8px',
-    border: '1px solid #e2e8f0'
-  },
-  metricsWrapper: {
-    display: 'flex',
-    gap: '1rem',
-    padding: '0.75rem 1rem',
-    backgroundColor: '#f0fdf4',
-    border: '1px solid #bbf7d0',
-    borderRadius: '8px',
-    marginBottom: '1rem'
-  },
-  metricItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.65rem'
-  },
-  decisionBtn: {
-    color: '#fff',
-    border: 'none',
-    padding: '0.55rem 1.15rem',
-    borderRadius: '8px',
     fontSize: '0.82rem',
     fontWeight: '600',
     cursor: 'pointer'
@@ -2295,26 +2844,6 @@ const styles = {
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box'
-  },
-  modalTextarea: {
-    padding: '0.55rem 0.75rem',
-    borderRadius: '8px',
-    border: '1px solid #d1d5db',
-    fontSize: '0.85rem',
-    outline: 'none',
-    width: '100%',
-    boxSizing: 'border-box',
-    resize: 'vertical'
-  },
-  catSelectBtn: {
-    padding: '0.55rem 0.75rem',
-    borderRadius: '8px',
-    border: '1px solid #d1d5db',
-    fontSize: '0.82rem',
-    fontWeight: '600',
-    cursor: 'pointer',
-    textAlign: 'center',
-    transition: 'all 0.15s ease'
   },
   modalActions: {
     display: 'flex',

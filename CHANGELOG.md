@@ -1,3 +1,20 @@
+## [v4.7.77] - 28 de Agosto, 2026
+### Módulo de Compras (NexaPROCURE) — Pedidos Multi-Itens, 3 Modos de Visualização & Gestão do Solicitante
+- **Pedidos Consolidados com Múltiplos Insumos:**
+  - O solicitante agora monta um pedido de compras completo com múltiplos insumos em uma única solicitação (`#SOL-YYYY-XXX`), podendo mesclar itens cadastrados no estoque e novos insumos livres.
+- **3 Modos de Visualização na Esteira (Compacta como Padrão):**
+  - **Compacta (Padrão ⭐):** Visualização em tabela densa, com código, data, setor, solicitante, resumo dos insumos solicitados, status e ações rápidas.
+  - **Normal:** Grade de cards informativos com lista de insumos e detalhes do pedido.
+  - **Estendida:** Cards amplos com a esteira/stepper de 5 fases de aprovação e tabela interna de itens com especificações completas.
+- **Gestão do Solicitante (Edição e Exclusão):**
+  - Permite ao solicitante editar seus pedidos ou excluí-los enquanto a solicitação estiver em análise inicial (`Aguardando Gestor`) ou caso tenha sido recusada.
+- **Modal de Detalhes Completo:**
+  - Janela modal para inspeção profunda de todos os insumos, quantidades, unidades, especificações e histórico cronológico de aprovações.
+- **Busca & Filtros da Esteira:**
+  - Busca textual por código, insumo, solicitante ou setor, combinada com filtro rápido por status da esteira.
+
+---
+
 ## [v4.7.75] - 28 de Agosto, 2026
 ### Módulo de Compras (NexaPROCURE) — Controle de Acesso por Perfis (RBAC) & Segregação de Visualização
 - **Identificação Inteligente de Perfis e Papéis:**

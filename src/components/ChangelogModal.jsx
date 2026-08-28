@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.77',
+      date: '28/08/2026',
+      title: 'Módulo de Compras (NexaPROCURE) — Pedidos Multi-Itens, 3 Modos de Visualização & Gestão do Solicitante',
+      description: 'Evolução estrutural do fluxo de requisições de compras: criação de pedidos consolidados com múltiplos insumos (estoque ou novos itens), 3 modos de visualização da esteira (Compacta como padrão, Normal em cards e Estendida com timeline e tabelas) e permissão de edição/exclusão pelo solicitante.',
+      changes: [
+        { type: 'Pedidos Multi-Itens', text: 'Permite ao solicitante montar um pedido completo com múltiplos insumos em uma única solicitação (#SOL-YYYY-XXX), mesclando produtos do estoque e novos itens livres.' },
+        { type: '3 Modos de Visualização', text: 'Seletor de exibição na esteira: Compacta (tabela densa e rápida, padrão), Normal (cards médios) e Estendida (cards amplos com stepper e grade detalhada de itens).' },
+        { type: 'Gestão do Solicitante', text: 'Possibilidade de editar ou excluir a solicitação enquanto estiver em análise inicial (Aguardando Gestor) ou se recusada.' },
+        { type: 'Modal de Detalhes', text: 'Visualização aprofundada de todos os insumos solicitados, quantidades, unidades, especificações e histórico completo de aprovações.' },
+        { type: 'Filtros & Busca', text: 'Busca textual unificada por código, insumo, solicitante ou setor com filtro rápido por status da esteira.' }
+      ]
+    },
+    {
       version: 'v4.7.75',
       date: '28/08/2026',
       title: 'Módulo de Compras (NexaPROCURE) — Controle de Acesso por Perfis (RBAC) & Segregação de Visualização',

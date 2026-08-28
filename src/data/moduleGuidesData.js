@@ -1513,6 +1513,18 @@ export const MODULE_GUIDES = {
     color: '#0891b2',
     recursos: [
       {
+        title: 'Pedidos Multi-Itens',
+        desc: 'Criação de pedidos consolidados contendo múltiplos insumos em uma única solicitação (#SOL-YYYY-XXX), mesclando produtos do estoque e novos itens livres.'
+      },
+      {
+        title: '3 Modos de Visualização da Esteira',
+        desc: 'Alternância ágil entre modo Compacto (tabela densa, padrão), Normal (cards médios) e Estendido (cards completos com esteira de 5 fases e tabela interna de itens).'
+      },
+      {
+        title: 'Gestão & Autonomia do Solicitante',
+        desc: 'Possibilidade de editar ou excluir solicitações enquanto estiverem em análise inicial (Aguardando Gestor) ou em caso de recusa.'
+      },
+      {
         title: 'Cotações Web com Fornecedores',
         desc: 'Criação de rodadas de cotação digital com geração de links exclusivos e tokens criptografados para preenchimento direto pelos fornecedores via celular ou computador.'
       },
@@ -1534,61 +1546,55 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Controle de Perfis & Alçadas (RBAC)',
-        desc: 'Segregação inteligente de visualização: Comprador/Admin visualiza todas as rotinas; Gestor/Diretor visualiza solicitações e aprovações; Colaboradores/Solicitantes operam exclusivamente a esteira de pedidos.'
-      },
-      {
-        title: 'Esteira de Alçadas e Aprovações',
-        desc: 'Fluxo hierárquico com aprovação de Gestor de Setor e Diretor Financeiro para autorização prévia de verba.'
+        desc: 'Segregação inteligente de visualização: Comprador/Admin visualiza todas as rotinas; Gestor/Diretor visualiza solicitações e aprovações; Colaboradores/Solicitantes operam a esteira de pedidos.'
       }
     ],
     tutorial: [
       {
-        title: 'Como Solicitar Insumos como Colaborador',
+        title: 'Como Criar um Pedido Multi-Itens',
         steps: [
-          'Acesse o NexaPROCURE. Como solicitante, sua tela exibirá diretamente a Esteira de Solicitações.',
-          'Clique no botão "+ Nova Solicitação".',
-          'Escolha se deseja Reposição de item de catálogo ou Novo Produto.',
-          'Informe a Quantidade, a Justificativa da compra e o Setor solicitante.',
-          'Clique em "Salvar". O pedido entrará na fila de aprovação do seu Gestor imediato.'
+          'Acesse o NexaPROCURE e clique no botão "+ Nova Solicitação".',
+          'Selecione o Setor demandante e informe a Prioridade (Normal ou Urgente) e a Justificativa.',
+          'No quadro de insumos, escolha entre "Estoque" ou "Novo", informe a Quantidade, Unidade e Especificação e clique em "+ Adicionar".',
+          'Repita o passo anterior para quantos insumos desejar incluir no mesmo pedido.',
+          'Confira a tabela de itens e clique em "Enviar Solicitação".'
         ]
       },
       {
-        title: 'Como Criar uma Cotação Web',
+        title: 'Como Alternar os Modos de Visualização e Editar',
+        steps: [
+          'No topo da Esteira de Solicitações, utilize os botões "Compacta", "Normal" e "Estendida" para escolher a densidade de visualização.',
+          'Para inspecionar todos os itens e a linha do tempo, clique no ícone de visualização (👁️) da linha ou card.',
+          'Para corrigir itens ou justificativas, clique no botão de edição (✏️) disponível enquanto o status for "Aguardando Gestor".'
+        ]
+      },
+      {
+        title: 'Como Criar uma Cotação Web e Homologar',
         steps: [
           'Acesse a aba "Cotações" no NexaPROCURE e clique no botão "+ Nova Cotação".',
-          'Informe o Título, o Prazo Limite (data e hora de encerramento) e observações comerciais.',
-          'Adicione os insumos desejados através da busca ou clique em "⚡ Importar Estoque Crítico" para puxar itens abaixo do mínimo.',
-          'Selecione os fornecedores convidados e clique em "Publicar Cotação e Gerar Links".',
-          'Na janela de compartilhamento, clique em "WhatsApp" para disparar a mensagem pronta com o link seguro para cada representante.'
-        ]
-      },
-      {
-        title: 'Como Analisar o Mapa Comparativo e Homologar',
-        steps: [
-          'Na aba "Cotações", localize a cotação desejada e clique em "Comparativo".',
-          'Visualize a matriz de preços: os menores valores unitários recebem destaque automático em verde com troféu 🏆.',
-          'Analise as condições de Frete (CIF/FOB), Prazo de Entrega e Condição de Pagamento de cada proposta.',
-          'Escolha a estratégia de homologação ("Menor Preço por Item" ou "Pedido Global") e clique em "Homologar e Fechar Cotação".',
-          'O sistema emite a Ordem de Compra oficial e integra o pedido à esteira de recebimento.'
+          'Informe o Título, o Prazo Limite e adicione os insumos desejados através da busca ou importando o estoque crítico.',
+          'Selecione os fornecedores e clique em "Publicar Cotação e Gerar Links".',
+          'Dispare os links via WhatsApp para os representantes comerciais.',
+          'No "Mapa Comparativo", analise as propostas e clique em "Homologar" para fechar a compra.'
         ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'Quem tem acesso completo ao módulo de compras?',
-        resposta: 'O Administrador do sistema (contato@techcosta.net), os usuários com perfil "admin" ou "compras", e colaboradores com setor de compras atribuído. Os demais usuários visualizam apenas suas solicitações.'
+        pergunta: 'Posso incluir produtos do estoque e itens novos no mesmo pedido?',
+        resposta: 'Sim. O novo formulário multi-itens permite mesclar insumos já cadastrados no almoxarifado/farmácia e novos produtos de texto livre em uma única solicitação.'
+      },
+      {
+        pergunta: 'Até quando posso editar ou excluir minha solicitação?',
+        resposta: 'Você pode editar ou excluir sua solicitação enquanto ela estiver com status "Aguardando Gestor" ou caso tenha sido recusada. Após aprovada pelo gestor/diretoria ou em cotação, a edição é bloqueada para garantir a rastreabilidade.'
+      },
+      {
+        pergunta: 'Qual o modo de visualização padrão da esteira?',
+        resposta: 'O modo Compacto é o padrão inicial por ser mais rápido e organizado. Sua preferência fica salva automaticamente no navegador.'
       },
       {
         pergunta: 'O fornecedor precisa ter login ou senha para enviar os preços?',
         resposta: 'Não. O sistema utiliza a tecnologia de Token Seguro (Magic Link). Cada fornecedor recebe um link exclusivo criptografado que abre diretamente a tela da cotação sem exigir cadastro prévio.'
-      },
-      {
-        pergunta: 'Um fornecedor consegue ver os preços ou os nomes dos concorrentes?',
-        resposta: 'Não. O portal opera em sigilo absoluto (Blind Bidding). O fornecedor visualiza apenas os itens solicitados pela clínica e seus próprios campos de digitação.'
-      },
-      {
-        pergunta: 'O que acontece quando o prazo limite da cotação expira?',
-        resposta: 'O portal bloqueia automaticamente novas submissões ou alterações de lances, garantindo a integridade e transparência da rodada para a equipe de compras.'
       }
     ]
   }
