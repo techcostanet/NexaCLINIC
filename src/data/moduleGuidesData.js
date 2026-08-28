@@ -1533,11 +1533,25 @@ export const MODULE_GUIDES = {
         desc: 'Cálculo dinâmico de saldo Físico, Reservado, Disponível e em Trânsito para sugestão automática de compras baseada no estoque mínimo.'
       },
       {
+        title: 'Controle de Perfis & Alçadas (RBAC)',
+        desc: 'Segregação inteligente de visualização: Comprador/Admin visualiza todas as rotinas; Gestor/Diretor visualiza solicitações e aprovações; Colaboradores/Solicitantes operam exclusivamente a esteira de pedidos.'
+      },
+      {
         title: 'Esteira de Alçadas e Aprovações',
         desc: 'Fluxo hierárquico com aprovação de Gestor de Setor e Diretor Financeiro para autorização prévia de verba.'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Solicitar Insumos como Colaborador',
+        steps: [
+          'Acesse o NexaPROCURE. Como solicitante, sua tela exibirá diretamente a Esteira de Solicitações.',
+          'Clique no botão "+ Nova Solicitação".',
+          'Escolha se deseja Reposição de item de catálogo ou Novo Produto.',
+          'Informe a Quantidade, a Justificativa da compra e o Setor solicitante.',
+          'Clique em "Salvar". O pedido entrará na fila de aprovação do seu Gestor imediato.'
+        ]
+      },
       {
         title: 'Como Criar uma Cotação Web',
         steps: [
@@ -1560,6 +1574,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Quem tem acesso completo ao módulo de compras?',
+        resposta: 'O Administrador do sistema (contato@techcosta.net), os usuários com perfil "admin" ou "compras", e colaboradores com setor de compras atribuído. Os demais usuários visualizam apenas suas solicitações.'
+      },
       {
         pergunta: 'O fornecedor precisa ter login ou senha para enviar os preços?',
         resposta: 'Não. O sistema utiliza a tecnologia de Token Seguro (Magic Link). Cada fornecedor recebe um link exclusivo criptografado que abre diretamente a tela da cotação sem exigir cadastro prévio.'

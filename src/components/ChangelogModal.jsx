@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.75',
+      date: '28/08/2026',
+      title: 'Módulo de Compras (NexaPROCURE) — Controle de Acesso por Perfis (RBAC) & Segregação de Visualização',
+      description: 'Implementação de segregação inteligente de perfis e alçadas no módulo de compras: Comprador/Admin visualiza todas as abas e ferramentas de cotação/fornecedores; Gestor/Diretor visualiza solicitações e aprovações; Colaboradores/Solicitantes operam exclusivamente a esteira de pedidos com acompanhamento em tempo real.',
+      changes: [
+        { type: 'Segregação de Perfis', text: 'Identificação inteligente por e-mail, cargo, perfil e setores atribuídos do usuário no sistema.' },
+        { type: 'Visão do Solicitante', text: 'Interface limpa e simplificada para colaboradores comuns (apenas a Esteira de Solicitações), ocultando abas avançadas de reposição crítica, cotações e fornecedores.' },
+        { type: 'Filtro Minhas Solicitações', text: 'Botões rápidos para alternar entre "Todas do Setor" e "Minhas Solicitações" para fácil acompanhamento de status.' },
+        { type: 'Rastreabilidade Completa', text: 'Gravação automática do nome e e-mail do colaborador solicitante no histórico do pedido.' },
+        { type: 'Segurança & Alçadas', text: 'Proteção contra acessos indevidos e redirecionamento dinâmico de abas conforme as permissões do usuário.' }
+      ]
+    },
+    {
       version: 'v4.7.73',
       date: '28/08/2026',
       title: 'Módulo de Compras (NexaPROCURE) — Sistema de Cotações Web & Portal B2B para Fornecedores',

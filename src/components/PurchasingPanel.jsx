@@ -115,10 +115,64 @@ export default function PurchasingPanel({ currentUser }) {
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
   };
 
+  // Permissões e Níveis de Acesso no NexaPROCURE (RBAC)
+  const isPurchasingAdmin = useMemo(() => {
+    if (!user) return false;
+    const email = (user.email || '').toLowerCase().trim();
+    const role = (user.role || '').toLowerCase().trim();
+    const sectors = (user.sectors || user.setores || []).map(s => String(s).toLowerCase());
+    const jobTitle = (user.jobTitle || user.cargo || '').toLowerCase();
+
+    if (email === 'contato@techcosta.net' || role === 'admin' || user.isAdmin === true) return true;
+    if (role === 'compras' || role === 'suprimentos' || role === 'almoxarifado') return true;
+    if (sectors.includes('compras') || sectors.includes('suprimentos')) return true;
+    if (jobTitle.includes('comprador') || jobTitle.includes('compras') || jobTitle.includes('suprimentos') || jobTitle.includes('almoxarife')) return true;
+    if (user.permissions?.purchasing === 'write') return true;
+    return false;
+  }, [user]);
+
+  const isPurchasingApprover = useMemo(() => {
+    if (!user) return false;
+    if (isPurchasingAdmin) return true;
+    const role = (user.role || '').toLowerCase().trim();
+    const jobTitle = (user.jobTitle || user.cargo || '').toLowerCase();
+
+    if (['manager', 'gestor', 'diretoria', 'director', 'coordenador', 'supervisor'].includes(role)) return true;
+    if (jobTitle.includes('gerente') || jobTitle.includes('gestor') || jobTitle.includes('coordenador') || jobTitle.includes('supervisor') || jobTitle.includes('diretor') || jobTitle.includes('responsavel tecnico')) return true;
+    return false;
+  }, [user, isPurchasingAdmin]);
+
+  const isRequesterOnly = !isPurchasingAdmin && !isPurchasingApprover;
+
+  // Redirecionamento automático de aba baseado no perfil
+  useEffect(() => {
+    if (isRequesterOnly && activeTab !== 'requests') {
+      setActiveTab('requests');
+    } else if (!isPurchasingAdmin && isPurchasingApprover && ['reposition', 'quotes', 'suppliers'].includes(activeTab)) {
+      setActiveTab('requests');
+    }
+  }, [isRequesterOnly, isPurchasingApprover, isPurchasingAdmin, activeTab]);
+
+  const [myRequestsOnly, setMyRequestsOnly] = useState(false);
+
   // Filtragem de Dados pela Unidade Ativa
   const currentPurchases = useMemo(() => filterByActiveUnit(purchases), [purchases, activeUnitId]);
   const currentInventoryItems = useMemo(() => filterByActiveUnit(inventoryItems), [inventoryItems, activeUnitId]);
   const currentRequisitions = useMemo(() => filterByActiveUnit(requisitions), [requisitions, activeUnitId]);
+
+  // Solicitações Exibidas (com filtro Minhas Solicitações para solicitantes)
+  const displayedPurchases = useMemo(() => {
+    let list = currentPurchases;
+    if (isRequesterOnly && myRequestsOnly && user) {
+      const userEmail = (user.email || '').toLowerCase().trim();
+      const userName = (user.name || '').toLowerCase().trim();
+      list = list.filter(p => 
+        (p.requesterEmail && p.requesterEmail.toLowerCase() === userEmail) ||
+        (p.requesterName && p.requesterName.toLowerCase() === userName)
+      );
+    }
+    return list;
+  }, [currentPurchases, isRequesterOnly, myRequestsOnly, user]);
 
   // Itens com Cálculo dos 4 Saldos (Físico, Reservado, Disponível, Trânsito)
   const enrichedInventoryItems = useMemo(() => {
@@ -380,13 +434,13 @@ export default function PurchasingPanel({ currentUser }) {
         unit: requestForm.unit || 'Unidade',
         justification: requestForm.justification,
         sector: requestForm.sector,
-        requesterName: currentUser?.name || 'Funcionário',
-        requesterEmail: currentUser?.email || 'funcionario@clinica.com',
+        requesterName: user?.name || currentUser?.name || 'Profissional',
+        requesterEmail: user?.email || currentUser?.email || '',
         status: 'Aguardando Gestor',
         unitId: targetUnitId,
         unit: targetUnit,
         history: [
-          { status: 'Aguardando Gestor', date: new Date().toISOString(), message: 'Solicitação de compra criada.' }
+          { status: 'Aguardando Gestor', date: new Date().toISOString(), message: `Solicitação criada por ${user?.name || 'Profissional'}.` }
         ]
       };
 
@@ -665,14 +719,16 @@ export default function PurchasingPanel({ currentUser }) {
           <div>
             <h1 style={styles.heroTitle}>NexaPROCURE</h1>
             <p style={styles.heroSubtitle}>
-              Gestão de compras hospitalares, reposição de estoque crítico, cotações triplas e fornecedores.
+              {isRequesterOnly 
+                ? 'Central de solicitações de insumos e acompanhamento de status em tempo real.'
+                : 'Gestão de compras hospitalares, reposição de estoque crítico, cotações triplas e fornecedores.'}
             </p>
           </div>
         </div>
 
         <div style={styles.heroActions}>
           <UnitSelector compact showLabel={false} />
-          {activeTab === 'reposition' && criticalItems.length > 0 && (
+          {isPurchasingAdmin && activeTab === 'reposition' && criticalItems.length > 0 && (
             <button 
               onClick={handleBatchRequestAllCritical}
               disabled={actionLoading}
@@ -705,84 +761,94 @@ export default function PurchasingPanel({ currentUser }) {
         </div>
       </div>
 
-      {/* Abas com Contadores Dinâmicos */}
-      <div style={styles.tabsWrapper}>
-        <button 
-          onClick={() => setActiveTab('reposition')} 
-          style={{
-            ...styles.tabBtn,
-            color: activeTab === 'reposition' ? '#0891b2' : 'var(--text-secondary)',
-            borderBottomColor: activeTab === 'reposition' ? '#0891b2' : 'transparent',
-            fontWeight: activeTab === 'reposition' ? '700' : '600'
-          }}
-        >
-          <Zap size={16} color={activeTab === 'reposition' ? '#0891b2' : 'currentColor'} />
-          <span>Reposição</span>
-          {criticalItems.length > 0 && (
-            <span style={styles.badgeDanger}>{criticalItems.length}</span>
+      {/* Abas com Controle de Acesso (RBAC) */}
+      {!isRequesterOnly && (
+        <div style={styles.tabsWrapper}>
+          {isPurchasingAdmin && (
+            <button 
+              onClick={() => setActiveTab('reposition')} 
+              style={{
+                ...styles.tabBtn,
+                color: activeTab === 'reposition' ? '#0891b2' : 'var(--text-secondary)',
+                borderBottomColor: activeTab === 'reposition' ? '#0891b2' : 'transparent',
+                fontWeight: activeTab === 'reposition' ? '700' : '600'
+              }}
+            >
+              <Zap size={16} color={activeTab === 'reposition' ? '#0891b2' : 'currentColor'} />
+              <span>Reposição</span>
+              {criticalItems.length > 0 && (
+                <span style={styles.badgeDanger}>{criticalItems.length}</span>
+              )}
+            </button>
           )}
-        </button>
 
-        <button 
-          onClick={() => setActiveTab('requests')} 
-          style={{
-            ...styles.tabBtn,
-            color: activeTab === 'requests' ? '#0891b2' : 'var(--text-secondary)',
-            borderBottomColor: activeTab === 'requests' ? '#0891b2' : 'transparent',
-            fontWeight: activeTab === 'requests' ? '700' : '600'
-          }}
-        >
-          <ClipboardList size={16} color={activeTab === 'requests' ? '#0891b2' : 'currentColor'} />
-          <span>Solicitações</span>
-          <span style={styles.badgeNeutral}>{currentPurchases.length}</span>
-        </button>
+          <button 
+            onClick={() => setActiveTab('requests')} 
+            style={{
+              ...styles.tabBtn,
+              color: activeTab === 'requests' ? '#0891b2' : 'var(--text-secondary)',
+              borderBottomColor: activeTab === 'requests' ? '#0891b2' : 'transparent',
+              fontWeight: activeTab === 'requests' ? '700' : '600'
+            }}
+          >
+            <ClipboardList size={16} color={activeTab === 'requests' ? '#0891b2' : 'currentColor'} />
+            <span>Solicitações</span>
+            <span style={styles.badgeNeutral}>{currentPurchases.length}</span>
+          </button>
 
-        <button 
-          onClick={() => setActiveTab('approvals')} 
-          style={{
-            ...styles.tabBtn,
-            color: activeTab === 'approvals' ? '#0891b2' : 'var(--text-secondary)',
-            borderBottomColor: activeTab === 'approvals' ? '#0891b2' : 'transparent',
-            fontWeight: activeTab === 'approvals' ? '700' : '600'
-          }}
-        >
-          <CheckSquare size={16} color={activeTab === 'approvals' ? '#0891b2' : 'currentColor'} />
-          <span>Aprovações</span>
-          {pendingApprovalsCount > 0 && (
-            <span style={styles.badgeWarning}>{pendingApprovalsCount}</span>
+          {isPurchasingApprover && (
+            <button 
+              onClick={() => setActiveTab('approvals')} 
+              style={{
+                ...styles.tabBtn,
+                color: activeTab === 'approvals' ? '#0891b2' : 'var(--text-secondary)',
+                borderBottomColor: activeTab === 'approvals' ? '#0891b2' : 'transparent',
+                fontWeight: activeTab === 'approvals' ? '700' : '600'
+              }}
+            >
+              <CheckSquare size={16} color={activeTab === 'approvals' ? '#0891b2' : 'currentColor'} />
+              <span>Aprovações</span>
+              {pendingApprovalsCount > 0 && (
+                <span style={styles.badgeWarning}>{pendingApprovalsCount}</span>
+              )}
+            </button>
           )}
-        </button>
 
-        <button 
-          onClick={() => setActiveTab('quotes')} 
-          style={{
-            ...styles.tabBtn,
-            color: activeTab === 'quotes' ? '#0891b2' : 'var(--text-secondary)',
-            borderBottomColor: activeTab === 'quotes' ? '#0891b2' : 'transparent',
-            fontWeight: activeTab === 'quotes' ? '700' : '600'
-          }}
-        >
-          <DollarSign size={16} color={activeTab === 'quotes' ? '#0891b2' : 'currentColor'} />
-          <span>Cotações</span>
-          {pendingQuotesCount > 0 && (
-            <span style={styles.badgeInfo}>{pendingQuotesCount}</span>
+          {isPurchasingAdmin && (
+            <>
+              <button 
+                onClick={() => setActiveTab('quotes')} 
+                style={{
+                  ...styles.tabBtn,
+                  color: activeTab === 'quotes' ? '#0891b2' : 'var(--text-secondary)',
+                  borderBottomColor: activeTab === 'quotes' ? '#0891b2' : 'transparent',
+                  fontWeight: activeTab === 'quotes' ? '700' : '600'
+                }}
+              >
+                <DollarSign size={16} color={activeTab === 'quotes' ? '#0891b2' : 'currentColor'} />
+                <span>Cotações</span>
+                {pendingQuotesCount > 0 && (
+                  <span style={styles.badgeInfo}>{pendingQuotesCount}</span>
+                )}
+              </button>
+
+              <button 
+                onClick={() => setActiveTab('suppliers')} 
+                style={{
+                  ...styles.tabBtn,
+                  color: activeTab === 'suppliers' ? '#0891b2' : 'var(--text-secondary)',
+                  borderBottomColor: activeTab === 'suppliers' ? '#0891b2' : 'transparent',
+                  fontWeight: activeTab === 'suppliers' ? '700' : '600'
+                }}
+              >
+                <Building2 size={16} color={activeTab === 'suppliers' ? '#0891b2' : 'currentColor'} />
+                <span>Fornecedores</span>
+                <span style={styles.badgeNeutral}>{suppliers.length}</span>
+              </button>
+            </>
           )}
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('suppliers')} 
-          style={{
-            ...styles.tabBtn,
-            color: activeTab === 'suppliers' ? '#0891b2' : 'var(--text-secondary)',
-            borderBottomColor: activeTab === 'suppliers' ? '#0891b2' : 'transparent',
-            fontWeight: activeTab === 'suppliers' ? '700' : '600'
-          }}
-        >
-          <Building2 size={16} color={activeTab === 'suppliers' ? '#0891b2' : 'currentColor'} />
-          <span>Fornecedores</span>
-          <span style={styles.badgeNeutral}>{suppliers.length}</span>
-        </button>
-      </div>
+        </div>
+      )}
 
       {loading ? (
         <div style={styles.emptyState}>
@@ -1020,17 +1086,61 @@ export default function PurchasingPanel({ currentUser }) {
           {/* TAB 2: SOLICITAÇÕES DE COMPRA */}
           {activeTab === 'requests' && (
             <div style={styles.listCard}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>
-                  📋 Esteira de Solicitações de Compras
-                </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>
+                    📋 Esteira de Solicitações de Compras
+                  </h3>
+                  {isRequesterOnly && (
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                      Acompanhe abaixo o andamento de cada solicitação e as aprovações.
+                    </span>
+                  )}
+                </div>
+
+                {isRequesterOnly && (
+                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                    <button
+                      onClick={() => setMyRequestsOnly(false)}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '6px',
+                        border: !myRequestsOnly ? '1.5px solid #0891b2' : '1px solid #cbd5e1',
+                        backgroundColor: !myRequestsOnly ? '#ecfeff' : '#fff',
+                        color: !myRequestsOnly ? '#0891b2' : '#64748b',
+                        fontWeight: '700',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Todas do Setor
+                    </button>
+                    <button
+                      onClick={() => setMyRequestsOnly(true)}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '6px',
+                        border: myRequestsOnly ? '1.5px solid #0891b2' : '1px solid #cbd5e1',
+                        backgroundColor: myRequestsOnly ? '#ecfeff' : '#fff',
+                        color: myRequestsOnly ? '#0891b2' : '#64748b',
+                        fontWeight: '700',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Minhas Solicitações
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                {purchases.length === 0 ? (
-                  <p style={styles.noDataText}>Nenhuma solicitação de compra registrada.</p>
+                {displayedPurchases.length === 0 ? (
+                  <p style={styles.noDataText}>
+                    {myRequestsOnly ? 'Você ainda não possui solicitações registradas.' : 'Nenhuma solicitação de compra registrada para esta filial.'}
+                  </p>
                 ) : (
-                  purchases.map(req => {
+                  displayedPurchases.map(req => {
                     const badge = getStatusBadgeColor(req.status);
                     return (
                       <div key={req.id} style={styles.purchaseItem}>

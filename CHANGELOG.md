@@ -1,3 +1,18 @@
+## [v4.7.75] - 28 de Agosto, 2026
+### Módulo de Compras (NexaPROCURE) — Controle de Acesso por Perfis (RBAC) & Segregação de Visualização
+- **Identificação Inteligente de Perfis e Papéis:**
+  - Segregação automática e em cascata por e-mail (`contato@techcosta.net`), papéis (`admin`, `compras`, `gestor`, `professional`), setores atribuídos e cargo no RH.
+- **Visão Simplificada do Colaborador / Solicitante:**
+  - Usuários comuns (equipe assistencial, enfermagem, recepção, psicologia, nutrição, etc.) visualizam exclusivamente a esteira de pedidos, ocultando abas avançadas de reposição crítica, cotações e fornecedores.
+- **Filtro Rápido de Solicitações:**
+  - Alternância facilitada entre "Todas do Setor" e "Minhas Solicitações" para acompanhamento ágil do andamento de aprovações.
+- **Rastreabilidade de Pedidos:**
+  - Registro automático de nome e e-mail do autor em cada solicitação e no histórico da esteira.
+- **Segurança de Acesso e Redirecionamento Dinâmico:**
+  - Prevenção de acessos forçados a abas administrativas e redirecionamento instantâneo.
+
+---
+
 ## [v4.7.73] - 28 de Agosto, 2026
 ### Módulo de Compras (NexaPROCURE) — Sistema de Cotações Web & Portal B2B para Fornecedores
 - **Cotações Web e E-Procurement:**
