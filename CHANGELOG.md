@@ -1,3 +1,25 @@
+## [v4.7.82] - 28 de Agosto, 2026
+### Módulo de Compras (NexaPROCURE) — Ordem de Compra Oficial (PO), Provisão no Contas a Pagar, Saving & Curva ABC
+- **Emissão e Envio da Ordem de Compra Oficial (PO / Purchase Order):**
+  - Geração de documento timbrado e padronizado de Ordem de Compra hospitalar (`#OC-YYYY-XXX`) para cada fornecedor vencedor após homologação (pedido único ou compra dividida/split).
+  - Espelho com dados da unidade compradora, fornecedor, CNPJ, itens premiados, marcas, quantidades, valores unitários e totais, frete (CIF/FOB), prazo de entrega e condições de pagamento.
+  - Seções formais de instruções fiscais/ANVISA, assinatura do comprador e autorização da diretoria.
+  - Botão de Impressão A4 limpa (`@media print`), disparo direto no WhatsApp do representante comercial e cópia rápida de resumo.
+- **Integração Automática com o Módulo Financeiro (`Contas a Pagar`):**
+  - No momento da homologação, o sistema gera automaticamente uma provisão de despesa no Contas a Pagar (`accounts_payable`).
+  - Registro parametrizado com status `Pendente`, `isProvision: true`, centro de custo de Farmácia/Almoxarifado, categoria de insumos e data de vencimento calculada a partir do prazo negociado.
+- **Indicador de Saving (Economia em R$ e %):**
+  - Cálculo em tempo real da economia gerada em relação à última compra histórica por insumo e total da cotação.
+  - KPI Card de Economia Total (Saving) no topo da aba de cotações e badges verdes de economia no Mapa Comparativo de Preços.
+- **Auditoria de Histórico de Preços & Inflação:**
+  - Novo modal interativo de auditoria de preços ao clicar em qualquer insumo no catálogo ou no mapa de cotações.
+  - Exibição de menor preço histórico, preço médio ponderado, maior preço pago e linha do tempo com percentuais de variação (economia/aumento).
+- **Classificação Curva ABC no Estoque de Reposição:**
+  - Classificação inteligente de todos os insumos em **Classe A** (80% do valor financeiro), **Classe B** (15%) e **Classe C** (5%).
+  - Filtro por classe na aba de Reposição e badges visuais estilizados para tomada de decisão estratégica de suprimentos.
+
+---
+
 ## [v4.7.80] - 28 de Agosto, 2026
 ### Módulo Compras / Cotação Web (NexaPROCURE) — Busca Alfabética por Digitação de Insumos & Layout Responsivo com Rodapé Fixo
 - **Busca por Digitação em Ordem Alfabética:**

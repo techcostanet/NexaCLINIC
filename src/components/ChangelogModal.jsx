@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.82',
+      date: '28/08/2026',
+      title: 'Módulo de Compras (NexaPROCURE) — Ordem de Compra Oficial (PO), Provisão no Contas a Pagar, Saving & Curva ABC',
+      description: 'Implementação do trio estratégico de compras: emissão e espelho oficial de Ordem de Compra (PO) em PDF timbrado e WhatsApp, lançamento automático de provisão financeira no Contas a Pagar ao homologar cotações, e indicadores de Saving (Economia em R$ e %), Curva ABC e Histórico de Preços por insumo.',
+      changes: [
+        { type: 'Ordem de Compra Oficial (PO)', text: 'Geração e visualização de Ordem de Compra timbrada hospitalar com dados da filial, fornecedor, itens homologados, condições comerciais, regras fiscais/ANVISA, botão de impressão A4 limpa e envio instantâneo via WhatsApp.' },
+        { type: 'Integração Financeira', text: 'Lançamento automático de provisão de despesa no módulo Contas a Pagar ao homologar a cotação, com valor total, centro de custo, vencimento projetado pelo prazo acordado e vínculo rastreável da OC.' },
+        { type: 'Indicador de Saving', text: 'Cálculo de economia obtida em relação à última compra por insumo e total acumulado (R$ e %) com KPI card em destaque e badges no Mapa Comparativo.' },
+        { type: 'Histórico de Preços & Inflação', text: 'Modal de consulta e auditoria de oscilação de preços de qualquer insumo ao clicar no seu nome, com menor valor histórico, média praticada e linha do tempo de cotações e pedidos anteriores.' },
+        { type: 'Classificação Curva ABC', text: 'Classificação automática de todos os insumos em Classe A (80% do valor), Classe B (15%) e Classe C (5%) na aba de Reposição, com filtros dinâmicos e badges de impacto financeiro.' }
+      ]
+    },
+    {
       version: 'v4.7.80',
       date: '28/08/2026',
       title: 'Módulo Compras / Cotação Web (NexaPROCURE) — Busca Alfabética por Digitação de Insumos & Layout Responsivo com Rodapé Fixo',

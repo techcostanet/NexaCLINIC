@@ -4,10 +4,12 @@ import {
   ExternalLink, Copy, Send, Check, Eye, Trash2, Award, Printer, 
   FileText, Truck, DollarSign, Package, ArrowUpDown, ChevronRight,
   Filter, Layers, X, Calendar, Share2, ChevronDown, CheckSquare,
-  Square, Sparkles
+  Square, Sparkles, TrendingUp, TrendingDown, BarChart3
 } from 'lucide-react';
 import { dbService } from '../../firebase';
-import { generateQuoteToken, generateQuotationCode } from '../../services/firebase/purchasingService';
+import { generateQuoteToken, generateQuotationCode, generatePurchaseOrderCode } from '../../services/firebase/purchasingService';
+import PurchaseOrderModal from './PurchaseOrderModal';
+import PriceHistoryModal from './PriceHistoryModal';
 
 const normalizeText = (str) => {
   return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
@@ -82,6 +84,10 @@ export default function WebQuotationsTab({
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderToView, setOrderToView] = useState(null);
 
+  // Price History Modal
+  const [showPriceHistoryModal, setShowPriceHistoryModal] = useState(false);
+  const [selectedItemForPriceHistory, setSelectedItemForPriceHistory] = useState(null);
+
   useEffect(() => {
     loadQuotations();
   }, []);
@@ -97,6 +103,11 @@ export default function WebQuotationsTab({
       setLoading(false);
     }
   };
+
+  // Economia Global (Saving) acumulada nas cotações homologadas
+  const totalGlobalSavings = useMemo(() => {
+    return quotations.reduce((acc, q) => acc + (parseFloat(q.totalSavingsAmount) || 0), 0);
+  }, [quotations]);
 
   // Itens de Estoque estritamente em Ordem Alfabética
   const sortedInventoryItems = useMemo(() => {
@@ -458,7 +469,7 @@ export default function WebQuotationsTab({
     window.open(whatsappUrl, '_blank');
   };
 
-  // Homologate Quotation
+  // Homologate Quotation with Purchase Order Generation & Financial Provision
   const handleHomologateQuotation = async () => {
     if (!activeQuotation) return;
     if (responses.length === 0) {
@@ -466,28 +477,265 @@ export default function WebQuotationsTab({
       return;
     }
 
-    if (!window.confirm('Deseja realmente homologar esta cotação e emitir o Pedido de Compra?')) {
+    if (!window.confirm('Deseja realmente homologar esta cotação, emitir as Ordens de Compra (PO) e gerar a provisão no Contas a Pagar?')) {
       return;
     }
 
     setActionLoading(true);
     try {
       let winningSupplierName = '';
+      const generatedOrders = [];
+      let quotationTotalSavings = 0;
+
       if (homologationMode === 'single') {
-        const foundResp = responses.find(r => (r.supplierId || r.supplierName) === selectedSingleSupplierId);
-        winningSupplierName = foundResp ? foundResp.supplierName : selectedSingleSupplierId;
+        const winningResp = responses.find(r => (r.supplierId || r.supplierName) === selectedSingleSupplierId) || responses[0];
+        winningSupplierName = winningResp ? winningResp.supplierName : selectedSingleSupplierId;
+        const matchingSupplier = suppliers.find(s => s.id === winningResp.supplierId || s.name === winningResp.supplierName) || {};
+
+        let totalItemsAmount = 0;
+        let totalOrderSavings = 0;
+
+        const orderItems = (activeQuotation.items || []).map(item => {
+          const offer = (winningResp.items || []).find(oi => oi.itemId === item.id);
+          const unitPrice = offer && offer.available ? parseFloat(offer.unitPrice) || 0 : 0;
+          const totalPrice = unitPrice * (parseFloat(item.quantity) || 1);
+          totalItemsAmount += totalPrice;
+
+          const lastPrice = parseFloat(item.lastPricePaid) || 0;
+          if (lastPrice > 0 && unitPrice < lastPrice) {
+            totalOrderSavings += (lastPrice - unitPrice) * (parseFloat(item.quantity) || 1);
+          }
+
+          return {
+            id: 'poi_' + Date.now() + Math.random().toString(36).substr(2, 4),
+            itemId: item.id,
+            productId: item.productId || '',
+            productName: item.productName,
+            specification: item.specification || '',
+            brand: offer?.brand || '',
+            quantity: parseFloat(item.quantity) || 1,
+            unit: item.unit || 'un',
+            unitPrice: unitPrice,
+            totalPrice: totalPrice,
+            lastPricePaid: lastPrice
+          };
+        });
+
+        const freightVal = parseFloat(winningResp.freightValue) || 0;
+        const grandTotal = totalItemsAmount + freightVal;
+        quotationTotalSavings = totalOrderSavings;
+
+        const leadDays = parseInt(winningResp.leadTimeDays) || 3;
+        const deliveryDate = new Date();
+        deliveryDate.setDate(deliveryDate.getDate() + leadDays);
+
+        const dueDate = new Date(deliveryDate);
+        dueDate.setDate(dueDate.getDate() + 28); // Default Boleto 28 dias
+
+        const orderCode = generatePurchaseOrderCode(quotations.length + generatedOrders.length);
+        const payableRefId = 'PAY-' + Math.random().toString(36).substr(2, 7).toUpperCase();
+
+        // 1. Lançamento Automático no Contas a Pagar
+        if (dbService.saveAccountsPayable) {
+          await dbService.saveAccountsPayable({
+            id: payableRefId,
+            unit: activeQuotation.unit || 'Betim',
+            unitId: activeQuotation.unitId || 'betim',
+            costCenterId: '1.1',
+            costCenter: 'Almoxarifado & Farmácia',
+            mesCompetencia: new Date().toISOString().substring(0, 7),
+            fornecedor: winningResp.supplierName,
+            cnpj: winningResp.cnpj || matchingSupplier.cnpj || '',
+            descricao: `OC #${orderCode} - Cotação #${activeQuotation.code} (${orderItems.length} insumos)`,
+            categoria: 'MatMed / Insumos',
+            valorTotal: grandTotal,
+            dataVencimento: dueDate.toISOString().substring(0, 10),
+            formaPagamento: winningResp.paymentTerm || 'Boleto',
+            status: 'Pendente',
+            origemModulo: 'NexaPROCURE',
+            isProvision: true,
+            quotationCode: activeQuotation.code,
+            purchaseOrderCode: orderCode,
+            notes: `Provisão gerada automaticamente na homologação da cotação #${activeQuotation.code}. Fornecedor: ${winningResp.supplierName}.`
+          });
+        }
+
+        generatedOrders.push({
+          id: 'po_' + Date.now(),
+          code: orderCode,
+          quotationId: activeQuotation.id,
+          quotationCode: activeQuotation.code,
+          supplierId: winningResp.supplierId || matchingSupplier.id || '',
+          supplierName: winningResp.supplierName,
+          tradeName: matchingSupplier.tradeName || winningResp.supplierName,
+          cnpj: winningResp.cnpj || matchingSupplier.cnpj || '',
+          supplierContact: winningResp.contactName || matchingSupplier.contactPerson || '',
+          supplierPhone: winningResp.contactPhone || matchingSupplier.phone || '',
+          supplierEmail: winningResp.contactEmail || matchingSupplier.email || '',
+          unitId: activeQuotation.unitId || 'betim',
+          unit: activeQuotation.unit || 'Betim',
+          buyerName: activeQuotation.buyerName || currentUser?.name || 'Comprador',
+          buyerEmail: activeQuotation.buyerEmail || currentUser?.email || '',
+          status: 'Emitido',
+          freightType: winningResp.freightType || 'CIF',
+          freightValue: freightVal,
+          paymentTerm: winningResp.paymentTerm || 'Boleto 28 dias',
+          leadTimeDays: leadDays,
+          estimatedDeliveryDate: deliveryDate.toISOString().substring(0, 10),
+          totalItemsAmount: totalItemsAmount,
+          totalGrandAmount: grandTotal,
+          savingsAmount: totalOrderSavings,
+          payableId: payableRefId,
+          observations: winningResp.observations || '',
+          items: orderItems,
+          createdAt: new Date().toISOString()
+        });
+
+      } else {
+        // Homologação Split (Menor preço por item entre vários fornecedores)
+        winningSupplierName = 'Compra Dividida (Split)';
+        const supplierGroups = {}; // supplierKey -> items[]
+
+        (activeQuotation.items || []).forEach(item => {
+          const chosenSupplierKey = itemSplitAwards[item.id];
+          const resp = responses.find(r => (r.supplierId || r.supplierName) === chosenSupplierKey) || responses[0];
+          if (!resp) return;
+
+          const sKey = resp.supplierId || resp.supplierName;
+          if (!supplierGroups[sKey]) {
+            supplierGroups[sKey] = {
+              response: resp,
+              supplier: suppliers.find(s => s.id === resp.supplierId || s.name === resp.supplierName) || {},
+              items: []
+            };
+          }
+
+          const offer = (resp.items || []).find(oi => oi.itemId === item.id);
+          const unitPrice = offer && offer.available ? parseFloat(offer.unitPrice) || 0 : 0;
+          const totalPrice = unitPrice * (parseFloat(item.quantity) || 1);
+          const lastPrice = parseFloat(item.lastPricePaid) || 0;
+
+          supplierGroups[sKey].items.push({
+            id: 'poi_' + Date.now() + Math.random().toString(36).substr(2, 4),
+            itemId: item.id,
+            productId: item.productId || '',
+            productName: item.productName,
+            specification: item.specification || '',
+            brand: offer?.brand || '',
+            quantity: parseFloat(item.quantity) || 1,
+            unit: item.unit || 'un',
+            unitPrice: unitPrice,
+            totalPrice: totalPrice,
+            lastPricePaid: lastPrice
+          });
+        });
+
+        // Generate PO for each winning split supplier
+        let orderCounter = 0;
+        for (const sKey of Object.keys(supplierGroups)) {
+          const group = supplierGroups[sKey];
+          const resp = group.response;
+          const matchingSupp = group.supplier;
+
+          const totalItemsAmount = group.items.reduce((acc, it) => acc + it.totalPrice, 0);
+          const totalOrderSavings = group.items.reduce((acc, it) => {
+            if (it.lastPricePaid > 0 && it.unitPrice < it.lastPricePaid) {
+              return acc + ((it.lastPricePaid - it.unitPrice) * it.quantity);
+            }
+            return acc;
+          }, 0);
+          quotationTotalSavings += totalOrderSavings;
+
+          const freightVal = parseFloat(resp.freightValue) || 0;
+          const grandTotal = totalItemsAmount + freightVal;
+
+          const leadDays = parseInt(resp.leadTimeDays) || 3;
+          const deliveryDate = new Date();
+          deliveryDate.setDate(deliveryDate.getDate() + leadDays);
+
+          const dueDate = new Date(deliveryDate);
+          dueDate.setDate(dueDate.getDate() + 28);
+
+          const orderCode = generatePurchaseOrderCode(quotations.length + orderCounter);
+          orderCounter++;
+          const payableRefId = 'PAY-' + Math.random().toString(36).substr(2, 7).toUpperCase();
+
+          // Lançamento Automático no Contas a Pagar
+          if (dbService.saveAccountsPayable) {
+            await dbService.saveAccountsPayable({
+              id: payableRefId,
+              unit: activeQuotation.unit || 'Betim',
+              unitId: activeQuotation.unitId || 'betim',
+              costCenterId: '1.1',
+              costCenter: 'Almoxarifado & Farmácia',
+              mesCompetencia: new Date().toISOString().substring(0, 7),
+              fornecedor: resp.supplierName,
+              cnpj: resp.cnpj || matchingSupp.cnpj || '',
+              descricao: `OC #${orderCode} - Cotação #${activeQuotation.code} (${group.items.length} insumos)`,
+              categoria: 'Insumos Hospitalares',
+              valorTotal: grandTotal,
+              dataVencimento: dueDate.toISOString().substring(0, 10),
+              formaPagamento: resp.paymentTerm || 'Boleto',
+              status: 'Pendente',
+              origemModulo: 'NexaPROCURE',
+              isProvision: true,
+              quotationCode: activeQuotation.code,
+              purchaseOrderCode: orderCode,
+              notes: `Provisão gerada automaticamente na homologação split da cotação #${activeQuotation.code}. Fornecedor: ${resp.supplierName}.`
+            });
+          }
+
+          generatedOrders.push({
+            id: 'po_' + Date.now() + '_' + orderCounter,
+            code: orderCode,
+            quotationId: activeQuotation.id,
+            quotationCode: activeQuotation.code,
+            supplierId: resp.supplierId || matchingSupp.id || '',
+            supplierName: resp.supplierName,
+            tradeName: matchingSupp.tradeName || resp.supplierName,
+            cnpj: resp.cnpj || matchingSupp.cnpj || '',
+            supplierContact: resp.contactName || matchingSupp.contactPerson || '',
+            supplierPhone: resp.contactPhone || matchingSupp.phone || '',
+            supplierEmail: resp.contactEmail || matchingSupp.email || '',
+            unitId: activeQuotation.unitId || 'betim',
+            unit: activeQuotation.unit || 'Betim',
+            buyerName: activeQuotation.buyerName || currentUser?.name || 'Comprador',
+            buyerEmail: activeQuotation.buyerEmail || currentUser?.email || '',
+            status: 'Emitido',
+            freightType: resp.freightType || 'CIF',
+            freightValue: freightVal,
+            paymentTerm: resp.paymentTerm || 'Boleto 28 dias',
+            leadTimeDays: leadDays,
+            estimatedDeliveryDate: deliveryDate.toISOString().substring(0, 10),
+            totalItemsAmount: totalItemsAmount,
+            totalGrandAmount: grandTotal,
+            savingsAmount: totalOrderSavings,
+            payableId: payableRefId,
+            observations: resp.observations || '',
+            items: group.items,
+            createdAt: new Date().toISOString()
+          });
+        }
       }
 
       await dbService.updateWebQuotation(activeQuotation.id, {
         status: 'Homologada',
         winningSupplierId: homologationMode === 'single' ? selectedSingleSupplierId : undefined,
-        winningSupplierName: homologationMode === 'single' ? winningSupplierName : 'Compra Dividida (Split)',
-        winningSplits: homologationMode === 'split' ? itemSplitAwards : undefined
+        winningSupplierName: winningSupplierName,
+        winningSplits: homologationMode === 'split' ? itemSplitAwards : undefined,
+        purchaseOrders: generatedOrders,
+        totalSavingsAmount: quotationTotalSavings
       });
 
       setShowComparisonModal(false);
       await loadQuotations();
-      alert('Cotação homologada com sucesso! O Pedido de Compra Oficial foi emitido.');
+
+      if (generatedOrders.length > 0) {
+        setOrderToView(generatedOrders[0]);
+        setShowOrderModal(true);
+      }
+
+      alert(`Cotação homologada com sucesso!\n\n📄 ${generatedOrders.length} Ordem(ns) de Compra gerada(s).\n💰 Provisão financeira lançada no Contas a Pagar.\n🏆 Economia total obtida: ${quotationTotalSavings.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`);
     } catch (err) {
       console.error('Erro ao homologar cotação:', err);
       alert('Erro ao homologar cotação.');
@@ -548,7 +796,7 @@ export default function WebQuotationsTab({
         </button>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards com Indicador de Saving */}
       <div style={styles.kpiGrid}>
         <div style={styles.kpiCard}>
           <span style={styles.kpiLabel}>Total</span>
@@ -570,6 +818,15 @@ export default function WebQuotationsTab({
           <span style={{ ...styles.kpiLabel, color: '#16a34a' }}>Homologadas</span>
           <strong style={{ ...styles.kpiValue, color: '#16a34a' }}>
             {quotations.filter(q => q.status === 'Homologada').length}
+          </strong>
+        </div>
+        <div style={{ ...styles.kpiCard, backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <TrendingDown size={14} color="#16a34a" />
+            <span style={{ ...styles.kpiLabel, color: '#15803d' }}>Economia (Saving)</span>
+          </div>
+          <strong style={{ ...styles.kpiValue, color: '#16a34a' }}>
+            {totalGlobalSavings > 0 ? totalGlobalSavings.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00'}
           </strong>
         </div>
       </div>
@@ -658,7 +915,50 @@ export default function WebQuotationsTab({
                     </td>
 
                     <td style={{ ...styles.td, textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end' }}>
+                      <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        {/* Botão de Ordem de Compra se Homologada */}
+                        {q.status === 'Homologada' && (
+                          <button 
+                            onClick={() => {
+                              if (q.purchaseOrders && q.purchaseOrders.length > 0) {
+                                setOrderToView(q.purchaseOrders[0]);
+                                setShowOrderModal(true);
+                              } else {
+                                const fallbackOrder = {
+                                  code: `OC-${q.code}`,
+                                  quotationCode: q.code,
+                                  supplierName: q.winningSupplierName || 'Fornecedor Homologado',
+                                  unit: q.unit,
+                                  buyerName: q.buyerName,
+                                  status: 'Emitido',
+                                  paymentTerm: 'Boleto 28 dias',
+                                  freightType: 'CIF',
+                                  leadTimeDays: 3,
+                                  items: (q.items || []).map(i => ({
+                                    ...i,
+                                    unitPrice: i.lastPricePaid || 10,
+                                    totalPrice: (i.lastPricePaid || 10) * (i.quantity || 1)
+                                  })),
+                                  totalGrandAmount: (q.items || []).reduce((acc, it) => acc + ((it.lastPricePaid || 10) * (it.quantity || 1)), 0),
+                                  createdAt: q.updatedAt || q.createdAt
+                                };
+                                setOrderToView(fallbackOrder);
+                                setShowOrderModal(true);
+                              }
+                            }}
+                            title="Visualizar e Imprimir Ordem de Compra Oficial (PO)" 
+                            style={{
+                              ...styles.actionBtnPrimary,
+                              backgroundColor: '#dcfce7',
+                              color: '#15803d',
+                              borderColor: '#bbf7d0'
+                            }}
+                          >
+                            <FileText size={14} />
+                            <span>Pedido (OC)</span>
+                          </button>
+                        )}
+
                         <button 
                           onClick={() => handleOpenComparison(q)} 
                           title="Abrir Mapa Comparativo de Preços" 
@@ -1316,8 +1616,9 @@ export default function WebQuotationsTab({
                           <th style={{ ...styles.th, minWidth: '220px', position: 'sticky', left: 0, backgroundColor: '#f8fafc', zIndex: 2 }}>
                             Insumo Solicitado
                           </th>
-                          <th style={{ ...styles.th, width: '100px', textAlign: 'center' }}>Qtd</th>
+                          <th style={{ ...styles.th, width: '90px', textAlign: 'center' }}>Qtd</th>
                           <th style={{ ...styles.th, width: '110px', textAlign: 'right' }}>Última Compra</th>
+                          <th style={{ ...styles.th, width: '120px', textAlign: 'center', backgroundColor: '#f0fdf4', color: '#16a34a' }}>Economia</th>
                           
                           {/* Suppliers Columns */}
                           {responses.map(resp => (
@@ -1341,13 +1642,33 @@ export default function WebQuotationsTab({
                             }
                           });
 
+                          const lastPrice = parseFloat(item.lastPricePaid) || 0;
+                          let itemSaving = 0;
+                          let itemSavingPct = 0;
+                          if (lastPrice > 0 && lowestPrice < lastPrice && lowestPrice < Infinity) {
+                            itemSaving = (lastPrice - lowestPrice) * (parseFloat(item.quantity) || 1);
+                            itemSavingPct = ((lastPrice - lowestPrice) / lastPrice) * 100;
+                          }
+
                           return (
                             <tr key={item.id} style={styles.trRow}>
                               <td style={{ ...styles.td, position: 'sticky', left: 0, backgroundColor: '#fff', zIndex: 1 }}>
-                                <strong style={{ fontSize: '0.85rem', color: '#0f172a' }}>{item.productName}</strong>
-                                {item.specification && (
-                                  <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>{item.specification}</span>
-                                )}
+                                <div 
+                                  onClick={() => {
+                                    setSelectedItemForPriceHistory(item);
+                                    setShowPriceHistoryModal(true);
+                                  }}
+                                  style={{ cursor: 'pointer' }}
+                                  title="Clique para abrir histórico detalhado de preços deste insumo"
+                                >
+                                  <strong style={{ fontSize: '0.85rem', color: '#0284c7', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    {item.productName}
+                                    <BarChart3 size={13} color="#0284c7" />
+                                  </strong>
+                                  {item.specification && (
+                                    <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block' }}>{item.specification}</span>
+                                  )}
+                                </div>
                               </td>
 
                               <td style={{ ...styles.td, textAlign: 'center', fontWeight: '700' }}>
@@ -1355,7 +1676,19 @@ export default function WebQuotationsTab({
                               </td>
 
                               <td style={{ ...styles.td, textAlign: 'right', fontSize: '0.82rem', color: '#64748b' }}>
-                                {item.lastPricePaid ? item.lastPricePaid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                                {lastPrice > 0 ? lastPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                              </td>
+
+                              <td style={{ ...styles.td, textAlign: 'center', backgroundColor: '#f0fdf4' }}>
+                                {itemSaving > 0 ? (
+                                  <span style={{ fontSize: '0.74rem', color: '#15803d', fontWeight: '800', backgroundColor: '#dcfce7', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
+                                    💰 -{itemSaving.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} ({itemSavingPct.toFixed(0)}%)
+                                  </span>
+                                ) : lastPrice > 0 ? (
+                                  <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Sem economia</span>
+                                ) : (
+                                  <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>1ª Compra</span>
+                                )}
                               </td>
 
                               {/* Supplier Offers for this item */}
@@ -1411,7 +1744,7 @@ export default function WebQuotationsTab({
 
                         {/* Grand Totals Row */}
                         <tr style={{ backgroundColor: '#f8fafc', fontWeight: '800' }}>
-                          <td style={{ ...styles.td, position: 'sticky', left: 0, backgroundColor: '#f8fafc', zIndex: 1 }} colSpan="3">
+                          <td style={{ ...styles.td, position: 'sticky', left: 0, backgroundColor: '#f8fafc', zIndex: 1 }} colSpan="4">
                             <span style={{ fontSize: '0.88rem', textTransform: 'uppercase' }}>Valor Total da Proposta</span>
                           </td>
                           {responses.map(resp => (
@@ -1480,6 +1813,29 @@ export default function WebQuotationsTab({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 4: ORDEM DE COMPRA OFICIAL (PO / PURCHASE ORDER) */}
+      {/* ========================================================================= */}
+      {showOrderModal && (
+        <PurchaseOrderModal
+          isOpen={showOrderModal}
+          onClose={() => setShowOrderModal(false)}
+          order={orderToView}
+        />
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 5: HISTÓRICO DE PREÇOS E INFLAÇÃO DO INSUMO */}
+      {/* ========================================================================= */}
+      {showPriceHistoryModal && (
+        <PriceHistoryModal
+          isOpen={showPriceHistoryModal}
+          onClose={() => setShowPriceHistoryModal(false)}
+          item={selectedItemForPriceHistory}
+          quotations={quotations}
+        />
       )}
 
     </div>

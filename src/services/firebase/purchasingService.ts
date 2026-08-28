@@ -25,6 +25,52 @@ export interface InvitedSupplier {
   respondedAt?: string;
 }
 
+export interface PurchaseOrderItem {
+  id?: string;
+  itemId?: string;
+  productId?: string;
+  productName: string;
+  specification?: string;
+  brand?: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  totalPrice: number;
+  lastPricePaid?: number;
+}
+
+export interface PurchaseOrder {
+  id?: string;
+  code: string; // e.g. OC-2026-001
+  quotationId?: string;
+  quotationCode?: string;
+  supplierId?: string;
+  supplierName: string;
+  tradeName?: string;
+  cnpj?: string;
+  supplierContact?: string;
+  supplierPhone?: string;
+  supplierEmail?: string;
+  unitId: string;
+  unit: string;
+  buyerName: string;
+  buyerEmail?: string;
+  status: 'Emitido' | 'Aguardando Entrega' | 'Recebido Parcial' | 'Entregue' | 'Cancelado';
+  freightType: 'CIF' | 'FOB';
+  freightValue?: number;
+  paymentTerm: string;
+  leadTimeDays: number;
+  estimatedDeliveryDate?: string;
+  totalItemsAmount: number;
+  totalGrandAmount: number;
+  savingsAmount?: number;
+  payableId?: string;
+  observations?: string;
+  items: PurchaseOrderItem[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface WebQuotation {
   id?: string;
   code: string;
@@ -41,6 +87,8 @@ export interface WebQuotation {
   winningSupplierId?: string;
   winningSupplierName?: string;
   winningSplits?: Record<string, string>; // itemId -> supplierId
+  purchaseOrders?: PurchaseOrder[];
+  totalSavingsAmount?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -97,6 +145,13 @@ export const generateQuotationCode = (existingCount: number = 0): string => {
   const year = new Date().getFullYear();
   const seq = String(existingCount + 1).padStart(3, '0');
   return `COT-${year}-${seq}`;
+};
+
+// Generate friendly Purchase Order code (e.g. OC-2026-001)
+export const generatePurchaseOrderCode = (existingCount: number = 0): string => {
+  const year = new Date().getFullYear();
+  const seq = String(existingCount + 1).padStart(3, '0');
+  return `OC-${year}-${seq}`;
 };
 
 /**

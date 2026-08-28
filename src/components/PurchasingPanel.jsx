@@ -4,7 +4,8 @@ import {
   Search, Building2, User, Clock, ArrowRight, ShieldAlert, Award,
   Edit, Trash2, X, AlertTriangle, ArrowUpDown, ChevronUp, ChevronDown,
   Package, Zap, CheckCircle2, History, Filter, RefreshCw, Layers, Info,
-  ListFilter, Maximize2, Eye, FileText, Tag, Sparkles
+  ListFilter, Maximize2, Eye, FileText, Tag, Sparkles, TrendingUp,
+  TrendingDown, BarChart3, PieChart
 } from 'lucide-react';
 import { dbService } from '../firebase';
 import { useUnit } from '../contexts/UnitContext';
@@ -12,6 +13,7 @@ import UnitSelector from './common/UnitSelector';
 import WebQuotationsTab from './purchasing/WebQuotationsTab';
 import PurchaseRequestModal from './purchasing/PurchaseRequestModal';
 import PurchaseDetailsModal from './purchasing/PurchaseDetailsModal';
+import PriceHistoryModal from './purchasing/PriceHistoryModal';
 
 export default function PurchasingPanel({ currentUser }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
@@ -32,6 +34,11 @@ export default function PurchasingPanel({ currentUser }) {
   const [repositionSearch, setRepositionSearch] = useState('');
   const [repositionCategory, setRepositionCategory] = useState('all');
   const [repositionSeverity, setRepositionSeverity] = useState('all'); // 'all' | 'zero' | 'below_min'
+  const [repositionAbcFilter, setRepositionAbcFilter] = useState('all'); // 'all' | 'A' | 'B' | 'C'
+
+  // Histórico de Preços
+  const [showPriceHistoryModal, setShowPriceHistoryModal] = useState(false);
+  const [selectedItemForPriceHistory, setSelectedItemForPriceHistory] = useState(null);
 
   // Modos de Visualização das Solicitações (Compacta como Padrão)
   const [requestsViewMode, setRequestsViewMode] = useState(() => {
@@ -253,9 +260,9 @@ export default function PurchasingPanel({ currentUser }) {
     return list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   }, [currentPurchases, isRequesterOnly, myRequestsOnly, user, requestsStatusFilter, requestsSearch]);
 
-  // Itens com Cálculo dos 4 Saldos (Físico, Reservado, Disponível, Trânsito)
+  // Itens com Cálculo dos 4 Saldos (Físico, Reservado, Disponível, Trânsito) + Curva ABC
   const enrichedInventoryItems = useMemo(() => {
-    return currentInventoryItems.map(item => {
+    const rawEnriched = currentInventoryItems.map(item => {
       const physicalStock = parseFloat(item.currentStock) || 0;
       const minStock = parseFloat(item.minStock) || 0;
       const idealStock = parseFloat(item.idealStock) || (minStock * 2 > 0 ? minStock * 2 : 20);
@@ -317,6 +324,10 @@ export default function PurchasingPanel({ currentUser }) {
       // É Crítico se o Disponível for menor/igual ao Mínimo ou Zerado
       const isCritical = (availableStock <= minStock) || (availableStock === 0);
 
+      // Valor financeiro para classificação da Curva ABC
+      const unitPrice = parseFloat(item.lastPrice || item.averageCost || item.salePrice || 10);
+      const financialValue = unitPrice * Math.max(1, idealStock);
+
       return {
         ...item,
         physicalStock,
@@ -329,9 +340,38 @@ export default function PurchasingPanel({ currentUser }) {
         suggestedQty,
         isCritical,
         salonBreakdown,
-        activeReqCount: activeReqsForItem.length
+        activeReqCount: activeReqsForItem.length,
+        unitPrice,
+        financialValue
       };
     });
+
+    // Classificação Curva ABC (80% Classe A / 15% Classe B / 5% Classe C)
+    const sortedByValue = [...rawEnriched].sort((a, b) => b.financialValue - a.financialValue);
+    const totalInventoryValue = sortedByValue.reduce((acc, it) => acc + it.financialValue, 0) || 1;
+
+    let accumulatedValue = 0;
+    const abcMap = {};
+
+    sortedByValue.forEach(item => {
+      accumulatedValue += item.financialValue;
+      const pct = (accumulatedValue / totalInventoryValue) * 100;
+      let abcClass = 'C';
+      if (pct <= 80) {
+        abcClass = 'A';
+      } else if (pct <= 95) {
+        abcClass = 'B';
+      } else {
+        abcClass = 'C';
+      }
+      abcMap[item.id] = { abcClass, accumulatedPercent: pct };
+    });
+
+    return rawEnriched.map(item => ({
+      ...item,
+      abcClass: abcMap[item.id]?.abcClass || 'C',
+      accumulatedPercent: abcMap[item.id]?.accumulatedPercent || 100
+    }));
   }, [currentInventoryItems, currentRequisitions, currentPurchases]);
 
   // Itens Críticos do Estoque (Baseados no Saldo Disponível)
@@ -362,9 +402,14 @@ export default function PurchasingPanel({ currentUser }) {
       if (repositionSeverity === 'zero' && avail > 0) return false;
       if (repositionSeverity === 'below_min' && (avail === 0 || avail > min)) return false;
 
+      // Curva ABC
+      if (repositionAbcFilter !== 'all' && item.abcClass !== repositionAbcFilter) {
+        return false;
+      }
+
       return true;
     });
-  }, [criticalItems, repositionSearch, repositionCategory, repositionSeverity]);
+  }, [criticalItems, repositionSearch, repositionCategory, repositionSeverity, repositionAbcFilter]);
 
   // Categorias únicas dos itens do estoque
   const inventoryCategories = useMemo(() => {
@@ -1035,7 +1080,7 @@ export default function PurchasingPanel({ currentUser }) {
         </div>
       ) : (
         <>
-          {/* TAB 1: REPOSIÇÃO CRÍTICA (Estoque Mínimo em Tempo Real) */}
+          {/* TAB 1: REPOSIÇÃO CRÍTICA (Estoque Mínimo em Tempo Real & Curva ABC) */}
           {activeTab === 'reposition' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {/* Cards de Métricas da Reposição Inteligente */}
@@ -1079,6 +1124,22 @@ export default function PurchasingPanel({ currentUser }) {
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>pedidos abertos</span>
                   </div>
                 </div>
+
+                {/* Card Curva ABC */}
+                <div style={{ ...styles.repositionMetricCard, backgroundColor: '#faf5ff', borderColor: '#e9d5ff' }}>
+                  <span style={{ ...styles.metricLabel, color: '#7c3aed' }}>Curva ABC Crítica</span>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.35rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.75rem', backgroundColor: '#7c3aed', color: '#fff', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '800' }} title="Classe A: 80% do valor financeiro do estoque">
+                      A: {criticalItems.filter(i => i.abcClass === 'A').length}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', backgroundColor: '#d97706', color: '#fff', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '800' }} title="Classe B: 15% do valor financeiro">
+                      B: {criticalItems.filter(i => i.abcClass === 'B').length}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', backgroundColor: '#64748b', color: '#fff', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '800' }} title="Classe C: 5% do valor financeiro">
+                      C: {criticalItems.filter(i => i.abcClass === 'C').length}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Barra de Filtros da Reposição */}
@@ -1119,6 +1180,17 @@ export default function PurchasingPanel({ currentUser }) {
                     <option value="below_min">🟡 Abaixo do Mínimo</option>
                   </select>
 
+                  <select 
+                    value={repositionAbcFilter} 
+                    onChange={(e) => setRepositionAbcFilter(e.target.value)}
+                    style={styles.selectInput}
+                  >
+                    <option value="all">📊 Curva ABC</option>
+                    <option value="A">⭐ Classe A (80% valor)</option>
+                    <option value="B">⚡ Classe B (15% valor)</option>
+                    <option value="C">📦 Classe C (5% valor)</option>
+                  </select>
+
                   <button onClick={() => fetchData(true)} style={styles.refreshBtn} title="Atualizar estoque e requisições em tempo real">
                     <RefreshCw size={16} />
                   </button>
@@ -1131,6 +1203,7 @@ export default function PurchasingPanel({ currentUser }) {
                   <thead>
                     <tr style={styles.theadRow}>
                       <th style={styles.th}>Insumo</th>
+                      <th style={styles.th}>Curva</th>
                       <th style={styles.th}>Categoria</th>
                       <th style={styles.th}>Físico</th>
                       <th style={styles.th}>Reservado</th>
@@ -1144,7 +1217,7 @@ export default function PurchasingPanel({ currentUser }) {
                   <tbody>
                     {filteredCriticalItems.length === 0 ? (
                       <tr>
-                        <td colSpan="9" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+                        <td colSpan="10" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
                           <CheckCircle2 size={36} color="#10b981" style={{ margin: '0 auto 0.5rem auto' }} />
                           <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>Estoque em Nível Seguro!</div>
                           <span style={{ fontSize: '0.85rem' }}>Nenhum insumo está com saldo disponível abaixo do estoque mínimo.</span>
@@ -1157,10 +1230,36 @@ export default function PurchasingPanel({ currentUser }) {
                         return (
                           <tr key={item.id} style={styles.tr}>
                             <td style={styles.td}>
-                              <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{item.name}</div>
-                              {item.code && (
-                                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Cód: {item.code}</span>
-                              )}
+                              <div 
+                                onClick={() => {
+                                  setSelectedItemForPriceHistory(item);
+                                  setShowPriceHistoryModal(true);
+                                }}
+                                style={{ cursor: 'pointer' }}
+                                title="Clique para ver histórico de preços deste insumo"
+                              >
+                                <div style={{ fontWeight: '700', color: '#0284c7', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  {item.name}
+                                  <BarChart3 size={12} color="#0284c7" />
+                                </div>
+                                {item.code && (
+                                  <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Cód: {item.code}</span>
+                                )}
+                              </div>
+                            </td>
+                            <td style={styles.td}>
+                              <span style={{
+                                fontSize: '0.72rem',
+                                fontWeight: '800',
+                                padding: '0.15rem 0.45rem',
+                                borderRadius: '4px',
+                                border: '1px solid',
+                                backgroundColor: item.abcClass === 'A' ? '#f5f3ff' : item.abcClass === 'B' ? '#fef3c7' : '#f1f5f9',
+                                color: item.abcClass === 'A' ? '#7c3aed' : item.abcClass === 'B' ? '#b45309' : '#475569',
+                                borderColor: item.abcClass === 'A' ? '#ddd6fe' : item.abcClass === 'B' ? '#fde68a' : '#cbd5e1'
+                              }} title={`Curva ABC: Classe ${item.abcClass}`}>
+                                Classe {item.abcClass}
+                              </span>
                             </td>
                             <td style={styles.td}>
                               <span style={styles.categoryBadge}>
@@ -2230,6 +2329,16 @@ export default function PurchasingPanel({ currentUser }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* MODAL: HISTÓRICO DE PREÇOS E AUDITORIA DO INSUMO */}
+      {showPriceHistoryModal && (
+        <PriceHistoryModal
+          isOpen={showPriceHistoryModal}
+          onClose={() => setShowPriceHistoryModal(false)}
+          item={selectedItemForPriceHistory}
+          purchases={purchases}
+        />
       )}
     </div>
   );

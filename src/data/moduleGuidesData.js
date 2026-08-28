@@ -1533,12 +1533,20 @@ export const MODULE_GUIDES = {
         desc: 'Ambiente público sem atrito para distribuidores digitarem preços unitários, marcas ofertadas, tipo de frete (CIF/FOB), prazos de entrega e anexarem propostas em PDF.'
       },
       {
-        title: 'Mapa Comparativo Inteligente',
-        desc: 'Matriz lado a lado com destaque visual do menor preço por insumo, comparativo histórico com a última compra e condições comerciais consolidadas.'
+        title: 'Mapa Comparativo Inteligente & Saving',
+        desc: 'Matriz lado a lado com destaque visual do menor preço por insumo, comparativo histórico com a última compra, cálculo de Saving (Economia em R$ e %) e condições comerciais.'
       },
       {
-        title: 'Homologação Flexível (Split vs Global)',
-        desc: 'Possibilidade de fechar a compra dividida pelos melhores itens de cada distribuidor ou compra consolidada em fornecedor único com 1 clique.'
+        title: 'Emissão de Ordem de Compra Oficial (PO)',
+        desc: 'Geração instantânea da Ordem de Compra (PO) timbrada e padronizada em PDF/A4 para impressão ou envio por WhatsApp com 1 clique ao fornecedor vencedor.'
+      },
+      {
+        title: 'Integração Automática com o Financeiro',
+        desc: 'Lançamento automático de provisão financeira no Contas a Pagar ao homologar cotações, com data de vencimento baseada no prazo comercial acordado e rastreabilidade da OC.'
+      },
+      {
+        title: 'Curva ABC & Histórico de Preços',
+        desc: 'Classificação automática de insumos em Classe A (80% do valor), Classe B (15%) e Classe C (5%) com modal de auditoria de preços e oscilação de inflação por insumo.'
       },
       {
         title: 'Reposição Inteligente dos 4 Saldos',
@@ -1576,11 +1584,39 @@ export const MODULE_GUIDES = {
           'Filtre e selecione os distribuidores desejados (com apoio dos botões "Selecionar Todos" / "Desmarcar Todos") na grade com rolagem independente.',
           'Clique em "Publicar Cotação e Gerar Links" no rodapé fixo do modal.',
           'Dispare os links via WhatsApp para os representantes comerciais.',
-          'No "Mapa Comparativo", analise as propostas e clique em "Homologar" para fechar a compra.'
+          'No "Mapa Comparativo", analise as propostas, confira o Saving (Economia) e clique em "Homologar e Fechar Cotação".'
+        ]
+      },
+      {
+        title: 'Como Emitir e Compartilhar a Ordem de Compra Oficial (PO)',
+        steps: [
+          'Ao homologar a cotação, a Ordem de Compra Oficial é aberta automaticamente na tela.',
+          'Você também pode acessá-la a qualquer momento clicando no botão "Pedido (OC)" na tabela de cotações homologadas.',
+          'Clique em "Imprimir (A4)" para gerar o PDF timbrado formal ou em "Enviar WhatsApp" para disparar o pedido diretamente ao representante comercial.'
+        ]
+      },
+      {
+        title: 'Como Auditar o Histórico de Preços e a Curva ABC',
+        steps: [
+          'Na aba "Reposição", utilize o filtro "Curva ABC" para visualizar apenas insumos Classe A (alto impacto financeiro), B ou C.',
+          'Clique sobre o nome de qualquer insumo crítico ou em qualquer item do Mapa Comparativo para abrir o modal de "Histórico de Preços".',
+          'Analise as últimas compras realizadas, o menor preço histórico e a variação percentual de inflação do item.'
         ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como a Ordem de Compra é integrada ao Financeiro?',
+        resposta: 'No momento exato em que a cotação é homologada, o sistema cria automaticamente um lançamento de despesa provisória no módulo Financeiro (Contas a Pagar), vinculado à filial correspondente e com a data de vencimento projetada pelo prazo de entrega e pagamento acordado com o fornecedor.'
+      },
+      {
+        pergunta: 'Como funciona o cálculo de Saving (Economia)?',
+        resposta: 'O Saving é apurado item a item comparando o último preço histórico pago pelo insumo com o melhor preço unitário obtido na cotação atual. O sistema exibe o total economizado em R$ e o percentual de desconto obtido pelo setor de compras.'
+      },
+      {
+        pergunta: 'O que significa a classificação da Curva ABC no estoque?',
+        resposta: 'A Curva ABC classifica os insumos pelo impacto financeiro total: Classe A representa 80% do valor financeiro do estoque (itens de alto custo/volume); Classe B representa 15%; e Classe C representa 5% (itens de baixo impacto financeiro).'
+      },
       {
         pergunta: 'Posso incluir produtos do estoque e itens novos no mesmo pedido?',
         resposta: 'Sim. O novo formulário multi-itens permite mesclar insumos já cadastrados no almoxarifado/farmácia e novos produtos de texto livre em uma única solicitação.'
@@ -1588,14 +1624,6 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Até quando posso editar ou excluir minha solicitação?',
         resposta: 'Você pode editar ou excluir sua solicitação enquanto ela estiver com status "Aguardando Gestor" ou caso tenha sido recusada. Após aprovada pelo gestor/diretoria ou em cotação, a edição é bloqueada para garantir a rastreabilidade.'
-      },
-      {
-        pergunta: 'Qual o modo de visualização padrão da esteira?',
-        resposta: 'O modo Compacto é o padrão inicial por ser mais rápido e organizado. Sua preferência fica salva automaticamente no navegador.'
-      },
-      {
-        pergunta: 'O fornecedor precisa ter login ou senha para enviar os preços?',
-        resposta: 'Não. O sistema utiliza a tecnologia de Token Seguro (Magic Link). Cada fornecedor recebe um link exclusivo criptografado que abre diretamente a tela da cotação sem exigir cadastro prévio.'
       }
     ]
   }
