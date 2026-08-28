@@ -1505,6 +1505,74 @@ export const MODULE_GUIDES = {
         resposta: 'Não. Os módulos continuam operando normalmente em tela. Apenas o disparo de mensagens para caixas postais externas é pausado com segurança.'
       }
     ]
+  },
+  purchasing: {
+    id: 'purchasing',
+    name: 'Módulo de Compras',
+    subtitle: 'NexaPROCURE — Gestão de Suprimentos & E-Procurement',
+    color: '#0891b2',
+    recursos: [
+      {
+        title: 'Cotações Web com Fornecedores',
+        desc: 'Criação de rodadas de cotação digital com geração de links exclusivos e tokens criptografados para preenchimento direto pelos fornecedores via celular ou computador.'
+      },
+      {
+        title: 'Portal B2B do Fornecedor',
+        desc: 'Ambiente público sem atrito para distribuidores digitarem preços unitários, marcas ofertadas, tipo de frete (CIF/FOB), prazos de entrega e anexarem propostas em PDF.'
+      },
+      {
+        title: 'Mapa Comparativo Inteligente',
+        desc: 'Matriz lado a lado com destaque visual do menor preço por insumo, comparativo histórico com a última compra e condições comerciais consolidadas.'
+      },
+      {
+        title: 'Homologação Flexível (Split vs Global)',
+        desc: 'Possibilidade de fechar a compra dividida pelos melhores itens de cada distribuidor ou compra consolidada em fornecedor único com 1 clique.'
+      },
+      {
+        title: 'Reposição Inteligente dos 4 Saldos',
+        desc: 'Cálculo dinâmico de saldo Físico, Reservado, Disponível e em Trânsito para sugestão automática de compras baseada no estoque mínimo.'
+      },
+      {
+        title: 'Esteira de Alçadas e Aprovações',
+        desc: 'Fluxo hierárquico com aprovação de Gestor de Setor e Diretor Financeiro para autorização prévia de verba.'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Criar uma Cotação Web',
+        steps: [
+          'Acesse a aba "Cotações" no NexaPROCURE e clique no botão "+ Nova Cotação".',
+          'Informe o Título, o Prazo Limite (data e hora de encerramento) e observações comerciais.',
+          'Adicione os insumos desejados através da busca ou clique em "⚡ Importar Estoque Crítico" para puxar itens abaixo do mínimo.',
+          'Selecione os fornecedores convidados e clique em "Publicar Cotação e Gerar Links".',
+          'Na janela de compartilhamento, clique em "WhatsApp" para disparar a mensagem pronta com o link seguro para cada representante.'
+        ]
+      },
+      {
+        title: 'Como Analisar o Mapa Comparativo e Homologar',
+        steps: [
+          'Na aba "Cotações", localize a cotação desejada e clique em "Comparativo".',
+          'Visualize a matriz de preços: os menores valores unitários recebem destaque automático em verde com troféu 🏆.',
+          'Analise as condições de Frete (CIF/FOB), Prazo de Entrega e Condição de Pagamento de cada proposta.',
+          'Escolha a estratégia de homologação ("Menor Preço por Item" ou "Pedido Global") e clique em "Homologar e Fechar Cotação".',
+          'O sistema emite a Ordem de Compra oficial e integra o pedido à esteira de recebimento.'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'O fornecedor precisa ter login ou senha para enviar os preços?',
+        resposta: 'Não. O sistema utiliza a tecnologia de Token Seguro (Magic Link). Cada fornecedor recebe um link exclusivo criptografado que abre diretamente a tela da cotação sem exigir cadastro prévio.'
+      },
+      {
+        pergunta: 'Um fornecedor consegue ver os preços ou os nomes dos concorrentes?',
+        resposta: 'Não. O portal opera em sigilo absoluto (Blind Bidding). O fornecedor visualiza apenas os itens solicitados pela clínica e seus próprios campos de digitação.'
+      },
+      {
+        pergunta: 'O que acontece quando o prazo limite da cotação expira?',
+        resposta: 'O portal bloqueia automaticamente novas submissões ou alterações de lances, garantindo a integridade e transparência da rodada para a equipe de compras.'
+      }
+    ]
   }
 };
 

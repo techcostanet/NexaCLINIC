@@ -83,6 +83,15 @@ service cloud.firestore {
     match /purchase_invoices/{invoiceId} {
       allow read, write: if isAuthenticated();
     }
+    match /web_quotations/{quoteId} {
+      allow read: if true;
+      allow write: if isAuthenticated() || true;
+    }
+    match /quote_responses/{respId} {
+      allow read: if isAuthenticated();
+      allow create, update: if true;
+      allow delete: if isAuthenticated();
+    }
 
     // Stock Items Collection Rules
     match /stock_items/{itemId} {

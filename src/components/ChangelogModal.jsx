@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.73',
+      date: '28/08/2026',
+      title: 'Módulo de Compras (NexaPROCURE) — Sistema de Cotações Web & Portal B2B para Fornecedores',
+      description: 'Implementação de solução completa de E-Procurement hospitalar com criação de cotações digitais multi-itens, geração de links com tokens seguros de acesso para fornecedores, portal web público para lances com cálculo automático de frete/prazos, mapa comparativo inteligente com destaque de menor preço e homologação com 1 clique.',
+      changes: [
+        { type: 'Cotações Web', text: 'Criação de rodadas de cotação de insumos com múltiplos itens a partir do estoque crítico ou catálogo geral.' },
+        { type: 'Portal do Fornecedor', text: 'Portal público responsivo acessível via link com token único criptografado (sem burocracia de senhas), onde fornecedores preenchem preços, marcas ofertadas, embalagens, frete CIF/FOB, prazos de entrega e anexam propostas em PDF.' },
+        { type: 'Disparo via WhatsApp', text: 'Geração imediata de links seguros com botão de disparo automatizado de mensagens no WhatsApp para representantes comerciais.' },
+        { type: 'Mapa Comparativo', text: 'Matriz lado a lado com destaque visual em verde do menor preço unitário por item (🏆) e comparativo de variação com o último preço pago pela clínica.' },
+        { type: 'Homologação Flexível', text: 'Suporte a compra dividida pelos melhores itens de cada distribuidor (Split Order) ou fechamento consolidado com fornecedor único.' },
+        { type: 'Segurança & Sigilo', text: 'Cotação cega (Blind Bidding) com sigilo total entre concorrentes e regras de acesso dedicadas no Firestore.' }
+      ]
+    },
+    {
       version: 'v4.7.72',
       date: '28/08/2026',
       title: 'Módulo RH — Armazenamento em Nuvem (Firebase Cloud Storage) e Visualização de Exames Ocupacionais (ASO)',

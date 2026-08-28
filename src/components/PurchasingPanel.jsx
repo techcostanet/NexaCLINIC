@@ -8,6 +8,7 @@ import {
 import { dbService } from '../firebase';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
+import WebQuotationsTab from './purchasing/WebQuotationsTab';
 
 export default function PurchasingPanel({ currentUser }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
@@ -1147,147 +1148,16 @@ export default function PurchasingPanel({ currentUser }) {
             </div>
           )}
 
-          {/* TAB 4: SALA DE COTAÇÕES */}
+          {/* TAB 4: COTAÇÕES WEB E E-PROCUREMENT */}
           {activeTab === 'quotes' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 2fr', gap: '1.5rem' }}>
-              {/* Itens aguardando cotação */}
-              <div style={styles.listCard}>
-                <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem', color: 'var(--text-primary)' }}>
-                  📦 Itens Aguardando Cotação
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {purchases.filter(p => p.status === 'Aguardando Cotação').length === 0 ? (
-                    <p style={styles.noDataText}>Nenhum item aguardando cotação.</p>
-                  ) : (
-                    purchases.filter(p => p.status === 'Aguardando Cotação').map(req => (
-                      <div 
-                        key={req.id} 
-                        onClick={() => {
-                          setActiveQuoteId(req.id);
-                          setQuoteForm({
-                            supplierA: { name: '', price: '', deliveryDays: '' },
-                            supplierB: { name: '', price: '', deliveryDays: '' },
-                            supplierC: { name: '', price: '', deliveryDays: '' }
-                          });
-                        }}
-                        style={{ 
-                          ...styles.quoteSelectableItem,
-                          borderLeftColor: activeQuoteId === req.id ? '#0891b2' : 'var(--border-color)',
-                          backgroundColor: activeQuoteId === req.id ? '#ecfeff' : '#fff'
-                        }}
-                      >
-                        <strong style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>{req.productName}</strong>
-                        <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                          Qtd: <strong>{req.quantity} {req.unit || 'un'}</strong> | Setor: {req.sector?.toUpperCase()}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Formulário Comparativo de Cotações */}
-              <div style={styles.formCard}>
-                {activeQuoteId ? (
-                  (() => {
-                    const currentReq = purchases.find(p => p.id === activeQuoteId);
-                    return (
-                      <div>
-                        <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '1rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.5rem', color: 'var(--text-primary)' }}>
-                          📊 Comparar 3 Orçamentos — {currentReq?.productName} (Qtd: {currentReq?.quantity} {currentReq?.unit || 'un'})
-                        </h3>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                          {/* Fornecedor A */}
-                          <div style={styles.supplierBlock}>
-                            <h4 style={{ fontSize: '0.8rem', fontWeight: '700', marginBottom: '0.5rem', color: '#0891b2' }}>Fornecedor A</h4>
-                            <div style={styles.formGroup}>
-                              <label style={styles.formLabel}>Fornecedor</label>
-                              <input type="text" placeholder="Nome da Distribuidora" style={styles.modalInput} value={quoteForm.supplierA.name} onChange={e => setQuoteForm({ ...quoteForm, supplierA: { ...quoteForm.supplierA, name: e.target.value } })} />
-                            </div>
-                            <div style={styles.formGroup}>
-                              <label style={styles.formLabel}>Preço (R$)</label>
-                              <input type="number" step="0.01" placeholder="0.00" style={styles.modalInput} value={quoteForm.supplierA.price} onChange={e => setQuoteForm({ ...quoteForm, supplierA: { ...quoteForm.supplierA, price: e.target.value } })} />
-                            </div>
-                            <div style={styles.formGroup}>
-                              <label style={styles.formLabel}>Prazo (Dias)</label>
-                              <input type="number" placeholder="Ex: 3" style={styles.modalInput} value={quoteForm.supplierA.deliveryDays} onChange={e => setQuoteForm({ ...quoteForm, supplierA: { ...quoteForm.supplierA, deliveryDays: e.target.value } })} />
-                            </div>
-                          </div>
-
-                          {/* Fornecedor B */}
-                          <div style={styles.supplierBlock}>
-                            <h4 style={{ fontSize: '0.8rem', fontWeight: '700', marginBottom: '0.5rem', color: '#10b981' }}>Fornecedor B</h4>
-                            <div style={styles.formGroup}>
-                              <label style={styles.formLabel}>Fornecedor</label>
-                              <input type="text" placeholder="Nome da Distribuidora" style={styles.modalInput} value={quoteForm.supplierB.name} onChange={e => setQuoteForm({ ...quoteForm, supplierB: { ...quoteForm.supplierB, name: e.target.value } })} />
-                            </div>
-                            <div style={styles.formGroup}>
-                              <label style={styles.formLabel}>Preço (R$)</label>
-                              <input type="number" step="0.01" placeholder="0.00" style={styles.modalInput} value={quoteForm.supplierB.price} onChange={e => setQuoteForm({ ...quoteForm, supplierB: { ...quoteForm.supplierB, price: e.target.value } })} />
-                            </div>
-                            <div style={styles.formGroup}>
-                              <label style={styles.formLabel}>Prazo (Dias)</label>
-                              <input type="number" placeholder="Ex: 5" style={styles.modalInput} value={quoteForm.supplierB.deliveryDays} onChange={e => setQuoteForm({ ...quoteForm, supplierB: { ...quoteForm.supplierB, deliveryDays: e.target.value } })} />
-                            </div>
-                          </div>
-
-                          {/* Fornecedor C */}
-                          <div style={styles.supplierBlock}>
-                            <h4 style={{ fontSize: '0.8rem', fontWeight: '700', marginBottom: '0.5rem', color: '#8b5cf6' }}>Fornecedor C</h4>
-                            <div style={styles.formGroup}>
-                              <label style={styles.formLabel}>Fornecedor</label>
-                              <input type="text" placeholder="Nome da Distribuidora" style={styles.modalInput} value={quoteForm.supplierC.name} onChange={e => setQuoteForm({ ...quoteForm, supplierC: { ...quoteForm.supplierC, name: e.target.value } })} />
-                            </div>
-                            <div style={styles.formGroup}>
-                              <label style={styles.formLabel}>Preço (R$)</label>
-                              <input type="number" step="0.01" placeholder="0.00" style={styles.modalInput} value={quoteForm.supplierC.price} onChange={e => setQuoteForm({ ...quoteForm, supplierC: { ...quoteForm.supplierC, price: e.target.value } })} />
-                            </div>
-                            <div style={styles.formGroup}>
-                              <label style={styles.formLabel}>Prazo (Dias)</label>
-                              <input type="number" placeholder="Ex: 7" style={styles.modalInput} value={quoteForm.supplierC.deliveryDays} onChange={e => setQuoteForm({ ...quoteForm, supplierC: { ...quoteForm.supplierC, deliveryDays: e.target.value } })} />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Vencedores Destacados */}
-                        {bestPrice && (
-                          <div style={styles.metricsWrapper}>
-                            {bestPrice.name && (
-                              <div style={styles.metricItem}>
-                                <Award size={20} color="#10b981" />
-                                <div>
-                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Melhor Preço 💰</div>
-                                  <strong style={{ fontSize: '0.9rem', color: '#047857' }}>{bestPrice.name} (R$ {parseFloat(bestPrice.price).toFixed(2)})</strong>
-                                </div>
-                              </div>
-                            )}
-                            {bestTime.name && (
-                              <div style={styles.metricItem}>
-                                <Truck size={20} color="#0891b2" />
-                                <div>
-                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Entrega Mais Rápida ⚡</div>
-                                  <strong style={{ fontSize: '0.9rem', color: '#0369a1' }}>{bestTime.name} ({bestTime.deliveryDays} dias)</strong>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Botões de Decisão de Compra */}
-                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
-                          <button onClick={() => handleFinalizePurchase(currentReq, 'A')} disabled={!quoteForm.supplierA.name || actionLoading} style={{ ...styles.decisionBtn, backgroundColor: '#0891b2' }}>Comprar do A</button>
-                          <button onClick={() => handleFinalizePurchase(currentReq, 'B')} disabled={!quoteForm.supplierB.name || actionLoading} style={{ ...styles.decisionBtn, backgroundColor: '#10b981' }}>Comprar do B</button>
-                          <button onClick={() => handleFinalizePurchase(currentReq, 'C')} disabled={!quoteForm.supplierC.name || actionLoading} style={{ ...styles.decisionBtn, backgroundColor: '#8b5cf6' }}>Comprar do C</button>
-                        </div>
-                      </div>
-                    );
-                  })()
-                ) : (
-                  <p style={{ ...styles.noDataText, textAlign: 'center', margin: '4rem 0' }}>Selecione um item na lista ao lado para comparar os orçamentos.</p>
-                )}
-              </div>
-            </div>
+            <WebQuotationsTab 
+              currentUser={user}
+              activeUnitId={activeUnitId}
+              inventoryItems={currentInventoryItems}
+              suppliers={suppliers}
+              requisitions={currentRequisitions}
+              onUpdateStock={() => fetchData(false)}
+            />
           )}
 
           {/* TAB 5: GESTÃO DE FORNECEDORES (Colunas Clicáveis para Ordenação) */}

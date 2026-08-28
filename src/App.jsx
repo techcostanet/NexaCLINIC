@@ -20,6 +20,7 @@ import MaintenancePanel from './components/MaintenancePanel';
 import SesmtDashboard from './components/sesmt/SesmtDashboard';
 import AssistPanel from './components/AssistPanel';
 import MedicalPanel from './components/MedicalPanel';
+import SupplierQuotePortal from './components/purchasing/SupplierQuotePortal';
 import ErrorBoundary from './components/ErrorBoundary';
 import ModuleGuideModal from './components/common/ModuleGuideModal';
 import { UnitProvider } from './contexts/UnitContext';
@@ -31,6 +32,10 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [isReportsOpen, setIsReportsOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+
+  // Verificação de Acesso Público de Fornecedor via Token
+  const urlParams = new URLSearchParams(window.location.search);
+  const quoteToken = urlParams.get('token') || urlParams.get('cotacao');
 
   useEffect(() => {
     let isMounted = true;
@@ -85,6 +90,18 @@ export default function App() {
       window.removeEventListener('tenant-branding-changed', loadBranding);
     };
   }, []);
+
+  // Se o link acessado for do portal do fornecedor, renderiza direto
+  if (quoteToken) {
+    return (
+      <SupplierQuotePortal 
+        token={quoteToken} 
+        onExitPortal={() => {
+          window.location.href = window.location.origin;
+        }} 
+      />
+    );
+  }
 
   if (loading) {
     return (

@@ -1,3 +1,20 @@
+## [v4.7.73] - 28 de Agosto, 2026
+### Módulo de Compras (NexaPROCURE) — Sistema de Cotações Web & Portal B2B para Fornecedores
+- **Cotações Web e E-Procurement:**
+  - Criação de rodadas de cotação digital multi-itens a partir de insumos críticos do estoque ou catálogo geral da clínica.
+- **Portal B2B Público do Fornecedor (`/cotacao?token=...`):**
+  - Ambiente responsivo onde os fornecedores acessam via link exclusivo com token seguro (sem burocracia de cadastros e senhas) para preencher preços unitários, marcas ofertadas, tipo de frete (CIF/FOB), prazos de entrega e anexar propostas formais em PDF.
+- **Disparo Automatizado via WhatsApp:**
+  - Botão de envio que abre o WhatsApp do representante comercial com a mensagem estruturada e link exclusivo para resposta imediata.
+- **Mapa Comparativo Inteligente:**
+  - Matriz de preços lado a lado destacando em verde o menor valor unitário por item (🏆) e comparativo de variação com a última compra histórica da clínica.
+- **Homologação Flexível e Emissão de Pedido de Compra:**
+  - Suporte à compra dividida pelos melhores itens de cada distribuidor (Split Order) ou fechamento consolidado com fornecedor único.
+- **Segurança e Sigilo:**
+  - Cotação cega (Blind Bidding) com sigilo total de concorrentes e regras dedicadas no Firestore.
+
+---
+
 ## [v4.7.72] - 28 de Agosto, 2026
 ### Módulo RH — Armazenamento em Nuvem (Firebase Cloud Storage) e Visualização de Exames Ocupacionais (ASO)
 - **Integração com Firebase Cloud Storage:**
