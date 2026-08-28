@@ -1,7 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  ShoppingBag, Plus, Trash2, X, AlertCircle, Package, Sparkles, Check, Layers
+  ShoppingBag, Plus, Trash2, X, AlertCircle, Package, Sparkles, Check, 
+  Layers, Search, ChevronDown, CheckCircle2
 } from 'lucide-react';
+
+const normalizeText = (str) => {
+  return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+};
 
 export default function PurchaseRequestModal({
   show,
@@ -20,11 +25,28 @@ export default function PurchaseRequestModal({
   // Draft item line state
   const [itemType, setItemType] = useState('Reposição'); // 'Reposição' | 'Novo'
   const [selectedStockId, setSelectedStockId] = useState('');
+  const [selectedStockItem, setSelectedStockItem] = useState(null);
+  const [stockSearchQuery, setStockSearchQuery] = useState('');
+  const [isStockDropdownOpen, setIsStockDropdownOpen] = useState(false);
+
   const [newItemName, setNewItemName] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [unit, setUnit] = useState('Unidade');
   const [specification, setSpecification] = useState('');
   const [formError, setFormError] = useState('');
+
+  const searchContainerRef = useRef(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setIsStockDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (show) {
@@ -60,12 +82,63 @@ export default function PurchaseRequestModal({
       // Reset draft item
       setItemType('Reposição');
       setSelectedStockId('');
+      setSelectedStockItem(null);
+      setStockSearchQuery('');
+      setIsStockDropdownOpen(false);
       setNewItemName('');
       setQuantity(1);
       setUnit('Unidade');
       setSpecification('');
     }
   }, [show, editingRequest]);
+
+  // Filtragem dinâmica e inteligente dos insumos do estoque
+  const filteredStockItems = useMemo(() => {
+    if (!Array.isArray(inventoryItems) || inventoryItems.length === 0) return [];
+    
+    const query = normalizeText(stockSearchQuery);
+    if (!query) {
+      // Retorna os primeiros 50 itens
+      return inventoryItems.slice(0, 50);
+    }
+
+    const matched = inventoryItems.filter(item => {
+      const name = normalizeText(item.name);
+      const code = normalizeText(item.code);
+      const barcode = normalizeText(item.barcode);
+      const category = normalizeText(item.category);
+      const subgroup = normalizeText(item.subgroup);
+      return name.includes(query) || code.includes(query) || barcode.includes(query) || category.includes(query) || subgroup.includes(query);
+    });
+
+    // Ordenar para que os que começam com o termo venham primeiro
+    return matched.sort((a, b) => {
+      const aStarts = normalizeText(a.name).startsWith(query);
+      const bStarts = normalizeText(b.name).startsWith(query);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      return (a.name || '').localeCompare(b.name || '');
+    }).slice(0, 60);
+  }, [inventoryItems, stockSearchQuery]);
+
+  // Selecionar insumo do estoque pelo autocomplete
+  const handleSelectStockItem = (item) => {
+    setSelectedStockId(item.id);
+    setSelectedStockItem(item);
+    setStockSearchQuery(item.name);
+    setIsStockDropdownOpen(false);
+    if (item.unit) {
+      setUnit(item.unit);
+    }
+    setFormError('');
+  };
+
+  const handleClearStockSelection = () => {
+    setSelectedStockId('');
+    setSelectedStockItem(null);
+    setStockSearchQuery('');
+    setUnit('Unidade');
+  };
 
   if (!show) return null;
 
@@ -76,11 +149,11 @@ export default function PurchaseRequestModal({
     let prodId = '';
 
     if (itemType === 'Reposição') {
-      if (!selectedStockId) {
-        setFormError('Selecione um insumo cadastrado do estoque.');
+      if (!selectedStockId && !selectedStockItem) {
+        setFormError('Selecione ou digite um insumo cadastrado do estoque.');
         return;
       }
-      const found = inventoryItems.find(i => i.id === selectedStockId);
+      const found = selectedStockItem || inventoryItems.find(i => i.id === selectedStockId);
       if (!found) {
         setFormError('Insumo não encontrado no estoque.');
         return;
@@ -116,6 +189,9 @@ export default function PurchaseRequestModal({
 
     // Limpar campos de adição
     setSelectedStockId('');
+    setSelectedStockItem(null);
+    setStockSearchQuery('');
+    setIsStockDropdownOpen(false);
     setNewItemName('');
     setQuantity(1);
     setUnit('Unidade');
@@ -137,8 +213,8 @@ export default function PurchaseRequestModal({
     if (finalItems.length === 0) {
       let draftName = '';
       let draftId = '';
-      if (itemType === 'Reposição' && selectedStockId) {
-        const found = inventoryItems.find(i => i.id === selectedStockId);
+      if (itemType === 'Reposição' && (selectedStockId || selectedStockItem)) {
+        const found = selectedStockItem || inventoryItems.find(i => i.id === selectedStockId);
         if (found) {
           draftName = found.name;
           draftId = found.id;
@@ -299,28 +375,131 @@ export default function PurchaseRequestModal({
               </div>
             </div>
 
-            {/* Linha de Seleção do Produto */}
+            {/* Seleção do Produto: Autocomplete com Busca por Digitação */}
             {itemType === 'Reposição' ? (
-              <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Insumo Cadastrado</label>
-                <select 
-                  value={selectedStockId}
-                  onChange={(e) => {
-                    const sel = inventoryItems.find(i => i.id === e.target.value);
-                    setSelectedStockId(e.target.value);
-                    if (sel && sel.unit) {
-                      setUnit(sel.unit);
-                    }
-                  }}
-                  style={styles.modalInput}
-                >
-                  <option value="">Selecione o insumo cadastrado...</option>
-                  {inventoryItems.map(itm => (
-                    <option key={itm.id} value={itm.id}>
-                      {itm.name} (Saldo: {itm.currentStock || 0} {itm.unit || 'un'} | Mín: {itm.minStock || 0})
-                    </option>
-                  ))}
-                </select>
+              <div style={styles.formGroup} ref={searchContainerRef}>
+                <label style={styles.formLabel}>Insumo Cadastrado (Digite para buscar)</label>
+                
+                <div style={{ position: 'relative' }}>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', pointerEvents: 'none' }} />
+                    <input 
+                      type="text"
+                      placeholder="Digite o nome, código ou categoria (ex: seringa, luva, dipirona)..."
+                      value={stockSearchQuery}
+                      onChange={(e) => {
+                        setStockSearchQuery(e.target.value);
+                        setSelectedStockId('');
+                        setSelectedStockItem(null);
+                        setIsStockDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsStockDropdownOpen(true)}
+                      style={{
+                        ...styles.modalInput,
+                        paddingLeft: '36px',
+                        paddingRight: selectedStockItem || stockSearchQuery ? '60px' : '36px'
+                      }}
+                    />
+                    
+                    <div style={{ position: 'absolute', right: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {(stockSearchQuery || selectedStockItem) && (
+                        <button
+                          type="button"
+                          onClick={handleClearStockSelection}
+                          style={styles.inputClearBtn}
+                          title="Limpar busca"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setIsStockDropdownOpen(!isStockDropdownOpen)}
+                        style={styles.inputDropdownToggle}
+                        title="Ver lista"
+                      >
+                        <ChevronDown size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Dropdown Flutuante de Produtos */}
+                  {isStockDropdownOpen && (
+                    <div style={styles.autocompleteDropdown}>
+                      {filteredStockItems.length === 0 ? (
+                        <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.82rem' }}>
+                          Nenhum insumo encontrado para "{stockSearchQuery}".
+                        </div>
+                      ) : (
+                        <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
+                          <div style={{ padding: '0.4rem 0.75rem', fontSize: '0.72rem', color: '#94a3b8', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontWeight: '700', textTransform: 'uppercase' }}>
+                            {filteredStockItems.length} insumos encontrados (clique para selecionar):
+                          </div>
+                          {filteredStockItems.map(item => {
+                            const isSelected = selectedStockId === item.id;
+                            const stockNum = parseFloat(item.currentStock) || 0;
+                            const minNum = parseFloat(item.minStock) || 0;
+                            const isBelowMin = stockNum <= minNum;
+
+                            return (
+                              <div
+                                key={item.id}
+                                onClick={() => handleSelectStockItem(item)}
+                                style={{
+                                  ...styles.autocompleteItem,
+                                  backgroundColor: isSelected ? '#f0fdf4' : '#fff'
+                                }}
+                              >
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                                    <strong style={{ fontSize: '0.84rem', color: isSelected ? '#15803d' : '#1e293b' }}>
+                                      {item.name}
+                                    </strong>
+                                    {item.code && (
+                                      <span style={styles.itemCodeBadge}>
+                                        #{item.code}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '0.65rem', marginTop: '0.2rem', fontSize: '0.74rem', color: '#64748b' }}>
+                                    {item.category && <span>🏷️ {item.category}</span>}
+                                    {item.subgroup && <span>📁 {item.subgroup}</span>}
+                                  </div>
+                                </div>
+
+                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                  <span style={{
+                                    fontSize: '0.76rem',
+                                    fontWeight: '700',
+                                    padding: '0.15rem 0.5rem',
+                                    borderRadius: '6px',
+                                    backgroundColor: isBelowMin ? '#fef2f2' : '#ecfdf5',
+                                    color: isBelowMin ? '#b91c1c' : '#15803d',
+                                    border: `1px solid ${isBelowMin ? '#fecaca' : '#bbf7d0'}`
+                                  }}>
+                                    Saldo: {stockNum} {item.unit || 'un'}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Confirmação do Insumo Selecionado */}
+                {selectedStockItem && (
+                  <div style={styles.selectedItemPreview}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <CheckCircle2 size={16} color="#15803d" />
+                      <span style={{ fontSize: '0.8rem', color: '#166534', fontWeight: '600' }}>
+                        Insumo selecionado: <strong>{selectedStockItem.name}</strong> (Saldo Atual: {selectedStockItem.currentStock || 0} {selectedStockItem.unit || 'un'})
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div style={styles.formGroup}>
@@ -476,7 +655,7 @@ export default function PurchaseRequestModal({
                 cursor: (actionLoading || items.length === 0) ? 'not-allowed' : 'pointer'
               }}
             >
-              {actionLoading ? 'Salvando...' : editingRequest ? 'Salvar Alterações' : `Enviar Solicitação (${items.length} ${items.length === 1 ? 'insumo' : 'insumos'})`}
+              {actionLoading ? 'Salvando...' : editingRequest ? 'Atualizar Solicitação' : `Enviar Solicitação (${items.length} ${items.length === 1 ? 'insumo' : 'insumos'})`}
             </button>
           </div>
         </form>

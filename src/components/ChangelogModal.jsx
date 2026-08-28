@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.78',
+      date: '28/08/2026',
+      title: 'Módulo de Compras (NexaPROCURE) — Busca com Digitação (Autocomplete) de Insumos do Estoque & Correção de Unidade',
+      description: 'Implementação de campo de busca inteligente por digitação com autocomplete em tempo real para seleção rápida de insumos cadastrados do estoque no pedido de solicitação, além da correção do filtro multi-unidade para itens com unidade de medida.',
+      changes: [
+        { type: 'Busca por Digitação', text: 'Permite digitar nome, código ou categoria do insumo para filtrar instantaneamente entre centenas de produtos cadastrados no catálogo.' },
+        { type: 'Menu Autocomplete', text: 'Dropdown flutuante rápido com destaque do nome, código, saldo em estoque (verde/vermelho se abaixo do mínimo) e categoria/subgrupo.' },
+        { type: 'Seleção Rápida', text: 'Preenchimento automático da unidade de medida do produto e foco instantâneo na quantidade ao selecionar o insumo.' },
+        { type: 'Correção Multi-Unidade', text: 'Ajuste no filtro da unidade ativa para garantir que produtos do estoque com unidades de medida gerais estejam sempre acessíveis aos solicitantes.' }
+      ]
+    },
+    {
       version: 'v4.7.77',
       date: '28/08/2026',
       title: 'Módulo de Compras (NexaPROCURE) — Pedidos Multi-Itens, 3 Modos de Visualização & Gestão do Solicitante',

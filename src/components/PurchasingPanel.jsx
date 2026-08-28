@@ -2004,7 +2004,7 @@ export default function PurchasingPanel({ currentUser }) {
         onClose={() => { setShowRequestModal(false); setEditingRequest(null); }}
         onSave={handleSaveRequest}
         editingRequest={editingRequest}
-        inventoryItems={currentInventoryItems}
+        inventoryItems={currentInventoryItems && currentInventoryItems.length > 0 ? currentInventoryItems : inventoryItems}
         currentUser={user}
         actionLoading={actionLoading}
       />

@@ -1,3 +1,16 @@
+## [v4.7.78] - 28 de Agosto, 2026
+### Módulo de Compras (NexaPROCURE) — Busca com Digitação (Autocomplete) de Insumos do Estoque & Correção de Unidade
+- **Busca por Digitação em Tempo Real (Autocomplete):**
+  - O solicitante agora pode digitar diretamente o nome, código ou categoria do insumo desejado (ex: *dipirona*, *luva*, *seringa*, *agulha*, etc.), com filtro instantâneo e insensível a acentos.
+- **Dropdown Inteligente de Produtos:**
+  - Exibição de menu suspenso flutuante com nome em destaque, código (`#123`), categorias/subgrupos e indicador de saldo em estoque (verde ou vermelho se abaixo do mínimo).
+- **Seleção Rápida e Preenchimento Automático:**
+  - Ao clicar no insumo, o sistema preenche a unidade de medida padrão (ex: `UNIDADE`, `Frasco`, `Caixa`) e confirma a seleção com badge visual e opção rápida de limpeza/troca.
+- **Correção no Filtro Multi-Unidade:**
+  - Ajuste na verificação de unidade ativa do `UnitContext` para garantir que itens do estoque geral nunca sejam ocultados por confusão entre unidade de medida e filial da clínica.
+
+---
+
 ## [v4.7.77] - 28 de Agosto, 2026
 ### Módulo de Compras (NexaPROCURE) — Pedidos Multi-Itens, 3 Modos de Visualização & Gestão do Solicitante
 - **Pedidos Consolidados com Múltiplos Insumos:**

@@ -121,8 +121,29 @@ export function UnitProvider({ children, currentUser }) {
     if (Array.isArray(item.units)) {
       return item.units.includes(activeUnitId) || (activeUnitId === 'betim' && item.units.includes('btm')) || (activeUnitId === 'taguatinga' && item.units.includes('tag'));
     }
-    const itemUnit = item.unitId || item.unit || item.filial || item.branch || item.unidade || 'betim';
-    const cleanUnit = String(itemUnit).toLowerCase().trim();
+
+    // Branch field resolution: priority to dedicated unitId / filial / branch / unidade fields
+    let branchVal = item.unitId || item.filial || item.branch || item.unidade;
+    
+    // Only check item.unit if it matches a known clinic branch name, since in inventory items 'unit' represents the unit of measure (e.g. 'UNIDADE', 'FRASCO', 'CX')
+    if (!branchVal && item.unit) {
+      const uLower = String(item.unit).toLowerCase().trim();
+      if (['betim', 'btm', 'taguatinga', 'tag', 'all'].includes(uLower)) {
+        branchVal = item.unit;
+      }
+    }
+
+    // If no explicit branch is set:
+    if (!branchVal) {
+      // General inventory catalog items without specific clinic lock are available across clinics
+      if (item.category || item.minStock !== undefined || item.currentStock !== undefined || item.barcode || item.subgroup) {
+        return true;
+      }
+      branchVal = 'betim';
+    }
+
+    const cleanUnit = String(branchVal).toLowerCase().trim();
+    if (cleanUnit === 'all' || cleanUnit === '*') return true;
     if (activeUnitId === 'betim') return cleanUnit === 'betim' || cleanUnit === 'btm';
     if (activeUnitId === 'taguatinga') return cleanUnit === 'taguatinga' || cleanUnit === 'tag';
     return cleanUnit === activeUnitId;
