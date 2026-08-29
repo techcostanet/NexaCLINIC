@@ -116,7 +116,10 @@ export default function ConfigPanel() {
       setTenantSettings(settings);
       setProfiles(profileList);
       setUsersList(users);
-      setEmployees(empList);
+      const sortedEmployees = (empList || []).slice().sort((a, b) => 
+        (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' })
+      );
+      setEmployees(sortedEmployees);
       setAuditLogs(logs);
       setCategoriesList(catList);
       setStockLocations(locList);
@@ -258,44 +261,53 @@ export default function ConfigPanel() {
 
   const handleSaveUser = async (e) => {
     e.preventDefault();
+    if (!userForm.name || !userForm.email) {
+      return showAlert('Preencha os campos obrigatórios (Nome e E-mail).', 'warning');
+    }
     setActionLoading(true);
     try {
       const allowedUnitsToSave = userForm.primaryUnit === 'all' ? ['all', 'betim', 'taguatinga'] : [userForm.primaryUnit || 'betim'];
       if (editingUser) {
         await dbService.updateUser(editingUser.uid, {
-          ...userForm,
-          allowedUnits: allowedUnitsToSave
+          name: userForm.name,
+          email: userForm.email,
+          role: userForm.role,
+          employeeId: userForm.employeeId || '',
+          primaryUnit: userForm.primaryUnit || 'betim',
+          allowedUnits: allowedUnitsToSave,
+          status: userForm.status || 'active'
         });
         if (userForm.password) {
           const identifier = editingUser.email || editingUser.uid;
           await dbService.updateUserPassword(identifier, userForm.password);
         }
-        showAlert(`Acesso de "${userForm.name}" gravado com sucesso no banco cloud!`, 'success');
+        showAlert(`Acesso de "${userForm.name}" gravado com sucesso!`, 'success');
         logAudit('Modificação de Usuário', `Usuário ${userForm.email} editado. Status: ${userForm.status}, Perfil: ${userForm.role}, Filial: ${userForm.primaryUnit}`);
         setShowUserModal(false);
       } else {
         const tempPass = userForm.password || Math.random().toString(36).substring(2, 10);
-        const res = await dbService.createUser(userForm.email, userForm.name, userForm.role, []);
-        // Get created user to update employeeId, password, unit & status
-        const updatedUsers = await dbService.getUsers();
-        const created = updatedUsers.find(u => (u.email || '').toLowerCase() === userForm.email.toLowerCase());
-        if (created) {
-          await dbService.updateUser(created.uid, {
-            employeeId: userForm.employeeId,
-            primaryUnit: userForm.primaryUnit || 'betim',
-            allowedUnits: allowedUnitsToSave,
-            status: userForm.status,
+        const res = await dbService.createUser(
+          userForm.email,
+          userForm.name,
+          userForm.role,
+          [],
+          userForm.primaryUnit || 'betim',
+          allowedUnitsToSave,
+          {
+            employeeId: userForm.employeeId || '',
+            status: userForm.status || 'active',
             password: tempPass
-          });
-        }
+          }
+        );
         const msg = res?.isExisting
-          ? `O e-mail "${userForm.email}" já possuía cadastro de login na autenticação. O perfil e a senha de "${userForm.name}" foram sincronizados na nuvem!`
-          : `Usuário criado com sucesso! Senha configurada na nuvem: ${tempPass}`;
-        setTempPasswordMessage(msg);
+          ? `O e-mail "${userForm.email}" já possuía cadastro. O perfil e acesso de "${userForm.name}" foram sincronizados!`
+          : `Usuário "${userForm.name}" criado com sucesso! Senha inicial: ${tempPass}`;
+        showAlert(msg, 'success');
         setGeneratedTempPass(tempPass);
         logAudit('Criação de Usuário', `Usuário de login ${userForm.email} salvo sob perfil ${userForm.role} na filial ${userForm.primaryUnit}.`);
+        setShowUserModal(false);
       }
-      fetchData();
+      await fetchData();
     } catch (err) {
       console.error(err);
       showAlert(err.message || 'Erro ao gravar usuário.', 'danger');
@@ -733,19 +745,21 @@ export default function ConfigPanel() {
           {/* TAB 2: RBAC Matrix */}
           {activeTab === 'profiles' && (() => {
             const rbacModules = [
-              { key: 'index', label: 'BI & Qualidade (INDEX)' },
-              { key: 'reception', label: 'Recepção & Cadastro' },
-              { key: 'clinical', label: 'Prontuário & Clínico' },
-              { key: 'calendar', label: 'Agenda & Consultas' },
-              { key: 'stock', label: 'Estoque & Farmácia' },
-              { key: 'maintenance', label: 'Manutenção & T.I. (SERVICE)' },
-              { key: 'purchasing', label: 'Compras & Cotações' },
-              { key: 'requisitions', label: 'Requisições (Salão)' },
-              { key: 'apac', label: 'APACs & Faturamento' },
-              { key: 'finance', label: 'Módulo Financeiro' },
-              { key: 'hr', label: 'Recursos Humanos (RH)' },
-              { key: 'sesmt', label: 'SESMT & Segurança (SAFE)' },
-              { key: 'config', label: 'Configurações T.I.' }
+              { key: 'assist', label: 'Assistencial' },
+              { key: 'medical', label: 'Médico' },
+              { key: 'index', label: 'Qualidade' },
+              { key: 'reception', label: 'Recepção' },
+              { key: 'clinical', label: 'Clínico' },
+              { key: 'calendar', label: 'Agenda' },
+              { key: 'stock', label: 'Estoque' },
+              { key: 'maintenance', label: 'Manutenção' },
+              { key: 'purchasing', label: 'Compras' },
+              { key: 'requisitions', label: 'Requisições' },
+              { key: 'apac', label: 'Faturamento' },
+              { key: 'finance', label: 'Financeiro' },
+              { key: 'hr', label: 'RH' },
+              { key: 'sesmt', label: 'SESMT' },
+              { key: 'config', label: 'Configurações' }
             ];
 
             return (
@@ -760,9 +774,9 @@ export default function ConfigPanel() {
                   <table style={styles.table}>
                     <thead>
                       <tr>
-                        <th style={{ minWidth: '180px' }}>Perfil / Função</th>
+                        <th style={{ minWidth: '180px' }}>Perfil</th>
                         {rbacModules.map(m => (
-                          <th key={m.key} style={{ minWidth: '140px', textAlign: 'center' }}>{m.label}</th>
+                          <th key={m.key} style={{ minWidth: '130px', textAlign: 'center' }}>{m.label}</th>
                         ))}
                       </tr>
                     </thead>
@@ -790,7 +804,7 @@ export default function ConfigPanel() {
                                 >
                                   <option value="none">Bloqueado</option>
                                   <option value="read">Leitura</option>
-                                  <option value="write">Escrita / Full</option>
+                                  <option value="write">Escrita</option>
                                 </select>
                               </td>
                             );
@@ -817,12 +831,12 @@ export default function ConfigPanel() {
                 <table style={styles.table}>
                   <thead>
                     <tr>
-                      <th>Operador / Usuário</th>
-                      <th>Email de Login</th>
+                      <th>Usuário</th>
+                      <th>Email</th>
                       <th>Filial</th>
-                      <th>Perfil / Permissão</th>
-                      <th>Vínculo Funcionário</th>
-                      <th>Status da Conta</th>
+                      <th>Perfil</th>
+                      <th>Funcionário</th>
+                      <th>Status</th>
                       <th>Ações</th>
                     </tr>
                   </thead>
@@ -918,8 +932,8 @@ export default function ConfigPanel() {
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th>Nome do Local</th>
-                    <th>Descrição / Aplicação</th>
+                    <th>Local</th>
+                    <th>Descrição</th>
                     <th>Responsável</th>
                     <th>Status</th>
                     <th>Ações</th>
@@ -991,8 +1005,8 @@ export default function ConfigPanel() {
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th>Nome da Categoria</th>
-                    <th>Módulo Destino</th>
+                    <th>Categoria</th>
+                    <th>Módulo</th>
                     <th>Descrição</th>
                     <th>Ações</th>
                   </tr>
@@ -1119,10 +1133,10 @@ export default function ConfigPanel() {
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th>Data/Hora</th>
+                    <th>Data</th>
                     <th>Operador</th>
-                    <th>Ação realizada</th>
-                    <th>Detalhes da Operação</th>
+                    <th>Ação</th>
+                    <th>Detalhes</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1171,7 +1185,7 @@ export default function ConfigPanel() {
                 </div>
                 <div>
                   <h2 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>
-                    {editingUser ? 'Editar Acesso do Usuário' : 'Criar Novo Usuário'}
+                    {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
                   </h2>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
                     {editingUser ? 'Atualize os dados e privilégios de acesso ao sistema' : 'Cadastre uma nova credencial de operador'}
@@ -1182,118 +1196,109 @@ export default function ConfigPanel() {
             </div>
             
             <form onSubmit={handleSaveUser} style={styles.modalForm}>
-              {tempPasswordMessage ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem 0' }}>
-                  <div style={{ ...styles.alert, backgroundColor: 'var(--success-light)', color: 'var(--success-color)', border: '1px solid var(--success-color)' }}>
-                    <CheckCircle2 size={18} />
-                    <span>{tempPasswordMessage}</span>
-                  </div>
-                  <button type="button" onClick={() => setShowUserModal(false)} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', color: '#ffffff', width: '100%', padding: '0.6rem', borderRadius: '6px', fontWeight: '600' }}>Fechar</button>
-                </div>
-              ) : (
-                <>
-                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Nome Completo *</label>
-                    <input type="text" className="form-control" required placeholder="Nome e Sobrenome" value={userForm.name} onChange={e => setUserForm({ ...userForm, name: e.target.value })} style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} />
-                  </div>
-                  
-                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Email de Login *</label>
-                    <input type="email" className="form-control" required disabled={editingUser !== null} placeholder="usuario@clinica.com" value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })} style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: editingUser !== null ? '#f1f5f9' : '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} />
-                  </div>
-                  
-                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Vincular a Funcionário Físico</label>
-                    <select className="form-control" value={userForm.employeeId} onChange={e => setUserForm({ ...userForm, employeeId: e.target.value })} style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
-                      <option value="">Não vincular a funcionário</option>
-                      {employees.map(emp => (
-                        <option key={emp.id} value={emp.id}>{emp.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Perfil de Permissão *</label>
-                    <select className="form-control" required value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value })} style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
-                      {profiles.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                  </div>
+              <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Nome Completo *</label>
+                <input type="text" className="form-control" required placeholder="Nome e Sobrenome" value={userForm.name} onChange={e => setUserForm({ ...userForm, name: e.target.value })} style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} />
+              </div>
+              
+              <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Email de Login *</label>
+                <input type="email" className="form-control" required disabled={editingUser !== null} placeholder="usuario@clinica.com" value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })} style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: editingUser !== null ? '#f1f5f9' : '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} />
+              </div>
+              
+              <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Funcionário</label>
+                <select className="form-control" value={userForm.employeeId} onChange={e => setUserForm({ ...userForm, employeeId: e.target.value })} style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                  <option value="">Não vincular a funcionário</option>
+                  {employees
+                    .slice()
+                    .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' }))
+                    .map(emp => (
+                      <option key={emp.id} value={emp.id}>{emp.name}</option>
+                    ))}
+                </select>
+              </div>
+              
+              <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Perfil *</label>
+                <select className="form-control" required value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value })} style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                  {profiles.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
 
-                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Filial de Operação *</label>
-                    <select 
-                      className="form-control" 
-                      required 
-                      value={userForm.primaryUnit || 'betim'} 
-                      onChange={e => {
-                        const u = e.target.value;
-                        setUserForm({ 
-                          ...userForm, 
-                          primaryUnit: u,
-                          allowedUnits: u === 'all' ? ['all', 'betim', 'taguatinga'] : [u]
-                        });
-                      }} 
-                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}
+              <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Filial *</label>
+                <select 
+                  className="form-control" 
+                  required 
+                  value={userForm.primaryUnit || 'betim'} 
+                  onChange={e => {
+                    const u = e.target.value;
+                    setUserForm({ 
+                      ...userForm, 
+                      primaryUnit: u,
+                      allowedUnits: u === 'all' ? ['all', 'betim', 'taguatinga'] : [u]
+                    });
+                  }} 
+                  style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}
+                >
+                  <option value="betim">🏢 Unidade Betim - MG</option>
+                  <option value="taguatinga">🏢 Unidade Taguatinga - DF</option>
+                  <option value="all">🌐 Todas as Unidades (Acesso Global)</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>
+                  {editingUser ? 'Nova Senha (deixe em branco para manter a atual)' : 'Senha de Acesso Inicial'}
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder={editingUser ? "Digite a nova senha de login" : "Ex: MinhaSenha123"} 
+                    value={userForm.password} 
+                    onChange={e => setUserForm({ ...userForm, password: e.target.value })} 
+                    style={{ flex: 1, padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                  />
+                  {editingUser && (
+                    <button 
+                      type="button" 
+                      onClick={() => handleGenerateTempPassword(editingUser)}
+                      disabled={actionLoading}
+                      className="btn btn-outline"
+                      title="Gerar Senha Temporária Dinâmica"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: '600', color: '#f59e0b', borderColor: '#f59e0b', cursor: 'pointer', whiteSpace: 'nowrap' }}
                     >
-                      <option value="betim">🏢 Unidade Betim - MG</option>
-                      <option value="taguatinga">🏢 Unidade Taguatinga - DF</option>
-                      <option value="all">🌐 Todas as Unidades (Acesso Global)</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>
-                      {editingUser ? 'Nova Senha (deixe em branco para manter a atual)' : 'Senha de Acesso Inicial'}
-                    </label>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <input 
-                        type="text" 
-                        className="form-control" 
-                        placeholder={editingUser ? "Digite a nova senha de login" : "Ex: MinhaSenha123"} 
-                        value={userForm.password} 
-                        onChange={e => setUserForm({ ...userForm, password: e.target.value })} 
-                        style={{ flex: 1, padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
-                      />
-                      {editingUser && (
-                        <button 
-                          type="button" 
-                          onClick={() => handleGenerateTempPassword(editingUser)}
-                          disabled={actionLoading}
-                          className="btn btn-outline"
-                          title="Gerar Senha Temporária Dinâmica"
-                          style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: '600', color: '#f59e0b', borderColor: '#f59e0b', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                        >
-                          <RefreshCw size={14} /> Gerar Temporária
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {generatedTempPass && (
-                    <div style={{ ...styles.alert, backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b', marginBottom: '0.85rem' }}>
-                      <KeyRound size={16} />
-                      <span>Senha Temporária Atual Salva na Nuvem: <strong>{generatedTempPass}</strong></span>
-                    </div>
-                  )}
-                  
-                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Status de Login</label>
-                    <select className="form-control" value={userForm.status} onChange={e => setUserForm({ ...userForm, status: e.target.value })} style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
-                      <option value="active">Ativo (Permitir Login)</option>
-                      <option value="inactive">Inativo (Bloquear Login)</option>
-                    </select>
-                  </div>
-
-                  <div style={styles.modalFooter}>
-                    <button type="button" onClick={() => setShowUserModal(false)} className="btn btn-secondary" style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer' }}>Cancelar</button>
-                    <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', color: '#ffffff', padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}>
-                      {actionLoading ? 'Salvando...' : 'Gravar Acesso'}
+                      <RefreshCw size={14} /> Gerar Temporária
                     </button>
-                  </div>
-                </>
+                  )}
+                </div>
+              </div>
+
+              {generatedTempPass && (
+                <div style={{ ...styles.alert, backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b', marginBottom: '0.75rem' }}>
+                  <KeyRound size={16} />
+                  <span>Senha Temporária Salva na Nuvem: <strong>{generatedTempPass}</strong></span>
+                </div>
               )}
+              
+              <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Status</label>
+                <select className="form-control" value={userForm.status} onChange={e => setUserForm({ ...userForm, status: e.target.value })} style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                  <option value="active">Ativo (Permitir Login)</option>
+                  <option value="inactive">Inativo (Bloquear Login)</option>
+                </select>
+              </div>
+
+              <div style={styles.modalFooter}>
+                <button type="button" onClick={() => setShowUserModal(false)} className="btn btn-secondary" style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer' }}>Cancelar</button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', color: '#ffffff', padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}>
+                  {actionLoading ? 'Salvando...' : 'Gravar Acesso'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -1305,7 +1310,7 @@ export default function ConfigPanel() {
           <div style={{ ...styles.modalCard, maxWidth: '500px' }}>
             <div style={styles.modalHeader}>
               <div>
-                <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{editingLocation ? 'Editar Local de Estoque' : 'Cadastrar Local de Estoque'}</h3>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{editingLocation ? 'Editar Local' : 'Cadastrar Local'}</h3>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Defina os locais físicos e almoxarifados da clínica.</span>
               </div>
               <button onClick={() => setShowLocationModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
@@ -1313,7 +1318,7 @@ export default function ConfigPanel() {
             
             <form onSubmit={handleSaveLocation} style={styles.modalForm}>
               <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Nome do Local / Almoxarifado *</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Local *</label>
                 <input 
                   type="text" 
                   className="form-control" 
@@ -1326,7 +1331,7 @@ export default function ConfigPanel() {
               </div>
 
               <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Responsável pelo Local</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Responsável</label>
                 <input 
                   type="text" 
                   className="form-control" 
@@ -1351,7 +1356,7 @@ export default function ConfigPanel() {
               </div>
 
               <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Descrição / Observações</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Descrição</label>
                 <input 
                   type="text" 
                   className="form-control" 
@@ -1379,7 +1384,7 @@ export default function ConfigPanel() {
           <div style={{ ...styles.modalCard, maxWidth: '500px' }}>
             <div style={styles.modalHeader}>
               <div>
-                <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{editingCategory ? 'Editar Categoria' : 'Cadastrar Nova Categoria'}</h3>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{editingCategory ? 'Editar Categoria' : 'Cadastrar Categoria'}</h3>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Defina o nome e o módulo de aplicação da categoria.</span>
               </div>
               <button onClick={() => setShowCategoryModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
@@ -1387,7 +1392,7 @@ export default function ConfigPanel() {
             
             <form onSubmit={handleSaveCategory} style={styles.modalForm}>
               <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Nome da Categoria *</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Categoria *</label>
                 <input 
                   type="text" 
                   className="form-control" 
@@ -1400,7 +1405,7 @@ export default function ConfigPanel() {
               </div>
 
               <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Módulo de Aplicação *</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Módulo *</label>
                 <select 
                   className="form-control" 
                   required 
@@ -1408,15 +1413,15 @@ export default function ConfigPanel() {
                   onChange={e => setCategoryForm({ ...categoryForm, module: e.target.value })} 
                   style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}
                 >
-                  <option value="Estoque">Estoque / Farmácia</option>
-                  <option value="Financeiro">Financeiro / Contas</option>
-                  <option value="RH">Recursos Humanos (RH)</option>
-                  <option value="T.I">T.I / Geral</option>
+                  <option value="Estoque">Estoque</option>
+                  <option value="Financeiro">Financeiro</option>
+                  <option value="RH">RH</option>
+                  <option value="T.I">TI</option>
                 </select>
               </div>
 
               <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Descrição / Finalidade</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Descrição</label>
                 <input 
                   type="text" 
                   className="form-control" 
@@ -1629,6 +1634,7 @@ const styles = {
     borderRadius: '16px',
     width: '100%',
     maxWidth: '520px',
+    maxHeight: '92vh',
     overflow: 'hidden',
     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)',
     border: '1px solid var(--border-color)',
@@ -1636,12 +1642,13 @@ const styles = {
     flexDirection: 'column',
   },
   modalHeader: {
-    padding: '1.25rem 1.5rem',
+    padding: '1.15rem 1.35rem',
     borderBottom: '1px solid var(--border-color)',
     backgroundColor: '#ffffff',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexShrink: 0,
   },
   modalCloseBtn: {
     background: 'none',
@@ -1655,18 +1662,25 @@ const styles = {
     borderRadius: '50%',
   },
   modalForm: {
-    padding: '1.5rem',
+    padding: '1.25rem 1.35rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem',
+    flex: 1,
+    overflowY: 'auto',
+    minHeight: 0,
     backgroundColor: '#ffffff',
   },
   modalFooter: {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '0.75rem',
-    marginTop: '1rem',
-    paddingTop: '1rem',
+    marginTop: '0.75rem',
+    paddingTop: '0.85rem',
     borderTop: '1px solid var(--border-color)',
+    position: 'sticky',
+    bottom: 0,
+    backgroundColor: '#ffffff',
+    zIndex: 5,
+    flexShrink: 0,
   }
 };

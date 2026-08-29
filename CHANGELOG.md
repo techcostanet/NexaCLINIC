@@ -1,3 +1,20 @@
+## [v4.7.84] - 29 de Agosto, 2026
+### Módulo Configurações (NexaCONFIG) — Matriz RBAC com Feed Assistencial e Médico, Ordenação Alfabética e Salvamento Ágil de Usuários
+- **Matriz RBAC com Módulos Assistencial e Médico:**
+  - Inclusão das colunas de permissão para o Feed Assistencial (`assist` / NexaASSIST) e Gestão Médica (`medical` / NexaMED) na matriz de perfis de usuário do sistema.
+  - Permite aos administradores definir granularmente o acesso (`Bloqueado`, `Leitura` ou `Escrita`) para qualquer perfil operacional (Médico, Enfermagem, Recepção, RH, etc.), com reflexo imediato no seletor de módulos.
+- **Ordenação Alfabética Rigorosa de Funcionários:**
+  - Ordenação alfabética (A-Z com suporte a acentuação em português) aplicada na busca do banco de dados e no seletor de colaboradores físicos no modal de criação e edição de credenciais de login.
+- **Gravação de Acessos em 1 Clique Único (Atômica):**
+  - Refatoração dos métodos de criação e atualização de usuários no Firebase Auth e Firestore com payload unificado e uso de `setDoc(..., { merge: true })`.
+  - Eliminação de chamadas redundantes e fechamento instantâneo do modal com mensagem de confirmação em toast, resolvendo o comportamento onde era necessário clicar duas vezes para salvar.
+- **Layout Responsivo do Modal com Rodapé Fixo:**
+  - Ajuste de dimensionamento do modal de usuários com altura máxima de `92vh`, rolagem interna fluida no formulário e rodapé com o botão "Gravar Acesso" sempre fixo e visível, sem necessidade de alterar o zoom do navegador.
+- **Padronização de Rótulos em Termo Único (Boy Scout Rule):**
+  - Limpeza e padronização rigorosa de todos os cabeçalhos de tabela e rótulos de campos nas abas de Perfis, Usuários, Locais de Estoque, Categorias e Logs de Auditoria.
+
+---
+
 ## [v4.7.82] - 28 de Agosto, 2026
 ### Módulo de Compras (NexaPROCURE) — Ordem de Compra Oficial (PO), Provisão no Contas a Pagar, Saving & Curva ABC
 - **Emissão e Envio da Ordem de Compra Oficial (PO / Purchase Order):**

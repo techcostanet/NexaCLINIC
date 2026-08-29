@@ -215,9 +215,9 @@ export const logout = async () => {
     return signOut(auth);
   };
 
-export const createUser = async (email, name, role, allowedSectors, primaryUnit = 'betim', allowedUnits = ['betim']) => {
+export const createUser = async (email, name, role, allowedSectors = [], primaryUnit = 'betim', allowedUnits = ['betim'], extraData = {}) => {
     if (USE_MOCK) {
-      return mockAuth.createUser(email, name, role, allowedSectors, primaryUnit, allowedUnits);
+      return mockAuth.createUser(email, name, role, allowedSectors, primaryUnit, allowedUnits, extraData);
     }
     
     const { initializeApp: initializeSecondaryApp } = await import('firebase/app');
@@ -231,40 +231,48 @@ export const createUser = async (email, name, role, allowedSectors, primaryUnit 
     }
 
     const secondaryAppName = `secondary-${Math.random().toString(36).substr(2, 9)}`;
-    const secondaryApp = initializeSecondaryApp(configToUse, secondaryAppName);
-    const secondaryAuth = getAuth(secondaryApp);
+    let secondaryApp = null;
     
     // Password policy for new created users
-    const base = email.split('@')[0];
-    const tempPassword = base === 'daliam' ? 'dalia123' : `${base}123`;
+    const base = (email || '').split('@')[0];
+    const initialPassword = extraData.password || (base === 'daliam' ? 'dalia123' : `${base}123`);
     
     try {
-      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, tempPassword);
+      secondaryApp = initializeSecondaryApp(configToUse, secondaryAppName);
+      const secondaryAuth = getAuth(secondaryApp);
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, initialPassword);
       const uid = userCredential.user.uid;
 
       // Save user metadata in Firestore
       const db = getFirestore(app);
-      await setDoc(doc(db, 'users', uid), {
+      const userPayload = {
         uid,
-        email,
-        name,
-        role,
-        allowedSectors,
+        email: (email || '').trim().toLowerCase(),
+        name: name || 'Operador',
+        role: role || 'reception',
+        allowedSectors: allowedSectors || [],
         primaryUnit: primaryUnit || 'betim',
         allowedUnits: allowedUnits || [primaryUnit || 'betim'],
-        authPassword: tempPassword, // Save this to help heal Firebase Auth later
+        employeeId: extraData.employeeId || '',
+        status: extraData.status || 'active',
+        password: initialPassword,
+        authPassword: initialPassword, // Save this to help heal Firebase Auth later
         createdAt: new Date().toISOString()
-      });
+      };
+
+      await setDoc(doc(db, 'users', uid), userPayload, { merge: true });
 
       // Sign out of secondary and clean up
       await signOut(secondaryAuth);
       await secondaryApp.delete();
 
-      return { uid, email, name, role, primaryUnit, allowedUnits };
+      return userPayload;
     } catch (err) {
-      try {
-        await secondaryApp.delete();
-      } catch (e) {}
+      if (secondaryApp) {
+        try {
+          await secondaryApp.delete();
+        } catch (e) {}
+      }
 
       if (err.code === 'auth/email-already-in-use') {
         const cleanEmail = (email || '').trim().toLowerCase();
@@ -283,12 +291,14 @@ export const createUser = async (email, name, role, allowedSectors, primaryUnit 
             allowedSectors: allowedSectors || [],
             primaryUnit: primaryUnit || 'betim',
             allowedUnits: allowedUnits || [primaryUnit || 'betim'],
-            status: 'active',
+            employeeId: extraData.employeeId !== undefined ? extraData.employeeId : (existingUserDoc?.data()?.employeeId || ''),
+            status: extraData.status || existingUserDoc?.data()?.status || 'active',
+            ...(extraData.password ? { password: extraData.password, authPassword: extraData.password } : {}),
             updatedAt: new Date().toISOString()
           };
 
           await setDoc(doc(db, 'users', targetUid), userPayload, { merge: true });
-          return { uid: targetUid, email: cleanEmail, name, role, primaryUnit, allowedUnits, isExisting: true };
+          return { ...userPayload, isExisting: true };
         } catch (dbErr) {
           console.error("Erro ao sincronizar perfil do usuário existente no Firestore:", dbErr);
         }
@@ -507,12 +517,13 @@ export const updateUser = async (uid, userData) => {
     if (USE_MOCK) {
       return mockFirestore.updateUser(uid, userData);
     }
-    const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
+    const { getFirestore, doc, setDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
-    return updateDoc(doc(db, 'users', uid), {
+    return setDoc(doc(db, 'users', uid), {
       ...userData,
+      uid,
       updatedAt: new Date().toISOString()
-    });
+    }, { merge: true });
   };
 
 export const deleteUser = async (uid) => {
@@ -525,17 +536,17 @@ export const deleteUser = async (uid) => {
   };
 
 export const DEFAULT_USER_PROFILES = [
-  { id: 'admin', name: 'Administrador / T.I.', permissions: { index: 'write', reception: 'write', clinical: 'write', medical: 'write', calendar: 'write', stock: 'write', maintenance: 'write', purchasing: 'write', requisitions: 'write', apac: 'write', finance: 'write', hr: 'write', sesmt: 'write', config: 'write' } },
-  { id: 'doctor', name: 'Médico / Corpo Clínico', permissions: { index: 'read', reception: 'read', clinical: 'write', medical: 'write', calendar: 'write', assist: 'write', stock: 'read', maintenance: 'read', purchasing: 'none', requisitions: 'read', apac: 'none', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
-  { id: 'clinical', name: 'Equipe Multiprofissional', permissions: { index: 'read', reception: 'read', clinical: 'write', medical: 'read', calendar: 'read', assist: 'write', stock: 'read', maintenance: 'read', purchasing: 'none', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
-  { id: 'reception', name: 'Recepção / Atendimento', permissions: { index: 'read', reception: 'write', clinical: 'none', medical: 'none', calendar: 'write', assist: 'read', stock: 'none', maintenance: 'read', purchasing: 'none', requisitions: 'none', apac: 'read', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
-  { id: 'financial', name: 'Gestão Financeira', permissions: { index: 'read', reception: 'none', clinical: 'none', medical: 'none', calendar: 'none', assist: 'none', stock: 'none', maintenance: 'read', purchasing: 'read', requisitions: 'none', apac: 'write', finance: 'write', hr: 'none', sesmt: 'none', config: 'none' } },
-  { id: 'hr', name: 'Recursos Humanos (RH)', permissions: { index: 'read', reception: 'none', clinical: 'none', medical: 'none', calendar: 'none', assist: 'none', stock: 'none', maintenance: 'read', purchasing: 'read', requisitions: 'none', apac: 'none', finance: 'none', hr: 'write', sesmt: 'read', config: 'none' } },
-  { id: 'sesmt', name: 'SESMT & Segurança do Trabalho', permissions: { index: 'read', reception: 'none', clinical: 'none', medical: 'none', calendar: 'none', assist: 'none', stock: 'none', maintenance: 'read', purchasing: 'none', requisitions: 'none', apac: 'none', finance: 'none', hr: 'read', sesmt: 'write', config: 'none' } },
-  { id: 'stock_keeper', name: 'Almoxarifado & Farmácia', permissions: { index: 'read', reception: 'none', clinical: 'read', medical: 'none', calendar: 'none', assist: 'none', stock: 'write', maintenance: 'read', purchasing: 'write', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
-  { id: 'technician', name: 'Manutenção & Engenharia Clínica', permissions: { index: 'read', reception: 'none', clinical: 'none', medical: 'none', calendar: 'none', assist: 'none', stock: 'read', maintenance: 'write', purchasing: 'read', requisitions: 'read', apac: 'none', finance: 'none', hr: 'none', sesmt: 'read', config: 'none' } },
-  { id: 'apac', name: 'Faturamento & APACs', permissions: { index: 'read', reception: 'read', clinical: 'none', medical: 'none', calendar: 'none', assist: 'none', stock: 'none', maintenance: 'none', purchasing: 'none', requisitions: 'none', apac: 'write', finance: 'read', hr: 'none', sesmt: 'none', config: 'none' } },
-  { id: 'purchasing', name: 'Compras & Suprimentos', permissions: { index: 'read', reception: 'none', clinical: 'none', medical: 'none', calendar: 'none', assist: 'none', stock: 'read', maintenance: 'none', purchasing: 'write', requisitions: 'read', apac: 'none', finance: 'read', hr: 'none', sesmt: 'none', config: 'none' } }
+  { id: 'admin', name: 'Administrador', permissions: { assist: 'write', medical: 'write', index: 'write', reception: 'write', clinical: 'write', calendar: 'write', stock: 'write', maintenance: 'write', purchasing: 'write', requisitions: 'write', apac: 'write', finance: 'write', hr: 'write', sesmt: 'write', config: 'write' } },
+  { id: 'doctor', name: 'Médico / Corpo Clínico', permissions: { assist: 'write', medical: 'write', index: 'read', reception: 'read', clinical: 'write', calendar: 'write', stock: 'read', maintenance: 'read', purchasing: 'none', requisitions: 'read', apac: 'none', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
+  { id: 'clinical', name: 'Equipe Multiprofissional', permissions: { assist: 'write', medical: 'read', index: 'read', reception: 'read', clinical: 'write', calendar: 'read', stock: 'read', maintenance: 'read', purchasing: 'none', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
+  { id: 'reception', name: 'Recepção / Atendimento', permissions: { assist: 'read', medical: 'none', index: 'read', reception: 'write', clinical: 'none', calendar: 'write', stock: 'none', maintenance: 'read', purchasing: 'none', requisitions: 'none', apac: 'read', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
+  { id: 'financial', name: 'Gestão Financeira', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'read', purchasing: 'read', requisitions: 'none', apac: 'write', finance: 'write', hr: 'none', sesmt: 'none', config: 'none' } },
+  { id: 'hr', name: 'Recursos Humanos (RH)', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'read', purchasing: 'read', requisitions: 'none', apac: 'none', finance: 'none', hr: 'write', sesmt: 'read', config: 'none' } },
+  { id: 'sesmt', name: 'SESMT & Segurança', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'read', purchasing: 'none', requisitions: 'none', apac: 'none', finance: 'none', hr: 'read', sesmt: 'write', config: 'none' } },
+  { id: 'stock_keeper', name: 'Almoxarifado & Farmácia', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'none', clinical: 'read', calendar: 'none', stock: 'write', maintenance: 'read', purchasing: 'write', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
+  { id: 'technician', name: 'Manutenção & Engenharia Clínica', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'read', maintenance: 'write', purchasing: 'read', requisitions: 'read', apac: 'none', finance: 'none', hr: 'none', sesmt: 'read', config: 'none' } },
+  { id: 'apac', name: 'Faturamento & APACs', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'read', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'none', purchasing: 'none', requisitions: 'none', apac: 'write', finance: 'read', hr: 'none', sesmt: 'none', config: 'none' } },
+  { id: 'purchasing', name: 'Compras & Suprimentos', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'read', maintenance: 'none', purchasing: 'write', requisitions: 'read', apac: 'none', finance: 'read', hr: 'none', sesmt: 'none', config: 'none' } }
 ];
 
 export const getUserProfiles = async () => {

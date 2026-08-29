@@ -1439,12 +1439,12 @@ export const MODULE_GUIDES = {
         desc: 'Customização de nome fantasia da clínica, CNPJ, logomarca institucional e cor primária do sistema.'
       },
       {
-        title: 'Perfis de Segurança & Permissões (RBAC)',
-        desc: 'Controle de acessos e permissões por perfil (Administrador, Médico, Enfermagem, Recepção, RH, Financeiro, SESMT).'
+        title: 'Matriz de Perfis & Permissões RBAC Completa',
+        desc: 'Controle granular de acessos (Bloqueado, Leitura, Escrita) por perfil em todos os módulos, incluindo Feed Assistencial (NexaASSIST) e Gestão Médica (NexaMED).'
       },
       {
-        title: 'Gestão de Usuários & Senhas Temporárias',
-        desc: 'Criação de contas de login, vinculação com colaboradores do RH e redefinição de senhas com expiração.'
+        title: 'Gestão Ágil de Usuários & Vínculo com RH',
+        desc: 'Criação e edição de acessos em 1 clique único atômico, ordenação alfabética de funcionários físicos para vínculo, e geração de senhas temporárias.'
       },
       {
         title: 'Backups & Logs de Auditoria',
@@ -1453,13 +1453,22 @@ export const MODULE_GUIDES = {
     ],
     tutorial: [
       {
-        title: 'Como Criar Usuário com Perfil de Médico',
+        title: 'Como Liberar ou Bloquear o Feed Assistencial e Médico na Matriz RBAC',
         steps: [
-          'Acesse a aba "Usuários" no módulo "Configurações & TI" e clique em "+ Novo Usuário".',
-          'Informe o Nome Completo e o E-mail institucional ou profissional do médico.',
-          'No campo "Perfil de Acesso", selecione a opção "Médico / Corpo Clínico".',
-          'Defina a Filial Principal de atuação e clique em "Salvar".',
-          'O login é gerado imediatamente e o médico já fica disponível no NexaMED para complementação cadastral.'
+          'Acesse o módulo "Configurações & TI" e clique na aba "Perfis de Acesso".',
+          'Localize a linha correspondente ao perfil de usuário desejado (ex: Enfermagem, Recepção, Operador).',
+          'Na coluna "Assistencial" ou "Médico", selecione o nível de permissão: "Bloqueado", "Leitura" ou "Escrita".',
+          'As permissões são atualizadas em tempo real no banco cloud e aplicadas instantaneamente no menu principal de módulos.'
+        ]
+      },
+      {
+        title: 'Como Criar Usuário com Vínculo a Funcionário',
+        steps: [
+          'Acesse a aba "Usuários" no módulo "Configurações & TI" e clique no botão "+ Criar Conta de Usuário".',
+          'Informe o Nome Completo e o E-mail de Login do colaborador.',
+          'No campo "Funcionário", selecione o colaborador na lista ordenada alfabeticamente (A-Z).',
+          'Selecione o Perfil de Permissão e a Filial de Atuação.',
+          'Clique em "Gravar Acesso". O registro é salvo imediatamente em 1 clique e o modal fecha com confirmação na tela.'
         ]
       },
       {
@@ -1492,6 +1501,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como faço para que determinado perfil veja o Feed Assistencial?',
+        resposta: 'Na aba "Perfis de Acesso", altere a coluna "Assistencial" do perfil desejado para "Leitura" ou "Escrita". Ao logar com esse perfil, o módulo NexaASSIST aparecerá disponível na tela inicial.'
+      },
       {
         pergunta: 'Como obtenho a senha para usar o Gmail ou Google Workspace?',
         resposta: 'O Google exige o uso de uma "Senha de Aplicativo" de 16 dígitos gerada em Gerenciar Conta Google > Segurança > Verificação em duas etapas > Senhas de app. Nunca utilize sua senha pessoal de login comum.'

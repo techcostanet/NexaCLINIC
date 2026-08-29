@@ -2555,20 +2555,38 @@ export const mockAuth = {
     };
   },
 
-  createUser: async (email, name, role, allowedSectors) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  createUser: async (email, name, role, allowedSectors = [], primaryUnit = 'betim', allowedUnits = ['betim'], extraData = {}) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
     const db = getDB();
-    const emailExists = db.users.some(u => u.email === email);
-    if (emailExists) {
-      throw new Error('E-mail já cadastrado.');
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const existingIndex = db.users.findIndex(u => (u.email || '').trim().toLowerCase() === cleanEmail);
+    if (existingIndex > -1) {
+      db.users[existingIndex] = {
+        ...db.users[existingIndex],
+        name: name || db.users[existingIndex].name,
+        role: role || db.users[existingIndex].role,
+        allowedSectors: allowedSectors || db.users[existingIndex].allowedSectors,
+        primaryUnit: primaryUnit || db.users[existingIndex].primaryUnit,
+        allowedUnits: allowedUnits || db.users[existingIndex].allowedUnits,
+        employeeId: extraData.employeeId !== undefined ? extraData.employeeId : db.users[existingIndex].employeeId,
+        status: extraData.status || db.users[existingIndex].status || 'active',
+        password: extraData.password || db.users[existingIndex].password,
+        updatedAt: new Date().toISOString()
+      };
+      setDB(db);
+      return { ...db.users[existingIndex], isExisting: true };
     }
     const newUser = {
       uid: 'user-' + Math.random().toString(36).substr(2, 9),
-      email,
+      email: cleanEmail,
       name,
       role,
-      allowedSectors,
-      status: 'active',
+      allowedSectors: allowedSectors || [],
+      primaryUnit: primaryUnit || 'betim',
+      allowedUnits: allowedUnits || [primaryUnit || 'betim'],
+      employeeId: extraData.employeeId || '',
+      status: extraData.status || 'active',
+      password: extraData.password || `${cleanEmail.split('@')[0]}123`,
       createdAt: new Date().toISOString()
     };
     db.users.push(newUser);
@@ -2585,7 +2603,7 @@ export const mockFirestore = {
   },
 
   updateUserPermissions: async (uid, allowedSectors) => {
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 300));
     const db = getDB();
     const index = db.users.findIndex(u => u.uid === uid);
     if (index > -1) {
@@ -2597,19 +2615,30 @@ export const mockFirestore = {
   },
 
   updateUser: async (uid, userData) => {
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 300));
     const db = getDB();
-    const index = db.users.findIndex(u => u.uid === uid);
+    let index = db.users.findIndex(u => u.uid === uid);
+    if (index === -1 && userData.email) {
+      index = db.users.findIndex(u => (u.email || '').toLowerCase() === userData.email.toLowerCase());
+    }
     if (index > -1) {
       db.users[index] = {
         ...db.users[index],
         ...userData,
+        uid: db.users[index].uid || uid,
         updatedAt: new Date().toISOString()
       };
       setDB(db);
       return db.users[index];
     }
-    throw new Error('Usuário não encontrado');
+    const newUser = {
+      uid,
+      ...userData,
+      createdAt: new Date().toISOString()
+    };
+    db.users.push(newUser);
+    setDB(db);
+    return newUser;
   },
 
   deleteUser: async (uid) => {

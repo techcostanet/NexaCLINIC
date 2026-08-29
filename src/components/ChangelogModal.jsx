@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.84',
+      date: '29/08/2026',
+      title: 'Módulo Configurações (NexaCONFIG) — Matriz RBAC com Feed Assistencial e Médico, Ordenação Alfabética e Salvamento Ágil de Usuários',
+      description: 'Aprimoramento abrangente da gestão de acessos e configurações: inclusão dos módulos Assistencial (NexaASSIST) e Médico (NexaMED) na matriz RBAC de perfis de usuário, ordenação alfabética rigorosa na listagem de colaboradores para vínculo de contas, layout com rodapé fixo sem necessidade de zoom e correção no fluxo de gravação de acessos com 1 clique único atômico.',
+      changes: [
+        { type: 'Matriz RBAC Completa', text: 'Adição das colunas Feed Assistencial (NexaASSIST) e Gestão Médica (NexaMED) na matriz de permissões por perfil, permitindo liberar (Leitura/Escrita) ou bloquear com sincronização imediata no menu de módulos.' },
+        { type: 'Ordenação Alfabética de Funcionários', text: 'Listagem de funcionários físicos no modal de criação e edição de usuários ordenada estritamente em ordem alfabética (A-Z, pt-BR).' },
+        { type: 'Salvamento de Acesso em 1 Clique', text: 'Correção do fluxo de gravação de usuários com salvamento atômico (setDoc com merge e suporte a credenciais iniciais), fechamento automático do modal e confirmação visual instantânea.' },
+        { type: 'Layout Responsivo com Rodapé Fixo', text: 'Reestruturação do modal de usuário com altura máxima segura (92vh), rolagem vertical interna e rodapé de botões fixo, eliminando a necessidade de ajuste de zoom.' },
+        { type: 'Padronização de Rótulos (Termo Único)', text: 'Adequação rigorosa de todos os cabeçalhos de tabela, filtros e campos do módulo para termos únicos e diretos conforme as diretrizes do sistema.' }
+      ]
+    },
+    {
       version: 'v4.7.82',
       date: '28/08/2026',
       title: 'Módulo de Compras (NexaPROCURE) — Ordem de Compra Oficial (PO), Provisão no Contas a Pagar, Saving & Curva ABC',
