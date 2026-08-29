@@ -12,6 +12,7 @@ export default function ScheduleBlockModal({
   doctors = [],
   appointments = [],
   existingBlocks = [],
+  activeUnitId = 'betim',
   onBlockSaved,
   onBlockDeleted
 }) {
@@ -56,6 +57,9 @@ export default function ScheduleBlockModal({
       return setFeedback({ text: 'A data inicial não pode ser posterior à data final.', type: 'danger' });
     }
 
+    const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+    const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
+
     setSaving(true);
     try {
       const payload = {
@@ -68,6 +72,8 @@ export default function ScheduleBlockModal({
         endTime: period === 'Horário' ? endTime : (period === 'Manhã' ? '12:00' : period === 'Tarde' ? '18:00' : '19:00'),
         reason,
         notes,
+        unitId: targetUnitId,
+        unit: targetUnit,
         createdAt: new Date().toISOString()
       };
 

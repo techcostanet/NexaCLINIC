@@ -43,21 +43,21 @@ export default function CalendarReportsModal({
   const [kpis, setKpis] = useState([]);
 
   const REPORTS = [
-    { id: 'EXTRATO_GERAL', name: '1. Extrato Geral de Agendamentos', icon: ClipboardList },
-    { id: 'PRODUTIVIDADE_MEDICO', name: '2. Produtividade por Médico', icon: Stethoscope },
-    { id: 'ABSENTEISMO_FALTAS', name: '3. Taxa de Faltas (No-Show)', icon: UserX },
-    { id: 'CONFIRMACOES_WHATSAPP', name: '4. Confirmações via WhatsApp', icon: Send },
-    { id: 'OCUPACAO_SALAS', name: '5. Ocupação de Consultórios', icon: Building2 },
-    { id: 'TIPO_CONSULTA', name: '6. Consultas por Modalidade', icon: FilePieChart },
-    { id: 'ENCAIXES_URGENCIA', name: '7. Encaixes & Urgências', icon: Zap },
-    { id: 'CANCELAMENTOS', name: '8. Histórico de Cancelamentos', icon: AlertTriangle },
-    { id: 'COTAS_METAS', name: '9. Cotas Anuais & Metas', icon: TrendingUp },
-    { id: 'BLOQUEIOS_AGENDA', name: '10. Bloqueios & Afastamentos', icon: Lock },
-    { id: 'TEMPO_ESPERA', name: '11. Tempo de Espera & Pontualidade', icon: Clock },
-    { id: 'DISTRIBUICAO_CONVENIOS', name: '12. Distribuição por Convênio', icon: HeartPulse },
-    { id: 'BUSCA_ATIVA_SEM_RETORNO', name: '13. Pacientes Crônicos Sem Retorno', icon: Users },
-    { id: 'ESCALA_FERIADOS', name: '14. Escala Médica em Feriados', icon: Calendar },
-    { id: 'AUDITORIA_AGENDA', name: '15. Auditoria de Modificações', icon: ShieldCheck }
+    { id: 'EXTRATO_GERAL', name: '1. Extrato Geral', icon: ClipboardList },
+    { id: 'PRODUTIVIDADE_MEDICO', name: '2. Produtividade', icon: Stethoscope },
+    { id: 'ABSENTEISMO_FALTAS', name: '3. Faltas', icon: UserX },
+    { id: 'CONFIRMACOES_WHATSAPP', name: '4. Confirmações', icon: Send },
+    { id: 'OCUPACAO_SALAS', name: '5. Ocupação', icon: Building2 },
+    { id: 'TIPO_CONSULTA', name: '6. Modalidades', icon: FilePieChart },
+    { id: 'ENCAIXES_URGENCIA', name: '7. Encaixes', icon: Zap },
+    { id: 'CANCELAMENTOS', name: '8. Cancelamentos', icon: AlertTriangle },
+    { id: 'COTAS_METAS', name: '9. Cotas', icon: TrendingUp },
+    { id: 'BLOQUEIOS_AGENDA', name: '10. Bloqueios', icon: Lock },
+    { id: 'TEMPO_ESPERA', name: '11. Pontualidade', icon: Clock },
+    { id: 'DISTRIBUICAO_CONVENIOS', name: '12. Convênios', icon: HeartPulse },
+    { id: 'BUSCA_ATIVA_SEM_RETORNO', name: '13. Busca Ativa', icon: Users },
+    { id: 'ESCALA_FERIADOS', name: '14. Feriados', icon: Calendar },
+    { id: 'AUDITORIA_AGENDA', name: '15. Auditoria', icon: ShieldCheck }
   ];
 
   const availableRooms = [
@@ -76,8 +76,8 @@ export default function CalendarReportsModal({
     'Agendado',
     'Confirmado',
     'Aguardando',
-    'Em Atendimento',
-    'Atendido',
+    'Em Consulta',
+    'Finalizado',
     'Faltou',
     'Cancelado'
   ];
@@ -130,6 +130,12 @@ export default function CalendarReportsModal({
 
     const filterByStatus = (item) => {
       if (statusFilter === 'Todos') return true;
+      if (statusFilter === 'Finalizado' || statusFilter === 'Atendido') {
+        return item.status === 'Finalizado' || item.status === 'Atendido' || item.status === 'Concluído';
+      }
+      if (statusFilter === 'Em Consulta' || statusFilter === 'Em Atendimento') {
+        return item.status === 'Em Consulta' || item.status === 'Em Atendimento';
+      }
       return (item.status || '') === statusFilter;
     };
 
@@ -186,7 +192,7 @@ export default function CalendarReportsModal({
         ];
 
         const total = data.length;
-        const confirmados = filteredApts.filter(a => a.status === 'Confirmado' || a.status === 'Atendido' || a.status === 'Em Atendimento').length;
+        const confirmados = filteredApts.filter(a => a.status === 'Confirmado' || a.status === 'Finalizado' || a.status === 'Atendido' || a.status === 'Em Consulta' || a.status === 'Em Atendimento').length;
         const faltas = filteredApts.filter(a => a.status === 'Faltou').length;
         const encaixes = filteredApts.filter(a => a.isEncaixe).length;
 
@@ -232,7 +238,7 @@ export default function CalendarReportsModal({
             };
           }
           mapDoc[docId].total++;
-          if (apt.status === 'Atendido' || apt.status === 'Em Atendimento') mapDoc[docId].atendidos++;
+          if (apt.status === 'Finalizado' || apt.status === 'Atendido' || apt.status === 'Em Consulta' || apt.status === 'Em Atendimento') mapDoc[docId].atendidos++;
           if ((apt.type || '').toLowerCase().includes('primeira')) mapDoc[docId].primeiras++;
           if ((apt.type || '').toLowerCase().includes('retorno')) mapDoc[docId].retornos++;
           if (apt.isEncaixe) mapDoc[docId].encaixes++;
@@ -394,7 +400,7 @@ export default function CalendarReportsModal({
           const r = apt.room || 'Consultório 1';
           if (roomMap[r]) {
             roomMap[r].agendados++;
-            if (apt.status === 'Atendido' || apt.status === 'Em Atendimento') roomMap[r].atendidos++;
+            if (apt.status === 'Finalizado' || apt.status === 'Atendido' || apt.status === 'Em Consulta' || apt.status === 'Em Atendimento') roomMap[r].atendidos++;
             roomMap[r].horasOcupadas += 0.5; // ~30 min por consulta padrão
             if (apt.doctorName) roomMap[r].medicos.add(formatDoctorDisplayName(apt.doctorName));
           }
@@ -557,7 +563,7 @@ export default function CalendarReportsModal({
           const sched = doctorSchedules.find(s => s.doctorId === doc.uid) || {};
           const cotaAnual = sched.annualQuota || 480; // default 480 consultas/ano (~40/mês)
           const metaMensal = Math.round(cotaAnual / 12);
-          const realizadasAno = appointments.filter(a => a.doctorId === doc.uid && (a.status === 'Atendido' || a.status === 'Confirmado')).length;
+          const realizadasAno = appointments.filter(a => a.doctorId === doc.uid && (a.status === 'Finalizado' || a.status === 'Atendido' || a.status === 'Confirmado')).length;
           const atingimento = ((realizadasAno / cotaAnual) * 100).toFixed(1) + '%';
           const saldo = Math.max(0, cotaAnual - realizadasAno);
 
@@ -636,7 +642,7 @@ export default function CalendarReportsModal({
       // 11. TEMPO DE ESPERA & PONTUALIDADE
       case 'TEMPO_ESPERA': {
         data = filteredApts
-          .filter(a => a.status === 'Atendido' || a.status === 'Em Atendimento' || a.status === 'Aguardando')
+          .filter(a => a.status === 'Finalizado' || a.status === 'Atendido' || a.status === 'Em Consulta' || a.status === 'Em Atendimento' || a.status === 'Aguardando')
           .map(apt => {
             const pat = patients.find(p => p.id === apt.patientId) || {};
             // Simulated / real wait times based on checkInTime vs scheduled time
@@ -652,7 +658,7 @@ export default function CalendarReportsModal({
               inicio_atendimento: horaInicio,
               tempo_espera: '15 min',
               duracao_consulta: '25 min',
-              status: apt.status || 'Atendido'
+              status: apt.status || 'Finalizado'
             };
           });
 
@@ -717,7 +723,7 @@ export default function CalendarReportsModal({
         data = patients.map(pat => {
           // Find last appointment
           const userApts = appointments
-            .filter(a => a.patientId === pat.id && (a.status === 'Atendido' || a.status === 'Confirmado'))
+            .filter(a => a.patientId === pat.id && (a.status === 'Finalizado' || a.status === 'Atendido' || a.status === 'Confirmado'))
             .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
           const lastApt = userApts[0];
@@ -734,7 +740,7 @@ export default function CalendarReportsModal({
             telefone: pat.phone || '-',
             cpf: pat.cpf || '-',
             turno: pat.shift || pat.dialysisShift || 'Turno 1',
-            nefrologista: pat.nephrologist || pat.doctor || 'Dr. Carlos',
+            nefrologista: formatDoctorDisplayName(pat.nephrologist || pat.doctor || 'Médico'),
             ultima_consulta: lastApt ? formatDateBR(lastApt.date) : 'Sem registro',
             dias_sem_consulta: typeof diasSemConsulta === 'number' ? `${diasSemConsulta} dias` : diasSemConsulta,
             rawDays: typeof diasSemConsulta === 'number' ? diasSemConsulta : 999

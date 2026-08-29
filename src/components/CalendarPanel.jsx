@@ -27,6 +27,7 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
   const [doctors, setDoctors] = useState([]);
   const [doctorSchedules, setDoctorSchedules] = useState([]);
   const [scheduleBlocks, setScheduleBlocks] = useState([]);
+  const [tenantSettings, setTenantSettings] = useState({ name: 'Nexa Clínica', cnpj: '00.000.000/0001-00', logo: '' });
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -111,18 +112,22 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [aptList, patList, userList, schedList, blockList] = await Promise.all([
+      const [aptList, patList, userList, schedList, blockList, tenantData] = await Promise.all([
         dbService.getAppointments(),
         dbService.getPatients(),
         dbService.getUsers(),
         dbService.getDoctorSchedules(),
-        dbService.getScheduleBlocks()
+        dbService.getScheduleBlocks(),
+        dbService.getTenantSettings ? dbService.getTenantSettings().catch(() => null) : Promise.resolve(null)
       ]);
 
       setAppointments(aptList || []);
       setPatients(patList || []);
       setDoctorSchedules(schedList || []);
       setScheduleBlocks(blockList || []);
+      if (tenantData && tenantData.name) {
+        setTenantSettings(tenantData);
+      }
 
       // Filter clinical professionals / doctors
       const docList = (userList || []).filter(u => 
@@ -449,6 +454,8 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
         showAlert('Atendimento clínico iniciado!', 'success');
       } else if (newStatus === 'Finalizado') {
         showAlert('Atendimento finalizado com sucesso!', 'success');
+      } else if (newStatus === 'Faltou') {
+        showAlert('Falta (No-Show) registrada com sucesso.', 'warning');
       } else {
         showAlert(`Status atualizado para: ${newStatus}`, 'success');
       }
@@ -466,7 +473,8 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
     const roomInfo = apt.room && apt.room !== 'Nenhum' ? ` no local *${apt.room}*` : '';
     const timeRange = apt.endTime ? `${apt.time} às ${apt.endTime}` : apt.time;
     const encaixeText = apt.isEncaixe ? ' *(Encaixe)*' : '';
-    const textMsg = `Olá *${apt.patientName}*! 👋\nConfirmamos seu agendamento${encaixeText} de *${apt.type}* com *${apt.doctorName}* na clínica *NexAi* para o dia *${dateFormatted}* das *${timeRange}*${roomInfo}.\n\nPor favor, responda *SIM* para confirmar ou nos avise se precisar reagendar.`;
+    const clinicName = tenantSettings?.name || 'Clínica';
+    const textMsg = `Olá *${apt.patientName}*! 👋\nConfirmamos seu agendamento${encaixeText} de *${apt.type}* com *${apt.doctorName}* na clínica *${clinicName}* para o dia *${dateFormatted}* das *${timeRange}*${roomInfo}.\n\nPor favor, responda *SIM* para confirmar ou nos avise se precisar reagendar.`;
     
     const waUrl = rawPhone.length >= 10 
       ? `https://wa.me/55${rawPhone}?text=${encodeURIComponent(textMsg)}`
@@ -757,12 +765,14 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                             apt.status === 'Aguardando' ? '#fef3c7' :
                             apt.status === 'Em Consulta' ? '#ede9fe' :
                             apt.status === 'Finalizado' ? '#dcfce7' :
-                            apt.status === 'Cancelado' ? '#fee2e2' : '#e0f2fe',
+                            apt.status === 'Faltou' ? '#fee2e2' :
+                            apt.status === 'Cancelado' ? '#f1f5f9' : '#e0f2fe',
                           color: 
                             apt.status === 'Aguardando' ? '#b45309' :
                             apt.status === 'Em Consulta' ? '#6d28d9' :
                             apt.status === 'Finalizado' ? '#166534' :
-                            apt.status === 'Cancelado' ? '#991b1b' : '#0369a1'
+                            apt.status === 'Faltou' ? '#dc2626' :
+                            apt.status === 'Cancelado' ? '#475569' : '#0369a1'
                         }}>
                           {apt.status}
                         </span>
@@ -988,12 +998,14 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                               apt.status === 'Aguardando' ? '#fef3c7' :
                               apt.status === 'Em Consulta' ? '#ede9fe' :
                               apt.status === 'Finalizado' ? '#dcfce7' :
-                              apt.status === 'Cancelado' ? '#fee2e2' : '#e0f2fe',
+                              apt.status === 'Faltou' ? '#fee2e2' :
+                              apt.status === 'Cancelado' ? '#f1f5f9' : '#e0f2fe',
                             color: 
                               apt.status === 'Aguardando' ? '#b45309' :
                               apt.status === 'Em Consulta' ? '#6d28d9' :
                               apt.status === 'Finalizado' ? '#166534' :
-                              apt.status === 'Cancelado' ? '#991b1b' : '#0369a1'
+                              apt.status === 'Faltou' ? '#dc2626' :
+                              apt.status === 'Cancelado' ? '#475569' : '#0369a1'
                           }}>
                             {apt.status}
                           </span>
@@ -1002,7 +1014,7 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                         {/* Actions */}
                         <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
-                            {apt.status !== 'Finalizado' && apt.status !== 'Cancelado' && (
+                            {apt.status !== 'Finalizado' && apt.status !== 'Cancelado' && apt.status !== 'Faltou' && (
                               <>
                                 {apt.status === 'Agendado' && (
                                   <button onClick={() => handleUpdateStatus(apt.id, 'Confirmado')} style={{ ...styles.statusBtn, backgroundColor: '#0284c7' }}>
@@ -1024,7 +1036,18 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                                     Finalizar
                                   </button>
                                 )}
+                                {(apt.status === 'Agendado' || apt.status === 'Confirmado' || apt.status === 'Aguardando') && (
+                                  <button onClick={() => handleUpdateStatus(apt.id, 'Faltou')} style={{ ...styles.statusBtn, backgroundColor: '#dc2626' }} title="Registrar Falta (No-Show)">
+                                    Faltou
+                                  </button>
+                                )}
                               </>
+                            )}
+
+                            {apt.status === 'Faltou' && (
+                              <button onClick={() => handleUpdateStatus(apt.id, 'Confirmado')} style={{ ...styles.statusBtn, backgroundColor: '#0284c7' }} title="Reagendar">
+                                Reagendar
+                              </button>
                             )}
                             
                             <button onClick={() => handleOpenEditModal(apt)} style={styles.iconBtn} title="Editar">
@@ -1456,6 +1479,10 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
           </div>
           <div style={styles.legendItem}>
             <span style={{ ...styles.legendDot, backgroundColor: '#dc2626' }} />
+            <span>Faltou</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.legendDot, backgroundColor: '#64748b' }} />
             <span>Cancelado</span>
           </div>
         </div>
@@ -1539,6 +1566,7 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
             <option value="Em Consulta">Em Consulta</option>
             <option value="Encaixe">Encaixes</option>
             <option value="Finalizado">Finalizado</option>
+            <option value="Faltou">Faltou</option>
             <option value="Cancelado">Cancelado</option>
           </select>
         </div>
@@ -1598,6 +1626,7 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
         doctors={doctors}
         appointments={currentAppointments}
         existingBlocks={currentScheduleBlocks}
+        activeUnitId={activeUnitId}
         onBlockSaved={() => {
           fetchData();
           showAlert('Bloqueio criado com sucesso!');
@@ -1894,6 +1923,7 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                     <option value="Aguardando">Aguardando</option>
                     <option value="Em Consulta">Em Consulta</option>
                     <option value="Finalizado">Finalizado</option>
+                    <option value="Faltou">Faltou</option>
                     <option value="Cancelado">Cancelado</option>
                   </select>
                 </div>
@@ -1933,7 +1963,7 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
           doctors={doctors}
           doctorSchedules={doctorSchedules}
           scheduleBlocks={scheduleBlocks}
-          tenantSettings={{ name: 'Nexa Clínica', cnpj: '00.000.000/0001-00', logo: '' }}
+          tenantSettings={tenantSettings}
         />
       )}
     </div>

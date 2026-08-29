@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.90',
+      date: '29/08/2026',
+      title: 'Módulo Agenda (NexaCAL) — Registro Ágil de Falta (No-Show), WhatsApp Dinâmico com Branding e Isolamento Multi-Unidade',
+      description: 'Aprimoramentos profundos no módulo de Agenda (NexaCAL) para início imediato da operação clínica: inclusão do status e ação rápida de "Faltou" (No-Show) na recepção e timeline, disparo de WhatsApp com template dinâmico puxando a Razão/Nome Fantasia da clínica configurada no Branding, isolamento rigoroso por filial nos bloqueios de agenda e normalização de 100% dos relatórios gerenciais.',
+      changes: [
+        { type: 'Ação Rápida de Falta (No-Show)', text: 'Inclusão do botão "Faltou" na timeline diária e no seletor de status, registrando a ausência do paciente com 1 clique e alimentando o relatório de absenteísmo.' },
+        { type: 'WhatsApp Dinâmico com Branding', text: 'Template de confirmação e lembretes com inserção dinâmica do nome da clínica definido nas configurações de branding (Customização SaaS).' },
+        { type: 'Isolamento Multi-Unidade nos Bloqueios', text: 'Gravação e filtragem do unitId em todos os bloqueios de agenda para segregação completa entre unidades (Betim e Taguatinga).' },
+        { type: 'Compatibilidade Total nos 15 Relatórios', text: 'Normalização dos cálculos de atendimento e produtividade, garantindo precisão absoluta nos relatórios em PDF timbrado e Excel.' }
+      ]
+    },
+    {
       version: 'v4.7.87',
       date: '29/08/2026',
       title: 'Corpo Clínico — Padronização Visual sem CRM/Títulos, Ordenação A-Z e Sincronização em Lote de 38 Profissionais via CSV',

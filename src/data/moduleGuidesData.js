@@ -1595,6 +1595,120 @@ export const MODULE_GUIDES = {
         resposta: 'Você pode editar ou excluir sua solicitação enquanto ela estiver com status "Aguardando Gestor" ou caso tenha sido recusada. Após aprovada pelo gestor/diretoria ou em cotação, a edição é bloqueada para garantir a rastreabilidade.'
       }
     ]
+  },
+  calendar: {
+    id: 'calendar',
+    name: 'Agenda & Consultórios',
+    subtitle: 'NexaCAL — Gestão de Agendamentos, Grade & Cotas',
+    color: '#0891b2',
+    recursos: [
+      {
+        title: 'Central de 15 Relatórios Clínicos & Executivos',
+        desc: 'Relatórios completos de extrato geral, absenteísmo (faltas/no-show), produtividade médica, ocupação de salas, confirmações WhatsApp, cotas anuais, tempo de espera, busca ativa de pacientes crônicos e auditoria de alterações.'
+      },
+      {
+        title: 'Exportação em PDF Timbrado & Excel (XLSX)',
+        desc: 'Emissão instantânea de relatórios com cabeçalho institucional timbrado em PDF (A4) e planilhas dinâmicas em Excel prontas para auditorias e BI.'
+      },
+      {
+        title: 'Configuração Anual de Grade & Cotas Médicas',
+        desc: 'Parametrização de cotas anuais e mensais de primeiras consultas, retornos e procedimentos por médico, com botão de replicação para os 12 meses do ano em 1 clique e painel de capacidade anual consolidada.'
+      },
+      {
+        title: 'Pesquisa Global Multianual',
+        desc: 'Busca universal e profunda em todo o banco de agendamentos em todos os dias, meses e anos por nome, CPF, telefone, médico, sala ou data, com botão de navegação direta "Ver Dia".'
+      },
+      {
+        title: 'Gestão Multissalas e 4 Visualizações',
+        desc: 'Alternância instantânea entre modos Horários (Timeline do dia), Salas (Visão por consultório), Semanal e Mensal.'
+      },
+      {
+        title: 'Registro Rápido de Falta (No-Show)',
+        desc: 'Botão de 1 clique para registro de faltas na recepção, alimentando automaticamente os indicadores de absenteísmo.'
+      },
+      {
+        title: 'Bloqueio de Agenda & Ausências',
+        desc: 'Registro de congressos, férias e solicitações com detecção em tempo real de pacientes afetados para remanejamento preventivo e isolamento por filial.'
+      },
+      {
+        title: 'Feriados Nacionais Automáticos',
+        desc: 'Identificação e sinalização de feriados nacionais do Brasil no calendário com avisos preventivos em agendamentos.'
+      },
+      {
+        title: 'Notificações WhatsApp com Nome da Clínica',
+        desc: 'Envio de lembretes e confirmações com 1 clique direto para o WhatsApp do paciente com informações de local, horário e nome da clínica configurado no branding.'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Acessar e Exportar Relatórios da Agenda',
+        steps: [
+          'No topo do módulo de Agenda, clique no botão "Relatórios".',
+          'Selecione na barra lateral o relatório desejado (ex: "Extrato Geral", "Produtividade", "Faltas" ou "Busca Ativa").',
+          'Defina os filtros de Período (Início e Fim), Médico, Consultório/Sala e Status.',
+          'Clique em "Exportar PDF" para gerar o documento timbrado A4 ou "Exportar Excel" para obter a planilha XLSX.'
+        ]
+      },
+      {
+        title: 'Como Configurar a Grade Anual do Médico',
+        steps: [
+          'No cabeçalho da Agenda, clique no botão "Grade".',
+          'Selecione o profissional de saúde na barra lateral.',
+          'Utilize o seletor de ano para definir o exercício desejado (ex: 2026 ou 2027).',
+          'Ajuste as cotas mensais de Primeira Consulta, Retorno e Procedimentos.',
+          'Clique em "Replicar para o Ano Inteiro" para aplicar os valores aos 12 meses simultaneamente.',
+          'Defina os dias e horários de atendimento da semana e clique em "Salvar".'
+        ]
+      },
+      {
+        title: 'Como Realizar Busca Global em Todos os Anos',
+        steps: [
+          'No campo de pesquisa na barra superior, digite qualquer termo: nome do paciente, CPF, telefone, médico ou data (ex: "24/08/2026", "2026" ou "Agosto").',
+          'O sistema abrirá a visualização de Busca Global listando todos os agendamentos encontrados em qualquer data.',
+          'Clique no botão "Ver Dia" para ir diretamente para a visualização detalhada da data encontrada.'
+        ]
+      },
+      {
+        title: 'Como Registrar Presença, Atendimento ou Falta (No-Show)',
+        steps: [
+          'Na visualização de Horários do dia, localize o paciente.',
+          'Quando o paciente chegar à clínica, clique em "Chegou" (status mudará para Aguardando).',
+          'Quando o médico chamar o paciente para a sala, clique em "Iniciar" (status mudará para Em Consulta).',
+          'Ao concluir a consulta, clique em "Finalizar".',
+          'Se o paciente não comparecer, clique em "Faltou" para alimentar a taxa de absenteísmo.'
+        ]
+      },
+      {
+        title: 'Como Bloquear Dias ou Períodos para Ausências',
+        steps: [
+          'Clique no botão "Bloquear" no topo da Agenda.',
+          'Selecione o Médico (ou Todos os Médicos), o Período e o Motivo (Férias, Congresso, etc.).',
+          'Confira os agendamentos conflitantes no quadro de aviso e clique em "Bloquear".'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'Quais relatórios estão disponíveis na Agenda?',
+        resposta: 'São 15 relatórios: 1. Extrato Geral, 2. Produtividade, 3. Faltas (No-Show), 4. Confirmações WhatsApp, 5. Ocupação, 6. Modalidades, 7. Encaixes, 8. Cancelamentos, 9. Cotas, 10. Bloqueios, 11. Pontualidade, 12. Convênios, 13. Busca Ativa de Crônicos Sem Retorno, 14. Feriados e 15. Auditoria.'
+      },
+      {
+        pergunta: 'De onde vem o nome da clínica na mensagem do WhatsApp e nos relatórios em PDF?',
+        resposta: 'O sistema busca automaticamente a Razão Social ou Nome Fantasia configurado no módulo de Configurações > Customização SaaS / Branding.'
+      },
+      {
+        pergunta: 'Como a busca global localiza consultas de anos anteriores ou futuros?',
+        resposta: 'A barra de pesquisa faz uma varredura completa em toda a base de dados de agendamentos em tempo real, sem restrição de data ou mês atual.'
+      },
+      {
+        pergunta: 'O que acontece ao atingir o limite de cotas do mês configurado?',
+        resposta: 'O sistema emite um alerta visual ao atendente no momento de marcar uma nova primeira consulta ou retorno, permitindo remanejar ou registrar como encaixe justificado.'
+      },
+      {
+        pergunta: 'Como o médico visualiza as consultas finalizadas na sua produção?',
+        resposta: 'Todas as consultas concluídas e finalizadas no módulo Agenda entram automaticamente na apuração de honorários do módulo NexaMED.'
+      }
+    ]
   }
 };
 
