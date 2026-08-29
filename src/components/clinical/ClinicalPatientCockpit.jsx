@@ -23,6 +23,10 @@ export default function ClinicalPatientCockpit({
     return Math.abs(ageDate.getUTCFullYear() - 1970);
   };
 
+  const displayAllergies = patient?.allergies 
+    ? (Array.isArray(patient.allergies) ? patient.allergies : [patient.allergies])
+    : allergies;
+
   const age = calculateAge(patient.birthDate);
 
   return (
@@ -39,6 +43,16 @@ export default function ClinicalPatientCockpit({
               <h2 style={styles.patientName}>{patient.name}</h2>
               <span style={styles.statusBadge}>{patient.treatmentStatus || 'Ativo'}</span>
               <span style={styles.therapyBadge}>{patient.treatmentType || 'HD'}</span>
+              {patient.bloodType && (
+                <span style={{ fontSize: '0.7rem', fontWeight: '800', backgroundColor: '#fee2e2', color: '#991b1b', padding: '0.15rem 0.5rem', borderRadius: '6px', border: '1px solid #fecaca' }}>
+                  {patient.bloodType} {patient.rhFactor === 'Positivo' ? '+' : '-'}
+                </span>
+              )}
+              {patient.transplantStatus && (
+                <span style={{ fontSize: '0.7rem', fontWeight: '700', backgroundColor: '#eff6ff', color: '#1e40af', padding: '0.15rem 0.5rem', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
+                  Tx: {patient.transplantStatus}
+                </span>
+              )}
             </div>
             <div style={styles.metaRow}>
               <span><strong>CPF:</strong> {patient.cpf}</span>
@@ -48,6 +62,12 @@ export default function ClinicalPatientCockpit({
               <span><strong>Sexo:</strong> {patient.gender || 'Não informado'}</span>
               <span>•</span>
               <span><strong>Salão:</strong> {patient.room || 'Salão 1'} ({patient.shift || '1º Turno'})</span>
+              {patient.primaryDiagnosis && (
+                <>
+                  <span>•</span>
+                  <span><strong>Etiologia:</strong> {patient.primaryDiagnosis}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -149,7 +169,7 @@ export default function ClinicalPatientCockpit({
             <span style={{ color: '#dc2626', fontWeight: '700' }}>Alergias</span>
           </div>
           <div style={styles.allergiesWrap}>
-            {allergies.map((alg, i) => (
+            {displayAllergies.map((alg, i) => (
               <span key={i} style={styles.allergyTag}>
                 {alg}
               </span>

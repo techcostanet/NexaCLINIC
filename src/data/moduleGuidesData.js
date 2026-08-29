@@ -1709,6 +1709,101 @@ export const MODULE_GUIDES = {
         resposta: 'Todas as consultas concluídas e finalizadas no módulo Agenda entram automaticamente na apuração de honorários do módulo NexaMED.'
       }
     ]
+  },
+  reception: {
+    id: 'reception',
+    name: 'Recepção & Admissão',
+    subtitle: 'NexaCLINIC — Front-Office & Admissão Nefrológica',
+    color: '#0d9488',
+    recursos: [
+      {
+        title: 'Admissão Nefrológica Completa em 6 Abas',
+        desc: 'Cadastro estruturado com Identificação (CPF/CNS e desambiguação de homônimos), Contatos com Busca de CEP, Convênio/APAC, Logística de Salão, Nefrologia (Histórico da 1ª diálise, Etiologia DRC, Alergias e Comorbidades) e Regulação de Transplante Renal (RBT).'
+      },
+      {
+        title: 'Autocompletar Instantâneo de CEP (ViaCEP)',
+        desc: 'Preenchimento automático e imediato de Logradouro, Bairro, Cidade e Estado ao digitar o CEP e clicar em Buscar.'
+      },
+      {
+        title: 'Check-in de Presença & Ganho de Peso Interdialítico',
+        desc: 'Confirmação rápida de chegada com registro de PA, temperatura e cálculo automático do ganho de peso (Peso Pré - Peso Seco) com alerta visual para ganhos críticos (> 4.0 kg).'
+      },
+      {
+        title: 'Comunicação Direta via WhatsApp em 1 Clique',
+        desc: 'Atalhos integrados em cada linha de paciente e contato de emergência para abertura instantânea do WhatsApp com mensagem de suporte pré-formatada.'
+      },
+      {
+        title: 'Monitoramento Preditivo de Validade de APACs',
+        desc: 'Sinalização automática com badges coloridos para APACs regulares (verde), a vencer em menos de 30 dias (âmbar) ou vencidas (vermelho).'
+      },
+      {
+        title: 'Mapa Interativo de Poltronas & Salas',
+        desc: 'Visualização da distribuição de poltronas em tempo real por salão e turno com identificação de presença dos pacientes em diálise.'
+      },
+      {
+        title: 'Ronda Médica Presencial Integrada',
+        desc: 'Auditoria de presença dos nefrologistas plantonistas por turno e setor com registro de presença, atraso, trocas ou faltas.'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Realizar a Admissão de um Paciente',
+        steps: [
+          'Acesse o módulo de Recepção e clique na aba "Pacientes".',
+          'Clique no botão "+ Admissão" no canto superior direito.',
+          'Preencha os dados de "Identificação" (Nome, CPF, CNS, Nascimento, Mãe, Sexo e Status).',
+          'Na aba "Contatos", digite o CEP e clique em "Buscar" para preencher o endereço automaticamente; informe o telefone e os contatos de emergência/recado.',
+          'Na aba "Convênio", cadastre o Pagante (SUS/Convênio Privado), número e validade da APAC.',
+          'Na aba "Logística", defina a Unidade, Modalidade (HD/DP), Frequência, Turno, Salão e Poltrona.',
+          'Na aba "Nefrologia", registre a Origem, Data da 1ª diálise, Etiologia da DRC, Tipo Sanguíneo/RH, Alergias e Comorbidades.',
+          'Na aba "Transplante", informe a indicação, situação na fila RBT, centro transplantador e histórico obstétrico/transfusional.',
+          'Clique em "Salvar Ficha do Paciente".'
+        ]
+      },
+      {
+        title: 'Como Realizar o Check-in Diário de Presença',
+        steps: [
+          'Na aba "Presença", localize o paciente agendado para o turno atual.',
+          'Clique no botão verde "Registrar".',
+          'Informe o Peso de Entrada (kg), a Pressão Arterial (Sistólica/Diastólica) e a Temperatura (°C).',
+          'O sistema calculará automaticamente o ganho de peso interdialítico.',
+          'Clique em "Confirmar Presença". O status mudará para "Presente" e os dados ficarão disponíveis para a enfermagem.'
+        ]
+      },
+      {
+        title: 'Como Monitorar APACs e Falar com Familiares',
+        steps: [
+          'Consulte o card de KPI "APACs" no topo do painel para verificar pendências.',
+          'Na tabela de pacientes ou presença, clique no ícone do WhatsApp para disparar uma mensagem direta ao paciente ou familiar de recado.'
+        ]
+      },
+      {
+        title: 'Como Auditar a Ronda Médica',
+        steps: [
+          'Acesse a aba "Ronda".',
+          'Confira a lista de médicos escalados para o dia.',
+          'Conforme o nefrologista chegar ao salão, clique em "✓ Presente". Em caso de atraso ou substituição, clique no respectivo botão para auditar.'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'Por que o formulário de admissão possui dados de nefrologia e transplante?',
+        resposta: 'Para garantir que o paciente admitido pela recepção já entre no sistema com dados cruciais para a segurança clínica (alergias em destaque, tipo sanguíneo, acesso vascular e histórico de diálise) e faturamento APAC (CNS, CID-10 e número da APAC).'
+      },
+      {
+        pergunta: 'O que acontece quando o ganho de peso interdialítico for excessivo?',
+        resposta: 'Ao registrar um peso de entrada que supere em mais de 4.0 kg o peso seco prescrito, o sistema emite um destaque visual em vermelho na linha do paciente para alertar a equipe de enfermagem sobre hipervolemia.'
+      },
+      {
+        pergunta: 'Como funciona a busca de CEP?',
+        resposta: 'Basta digitar os 8 números do CEP na aba de contatos e clicar em "Buscar". O sistema consulta a API oficial do ViaCEP e preenche imediatamente o logradouro, bairro, cidade e estado.'
+      },
+      {
+        pergunta: 'Onde o médico visualiza as alergias cadastradas pela recepção?',
+        resposta: 'As alergias informadas na admissão aparecem automaticamente com badge de alerta de segurança no topo do Cockpit Clínico do Prontuário Médico (NexaCLINIC).'
+      }
+    ]
   }
 };
 

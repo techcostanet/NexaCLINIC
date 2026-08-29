@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.8.1',
+      date: '29/08/2026',
+      title: 'Módulo Recepção — Admissão Nefrológica Completa em 6 Abas, Busca de CEP (ViaCEP), Atalhos WhatsApp & Alerta de Ganho de Peso',
+      description: 'Reformulação estrutural completa do Módulo de Recepção do NexaCLINIC: admissão com suporte a 6 abas (Identificação, Contatos, Convênio/APAC, Logística, Nefrologia e Transplante Renal RBT), eliminação de burocracias obsoletas, preenchimento instantâneo de endereço via CEP, cálculo de ganho de peso interdialítico no check-in diário com alerta de hipervolemia, botões diretos de WhatsApp para pacientes e familiares, e estrita conformidade com o padrão de rótulos diretos de 1 palavra.',
+      changes: [
+        { type: 'Admissão Nefrológica em 6 Abas', text: 'Formulário moderno segregado em Identificação civil, Contatos e Endereço, Convênio e APAC, Logística de Salão, Nefrologia (Histórico da 1ª diálise, Etiologia DRC, Alergias e Comorbidades) e Transplante Renal.' },
+        { type: 'Autocompletar de CEP (ViaCEP)', text: 'Preenchimento automático e instantâneo de Logradouro, Bairro, Cidade e UF diretamente pela API oficial do ViaCEP com 1 clique.' },
+        { type: 'Check-in com Alerta de Ganho de Peso', text: 'Cálculo dinâmico do ganho de peso interdialítico (Peso Pré - Peso Seco) no registro de presença com badge vermelho de alerta para ganhos críticos (> 4.0 kg).' },
+        { type: 'Atalhos de WhatsApp em 1 Clique', text: 'Botão de disparo direto de WhatsApp em cada linha de paciente e contato de emergência com mensagem pré-formatada para comunicação ágil.' },
+        { type: 'Conexão Clínica & Prontuário', text: 'Exibição instantânea dos dados de admissão (Alergias em vermelho, Tipo Sanguíneo/RH, Etiologia e Transplante) diretamente no Cockpit Clínico do Nefrologista.' },
+        { type: 'Padronização Rigorosa de Rótulos (1 Palavra)', text: 'Varredura e adequação de todas as tabelas, abas e filtros para termos únicos e objetivos sem barras ou conectivos redundantes.' }
+      ]
+    },
+    {
       version: 'v4.7.90',
       date: '29/08/2026',
       title: 'Módulo Agenda (NexaCAL) — Registro Ágil de Falta (No-Show), WhatsApp Dinâmico com Branding e Isolamento Multi-Unidade',

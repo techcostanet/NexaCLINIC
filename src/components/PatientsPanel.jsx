@@ -419,12 +419,12 @@ export default function PatientsPanel() {
             <table>
               <thead>
                 <tr>
-                  <th>Paciente / Prontuário</th>
-                  <th>Idade / Sexo</th>
+                  <th>Paciente</th>
+                  <th>Idade</th>
                   <th>Status</th>
-                  <th>Acesso Vascular</th>
-                  <th>Turno / Salão</th>
-                  <th>Escala / Peso Seco</th>
+                  <th>Acesso</th>
+                  <th>Turno</th>
+                  <th>Frequência</th>
                   <th style={{ textAlign: 'right' }}>Ações</th>
                 </tr>
               </thead>

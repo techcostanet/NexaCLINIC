@@ -1,3 +1,29 @@
+## [v4.8.1] - 29 de Agosto, 2026
+### Módulo Recepção — Admissão Nefrológica Completa em 6 Abas, Busca de CEP (ViaCEP), Atalhos WhatsApp & Alerta de Ganho de Peso
+- **Admissão Nefrológica Completa em 6 Abas:**
+  - Reformulação integral do cadastro de pacientes com divisão lógica em abas:
+    1. *Identificação Civil* (Nome, Nome Social, CPF, CNS de 15 dígitos, RG, Data de Nascimento com cálculo de idade em tempo real, Gênero, Estado Civil, Nome da Mãe e Pai).
+    2. *Contatos & Endereço* (Busca instantânea de CEP via API ViaCEP, Logradouro, Bairro, Cidade, UF, Ponto de Referência, Telefone Principal e Acompanhantes/Contatos de Emergência com parentesco).
+    3. *Convênio & APAC* (Pagante SUS, Unimed, Bradesco, Amil, SulAmérica, Particular, Carteirinha, Validade da Guia e APAC com alerta preditivo de vencimento).
+    4. *Logística de Diálise* (Modalidade HD/DP/Conservador, Frequência Semanal, Turno, Salão, Poltrona #1 a #20, Tipo de Acesso Vascular, Localização anatômica, Peso Seco e Médico Assistente).
+    5. *Nefrologia & Admissão* (Origem, Centro de Origem, Data da 1ª diálise da vida, Caráter Eletivo vs Urgência, Local Hospital vs Clínica, Etiologia da DRC/CID-10, Tipo Sanguíneo/RH, Alergias Conhecidas e Comorbidades).
+    6. *Transplante Renal* (Indicação, Situação na Fila RBT, Centro Transplantador, Inscrição Estadual, Tipo de Doador e Histórico Obstétrico/Sensibilização HLA).
+- **Eliminação de Burocracias Legadas:**
+  - Remoção total de campos obsoletos (Título de Eleitor, Zona, Seção, CTPS, Série, PIS/PASEP, Certidões de Cartório) em conformidade com as diretrizes do SUS Digital e LGPD.
+- **Autocompletar de Endereço (ViaCEP):**
+  - Consulta automática da API dos Correios (ViaCEP) ao digitar o CEP, preenchendo rua, bairro, cidade e estado em 1 segundo.
+- **Check-in Diário de Presença & Cálculo de Ganho de Peso Interdialítico:**
+  - Confirmação de presença do dia com registro de Peso de Entrada, Pressão Arterial e Temperatura.
+  - Cálculo instantâneo do Ganho de Peso Interdialítico (`Peso de Entrada - Peso Seco`), com badge vermelho de alerta para ganhos críticos (> 4.0 kg).
+- **Comunicação Direta por WhatsApp:**
+  - Disparo de mensagens pré-formatadas para o paciente ou contatos de emergência/recado diretamente da lista de presença e cadastro.
+- **Conexão com Cockpit Clínico & Prontuário Médico:**
+  - Integração dos dados de admissão (Alergias em destaque vermelho, Tipo Sanguíneo, Etiologia e Transplante) diretamente na visualização médica do prontuário.
+- **Conformidade com Diretrizes de UI/UX (Termo Único):**
+  - Padronização de 100% dos rótulos de tabelas, abas e filtros com termos diretos de 1 palavra.
+
+---
+
 ## [v4.7.90] - 29 de Agosto, 2026
 ### Módulo Agenda (NexaCAL) — Registro Ágil de Falta (No-Show), WhatsApp Dinâmico com Branding e Isolamento Multi-Unidade
 - **Ação Rápida de Falta (No-Show):**
