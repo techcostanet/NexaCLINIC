@@ -1,5 +1,6 @@
 import React from 'react';
 import { Printer, Download, X, DollarSign, CheckCircle2 } from 'lucide-react';
+import { formatDoctorDisplayName } from '../../utils/doctorFormatters';
 
 export default function MedicalStatementModal({
   production,
@@ -58,19 +59,15 @@ export default function MedicalStatementModal({
           {/* Doctor Info Box */}
           <div style={styles.infoBox}>
             <div style={styles.infoCol}>
-              <span style={styles.infoLabel}>Médico:</span>
-              <strong style={styles.infoVal}>{production.doctorName}</strong>
+              <span style={styles.infoLabel}>Médico</span>
+              <strong style={styles.infoVal}>{formatDoctorDisplayName(production.doctorName)}</strong>
             </div>
             <div style={styles.infoCol}>
-              <span style={styles.infoLabel}>CRM:</span>
-              <strong style={styles.infoVal}>{production.doctorCrm || '-'}</strong>
-            </div>
-            <div style={styles.infoCol}>
-              <span style={styles.infoLabel}>Tipo de Vínculo:</span>
+              <span style={styles.infoLabel}>Vínculo</span>
               <strong style={styles.infoVal}>{production.contractType || 'PJ'}</strong>
             </div>
             <div style={styles.infoCol}>
-              <span style={styles.infoLabel}>Chave PIX:</span>
+              <span style={styles.infoLabel}>PIX</span>
               <strong style={styles.infoVal}>{production.pixKey || '-'}</strong>
             </div>
           </div>

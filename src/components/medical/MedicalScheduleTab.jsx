@@ -5,6 +5,7 @@ import {
   ShieldAlert, LayoutGrid, List, Printer, RefreshCw, Sparkles, UserPlus, Info
 } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
+import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
 
 export default function MedicalScheduleTab({
   schedules = [],
@@ -841,7 +842,7 @@ export default function MedicalScheduleTab({
                   >
                     {availableDoctors.map(doc => (
                       <option key={doc.id || doc.uid || doc.name} value={doc.id || doc.uid || doc.name}>
-                        {doc.name} {doc.crm ? `(CRM: ${doc.crm})` : ''}
+                        {formatDoctorDisplayName(doc.name)}
                       </option>
                     ))}
                   </select>

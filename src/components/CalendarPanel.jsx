@@ -10,6 +10,7 @@ import { isBrazilianHoliday, getBrazilianHolidays } from '../utils/brazilHoliday
 import DoctorScheduleModal from './calendar/DoctorScheduleModal';
 import ScheduleBlockModal from './calendar/ScheduleBlockModal';
 import CalendarReportsModal from './CalendarReportsModal';
+import { formatDoctorDisplayName, sortDoctorsByName } from '../utils/doctorFormatters';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
 
@@ -127,10 +128,11 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
       const docList = (userList || []).filter(u => 
         u.role === 'admin' || 
         u.role === 'professional' || 
+        u.role === 'doctor' ||
         u.role === 'clinical' || 
-        (u.allowedSectors && u.allowedSectors.includes('medica'))
+        (u.allowedSectors && (u.allowedSectors.includes('medica') || u.allowedSectors.includes('consultorio')))
       );
-      const finalDocs = docList.length > 0 ? docList : userList || [];
+      const finalDocs = sortDoctorsByName(docList.length > 0 ? docList : userList || []);
       setDoctors(finalDocs);
 
       // Seed mock sample appointments if DB is brand new
@@ -371,7 +373,7 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
     }
 
     const docFound = doctors.find(d => d.uid === aptForm.doctorId);
-    const docName = docFound ? docFound.name : 'Profissional Clínico';
+    const docName = docFound ? formatDoctorDisplayName(docFound.name) : 'Profissional Clínico';
 
     let patName = aptForm.patientName;
     let patPhone = aptForm.patientPhone;
@@ -1508,19 +1510,19 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
       {/* Secondary Filters Bar */}
       <div style={styles.filterBar}>
         <div style={styles.filterGroup}>
-          <label style={styles.filterLabel}>Médico:</label>
+          <label style={styles.filterLabel}>Médico</label>
           <select value={selectedDoctorId} onChange={e => setSelectedDoctorId(e.target.value)} style={styles.selectFilter}>
-            <option value="all">Todos os Médicos</option>
-            {doctors.map(d => (
-              <option key={d.uid} value={d.uid}>{d.name}</option>
+            <option value="all">Todos</option>
+            {sortDoctorsByName(doctors).map(d => (
+              <option key={d.uid} value={d.uid}>{formatDoctorDisplayName(d.name)}</option>
             ))}
           </select>
         </div>
 
         <div style={styles.filterGroup}>
-          <label style={styles.filterLabel}>Sala:</label>
+          <label style={styles.filterLabel}>Sala</label>
           <select value={selectedRoom} onChange={e => setSelectedRoom(e.target.value)} style={styles.selectFilter}>
-            <option value="all">Todas as Salas</option>
+            <option value="all">Todas</option>
             {availableRooms.map(r => (
               <option key={r} value={r}>{r}</option>
             ))}
@@ -1528,9 +1530,9 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
         </div>
 
         <div style={styles.filterGroup}>
-          <label style={styles.filterLabel}>Status:</label>
+          <label style={styles.filterLabel}>Status</label>
           <select value={selectedStatusFilter} onChange={e => setSelectedStatusFilter(e.target.value)} style={styles.selectFilter}>
-            <option value="all">Todos os Status</option>
+            <option value="all">Todos</option>
             <option value="Agendado">Agendado</option>
             <option value="Confirmado">Confirmado</option>
             <option value="Aguardando">Aguardando</option>
@@ -1757,8 +1759,8 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                     style={styles.textInput}
                   >
                     <option value="">Selecione o Médico</option>
-                    {doctors.map(d => (
-                      <option key={d.uid} value={d.uid}>{d.name}</option>
+                    {sortDoctorsByName(doctors).map(d => (
+                      <option key={d.uid} value={d.uid}>{formatDoctorDisplayName(d.name)}</option>
                     ))}
                   </select>
                 </div>

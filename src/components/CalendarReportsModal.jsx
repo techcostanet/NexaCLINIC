@@ -10,6 +10,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { isBrazilianHoliday, getBrazilianHolidays } from '../utils/brazilHolidays';
+import { formatDoctorDisplayName, sortDoctorsByName } from '../utils/doctorFormatters';
 
 export default function CalendarReportsModal({
   onClose,
@@ -161,7 +162,7 @@ export default function CalendarReportsModal({
               paciente: apt.patientName || pat.name || '-',
               cpf: apt.patientCpf || pat.cpf || '-',
               telefone: apt.patientPhone || pat.phone || '-',
-              medico: apt.doctorName || '-',
+              medico: formatDoctorDisplayName(apt.doctorName) || '-',
               sala: apt.room || '-',
               tipo: apt.type || 'Consulta',
               status: apt.status || 'Agendado',
@@ -219,7 +220,7 @@ export default function CalendarReportsModal({
           const docId = apt.doctorId || 'unknown';
           if (!mapDoc[docId]) {
             mapDoc[docId] = {
-              medico: apt.doctorName || 'Médico',
+              medico: formatDoctorDisplayName(apt.doctorName || 'Médico'),
               especialidade: 'Clínica',
               total: 0,
               atendidos: 0,
@@ -304,7 +305,7 @@ export default function CalendarReportsModal({
               horario: apt.time || '-',
               paciente: apt.patientName || pat.name || '-',
               telefone: apt.patientPhone || pat.phone || '-',
-              medico: apt.doctorName || '-',
+              medico: formatDoctorDisplayName(apt.doctorName) || '-',
               motivo: apt.notes || 'Sem justificativa informada',
               reincidencias: countMap[apt.patientName] || 1
             };
@@ -346,7 +347,7 @@ export default function CalendarReportsModal({
               horario: apt.time || '-',
               paciente: apt.patientName || pat.name || '-',
               telefone: apt.patientPhone || pat.phone || '-',
-              medico: apt.doctorName || '-',
+              medico: formatDoctorDisplayName(apt.doctorName) || '-',
               status_agenda: apt.status || 'Agendado',
               status_whatsapp: wStatus,
               resposta: wStatus === 'Confirmado' ? 'Paciente confirmou presença' : wStatus === 'Enviado' ? 'Aguardando resposta do paciente' : 'Lembrete não disparado'
@@ -395,7 +396,7 @@ export default function CalendarReportsModal({
             roomMap[r].agendados++;
             if (apt.status === 'Atendido' || apt.status === 'Em Atendimento') roomMap[r].atendidos++;
             roomMap[r].horasOcupadas += 0.5; // ~30 min por consulta padrão
-            if (apt.doctorName) roomMap[r].medicos.add(apt.doctorName);
+            if (apt.doctorName) roomMap[r].medicos.add(formatDoctorDisplayName(apt.doctorName));
           }
         });
 
@@ -439,7 +440,7 @@ export default function CalendarReportsModal({
             typeMap[t] = { tipo: t, count: 0, medicos: new Set() };
           }
           typeMap[t].count++;
-          if (apt.doctorName) typeMap[t].medicos.add(apt.doctorName);
+          if (apt.doctorName) typeMap[t].medicos.add(formatDoctorDisplayName(apt.doctorName));
         });
 
         const totalAll = filteredApts.length;
@@ -478,7 +479,7 @@ export default function CalendarReportsModal({
               data: formatDateBR(apt.date),
               horario: apt.time || '-',
               paciente: apt.patientName || pat.name || '-',
-              medico: apt.doctorName || '-',
+              medico: formatDoctorDisplayName(apt.doctorName) || '-',
               sala: apt.room || '-',
               tipo: apt.type || 'Encaixe',
               motivo: apt.notes || 'Encaixe clínico de emergência',
@@ -521,7 +522,7 @@ export default function CalendarReportsModal({
               horario: apt.time || '-',
               paciente: apt.patientName || pat.name || '-',
               telefone: apt.patientPhone || pat.phone || '-',
-              medico: apt.doctorName || '-',
+              medico: formatDoctorDisplayName(apt.doctorName) || '-',
               sala: apt.room || '-',
               tipo: apt.type || 'Consulta',
               motivo: apt.notes || 'Cancelamento solicitado pelo paciente'
@@ -561,7 +562,7 @@ export default function CalendarReportsModal({
           const saldo = Math.max(0, cotaAnual - realizadasAno);
 
           return {
-            medico: doc.name || 'Médico',
+            medico: formatDoctorDisplayName(doc.name || 'Médico'),
             especialidade: doc.specialty || 'Nefrologia',
             cota_anual: cotaAnual,
             meta_mensal: metaMensal,
@@ -607,7 +608,7 @@ export default function CalendarReportsModal({
             dias = Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
           }
           return {
-            medico: b.doctorName || 'Corpo Clínico',
+            medico: formatDoctorDisplayName(b.doctorName || 'Corpo Clínico'),
             sala: b.room || 'Todas',
             periodo: `${formatDateBR(sDate)} a ${formatDateBR(eDate)}`,
             dias: dias,
@@ -645,7 +646,7 @@ export default function CalendarReportsModal({
             
             return {
               paciente: apt.patientName || pat.name || '-',
-              medico: apt.doctorName || '-',
+              medico: formatDoctorDisplayName(apt.doctorName) || '-',
               agendado: horaAgendada,
               recepcao: horaRecepcao,
               inicio_atendimento: horaInicio,
@@ -768,7 +769,7 @@ export default function CalendarReportsModal({
           const hDateStr = h.date;
           // Count appointments on this holiday
           const aptsOnHoliday = appointments.filter(a => a.date === hDateStr);
-          const docsOnHoliday = Array.from(new Set(aptsOnHoliday.map(a => a.doctorName).filter(Boolean))).join(', ') || 'Nenhum plantão escalado';
+          const docsOnHoliday = Array.from(new Set(aptsOnHoliday.map(a => formatDoctorDisplayName(a.doctorName)).filter(Boolean))).join(', ') || 'Nenhum plantão escalado';
 
           return {
             data: formatDateBR(hDateStr),
@@ -801,7 +802,7 @@ export default function CalendarReportsModal({
           horario: apt.time || '-',
           operacao: apt.status === 'Cancelado' ? 'Cancelamento' : apt.isEncaixe ? 'Inclusão de Encaixe' : 'Agendamento Regular',
           paciente: apt.patientName || '-',
-          medico: apt.doctorName || '-',
+          medico: formatDoctorDisplayName(apt.doctorName) || '-',
           operador: apt.createdBy || 'Recepção Central',
           detalhes: `Consulta ${apt.type || 'Geral'} em ${apt.room || 'Consultório'}. Status atual: ${apt.status || 'Agendado'}`
         })).reverse();
@@ -987,9 +988,9 @@ export default function CalendarReportsModal({
                     onChange={e => setDoctorFilter(e.target.value)} 
                     style={styles.input}
                   >
-                    <option value="Todos">Todos os Médicos</option>
-                    {doctors.map(doc => (
-                      <option key={doc.uid} value={doc.uid}>{doc.name}</option>
+                    <option value="Todos">Todos</option>
+                    {sortDoctorsByName(doctors).map(doc => (
+                      <option key={doc.uid} value={doc.uid}>{formatDoctorDisplayName(doc.name)}</option>
                     ))}
                   </select>
                 </div>

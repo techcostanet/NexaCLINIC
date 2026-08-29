@@ -3,6 +3,7 @@ import {
   Users, UserCheck, AlertCircle, Edit2, Search, Filter, 
   Stethoscope, Save, X, Phone, Mail, CreditCard, Shield, CheckCircle2
 } from 'lucide-react';
+import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
 
 export default function MedicalDoctorsTab({
   doctors = [],
@@ -39,7 +40,7 @@ export default function MedicalDoctorsTab({
 
   // Filtered Doctors List
   const filteredDoctors = useMemo(() => {
-    return doctors.filter(doc => {
+    const list = doctors.filter(doc => {
       const isPending = !doc.cpf || !doc.susCard || !doc.phone || !doc.crm;
       if (filterStatus === 'pending' && !isPending) return false;
       if (filterStatus === 'active' && doc.active === false) return false;
@@ -47,7 +48,9 @@ export default function MedicalDoctorsTab({
 
       if (!searchTerm.trim()) return true;
       const term = searchTerm.toLowerCase();
+      const cleanName = formatDoctorDisplayName(doc.name || '');
       return (
+        (cleanName && cleanName.toLowerCase().includes(term)) ||
         (doc.name && doc.name.toLowerCase().includes(term)) ||
         (doc.crm && doc.crm.toLowerCase().includes(term)) ||
         (doc.cpf && doc.cpf.toLowerCase().includes(term)) ||
@@ -56,6 +59,7 @@ export default function MedicalDoctorsTab({
         (doc.specialty && doc.specialty.toLowerCase().includes(term))
       );
     });
+    return sortDoctorsByName(list);
   }, [doctors, searchTerm, filterStatus]);
 
   const handleOpenEditDoctor = (doc) => {
@@ -213,7 +217,7 @@ export default function MedicalDoctorsTab({
                   <tr key={doc.id || doc.uid} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: isPending ? '#fffdf7' : '#ffffff' }}>
                     <td style={{ fontWeight: '800', color: '#0f172a' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <span>{doc.name}</span>
+                        <span>{formatDoctorDisplayName(doc.name)}</span>
                         {isPending && (
                           <span style={styles.incompleteBadge} title="Clique em 'Completar' para preencher os dados pendentes">
                             Completar

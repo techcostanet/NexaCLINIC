@@ -3,6 +3,7 @@ import {
   Save, DollarSign, Users, FileSpreadsheet, Check, Edit2, 
   X, UserCheck, AlertCircle, Phone, Mail, CreditCard, Shield, Stethoscope
 } from 'lucide-react';
+import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
 
 export default function MedicalSettingsTab({
   settings = {},
@@ -216,13 +217,13 @@ export default function MedicalSettingsTab({
               </tr>
             </thead>
             <tbody>
-              {doctors.map(doc => {
+              {sortDoctorsByName(doctors).map(doc => {
                 const hasIncompleteData = !doc.crm || !doc.cpf || !doc.phone || !doc.susCard;
                 return (
                   <tr key={doc.id || doc.uid} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: hasIncompleteData ? '#fffdf7' : '#ffffff' }}>
                     <td style={{ fontWeight: '800', color: '#0f172a' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <span>{doc.name}</span>
+                        <span>{formatDoctorDisplayName(doc.name)}</span>
                         {hasIncompleteData && (
                           <span style={styles.incompleteBadge} title="Cadastro pendente de complementação de dados">
                             Completar

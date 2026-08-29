@@ -4,6 +4,7 @@ import {
   Clock, User, ShieldAlert, Trash2, Plus, Users
 } from 'lucide-react';
 import { dbService } from '../../firebase';
+import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
 
 export default function ScheduleBlockModal({
   isOpen,
@@ -59,7 +60,7 @@ export default function ScheduleBlockModal({
     try {
       const payload = {
         doctorId,
-        doctorName: doctorId === 'all' ? 'Todos os Médicos' : (selectedDoctorObj?.name || 'Médico'),
+        doctorName: doctorId === 'all' ? 'Todos os Médicos' : formatDoctorDisplayName(selectedDoctorObj?.name || 'Médico'),
         startDate,
         endDate,
         period,
@@ -139,9 +140,9 @@ export default function ScheduleBlockModal({
                   style={styles.input}
                   required
                 >
-                  <option value="all">Todos os Médicos (Bloqueio Geral da Clínica)</option>
-                  {doctors.map(d => (
-                    <option key={d.uid} value={d.uid}>{d.name}</option>
+                  <option value="all">Todos</option>
+                  {sortDoctorsByName(doctors).map(d => (
+                    <option key={d.uid} value={d.uid}>{formatDoctorDisplayName(d.name)}</option>
                   ))}
                 </select>
               </div>

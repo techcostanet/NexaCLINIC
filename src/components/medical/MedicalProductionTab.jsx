@@ -4,6 +4,7 @@ import {
   Printer, ArrowRight, ShieldCheck, ChevronRight
 } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
+import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
 
 export default function MedicalProductionTab({
   selectedMonth,
@@ -24,7 +25,7 @@ export default function MedicalProductionTab({
   const consultFee = settings.consultationFee || 150.0;
 
   // Compute production metrics for each doctor
-  const doctorProductions = availableDoctors.map(doc => {
+  const doctorProductions = sortDoctorsByName(availableDoctors).map(doc => {
     const docId = doc.id || doc.uid;
     // 1. Shifts: Only present or confirmed shifts
     const docShifts = schedules.filter(s => 
@@ -56,7 +57,7 @@ export default function MedicalProductionTab({
 
     return {
       doctorId: docId,
-      doctorName: doc.name,
+      doctorName: formatDoctorDisplayName(doc.name),
       doctorCrm: doc.crm || '',
       pixKey: doc.pixKey || '',
       contractType: doc.contractType || 'PJ',
@@ -155,9 +156,9 @@ export default function MedicalProductionTab({
             {doctorProductions.map(prod => (
               <tr key={prod.doctorId}>
                 <td>
-                  <div style={{ fontWeight: '800', color: '#0f172a' }}>{prod.doctorName}</div>
+                  <div style={{ fontWeight: '800', color: '#0f172a' }}>{formatDoctorDisplayName(prod.doctorName)}</div>
                   <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                    CRM: {prod.doctorCrm} • Vínculo: <strong>{prod.contractType}</strong>
+                    Vínculo: <strong>{prod.contractType}</strong>
                   </div>
                 </td>
 

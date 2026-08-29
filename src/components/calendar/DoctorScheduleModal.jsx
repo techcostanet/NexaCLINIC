@@ -5,6 +5,7 @@ import {
   ChevronLeft, Copy, BarChart3, Check
 } from 'lucide-react';
 import { dbService } from '../../firebase';
+import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
 
 export default function DoctorScheduleModal({ 
   isOpen, 
@@ -378,7 +379,7 @@ export default function DoctorScheduleModal({
           <div style={styles.sidebar}>
             <span style={styles.sidebarTitle}>Profissionais</span>
             <div style={styles.doctorList}>
-              {doctors.map(doc => {
+              {sortDoctorsByName(doctors).map(doc => {
                 const isSelected = doc.uid === activeDoctorId;
                 return (
                   <button
@@ -394,7 +395,7 @@ export default function DoctorScheduleModal({
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <User size={14} color={isSelected ? '#10b981' : '#64748b'} />
-                      <strong style={{ fontSize: '0.82rem', textAlign: 'left' }}>{doc.name}</strong>
+                      <strong style={{ fontSize: '0.82rem', textAlign: 'left' }}>{formatDoctorDisplayName(doc.name)}</strong>
                     </div>
                     {isSelected && <ChevronRight size={14} color="#10b981" />}
                   </button>

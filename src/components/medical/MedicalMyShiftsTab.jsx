@@ -4,6 +4,7 @@ import {
   Clock, ShieldAlert, FileText, Send, User, ChevronRight
 } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
+import { formatDoctorDisplayName } from '../../utils/doctorFormatters';
 
 export default function MedicalMyShiftsTab({
   doctor,
@@ -240,7 +241,7 @@ export default function MedicalMyShiftsTab({
                     <option value="">Selecione...</option>
                     {availableDoctors.filter(d => ((d.id || d.uid) !== (activeDoctor?.id || activeDoctor?.uid))).map(doc => (
                       <option key={doc.id || doc.uid} value={doc.id || doc.uid}>
-                        {doc.name} {doc.crm ? `(${doc.crm})` : ''}
+                        {formatDoctorDisplayName(doc.name)}
                       </option>
                     ))}
                   </select>

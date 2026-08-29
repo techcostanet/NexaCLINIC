@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.87',
+      date: '29/08/2026',
+      title: 'Corpo Clínico — Padronização Visual sem CRM/Títulos, Ordenação A-Z e Sincronização em Lote de 38 Profissionais via CSV',
+      description: 'Padronização visual e de dados do Corpo Clínico em todos os módulos do NexaCLINIC: remoção de prefixos (Dr./Dra.), ocultação de CRM e especialidades nos seletores e visualizações, ordenação alfabética (A-Z) e criação/atualização de 38 contas de acesso com perfil médico integrado (NexaASSIST, NexaMED, NexaCLINIC e NexaCAL) com credenciais no padrão corporativo.',
+      changes: [
+        { type: 'Visualização Limpa de Médicos', text: 'Remoção de títulos/prefixos ("Dr.", "Dra."), supressão de CRM e especialidades nos dropdowns, escalas, filtros e formulários de agendamento e honorários.' },
+        { type: 'Ordenação Alfabética A-Z', text: 'Listagem de médicos e profissionais de saúde ordenada alfabeticamente pelo nome em todos os módulos (Agenda, Relatórios, Escalas, Produção e Procedimentos).' },
+        { type: 'Sincronização em Lote (CSV)', text: 'Criação e atualização de 38 contas de acesso no Firebase Auth e Firestore a partir do cadastro oficial de profissionais (login@nexa.com / senha corporativa).' },
+        { type: 'Permissões Médicas Automatizadas', text: 'Concessão de permissões de escrita nos módulos Assistencial (assist), Gestão Médica (med), Clínico (clinic) e Agenda (cal).' }
+      ]
+    },
+    {
       version: 'v4.7.85',
       date: '29/08/2026',
       title: 'Módulo Agenda (NexaCAL) — Central de 15 Relatórios Clínicos & Operacionais com Exportação PDF e Excel',

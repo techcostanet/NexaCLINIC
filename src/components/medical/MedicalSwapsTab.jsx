@@ -3,6 +3,7 @@ import {
   RefreshCw, CheckCircle2, XCircle, Clock, 
   Mail, ShieldCheck, AlertCircle, ArrowRight, UserCheck
 } from 'lucide-react';
+import { formatDoctorDisplayName } from '../../utils/doctorFormatters';
 
 export default function MedicalSwapsTab({
   swaps = [],
@@ -90,13 +91,13 @@ export default function MedicalSwapsTab({
                       </div>
                     </td>
                     <td>
-                      <div style={{ fontWeight: '700', color: '#1e293b' }}>{swap.requestingDoctorName}</div>
+                      <div style={{ fontWeight: '700', color: '#1e293b' }}>{formatDoctorDisplayName(swap.requestingDoctorName)}</div>
                     </td>
                     <td style={{ textAlign: 'center', color: '#94a3b8' }}>
                       <ArrowRight size={14} />
                     </td>
                     <td>
-                      <div style={{ fontWeight: '700', color: '#0284c7' }}>{swap.targetDoctorName}</div>
+                      <div style={{ fontWeight: '700', color: '#0284c7' }}>{formatDoctorDisplayName(swap.targetDoctorName)}</div>
                     </td>
                     <td style={{ fontSize: '0.8rem', color: '#475569', maxWidth: '200px' }}>
                       {swap.reason || '-'}

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { dbService } from '../firebase';
 import { FALLBACK_DOCTORS } from '../services/firebase/medicalService';
+import { formatDoctorDisplayName, sortDoctorsByName } from '../utils/doctorFormatters';
 
 import MedicalScheduleTab from './medical/MedicalScheduleTab';
 import MedicalMyShiftsTab from './medical/MedicalMyShiftsTab';
@@ -74,12 +75,13 @@ export default function MedicalPanel({ currentUser, onBack }) {
       ]);
 
       // Unify doctors from medicalService and users (from Agenda)
-      const unifiedDocs = Array.isArray(docsData) && docsData.length > 0 ? [...docsData] : [...FALLBACK_DOCTORS];
+      const unifiedDocs = Array.isArray(docsData) && docsData.length > 0 ? docsData.map(d => ({ ...d, name: formatDoctorDisplayName(d.name) })) : FALLBACK_DOCTORS.map(d => ({ ...d, name: formatDoctorDisplayName(d.name) }));
       (userList || []).forEach(u => {
         const uId = u.uid || u.id;
         const exists = unifiedDocs.some(d => d.id === uId || (d.email && u.email && d.email.toLowerCase() === u.email.toLowerCase()) || d.name === u.name);
         if (!exists) {
-          const isDoc = u.role === 'admin' || 
+          const isDoc = u.role === 'doctor' ||
+            u.role === 'admin' || 
             u.role === 'professional' || 
             u.role === 'clinical' || 
             (u.allowedSectors && u.allowedSectors.includes('medica')) ||
@@ -88,7 +90,7 @@ export default function MedicalPanel({ currentUser, onBack }) {
           if (isDoc) {
             unifiedDocs.push({
               id: uId,
-              name: u.name || 'Profissional',
+              name: formatDoctorDisplayName(u.name) || 'Profissional',
               crm: u.crm || (u.name?.includes('Dr') ? '45892/MG' : 'CRM Ativo'),
               specialty: u.specialty || 'Nefrologia',
               email: u.email || '',
@@ -101,7 +103,7 @@ export default function MedicalPanel({ currentUser, onBack }) {
         }
       });
 
-      const sortedDocs = unifiedDocs.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      const sortedDocs = sortDoctorsByName(unifiedDocs);
       setDoctors(sortedDocs);
 
       // Select doctor based on current logged user if available, or maintain selection

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Edit2, Activity, CheckCircle, Search } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
+import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
 
 export default function MedicalProceduresTab({
   procedures = [],
@@ -55,7 +56,7 @@ export default function MedicalProceduresTab({
 
     onSaveProcedure({
       doctorId: formData.doctorId,
-      doctorName: doc ? doc.name : 'Médico Não Informado',
+      doctorName: doc ? formatDoctorDisplayName(doc.name) : 'Médico Não Informado',
       patientId: formData.patientId,
       patientName: pat ? pat.name : 'Paciente Não Informado',
       date: formData.date,
@@ -113,9 +114,9 @@ export default function MedicalProceduresTab({
             onChange={e => setFilterDoc(e.target.value)}
             style={{ width: '220px', fontSize: '0.8rem' }}
           >
-            <option value="Todos">Todos os Médicos</option>
-            {availableDoctors.map(doc => (
-              <option key={doc.id || doc.uid} value={doc.id || doc.uid}>{doc.name}</option>
+            <option value="Todos">Todos</option>
+            {sortDoctorsByName(availableDoctors).map(doc => (
+              <option key={doc.id || doc.uid} value={doc.id || doc.uid}>{formatDoctorDisplayName(doc.name)}</option>
             ))}
           </select>
 
@@ -209,9 +210,9 @@ export default function MedicalProceduresTab({
                     required
                   >
                     <option value="">Selecione...</option>
-                    {availableDoctors.map(d => (
+                    {sortDoctorsByName(availableDoctors).map(d => (
                       <option key={d.id || d.uid} value={d.id || d.uid}>
-                        {d.name} {d.crm ? `(${d.crm})` : ''}
+                        {formatDoctorDisplayName(d.name)}
                       </option>
                     ))}
                   </select>

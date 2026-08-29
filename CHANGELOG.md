@@ -1,3 +1,16 @@
+## [v4.7.87] - 29 de Agosto, 2026
+### Corpo Clínico — Padronização Visual sem CRM/Títulos, Ordenação A-Z e Sincronização em Lote de 38 Profissionais via CSV
+- **Padronização e Limpeza Visual do Corpo Clínico:**
+  - Remoção rigorosa de prefixos e títulos profissionais ("Dr.", "Dra.", "Doutor(a)") em todas as telas e seletores do sistema.
+  - Ocultação de menções redundantes a CRM e especialidades nos dropdowns da Agenda, Escala de Plantões, Bolsa de Trocas e Procedimentos, exibindo exclusivamente o nome limpo do profissional.
+  - Ordenação alfabética padronizada (A-Z) em todos os seletores de médicos e profissionais clínicos do sistema.
+- **Sincronização em Lote de 38 Profissionais via CSV (`prodissionais.CSV`):**
+  - Integração em lote de 38 profissionais cadastrados na base corporativa com criação/atualização de contas no Firebase Auth (`login@nexa.com`, senha padrão corporativa `login123`) e espelhamento no Firestore.
+  - Vínculo automático de todos os médicos ao perfil com permissão de escrita nos módulos Assistencial (`assist` / NexaASSIST), Médico (`med` / NexaMED), Clínico (`clinic` / NexaCLINIC) e Agenda (`cal` / NexaCAL).
+  - Normalização de nomes e campos de contato (telefone, e-mail corporativo, status ativo).
+
+---
+
 ## [v4.7.85] - 29 de Agosto, 2026
 ### Módulo Agenda (NexaCAL) — Central de 15 Relatórios Clínicos & Operacionais com Exportação PDF e Excel
 - **Central de 15 Relatórios Clínicos e Estratégicos:**
