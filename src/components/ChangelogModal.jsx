@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.7.85',
+      date: '29/08/2026',
+      title: 'Módulo Agenda (NexaCAL) — Central de 15 Relatórios Clínicos & Operacionais com Exportação PDF e Excel',
+      description: 'Lançamento da Central de Relatórios do Módulo Agenda, integrada ao botão superior "Relatórios" do Navbar: 15 relatórios estratégicos com cálculo em tempo real, painel de KPIs, filtros multidimensionais e exportação nativa em PDF A4 timbrado e Excel (XLSX).',
+      changes: [
+        { type: '15 Relatórios Especializados', text: 'Extrato Geral de Agendamentos, Produtividade por Médico, Taxa de Faltas (No-Show), Confirmações WhatsApp, Ocupação de Consultórios, Consultas por Modalidade, Encaixes & Urgências, Cancelamentos, Cotas Anuais & Metas, Bloqueios & Afastamentos, Tempo de Espera & Pontualidade, Distribuição por Convênio, Busca Ativa de Crônicos Sem Retorno, Escala em Feriados e Auditoria de Modificações.' },
+        { type: 'Exportação PDF Timbrada', text: 'Geração instantânea de relatório A4 timbrado com cabeçalho institucional da clínica, CNPJ, filtros ativos, métricas de produtividade e tabela formatada.' },
+        { type: 'Exportação Excel (XLSX)', text: 'Exportação de planilha estruturada para Excel com tipos de dados limpos prontos para manipulação, fórmulas e relatórios de auditoria.' },
+        { type: 'Filtros Multidimensionais & KPIs', text: 'Filtros dinâmicos por Período Inicial/Final, Médico, Consultório/Sala, Status e Filial com badges de métricas consolidadas em destaque.' }
+      ]
+    },
+    {
       version: 'v4.7.84',
       date: '29/08/2026',
       title: 'Módulo Configurações (NexaCONFIG) — Matriz RBAC com Feed Assistencial e Médico, Ordenação Alfabética e Salvamento Ágil de Usuários',

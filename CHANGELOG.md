@@ -1,3 +1,30 @@
+## [v4.7.85] - 29 de Agosto, 2026
+### Módulo Agenda (NexaCAL) — Central de 15 Relatórios Clínicos & Operacionais com Exportação PDF e Excel
+- **Central de 15 Relatórios Clínicos e Estratégicos:**
+  - Lançamento da central integrada de relatórios para o módulo Agenda (NexaCAL), acessada diretamente pelo botão "Relatórios" do Navbar:
+    1. *Extrato Geral de Agendamentos (Grade Completa)*
+    2. *Produtividade & Atendimentos por Médico*
+    3. *Taxa de Absenteísmo & Faltas (No-Show)*
+    4. *Confirmações & Disparos via WhatsApp*
+    5. *Ocupação & Utilização de Consultórios*
+    6. *Distribuição por Tipo de Consulta*
+    7. *Encaixes & Atendimentos de Urgência*
+    8. *Cancelamentos & Reagendamentos*
+    9. *Cotas Anuais & Metas por Médico*
+    10. *Bloqueios de Agenda & Afastamentos*
+    11. *Tempo de Espera & Pontualidade*
+    12. *Distribuição por Convênio / Plano de Saúde*
+    13. *Pacientes Crônicos Sem Retorno (Busca Ativa Preventiva)*
+    14. *Escala Médica vs Feriados Nacionais*
+    15. *Auditoria de Inclusões & Alterações de Agenda*
+- **Exportação Profissional em PDF & Excel (XLSX):**
+  - Botão de exportação **PDF** com layout timbrado hospitalar, cabeçalho da clínica, dados do CNPJ, filtros ativos e paginação automática com `jsPDF` e `jspdf-autotable`.
+  - Botão de exportação **Excel** com geração de planilhas `.xlsx` formatadas com células numéricas limpas prontas para auditorias e análises dinâmicas.
+- **Painel de Indicadores (KPIs) & Filtros Dinâmicos:**
+  - Filtros cruzados por Período Inicial/Final, Profissional Médico, Sala/Consultório e Status do agendamento, com atualização em tempo real de KPIs (Total, Realizados, No-Show, Encaixes e Taxas de Conversão).
+
+---
+
 ## [v4.7.84] - 29 de Agosto, 2026
 ### Módulo Configurações (NexaCONFIG) — Matriz RBAC com Feed Assistencial e Médico, Ordenação Alfabética e Salvamento Ágil de Usuários
 - **Matriz RBAC com Módulos Assistencial e Médico:**

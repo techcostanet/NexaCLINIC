@@ -9,10 +9,11 @@ import { dbService } from '../firebase';
 import { isBrazilianHoliday, getBrazilianHolidays } from '../utils/brazilHolidays';
 import DoctorScheduleModal from './calendar/DoctorScheduleModal';
 import ScheduleBlockModal from './calendar/ScheduleBlockModal';
+import CalendarReportsModal from './CalendarReportsModal';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
 
-export default function CalendarPanel({ currentUser }) {
+export default function CalendarPanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
 
   // Navigation & View Mode
@@ -1919,6 +1920,19 @@ export default function CalendarPanel({ currentUser }) {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Calendar Reports Modal (NexaCAL) */}
+      {isReportsOpen && (
+        <CalendarReportsModal
+          onClose={() => setIsReportsOpen && setIsReportsOpen(false)}
+          appointments={appointments}
+          patients={patients}
+          doctors={doctors}
+          doctorSchedules={doctorSchedules}
+          scheduleBlocks={scheduleBlocks}
+          tenantSettings={{ name: 'Nexa Clínica', cnpj: '00.000.000/0001-00', logo: '' }}
+        />
       )}
     </div>
   );

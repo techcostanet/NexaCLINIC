@@ -148,7 +148,7 @@ export default function App() {
       case 'purchasing':
         return <ErrorBoundary><PurchasingPanel currentUser={user} /></ErrorBoundary>;
       case 'calendar':
-        return <ErrorBoundary><CalendarPanel currentUser={user} /></ErrorBoundary>;
+        return <ErrorBoundary><CalendarPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'config':
         return <ErrorBoundary><ConfigPanel currentUser={user} /></ErrorBoundary>;
       case 'requisitions':

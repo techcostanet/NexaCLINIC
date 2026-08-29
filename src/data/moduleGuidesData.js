@@ -237,71 +237,6 @@ export const MODULE_GUIDES = {
     ]
   },
 
-  calendar: {
-    id: 'calendar',
-    name: 'Agenda & Consultas',
-    subtitle: 'NexaCAL — Agendamentos & Salas',
-    color: '#06b6d4',
-    recursos: [
-      {
-        title: 'Múltiplas Visões da Grade',
-        desc: 'Visualização por Dia, Semana, Mês ou por Salas/Consultórios físicos em tempo real.'
-      },
-      {
-        title: 'Disparo de WhatsApp com 1 Clique',
-        desc: 'Envio de mensagem pré-formatada no WhatsApp do paciente solicitando confirmação de presença.'
-      },
-      {
-        title: 'Gestão Inteligente de Encaixes',
-        desc: 'Permite agendamentos extras com sinalização visual destacada sem sobrepor horários fixos.'
-      },
-      {
-        title: 'Cotas e Limites por Especialista',
-        desc: 'Controle de vagas máximas por mês para Primeira Consulta e Retornos para cada profissional médico.'
-      },
-      {
-        title: 'Bloqueios e Feriados Nacionais',
-        desc: 'Calendário de feriados brasileiros integrado e registro de bloqueios de agenda por férias ou congressos.'
-      }
-    ],
-    tutorial: [
-      {
-        title: 'Como Agendar um Paciente',
-        steps: [
-          'Clique no botão "+ Novo Agendamento" ou dê um clique direto no horário vago da grade.',
-          'Busque o paciente por Nome ou CPF (ou digite os dados para paciente avulso).',
-          'Selecione o Profissional Médico, o Consultório/Sala e o Tipo de Atendimento (Primeira Consulta, Retorno, Procedimento).',
-          'Clique em "Salvar Agendamento". O horário será bloqueado na grade instantaneamente.'
-        ]
-      },
-      {
-        title: 'Como Confirmar Presença via WhatsApp',
-        steps: [
-          'No card do agendamento, clique no ícone verde do WhatsApp.',
-          'O sistema abrirá o WhatsApp Web com o texto personalizado contendo data, horário, médico e consultório.',
-          'Após o envio, marque o status do WhatsApp como "Enviado" ou "Confirmado".'
-        ]
-      },
-      {
-        title: 'Como Registrar Entrada na Recepção',
-        steps: [
-          'Quando o paciente chegar à clínica, clique com o botão direito no card (ou botão rápido de status) e marque "Aguardando".',
-          'O médico responsável verá a notificação no painel clínico de que o paciente já está na sala de espera.'
-        ]
-      }
-    ],
-    duvidas: [
-      {
-        pergunta: 'O que acontece quando marco um horário conflitante?',
-        resposta: 'O sistema emite um alerta de sobreposição de horário e pergunta se você deseja registrar o atendimento como "Encaixe".'
-      },
-      {
-        pergunta: 'Como bloquear a agenda de um médico que sairá de férias?',
-        resposta: 'Clique no botão "Bloqueios" no topo da agenda, selecione o médico, o intervalo de datas e o motivo do bloqueio.'
-      }
-    ]
-  },
-
   stock: {
     id: 'stock',
     name: 'Estoque & Farmácia',
@@ -1344,6 +1279,14 @@ export const MODULE_GUIDES = {
     color: '#0891b2',
     recursos: [
       {
+        title: 'Central de 15 Relatórios Executivos & Operacionais',
+        desc: 'Relatórios completos de extrato geral, absenteísmo (no-show), produtividade por médico, ocupação de consultórios, confirmações WhatsApp, cotas anuais, tempo de espera, busca ativa de pacientes crônicos e auditoria de alterações.'
+      },
+      {
+        title: 'Exportação Profissional em PDF & Excel (XLSX)',
+        desc: 'Emissão instantânea de relatórios com cabeçalho institucional timbrado em PDF (A4) e planilhas dinâmicas em Excel prontas para auditorias e BI.'
+      },
+      {
         title: 'Configuração Anual de Grade e Cotas',
         desc: 'Parametrização de cotas anuais e mensais de primeiras consultas, retornos e procedimentos por médico, com botão de replicação para os 12 meses do ano em 1 clique e painel de capacidade anual consolidada.'
       },
@@ -1369,6 +1312,15 @@ export const MODULE_GUIDES = {
       }
     ],
     tutorial: [
+      {
+        title: 'Como Acessar e Exportar Relatórios da Agenda',
+        steps: [
+          'No topo do módulo de Agenda, clique no botão "Relatórios".',
+          'Selecione na barra lateral o relatório desejado (ex: "Extrato Geral", "Produtividade por Médico", "Taxa de Faltas No-Show" ou "Busca Ativa").',
+          'Defina os filtros de Período (Início e Fim), Médico, Consultório/Sala e Status.',
+          'Clique em "Exportar PDF" para gerar o documento timbrado A4 ou "Exportar Excel" para obter a planilha XLSX.'
+        ]
+      },
       {
         title: 'Como Configurar a Grade Anual do Médico',
         steps: [
@@ -1398,6 +1350,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Quais relatórios estão disponíveis na Agenda?',
+        resposta: 'São 15 relatórios: 1. Extrato Geral, 2. Produtividade por Médico, 3. Taxa de Faltas (No-Show), 4. Confirmações WhatsApp, 5. Ocupação de Consultórios, 6. Consultas por Modalidade, 7. Encaixes & Urgências, 8. Cancelamentos, 9. Cotas Anuais & Metas, 10. Bloqueios & Afastamentos, 11. Tempo de Espera & Pontualidade, 12. Distribuição por Convênio, 13. Busca Ativa de Crônicos Sem Retorno, 14. Escala em Feriados e 15. Auditoria de Modificações.'
+      },
       {
         pergunta: 'Como a busca global localiza consultas de anos anteriores ou futuros?',
         resposta: 'A barra de pesquisa faz uma varredura completa em toda a base de dados de agendamentos em tempo real, sem restrição de data ou mês atual.'
