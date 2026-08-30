@@ -1721,9 +1721,13 @@ export const MODULE_GUIDES = {
   reception: {
     id: 'reception',
     name: 'Recepção & Admissão',
-    subtitle: 'NexaCLINIC — Front-Office & Admissão Nefrológica',
+    subtitle: 'NexaCLINIC — Front-Office & Base Mestre de Pacientes',
     color: '#0d9488',
     recursos: [
+      {
+        title: 'Base Central e Unificada de Pacientes (Master Record)',
+        desc: 'Cadastro único e centralizado de pacientes integrado em tempo real a todos os módulos do sistema (Prontuário Clínico, Enfermagem/Sessões, Alertas Assistenciais, Procedimentos Médicos, Agenda e Faturamento APAC).'
+      },
       {
         title: 'Admissão Nefrológica Completa em 6 Abas',
         desc: 'Cadastro estruturado com Identificação (CPF/CNS e desambiguação de homônimos), Contatos com Busca de CEP, Convênio/APAC, Logística de Salão, Nefrologia (Histórico da 1ª diálise, Etiologia DRC, Alergias e Comorbidades) e Regulação de Transplante Renal (RBT).'
@@ -1765,7 +1769,7 @@ export const MODULE_GUIDES = {
           'Na aba "Logística", defina a Unidade, Modalidade (HD/DP), Frequência, Turno, Salão e Poltrona.',
           'Na aba "Nefrologia", registre a Origem, Data da 1ª diálise, Etiologia da DRC, Tipo Sanguíneo/RH, Alergias e Comorbidades.',
           'Na aba "Transplante", informe a indicação, situação na fila RBT, centro transplantador e histórico obstétrico/transfusional.',
-          'Clique em "Salvar Ficha do Paciente".'
+          'Clique em "Salvar Ficha do Paciente". Os dados ficam imediatamente disponíveis em todo o sistema.'
         ]
       },
       {
@@ -1795,6 +1799,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como as alterações feitas no cadastro de pacientes se refletem nos outros módulos?',
+        resposta: 'O sistema utiliza uma Base Central Unificada (Master Patient Record). Ao salvar qualquer alteração (endereço, telefone, peso seco, alergias ou APAC), os novos dados são propagados instantaneamente para o Prontuário Clínico, Enfermagem, Faturamento APAC, Feed Assistencial e Agenda de Consultas.'
+      },
       {
         pergunta: 'Por que o formulário de admissão possui dados de nefrologia e transplante?',
         resposta: 'Para garantir que o paciente admitido pela recepção já entre no sistema com dados cruciais para a segurança clínica (alergias em destaque, tipo sanguíneo, acesso vascular e histórico de diálise) e faturamento APAC (CNS, CID-10 e número da APAC).'

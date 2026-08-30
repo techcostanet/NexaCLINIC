@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FileText, 
   Clock, 
@@ -6,37 +6,96 @@ import {
   Download, 
   DollarSign,
   AlertTriangle,
-  UploadCloud
+  UploadCloud,
+  Edit2,
+  CheckCircle2,
+  X
 } from 'lucide-react';
+import { dbService } from '../firebase';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
 
 export default function ApacBillingPanel() {
-  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
+  const { activeUnitId, filterByActiveUnit } = useUnit();
   const [activeTab, setActiveTab] = useState('apacs'); // 'apacs' | 'glosas' | 'remessas'
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState({ text: '', type: '' });
 
-  // Simulated dataset for APACs & Billing (Tagged with betim)
-  const [apacList] = useState([
-    { id: '1', unitId: 'betim', unit: 'Betim', patientName: 'ADAIR PRAXEDES MORENO', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-07-28', status: 'Atenção', convenio: 'SUS', valorMes: 2450.00 },
-    { id: '2', unitId: 'betim', unit: 'Betim', patientName: 'ADAO LUCIANO DIAS', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-08-15', status: 'Ativa', convenio: 'SUS', valorMes: 2450.00 },
-    { id: '3', unitId: 'betim', unit: 'Betim', patientName: 'ADRIANO BRANDAO DA SILVA', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-07-20', status: 'Urgente', convenio: 'SUS', valorMes: 2450.00 },
-    { id: '4', unitId: 'betim', unit: 'Betim', patientName: 'AGMAR DE SOUZA TAVARES', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-09-02', status: 'Ativa', convenio: 'SUS', valorMes: 2450.00 },
-    { id: '5', unitId: 'betim', unit: 'Betim', patientName: 'ALAN ALVES DE SOUZA', code: '0303020059', procedimiento: 'Hemodiálise Contínua (Trissemanal)', expires: '2026-07-22', status: 'Urgente', convenio: 'SUS', valorMes: 2450.00 },
-    { id: '6', unitId: 'betim', unit: 'Betim', patientName: 'CARLOS EDUARDO SILVA', code: '0303020059', procedimiento: 'Hemodiálise High-Flux', expires: '2026-08-30', status: 'Ativa', convenio: 'SUS', valorMes: 2890.00 },
-    { id: '7', unitId: 'betim', unit: 'Betim', patientName: 'FRANCISCA OLIVEIRA SANTOS', code: '0303020059', procedimiento: 'Hemodiálise Contínua', expires: '2026-08-05', status: 'Atenção', convenio: 'SUS', valorMes: 2450.00 }
-  ]);
+  // Modal para Edição Rápida de APAC
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingPatient, setEditingPatient] = useState(null);
+  const [apacForm, setApacForm] = useState({
+    apacNumber: '',
+    apacExpiry: '',
+    insurance: 'SUS'
+  });
 
   const [glosaList] = useState([
-    { id: 'g1', unitId: 'betim', unit: 'Betim', lote: 'REM-2026-06', paciente: 'ADRIANO BRANDAO DA SILVA', motivo: 'APAC Vencida durante o ciclo', valorGlosa: 612.50, status: 'Em Recurso', dataGlosa: '2026-07-05' },
-    { id: 'g2', unitId: 'betim', unit: 'Betim', lote: 'REM-2026-05', paciente: 'MARIA APARECIDA COSTA', motivo: 'Divergência no CID de insuficiência renal', valorGlosa: 1225.00, status: 'Deferido', dataGlosa: '2026-06-12' },
-    { id: 'g3', unitId: 'betim', unit: 'Betim', lote: 'REM-2026-06', paciente: 'ROBERTO ALVES PINTO', motivo: 'Assinatura de presença com falta injustificada', valorGlosa: 306.25, status: 'Pendente', dataGlosa: '2026-07-10' }
+    { id: 'g1', unitId: 'betim', unit: 'Betim', lote: 'REM-2026-06', paciente: 'ADRIANO BRANDAO DA SILVA', motivo: 'APAC vencida durante o ciclo', valorGlosa: 612.50, status: 'Em Recurso', dataGlosa: '2026-07-05' },
+    { id: 'g2', unitId: 'betim', unit: 'Betim', lote: 'REM-2026-05', paciente: 'MARIA APARECIDA COSTA', motivo: 'Divergência no CID', valorGlosa: 1225.00, status: 'Deferido', dataGlosa: '2026-06-12' },
+    { id: 'g3', unitId: 'betim', unit: 'Betim', lote: 'REM-2026-06', paciente: 'ROBERTO ALVES PINTO', motivo: 'Assinatura divergente', valorGlosa: 306.25, status: 'Pendente', dataGlosa: '2026-07-10' }
   ]);
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const pList = await dbService.getPatients();
+      setPatients(pList || []);
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao carregar dados de APACs dos pacientes.', 'danger');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showAlert = (text, type) => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+  };
+
   // Filtragem de Dados pela Unidade Ativa
-  const currentApacList = useMemo(() => filterByActiveUnit(apacList), [apacList, activeUnitId]);
+  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
   const currentGlosaList = useMemo(() => filterByActiveUnit(glosaList), [glosaList, activeUnitId]);
+
+  // Lista dinâmica de APACs baseada no cadastro central de pacientes
+  const apacList = useMemo(() => {
+    const today = new Date();
+    return currentPatients.map(p => {
+      const expDate = p.apacExpiry ? new Date(p.apacExpiry) : new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000);
+      const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+      
+      let status = 'Ativa';
+      if (diffDays <= 10) {
+        status = 'Urgente';
+      } else if (diffDays <= 30) {
+        status = 'Atenção';
+      }
+
+      return {
+        id: p.id,
+        patientId: p.id,
+        patientName: p.name,
+        cpf: p.cpf,
+        code: p.apacNumber || '0303020059',
+        procedimento: p.treatmentType === 'DP' ? 'Diálise Peritoneal' : 'Hemodiálise Contínua',
+        expires: p.apacExpiry || '2026-10-31',
+        diffDays,
+        status,
+        convenio: p.insurance || 'SUS',
+        valorMes: p.treatmentType === 'DP' ? 2680.00 : 2450.00,
+        unitId: p.unitId,
+        unit: p.unit
+      };
+    });
+  }, [currentPatients]);
 
   const getApacBadgeStyle = (status) => {
     switch (status) {
@@ -46,31 +105,76 @@ export default function ApacBillingPanel() {
     }
   };
 
-  const filteredApacs = currentApacList.filter(a => {
-    const matchesSearch = a.patientName.toLowerCase().includes(searchTerm.toLowerCase()) || a.code.includes(searchTerm);
+  const filteredApacs = apacList.filter(a => {
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = a.patientName.toLowerCase().includes(term) || (a.code && a.code.includes(term)) || (a.cpf && a.cpf.includes(term));
     const matchesStatus = statusFilter ? a.status === statusFilter : true;
     return matchesSearch && matchesStatus;
   });
 
-  const urgentCount = currentApacList.filter(a => a.status === 'Urgente').length;
-  const warningCount = currentApacList.filter(a => a.status === 'Atenção').length;
-  const totalFaturamentoEst = currentApacList.reduce((acc, c) => acc + c.valorMes, 0);
+  const urgentCount = apacList.filter(a => a.status === 'Urgente').length;
+  const warningCount = apacList.filter(a => a.status === 'Atenção').length;
+  const totalFaturamentoEst = apacList.reduce((acc, c) => acc + c.valorMes, 0);
+
+  const handleOpenEditApac = (pat) => {
+    const rawPatient = patients.find(p => p.id === pat.id);
+    if (!rawPatient) return;
+    setEditingPatient(rawPatient);
+    setApacForm({
+      apacNumber: rawPatient.apacNumber || '',
+      apacExpiry: rawPatient.apacExpiry || new Date(Date.now() + 90 * 86400000).toISOString().substring(0, 10),
+      insurance: rawPatient.insurance || 'SUS'
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveApac = async (e) => {
+    e.preventDefault();
+    if (!editingPatient) return;
+    try {
+      await dbService.updatePatient(editingPatient.id, {
+        apacNumber: apacForm.apacNumber,
+        apacExpiry: apacForm.apacExpiry,
+        insurance: apacForm.insurance
+      });
+      showAlert(`APAC do paciente ${editingPatient.name} atualizada com sucesso!`, 'success');
+      setShowEditModal(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao atualizar dados de APAC.', 'danger');
+    }
+  };
 
   return (
     <div style={styles.container}>
+      {/* Mensagem de Feedback */}
+      {message.text && (
+        <div style={{
+          padding: '0.75rem 1rem',
+          borderRadius: '8px',
+          marginBottom: '1rem',
+          backgroundColor: message.type === 'danger' ? '#fee2e2' : '#dcfce7',
+          color: message.type === 'danger' ? '#991b1b' : '#166534',
+          fontWeight: '600'
+        }}>
+          {message.text}
+        </div>
+      )}
+
       {/* Module Title Header */}
       <div style={styles.header}>
         <div>
-          <h1 style={styles.title}>NexaAPAC - Gestão de APACs & Faturamento SUS / Convênios</h1>
+          <h1 style={styles.title}>NexaAPAC — Gestão de APACs e Faturamento</h1>
           <p style={styles.subtitle}>
-            Portal exclusivo para auditoria de APACs, faturamento de sessões de diálise, controle de glosas e remessas BPA/APAC.
+            Auditoria de guias APAC, faturamento integrado à base central de pacientes, controle de glosas e remessas BPA.
           </p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           <UnitSelector compact showLabel={false} />
           <button onClick={() => alert('Exportação de Remessa BPA/APAC SUS gerada com sucesso!')} style={styles.btnSecondary}>
-            <Download size={16} /> Gerar Remessa SUS (BPA/APAC)
+            <Download size={16} /> Exportar
           </button>
         </div>
       </div>
@@ -79,16 +183,16 @@ export default function ApacBillingPanel() {
       <div style={styles.kpiGrid}>
         <div style={styles.kpiCard}>
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>APACs Ativas / Cadastradas</span>
+            <span style={styles.kpiLabel}>Cadastrados</span>
             <FileText size={20} color="var(--primary-color)" />
           </div>
-          <span style={styles.kpiValue}>{currentApacList.length} Pacientes</span>
-          <span style={styles.kpiSubtext}>Regulados na Nefrologia</span>
+          <span style={styles.kpiValue}>{apacList.length} Pacientes</span>
+          <span style={styles.kpiSubtext}>Base central regulada</span>
         </div>
 
         <div style={{ ...styles.kpiCard, borderLeft: '4px solid #ef4444' }}>
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>APACs com Vencimento Urgente</span>
+            <span style={styles.kpiLabel}>Urgente</span>
             <AlertTriangle size={20} color="#ef4444" />
           </div>
           <span style={{ ...styles.kpiValue, color: '#ef4444' }}>{urgentCount} Guias</span>
@@ -97,7 +201,7 @@ export default function ApacBillingPanel() {
 
         <div style={{ ...styles.kpiCard, borderLeft: '4px solid #f59e0b' }}>
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>Atenção para Renovação</span>
+            <span style={styles.kpiLabel}>Atenção</span>
             <Clock size={20} color="#f59e0b" />
           </div>
           <span style={{ ...styles.kpiValue, color: '#f59e0b' }}>{warningCount} Guias</span>
@@ -106,13 +210,13 @@ export default function ApacBillingPanel() {
 
         <div style={{ ...styles.kpiCard, borderLeft: '4px solid #10b981' }}>
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiLabel}>Faturamento Estimado do Mês</span>
+            <span style={styles.kpiLabel}>Faturamento</span>
             <DollarSign size={20} color="#10b981" />
           </div>
           <span style={{ ...styles.kpiValue, color: '#10b981' }}>
             R$ {totalFaturamentoEst.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </span>
-          <span style={styles.kpiSubtext}>Repasse mensal do SUS</span>
+          <span style={styles.kpiSubtext}>Repasse mensal estimado</span>
         </div>
       </div>
 
@@ -123,19 +227,19 @@ export default function ApacBillingPanel() {
             onClick={() => setActiveTab('apacs')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'apacs' ? styles.tabBtnActive : {}) }}
           >
-            📋 Validade de APACs ({currentApacList.length})
+            📋 Validade ({apacList.length})
           </button>
           <button 
             onClick={() => setActiveTab('glosas')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'glosas' ? styles.tabBtnActive : {}) }}
           >
-            ⚠️ Gestão de Glosas ({currentGlosaList.length})
+            ⚠️ Glosas ({currentGlosaList.length})
           </button>
           <button 
             onClick={() => setActiveTab('remessas')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'remessas' ? styles.tabBtnActive : {}) }}
           >
-            📦 Remessas & Lotes de Faturamento
+            📦 Remessas
           </button>
         </div>
       </div>
@@ -146,7 +250,7 @@ export default function ApacBillingPanel() {
           <Search size={18} style={styles.searchIcon} />
           <input 
             type="text" 
-            placeholder="Pesquisar por paciente ou Nº da APAC..."
+            placeholder="Pesquisar por paciente, CPF ou Nº APAC..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             style={styles.searchInput}
@@ -155,10 +259,10 @@ export default function ApacBillingPanel() {
 
         {activeTab === 'apacs' && (
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={styles.filterSelect}>
-            <option value="">Todos os Status de Validade</option>
+            <option value="">Status</option>
             <option value="Urgente">🔴 Urgente (&lt; 10 dias)</option>
             <option value="Atenção">🟡 Atenção (10 a 30 dias)</option>
-            <option value="Ativa">🟢 Ativa / Regular</option>
+            <option value="Ativa">🟢 Ativa</option>
           </select>
         )}
       </div>
@@ -166,41 +270,42 @@ export default function ApacBillingPanel() {
       {/* TAB 1: APACs List */}
       {activeTab === 'apacs' && (
         <div style={styles.tableWrapper}>
-          <table style={styles.table}>
-            <thead>
-              <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid var(--border-color)' }}>
-                <th style={{ padding: '0.75rem 1rem' }}>Paciente</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Nº APAC Autorizada</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Procedimento SUS</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Validade APAC</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Dias Restantes</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Faturamento Mensal</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Status</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredApacs.length === 0 ? (
-                <tr>
-                  <td colSpan="8" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    Nenhuma APAC encontrada para a unidade selecionada.
-                  </td>
+          {loading ? (
+            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              Carregando dados das APACs dos pacientes...
+            </div>
+          ) : (
+            <table style={styles.table}>
+              <thead>
+                <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid var(--border-color)' }}>
+                  <th style={{ padding: '0.75rem 1rem' }}>Paciente</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>CPF</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>APAC</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Procedimento</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Validade</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Prazo</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Faturamento</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Status</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Ações</th>
                 </tr>
-              ) : (
-                filteredApacs.map(apac => {
-                  const today = new Date();
-                  const expireDate = new Date(apac.expires);
-                  const diffTime = expireDate - today;
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                  return (
+              </thead>
+              <tbody>
+                {filteredApacs.length === 0 ? (
+                  <tr>
+                    <td colSpan="9" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      Nenhum paciente encontrado com os filtros aplicados.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredApacs.slice(0, 100).map(apac => (
                     <tr key={apac.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                       <td style={{ padding: '0.875rem 1rem', fontWeight: '600' }}>{apac.patientName}</td>
+                      <td style={{ padding: '0.875rem 1rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>{apac.cpf}</td>
                       <td style={{ padding: '0.875rem 1rem', fontFamily: 'monospace', fontWeight: '600' }}>{apac.code}</td>
-                      <td style={{ padding: '0.875rem 1rem' }}>{apac.procedimiento}</td>
-                      <td style={{ padding: '0.875rem 1rem' }}>{apac.expires.split('-').reverse().join('/')}</td>
-                      <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: diffDays <= 10 ? '#ef4444' : diffDays <= 30 ? '#f59e0b' : 'var(--text-primary)' }}>
-                        {diffDays} dias
+                      <td style={{ padding: '0.875rem 1rem' }}>{apac.procedimento}</td>
+                      <td style={{ padding: '0.875rem 1rem' }}>{apac.expires ? apac.expires.split('-').reverse().join('/') : '-'}</td>
+                      <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: apac.diffDays <= 10 ? '#ef4444' : apac.diffDays <= 30 ? '#f59e0b' : 'var(--text-primary)' }}>
+                        {apac.diffDays} dias
                       </td>
                       <td style={{ padding: '0.875rem 1rem', fontWeight: '700', color: '#10b981' }}>
                         R$ {apac.valorMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -211,16 +316,16 @@ export default function ApacBillingPanel() {
                         </span>
                       </td>
                       <td style={{ padding: '0.875rem 1rem' }}>
-                        <button onClick={() => alert(`Solicitação de renovação para a APAC ${apac.code} de ${apac.patientName} registrada!`)} style={styles.actionBtn}>
-                          Renovar APAC
+                        <button onClick={() => handleOpenEditApac(apac)} style={styles.actionBtn} title="Editar APAC">
+                          <Edit2 size={13} style={{ marginRight: '4px' }} /> Editar
                         </button>
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
 
@@ -230,12 +335,12 @@ export default function ApacBillingPanel() {
           <table style={styles.table}>
             <thead>
               <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid var(--border-color)' }}>
-                <th style={{ padding: '0.75rem 1rem' }}>Lote / Remessa</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Lote</th>
                 <th style={{ padding: '0.75rem 1rem' }}>Paciente</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Motivo da Glosa</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Data da Glosa</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Valor Glosado</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Status do Recurso</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Motivo</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Data</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Valor</th>
+                <th style={{ padding: '0.75rem 1rem' }}>Recurso</th>
                 <th style={{ padding: '0.75rem 1rem' }}>Ações</th>
               </tr>
             </thead>
@@ -270,7 +375,7 @@ export default function ApacBillingPanel() {
                     </td>
                     <td style={{ padding: '0.875rem 1rem' }}>
                       <button onClick={() => alert(`Entrando com recurso para a glosa de ${g.paciente}...`)} style={styles.actionBtn}>
-                        Recorrer Glosa
+                        Recorrer
                       </button>
                     </td>
                   </tr>
@@ -285,13 +390,78 @@ export default function ApacBillingPanel() {
       {activeTab === 'remessas' && (
         <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
           <UploadCloud size={48} color="var(--primary-color)" style={{ marginBottom: '1rem' }} />
-          <h3 style={{ margin: '0 0 0.5rem 0' }}>Geração de Arquivo de Remessa BPA / APAC SUS</h3>
+          <h3 style={{ margin: '0 0 0.5rem 0' }}>Geração de Arquivo BPA e APAC</h3>
           <p style={{ color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto 1.5rem auto' }}>
-            Consolidação mensal de presenças diárias dos pacientes do salão de hemodiálise para exportação e faturamento no Datasus.
+            Consolidação mensal de presenças e sessões dos pacientes da base central para exportação e faturamento.
           </p>
           <button onClick={() => alert('Remessa do mês atual exportada com sucesso!')} style={styles.btnPrimary}>
-            <Download size={16} /> Fechar Mês & Baixar Arquivo BPA/APAC
+            <Download size={16} /> Fechar
           </button>
+        </div>
+      )}
+
+      {/* Modal de Edição de APAC */}
+      {showEditModal && editingPatient && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <div style={styles.modalHeader}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700' }}>
+                Atualizar APAC — {editingPatient.name}
+              </h3>
+              <button onClick={() => setShowEditModal(false)} style={styles.closeBtn}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveApac} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+              <div>
+                <label style={styles.label}>Nº APAC Autorizada</label>
+                <input 
+                  type="text" 
+                  value={apacForm.apacNumber} 
+                  onChange={e => setApacForm(f => ({ ...f, apacNumber: e.target.value }))}
+                  required
+                  placeholder="Ex: 3126101004523"
+                  style={styles.input}
+                />
+              </div>
+
+              <div>
+                <label style={styles.label}>Validade da APAC</label>
+                <input 
+                  type="date" 
+                  value={apacForm.apacExpiry} 
+                  onChange={e => setApacForm(f => ({ ...f, apacExpiry: e.target.value }))}
+                  required
+                  style={styles.input}
+                />
+              </div>
+
+              <div>
+                <label style={styles.label}>Convênio</label>
+                <select 
+                  value={apacForm.insurance} 
+                  onChange={e => setApacForm(f => ({ ...f, insurance: e.target.value }))}
+                  style={styles.input}
+                >
+                  <option value="SUS">SUS</option>
+                  <option value="Unimed BH">Unimed BH</option>
+                  <option value="Bradesco Saúde">Bradesco Saúde</option>
+                  <option value="Amil">Amil</option>
+                  <option value="Particular">Particular</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setShowEditModal(false)} style={styles.btnSecondary}>
+                  Cancelar
+                </button>
+                <button type="submit" style={styles.btnPrimary}>
+                  Salvar
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
@@ -455,5 +625,54 @@ const styles = {
     fontWeight: '600',
     fontSize: '0.8rem',
     cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    padding: '1.5rem',
+    borderRadius: '10px',
+    width: '90%',
+    maxWidth: '460px',
+    boxShadow: '0 10px 25px rgba(0,0,0,0.15)'
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottom: '1px solid var(--border-color)',
+    paddingBottom: '0.75rem'
+  },
+  closeBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: 'var(--text-muted)'
+  },
+  label: {
+    display: 'block',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    color: 'var(--text-secondary)',
+    marginBottom: '0.25rem'
+  },
+  input: {
+    width: '100%',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '6px',
+    border: '1px solid var(--border-color)',
+    fontSize: '0.875rem'
   }
 };

@@ -18,7 +18,7 @@ const getDB = () => {
     let updated = false;
 
     // Migrate patients
-    if (!parsed.patients || parsed.patients.length < 650 || !parsed.patients.some(p => p.scheduleSlots)) {
+    if (!parsed.patients || parsed.patients.length < 650 || !parsed.patients.some(p => p.cns) || !parsed.patients.some(p => p.apacNumber)) {
       parsed.patients = getDefaultPatients();
       updated = true;
     }
@@ -2887,18 +2887,47 @@ export const mockFirestore = {
   },
 
   // Patients Methods
-  getPatients: async () => {
+  getPatients: async (unitId = null) => {
     const db = getDB();
-    return db.patients || [];
+    const list = db.patients || [];
+    if (unitId && unitId !== 'all') {
+      return list.filter(p => !p.unitId || p.unitId === unitId);
+    }
+    return list;
+  },
+
+  getPatientById: async (id) => {
+    if (!id) return null;
+    const db = getDB();
+    return (db.patients || []).find(p => p.id === id) || null;
+  },
+
+  searchPatients: async (term = '', unitId = null) => {
+    const db = getDB();
+    let list = db.patients || [];
+    if (unitId && unitId !== 'all') {
+      list = list.filter(p => !p.unitId || p.unitId === unitId);
+    }
+    if (!term || !term.trim()) return list;
+    const clean = term.toLowerCase().trim();
+    const cleanDigits = clean.replace(/\D/g, '');
+    return list.filter(p => 
+      (p.name && p.name.toLowerCase().includes(clean)) ||
+      (cleanDigits && p.cpf && p.cpf.replace(/\D/g, '').includes(cleanDigits)) ||
+      (p.chartNumber && p.chartNumber.toLowerCase().includes(clean)) ||
+      (cleanDigits && p.cns && p.cns.includes(cleanDigits)) ||
+      (p.apacNumber && p.apacNumber.includes(clean))
+    );
   },
 
   createPatient: async (patientData) => {
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 300));
     const db = getDB();
     const newPatient = {
       id: 'pat-' + Math.random().toString(36).substr(2, 9),
       ...patientData,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     if (!db.patients) db.patients = [];
     db.patients.push(newPatient);
@@ -2907,7 +2936,7 @@ export const mockFirestore = {
   },
 
   updatePatient: async (id, patientData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 300));
     const db = getDB();
     const index = db.patients.findIndex(p => p.id === id);
     if (index > -1) {
@@ -2923,11 +2952,26 @@ export const mockFirestore = {
   },
 
   deletePatient: async (id) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 300));
     const db = getDB();
     db.patients = db.patients.filter(p => p.id !== id);
     setDB(db);
     return { success: true };
+  },
+
+  bulkSyncPatients: async (patientsList) => {
+    const db = getDB();
+    if (!db.patients) db.patients = [];
+    patientsList.forEach(pat => {
+      const idx = db.patients.findIndex(p => p.id === pat.id);
+      if (idx > -1) {
+        db.patients[idx] = { ...db.patients[idx], ...pat, updatedAt: new Date().toISOString() };
+      } else {
+        db.patients.push({ ...pat, updatedAt: new Date().toISOString() });
+      }
+    });
+    setDB(db);
+    return { count: patientsList.length };
   },
 
   // Shifts Methods (CRUD)

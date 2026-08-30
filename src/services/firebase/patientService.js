@@ -1,16 +1,23 @@
 import { app } from './config';
 import { USE_MOCK, mockFirestore } from './mockDb';
 
-export const getPatients = async () => {
+export const getPatients = async (unitId = null) => {
     if (USE_MOCK) {
-      return mockFirestore.getPatients();
+      return mockFirestore.getPatients(unitId);
     }
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+    const { getFirestore, collection, getDocs, query, where } = await import('firebase/firestore');
     const db = getFirestore(app);
-    const snap = await getDocs(collection(db, 'patients'));
+    
+    let snap;
+    if (unitId && unitId !== 'all') {
+      const q = query(collection(db, 'patients'), where('unitId', '==', unitId));
+      snap = await getDocs(q);
+    } else {
+      snap = await getDocs(collection(db, 'patients'));
+    }
     
     // Seed default patients if Firestore is empty
-    if (snap.empty) {
+    if (snap.empty && (!unitId || unitId === 'all')) {
       const { writeBatch, doc } = await import('firebase/firestore');
       const batch = writeBatch(db);
       const patientsList = await mockFirestore.getPatients();
@@ -24,6 +31,35 @@ export const getPatients = async () => {
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   };
 
+export const getPatientById = async (id) => {
+    if (!id) return null;
+    if (USE_MOCK) {
+      return mockFirestore.getPatientById(id);
+    }
+    const { getFirestore, doc, getDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const snap = await getDoc(doc(db, 'patients', id));
+    if (snap.exists()) {
+      return { id: snap.id, ...snap.data() };
+    }
+    return null;
+  };
+
+export const searchPatients = async (term = '', unitId = null) => {
+    if (USE_MOCK) {
+      return mockFirestore.searchPatients(term, unitId);
+    }
+    const all = await getPatients(unitId);
+    if (!term || !term.trim()) return all;
+    const clean = term.toLowerCase().trim();
+    return all.filter(p => 
+      (p.name && p.name.toLowerCase().includes(clean)) ||
+      (p.cpf && p.cpf.replace(/\D/g, '').includes(clean.replace(/\D/g, ''))) ||
+      (p.chartNumber && p.chartNumber.toLowerCase().includes(clean)) ||
+      (p.cns && p.cns.includes(clean))
+    );
+  };
+
 export const createPatient = async (patientData) => {
     if (USE_MOCK) {
       return mockFirestore.createPatient(patientData);
@@ -32,7 +68,8 @@ export const createPatient = async (patientData) => {
     const db = getFirestore(app);
     const docRef = await addDoc(collection(db, 'patients'), {
       ...patientData,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     });
     return { id: docRef.id, ...patientData };
   };
@@ -56,6 +93,20 @@ export const deletePatient = async (id) => {
     const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
     return deleteDoc(doc(db, 'patients', id));
+  };
+
+export const bulkSyncPatients = async (patientsList) => {
+    if (USE_MOCK) {
+      return mockFirestore.bulkSyncPatients(patientsList);
+    }
+    const { getFirestore, writeBatch, doc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const batch = writeBatch(db);
+    patientsList.forEach(pat => {
+      batch.set(doc(db, 'patients', pat.id), { ...pat, updatedAt: new Date().toISOString() }, { merge: true });
+    });
+    await batch.commit();
+    return { count: patientsList.length };
   };
 
 export const getPrescriptions = async () => {

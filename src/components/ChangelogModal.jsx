@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.6',
+      date: '30/08/2026',
+      title: 'Base Central e Unificada de Pacientes (Master Patient Record) em Todo o Sistema',
+      description: 'Centralização definitiva do cadastro de pacientes como fonte única de verdade (Single Source of Truth) do NexaCLINIC: consolidação e deduplicação de 691 pacientes completos com dados clínicos, demográficos, logísticos de diálise, contatos, APACs e transplante renal, integrando em tempo real todos os módulos operacionais (Recepção, Prontuário Clínico, NexaCARE Enfermagem, Feed Assistencial, Gestão Médica, Agenda e Faturamento APAC).',
+      changes: [
+        { type: 'Base Mestre Canônica Unificada', text: 'Consolidação de 691 fichas completas com dados cadastrais, APACs autorizadas, acessos vasculares, alocações de poltrona/turno e histórico nefro-transplante sem duplicidades.' },
+        { type: 'Serviço Centralizado no Banco', text: 'Aprimoramento do patientService com busca inteligente multi-campos (Nome, CPF limpo, Prontuário, CNS e APAC) e sincronização em tempo real no Firestore e MockDB.' },
+        { type: 'Redirecionamento de Todos os Módulos', text: 'Recepção, Prontuário Clínico, Enfermagem (NexaCARE), Alertas Assistenciais (NexaASSIST), Gestão Médica (NexaMED), Agenda (NexaCAL) e Faturamento (NexaAPAC) integrados diretamente à base mestre.' },
+        { type: 'Conformidade UI/UX & Manuais', text: 'Aplicação da regra de rótulos concisos (1 palavra / termo único) e documentação atualizada no manual do sistema.' }
+      ]
+    },
+    {
       version: 'v4.9.4',
       date: '30/08/2026',
       title: 'NexaCARE — Autocomplete Idêntico ao Módulo Assist e Busca Direta de Pacientes',

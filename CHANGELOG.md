@@ -1,3 +1,22 @@
+## [v4.9.6] - 30 de Agosto, 2026
+### Base Central e Unificada de Pacientes (Master Patient Record) em Todo o Sistema
+- **Base Mestre Canônica Unificada (Single Source of Truth):**
+  - Consolidação e deduplicação de 691 fichas de pacientes com dados cadastrais, APACs autorizadas, acessos vasculares, alocações de sala/turno e histórico clínico-transplante sem duplicidades.
+- **Serviço Centralizado no Banco de Dados (`patientService.js`):**
+  - Métodos padronizados de busca inteligente multi-campos (Nome, CPF sem pontuação, Prontuário, CNS e APAC) e sincronização em tempo real no Firestore e MockDB.
+- **Redirecionamento de Todos os Módulos:**
+  - *Recepção & Admissão:* Hub mestre de admissão e check-in diário sincronizado em tempo real.
+  - *Prontuário Clínico:* Prescrições, evoluções e exames laboratoriais vinculados diretamente ao paciente selecionado.
+  - *NexaCARE (Enfermagem):* Sessões de hemodiálise e escalas alimentadas pelos dados centrais.
+  - *NexaASSIST:* Alertas, altas e leitor de e-mails com vinculação automática inteligente aos pacientes da base.
+  - *NexaMED:* Procedimentos cirúrgicos (CDL, FAV, biópsias) e escalas com histórico unificado.
+  - *NexaCAL (Agenda):* Agendamento de consultas com busca preditiva no cadastro mestre.
+  - *NexaAPAC (Faturamento):* Validade de APACs e glosas conectadas aos dados reais dos pacientes.
+- **Diretrizes de UI/UX & Manuais:**
+  - Aplicação rigorosa da regra de rótulos concisos (1 palavra / termo único) e documentação atualizada no manual do sistema (`src/data/moduleGuidesData.js`).
+
+---
+
 ## [v4.9.4] - 30 de Agosto, 2026
 ### NexaCARE — Autocomplete Idêntico ao Módulo Assist e Busca Direta de Pacientes
 - **Componente Autocomplete Padronizado com o Módulo Assist:**
