@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.8',
+      date: '30/08/2026',
+      title: 'Correção de Falha Crítica na Busca de Pacientes (Tela de Erro)',
+      description: 'Resolução de um erro crítico de renderização (White Screen / Tela de Erro) nos módulos Clínico (Prontuário), Cadastro de Pacientes e Faturamento APAC, causado por pacientes com dados incompletos ou importados recentemente.',
+      changes: [
+        { type: 'Correção de TypeError', text: 'Tratamento seguro na função de busca que impedia o carregamento da lista de pacientes caso algum registro estivesse sem a propriedade nome definida (Cannot read properties of undefined).' },
+        { type: 'Estabilização de Módulos', text: 'Restauração do funcionamento normal da pesquisa nos módulos Prontuário Clínico (NexaCLINIC), Cadastro de Pacientes e Faturamento (NexaAPAC).' }
+      ]
+    },
+    {
       version: 'v4.9.7',
       date: '30/08/2026',
       title: 'Correção de Carregamento no Clínico e Busca Inteligente com Fallback na Recepção',

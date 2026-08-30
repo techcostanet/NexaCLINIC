@@ -863,7 +863,7 @@ export default function ClinicalPanel() {
                 </div>
                 <div style={styles.sidebarList}>
                   {currentPatients
-                    .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                    .filter(p => (p.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()))
                     .map(p => {
                       const pCount = currentAssistPosts.filter(ap => ap.patientId === p.id).length;
                       return (

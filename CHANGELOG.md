@@ -1,3 +1,12 @@
+## [v4.9.8] - 30 de Agosto, 2026
+### Correção de Falha Crítica na Busca de Pacientes (Tela de Erro)
+- **Correção de `TypeError` em Funções de Filtro (`ClinicalPanel.jsx`, `PatientsPanel.jsx` e `ApacBillingPanel.jsx`):**
+  - Adicionado tratamento seguro (`(p.name || '').toLowerCase()`) na lógica de pesquisa local para evitar erro crítico `Cannot read properties of undefined` (Tela de erro branca) causado pela tentativa de utilizar `.toLowerCase()` em registros sem nome definido ou com base importada de forma incompleta.
+- **Estabilização Total de Módulos Clínicos:**
+  - Restaurada a funcionalidade de busca e listagem no Prontuário Clínico (NexaCLINIC), Cadastro de Pacientes e Módulo de Faturamento APAC.
+
+---
+
 ## [v4.9.7] - 30 de Agosto, 2026
 ### Correção de Carregamento no Clínico e Busca Inteligente na Recepção
 - **Correção de useMemo no Painel Clínico (`ClinicalPanel.jsx`):**

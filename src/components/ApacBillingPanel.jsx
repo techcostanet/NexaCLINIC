@@ -110,7 +110,7 @@ export default function ApacBillingPanel() {
 
   const filteredApacs = apacList.filter(a => {
     const term = searchTerm.toLowerCase();
-    const matchesSearch = a.patientName.toLowerCase().includes(term) || (a.code && a.code.includes(term)) || (a.cpf && a.cpf.includes(term));
+    const matchesSearch = (a.patientName || '').toLowerCase().includes(term) || (a.code && a.code.includes(term)) || (a.cpf && a.cpf.includes(term));
     const matchesStatus = statusFilter ? a.status === statusFilter : true;
     return matchesSearch && matchesStatus;
   });

@@ -237,8 +237,8 @@ export default function PatientsPanel() {
 
   // Filtered Patients List
   const filteredPatients = currentPatients.filter((pat) => {
-    const matchesName = pat.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        (pat.chartNumber && pat.chartNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    const matchesName = (pat.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) || 
+                        (pat.chartNumber && pat.chartNumber.toLowerCase().includes((searchTerm || '').toLowerCase())) ||
                         (pat.cpf && pat.cpf.includes(searchTerm));
     const matchesShift = filterShift ? pat.shift === filterShift : true;
     const matchesRoom = filterRoom ? pat.room === filterRoom : true;
