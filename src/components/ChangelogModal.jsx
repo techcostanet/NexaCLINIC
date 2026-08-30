@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.2',
+      date: '30/08/2026',
+      title: 'NexaCARE — Correção na Consulta de Pacientes, Filtro de Cadência, Botão de Iniciar Sessão e Seletor no Modal',
+      description: 'Aprimoramentos imediatos no módulo NexaCARE: correção na consulta e busca de pacientes na aba Sessão (eliminando restrições de dia que ocultavam pacientes), adição de filtro seletor de Cadência (Todas, Hoje, SQS e TQS), inclusão do botão de ação primária "+ Iniciar Sessão" na barra superior e seletor dinâmico de pacientes no topo do modal de digitação de HD.',
+      changes: [
+        { type: 'Busca Global & Filtro de Cadência', text: 'Busca ampla por Nome, CPF, Cadeira, CNS, Salão e Turno, com seletor dedicado de Cadência (Todas, Hoje, Seg/Qua/Sex ou Ter/Qui/Sáb) sem ocultação indevida de pacientes.' },
+        { type: 'Botão "+ Iniciar Sessão"', text: 'Botão de ação destacado no topo da aba Sessão e no estado vazio da listagem para início rápido de preenchimento.' },
+        { type: 'Seletor de Paciente no Modal', text: 'Dropdown inteligente no topo do modal de sessão permitindo selecionar ou alternar o paciente em atendimento em tempo real.' },
+        { type: 'Adequação Rigorosa de Rótulos (1 Palavra)', text: 'Padronização direta dos rótulos de pré-diálise, parâmetros horários e intercorrências (Pulso, Acesso, Curativo, Precordialgia, etc).' }
+      ]
+    },
+    {
       version: 'v4.9.1',
       date: '30/08/2026',
       title: 'Módulo NexaCARE (Enfermagem & Salão) — Cockpit Unificado com 4 Abas (Sessão, Escala, Requisição, Chamados) e Perfil Nativo no RBAC',

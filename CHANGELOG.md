@@ -1,3 +1,19 @@
+## [v4.9.2] - 30 de Agosto, 2026
+### NexaCARE — Correção na Consulta de Pacientes, Filtro de Cadência, Botão de Iniciar Sessão e Seletor no Modal
+- **Busca e Consulta Ampla de Pacientes (Aba Sessão):**
+  - Correção na lógica de filtragem da grade de hemodiálise: eliminada a restrição fixa por dia da semana que ocultava pacientes no domingo/testes.
+  - Busca inteligente e instantânea por Nome, CPF (com ou sem pontuação), Cadeira (#), CNS, Salão (1, 2, 3), Turno e tipo de acesso vascular (FAV/Cateter).
+- **Filtro Seletor de Cadência:**
+  - Inclusão do dropdown de Cadência (`Cadência (Todas)`, `Hoje (Turno Atual)`, `Seg / Qua / Sex (SQS)`, `Ter / Qui / Sáb (TQS)`).
+- **Botão de Ação Destacado (+ Iniciar Sessão):**
+  - Inclusão do botão de ação primária em verde-azulado (+ Iniciar Sessão) no topo dos controles e no estado vazio (empty state) da tabela.
+- **Seletor de Paciente no Topo do Modal:**
+  - Adição de dropdown pesquisável no cabeçalho da folha eletrônica de diálise permitindo selecionar ou alternar o paciente em atendimento em tempo real.
+- **Conformidade com Diretrizes de UI/UX (1-Word Rule):**
+  - Padronização de todos os novos rótulos para termos únicos e diretos.
+
+---
+
 ## [v4.9.1] - 30 de Agosto, 2026
 ### Módulo NexaCARE (Enfermagem & Salão) — Cockpit Unificado com 4 Abas (Sessão, Escala, Requisição, Chamados) e Perfil Nativo no RBAC
 - **Cockpit Unificado da Enfermagem (NexaCARE):**

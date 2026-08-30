@@ -32,9 +32,11 @@ export default function CarePanel({ currentUser }) {
   const [message, setMessage] = useState({ text: '', type: '' });
 
   // ----------------------------------------------------
+  // ----------------------------------------------------
   // TAB 1: SESSÃO (Hemodialysis Session Tracking)
   // ----------------------------------------------------
   const [sessionSearchTerm, setSessionSearchTerm] = useState('');
+  const [sessionCadenceFilter, setSessionCadenceFilter] = useState('all');
   const [sessionShiftFilter, setSessionShiftFilter] = useState('all');
   const [sessionRoomFilter, setSessionRoomFilter] = useState('all');
   const [showSessionModal, setShowSessionModal] = useState(false);
@@ -105,18 +107,50 @@ export default function CarePanel({ currentUser }) {
 
   const todayStr = useMemo(() => new Date().toISOString().substring(0, 10), []);
 
-  const todayWeekday = useMemo(() => {
-    const day = new Date().getDay();
-    if ([1, 3, 5].includes(day)) return 'Segunda, quarta e sexta';
-    if ([2, 4, 6].includes(day)) return 'Terça, quinta e sábado';
-    return 'Segunda, quarta e sexta';
-  }, []);
+  const filteredSessionPatients = useMemo(() => {
+    return currentPatients.filter(patient => {
+      // 1. Search filter across all relevant fields
+      const term = sessionSearchTerm.trim().toLowerCase();
+      const cleanDigits = term.replace(/\D/g, '');
+      let matchSearch = true;
+      if (term) {
+        const nameMatch = (patient.name || '').toLowerCase().includes(term);
+        const cpfMatch = cleanDigits.length >= 2 && (patient.cpf || '').replace(/\D/g, '').includes(cleanDigits);
+        const chairMatch = (patient.chairNumber || '').toString().toLowerCase().includes(term);
+        const cnsMatch = (patient.cns || '').includes(term);
+        const roomMatch = (patient.room || '').toLowerCase().includes(term);
+        const shiftMatch = (patient.shift || '').toLowerCase().includes(term);
+        const accessMatch = (patient.accessType || '').toLowerCase().includes(term);
+        matchSearch = nameMatch || cpfMatch || chairMatch || cnsMatch || roomMatch || shiftMatch || accessMatch;
+      }
 
-  const todayDialysisPatients = useMemo(() => {
-    return currentPatients.filter(
-      p => (p.dialysisFrequency?.includes(todayWeekday) || p.dialysisFrequency === 'Diário' || !p.dialysisFrequency)
-    );
-  }, [currentPatients, todayWeekday]);
+      // 2. Shift filter
+      const matchShift = sessionShiftFilter === 'all' || patient.shift === sessionShiftFilter;
+
+      // 3. Room filter
+      const matchRoom = sessionRoomFilter === 'all' || patient.room === sessionRoomFilter;
+
+      // 4. Cadence filter
+      let matchCadence = true;
+      const freq = (patient.dialysisFrequency || '').toLowerCase();
+      if (sessionCadenceFilter === 'SQS') {
+        matchCadence = freq.includes('seg') || freq.includes('sqs') || freq.includes('diário') || freq.includes('diario') || !freq;
+      } else if (sessionCadenceFilter === 'TQS') {
+        matchCadence = freq.includes('ter') || freq.includes('tqs') || freq.includes('diário') || freq.includes('diario') || !freq;
+      } else if (sessionCadenceFilter === 'today') {
+        const day = new Date().getDay();
+        if ([1, 3, 5].includes(day)) {
+          matchCadence = freq.includes('seg') || freq.includes('sqs') || freq.includes('diário') || freq.includes('diario') || !freq;
+        } else if ([2, 4, 6].includes(day)) {
+          matchCadence = freq.includes('ter') || freq.includes('tqs') || freq.includes('diário') || freq.includes('diario') || !freq;
+        } else {
+          matchCadence = true;
+        }
+      }
+
+      return matchSearch && matchShift && matchRoom && matchCadence;
+    });
+  }, [currentPatients, sessionSearchTerm, sessionShiftFilter, sessionRoomFilter, sessionCadenceFilter]);
 
   const sortedStockItems = useMemo(() => {
     return [...currentStockItems].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
@@ -183,6 +217,7 @@ export default function CarePanel({ currentUser }) {
   // HANDLERS: SESSÃO
   // ----------------------------------------------------
   const handleOpenSessionModal = (patient) => {
+    if (!patient) return;
     setSelectedSessionPatient(patient);
     const existing = sessionsLogs.find(l => l.patientId === patient.id && l.date === todayStr);
 
@@ -218,6 +253,16 @@ export default function CarePanel({ currentUser }) {
       setDressingCondition('Limpo e oclusivo');
     }
     setShowSessionModal(true);
+  };
+
+  const handleOpenNewSessionModal = (patient = null) => {
+    const target = patient || selectedSessionPatient || filteredSessionPatients[0] || currentPatients[0] || null;
+    if (target) {
+      handleOpenSessionModal(target);
+    } else {
+      setSelectedSessionPatient(null);
+      setShowSessionModal(true);
+    }
   };
 
   const handleAddHourRow = () => {
@@ -491,7 +536,7 @@ export default function CarePanel({ currentUser }) {
         >
           <Activity size={16} /> Sessão
           <span style={styles.tabBadge}>
-            {sessionsLogs.filter(l => l.date === todayStr && matchItemUnit(l)).length}/{todayDialysisPatients.length}
+            {sessionsLogs.filter(l => l.date === todayStr && matchItemUnit(l)).length}/{currentPatients.length}
           </span>
         </button>
 
@@ -546,14 +591,34 @@ export default function CarePanel({ currentUser }) {
               <Search size={16} style={styles.searchIcon} />
               <input 
                 type="text" 
-                placeholder="Buscar paciente, CPF ou cadeira..."
+                placeholder="Buscar paciente, CPF, cadeira..."
                 value={sessionSearchTerm}
                 onChange={e => setSessionSearchTerm(e.target.value)}
                 style={styles.searchInput}
               />
+              {sessionSearchTerm && (
+                <button 
+                  onClick={() => setSessionSearchTerm('')} 
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '0 0.5rem', display: 'flex', alignItems: 'center' }}
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <select 
+                className="form-control" 
+                value={sessionCadenceFilter} 
+                onChange={e => setSessionCadenceFilter(e.target.value)}
+                style={{ width: '150px', fontSize: '0.85rem' }}
+              >
+                <option value="all">Cadência (Todas)</option>
+                <option value="today">Hoje (Turno Atual)</option>
+                <option value="SQS">Seg / Qua / Sex (SQS)</option>
+                <option value="TQS">Ter / Qui / Sáb (TQS)</option>
+              </select>
+
               <select 
                 className="form-control" 
                 value={sessionShiftFilter} 
@@ -577,6 +642,27 @@ export default function CarePanel({ currentUser }) {
                 <option value="Salão 02">Salão 02</option>
                 <option value="Salão 03">Salão 03</option>
               </select>
+
+              <button 
+                onClick={() => handleOpenNewSessionModal()} 
+                className="btn btn-primary"
+                style={{ 
+                  backgroundColor: '#0d9488', 
+                  color: '#ffffff',
+                  border: 'none', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.4rem',
+                  fontWeight: '700',
+                  padding: '0.55rem 1rem',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 4px rgba(13, 148, 136, 0.25)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <Plus size={16} /> Iniciar Sessão
+              </button>
             </div>
           </div>
 
@@ -595,16 +681,38 @@ export default function CarePanel({ currentUser }) {
                 </tr>
               </thead>
               <tbody>
-                {todayDialysisPatients
-                  .filter(p => {
-                    const matchSearch = (p.name || '').toLowerCase().includes(sessionSearchTerm.toLowerCase()) ||
-                                        (p.cpf || '').includes(sessionSearchTerm) ||
-                                        (p.chairNumber || '').includes(sessionSearchTerm);
-                    const matchShift = sessionShiftFilter === 'all' || p.shift === sessionShiftFilter;
-                    const matchRoom = sessionRoomFilter === 'all' || p.room === sessionRoomFilter;
-                    return matchSearch && matchShift && matchRoom;
-                  })
-                  .map(patient => {
+                {filteredSessionPatients.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                        <HeartPulse size={42} color="#94a3b8" />
+                        <p style={{ margin: 0, fontWeight: '700', color: '#334155', fontSize: '1.05rem' }}>
+                          Nenhum paciente encontrado com os filtros atuais
+                        </p>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
+                          Tente ajustar a busca, alterar a Cadência/Salão ou inicie uma nova sessão diretamente.
+                        </p>
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                          <button 
+                            onClick={() => { setSessionSearchTerm(''); setSessionShiftFilter('all'); setSessionRoomFilter('all'); setSessionCadenceFilter('all'); }}
+                            className="btn btn-sm btn-outline-secondary"
+                            style={{ borderRadius: '6px' }}
+                          >
+                            Limpar Filtros
+                          </button>
+                          <button 
+                            onClick={() => handleOpenNewSessionModal()}
+                            className="btn btn-sm btn-primary"
+                            style={{ backgroundColor: '#0d9488', border: 'none', borderRadius: '6px', fontWeight: '700' }}
+                          >
+                            <Plus size={14} /> Iniciar Sessão
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredSessionPatients.map(patient => {
                     const log = sessionsLogs.find(l => l.patientId === patient.id && l.date === todayStr);
                     const hasComplications = log?.complications?.length > 0;
 
@@ -612,7 +720,9 @@ export default function CarePanel({ currentUser }) {
                       <tr key={patient.id}>
                         <td>
                           <div style={{ fontWeight: '700', color: '#1e293b' }}>{patient.name}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>CPF: {patient.cpf || 'Não informado'} • Peso Seco: {patient.dryWeight ? `${patient.dryWeight} kg` : 'N/D'}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                            CPF: {patient.cpf || 'Não informado'} • Peso Seco: {patient.dryWeight ? `${patient.dryWeight} kg` : 'N/D'}
+                          </div>
                         </td>
                         <td>
                           <span style={styles.chairBadge}>#{patient.chairNumber || '--'}</span>
@@ -645,21 +755,26 @@ export default function CarePanel({ currentUser }) {
                             onClick={() => handleOpenSessionModal(patient)} 
                             className="btn btn-sm"
                             style={{ 
-                              backgroundColor: log ? '#0f766e' : '#14b8a6', 
+                              backgroundColor: log ? '#0f766e' : '#0d9488', 
                               color: '#ffffff',
-                              fontWeight: '600',
+                              fontWeight: '700',
                               borderRadius: '6px',
-                              padding: '0.35rem 0.75rem',
+                              padding: '0.45rem 0.9rem',
                               border: 'none',
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
                             }}
                           >
-                            {log ? 'Ver / Editar' : 'Digitar Sessão'}
+                            <Activity size={14} /> {log ? 'Ver / Editar' : 'Digitar Sessão'}
                           </button>
                         </td>
                       </tr>
                     );
-                  })}
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -912,7 +1027,7 @@ export default function CarePanel({ currentUser }) {
       {/* ========================================================================= */}
       {/* MODAL: DIGITAÇÃO DA SESSÃO DE HEMODIÁLISE                                 */}
       {/* ========================================================================= */}
-      {showSessionModal && selectedSessionPatient && (
+      {showSessionModal && (
         <div style={styles.modalOverlay}>
           <div style={{ ...styles.modalCard, maxWidth: '950px' }}>
             <div style={styles.modalHeader}>
@@ -922,217 +1037,246 @@ export default function CarePanel({ currentUser }) {
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>
-                    Sessão de Hemodiálise — {selectedSessionPatient.name}
+                    {selectedSessionPatient ? `Sessão — ${selectedSessionPatient.name}` : 'Iniciar Sessão de Diálise'}
                   </h3>
-                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                    {selectedSessionPatient.room || 'Salão 01'} • Cadeira #{selectedSessionPatient.chairNumber || '01'} • {selectedSessionPatient.shift || '1º Turno'} • Acesso: {selectedSessionPatient.accessType || 'FAV'}
-                  </span>
+                  {selectedSessionPatient && (
+                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      {selectedSessionPatient.room || 'Salão 01'} • Cadeira #{selectedSessionPatient.chairNumber || '01'} • {selectedSessionPatient.shift || '1º Turno'} • Acesso: {selectedSessionPatient.accessType || 'FAV'}
+                    </span>
+                  )}
                 </div>
               </div>
               <button onClick={() => setShowSessionModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
 
             <div style={styles.modalBody}>
-              {/* Prescrição Vigente Resumida */}
-              <div style={styles.prescInfoBox}>
-                <span style={{ fontWeight: '700', color: '#0f766e', fontSize: '0.85rem' }}>📋 Prescrição Médica:</span>
-                <span style={{ fontSize: '0.8rem', color: '#334155' }}>
-                  Tempo: 4.0h • Fluxo Sangue (Qb): 350 mL/min • Capilar: Alto Fluxo • Heparina: 5000 UI • Peso Seco Alvo: <strong>{selectedSessionPatient.dryWeight ? `${selectedSessionPatient.dryWeight} kg` : 'N/D'}</strong>
-                </span>
+              {/* Seletor Rápido de Paciente no Topo do Modal */}
+              <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', backgroundColor: '#f0fdfa', borderRadius: '8px', border: '1px solid #ccfbf1' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#0f766e', marginBottom: '0.35rem' }}>
+                  Paciente *
+                </label>
+                <select
+                  className="form-control"
+                  value={selectedSessionPatient?.id || ''}
+                  onChange={e => {
+                    const pat = currentPatients.find(p => p.id === e.target.value);
+                    if (pat) handleOpenSessionModal(pat);
+                  }}
+                  style={{ fontWeight: '700', fontSize: '0.95rem', color: '#0f172a', borderColor: '#0d9488' }}
+                >
+                  <option value="">Selecione o paciente...</option>
+                  {currentPatients.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} — Cadeira #{p.chairNumber || '--'} ({p.room || 'Salão 01'} • {p.shift || '1º Turno'}) • {p.accessType || 'FAV'}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {/* SEÇÃO 1: PRÉ-DIÁLISE */}
-              <div style={styles.sectionCard}>
-                <h4 style={styles.sectionTitle}>1. Avaliação Pré-Diálise</h4>
-                <div style={styles.grid4}>
-                  <div className="form-group">
-                    <label>Peso Inicial (kg) *</label>
-                    <input 
-                      type="number" step="0.1" className="form-control" 
-                      value={preWeight} onChange={e => setPreWeight(e.target.value)} 
-                      placeholder="Ex: 72.5" required 
-                    />
+              {selectedSessionPatient && (
+                <>
+                  {/* Prescrição Vigente Resumida */}
+                  <div style={styles.prescInfoBox}>
+                    <span style={{ fontWeight: '700', color: '#0f766e', fontSize: '0.85rem' }}>📋 Prescrição Médica:</span>
+                    <span style={{ fontSize: '0.8rem', color: '#334155' }}>
+                      Tempo: 4.0h • Fluxo Sangue (Qb): 350 mL/min • Capilar: Alto Fluxo • Heparina: 5000 UI • Peso Seco Alvo: <strong>{selectedSessionPatient.dryWeight ? `${selectedSessionPatient.dryWeight} kg` : 'N/D'}</strong>
+                    </span>
                   </div>
-                  <div className="form-group">
-                    <label>PA Inicial (mmHg) *</label>
-                    <input 
-                      type="text" className="form-control" 
-                      value={preBp} onChange={e => setPreBp(e.target.value)} 
-                      placeholder="130/80" required 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Pulso / FC (bpm)</label>
-                    <input 
-                      type="text" className="form-control" 
-                      value={preHr} onChange={e => setPreHr(e.target.value)} 
-                      placeholder="76" 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Temperatura (°C)</label>
-                    <input 
-                      type="text" className="form-control" 
-                      value={preTemp} onChange={e => setPreTemp(e.target.value)} 
-                      placeholder="36.2" 
-                    />
-                  </div>
-                </div>
-                <div style={{ marginTop: '0.5rem' }}>
-                  <label>Condição do Acesso Vascular</label>
-                  <input 
-                    type="text" className="form-control" 
-                    value={accessEvaluation} onChange={e => setAccessEvaluation(e.target.value)} 
-                    placeholder="Ex: FAV com excelente frêmito e sopro, sem sinais flogísticos" 
-                  />
-                </div>
-              </div>
 
-              {/* SEÇÃO 2: MONITORIZAÇÃO HORÁRIA */}
-              <div style={styles.sectionCard}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <h4 style={styles.sectionTitle}>2. Acompanhamento Horário da Sessão</h4>
-                  <button type="button" onClick={handleAddHourRow} className="btn btn-sm btn-outline" style={{ fontSize: '0.75rem' }}>
-                    <Plus size={13} /> Adicionar Hora
-                  </button>
-                </div>
+                  {/* SEÇÃO 1: PRÉ-DIÁLISE */}
+                  <div style={styles.sectionCard}>
+                    <h4 style={styles.sectionTitle}>1. Pré-Diálise</h4>
+                    <div style={styles.grid4}>
+                      <div className="form-group">
+                        <label>Peso Inicial (kg) *</label>
+                        <input 
+                          type="number" step="0.1" className="form-control" 
+                          value={preWeight} onChange={e => setPreWeight(e.target.value)} 
+                          placeholder="Ex: 72.5" required 
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>PA Inicial (mmHg) *</label>
+                        <input 
+                          type="text" className="form-control" 
+                          value={preBp} onChange={e => setPreBp(e.target.value)} 
+                          placeholder="130/80" required 
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Pulso (bpm)</label>
+                        <input 
+                          type="text" className="form-control" 
+                          value={preHr} onChange={e => setPreHr(e.target.value)} 
+                          placeholder="76" 
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Temperatura (°C)</label>
+                        <input 
+                          type="text" className="form-control" 
+                          value={preTemp} onChange={e => setPreTemp(e.target.value)} 
+                          placeholder="36.2" 
+                        />
+                      </div>
+                    </div>
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <label>Acesso</label>
+                      <input 
+                        type="text" className="form-control" 
+                        value={accessEvaluation} onChange={e => setAccessEvaluation(e.target.value)} 
+                        placeholder="Ex: FAV com excelente frêmito e sopro, sem sinais flogísticos" 
+                      />
+                    </div>
+                  </div>
 
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={styles.hourlyTable}>
-                    <thead>
-                      <tr>
-                        <th>Hora</th>
-                        <th>PA</th>
-                        <th>FC</th>
-                        <th>PV (mmHg)</th>
-                        <th>PA art</th>
-                        <th>Qb Real</th>
-                        <th>Taxa UF</th>
-                        <th>Heparina</th>
-                        <th>Anotações</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {hourlyRecords.map((row, idx) => (
-                        <tr key={idx}>
-                          <td style={{ fontWeight: '700', width: '50px' }}>{row.hour}</td>
-                          <td>
-                            <input type="text" className="form-control" value={row.bp} onChange={e => handleHourlyRowChange(idx, 'bp', e.target.value)} style={styles.inputMini} />
-                          </td>
-                          <td>
-                            <input type="text" className="form-control" value={row.hr} onChange={e => handleHourlyRowChange(idx, 'hr', e.target.value)} style={styles.inputMini} />
-                          </td>
-                          <td>
-                            <input type="text" className="form-control" value={row.venousPressure} onChange={e => handleHourlyRowChange(idx, 'venousPressure', e.target.value)} style={styles.inputMini} />
-                          </td>
-                          <td>
-                            <input type="text" className="form-control" value={row.arterialPressure} onChange={e => handleHourlyRowChange(idx, 'arterialPressure', e.target.value)} style={styles.inputMini} />
-                          </td>
-                          <td>
-                            <input type="text" className="form-control" value={row.bloodFlowReal} onChange={e => handleHourlyRowChange(idx, 'bloodFlowReal', e.target.value)} style={styles.inputMini} />
-                          </td>
-                          <td>
-                            <input type="text" className="form-control" value={row.ufRate} onChange={e => handleHourlyRowChange(idx, 'ufRate', e.target.value)} style={styles.inputMini} />
-                          </td>
-                          <td>
-                            <input type="text" className="form-control" value={row.heparin} onChange={e => handleHourlyRowChange(idx, 'heparin', e.target.value)} style={styles.inputMini} />
-                          </td>
-                          <td>
-                            <input type="text" className="form-control" value={row.notes} onChange={e => handleHourlyRowChange(idx, 'notes', e.target.value)} placeholder="Obs..." style={{ fontSize: '0.75rem', padding: '0.2rem' }} />
-                          </td>
-                          <td>
-                            {hourlyRecords.length > 1 && (
-                              <button type="button" onClick={() => handleRemoveHourRow(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
-                                <Trash2 size={13} />
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* SEÇÃO 3: INTERCORRÊNCIAS */}
-              <div style={styles.sectionCard}>
-                <h4 style={styles.sectionTitle}>3. Intercorrências Intradialíticas (1 Toque)</h4>
-                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.4rem' }}>
-                  {['Hipotensão', 'Cãibras', 'Coagulação de Linha/Capilar', 'Febre / Calafrios', 'Cefaleia', 'Vômito / Náuseas', 'Sangramento no Acesso', 'Dor Precordial'].map(comp => {
-                    const isSelected = complications.includes(comp);
-                    return (
-                      <button
-                        key={comp}
-                        type="button"
-                        onClick={() => toggleComplication(comp)}
-                        style={{
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                          padding: '0.35rem 0.65rem',
-                          borderRadius: '6px',
-                          border: isSelected ? '1px solid #ef4444' : '1px solid #cbd5e1',
-                          backgroundColor: isSelected ? '#fee2e2' : '#ffffff',
-                          color: isSelected ? '#b91c1c' : '#475569',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {isSelected ? '⚠️ ' : ''}{comp}
+                  {/* SEÇÃO 2: MONITORIZAÇÃO HORÁRIA */}
+                  <div style={styles.sectionCard}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <h4 style={styles.sectionTitle}>2. Horário</h4>
+                      <button type="button" onClick={handleAddHourRow} className="btn btn-sm btn-outline" style={{ fontSize: '0.75rem' }}>
+                        <Plus size={13} /> Adicionar Hora
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
+                    </div>
 
-              {/* SEÇÃO 4: PÓS-DIÁLISE */}
-              <div style={styles.sectionCard}>
-                <h4 style={styles.sectionTitle}>4. Fechamento Pós-Diálise</h4>
-                <div style={styles.grid4}>
-                  <div className="form-group">
-                    <label>Peso Final (kg)</label>
-                    <input 
-                      type="number" step="0.1" className="form-control" 
-                      value={finalWeight} onChange={e => setFinalWeight(e.target.value)} 
-                      placeholder="Ex: 70.0" 
-                    />
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={styles.hourlyTable}>
+                        <thead>
+                          <tr>
+                            <th>Hora</th>
+                            <th>PA</th>
+                            <th>FC</th>
+                            <th>PV</th>
+                            <th>PA art</th>
+                            <th>Qb</th>
+                            <th>Taxa UF</th>
+                            <th>Heparina</th>
+                            <th>Anotações</th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {hourlyRecords.map((row, idx) => (
+                            <tr key={idx}>
+                              <td style={{ fontWeight: '700', width: '50px' }}>{row.hour}</td>
+                              <td>
+                                <input type="text" className="form-control" value={row.bp} onChange={e => handleHourlyRowChange(idx, 'bp', e.target.value)} style={styles.inputMini} />
+                              </td>
+                              <td>
+                                <input type="text" className="form-control" value={row.hr} onChange={e => handleHourlyRowChange(idx, 'hr', e.target.value)} style={styles.inputMini} />
+                              </td>
+                              <td>
+                                <input type="text" className="form-control" value={row.venousPressure} onChange={e => handleHourlyRowChange(idx, 'venousPressure', e.target.value)} style={styles.inputMini} />
+                              </td>
+                              <td>
+                                <input type="text" className="form-control" value={row.arterialPressure} onChange={e => handleHourlyRowChange(idx, 'arterialPressure', e.target.value)} style={styles.inputMini} />
+                              </td>
+                              <td>
+                                <input type="text" className="form-control" value={row.bloodFlowReal} onChange={e => handleHourlyRowChange(idx, 'bloodFlowReal', e.target.value)} style={styles.inputMini} />
+                              </td>
+                              <td>
+                                <input type="text" className="form-control" value={row.ufRate} onChange={e => handleHourlyRowChange(idx, 'ufRate', e.target.value)} style={styles.inputMini} />
+                              </td>
+                              <td>
+                                <input type="text" className="form-control" value={row.heparin} onChange={e => handleHourlyRowChange(idx, 'heparin', e.target.value)} style={styles.inputMini} />
+                              </td>
+                              <td>
+                                <input type="text" className="form-control" value={row.notes} onChange={e => handleHourlyRowChange(idx, 'notes', e.target.value)} placeholder="Obs..." style={{ fontSize: '0.75rem', padding: '0.2rem' }} />
+                              </td>
+                              <td>
+                                {hourlyRecords.length > 1 && (
+                                  <button type="button" onClick={() => handleRemoveHourRow(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
+                                    <Trash2 size={13} />
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label>PA Final (mmHg)</label>
-                    <input 
-                      type="text" className="form-control" 
-                      value={finalBp} onChange={e => setFinalBp(e.target.value)} 
-                      placeholder="120/80" 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Tempo Hemostasia</label>
-                    <input 
-                      type="text" className="form-control" 
-                      value={hemostasisTime} onChange={e => setHemostasisTime(e.target.value)} 
-                      placeholder="15 min" 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Curativo / Saída</label>
-                    <input 
-                      type="text" className="form-control" 
-                      value={dressingCondition} onChange={e => setDressingCondition(e.target.value)} 
-                      placeholder="Limpo e seco" 
-                    />
-                  </div>
-                </div>
 
-                {preWeight && finalWeight && (
-                  <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#0f766e', fontWeight: '700' }}>
-                    💧 Perda Hídrica Efetiva: {(parseFloat(preWeight) - parseFloat(finalWeight)).toFixed(2)} kg
+                  {/* SEÇÃO 3: INTERCORRÊNCIAS */}
+                  <div style={styles.sectionCard}>
+                    <h4 style={styles.sectionTitle}>3. Intercorrências (1 Toque)</h4>
+                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.4rem' }}>
+                      {['Hipotensão', 'Cãibras', 'Coagulação', 'Febre', 'Cefaleia', 'Náuseas', 'Sangramento', 'Precordialgia'].map(comp => {
+                        const isSelected = complications.includes(comp);
+                        return (
+                          <button
+                            key={comp}
+                            type="button"
+                            onClick={() => toggleComplication(comp)}
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              padding: '0.35rem 0.65rem',
+                              borderRadius: '6px',
+                              border: isSelected ? '1px solid #ef4444' : '1px solid #cbd5e1',
+                              backgroundColor: isSelected ? '#fee2e2' : '#ffffff',
+                              color: isSelected ? '#b91c1c' : '#475569',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {isSelected ? '⚠️ ' : ''}{comp}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                )}
-              </div>
+
+                  {/* SEÇÃO 4: PÓS-DIÁLISE */}
+                  <div style={styles.sectionCard}>
+                    <h4 style={styles.sectionTitle}>4. Pós-Diálise</h4>
+                    <div style={styles.grid4}>
+                      <div className="form-group">
+                        <label>Peso Final (kg)</label>
+                        <input 
+                          type="number" step="0.1" className="form-control" 
+                          value={finalWeight} onChange={e => setFinalWeight(e.target.value)} 
+                          placeholder="Ex: 70.0" 
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>PA Final (mmHg)</label>
+                        <input 
+                          type="text" className="form-control" 
+                          value={finalBp} onChange={e => setFinalBp(e.target.value)} 
+                          placeholder="120/80" 
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Hemostasia</label>
+                        <input 
+                          type="text" className="form-control" 
+                          value={hemostasisTime} onChange={e => setHemostasisTime(e.target.value)} 
+                          placeholder="15 min" 
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Curativo</label>
+                        <input 
+                          type="text" className="form-control" 
+                          value={dressingCondition} onChange={e => setDressingCondition(e.target.value)} 
+                          placeholder="Limpo e seco" 
+                        />
+                      </div>
+                    </div>
+
+                    {preWeight && finalWeight && (
+                      <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#0f766e', fontWeight: '700' }}>
+                        💧 Perda Hídrica Efetiva: {(parseFloat(preWeight) - parseFloat(finalWeight)).toFixed(2)} kg
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
 
             <div style={styles.modalFooter}>
               <button type="button" onClick={() => setShowSessionModal(false)} className="btn btn-secondary">Cancelar</button>
-              <button type="button" onClick={handleSaveSession} disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: '#14b8a6', border: 'none' }}>
+              <button type="button" onClick={handleSaveSession} disabled={actionLoading || !selectedSessionPatient} className="btn btn-primary" style={{ backgroundColor: '#0d9488', border: 'none', fontWeight: '700' }}>
                 {actionLoading ? 'Gravando...' : 'Salvar Sessão de Diálise'}
               </button>
             </div>
