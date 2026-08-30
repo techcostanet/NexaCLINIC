@@ -1,3 +1,17 @@
+## [v4.9.3] - 30 de Agosto, 2026
+### NexaCARE — Busca Inteligente no Cadastro Completo de Pacientes e Autocomplete no Modal de Sessão
+- **Busca Global & Normalização NFD:**
+  - Consulta de pacientes com tolerância a acentos (normalização Unicode NFD), busca case-insensitive e limpeza de pontuação de CPF.
+  - Varredura irrestrita em todos os pacientes cadastrados no sistema (Nome, Nome Social, CPF, Prontuário, Cadeira, CNS, Salão, Turno e Acesso).
+- **Buscador com Autocomplete no Modal de Sessão:**
+  - Adição de campo de busca interativa preditiva com dropdown no topo do modal de sessão de hemodiálise, permitindo localizar e selecionar qualquer paciente do cadastro com 1 clique.
+- **Fallback Seguro de Unidade:**
+  - Proteção contra listas vazias quando pacientes cadastrados não possuem tag de unidade ou quando alternada a unidade ativa no seletor geral.
+- **Diretrizes de UI/UX (1-Word Rule):**
+  - Aplicação rigorosa da regra de termos concisos e únicos em botões e formulários.
+
+---
+
 ## [v4.9.2] - 30 de Agosto, 2026
 ### NexaCARE — Correção na Consulta de Pacientes, Filtro de Cadência, Botão de Iniciar Sessão e Seletor no Modal
 - **Busca e Consulta Ampla de Pacientes (Aba Sessão):**

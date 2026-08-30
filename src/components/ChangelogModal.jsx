@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.3',
+      date: '30/08/2026',
+      title: 'NexaCARE — Busca Inteligente no Cadastro Completo de Pacientes e Autocomplete no Modal de Sessão',
+      description: 'Aprimoramento abrangente da consulta de pacientes no módulo NexaCARE: busca inteligente insensível a acentos (normalização NFD) que varre todo o cadastro da clínica (Nome, Nome Social, CPF sem pontuação, Prontuário, Cadeira, CNS, Salão, Turno e Acesso), inclusão de buscador preditivo com autocomplete em tempo real no topo do modal de sessão de hemodiálise e sincronização instantânea dos dados do paciente.',
+      changes: [
+        { type: 'Busca Global & Normalização NFD', text: 'Busca inteligente com tolerância a acentuação e varredura irrestrita em todos os pacientes cadastrados no sistema.' },
+        { type: 'Buscador Autocomplete no Modal', text: 'Campo de pesquisa preditiva com dropdown interativo de pacientes no topo do modal de início de sessão.' },
+        { type: 'Fallback Seguro de Unidade', text: 'Garantia de que a lista de pacientes nunca fique vazia mesmo em alternâncias de unidade ou registros sem tag específica.' },
+        { type: 'UI/UX 1-Word Rule', text: 'Conformidade contínua com termos concisos e objetivos em botões e controles.' }
+      ]
+    },
+    {
       version: 'v4.9.2',
       date: '30/08/2026',
       title: 'NexaCARE — Correção na Consulta de Pacientes, Filtro de Cadência, Botão de Iniciar Sessão e Seletor no Modal',
