@@ -1,3 +1,15 @@
+## [v4.9.4] - 30 de Agosto, 2026
+### NexaCARE — Autocomplete Idêntico ao Módulo Assist e Busca Direta de Pacientes
+- **Componente Autocomplete Padronizado com o Módulo Assist:**
+  - Implementação idêntica da busca de paciente com dropdown suspenso em tempo real:
+    - Exibe nome do paciente em destaque.
+    - Exibe linha de apoio com `CPF`, `Salão` e `Turno` (inclusive para pacientes cadastrados com "Sem salão / Turno N/A").
+  - Ao selecionar um paciente, exibe o card de vínculo ativo com botão direto "Trocar Paciente".
+- **Busca Global na Tabela:**
+  - Consulta direta por nome e CPF sem bloqueios por salão ou turno ausente.
+
+---
+
 ## [v4.9.3] - 30 de Agosto, 2026
 ### NexaCARE — Busca Inteligente no Cadastro Completo de Pacientes e Autocomplete no Modal de Sessão
 - **Busca Global & Normalização NFD:**

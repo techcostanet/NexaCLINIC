@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.4',
+      date: '30/08/2026',
+      title: 'NexaCARE — Autocomplete Idêntico ao Módulo Assist e Busca Direta de Pacientes',
+      description: 'Padronização visual e comportamental do componente de busca e seleção de pacientes no NexaCARE com base no padrão nativo do módulo Assist: busca rápida por nome e CPF com dropdown suspenso, exibição formatada de dados cadastrais (CPF, Salão e Turno), seleção em 1 clique e badge de vínculo ativo com botão de troca rápida.',
+      changes: [
+        { type: 'Componente Autocomplete do Assist', text: 'Implementação exata do campo "Paciente:" com busca em tempo real e dropdown estilizado idêntico ao Assist.' },
+        { type: 'Exibição Completa de Pacientes', text: 'Exibição de pacientes mesmo sem salão ou turno definidos (Sem salão / Turno N/A) tanto na busca da tabela quanto no modal.' },
+        { type: 'Seleção em 1 Toque', text: 'Ao clicar no paciente sugerido, carrega a folha de diálise imediatamente com prescrição e parâmetros.' }
+      ]
+    },
+    {
       version: 'v4.9.3',
       date: '30/08/2026',
       title: 'NexaCARE — Busca Inteligente no Cadastro Completo de Pacientes e Autocomplete no Modal de Sessão',

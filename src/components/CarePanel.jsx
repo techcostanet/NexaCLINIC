@@ -41,8 +41,7 @@ export default function CarePanel({ currentUser }) {
   const [sessionRoomFilter, setSessionRoomFilter] = useState('all');
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [selectedSessionPatient, setSelectedSessionPatient] = useState(null);
-  const [modalPatientSearch, setModalPatientSearch] = useState('');
-  const [isModalPatientDropdownOpen, setIsModalPatientDropdownOpen] = useState(false);
+  const [patientSearchTerm, setPatientSearchTerm] = useState('');
 
   const [machineId, setMachineId] = useState('Máquina 01 - Fresenius 4008S');
   const [preWeight, setPreWeight] = useState('');
@@ -101,27 +100,22 @@ export default function CarePanel({ currentUser }) {
     sector: 'Salão 01'
   });
 
-  // Safe Text Normalizer (Accents and Case Insensitive)
-  const normalizeText = (str) => {
-    if (!str) return '';
-    return str
-      .toString()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .trim();
-  };
-
   // Unit filtered data with safe fallback
   const currentPatients = useMemo(() => {
-    if (!Array.isArray(patients) || patients.length === 0) return [];
-    const filtered = filterByActiveUnit(patients);
-    return filtered.length > 0 ? filtered : patients;
+    const list = filterByActiveUnit(patients);
+    return list.length > 0 ? list : (patients || []);
   }, [patients, activeUnitId]);
 
-  const sortedPatients = useMemo(() => {
-    return [...patients].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
-  }, [patients]);
+  // Pacientes filtrados para o modal de autocomplete (Idêntico ao AssistPanel)
+  const filteredModalPatients = useMemo(() => {
+    if (!patientSearchTerm) return currentPatients.slice(0, 8);
+    const term = patientSearchTerm.toLowerCase();
+    return currentPatients.filter(p => 
+      p.name?.toLowerCase().includes(term) || 
+      p.cpf?.includes(term) ||
+      p.room?.toLowerCase().includes(term)
+    ).slice(0, 10);
+  }, [currentPatients, patientSearchTerm]);
 
   const currentRequisitions = useMemo(() => filterByActiveUnit(requisitions), [requisitions, activeUnitId]);
   const currentStockItems = useMemo(() => filterByActiveUnit(stockItems), [stockItems, activeUnitId]);
@@ -131,54 +125,26 @@ export default function CarePanel({ currentUser }) {
   const todayStr = useMemo(() => new Date().toISOString().substring(0, 10), []);
 
   const filteredSessionPatients = useMemo(() => {
-    const term = normalizeText(sessionSearchTerm);
-    const cleanDigits = sessionSearchTerm.replace(/\D/g, '');
-
-    // If typing a search term, search across all registered patients in the database!
-    const baseList = term ? sortedPatients : currentPatients;
-
-    return baseList.filter(patient => {
-      // 1. Search match
-      let matchSearch = true;
-      if (term) {
-        const nameMatch = normalizeText(patient.name).includes(term) || normalizeText(patient.socialName).includes(term);
-        const cpfMatch = cleanDigits.length >= 2 && (patient.cpf || '').replace(/\D/g, '').includes(cleanDigits);
-        const chairMatch = (patient.chairNumber || '').toString().toLowerCase().includes(term);
-        const cnsMatch = (patient.cns || '').includes(term);
-        const chartMatch = (patient.chartNumber || '').toString().toLowerCase().includes(term);
-        const roomMatch = normalizeText(patient.room).includes(term);
-        const shiftMatch = normalizeText(patient.shift).includes(term);
-        const accessMatch = normalizeText(patient.accessType).includes(term);
-        matchSearch = nameMatch || cpfMatch || chairMatch || cnsMatch || chartMatch || roomMatch || shiftMatch || accessMatch;
-      }
-
-      // 2. Shift filter
-      const matchShift = sessionShiftFilter === 'all' || patient.shift === sessionShiftFilter;
-
-      // 3. Room filter
-      const matchRoom = sessionRoomFilter === 'all' || patient.room === sessionRoomFilter;
-
-      // 4. Cadence filter
-      let matchCadence = true;
-      const freq = normalizeText(patient.dialysisFrequency);
-      if (sessionCadenceFilter === 'SQS') {
-        matchCadence = freq.includes('seg') || freq.includes('sqs') || freq.includes('diario') || !freq;
-      } else if (sessionCadenceFilter === 'TQS') {
-        matchCadence = freq.includes('ter') || freq.includes('tqs') || freq.includes('diario') || !freq;
-      } else if (sessionCadenceFilter === 'today') {
-        const day = new Date().getDay();
-        if ([1, 3, 5].includes(day)) {
-          matchCadence = freq.includes('seg') || freq.includes('sqs') || freq.includes('diario') || !freq;
-        } else if ([2, 4, 6].includes(day)) {
-          matchCadence = freq.includes('ter') || freq.includes('tqs') || freq.includes('diario') || !freq;
-        } else {
-          matchCadence = true;
+    if (!sessionSearchTerm) {
+      return currentPatients.filter(patient => {
+        if (sessionShiftFilter !== 'all' && patient.shift && patient.shift !== sessionShiftFilter) return false;
+        if (sessionRoomFilter !== 'all' && patient.room && patient.room !== sessionRoomFilter) return false;
+        if (sessionCadenceFilter !== 'all') {
+          const freq = (patient.dialysisFrequency || '').toLowerCase();
+          if (sessionCadenceFilter === 'SQS' && !freq.includes('seg') && !freq.includes('sqs') && freq) return false;
+          if (sessionCadenceFilter === 'TQS' && !freq.includes('ter') && !freq.includes('tqs') && freq) return false;
         }
-      }
+        return true;
+      });
+    }
 
-      return matchSearch && matchShift && matchRoom && matchCadence;
-    });
-  }, [patients, sortedPatients, currentPatients, sessionSearchTerm, sessionShiftFilter, sessionRoomFilter, sessionCadenceFilter]);
+    const term = sessionSearchTerm.toLowerCase().trim();
+    return currentPatients.filter(p => 
+      p.name?.toLowerCase().includes(term) || 
+      p.cpf?.includes(term) ||
+      p.room?.toLowerCase().includes(term)
+    );
+  }, [currentPatients, sessionSearchTerm, sessionShiftFilter, sessionRoomFilter, sessionCadenceFilter]);
 
   const sortedStockItems = useMemo(() => {
     return [...currentStockItems].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
@@ -199,16 +165,6 @@ export default function CarePanel({ currentUser }) {
       (e.category === 'Biomédico' || e.name?.toLowerCase().includes('máquina') || e.name?.toLowerCase().includes('hemodiálise') || e.name?.toLowerCase().includes('poltrona') || e.name?.toLowerCase().includes('osmose'))
     );
   }, [currentEquipments]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('#modal-patient-search-container')) {
-        setIsModalPatientDropdownOpen(false);
-      }
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
 
   useEffect(() => {
     fetchData();
@@ -257,8 +213,7 @@ export default function CarePanel({ currentUser }) {
   const handleOpenSessionModal = (patient) => {
     if (!patient) return;
     setSelectedSessionPatient(patient);
-    setModalPatientSearch(patient.name || '');
-    setIsModalPatientDropdownOpen(false);
+    setPatientSearchTerm(patient.name || '');
 
     const existing = sessionsLogs.find(l => l.patientId === patient.id && l.date === todayStr);
 
@@ -296,20 +251,19 @@ export default function CarePanel({ currentUser }) {
     setShowSessionModal(true);
   };
 
+  const handleSelectPatient = (patient) => {
+    handleOpenSessionModal(patient);
+    setPatientSearchTerm(patient.name || '');
+  };
+
   const handleOpenNewSessionModal = (patient = null) => {
     if (patient) {
       handleOpenSessionModal(patient);
-    } else if (selectedSessionPatient) {
-      setModalPatientSearch(selectedSessionPatient.name || '');
-      setShowSessionModal(true);
-    } else if (sortedPatients.length > 0) {
-      handleOpenSessionModal(sortedPatients[0]);
     } else {
       setSelectedSessionPatient(null);
-      setModalPatientSearch('');
+      setPatientSearchTerm('');
       setShowSessionModal(true);
     }
-    setIsModalPatientDropdownOpen(false);
   };
 
   const handleAddHourRow = () => {
@@ -1097,129 +1051,67 @@ export default function CarePanel({ currentUser }) {
             </div>
 
             <div style={styles.modalBody}>
-              {/* Seletor & Busca de Paciente no Topo do Modal */}
-              <div style={{ marginBottom: '1.25rem', padding: '0.85rem 1rem', backgroundColor: '#f0fdfa', borderRadius: '10px', border: '1.5px solid #0d9488' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                  <label style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: '#0f766e', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <Search size={15} /> Paciente do Cadastro *
-                  </label>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>
-                    {sortedPatients.length} paciente(s) no cadastro
-                  </span>
-                </div>
-
-                <div style={{ position: 'relative' }} id="modal-patient-search-container">
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <div style={{ position: 'relative', flex: '1 1 280px' }}>
-                      <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#0d9488' }} />
-                      <input 
-                        type="text" 
-                        placeholder="Digite o nome, CPF, prontuário ou cadeira..."
-                        value={modalPatientSearch}
-                        onChange={e => {
-                          setModalPatientSearch(e.target.value);
-                          setIsModalPatientDropdownOpen(true);
-                        }}
-                        onFocus={() => setIsModalPatientDropdownOpen(true)}
-                        className="form-control"
-                        style={{ paddingLeft: '2.4rem', fontWeight: '700', fontSize: '0.95rem', color: '#0f172a', borderColor: '#0d9488', backgroundColor: '#ffffff' }}
-                      />
-                      {modalPatientSearch && (
-                        <button 
-                          type="button"
-                          onClick={() => { setModalPatientSearch(''); setIsModalPatientDropdownOpen(true); }}
-                          style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
-                        >
-                          <X size={14} />
-                        </button>
-                      )}
-                    </div>
-
-                    <select
-                      className="form-control"
-                      value={selectedSessionPatient?.id || ''}
-                      onChange={e => {
-                        const pat = sortedPatients.find(p => p.id === e.target.value);
-                        if (pat) handleOpenSessionModal(pat);
-                      }}
-                      style={{ flex: '1 1 220px', fontWeight: '600', fontSize: '0.85rem', color: '#0f172a', borderColor: '#0d9488' }}
-                    >
-                      <option value="">Ou selecione da lista...</option>
-                      {sortedPatients.map(p => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} {p.chairNumber ? `(#${p.chairNumber})` : ''} — {p.room || 'Salão 01'} ({p.shift || '1º Turno'})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Autocomplete Dropdown List */}
-                  {isModalPatientDropdownOpen && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      maxHeight: '260px',
-                      overflowY: 'auto',
-                      backgroundColor: '#ffffff',
-                      border: '1.5px solid #0d9488',
+              {/* Paciente com Autocomplete (Idêntico ao AssistPanel) */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.35rem' }}>
+                  Paciente:
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type="text"
+                    placeholder="Digite o nome ou CPF..."
+                    value={patientSearchTerm}
+                    onChange={(e) => {
+                      setPatientSearchTerm(e.target.value);
+                      if (!e.target.value) {
+                        setSelectedSessionPatient(null);
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
                       borderRadius: '8px',
-                      boxShadow: '0 12px 30px rgba(0,0,0,0.18)',
-                      zIndex: 1200,
-                      marginTop: '4px'
-                    }}>
-                      {sortedPatients
-                        .filter(p => {
-                          if (!modalPatientSearch.trim()) return true;
-                          const t = normalizeText(modalPatientSearch);
-                          const dig = modalPatientSearch.replace(/\D/g, '');
-                          return normalizeText(p.name).includes(t) ||
-                                 normalizeText(p.socialName).includes(t) ||
-                                 (dig.length >= 2 && (p.cpf || '').replace(/\D/g, '').includes(dig)) ||
-                                 (p.chairNumber || '').toString().includes(t) ||
-                                 (p.chartNumber || '').toString().includes(t) ||
-                                 normalizeText(p.room).includes(t) ||
-                                 normalizeText(p.shift).includes(t) ||
-                                 normalizeText(p.accessType).includes(t);
-                        })
-                        .map(p => (
-                          <div 
-                            key={p.id}
-                            onClick={() => {
-                              handleOpenSessionModal(p);
-                              setModalPatientSearch(p.name);
-                              setIsModalPatientDropdownOpen(false);
-                            }}
-                            style={{
-                              padding: '0.65rem 1rem',
-                              borderBottom: '1px solid #f1f5f9',
-                              cursor: 'pointer',
-                              backgroundColor: selectedSessionPatient?.id === p.id ? '#f0fdfa' : '#ffffff',
-                              transition: 'background 0.15s ease'
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f0fdfa'}
-                            onMouseLeave={e => e.currentTarget.style.backgroundColor = selectedSessionPatient?.id === p.id ? '#f0fdfa' : '#ffffff'}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '0.9rem' }}>
-                                {p.name}
-                              </div>
-                              <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                                {p.chairNumber && <span style={styles.chairBadge}>#{p.chairNumber}</span>}
-                                <span style={{ fontSize: '0.72rem', fontWeight: '600', color: '#0369a1', backgroundColor: '#e0f2fe', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
-                                  {p.accessType || 'FAV'}
-                                </span>
-                              </div>
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.2rem' }}>
-                              CPF: {p.cpf || 'Não informado'} • {p.room || 'Salão 01'} • {p.shift || '1º Turno'} • Peso Seco: {p.dryWeight ? `${p.dryWeight} kg` : 'N/D'}
-                            </div>
+                      border: '1px solid #d1d5db',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      backgroundColor: '#fff',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  {patientSearchTerm && !selectedSessionPatient && filteredModalPatients.length > 0 && (
+                    <div style={styles.patientDropdown}>
+                      {filteredModalPatients.map(pat => (
+                        <div 
+                          key={pat.id} 
+                          onClick={() => handleSelectPatient(pat)}
+                          style={styles.patientDropdownItem}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+                        >
+                          <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.95rem' }}>{pat.name}</div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                            CPF: {pat.cpf || 'N/A'} • {pat.room || 'Sem salão'} ({pat.shift || 'Turno N/A'})
                           </div>
-                        ))}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
+                {selectedSessionPatient && (
+                  <div style={styles.selectedPatientBadge}>
+                    <span>Vinculado a: <strong>{selectedSessionPatient.name}</strong></span>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setSelectedSessionPatient(null);
+                        setPatientSearchTerm('');
+                      }}
+                      style={styles.removeLinkBtn}
+                    >
+                      Trocar Paciente
+                    </button>
+                  </div>
+                )}
               </div>
 
               {!selectedSessionPatient && (
@@ -1227,7 +1119,7 @@ export default function CarePanel({ currentUser }) {
                   <HeartPulse size={42} color="#0d9488" style={{ marginBottom: '0.75rem' }} />
                   <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: '800', color: '#1e293b' }}>Selecione um Paciente</h4>
                   <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b' }}>
-                    Utilize o campo de busca ou o menu acima para escolher o paciente do cadastro e abrir a folha de diálise.
+                    Digite o nome ou CPF no campo acima para selecionar o paciente e abrir a folha de diálise.
                   </p>
                 </div>
               )}
@@ -2020,5 +1912,45 @@ const styles = {
     fontSize: '0.8rem',
     cursor: 'pointer',
     borderBottom: '1px solid #f1f5f9'
+  },
+  patientDropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    marginTop: '4px',
+    maxHeight: '220px',
+    overflowY: 'auto',
+    zIndex: 1000,
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+  },
+  patientDropdownItem: {
+    padding: '0.55rem 0.75rem',
+    borderBottom: '1px solid #f3f4f6',
+    cursor: 'pointer',
+    transition: 'background-color 0.15s ease'
+  },
+  selectedPatientBadge: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#ecfdf5',
+    border: '1px solid #a7f3d0',
+    padding: '0.45rem 0.75rem',
+    borderRadius: '6px',
+    fontSize: '0.85rem',
+    color: '#065f46',
+    marginTop: '0.45rem'
+  },
+  removeLinkBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#dc2626',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    cursor: 'pointer'
   }
 };
