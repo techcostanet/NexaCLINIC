@@ -108,13 +108,14 @@ export default function CarePanel({ currentUser }) {
 
   // Pacientes filtrados para o modal de autocomplete (Idêntico ao AssistPanel)
   const filteredModalPatients = useMemo(() => {
-    if (!patientSearchTerm) return currentPatients.slice(0, 8);
-    const term = patientSearchTerm.toLowerCase();
-    return currentPatients.filter(p => 
-      p.name?.toLowerCase().includes(term) || 
-      p.cpf?.includes(term) ||
-      p.room?.toLowerCase().includes(term)
-    ).slice(0, 10);
+    const term = (patientSearchTerm || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const termCpf = term.replace(/\D/g, '');
+    return currentPatients.filter(p => {
+      const pName = (p.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const pCpf = (p.cpf || '').replace(/\D/g, '');
+      const pRoom = (p.room || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      return pName.includes(term) || (termCpf && pCpf.includes(termCpf)) || pRoom.includes(term);
+    }).slice(0, 10);
   }, [currentPatients, patientSearchTerm]);
 
   const currentRequisitions = useMemo(() => filterByActiveUnit(requisitions), [requisitions, activeUnitId]);
@@ -138,12 +139,14 @@ export default function CarePanel({ currentUser }) {
       });
     }
 
-    const term = sessionSearchTerm.toLowerCase().trim();
-    return currentPatients.filter(p => 
-      p.name?.toLowerCase().includes(term) || 
-      p.cpf?.includes(term) ||
-      p.room?.toLowerCase().includes(term)
-    );
+    const term = (sessionSearchTerm || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const termCpf = term.replace(/\D/g, '');
+    return currentPatients.filter(p => {
+      const pName = (p.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const pCpf = (p.cpf || '').replace(/\D/g, '');
+      const pRoom = (p.room || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      return pName.includes(term) || (termCpf && pCpf.includes(termCpf)) || pRoom.includes(term);
+    });
   }, [currentPatients, sessionSearchTerm, sessionShiftFilter, sessionRoomFilter, sessionCadenceFilter]);
 
   const sortedStockItems = useMemo(() => {

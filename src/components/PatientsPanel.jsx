@@ -237,9 +237,14 @@ export default function PatientsPanel() {
 
   // Filtered Patients List
   const filteredPatients = currentPatients.filter((pat) => {
-    const matchesName = (pat.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) || 
-                        (pat.chartNumber && pat.chartNumber.toLowerCase().includes((searchTerm || '').toLowerCase())) ||
-                        (pat.cpf && pat.cpf.includes(searchTerm));
+    const term = (searchTerm || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const termCpf = term.replace(/\D/g, '');
+    
+    const pName = (pat.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const pChart = (pat.chartNumber || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const pCpf = (pat.cpf || '').replace(/\D/g, '');
+
+    const matchesName = pName.includes(term) || pChart.includes(term) || (termCpf && pCpf.includes(termCpf));
     const matchesShift = filterShift ? pat.shift === filterShift : true;
     const matchesRoom = filterRoom ? pat.room === filterRoom : true;
     const matchesAccess = filterAccess ? pat.accessType === filterAccess : true;

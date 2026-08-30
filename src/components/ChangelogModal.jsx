@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.9',
+      date: '30/08/2026',
+      title: 'Aprimoramento e Unificação do Motor de Busca de Pacientes',
+      description: 'Refatoração da busca (Omnisearch) nos módulos Clínico, Assistência, Pacientes e Faturamento para suportar buscas sem acentos e buscas parciais de CPF.',
+      changes: [
+        { type: 'Busca Tolerante a Acentos (NFD)', text: 'A pesquisa de pacientes agora normaliza caracteres e ignora acentos, casing e espaços, garantindo que buscas sem acento (ex: ADAIR) localizem resultados com nomes acentuados ou vice-versa em todos os módulos.' },
+        { type: 'Resolvida Omissão de Pacientes', text: 'Corrigido o comportamento onde os painéis Clínico e CarePanel não exibiam pacientes durante a digitação de termos com espaços ou divergências sutis de normalização textual.' }
+      ]
+    },
+    {
       version: 'v4.9.8',
       date: '30/08/2026',
       title: 'Correção de Falha Crítica na Busca de Pacientes (Tela de Erro)',

@@ -863,7 +863,13 @@ export default function ClinicalPanel() {
                 </div>
                 <div style={styles.sidebarList}>
                   {currentPatients
-                    .filter(p => (p.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()))
+                    .filter(p => {
+                      const term = (searchTerm || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+                      const pName = (p.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+                      const pCpf = (p.cpf || '').replace(/\D/g, '');
+                      const termCpf = term.replace(/\D/g, '');
+                      return pName.includes(term) || (termCpf && pCpf.includes(termCpf));
+                    })
                     .map(p => {
                       const pCount = currentAssistPosts.filter(ap => ap.patientId === p.id).length;
                       return (

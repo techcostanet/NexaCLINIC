@@ -1,3 +1,14 @@
+## [v4.9.9] - 30 de Agosto, 2026
+### Aprimoramento e Unificação do Motor de Busca de Pacientes
+- **Busca Normalizada e Tolerante a Acentos (Omnisearch):**
+  - Refatoração dos filtros de pesquisa nos módulos `ClinicalPanel.jsx`, `CarePanel.jsx`, `PatientsPanel.jsx` e `ApacBillingPanel.jsx` para utilizar normalização Unicode NFD.
+  - A busca agora ignora acentos, espaços desnecessários (trailing/leading) e casing (maiúsculo/minúsculo), garantindo que termos como "ADAIR" localizem corretamente "ADAIR PRAXEDES MORENO".
+  - Busca direta por dígitos limpos de CPF em todos os painéis, removendo formatação (`.` e `-`) para correspondência exata.
+- **Resolução de Omissão de Pacientes:**
+  - Corrigido o problema onde os painéis "Clínico" e "Assistência" não exibiam resultados esperados ao iniciar a digitação devido a discrepâncias na normalização de texto em comparação ao painel de "Agenda" e "Mural (Assist)".
+
+---
+
 ## [v4.9.8] - 30 de Agosto, 2026
 ### Correção de Falha Crítica na Busca de Pacientes (Tela de Erro)
 - **Correção de `TypeError` em Funções de Filtro (`ClinicalPanel.jsx`, `PatientsPanel.jsx` e `ApacBillingPanel.jsx`):**

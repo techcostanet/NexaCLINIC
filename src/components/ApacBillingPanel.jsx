@@ -109,8 +109,9 @@ export default function ApacBillingPanel() {
   };
 
   const filteredApacs = apacList.filter(a => {
-    const term = searchTerm.toLowerCase();
-    const matchesSearch = (a.patientName || '').toLowerCase().includes(term) || (a.code && a.code.includes(term)) || (a.cpf && a.cpf.includes(term));
+    const term = (searchTerm || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const pName = (a.patientName || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const matchesSearch = pName.includes(term) || (a.code && a.code.includes(term)) || (a.cpf && a.cpf.includes(term));
     const matchesStatus = statusFilter ? a.status === statusFilter : true;
     return matchesSearch && matchesStatus;
   });
