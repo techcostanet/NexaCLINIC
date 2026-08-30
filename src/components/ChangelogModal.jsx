@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.7',
+      date: '30/08/2026',
+      title: 'Correção de Carregamento no Clínico e Busca Inteligente com Fallback na Recepção',
+      description: 'Correções pontuais e aprimoramentos de estabilidade: resolução do erro ReferenceError: useMemo no painel Clínico, implementação de busca com normalização NFD e dígitos limpos de CPF/CNS na Recepção e particionamento em lotes com fallback seguro no serviço central de pacientes.',
+      changes: [
+        { type: 'Correção useMemo no Clínico', text: 'Importação do hook useMemo no ClinicalPanel eliminando a tela de erro e restaurando a visualização do prontuário.' },
+        { type: 'Busca Normalizada na Recepção', text: 'Busca instantânea e tolerante a acentos e pontuação (ex: digitando "ADAIR" ou CPF) em todo o cadastro de pacientes.' },
+        { type: 'Fallback Seguro de Pacientes', text: 'Garantia de que os 691 pacientes da base mestre sempre sejam carregados e exibidos em todos os painéis.' }
+      ]
+    },
+    {
       version: 'v4.9.6',
       date: '30/08/2026',
       title: 'Base Central e Unificada de Pacientes (Master Patient Record) em Todo o Sistema',

@@ -282,7 +282,10 @@ export default function ReceptionPanel() {
   };
 
   // Filtragem de Dados pela Unidade Ativa
-  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
+  const currentPatients = useMemo(() => {
+    const list = filterByActiveUnit(patients);
+    return list.length > 0 ? list : (patients || []);
+  }, [patients, activeUnitId]);
   const currentCheckins = useMemo(() => filterByActiveUnit(checkins), [checkins, activeUnitId]);
   const currentMedicalSchedules = useMemo(() => filterByActiveUnit(medicalSchedules), [medicalSchedules, activeUnitId]);
 
@@ -407,14 +410,33 @@ export default function ReceptionPanel() {
     return 'Seg/Qua/Sex';
   };
 
+  const normalizeSearch = (text) => {
+    if (!text) return '';
+    return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  };
+
   const todayScheduleFilter = getTodayWeekday();
 
   const getFilteredPatients = () => {
+    const cleanSearch = normalizeSearch(searchTerm);
+    const cleanDigits = searchTerm.replace(/\D/g, '');
+
     return currentPatients.filter(p => {
-      const matchesSearch = (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (p.cpf || '').includes(searchTerm) ||
-                            (p.cns || '').includes(searchTerm) ||
-                            (p.chairNumber || '').toString() === searchTerm;
+      const pName = normalizeSearch(p.name);
+      const pSocial = normalizeSearch(p.socialName);
+      const pCpf = (p.cpf || '').replace(/\D/g, '');
+      const pCns = (p.cns || '').replace(/\D/g, '');
+      const pChart = normalizeSearch(p.chartNumber);
+      const pChair = (p.chairNumber || p.point || '').toString();
+
+      const matchesSearch = !cleanSearch || 
+                            pName.includes(cleanSearch) ||
+                            (pSocial && pSocial.includes(cleanSearch)) ||
+                            (cleanDigits && pCpf.includes(cleanDigits)) ||
+                            (cleanDigits && pCns.includes(cleanDigits)) ||
+                            pChart.includes(cleanSearch) ||
+                            pChair === cleanSearch;
+
       const matchesShift = filterShift ? p.shift === filterShift : true;
       const matchesRoom = filterRoom ? p.room === filterRoom : true;
       const matchesStatus = filterStatus ? p.treatmentStatus === filterStatus : true;
@@ -423,13 +445,28 @@ export default function ReceptionPanel() {
   };
 
   const getPatientsForToday = () => {
+    const cleanSearch = normalizeSearch(searchTerm);
+    const cleanDigits = searchTerm.replace(/\D/g, '');
+
     return currentPatients.filter(p => {
       const matchesFrequency = (p.dialysisFrequency || '').includes(todayScheduleFilter) || p.dialysisFrequency === 'Diário';
       const isActive = p.treatmentStatus === 'Ativo';
       
-      const matchesSearch = (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            (p.cpf || '').includes(searchTerm) ||
-                            (p.chairNumber || '').toString() === searchTerm;
+      const pName = normalizeSearch(p.name);
+      const pSocial = normalizeSearch(p.socialName);
+      const pCpf = (p.cpf || '').replace(/\D/g, '');
+      const pCns = (p.cns || '').replace(/\D/g, '');
+      const pChart = normalizeSearch(p.chartNumber);
+      const pChair = (p.chairNumber || p.point || '').toString();
+
+      const matchesSearch = !cleanSearch || 
+                            pName.includes(cleanSearch) ||
+                            (pSocial && pSocial.includes(cleanSearch)) ||
+                            (cleanDigits && pCpf.includes(cleanDigits)) ||
+                            (cleanDigits && pCns.includes(cleanDigits)) ||
+                            pChart.includes(cleanSearch) ||
+                            pChair === cleanSearch;
+
       const matchesShift = filterShift ? p.shift === filterShift : true;
       const matchesRoom = filterRoom ? p.room === filterRoom : true;
 

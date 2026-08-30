@@ -62,7 +62,10 @@ export default function ApacBillingPanel() {
   };
 
   // Filtragem de Dados pela Unidade Ativa
-  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
+  const currentPatients = useMemo(() => {
+    const list = filterByActiveUnit(patients);
+    return list.length > 0 ? list : (patients || []);
+  }, [patients, activeUnitId]);
   const currentGlosaList = useMemo(() => filterByActiveUnit(glosaList), [glosaList, activeUnitId]);
 
   // Lista dinâmica de APACs baseada no cadastro central de pacientes

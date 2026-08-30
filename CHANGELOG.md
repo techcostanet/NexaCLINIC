@@ -1,3 +1,14 @@
+## [v4.9.7] - 30 de Agosto, 2026
+### Correção de Carregamento no Clínico e Busca Inteligente na Recepção
+- **Correção de useMemo no Painel Clínico (`ClinicalPanel.jsx`):**
+  - Importação do hook `useMemo` ausente, eliminando o erro `ReferenceError: useMemo is not defined` ao acessar o prontuário.
+- **Busca Normalizada e Tolerante a Acentos na Recepção (`ReceptionPanel.jsx`):**
+  - Implementada busca com normalização Unicode NFD e busca direta por dígitos limpos de CPF e CNS (ex: digitando "ADAIR" localiza imediatamente "ADAIR PRAXEDES MORENO").
+- **Garantia de Carregamento Contínuo da Base Mestre (`patientService.js`):**
+  - Adicionado particionamento de lotes de 400 escritas para o Firestore e fallback imediato caso a conexão com a nuvem demore ou esteja vazia.
+
+---
+
 ## [v4.9.6] - 30 de Agosto, 2026
 ### Base Central e Unificada de Pacientes (Master Patient Record) em Todo o Sistema
 - **Base Mestre Canônica Unificada (Single Source of Truth):**

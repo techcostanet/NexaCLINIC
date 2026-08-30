@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../firebase';
 import { 
   HeartPulse, ClipboardList, Activity, Plus, Search, Edit2, 
@@ -128,7 +128,10 @@ export default function ClinicalPanel() {
   };
 
   // Filtragem de Dados pela Unidade Ativa
-  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
+  const currentPatients = useMemo(() => {
+    const list = filterByActiveUnit(patients);
+    return list.length > 0 ? list : (patients || []);
+  }, [patients, activeUnitId]);
   const currentPrescriptions = useMemo(() => filterByActiveUnit(prescriptions), [prescriptions, activeUnitId]);
   const currentSessionsLogs = useMemo(() => filterByActiveUnit(sessionsLogs), [sessionsLogs, activeUnitId]);
   const currentClinicalNotes = useMemo(() => filterByActiveUnit(clinicalNotes), [clinicalNotes, activeUnitId]);
