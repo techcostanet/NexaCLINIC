@@ -1,3 +1,20 @@
+## [v4.9.1] - 30 de Agosto, 2026
+### Módulo NexaCARE (Enfermagem & Salão) — Cockpit Unificado com 4 Abas (Sessão, Escala, Requisição, Chamados) e Perfil Nativo no RBAC
+- **Cockpit Unificado da Enfermagem (NexaCARE):**
+  - Evolução integral do módulo de salão, reunindo as 4 rotinas diárias essenciais dos técnicos de enfermagem em um único ambiente moderno:
+    1. *Sessão:* Digitação e acompanhamento da hemodiálise (avaliação pré-diálise, tabela horária da 1ªh à 4ªh com PA, pulso, pressões de linha PV/PA art, Qb real e taxa UF, intercorrências intradialíticas em 1 toque e fechamento pós-diálise com cálculo de perda hídrica efetiva).
+    2. *Escala:* Consulta da grade de pacientes por salão (Salões 1, 2 e 3), turnos e cadências (SQS/TQS) em modo leitura com busca instantânea de pontos e cadeiras.
+    3. *Requisição:* Solicitação ágil de kits pré-configurados e insumos avulsos por salão ou vinculados a pacientes, com verificação de estoque e rastreamento na farmácia.
+    4. *Chamados:* Abertura direta de chamados técnicos e ordens de serviço corretivas para máquinas de hemodiálise, osmose e poltronas, sincronizadas em tempo real com a Engenharia Clínica no NexaSERVICE.
+- **Perfil Nativo Técnico de Enfermagem (RBAC):**
+  - Criação do perfil `nurse_tech` ("Técnico de Enfermagem") na matriz de controle de acessos do `NexaCONFIG` e no Firestore, com permissões sob medida para a equipe assistencial de salão.
+- **Padrão de Rótulos Únicos (UI/UX 1-Word Rule):**
+  - Conformidade estrita com o padrão de termos únicos concisos em todas as abas, botões, modais e formulários.
+- **Manual do Módulo:**
+  - Atualização completa de Recursos, Tutoriais e Dúvidas Frequentes do NexaCARE em `src/data/moduleGuidesData.js`.
+
+---
+
 ## [v4.8.1] - 29 de Agosto, 2026
 ### Módulo Recepção — Admissão Nefrológica Completa em 6 Abas, Busca de CEP (ViaCEP), Atalhos WhatsApp & Alerta de Ganho de Peso
 - **Admissão Nefrológica Completa em 6 Abas:**

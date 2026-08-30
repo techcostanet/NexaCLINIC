@@ -487,74 +487,82 @@ export const MODULE_GUIDES = {
 
   requisitions: {
     id: 'requisitions',
-    name: 'Requisições de Insumos',
-    subtitle: 'NexaREQ — Enfermagem & Salões de Diálise',
+    name: 'Enfermagem & Salão',
+    subtitle: 'NexaCARE — Operação & Assistência de Salão',
     color: '#14b8a6',
     recursos: [
       {
-        title: 'Controle de Tempo de Vida (TTL) & Expiração',
-        desc: 'Controle inteligente de tempo limite (inicial de 1h) para atendimento na farmácia com contagem regressiva em tempo real.'
+        title: 'Digitação & Acompanhamento de Sessões de HD',
+        desc: 'Registro completo pré-diálise, acompanhamento horário das pressões/taxa UF/fluxo de sangue, intercorrências intradialíticas em 1 toque e fechamento pós-diálise com cálculo de perda efetiva.'
       },
       {
-        title: 'Renovação de Requisições em 1 Clique',
-        desc: 'Botão de renovação instantânea para requisições que expiraram sem necessidade de preenchimento manual de todos os insumos novamente.'
+        title: 'Consulta da Escala de Salão em Tempo Real',
+        desc: 'Acesso imediato à distribuição de pacientes por Salão 1, 2 e 3, turnos e cadeiras em modo leitura para conferência ágil de pontos de diálise.'
       },
       {
-        title: 'Múltiplos Modos de Visualização',
-        desc: '3 opções visuais completas: Compacta (padrão de alta velocidade), Normal (detalhada) e Cards (painel visual de solicitações com filtros rápidos).'
+        title: 'Requisição Rápida de Kits & Insumos',
+        desc: 'Solicitação instantânea de kits padronizados (Kit Diálise, Kit Curativo, Kit Punção) e medicamentos para uso geral do salão ou vinculado a paciente.'
       },
       {
-        title: 'Inclusão Rápida de Kits de Produtos',
-        desc: 'Adição instantânea de todos os insumos padronizados de procedimentos dialíticos com apenas 1 clique.'
+        title: 'Abertura Direta de Chamados de Máquinas',
+        desc: 'Comunicação imediata de alarmes e falhas em máquinas de hemodiálise e poltronas diretamente para a equipe de Engenharia Clínica no NexaSERVICE.'
       },
       {
-        title: 'Sinalização de Medicamentos Controlados',
-        desc: 'Identificação visual e rastreabilidade rigorosa para medicamentos sujeitos à Portaria 344/ANVISA.'
-      },
-      {
-        title: 'Vinculação Obrigatória de Salão para Kits',
-        desc: 'Direcionamento logístico seguro para entrega direta no Salão 1, Salão 2, Salão 3 ou Consultório.'
+        title: 'Controle de Alertas & Intercorrências',
+        desc: 'Sinalização visual destacada de pacientes com intercorrências intradialíticas registradas durante o turno.'
       }
     ],
     tutorial: [
       {
-        title: 'Como Fazer uma Requisição para o Salão',
+        title: 'Como Digitar uma Sessão de Hemodiálise',
         steps: [
-          'No painel de requisições, clique no botão "+ Nova Requisição".',
-          'Selecione o Salão e informe se o Destino é de Uso Geral ou Paciente específico.',
-          'Utilize os botões de "Kits" para carregar pacotes pré-montados ou selecione insumos individuais na busca.',
-          'Informe a quantidade desejada e clique em "Adicionar".',
-          'Insira observações clínicas se necessário e clique em "Enviar".'
+          'Na aba "Sessão", localize o paciente na grade do turno do dia.',
+          'Clique em "Digitar Sessão" para abrir a folha eletrônica de diálise.',
+          'Preencha o Peso Inicial, PA Inicial, temperatura e avaliação do acesso vascular.',
+          'Registre os parâmetros horários (PA, FC, pressões de linha, Qb real e taxa UF) da 1ªh à 4ªh.',
+          'Caso ocorra hipotensão ou cãibras, selecione o botão correspondente nas intercorrências.',
+          'No término do tratamento, informe o Peso Final, PA Final e clique em "Salvar Sessão de Diálise".'
         ]
       },
       {
-        title: 'Como Renovar uma Requisição Expirada',
+        title: 'Como Consultar a Escala de Pacientes do Salão',
         steps: [
-          'Caso o atendimento não ocorra dentro do TTL estabelecido (ex: 1h), a requisição receberá a tarja vermelha "Expirada (TTL)".',
-          'Na coluna de Ações (ou no rodapé do Card), clique no botão de renovar (ícone de repetição).',
-          'Confirme o envio: uma nova requisição com código atualizado será gerada imediatamente para a farmácia.'
+          'Clique na aba "Escala".',
+          'Alterne entre Salão 01, Salão 02 ou Salão 03 e selecione o turno de interesse.',
+          'Consulte a disposição dos pacientes por número de cadeira e tipo de acesso vascular.'
         ]
       },
       {
-        title: 'Como Acompanhar o Tempo Restante',
+        title: 'Como Fazer uma Requisição de Insumos',
         steps: [
-          'Em qualquer uma das visualizações (Compacta, Normal ou Cards), observe o contador ao lado do status (ex: "42m restantes").',
-          'Quando faltarem menos de 15 minutos, o alerta ficará em vermelho indicando urgência.'
+          'Na aba "Requisição", clique no botão "+ Nova Requisição".',
+          'Selecione o Salão de destino e indique se é para Uso Geral ou vinculado a um Paciente.',
+          'Clique em um dos botões de Kits ou busque o material desejado na barra de pesquisa.',
+          'Informe a quantidade e clique em "Transmitir Requisição" para envio à Farmácia.'
+        ]
+      },
+      {
+        title: 'Como Abrir Chamado para Máquina de Hemodiálise',
+        steps: [
+          'Na aba "Chamados", clique no botão "+ Abrir Chamado".',
+          'Selecione a máquina pelo número e salão (ex: Máquina 04 - Salão 01).',
+          'Escolha a prioridade e selecione o defeito comum (ex: Alarme de Condutividade, Vazamento) ou digite a descrição.',
+          'Clique em "Transmitir para Manutenção". O chamado será recebido imediatamente pelos técnicos no NexaSERVICE.'
         ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'O que significa o status "Expirada (TTL)" na minha requisição?',
-        resposta: 'Significa que o prazo configurado para retirada na farmácia (ex: 1 hora) expirou antes que a farmácia realizasse a baixa. A reserva do medicamento foi liberada e você pode clicar no botão "Renovar" para reenviar a solicitação.'
+        pergunta: 'As sessões salvas no NexaCARE ficam registradas no prontuário do paciente?',
+        resposta: 'Sim. Todo o acompanhamento horário, peso pré/pós e intercorrências registradas no NexaCARE são sincronizados em tempo real com o prontuário eletrônico do paciente e com os indicadores de qualidade.'
       },
       {
-        pergunta: 'Por que o saldo do estoque central não é exibido durante a requisição?',
-        resposta: 'Para garantir que a equipe de enfermagem solicite exatamente o que o procedimento e o paciente necessitam, sem influências ou restrições pelo nível atual do almoxarifado.'
+        pergunta: 'Como sei se a máquina que apresentou defeito já foi consertada?',
+        resposta: 'Na aba "Chamados", você pode acompanhar o status da ordem de serviço em tempo real (Aberta, Em Diagnóstico, Concluída). Quando a manutenção concluir o reparo, o badge mudará para "Concluída".'
       },
       {
-        pergunta: 'É obrigatório selecionar o Salão de Destino?',
-        resposta: 'Para requisições contendo Kits de produtos o campo Salão é obrigatório, pois a logística de entrega precisa saber em qual bancada física o kit deve ser depositado.'
+        pergunta: 'Posso solicitar insumos para mais de um paciente na mesma requisição?',
+        resposta: 'Para materiais de uso individual rastreáveis (como capilares ou ampolas específicas), recomenda-se vincular a requisição diretamente ao paciente. Para insumos de salão (gaze, luvas, soros), utilize a opção "Uso Geral do Salão".'
       }
     ]
   },

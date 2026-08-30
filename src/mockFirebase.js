@@ -1578,18 +1578,29 @@ const getDB = () => {
 
     if (!parsed.user_profiles) {
       parsed.user_profiles = [
-        { id: 'admin', name: 'Administrador / T.I.', permissions: { index: 'write', reception: 'write', clinical: 'write', calendar: 'write', stock: 'write', maintenance: 'write', purchasing: 'write', requisitions: 'write', apac: 'write', finance: 'write', hr: 'write', sesmt: 'write', config: 'write' } },
-        { id: 'reception', name: 'Recepção / Atendimento', permissions: { index: 'read', reception: 'write', clinical: 'none', calendar: 'write', stock: 'none', maintenance: 'read', purchasing: 'none', requisitions: 'none', apac: 'read', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
-        { id: 'clinical', name: 'Equipe Multiprofissional', permissions: { index: 'read', reception: 'read', clinical: 'write', calendar: 'read', stock: 'read', maintenance: 'read', purchasing: 'none', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
-        { id: 'financial', name: 'Gestão Financeira', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'read', purchasing: 'read', requisitions: 'none', apac: 'write', finance: 'write', hr: 'none', sesmt: 'none', config: 'none' } },
-        { id: 'hr', name: 'Recursos Humanos (RH)', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'read', purchasing: 'read', requisitions: 'none', apac: 'none', finance: 'none', hr: 'write', sesmt: 'read', config: 'none' } },
-        { id: 'sesmt', name: 'SESMT & Segurança do Trabalho', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'read', purchasing: 'none', requisitions: 'none', apac: 'none', finance: 'none', hr: 'read', sesmt: 'write', config: 'none' } },
-        { id: 'stock_keeper', name: 'Almoxarifado & Farmácia', permissions: { index: 'read', reception: 'none', clinical: 'read', calendar: 'none', stock: 'write', maintenance: 'read', purchasing: 'write', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
-        { id: 'technician', name: 'Manutenção & Engenharia Clínica', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'read', maintenance: 'write', purchasing: 'read', requisitions: 'read', apac: 'none', finance: 'none', hr: 'none', sesmt: 'read', config: 'none' } },
-        { id: 'apac', name: 'Faturamento & APACs', permissions: { index: 'read', reception: 'read', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'none', purchasing: 'none', requisitions: 'none', apac: 'write', finance: 'read', hr: 'none', sesmt: 'none', config: 'none' } },
-        { id: 'purchasing', name: 'Compras & Suprimentos', permissions: { index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'read', maintenance: 'none', purchasing: 'write', requisitions: 'read', apac: 'none', finance: 'read', hr: 'none', sesmt: 'none', config: 'none' } }
+        { id: 'admin', name: 'Administrador / T.I.', permissions: { assist: 'write', medical: 'write', index: 'write', reception: 'write', clinical: 'write', calendar: 'write', stock: 'write', maintenance: 'write', purchasing: 'write', requisitions: 'write', apac: 'write', finance: 'write', hr: 'write', sesmt: 'write', config: 'write' } },
+        { id: 'nurse_tech', name: 'Técnico de Enfermagem', permissions: { assist: 'read', medical: 'none', index: 'read', reception: 'none', clinical: 'read', calendar: 'none', stock: 'read', maintenance: 'write', purchasing: 'none', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', sesmt: 'read', config: 'none' } },
+        { id: 'reception', name: 'Recepção / Atendimento', permissions: { assist: 'read', medical: 'none', index: 'read', reception: 'write', clinical: 'none', calendar: 'write', stock: 'none', maintenance: 'read', purchasing: 'none', requisitions: 'none', apac: 'read', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
+        { id: 'clinical', name: 'Equipe Multiprofissional', permissions: { assist: 'write', medical: 'read', index: 'read', reception: 'read', clinical: 'write', calendar: 'read', stock: 'read', maintenance: 'read', purchasing: 'none', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
+        { id: 'financial', name: 'Gestão Financeira', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'read', purchasing: 'read', requisitions: 'none', apac: 'write', finance: 'write', hr: 'none', sesmt: 'none', config: 'none' } },
+        { id: 'hr', name: 'Recursos Humanos (RH)', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'read', purchasing: 'read', requisitions: 'none', apac: 'none', finance: 'none', hr: 'write', sesmt: 'read', config: 'none' } },
+        { id: 'sesmt', name: 'SESMT & Segurança do Trabalho', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'read', purchasing: 'none', requisitions: 'none', apac: 'none', finance: 'none', hr: 'read', sesmt: 'write', config: 'none' } },
+        { id: 'stock_keeper', name: 'Almoxarifado & Farmácia', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'none', clinical: 'read', calendar: 'none', stock: 'write', maintenance: 'read', purchasing: 'write', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', sesmt: 'none', config: 'none' } },
+        { id: 'technician', name: 'Manutenção & Engenharia Clínica', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'read', maintenance: 'write', purchasing: 'read', requisitions: 'read', apac: 'none', finance: 'none', hr: 'none', sesmt: 'read', config: 'none' } },
+        { id: 'apac', name: 'Faturamento & APACs', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'read', clinical: 'none', calendar: 'none', stock: 'none', maintenance: 'none', purchasing: 'none', requisitions: 'none', apac: 'write', finance: 'read', hr: 'none', sesmt: 'none', config: 'none' } },
+        { id: 'purchasing', name: 'Compras & Suprimentos', permissions: { assist: 'none', medical: 'none', index: 'read', reception: 'none', clinical: 'none', calendar: 'none', stock: 'read', maintenance: 'none', purchasing: 'write', requisitions: 'read', apac: 'none', finance: 'read', hr: 'none', sesmt: 'none', config: 'none' } }
       ];
       updated = true;
+    } else {
+      const hasNurseTech = parsed.user_profiles.some(p => p.id === 'nurse_tech');
+      if (!hasNurseTech) {
+        parsed.user_profiles.push({
+          id: 'nurse_tech',
+          name: 'Técnico de Enfermagem',
+          permissions: { assist: 'read', medical: 'none', index: 'read', reception: 'none', clinical: 'read', calendar: 'none', stock: 'read', maintenance: 'write', purchasing: 'none', requisitions: 'write', apac: 'none', finance: 'none', hr: 'none', sesmt: 'read', config: 'none' }
+        });
+        updated = true;
+      }
     }
 
     if (updated) {

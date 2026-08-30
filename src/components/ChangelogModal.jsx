@@ -6,6 +6,21 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.1',
+      date: '30/08/2026',
+      title: 'Módulo NexaCARE (Enfermagem & Salão) — Cockpit Unificado com 4 Abas (Sessão, Escala, Requisição, Chamados) e Perfil Nativo no RBAC',
+      description: 'Lançamento do módulo NexaCARE (evolução do NexaREQ) desenhado sob medida para a rotina diária das técnicas e enfermeiros de salão: unificação de digitação de sessões de hemodiálise, consulta da escala de pacientes e poltronas em tempo real, solicitação ágil de kits/insumos com controle de estoque e abertura direta de chamados de máquinas conectados à Engenharia Clínica, além da inclusão do perfil "Técnico de Enfermagem" no controle de acessos (RBAC) do NexaCONFIG.',
+      changes: [
+        { type: 'Módulo Unificado NexaCARE', text: 'Cockpit operacional de salão com 4 abas integradas (Sessão, Escala, Requisição e Chamados) em conformidade rigorosa com o padrão de rótulos únicos de 1 palavra.' },
+        { type: 'Aba Sessão (Digitação de HD)', text: 'Folha eletrônica de hemodiálise com avaliação pré-diálise, acompanhamento horário (PA, FC, pressões venosa/arterial, Qb real e taxa UF), registro de intercorrências em 1 toque e fechamento pós-diálise com cálculo de perda efetiva.' },
+        { type: 'Aba Escala (Modo Leitura)', text: 'Visualização interativa da distribuição dos pacientes por Salões 1, 2 e 3, turnos e cadências (SQS/TQS) com busca instantânea de pontos e cadeiras.' },
+        { type: 'Aba Requisição (Kits & Insumos)', text: 'Solicitação ágil de kits padronizados de diálise e materiais avulsos por paciente ou salão com controle de disponibilidade de estoque e rastreabilidade na farmácia.' },
+        { type: 'Aba Chamados (Máquinas de HD)', text: 'Abertura rápida de ordens de serviço corretivas para máquinas de hemodiálise e poltronas com sincronização imediata à Engenharia Clínica no NexaSERVICE.' },
+        { type: 'Perfil RBAC no NexaCONFIG', text: 'Criação do perfil nativo "Técnico de Enfermagem" (nurse_tech) na matriz de permissões e no cadastro de usuários com acesso direto e priorizado ao NexaCARE.' },
+        { type: 'Manual do Módulo Atualizado', text: 'Documentação completa com Recursos, Tutoriais passo a passo e FAQ de dúvidas frequentes da enfermagem em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v4.8.1',
       date: '29/08/2026',
       title: 'Módulo Recepção — Admissão Nefrológica Completa em 6 Abas, Busca de CEP (ViaCEP), Atalhos WhatsApp & Alerta de Ganho de Peso',

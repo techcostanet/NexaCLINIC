@@ -130,12 +130,12 @@ export default function ModuleSelector({ user, onSelectModule }) {
     },
     {
       id: 'requisitions',
-      title: 'Requisições de Insumos (Salão)',
-      subtitle: 'NexaREQ - Enfermagem',
-      description: 'Solicitação ágil de materiais e medicamentos para salões de hemodiálise e vinculação a pacientes.',
-      icon: ClipboardList,
+      title: 'Enfermagem & Salão',
+      subtitle: 'NexaCARE — Assistência',
+      description: 'Digitação de sessões de hemodiálise, escala de salão, requisição de insumos e abertura de chamados de máquinas.',
+      icon: HeartPulse,
       color: '#14b8a6', // teal-500
-      allowedRoles: ['admin', 'professional', 'clinical', 'doctor', 'technician']
+      allowedRoles: ['admin', 'nurse_tech', 'professional', 'clinical', 'doctor', 'technician']
     },
     {
       id: 'config',

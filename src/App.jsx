@@ -14,6 +14,7 @@ import FinancePanel from './components/FinancePanel';
 import ConfigPanel from './components/ConfigPanel';
 import PurchasingPanel from './components/PurchasingPanel';
 import CalendarPanel from './components/CalendarPanel';
+import CarePanel from './components/CarePanel';
 import TechnicianPanel from './components/TechnicianPanel';
 import ApacBillingPanel from './components/ApacBillingPanel';
 import MaintenancePanel from './components/MaintenancePanel';
@@ -152,7 +153,8 @@ export default function App() {
       case 'config':
         return <ErrorBoundary><ConfigPanel currentUser={user} /></ErrorBoundary>;
       case 'requisitions':
-        return <ErrorBoundary><TechnicianPanel currentUser={user} /></ErrorBoundary>;
+      case 'care':
+        return <ErrorBoundary><CarePanel currentUser={user} /></ErrorBoundary>;
       case 'apac':
         return <ErrorBoundary><ApacBillingPanel currentUser={user} /></ErrorBoundary>;
       case 'sesmt':

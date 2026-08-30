@@ -754,7 +754,7 @@ export default function ConfigPanel() {
               { key: 'stock', label: 'Estoque' },
               { key: 'maintenance', label: 'Manutenção' },
               { key: 'purchasing', label: 'Compras' },
-              { key: 'requisitions', label: 'Requisições' },
+              { key: 'requisitions', label: 'Enfermagem' },
               { key: 'apac', label: 'Faturamento' },
               { key: 'finance', label: 'Financeiro' },
               { key: 'hr', label: 'RH' },
