@@ -1,3 +1,13 @@
+## [v4.9.21] - 31 de Agosto, 2026
+### Permissões por Perfil Médico & Solicitação de Troca de Plantões (NexaMED)
+- **Restrição de Abas Administrativas (`MedicalPanel.jsx`):**
+  - Ocultadas as abas **Escala**, **Profissionais** e **Honorários** para médicos sem perfil de Diretoria Clínica / Coordenação.
+  - Acesso do médico comum restrito às suas abas operacionais (**Plantões**, **Trocas**, **Procedimentos**, **Produção**).
+- **Solicitação de Troca de Plantão (`MedicalSwapsTab.jsx`):**
+  - Adicionado botão e modal "+ Pedir Troca de Plantão" na aba Trocas para permitir que o médico requisite a substituição de qualquer plantão previamente escalado pela coordenação.
+
+---
+
 ## [v4.9.19] - 31 de Agosto, 2026
 ### Correção de Renderização na Aba Produção (NexaMED)
 - **Aba Produção (`MedicalProductionTab.jsx`):**

@@ -1,20 +1,107 @@
 import React, { useState } from 'react';
 import { 
   RefreshCw, CheckCircle2, XCircle, Clock, 
-  Mail, ShieldCheck, AlertCircle, ArrowRight, UserCheck
+  Mail, ShieldCheck, AlertCircle, ArrowRight, UserCheck, Plus, X
 } from 'lucide-react';
-import { formatDoctorDisplayName } from '../../utils/doctorFormatters';
+import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
+import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
 
 export default function MedicalSwapsTab({
   swaps = [],
   currentDoctor,
+  doctors = [],
+  schedules = [],
   isCoordination = true,
+  onRequestSwap,
   onRespondSwap,
   onHomologateSwap,
   loading = false
 }) {
   const [selectedSwapForEmails, setSelectedSwapForEmails] = useState(null);
   const [filterStatus, setFilterStatus] = useState('Todos');
+  const [showNewSwapModal, setShowNewSwapModal] = useState(false);
+
+  const availableDoctors = Array.isArray(doctors) && doctors.length > 0 ? doctors : FALLBACK_DOCTORS;
+  const activeDoc = currentDoctor || availableDoctors[0];
+  const activeDocId = activeDoc?.id || activeDoc?.uid;
+
+  // Filter shifts assigned to the current active doctor
+  const myShifts = schedules.filter(s => {
+    const isDoc = s.doctorId === activeDocId || s.doctorId === activeDoc?.id || s.doctorId === activeDoc?.uid;
+    const isNotAbsent = s.checkinStatus !== 'Ausente';
+    return isDoc && isNotAbsent;
+  }).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+  // Swap Request Form State
+  const [selectedShiftId, setSelectedShiftId] = useState('');
+  const [targetDoctorId, setTargetDoctorId] = useState('');
+  const [swapReason, setSwapReason] = useState('');
+  const [submittingSwap, setSubmittingSwap] = useState(false);
+
+  const handleOpenNewSwap = () => {
+    if (myShifts.length > 0) {
+      setSelectedShiftId(myShifts[0].id);
+    } else {
+      setSelectedShiftId('');
+    }
+    const otherDocs = availableDoctors.filter(d => (d.id || d.uid) !== activeDocId);
+    if (otherDocs.length > 0) {
+      setTargetDoctorId(otherDocs[0].id || otherDocs[0].uid);
+    }
+    setSwapReason('');
+    setShowNewSwapModal(true);
+  };
+
+  const handleSendSwapSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedShiftId || !targetDoctorId) return;
+
+    const chosenShift = myShifts.find(s => s.id === selectedShiftId);
+    const chosenTargetDoc = availableDoctors.find(d => (d.id || d.uid) === targetDoctorId);
+
+    if (!chosenShift || !chosenTargetDoc) return;
+
+    setSubmittingSwap(true);
+    try {
+      const swapPayload = {
+        shiftId: chosenShift.id,
+        shiftDate: chosenShift.date,
+        shift: chosenShift.shift,
+        sector: chosenShift.sector,
+        unitId: chosenShift.unitId || 'betim',
+        requestingDoctorId: activeDocId,
+        requestingDoctorName: formatDoctorDisplayName(activeDoc.name),
+        requestingDoctorEmail: activeDoc.email || 'contato@techcosta.net',
+        targetDoctorId: chosenTargetDoc.id || chosenTargetDoc.uid,
+        targetDoctorName: formatDoctorDisplayName(chosenTargetDoc.name),
+        targetDoctorEmail: chosenTargetDoc.email || 'secretariabetim@dialize.com.br',
+        reason: swapReason.trim() || 'Troca de plantão assistencial',
+        status: 'Pendente',
+        requestedAt: new Date().toISOString(),
+        emailLogs: [
+          {
+            to: chosenTargetDoc.email || 'secretariabetim@dialize.com.br',
+            subject: `[NexaMED] Solicitação de Troca de Plantão — ${chosenShift.date}`,
+            date: new Date().toLocaleString('pt-BR')
+          },
+          {
+            to: activeDoc.email || 'contato@techcosta.net',
+            subject: `[NexaMED] Comprovante de Solicitação de Troca — ${chosenShift.date}`,
+            date: new Date().toLocaleString('pt-BR')
+          }
+        ]
+      };
+
+      if (onRequestSwap) {
+        await onRequestSwap(swapPayload);
+      }
+      setShowNewSwapModal(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmittingSwap(false);
+    }
+  };
 
   const filteredSwaps = swaps.filter(s => {
     if (filterStatus === 'Todos') return true;
@@ -25,9 +112,19 @@ export default function MedicalSwapsTab({
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <div>
-          <h3 style={styles.title}>Bolsa de Trocas & Notificações por E-mail</h3>
-          <p style={styles.subtitle}>Gestão de substituições de plantão entre médicos com auditoria e notificações automáticas.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <div>
+            <h3 style={styles.title}>Bolsa de Trocas & Notificações por E-mail</h3>
+            <p style={styles.subtitle}>Gestão de substituições de plantão entre médicos com auditoria e notificações automáticas.</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleOpenNewSwap}
+            style={styles.newSwapBtn}
+          >
+            <Plus size={15} />
+            <span>Pedir Troca de Plantão</span>
+          </button>
         </div>
       </div>
 
@@ -78,7 +175,7 @@ export default function MedicalSwapsTab({
                 const isPendingCoord = swap.status === 'Aceito';
                 const isHomologated = swap.status === 'Homologado';
 
-                const canRespond = currentDoctor && currentDoctor.id === swap.targetDoctorId && isPendingTarget;
+                const canRespond = activeDoc && (activeDoc.id === swap.targetDoctorId || activeDoc.uid === swap.targetDoctorId) && isPendingTarget;
 
                 return (
                   <tr key={swap.id}>
@@ -172,6 +269,90 @@ export default function MedicalSwapsTab({
         </table>
       </div>
 
+      {/* Modal: Solicitar Nova Troca de Plantão */}
+      {showNewSwapModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <RefreshCw size={18} color="#0284c7" />
+                <h4 style={{ margin: 0, fontWeight: '800', color: '#0f172a' }}>Solicitar Troca de Plantão</h4>
+              </div>
+              <button onClick={() => setShowNewSwapModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {myShifts.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '1.5rem 1rem', color: '#64748b' }}>
+                <AlertCircle size={32} color="#f59e0b" style={{ margin: '0 auto 0.5rem auto' }} />
+                <p style={{ fontWeight: '700', color: '#0f172a', margin: '0 0 0.25rem 0' }}>Nenhum plantão escalado</p>
+                <p style={{ fontSize: '0.8rem', margin: 0 }}>Você não possui plantões escalados pela coordenação disponíveis para troca neste período.</p>
+                <div style={{ marginTop: '1.25rem' }}>
+                  <button type="button" onClick={() => setShowNewSwapModal(false)} className="btn btn-secondary">Fechar</button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSendSwapSubmit}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                  <div className="form-group">
+                    <label>Seu Plantão a Trocar *</label>
+                    <select
+                      className="form-control"
+                      value={selectedShiftId}
+                      onChange={e => setSelectedShiftId(e.target.value)}
+                      required
+                    >
+                      {myShifts.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {new Date(s.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })} • {s.sector} • Turno {s.shift}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Colega Substituto *</label>
+                    <select
+                      className="form-control"
+                      value={targetDoctorId}
+                      onChange={e => setTargetDoctorId(e.target.value)}
+                      required
+                    >
+                      {sortDoctorsByName(availableDoctors.filter(d => (d.id || d.uid) !== activeDocId)).map(doc => (
+                        <option key={doc.id || doc.uid} value={doc.id || doc.uid}>
+                          {formatDoctorDisplayName(doc.name)} {doc.crm ? `(${doc.crm})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Motivo da Troca</label>
+                    <textarea
+                      className="form-control"
+                      placeholder="Ex: Participação em congresso de nefrologia / compromisso pessoal..."
+                      value={swapReason}
+                      onChange={e => setSwapReason(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.25rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                  <button type="button" onClick={() => setShowNewSwapModal(false)} className="btn btn-secondary">
+                    Cancelar
+                  </button>
+                  <button type="submit" disabled={submittingSwap} className="btn btn-primary" style={{ backgroundColor: '#0284c7' }}>
+                    {submittingSwap ? 'Enviando...' : 'Enviar Solicitação'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Modal: Visualizar Histórico de E-mails Disparados */}
       {selectedSwapForEmails && (
         <div style={styles.modalOverlay}>
@@ -237,6 +418,19 @@ const styles = {
     margin: 0,
     marginTop: '0.2rem',
   },
+  newSwapBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.45rem 0.9rem',
+    fontSize: '0.82rem',
+    fontWeight: '700',
+    backgroundColor: '#0284c7',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+  },
   filterBar: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -244,28 +438,28 @@ const styles = {
   },
   filterGroup: {
     display: 'flex',
-    gap: '0.4rem',
+    gap: '0.35rem',
+    flexWrap: 'wrap',
   },
   filterBtn: {
-    padding: '0.3rem 0.65rem',
-    fontSize: '0.75rem',
+    padding: '0.35rem 0.75rem',
+    fontSize: '0.8rem',
     fontWeight: '600',
     backgroundColor: '#f1f5f9',
     color: '#475569',
-    border: '1px solid #e2e8f0',
+    border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',
   },
   filterBtnActive: {
-    backgroundColor: '#8b5cf6',
+    backgroundColor: '#0f172a',
     color: '#fff',
-    borderColor: '#8b5cf6',
   },
   tableWrapper: {
-    overflowX: 'auto',
     backgroundColor: '#fff',
     border: '1px solid #e2e8f0',
     borderRadius: '8px',
+    overflowX: 'auto',
   },
   table: {
     width: '100%',
@@ -274,36 +468,37 @@ const styles = {
     textAlign: 'left',
   },
   noDataCell: {
+    padding: '2rem',
     textAlign: 'center',
-    padding: '2.5rem 1rem',
     color: '#94a3b8',
     fontStyle: 'italic',
+  },
+  statusPill: {
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '4px',
+    display: 'inline-block',
+  },
+  actionBtn: {
+    padding: '0.25rem 0.6rem',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    borderRadius: '4px',
+    border: 'none',
+    cursor: 'pointer',
   },
   emailBadge: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.3rem',
-    fontSize: '0.7rem',
-    fontWeight: '700',
-    backgroundColor: '#f0f9ff',
-    color: '#0369a1',
-    border: '1px solid #bae6fd',
-    padding: '0.15rem 0.45rem',
-    borderRadius: '6px',
-    cursor: 'pointer',
-  },
-  statusPill: {
-    fontSize: '0.7rem',
-    fontWeight: '700',
-    padding: '0.15rem 0.5rem',
-    borderRadius: '6px',
-  },
-  actionBtn: {
-    padding: '0.25rem 0.55rem',
-    fontSize: '0.7rem',
-    fontWeight: '700',
-    border: 'none',
+    backgroundColor: '#eff6ff',
+    color: '#1d4ed8',
+    border: '1px solid #bfdbfe',
     borderRadius: '4px',
+    padding: '0.15rem 0.4rem',
+    fontSize: '0.75rem',
+    fontWeight: '600',
     cursor: 'pointer',
   },
   modalOverlay: {
@@ -324,7 +519,7 @@ const styles = {
     borderRadius: '12px',
     width: '100%',
     maxWidth: '520px',
-    padding: '1.5rem',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
+    padding: '1.25rem',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
   }
 };

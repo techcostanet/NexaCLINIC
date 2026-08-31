@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.21',
+      date: '31/08/2026',
+      title: 'Permissões por Perfil Médico & Solicitação de Troca de Plantões (NexaMED)',
+      description: 'Controle granular de visualização para médicos assistenciais (ocultando abas administrativas como Escala, Profissionais e Honorários) e inclusão da funcionalidade de solicitação de trocas de plantões diretamente na aba Trocas.',
+      changes: [
+        { type: 'Restrição de Abas Administrativas', text: 'Médicos sem perfil de Diretoria Clínica ou Coordenação passam a visualizar exclusivamente suas abas operacionais (Plantões, Trocas, Procedimentos e Produção), mantendo Escala Geral, Profissionais e Honorários protegidas.' },
+        { type: 'Pedir Troca de Plantão na Aba Trocas', text: 'Adicionado botão e modal "+ Pedir Troca de Plantão" na aba Trocas, permitindo ao médico selecionar qualquer plantão previamente escalado para si e solicitar substituição para um colega.' }
+      ]
+    },
+    {
       version: 'v4.9.19',
       date: '31/08/2026',
       title: 'Correção de Renderização na Aba Produção (NexaMED)',

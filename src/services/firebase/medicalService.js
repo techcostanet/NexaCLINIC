@@ -366,6 +366,8 @@ export const createMedicalSwap = async (swapData) => {
   return { id: docRef.id, ...swapData, status: 'Pendente' };
 };
 
+export const requestMedicalSwap = createMedicalSwap;
+
 export const respondMedicalSwap = async (swapId, accepted) => {
   if (USE_MOCK) return mockFirestore.respondMedicalSwap(swapId, accepted);
   const { getFirestore, doc, updateDoc } = await import('firebase/firestore');

@@ -20,9 +20,28 @@ import UnitSelector from './common/UnitSelector';
 
 export default function MedicalPanel({ currentUser, onBack }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
-  const [activeTab, setActiveTab] = useState('Escala');
+
+  // Role check: Clinical Director / Admin vs Regular Doctor
+  const isClinicalDirector = Boolean(
+    currentUser?.role === 'admin' ||
+    currentUser?.role === 'director' ||
+    currentUser?.role === 'coordenador' ||
+    currentUser?.isDirector === true ||
+    currentUser?.isClinicalDirector === true ||
+    currentUser?.allowedSectors?.includes('admin') ||
+    currentUser?.email === 'contato@techcosta.net' ||
+    currentUser?.email === 'secretariabetim@dialize.com.br'
+  );
+
+  const [activeTab, setActiveTab] = useState(isClinicalDirector ? 'Escala' : 'Plantões');
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().substring(0, 7));
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isClinicalDirector && (activeTab === 'Escala' || activeTab === 'Profissionais' || activeTab === 'Honorários')) {
+      setActiveTab('Plantões');
+    }
+  }, [isClinicalDirector, activeTab]);
 
   // View switch: Coordination vs specific doctor portal
   const [currentDoctorId, setCurrentDoctorId] = useState('doc-lucas-uid');
@@ -295,13 +314,15 @@ export default function MedicalPanel({ currentUser, onBack }) {
   const currentAppointments = React.useMemo(() => filterByActiveUnit(appointments), [appointments, activeUnitId]);
 
   const tabs = [
-    { id: 'Escala', label: 'Escala', icon: Calendar },
+    ...(isClinicalDirector ? [{ id: 'Escala', label: 'Escala', icon: Calendar }] : []),
     { id: 'Plantões', label: 'Plantões', icon: UserCheck },
     { id: 'Trocas', label: 'Trocas', icon: RefreshCw },
     { id: 'Procedimentos', label: 'Procedimentos', icon: Activity },
     { id: 'Produção', label: 'Produção', icon: DollarSign },
-    { id: 'Profissionais', label: 'Profissionais', icon: Users },
-    { id: 'Honorários', label: 'Honorários', icon: Settings },
+    ...(isClinicalDirector ? [
+      { id: 'Profissionais', label: 'Profissionais', icon: Users },
+      { id: 'Honorários', label: 'Honorários', icon: Settings }
+    ] : [])
   ];
 
   return (
@@ -356,7 +377,7 @@ export default function MedicalPanel({ currentUser, onBack }) {
 
       {/* Content Area */}
       <div style={styles.contentArea}>
-        {activeTab === 'Escala' && (
+        {isClinicalDirector && activeTab === 'Escala' && (
           <MedicalScheduleTab
             schedules={currentSchedules}
             doctors={currentDoctors}
@@ -388,7 +409,10 @@ export default function MedicalPanel({ currentUser, onBack }) {
           <MedicalSwapsTab
             swaps={currentSwaps}
             currentDoctor={currentDoctor}
-            isCoordination={true}
+            doctors={currentDoctors}
+            schedules={currentSchedules}
+            isCoordination={isClinicalDirector}
+            onRequestSwap={handleRequestSwap}
             onRespondSwap={handleRespondSwap}
             onHomologateSwap={handleHomologateSwap}
             loading={loading}
@@ -423,7 +447,7 @@ export default function MedicalPanel({ currentUser, onBack }) {
           />
         )}
 
-        {activeTab === 'Profissionais' && (
+        {isClinicalDirector && activeTab === 'Profissionais' && (
           <MedicalDoctorsTab
             doctors={currentDoctors}
             onSaveDoctor={handleSaveDoctor}
@@ -431,7 +455,7 @@ export default function MedicalPanel({ currentUser, onBack }) {
           />
         )}
 
-        {activeTab === 'Honorários' && (
+        {isClinicalDirector && activeTab === 'Honorários' && (
           <MedicalSettingsTab
             settings={settings}
             doctors={currentDoctors}
