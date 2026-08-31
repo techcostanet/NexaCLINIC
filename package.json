@@ -9,7 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "deploy": "node increment-version.cjs && vite build && git add . && git commit -m \"Update and Deploy\" && git push && npx firebase-tools deploy",
+    "deploy": "node increment-version.cjs && vite build && git add . && git commit -m \"Update and Deploy\" && git push && npx firebase-tools deploy --only hosting",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
