@@ -3625,44 +3625,8 @@ export const mockFirestore = {
 
   getMedicalSchedules: async (month) => {
     const db = getDB();
-    const currentMonth = month || new Date().toISOString().substring(0, 7);
-    if (!db.medical_schedules || db.medical_schedules.length === 0) {
-      // Seed default monthly shifts
-      const doctors = await mockFirestore.getMedicalDoctors();
-      const sectors = ['Salão 1', 'Salão 2', 'Salão 3', 'Diálise Peritoneal (DP)'];
-      const shifts = ['1º Turno', '2º Turno', '3º Turno'];
-      const defaultSchedules = [];
-
-      // Generate for today and surrounding days
-      const today = new Date();
-      const year = today.getFullYear();
-      const mIdx = today.getMonth();
-
-      for (let day = 1; day <= 28; day++) {
-        const dateStr = `${year}-${String(mIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        sectors.forEach((sec, sIdx) => {
-          shifts.forEach((sh, shIdx) => {
-            const docIdx = (day + sIdx + shIdx) % doctors.length;
-            const isToday = day === today.getDate();
-            defaultSchedules.push({
-              id: `sch-${dateStr}-${sec.replace(/[^a-zA-Z0-9]/g, '')}-${sh.replace(/[^a-zA-Z0-9]/g, '')}`,
-              month: `${year}-${String(mIdx + 1).padStart(2, '0')}`,
-              date: dateStr,
-              sector: sec,
-              shift: sh,
-              doctorId: doctors[docIdx].id,
-              doctorName: doctors[docIdx].name,
-              doctorCrm: doctors[docIdx].crm,
-              status: 'Confirmado',
-              checkinStatus: isToday ? (shIdx === 0 ? 'Presente' : 'Pendente') : (day < today.getDate() ? 'Presente' : 'Pendente'),
-              checkinTime: isToday && shIdx === 0 ? '06:05' : (day < today.getDate() ? '06:00' : null),
-              checkedBy: day <= today.getDate() ? 'Recepção Central' : null,
-              notes: ''
-            });
-          });
-        });
-      }
-      db.medical_schedules = defaultSchedules;
+    if (!db.medical_schedules) {
+      db.medical_schedules = [];
       setDB(db);
     }
     return (db.medical_schedules || []).filter(s => !month || s.month === month);
@@ -3721,31 +3685,8 @@ export const mockFirestore = {
   // Swaps with Email Notifications
   getMedicalSwaps: async () => {
     const db = getDB();
-    if (!db.medical_swaps || db.medical_swaps.length === 0) {
-      db.medical_swaps = [
-        {
-          id: 'swap-1',
-          requestingDoctorId: 'doc-1',
-          requestingDoctorName: 'Dr. Lucas Mendes',
-          targetDoctorId: 'doc-2',
-          targetDoctorName: 'Dra. Mariana Ribeiro',
-          scheduleId: 'sch-today-demo',
-          shiftDate: new Date().toISOString().substring(0, 10),
-          sector: 'Salão 1',
-          shift: '2º Turno',
-          reason: 'Congresso Mineiro de Nefrologia',
-          status: 'Homologado',
-          requestedAt: '2026-08-20T10:00:00.000Z',
-          respondedAt: '2026-08-20T11:30:00.000Z',
-          homologatedAt: '2026-08-20T14:00:00.000Z',
-          homologatedBy: 'Dr. Roberto (Coordenador Médico)',
-          emailLogs: [
-            { to: 'mariana.ribeiro@nexaclinic.med.br', subject: 'Solicitação de Troca de Plantão - Dr. Lucas Mendes', date: '2026-08-20 10:00' },
-            { to: 'lucas.mendes@nexaclinic.med.br', subject: 'Troca Aceita por Dra. Mariana Ribeiro', date: '2026-08-20 11:30' },
-            { to: 'ambos', subject: 'Troca Homologada pela Coordenação Médica', date: '2026-08-20 14:00' }
-          ]
-        }
-      ];
+    if (!db.medical_swaps) {
+      db.medical_swaps = [];
       setDB(db);
     }
     return db.medical_swaps || [];
@@ -3832,153 +3773,8 @@ export const mockFirestore = {
   // Medical Procedures
   getMedicalProcedures: async (doctorId) => {
     const db = getDB();
-    if (!db.medical_procedures || db.medical_procedures.length === 0) {
-      db.medical_procedures = [
-        {
-          id: 'proc-1',
-          doctorId: 'doc-lucas-uid',
-          doctorName: 'Dr. Lucas Mendes',
-          patientId: 'pat-1',
-          patientName: 'ADAIR PRAXEDES MORENO',
-          date: '2026-08-05',
-          procedureType: 'IMPLANTE DE CATETER DE HEMODIÁLISE - CDL',
-          value: 270.0,
-          status: 'Realizado',
-          notes: 'Implante em Veia Jugular Interna Direita guiado por ultrassom.'
-        },
-        {
-          id: 'proc-2',
-          doctorId: 'doc-lucas-uid',
-          doctorName: 'Dr. Lucas Mendes',
-          patientId: 'pat-2',
-          patientName: 'ADAO LUCIANO DIAS',
-          date: '2026-08-12',
-          procedureType: 'DUPLEX SCAN VENOSO OU ARTERIAL – DSV/DAS',
-          value: 119.79,
-          status: 'Realizado',
-          notes: 'Mapeamento de leito vascular para confecção de FAV em membro superior esquerdo.'
-        },
-        {
-          id: 'proc-3',
-          doctorId: 'doc-mariana-uid',
-          doctorName: 'Dra. Mariana Ribeiro',
-          patientId: 'pat-3',
-          patientName: 'ADCELIO BARBOSA DE OLIVEIRA',
-          date: '2026-08-08',
-          procedureType: 'IMPLANTE DE CATETER DE LONGA PERMCATH',
-          value: 668.25,
-          status: 'Realizado',
-          notes: 'Permcath tunelizado em jugular direita, raio-x de controle com ponta em átrio direito.'
-        },
-        {
-          id: 'proc-4',
-          doctorId: 'doc-mariana-uid',
-          doctorName: 'Dra. Mariana Ribeiro',
-          patientId: 'pat-4',
-          patientName: 'ADELSON DIAS FERREIRA',
-          date: '2026-08-15',
-          procedureType: 'CONFECÇÃO DE FAV SIMPLES',
-          value: 668.25,
-          status: 'Realizado',
-          notes: 'Anastomose rádio-cefálica término-lateral em punho esquerdo com bom frêmito imediato.'
-        },
-        {
-          id: 'proc-5',
-          doctorId: 'doc-roberto-uid',
-          doctorName: 'Dr. Roberto Carvalho',
-          patientId: 'pat-5',
-          patientName: 'AFONSO DIAS GOMES',
-          date: '2026-08-03',
-          procedureType: 'COORDENAÇÃO DP',
-          value: 2800.0,
-          status: 'Realizado',
-          notes: 'Supervisão técnica, auditoria de prescrições e visitas a pacientes em Diálise Peritoneal.'
-        },
-        {
-          id: 'proc-6',
-          doctorId: 'doc-roberto-uid',
-          doctorName: 'Dr. Roberto Carvalho',
-          patientId: 'pat-6',
-          patientName: 'AGLAIR FERREIRA SILVA',
-          date: '2026-08-18',
-          procedureType: 'INTERVENÇÃO DE FAV',
-          value: 668.25,
-          status: 'Realizado',
-          notes: 'Angioplastia transluminal de estenose justa-anastomótica de fístula arteriovenosa.'
-        },
-        {
-          id: 'proc-7',
-          doctorId: 'doc-camila-uid',
-          doctorName: 'Dra. Camila Albuquerque',
-          patientId: 'pat-7',
-          patientName: 'AIRTON DE ASSIS',
-          date: '2026-08-10',
-          procedureType: 'RETIRADA DE CATETER PERMCATH',
-          value: 400.0,
-          status: 'Realizado',
-          notes: 'Retirada de cateter de longa permanência após maturação completa e uso de FAV.'
-        },
-        {
-          id: 'proc-8',
-          doctorId: 'doc-camila-uid',
-          doctorName: 'Dra. Camila Albuquerque',
-          patientId: 'pat-8',
-          patientName: 'ALCINO MARIANO',
-          date: '2026-08-22',
-          procedureType: 'SUPERFI. BASÍLICA, LUNAR, SAFENA, CEFALICA',
-          value: 1217.70,
-          status: 'Realizado',
-          notes: 'Transposição e superficialização de veia basílica em braço direito.'
-        },
-        {
-          id: 'proc-9',
-          doctorId: 'doc-fernando-uid',
-          doctorName: 'Dr. Fernando Vasconcelos',
-          patientId: 'pat-9',
-          patientName: 'ALESSANDRO GONCALVES DA SILVA',
-          date: '2026-08-01',
-          procedureType: 'COORDENAÇÃO GERAL',
-          value: 28000.0,
-          status: 'Realizado',
-          notes: 'Diretoria clínica, gestão técnica do corpo médico, protocolos clínicos e auditorias nefrológicas.'
-        },
-        {
-          id: 'proc-10',
-          doctorId: 'doc-fernando-uid',
-          doctorName: 'Dr. Fernando Vasconcelos',
-          patientId: 'pat-10',
-          patientName: 'ALEXANDRE DE JESUS LOPES',
-          date: '2026-08-14',
-          procedureType: 'CONFECÇÃO DE FAV COM PRÓTESE - PTFE',
-          value: 891.0,
-          status: 'Realizado',
-          notes: 'Enxerto vascular com prótese PTFE em alça braquio-axilar esquerda.'
-        },
-        {
-          id: 'proc-11',
-          doctorId: 'doc-jsoares-uid',
-          doctorName: 'Dr. J. Soares',
-          patientId: 'pat-11',
-          patientName: 'ALEXANDRE HENRIQUE SANTOS',
-          date: '2026-08-11',
-          procedureType: 'AVALIAÇÃO/CONSULTA - POR MÉDICO CIRURGIÃO',
-          value: 55.0,
-          status: 'Realizado',
-          notes: 'Avaliação pré-operatória de leito vascular para planejamento de novo acesso.'
-        },
-        {
-          id: 'proc-12',
-          doctorId: 'doc-jsoares-uid',
-          doctorName: 'Dr. J. Soares',
-          patientId: 'pat-12',
-          patientName: 'ALICE PEREIRA GOMES',
-          date: '2026-08-19',
-          procedureType: 'LIGADURA FAV',
-          value: 668.25,
-          status: 'Realizado',
-          notes: 'Ligadura de fístula arteriovenosa não funcionante por síndrome de hiperfluxo.'
-        }
-      ];
+    if (!db.medical_procedures) {
+      db.medical_procedures = [];
       setDB(db);
     }
     return (db.medical_procedures || []).filter(p => !doctorId || p.doctorId === doctorId);

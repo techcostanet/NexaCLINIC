@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Save, DollarSign, Users, FileSpreadsheet, Check, Edit2, 
-  X, UserCheck, AlertCircle, Phone, Mail, CreditCard, Shield, 
-  Stethoscope, History, Trash2, Plus, ToggleLeft, ToggleRight
+  Save, DollarSign, Check, Edit2, 
+  X, AlertCircle, History, Trash2, Plus
 } from 'lucide-react';
-import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
 import { DEFAULT_MEDICAL_SETTINGS } from '../../services/firebase/medicalService';
 
 export default function MedicalSettingsTab({
   settings = {},
-  doctors = [],
   onSaveSettings,
-  onSaveDoctor,
   loading = false
 }) {
   const [formData, setFormData] = useState({
@@ -41,23 +37,6 @@ export default function MedicalSettingsTab({
   const [showNewProcModal, setShowNewProcModal] = useState(false);
   const [newProcName, setNewProcName] = useState('');
   const [newProcValue, setNewProcValue] = useState('');
-
-  // Doctor Edit Modal State
-  const [editingDoctor, setEditingDoctor] = useState(null);
-  const [doctorForm, setDoctorForm] = useState({
-    name: '',
-    crm: '',
-    specialty: 'Nefrologia',
-    cpf: '',
-    susCard: '',
-    email: '',
-    phone: '',
-    contractType: 'PJ',
-    pixKey: '',
-    bank: '',
-    active: true
-  });
-  const [savingDoctor, setSavingDoctor] = useState(false);
 
   useEffect(() => {
     if (settings && Object.keys(settings).length > 0) {
@@ -183,41 +162,6 @@ export default function MedicalSettingsTab({
     setShowNewProcModal(false);
   };
 
-  // Open Edit Doctor Modal
-  const handleOpenEditDoctor = (doc) => {
-    setEditingDoctor(doc);
-    setDoctorForm({
-      name: doc.name || '',
-      crm: doc.crm || '',
-      specialty: doc.specialty || 'Nefrologia',
-      cpf: doc.cpf || '',
-      susCard: doc.susCard || '',
-      email: doc.email || '',
-      phone: doc.phone || doc.mobile || '',
-      contractType: doc.contractType || 'PJ',
-      pixKey: doc.pixKey || '',
-      bank: doc.bank || '',
-      active: doc.active !== false
-    });
-  };
-
-  const handleSaveDoctorSubmit = async (e) => {
-    e.preventDefault();
-    if (!editingDoctor) return;
-    setSavingDoctor(true);
-    try {
-      const docId = editingDoctor.id || editingDoctor.uid;
-      if (onSaveDoctor) {
-        await onSaveDoctor(docId, doctorForm);
-      }
-      setEditingDoctor(null);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSavingDoctor(false);
-    }
-  };
-
   return (
     <div style={styles.container}>
       {/* Header */}
@@ -235,7 +179,7 @@ export default function MedicalSettingsTab({
         </div>
       </div>
 
-      {/* Section 1: Consultas & Plantões side-by-side (Exact Print 1 Layout) */}
+      {/* Section 1: Consultas & Plantões side-by-side */}
       <div style={styles.grid2}>
         {/* Consultas Table */}
         <div style={styles.card}>
@@ -310,7 +254,7 @@ export default function MedicalSettingsTab({
         </div>
       </div>
 
-      {/* Section 2: Procedimentos List (Exact Print 2 Layout) */}
+      {/* Section 2: Procedimentos List */}
       <div style={{ ...styles.card, marginTop: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <div>
@@ -412,99 +356,6 @@ export default function MedicalSettingsTab({
                           <Trash2 size={14} />
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Section 3: Registered Doctors Table */}
-      <div style={{ marginTop: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-          <div>
-            <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#0f172a', margin: 0 }}>
-              Profissionais ({doctors.length})
-            </h4>
-            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-              Cadastros médicos e bancários gerenciados pela Coordenação Médica para apuração de honorários.
-            </span>
-          </div>
-        </div>
-
-        <div style={styles.tableWrapper}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th>Médico</th>
-                <th>CRM</th>
-                <th>Especialidade</th>
-                <th>CPF</th>
-                <th>SUS</th>
-                <th>E-mail</th>
-                <th>Celular</th>
-                <th>Vínculo</th>
-                <th>PIX</th>
-                <th>Banco</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'center', width: '100px' }}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortDoctorsByName(doctors).map(doc => {
-                const hasIncompleteData = !doc.crm || !doc.cpf || !doc.phone || !doc.susCard;
-                return (
-                  <tr key={doc.id || doc.uid} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: hasIncompleteData ? '#fffdf7' : '#ffffff' }}>
-                    <td style={{ fontWeight: '800', color: '#0f172a' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <span>{formatDoctorDisplayName(doc.name)}</span>
-                        {hasIncompleteData && (
-                          <span style={styles.incompleteBadge} title="Cadastro pendente de complementação de dados">
-                            Completar
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td>
-                      <span style={{ fontWeight: '700', color: doc.crm ? '#0f172a' : '#94a3b8' }}>
-                        {doc.crm || 'Pendente'}
-                      </span>
-                    </td>
-                    <td>{doc.specialty || 'Nefrologia'}</td>
-                    <td style={{ fontSize: '0.75rem', color: '#475569' }}>{doc.cpf || '-'}</td>
-                    <td style={{ fontSize: '0.75rem', color: '#475569' }}>{doc.susCard || '-'}</td>
-                    <td style={{ fontSize: '0.75rem', color: '#0284c7' }}>{doc.email || '-'}</td>
-                    <td style={{ fontSize: '0.75rem', color: '#475569' }}>{doc.phone || doc.mobile || '-'}</td>
-                    <td>
-                      <span style={{ fontSize: '0.7rem', fontWeight: '800', padding: '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: '#eff6ff', color: '#1e40af' }}>
-                        {doc.contractType || 'PJ'}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: '0.75rem', color: '#0284c7' }}>{doc.pixKey || '-'}</td>
-                    <td style={{ fontSize: '0.75rem', color: '#475569' }}>{doc.bank || '-'}</td>
-                    <td>
-                      <span style={{
-                        fontSize: '0.7rem',
-                        fontWeight: '700',
-                        padding: '0.15rem 0.4rem',
-                        borderRadius: '4px',
-                        backgroundColor: doc.active !== false ? '#dcfce7' : '#fee2e2',
-                        color: doc.active !== false ? '#166534' : '#991b1b'
-                      }}>
-                        {doc.active !== false ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button 
-                        type="button" 
-                        onClick={() => handleOpenEditDoctor(doc)}
-                        style={styles.editDoctorBtn}
-                        title="Editar cadastro do médico"
-                      >
-                        <Edit2 size={13} /> {hasIncompleteData ? 'Completar' : 'Editar'}
-                      </button>
                     </td>
                   </tr>
                 );
@@ -631,150 +482,6 @@ export default function MedicalSettingsTab({
           </div>
         </div>
       )}
-
-      {/* Modal: Editar Cadastro do Médico */}
-      {editingDoctor && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
-            <div style={styles.modalHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Stethoscope size={20} color="#0284c7" />
-                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a', fontWeight: '800' }}>
-                  Cadastro: {doctorForm.name || 'Médico'}
-                </h3>
-              </div>
-              <button onClick={() => setEditingDoctor(null)} style={styles.closeBtn}><X size={20} /></button>
-            </div>
-
-            <form onSubmit={handleSaveDoctorSubmit} style={styles.modalBody}>
-              <div style={styles.modalGrid}>
-                <div className="form-group">
-                  <label>Nome Completo *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={doctorForm.name}
-                    onChange={e => setDoctorForm({ ...doctorForm, name: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>CRM *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Ex: 45892/MG"
-                    value={doctorForm.crm}
-                    onChange={e => setDoctorForm({ ...doctorForm, crm: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Especialidade *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={doctorForm.specialty}
-                    onChange={e => setDoctorForm({ ...doctorForm, specialty: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>CPF *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="000.000.000-00"
-                    value={doctorForm.cpf}
-                    onChange={e => setDoctorForm({ ...doctorForm, cpf: e.target.value })}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Cartão SUS</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Cartão Nacional de Saúde"
-                    value={doctorForm.susCard}
-                    onChange={e => setDoctorForm({ ...doctorForm, susCard: e.target.value })}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>E-mail *</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    value={doctorForm.email}
-                    onChange={e => setDoctorForm({ ...doctorForm, email: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Celular / WhatsApp *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="(31) 98765-4321"
-                    value={doctorForm.phone}
-                    onChange={e => setDoctorForm({ ...doctorForm, phone: e.target.value })}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Tipo de Vínculo</label>
-                  <select
-                    className="form-control"
-                    value={doctorForm.contractType}
-                    onChange={e => setDoctorForm({ ...doctorForm, contractType: e.target.value })}
-                  >
-                    <option value="PJ">PJ (Pessoa Jurídica)</option>
-                    <option value="CLT">CLT (Empregado)</option>
-                    <option value="Sócio">Sócio Cotista</option>
-                    <option value="RPA">RPA (Autônomo)</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Chave PIX</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="CPF, CNPJ, Email ou Chave Aleatória"
-                    value={doctorForm.pixKey}
-                    onChange={e => setDoctorForm({ ...doctorForm, pixKey: e.target.value })}
-                  />
-                </div>
-
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label>Dados Bancários (Banco / Agência / Conta)</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Ex: Banco do Brasil (001) Ag 1234-5 CC 45892-1"
-                    value={doctorForm.bank}
-                    onChange={e => setDoctorForm({ ...doctorForm, bank: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div style={styles.modalFooter}>
-                <button type="button" onClick={() => setEditingDoctor(null)} className="btn btn-secondary">
-                  Cancelar
-                </button>
-                <button type="submit" disabled={savingDoctor} className="btn btn-primary" style={{ backgroundColor: '#0284c7' }}>
-                  {savingDoctor ? 'Salvando...' : 'Salvar Alterações'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -877,28 +584,6 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  editDoctorBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.3rem',
-    padding: '0.25rem 0.55rem',
-    fontSize: '0.7rem',
-    fontWeight: '700',
-    backgroundColor: '#eff6ff',
-    color: '#1d4ed8',
-    border: '1px solid #bfdbfe',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
-  incompleteBadge: {
-    fontSize: '0.65rem',
-    fontWeight: '800',
-    padding: '0.1rem 0.35rem',
-    borderRadius: '4px',
-    backgroundColor: '#fef3c7',
-    color: '#b45309',
-    border: '1px solid #fde68a',
-  },
   modalOverlay: {
     position: 'fixed',
     top: 0,
@@ -911,15 +596,6 @@ const styles = {
     justifyContent: 'center',
     zIndex: 9999,
     padding: '1rem',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    width: '100%',
-    maxWidth: '650px',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
   },
   modalContentSmall: {
     backgroundColor: '#fff',
@@ -934,22 +610,6 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  modalBody: {
-    padding: '1.25rem',
-  },
-  modalGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: '0.75rem',
-  },
-  modalFooter: {
-    marginTop: '1.25rem',
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '0.75rem',
-    borderTop: '1px solid #e2e8f0',
-    paddingTop: '1rem',
   },
   closeBtn: {
     background: 'none',

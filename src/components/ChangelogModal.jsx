@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.27',
+      date: '31/08/2026',
+      title: 'Limpeza de Dados Fictícios & Otimização da Aba Honorários (NexaMED)',
+      description: 'Zera as bases mock e temporárias de escalas, plantões, trocas, procedimentos e produção, além de remover a listagem redundante de profissionais do rodapé da aba Honorários.',
+      changes: [
+        { type: 'Limpeza de Dados Mock', text: 'Zera e reinicia as listas de produção, procedimentos, trocas de plantão, plantões individuais e escalas gerais para receberem apenas lançamentos reais da equipe.' },
+        { type: 'Honorários Focado e Enxuto', text: 'Removida a tabela duplicada de profissionais da aba Honorários, centralizando o gerenciamento dos cadastros médicos exclusivamente na aba Profissionais.' }
+      ]
+    },
+    {
       version: 'v4.9.25',
       date: '31/08/2026',
       title: 'Plantões Clicáveis para Troca & Interface Enxuta para Médicos (NexaMED)',

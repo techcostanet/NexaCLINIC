@@ -132,305 +132,6 @@ export const DEFAULT_MEDICAL_SETTINGS = {
   additionalEmail: ''
 };
 
-// Realistic mock schedules generator covering current and surrounding months
-export const generateFallbackSchedules = (targetMonth) => {
-  const currentYM = targetMonth || new Date().toISOString().substring(0, 7);
-  const [yearStr, monthStr] = currentYM.split('-');
-  const year = parseInt(yearStr, 10);
-  const monthIdx = parseInt(monthStr, 10) - 1;
-
-  const sectors = ['Salão 1', 'Salão 2', 'Salão 3', 'Diálise Peritoneal (DP)'];
-  const shifts = ['Manhã', 'Tarde', 'Noite'];
-  const doctors = FALLBACK_DOCTORS;
-
-  const list = [];
-  const today = new Date();
-
-  for (let day = 1; day <= 28; day++) {
-    const dateStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const dateObj = new Date(`${dateStr}T12:00:00`);
-    const dayOfWeek = dateObj.getDay(); // 0 is Sunday
-
-    if (dayOfWeek === 0) continue; // No regular hemodialysis on Sunday
-
-    sectors.forEach((sec, sIdx) => {
-      // DP only runs morning/afternoon, Salões run 3 shifts
-      const applicableShifts = sec.includes('DP') ? ['Manhã', 'Tarde'] : shifts;
-
-      applicableShifts.forEach((sh, shIdx) => {
-        const docIdx = (day * 3 + sIdx * 2 + shIdx) % doctors.length;
-        const doc = doctors[docIdx];
-        const isPast = dateObj < today;
-        const isToday = dateObj.toDateString() === today.toDateString();
-
-        let checkinStatus = 'Pendente';
-        let checkinTime = null;
-        let checkedBy = null;
-
-        if (isPast) {
-          if ((day + sIdx) % 7 === 0) {
-            checkinStatus = 'Atraso';
-            checkinTime = sh === 'Manhã' ? '06:25' : sh === 'Tarde' ? '12:20' : '18:15';
-            checkedBy = 'Recepção Central';
-          } else {
-            checkinStatus = 'Presente';
-            checkinTime = sh === 'Manhã' ? '05:55' : sh === 'Tarde' ? '11:50' : '17:50';
-            checkedBy = 'Recepção Central';
-          }
-        } else if (isToday) {
-          if (sh === 'Manhã') {
-            checkinStatus = 'Presente';
-            checkinTime = '06:02';
-            checkedBy = 'Recepção Central';
-          }
-        }
-
-        list.push({
-          id: `sch-${dateStr}-${sec.replace(/[^a-zA-Z0-9]/g, '')}-${sh}`,
-          month: currentYM,
-          date: dateStr,
-          sector: sec,
-          shift: sh,
-          doctorId: doc.id,
-          doctorName: doc.name,
-          doctorCrm: doc.crm,
-          unitId: 'betim',
-          status: 'Confirmado',
-          checkinStatus,
-          checkinTime,
-          checkedBy,
-          notes: ''
-        });
-      });
-    });
-  }
-
-  return list;
-};
-
-// Realistic mock swaps generator
-export const generateFallbackSwaps = () => {
-  const todayStr = new Date().toISOString().substring(0, 10);
-  return [
-    {
-      id: 'swap-1',
-      shiftId: 'sch-swap-1',
-      shiftDate: todayStr,
-      sector: 'Salão 1',
-      shift: 'Manhã',
-      requestingDoctorId: 'doc-lucas-uid',
-      requestingDoctorName: 'Dr. Lucas Mendes',
-      requestingDoctorEmail: 'lucas.mendes@nexa.com',
-      targetDoctorId: 'doc-mariana-uid',
-      targetDoctorName: 'Dra. Mariana Ribeiro',
-      targetDoctorEmail: 'mariana.ribeiro@nexa.com',
-      reason: 'Participação no Congresso Brasileiro de Nefrologia',
-      status: 'Homologado',
-      requestedAt: '2026-08-28T09:15:00.000Z',
-      respondedAt: '2026-08-28T10:30:00.000Z',
-      homologatedAt: '2026-08-28T14:00:00.000Z',
-      homologatedBy: 'Dr. Roberto Carvalho (Coordenação)',
-      emailLogs: [
-        { to: 'mariana.ribeiro@nexa.com', subject: '[NexaMED] Solicitação de Troca de Plantão — Dr. Lucas Mendes', date: '28/08/2026 09:15' },
-        { to: 'lucas.mendes@nexa.com', subject: '[NexaMED] Troca Aceita por Dra. Mariana Ribeiro', date: '28/08/2026 10:30' },
-        { to: 'ambos', subject: '[NexaMED] Homologação de Troca Concluída pela Coordenação Médica', date: '28/08/2026 14:00' }
-      ]
-    },
-    {
-      id: 'swap-2',
-      shiftId: 'sch-swap-2',
-      shiftDate: '2026-08-30',
-      sector: 'Salão 2',
-      shift: 'Tarde',
-      requestingDoctorId: 'doc-roberto-uid',
-      requestingDoctorName: 'Dr. Roberto Carvalho',
-      requestingDoctorEmail: 'roberto.carvalho@nexa.com',
-      targetDoctorId: 'doc-camila-uid',
-      targetDoctorName: 'Dra. Camila Albuquerque',
-      targetDoctorEmail: 'camila.albuquerque@nexa.com',
-      reason: 'Procedimento cirúrgico de emergência em outro hospital',
-      status: 'Aceito',
-      requestedAt: '2026-08-29T14:20:00.000Z',
-      respondedAt: '2026-08-29T15:00:00.000Z',
-      homologatedAt: null,
-      emailLogs: [
-        { to: 'camila.albuquerque@nexa.com', subject: '[NexaMED] Solicitação de Troca de Plantão — Dr. Roberto Carvalho', date: '29/08/2026 14:20' },
-        { to: 'roberto.carvalho@nexa.com', subject: '[NexaMED] Troca Aceita por Dra. Camila Albuquerque', date: '29/08/2026 15:00' }
-      ]
-    },
-    {
-      id: 'swap-3',
-      shiftId: 'sch-swap-3',
-      shiftDate: '2026-08-31',
-      sector: 'Diálise Peritoneal (DP)',
-      shift: 'Manhã',
-      requestingDoctorId: 'doc-fernando-uid',
-      requestingDoctorName: 'Dr. Fernando Vasconcelos',
-      requestingDoctorEmail: 'fernando.vasconcelos@nexa.com',
-      targetDoctorId: 'doc-jsoares-uid',
-      targetDoctorName: 'Dr. J. Soares',
-      targetDoctorEmail: 'jsoares@nexa.com',
-      reason: 'Compromisso acadêmico e mentoria de residência médica',
-      status: 'Pendente',
-      requestedAt: '2026-08-30T18:00:00.000Z',
-      respondedAt: null,
-      emailLogs: [
-        { to: 'jsoares@nexa.com', subject: '[NexaMED] Solicitação de Troca de Plantão — Dr. Fernando Vasconcelos', date: '30/08/2026 18:00' }
-      ]
-    }
-  ];
-};
-
-// Realistic mock procedures generator covering all doctors and 12 procedures
-export const generateFallbackProcedures = () => {
-  return [
-    {
-      id: 'proc-1',
-      doctorId: 'doc-lucas-uid',
-      doctorName: 'Dr. Lucas Mendes',
-      patientId: 'pat-1',
-      patientName: 'ADAIR PRAXEDES MORENO',
-      date: '2026-08-05',
-      procedureType: 'IMPLANTE DE CATETER DE HEMODIÁLISE - CDL',
-      value: 270.0,
-      status: 'Realizado',
-      notes: 'Implante em Veia Jugular Interna Direita guiado por ultrassom.'
-    },
-    {
-      id: 'proc-2',
-      doctorId: 'doc-lucas-uid',
-      doctorName: 'Dr. Lucas Mendes',
-      patientId: 'pat-2',
-      patientName: 'ADAO LUCIANO DIAS',
-      date: '2026-08-12',
-      procedureType: 'DUPLEX SCAN VENOSO OU ARTERIAL – DSV/DAS',
-      value: 119.79,
-      status: 'Realizado',
-      notes: 'Mapeamento de leito vascular para confecção de FAV em membro superior esquerdo.'
-    },
-    {
-      id: 'proc-3',
-      doctorId: 'doc-mariana-uid',
-      doctorName: 'Dra. Mariana Ribeiro',
-      patientId: 'pat-3',
-      patientName: 'ADCELIO BARBOSA DE OLIVEIRA',
-      date: '2026-08-08',
-      procedureType: 'IMPLANTE DE CATETER DE LONGA PERMCATH',
-      value: 668.25,
-      status: 'Realizado',
-      notes: 'Permcath tunelizado em jugular direita, raio-x de controle com ponta em átrio direito.'
-    },
-    {
-      id: 'proc-4',
-      doctorId: 'doc-mariana-uid',
-      doctorName: 'Dra. Mariana Ribeiro',
-      patientId: 'pat-4',
-      patientName: 'ADELSON DIAS FERREIRA',
-      date: '2026-08-15',
-      procedureType: 'CONFECÇÃO DE FAV SIMPLES',
-      value: 668.25,
-      status: 'Realizado',
-      notes: 'Anastomose rádio-cefálica término-lateral em punho esquerdo com bom frêmito imediato.'
-    },
-    {
-      id: 'proc-5',
-      doctorId: 'doc-roberto-uid',
-      doctorName: 'Dr. Roberto Carvalho',
-      patientId: 'pat-5',
-      patientName: 'AFONSO DIAS GOMES',
-      date: '2026-08-03',
-      procedureType: 'COORDENAÇÃO DP',
-      value: 2800.0,
-      status: 'Realizado',
-      notes: 'Supervisão técnica, auditoria de prescrições e visitas a pacientes em Diálise Peritoneal.'
-    },
-    {
-      id: 'proc-6',
-      doctorId: 'doc-roberto-uid',
-      doctorName: 'Dr. Roberto Carvalho',
-      patientId: 'pat-6',
-      patientName: 'AGLAIR FERREIRA SILVA',
-      date: '2026-08-18',
-      procedureType: 'INTERVENÇÃO DE FAV',
-      value: 668.25,
-      status: 'Realizado',
-      notes: 'Angioplastia transluminal de estenose justa-anastomótica de fístula arteriovenosa.'
-    },
-    {
-      id: 'proc-7',
-      doctorId: 'doc-camila-uid',
-      doctorName: 'Dra. Camila Albuquerque',
-      patientId: 'pat-7',
-      patientName: 'AIRTON DE ASSIS',
-      date: '2026-08-10',
-      procedureType: 'RETIRADA DE CATETER PERMCATH',
-      value: 400.0,
-      status: 'Realizado',
-      notes: 'Retirada de cateter de longa permanência após maturação completa e uso de FAV.'
-    },
-    {
-      id: 'proc-8',
-      doctorId: 'doc-camila-uid',
-      doctorName: 'Dra. Camila Albuquerque',
-      patientId: 'pat-8',
-      patientName: 'ALCINO MARIANO',
-      date: '2026-08-22',
-      procedureType: 'SUPERFI. BASÍLICA, LUNAR, SAFENA, CEFALICA',
-      value: 1217.70,
-      status: 'Realizado',
-      notes: 'Transposição e superficialização de veia basílica em braço direito.'
-    },
-    {
-      id: 'proc-9',
-      doctorId: 'doc-fernando-uid',
-      doctorName: 'Dr. Fernando Vasconcelos',
-      patientId: 'pat-9',
-      patientName: 'ALESSANDRO GONCALVES DA SILVA',
-      date: '2026-08-01',
-      procedureType: 'COORDENAÇÃO GERAL',
-      value: 28000.0,
-      status: 'Realizado',
-      notes: 'Diretoria clínica, gestão técnica do corpo médico, protocolos clínicos e auditorias nefrológicas.'
-    },
-    {
-      id: 'proc-10',
-      doctorId: 'doc-fernando-uid',
-      doctorName: 'Dr. Fernando Vasconcelos',
-      patientId: 'pat-10',
-      patientName: 'ALEXANDRE DE JESUS LOPES',
-      date: '2026-08-14',
-      procedureType: 'CONFECÇÃO DE FAV COM PRÓTESE - PTFE',
-      value: 891.0,
-      status: 'Realizado',
-      notes: 'Enxerto vascular com prótese PTFE em alça braquio-axilar esquerda.'
-    },
-    {
-      id: 'proc-11',
-      doctorId: 'doc-jsoares-uid',
-      doctorName: 'Dr. J. Soares',
-      patientId: 'pat-11',
-      patientName: 'ALEXANDRE HENRIQUE SANTOS',
-      date: '2026-08-11',
-      procedureType: 'AVALIAÇÃO/CONSULTA - POR MÉDICO CIRURGIÃO',
-      value: 55.0,
-      status: 'Realizado',
-      notes: 'Avaliação pré-operatória de leito vascular para planejamento de novo acesso.'
-    },
-    {
-      id: 'proc-12',
-      doctorId: 'doc-jsoares-uid',
-      doctorName: 'Dr. J. Soares',
-      patientId: 'pat-12',
-      patientName: 'ALICE PEREIRA GOMES',
-      date: '2026-08-19',
-      procedureType: 'LIGADURA FAV',
-      value: 668.25,
-      status: 'Realizado',
-      notes: 'Ligadura de fístula arteriovenosa não funcionante por síndrome de hiperfluxo.'
-    }
-  ];
-};
-
 export const getMedicalDoctors = async () => {
   if (USE_MOCK) {
     try {
@@ -576,13 +277,11 @@ export const getMedicalSchedules = async (month) => {
     const db = getFirestore(app);
     const snap = await getDocs(collection(db, 'medical_schedules'));
     const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (all.length > 0) {
-      return all.filter(s => !month || s.month === month);
-    }
+    return all.filter(s => !month || s.month === month);
   } catch (err) {
     console.warn('Erro ao ler medical_schedules do Firestore:', err);
+    return [];
   }
-  return generateFallbackSchedules(month);
 };
 
 export const saveMedicalSchedule = async (shiftData) => {
@@ -627,12 +326,11 @@ export const getMedicalSwaps = async () => {
     const { getFirestore, collection, getDocs } = await import('firebase/firestore');
     const db = getFirestore(app);
     const snap = await getDocs(collection(db, 'medical_swaps'));
-    const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (all.length > 0) return all;
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (err) {
     console.warn('Erro ao ler medical_swaps do Firestore:', err);
+    return [];
   }
-  return generateFallbackSwaps();
 };
 
 export const createMedicalSwap = async (swapData) => {
@@ -676,19 +374,16 @@ export const homologateMedicalSwap = async (swapId, approved, homologatedBy) => 
 
 export const getMedicalProcedures = async (doctorId) => {
   if (USE_MOCK) return mockFirestore.getMedicalProcedures(doctorId);
-  let all = [];
   try {
     const { getFirestore, collection, getDocs } = await import('firebase/firestore');
     const db = getFirestore(app);
     const snap = await getDocs(collection(db, 'medical_procedures'));
-    all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return all.filter(p => !doctorId || p.doctorId === doctorId);
   } catch (err) {
     console.warn('Erro ao ler medical_procedures do Firestore:', err);
+    return [];
   }
-  if (!all || all.length === 0) {
-    all = generateFallbackProcedures();
-  }
-  return all.filter(p => !doctorId || p.doctorId === doctorId);
 };
 
 export const saveMedicalProcedure = async (procData) => {

@@ -1,3 +1,12 @@
+## [v4.9.27] - 31 de Agosto, 2026
+### Limpeza de Dados Fictícios & Otimização da Aba Honorários (NexaMED)
+- **Zerar Bases Fictícias (`medicalService.js` & `mockFirebase.js`):**
+  - Zeradas todas as coleções e listas temporárias de **Produção**, **Procedimentos**, **Trocas**, **Plantões** e **Escala**.
+- **Otimização da Aba Honorários (`MedicalSettingsTab.jsx`):**
+  - Removida a listagem redundante de profissionais da aba Honorários, mantendo-a focada exclusivamente nas tabelas de consultas, plantões e procedimentos. A gestão dos profissionais permanece na aba **Profissionais**.
+
+---
+
 ## [v4.9.25] - 31 de Agosto, 2026
 ### Plantões Clicáveis para Troca & Interface Enxuta para Médicos (NexaMED)
 - **Plantões Clicáveis na Aba Plantões (`MedicalMyShiftsTab.jsx`):**

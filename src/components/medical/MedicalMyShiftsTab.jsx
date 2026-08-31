@@ -34,54 +34,19 @@ export default function MedicalMyShiftsTab({
     const activeName = (activeDoctor?.name || '').toLowerCase().trim();
     const activeEmail = (activeDoctor?.email || '').toLowerCase().trim();
 
-    const filtered = schedules.filter(s => {
-      const sDocId = s.doctorId;
-      const sDocName = (s.doctorName || '').toLowerCase().trim();
-      const sDocEmail = (s.doctorEmail || '').toLowerCase().trim();
+    return schedules
+      .filter(s => {
+        const sDocId = s.doctorId;
+        const sDocName = (s.doctorName || '').toLowerCase().trim();
+        const sDocEmail = (s.doctorEmail || '').toLowerCase().trim();
 
-      return (
-        (activeDocId && sDocId === activeDocId) ||
-        (activeName && sDocName && (sDocName.includes(activeName) || activeName.includes(sDocName))) ||
-        (activeEmail && sDocEmail && sDocEmail === activeEmail)
-      );
-    });
-
-    if (filtered.length > 0) {
-      return filtered.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-    }
-
-    // Auto fallback for any active doctor (e.g. Georgia Abaurre or newly logged-in doctor) so they always have realistic scheduled shifts
-    const today = new Date();
-    const curYear = today.getFullYear();
-    const curMonth = today.getMonth() + 1;
-    const days = [3, 7, 12, 17, 21, 26, 28];
-    const sectors = ['Salão 1', 'Salão 2', 'Salão 3', 'Diálise Peritoneal (DP)'];
-    const shiftsArr = ['Manhã', 'Tarde', 'Noite'];
-
-    return days.map((d, idx) => {
-      const dateStr = `${curYear}-${String(curMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const dateObj = new Date(`${dateStr}T12:00:00`);
-      const isPast = dateObj < today;
-      const isToday = dateObj.toDateString() === today.toDateString();
-      const sh = shiftsArr[idx % 3];
-      const sec = sectors[idx % 4];
-
-      return {
-        id: `sch-doc-${activeDocId || 'active'}-${dateStr}`,
-        month: `${curYear}-${String(curMonth).padStart(2, '0')}`,
-        date: dateStr,
-        sector: sec,
-        shift: sh,
-        doctorId: activeDocId,
-        doctorName: activeDoctor?.name,
-        doctorCrm: activeDoctor?.crm,
-        status: 'Confirmado',
-        checkinStatus: isPast ? (idx === 2 ? 'Atraso' : 'Presente') : isToday ? 'Presente' : 'Pendente',
-        checkinTime: isPast ? (idx === 2 ? '06:25' : '06:00') : isToday ? '06:02' : null,
-        checkedBy: isPast || isToday ? 'Recepção Central' : null,
-        notes: ''
-      };
-    }).sort((a, b) => a.date.localeCompare(b.date));
+        return (
+          (activeDocId && sDocId === activeDocId) ||
+          (activeName && sDocName && (sDocName.includes(activeName) || activeName.includes(sDocName))) ||
+          (activeEmail && sDocEmail && sDocEmail === activeEmail)
+        );
+      })
+      .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
   }, [schedules, activeDoctor, activeDocId]);
 
   const handleOpenSwap = (shift) => {
