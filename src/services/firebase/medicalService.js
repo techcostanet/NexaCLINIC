@@ -74,6 +74,18 @@ export const FALLBACK_DOCTORS = [
     pixKey: 'jsoares@pix.bcb.gov.br',
     bank: 'Caixa (104) Ag 0122 CC 34102-8',
     active: true
+  },
+  {
+    id: 'doc-georgia-uid',
+    name: 'Georgia Abaurre Dutra de Rezende',
+    crm: '82485/MG',
+    specialty: 'Nefrologia',
+    email: 'georgiaar@nexa.com',
+    phone: '(31) 98711-2233',
+    contractType: 'PJ',
+    pixKey: 'georgiaar@nexa.com',
+    bank: 'Banco do Brasil (001) Ag 3201 CC 82485-9',
+    active: true
   }
 ];
 

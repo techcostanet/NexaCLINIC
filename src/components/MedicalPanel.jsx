@@ -316,10 +316,10 @@ export default function MedicalPanel({ currentUser, onBack }) {
   const tabs = [
     ...(isClinicalDirector ? [{ id: 'Escala', label: 'Escala', icon: Calendar }] : []),
     { id: 'Plantões', label: 'Plantões', icon: UserCheck },
-    { id: 'Trocas', label: 'Trocas', icon: RefreshCw },
+    ...(isClinicalDirector ? [{ id: 'Trocas', label: 'Trocas', icon: RefreshCw }] : []),
     { id: 'Procedimentos', label: 'Procedimentos', icon: Activity },
-    { id: 'Produção', label: 'Produção', icon: DollarSign },
     ...(isClinicalDirector ? [
+      { id: 'Produção', label: 'Produção', icon: DollarSign },
       { id: 'Profissionais', label: 'Profissionais', icon: Users },
       { id: 'Honorários', label: 'Honorários', icon: Settings }
     ] : [])
@@ -405,7 +405,7 @@ export default function MedicalPanel({ currentUser, onBack }) {
           />
         )}
 
-        {activeTab === 'Trocas' && (
+        {isClinicalDirector && activeTab === 'Trocas' && (
           <MedicalSwapsTab
             swaps={currentSwaps}
             currentDoctor={currentDoctor}
@@ -431,7 +431,7 @@ export default function MedicalPanel({ currentUser, onBack }) {
           />
         )}
 
-        {activeTab === 'Produção' && (
+        {isClinicalDirector && activeTab === 'Produção' && (
           <MedicalProductionTab
             selectedMonth={selectedMonth}
             doctors={currentDoctors}

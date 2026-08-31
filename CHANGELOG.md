@@ -1,3 +1,14 @@
+## [v4.9.25] - 31 de Agosto, 2026
+### Plantões Clicáveis para Troca & Interface Enxuta para Médicos (NexaMED)
+- **Plantões Clicáveis na Aba Plantões (`MedicalMyShiftsTab.jsx`):**
+  - Cada card de plantão da lista agora é clicável e abre diretamente o modal para solicitar troca de plantão com um colega substituto.
+  - Removida a coluna redundante "Procedimentos Executados" da aba Plantões.
+- **Navegação Simplificada para o Médico Simples (`MedicalPanel.jsx`):**
+  - Ocultadas as abas **Trocas** e **Produção** para médicos assistenciais, exibindo exclusivamente **Plantões** e **Procedimentos**.
+  - Coordenação e Diretoria Clínica mantêm a visão de todas as abas de gestão.
+
+---
+
 ## [v4.9.23] - 31 de Agosto, 2026
 ### Geração de Base Completa de Dados Fictícios de Demonstração (NexaMED)
 - **Escalas e Plantões (`medicalService.js`):**

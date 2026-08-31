@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.25',
+      date: '31/08/2026',
+      title: 'Plantões Clicáveis para Troca & Interface Enxuta para Médicos (NexaMED)',
+      description: 'Permite que o médico clique diretamente em qualquer plantão da sua lista na aba Plantões para solicitar troca com um colega, além de simplificar a visão do médico comum para apenas duas abas essenciais (Plantões e Procedimentos).',
+      changes: [
+        { type: 'Plantões Clicáveis com Modal de Troca', text: 'Cada plantão agendado na lista da aba Plantões agora é clicável e abre diretamente o modal de solicitação de troca com seleção de colega substituto e motivo.' },
+        { type: 'Navegação Enxuta para Médico Simples', text: 'Ocultadas as abas Trocas e Produção para médicos sem perfil administrativo, concentrando a experiência operacional nas abas Plantões e Procedimentos.' },
+        { type: 'Limpeza de Procedimentos na Aba Plantões', text: 'Removida a listagem duplicada de procedimentos executados da aba Plantões, mantendo o foco exclusivo nos plantões e no fechamento mensal.' }
+      ]
+    },
+    {
       version: 'v4.9.23',
       date: '31/08/2026',
       title: 'Geração de Base Completa de Dados Fictícios de Demonstração (NexaMED)',
