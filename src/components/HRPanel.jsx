@@ -2713,7 +2713,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
       {/* Occupational Exam (ASO) Modal */}
       {showExamModal && (
         <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalCard, maxWidth: '650px', width: '95%' }}>
+          <div style={{ ...styles.modalCard, maxWidth: '950px', width: '95%' }}>
             <div style={styles.modalHeader}>
               <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Stethoscope size={20} color="#0284c7" />
@@ -2724,38 +2724,39 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
 
             <form onSubmit={handleSaveExam} style={styles.modalForm}>
               <div style={{ maxHeight: '75vh', overflowY: 'auto', padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div className="form-group">
-                  <label>Colaborador *</label>
-                  <select
-                    className="form-control"
-                    required
-                    value={examForm.employeeId}
-                    onChange={e => {
-                      const empId = e.target.value;
-                      const emp = employees.find(x => x.id === empId);
-                      setExamForm(prev => ({
-                        ...prev,
-                        employeeId: empId,
-                        employeeName: emp ? emp.name : '',
-                        cpf: emp ? (emp.cpf || '') : '',
-                        role: emp ? (emp.role || '') : '',
-                        contractType: emp ? (emp.contractType || 'CLT') : 'CLT'
-                      }));
-                    }}
-                  >
-                    <option value="">Selecione um colaborador...</option>
-                    {employees
-                      .filter(e => e.status !== 'Inativo')
-                      .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'))
-                      .map(emp => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.name} ({emp.contractType || 'CLT'} - {normalizeSingleWord(emp.role)})
-                        </option>
-                      ))}
-                  </select>
-                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label>Colaborador *</label>
+                    <select
+                      className="form-control"
+                      required
+                      value={examForm.employeeId}
+                      onChange={e => {
+                        const empId = e.target.value;
+                        const emp = employees.find(x => x.id === empId);
+                        setExamForm(prev => ({
+                          ...prev,
+                          employeeId: empId,
+                          employeeName: emp ? emp.name : '',
+                          cpf: emp ? (emp.cpf || '') : '',
+                          role: emp ? (emp.role || '') : '',
+                          contractType: emp ? (emp.contractType || 'CLT') : 'CLT'
+                        }));
+                      }}
+                    >
+                      <option value="">Selecione um colaborador...</option>
+                      {employees
+                        .filter(e => e.status !== 'Inativo')
+                        .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'))
+                        .map(emp => (
+                          <option key={emp.id} value={emp.id}>
+                            {emp.name} ({emp.contractType || 'CLT'} - {normalizeSingleWord(emp.role)})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                   <div className="form-group">
                     <label>Tipo *</label>
                     <select
@@ -2794,7 +2795,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 1.5fr', gap: '0.75rem' }}>
                   <div className="form-group">
                     <label>Exame *</label>
                     <input
@@ -2822,12 +2823,10 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       onChange={e => setExamForm(prev => ({ ...prev, nextDueDate: e.target.value }))}
                     />
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      Preenchido com +1 ano automaticamente.
+                      Preenchido com +1 ano.
                     </span>
                   </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                   <div className="form-group">
                     <label>Médico</label>
                     <input

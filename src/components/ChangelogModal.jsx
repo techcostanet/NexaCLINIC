@@ -6,6 +6,24 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.30',
+      date: '31/08/2026',
+      title: 'Melhoria de Layout: Modal de Registro de ASO (Exame Ocupacional)',
+      description: 'O modal de lançamento de ASO foi expandido e reorganizado para um formato horizontal e mais largo (wide), eliminando a necessidade de reduzir o zoom da tela para ver todo o formulário.',
+      changes: [
+        { type: 'Design Mais Amplo (Wide)', text: 'Os campos foram reorganizados em grades (grids) horizontais para aproveitar o espaço da tela e evitar barra de rolagem excessiva.' }
+      ]
+    },
+    {
+      version: 'v4.9.29',
+      date: '31/08/2026',
+      title: 'Atualização no Script de Deploy',
+      description: 'Ajuste interno para garantir o correto funcionamento da implantação automatizada na nuvem.',
+      changes: [
+        { type: 'Correção do Firebase CLI', text: 'Ajustado o comando de deploy no package.json para utilizar a versão correta do firebase-tools.' }
+      ]
+    },
+    {
       version: 'v4.9.28',
       date: '31/08/2026',
       title: 'Correção na Lógica da Presença Premiada & Prevenção de Erros na Busca do RH',

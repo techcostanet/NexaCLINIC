@@ -1,3 +1,18 @@
+## [v4.9.30] - 31 de Agosto, 2026
+### Melhoria de Layout: Modal de Registro de ASO (Exame Ocupacional)
+- **Design Mais Amplo (Wide):**
+  - O modal de lançamento de ASO no módulo de RH foi expandido para um formato horizontal mais largo (wide).
+  - Os campos foram reorganizados em grades (grids) horizontais, facilitando o preenchimento.
+  - Elimina a necessidade de reduzir o zoom da tela para ver todo o formulário.
+
+---
+
+## [v4.9.29] - 31 de Agosto, 2026
+### Atualização no Script de Deploy
+- **Correção do Firebase CLI:** Ajustado o `package.json` para utilizar `npx firebase-tools deploy` assegurando o funcionamento em diferentes ambientes.
+
+---
+
 ## [v4.9.28] - 31 de Agosto, 2026
 ### Correção na Lógica da Presença Premiada & Prevenção de Erros na Busca do RH
 - **Correção da Presença Premiada (`useHRLogic.jsx`):**
