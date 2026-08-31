@@ -23,6 +23,8 @@ export default function MedicalProductionTab({
   const [homologatingId, setHomologatingId] = useState(null);
   const availableDoctors = Array.isArray(doctors) && doctors.length > 0 ? doctors : FALLBACK_DOCTORS;
 
+  const shiftFee = settings.shiftFee || 726.0;
+  const consultFee = settings.consultationFee || 100.0;
   const shiftFees = settings.shiftFees || { 'Manhã': 726.0, 'Tarde': 726.0, 'Noite': 825.0 };
   const consultFees = settings.consultationFees || { 'Ambulatorial': 100.0, 'Peritonial': 160.0 };
 

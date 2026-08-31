@@ -1,3 +1,10 @@
+## [v4.9.19] - 31 de Agosto, 2026
+### Correção de Renderização na Aba Produção (NexaMED)
+- **Aba Produção (`MedicalProductionTab.jsx`):**
+  - Correção de referência de variável (`shiftFee`/`consultFee`) nos cards de apuração financeira e tabela base de honorários.
+
+---
+
 ## [v4.9.17] - 31 de Agosto, 2026
 ### Tabela Oficial de Honorários & Envio de Produção do Mês (NexaMED)
 - **Tabela de Honorários e Plantões (`MedicalSettingsTab.jsx` & `medicalService.js`):**

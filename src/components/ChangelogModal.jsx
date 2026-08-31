@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.19',
+      date: '31/08/2026',
+      title: 'Correção de Renderização na Aba Produção (NexaMED)',
+      description: 'Correção de variável de escopo na apuração dos valores base de plantões e consultas na aba Produção.',
+      changes: [
+        { type: 'Aba Produção NexaMED', text: 'Resolução de ReferenceError na renderização dos cards de KPI com fallback seguro para os novos valores de plantão e consulta.' }
+      ]
+    },
+    {
       version: 'v4.9.17',
       date: '31/08/2026',
       title: 'Tabela Oficial de Honorários & Envio de Produção do Mês (NexaMED)',
