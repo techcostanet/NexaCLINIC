@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.28',
+      date: '31/08/2026',
+      title: 'Correção na Lógica da Presença Premiada & Prevenção de Erros na Busca do RH',
+      description: 'Ajuste na verificação de faltas para contabilizar ausências contínuas que sobrepõem o período de apuração, evitando bonificações indevidas. Implementada também prevenção contra erros (Cannot read properties of undefined) na busca de funcionários com cadastro incompleto.',
+      changes: [
+        { type: 'Correção da Presença Premiada', text: 'Ajuste na lógica de verificação de faltas para considerar ausências longas que sobrepõem o período de apuração, além da correção de fuso horário nas datas.' },
+        { type: 'Prevenção de Erros de Busca', text: 'Adicionado tratamento seguro (fallback) nos campos de nome e CPF durante a filtragem de pesquisa do RH, garantindo a estabilidade da tela.' }
+      ]
+    },
+    {
       version: 'v4.9.27',
       date: '31/08/2026',
       title: 'Limpeza de Dados Fictícios & Otimização da Aba Honorários (NexaMED)',

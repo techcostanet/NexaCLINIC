@@ -1400,9 +1400,9 @@ export function useHRLogic(currentUser) {
 
   const getFilteredEmployees = () => {
     const filtered = currentEmployees.filter(emp => {
-      const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            emp.cpf.includes(searchTerm) ||
-                            (emp.role && emp.role.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesSearch = (emp.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (emp.cpf || '').includes(searchTerm) ||
+                            (emp.role && (emp.role || '').toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesSector = filterSector ? emp.sectorId === filterSector : true;
       const matchesStatus = filterStatus === 'all' 
         ? true 
@@ -1573,7 +1573,7 @@ export function useHRLogic(currentUser) {
       if (emp.warnings && Array.isArray(emp.warnings)) {
         const monthWarnings = emp.warnings.filter(w => {
           if (!w.date) return false;
-          const wDate = new Date(w.date);
+          const wDate = new Date(w.date + 'T00:00:00');
           return wDate >= startDate && wDate <= endDate;
         });
         if (monthWarnings.length > 0) {
@@ -1586,8 +1586,10 @@ export function useHRLogic(currentUser) {
       if (emp.absences && Array.isArray(emp.absences)) {
         const monthAbsences = emp.absences.filter(abs => {
           if (!abs.date) return false;
-          const absDate = new Date(abs.date);
-          return absDate >= startDate && absDate <= endDate;
+          const absDate = new Date(abs.date + 'T00:00:00');
+          const days = parseFloat(abs.days) || 1;
+          const absEndDate = new Date(absDate.getTime() + (days - 1) * 24 * 60 * 60 * 1000);
+          return absDate <= endDate && absEndDate >= startDate;
         });
         if (monthAbsences.length > 0) {
           const absDetails = monthAbsences.map(a => `${a.type || 'Ausência'}${a.date ? ` (${a.date})` : ''}`).join(', ');

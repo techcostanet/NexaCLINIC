@@ -1,3 +1,13 @@
+## [v4.9.28] - 31 de Agosto, 2026
+### Correção na Lógica da Presença Premiada & Prevenção de Erros na Busca do RH
+- **Correção da Presença Premiada (`useHRLogic.jsx`):**
+  - Ajuste na lógica de verificação de faltas para considerar ausências longas que sobrepõem o período de apuração, evitando que funcionários com faltas injustificadas contínuas sejam contemplados indevidamente.
+  - Correção de fuso horário nas datas de advertências e faltas para garantir que ocorrências no último dia do mês sejam computadas corretamente.
+- **Prevenção de Erros de Busca (`useHRLogic.jsx`):**
+  - Adicionado tratamento de fallback (`|| ''`) nos campos de nome e CPF durante a filtragem de pesquisa, prevenindo o erro `Cannot read properties of undefined (reading 'includes')` quando a base contém registros incompletos.
+
+---
+
 ## [v4.9.27] - 31 de Agosto, 2026
 ### Limpeza de Dados Fictícios & Otimização da Aba Honorários (NexaMED)
 - **Zerar Bases Fictícias (`medicalService.js` & `mockFirebase.js`):**
