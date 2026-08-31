@@ -1,3 +1,13 @@
+## [v4.9.23] - 31 de Agosto, 2026
+### Geração de Base Completa de Dados Fictícios de Demonstração (NexaMED)
+- **Escalas e Plantões (`medicalService.js`):**
+  - Geração de escala mensal assistencial para todos os 6 médicos em todos os setores (Salões 1, 2, 3 e DP) e turnos (Manhã, Tarde, Noite).
+- **Procedimentos e Trocas (`medicalService.js` & `mockFirebase.js`):**
+  - Cadastro de procedimentos cirúrgicos para todos os médicos com os 12 procedimentos oficiais da tabela de honorários.
+  - Cadastro de solicitações de trocas de plantões com múltiplos status (Pendente, Aceito, Homologado) e rastreabilidade de notificações por e-mail.
+
+---
+
 ## [v4.9.21] - 31 de Agosto, 2026
 ### Permissões por Perfil Médico & Solicitação de Troca de Plantões (NexaMED)
 - **Restrição de Abas Administrativas (`MedicalPanel.jsx`):**

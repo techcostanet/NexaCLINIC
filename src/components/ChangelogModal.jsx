@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.23',
+      date: '31/08/2026',
+      title: 'Geração de Base Completa de Dados Fictícios de Demonstração (NexaMED)',
+      description: 'População de dados fictícios realistas e completos para todo o corpo clínico, cobrindo grade mensal de plantões em todos os salões e turnos, solicitações e homologações de trocas com logs de e-mail, e procedimentos cirúrgicos para todos os médicos.',
+      changes: [
+        { type: 'Escalas e Plantões do Mês', text: 'Geração de escala assistencial para todos os 6 médicos em Salão 1, 2, 3 e DP em todos os turnos com auditorias de presença e horários de ronda.' },
+        { type: 'Procedimentos e Trocas Diversificadas', text: 'Cadastro de procedimentos cirúrgicos e intervencionistas executados por todos os médicos vinculados a pacientes reais, além de solicitações de troca com diferentes status (Pendente, Aceito, Homologado).' }
+      ]
+    },
+    {
       version: 'v4.9.21',
       date: '31/08/2026',
       title: 'Permissões por Perfil Médico & Solicitação de Troca de Plantões (NexaMED)',
