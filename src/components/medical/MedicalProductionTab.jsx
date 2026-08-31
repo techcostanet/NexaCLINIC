@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
 import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
+import MedicalSendProductionCard from './MedicalSendProductionCard';
 
 export default function MedicalProductionTab({
   selectedMonth,
@@ -16,24 +17,28 @@ export default function MedicalProductionTab({
   settings = {},
   onHomologateProduction,
   onOpenStatement,
+  onSaveSettings,
   loading = false
 }) {
   const [homologatingId, setHomologatingId] = useState(null);
   const availableDoctors = Array.isArray(doctors) && doctors.length > 0 ? doctors : FALLBACK_DOCTORS;
 
-  const shiftFee = settings.shiftFee || 1200.0;
-  const consultFee = settings.consultationFee || 150.0;
+  const shiftFees = settings.shiftFees || { 'Manhã': 726.0, 'Tarde': 726.0, 'Noite': 825.0 };
+  const consultFees = settings.consultationFees || { 'Ambulatorial': 100.0, 'Peritonial': 160.0 };
 
   // Compute production metrics for each doctor
   const doctorProductions = sortDoctorsByName(availableDoctors).map(doc => {
     const docId = doc.id || doc.uid;
-    // 1. Shifts: Only present or confirmed shifts
+    // 1. Shifts: Only present or confirmed shifts with shift-specific fees
     const docShifts = schedules.filter(s => 
       (s.doctorId === docId || s.doctorId === doc.id || s.doctorId === doc.uid) && 
       (s.checkinStatus === 'Presente' || s.checkinStatus === 'Substituído' || (s.status === 'Confirmado' && s.checkinStatus !== 'Ausente'))
     );
     const shiftsCount = docShifts.length;
-    const shiftsTotal = shiftsCount * shiftFee;
+    const shiftsTotal = docShifts.reduce((acc, s) => {
+      const fee = shiftFees[s.shift] || (s.shift === 'Noite' ? 825.0 : (settings.shiftFee || 726.0));
+      return acc + fee;
+    }, 0);
 
     // 2. Consultations: Appointments completed in calendar
     const docConsults = appointments.filter(a => 
@@ -41,7 +46,7 @@ export default function MedicalProductionTab({
       (a.status === 'Concluída' || a.status === 'Atendido' || a.status === 'completed' || a.status === 'Finalizado')
     );
     const consultationsCount = docConsults.length > 0 ? docConsults.length : 8; // default realistic fallback for demo
-    const consultationsTotal = consultationsCount * consultFee;
+    const consultationsTotal = consultationsCount * (consultFees['Ambulatorial'] || settings.consultationFee || 100.0);
 
     // 3. Procedures
     const docProcs = procedures.filter(p => p.doctorId === docId || p.doctorId === doc.id || p.doctorId === doc.uid);
@@ -245,6 +250,15 @@ export default function MedicalProductionTab({
           </tbody>
         </table>
       </div>
+
+      {/* Monthly Production Dispatch Card */}
+      <MedicalSendProductionCard
+        schedules={schedules}
+        procedures={procedures}
+        appointments={appointments}
+        settings={settings}
+        onSaveSettings={onSaveSettings}
+      />
     </div>
   );
 }

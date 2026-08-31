@@ -39,22 +39,30 @@ export default function MedicalProceduresTab({
     });
   }, [patients]);
 
+  const procedureTypes = (settings.procedureFees && Object.keys(settings.procedureFees).length > 0)
+    ? Object.keys(settings.procedureFees)
+    : [
+        'AVALIAÇÃO/CONSULTA - POR MÉDICO CIRURGIÃO',
+        'CONFECÇÃO DE FAV COM PRÓTESE - PTFE',
+        'CONFECÇÃO DE FAV SIMPLES',
+        'COORDENAÇÃO DP',
+        'COORDENAÇÃO GERAL',
+        'DUPLEX SCAN VENOSO OU ARTERIAL – DSV/DAS',
+        'IMPLANTE DE CATETER DE HEMODIÁLISE - CDL',
+        'IMPLANTE DE CATETER DE LONGA PERMCATH',
+        'INTERVENÇÃO DE FAV',
+        'LIGADURA FAV',
+        'RETIRADA DE CATETER PERMCATH',
+        'SUPERFI. BASÍLICA, LUNAR, SAFENA, CEFALICA'
+      ];
+
   const [formData, setFormData] = useState({
     doctorId: availableDoctors[0]?.id || availableDoctors[0]?.uid || '',
     patientId: '',
     date: new Date().toISOString().substring(0, 10),
-    procedureType: 'Cateter Duplo Lúmen (CDL)',
+    procedureType: 'IMPLANTE DE CATETER DE HEMODIÁLISE - CDL',
     notes: ''
   });
-
-  const procedureTypes = [
-    'Cateter Duplo Lúmen (CDL)',
-    'Implante de Permcath',
-    'Biópsia Renal',
-    'Mapeamento de Fístula AV',
-    'Curativo Especial de Acesso',
-    'Punção Biópsia / Aspiração'
-  ];
 
   const filteredProcedures = procedures.filter(p => {
     if (filterDoc !== 'Todos' && p.doctorId !== filterDoc) return false;

@@ -1,3 +1,14 @@
+## [v4.9.17] - 31 de Agosto, 2026
+### Tabela Oficial de Honorários & Envio de Produção do Mês (NexaMED)
+- **Tabela de Honorários e Plantões (`MedicalSettingsTab.jsx` & `medicalService.js`):**
+  - Cadastrados valores referenciais de Consultas (Ambulatorial: R$ 100,00; Peritonial: R$ 160,00).
+  - Cadastrados valores de Plantões assistenciais por turno (Manhã: R$ 726,00; Tarde: R$ 726,00; Noite: R$ 825,00).
+  - Cadastrada a tabela completa com os 12 procedimentos cirúrgicos e intervencionistas nefrológicos com chaves de ativação, edição de valores e histórico.
+- **Card "Enviar Produção do Mês" (`MedicalSendProductionCard.jsx`):**
+  - Implementado componente idêntico ao modelo com seletores de Mês e Ano, apuração em tempo real, campo para e-mail adicional de contabilidade e ação de envio direto.
+
+---
+
 ## [v4.9.15] - 31 de Agosto, 2026
 ### Ajustes no NexaMED (Gestão Médica) & Deduplicação Central de Pacientes
 - **Aba Plantões NexaMED (`MedicalMyShiftsTab.jsx`):**

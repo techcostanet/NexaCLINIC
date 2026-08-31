@@ -376,7 +376,10 @@ export default function MedicalPanel({ currentUser, onBack }) {
             patients={currentPatients}
             schedules={currentSchedules}
             procedures={currentProcedures}
+            appointments={currentAppointments}
+            settings={settings}
             onRequestSwap={handleRequestSwap}
+            onSaveSettings={handleSaveSettings}
             loading={loading}
           />
         )}
@@ -415,6 +418,7 @@ export default function MedicalPanel({ currentUser, onBack }) {
             settings={settings}
             onHomologateProduction={handleHomologateProduction}
             onOpenStatement={setStatementData}
+            onSaveSettings={handleSaveSettings}
             loading={loading}
           />
         )}

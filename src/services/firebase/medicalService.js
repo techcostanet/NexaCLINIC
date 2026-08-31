@@ -225,12 +225,72 @@ export const saveMedicalDoctor = async (doctorId, doctorData) => {
   return { id: doctorId, ...payload };
 };
 
+export const DEFAULT_MEDICAL_SETTINGS = {
+  shiftFee: 726.0,
+  shiftFees: {
+    'Manhã': 726.0,
+    'Tarde': 726.0,
+    'Noite': 825.0
+  },
+  consultationFee: 100.0,
+  consultationFees: {
+    'Ambulatorial': 100.0,
+    'Peritonial': 160.0
+  },
+  procedureFees: {
+    'AVALIAÇÃO/CONSULTA - POR MÉDICO CIRURGIÃO': 55.00,
+    'CONFECÇÃO DE FAV COM PRÓTESE - PTFE': 891.00,
+    'CONFECÇÃO DE FAV SIMPLES': 668.25,
+    'COORDENAÇÃO DP': 2800.00,
+    'COORDENAÇÃO GERAL': 28000.00,
+    'DUPLEX SCAN VENOSO OU ARTERIAL – DSV/DAS': 119.79,
+    'IMPLANTE DE CATETER DE HEMODIÁLISE - CDL': 270.00,
+    'IMPLANTE DE CATETER DE LONGA PERMCATH': 668.25,
+    'INTERVENÇÃO DE FAV': 668.25,
+    'LIGADURA FAV': 668.25,
+    'RETIRADA DE CATETER PERMCATH': 400.00,
+    'SUPERFI. BASÍLICA, LUNAR, SAFENA, CEFALICA': 1217.70
+  },
+  procedureStatus: {
+    'AVALIAÇÃO/CONSULTA - POR MÉDICO CIRURGIÃO': true,
+    'CONFECÇÃO DE FAV COM PRÓTESE - PTFE': true,
+    'CONFECÇÃO DE FAV SIMPLES': true,
+    'COORDENAÇÃO DP': true,
+    'COORDENAÇÃO GERAL': true,
+    'DUPLEX SCAN VENOSO OU ARTERIAL – DSV/DAS': true,
+    'IMPLANTE DE CATETER DE HEMODIÁLISE - CDL': true,
+    'IMPLANTE DE CATETER DE LONGA PERMCATH': true,
+    'INTERVENÇÃO DE FAV': true,
+    'LIGADURA FAV': true,
+    'RETIRADA DE CATETER PERMCATH': true,
+    'SUPERFI. BASÍLICA, LUNAR, SAFENA, CEFALICA': true
+  },
+  additionalEmail: '',
+  defaultRecipientEmails: ['contato@techcosta.net', 'secretariabetim@dialize.com.br']
+};
+
 export const getMedicalSettings = async () => {
-  if (USE_MOCK) return mockFirestore.getMedicalSettings();
-  const { getFirestore, doc, getDoc } = await import('firebase/firestore');
-  const db = getFirestore(app);
-  const snap = await getDoc(doc(db, 'settings', 'medical'));
-  return snap.exists() ? snap.data() : {};
+  if (USE_MOCK) return DEFAULT_MEDICAL_SETTINGS;
+  try {
+    const { getFirestore, doc, getDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const snap = await getDoc(doc(db, 'settings', 'medical'));
+    if (snap.exists()) {
+      const data = snap.data();
+      return {
+        ...DEFAULT_MEDICAL_SETTINGS,
+        ...data,
+        shiftFees: { ...DEFAULT_MEDICAL_SETTINGS.shiftFees, ...(data.shiftFees || {}) },
+        consultationFees: { ...DEFAULT_MEDICAL_SETTINGS.consultationFees, ...(data.consultationFees || {}) },
+        procedureFees: { ...DEFAULT_MEDICAL_SETTINGS.procedureFees, ...(data.procedureFees || {}) },
+        procedureStatus: { ...DEFAULT_MEDICAL_SETTINGS.procedureStatus, ...(data.procedureStatus || {}) }
+      };
+    }
+    return DEFAULT_MEDICAL_SETTINGS;
+  } catch (err) {
+    console.warn('Erro ao carregar medical settings do Firestore:', err);
+    return DEFAULT_MEDICAL_SETTINGS;
+  }
 };
 
 export const saveMedicalSettings = async (settingsData) => {

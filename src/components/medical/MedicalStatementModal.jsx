@@ -89,7 +89,7 @@ export default function MedicalStatementModal({
                   <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Escala assistencial presencial auditada pela ronda da recepção.</div>
                 </td>
                 <td style={{ textAlign: 'center', fontWeight: '700' }}>{production.shiftsCount}</td>
-                <td style={{ textAlign: 'right' }}>R$ {(settings.shiftFee || 1200).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td style={{ textAlign: 'right' }}>R$ {(settings.shiftFees?.['Manhã'] || settings.shiftFee || 726).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                 <td style={{ textAlign: 'right', fontWeight: '700' }}>R$ {production.shiftsTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
               </tr>
 
@@ -99,7 +99,7 @@ export default function MedicalStatementModal({
                   <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Atendimentos de consultório concluídos no módulo Agenda.</div>
                 </td>
                 <td style={{ textAlign: 'center', fontWeight: '700' }}>{production.consultationsCount}</td>
-                <td style={{ textAlign: 'right' }}>R$ {(settings.consultationFee || 150).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td style={{ textAlign: 'right' }}>R$ {(settings.consultationFees?.['Ambulatorial'] || settings.consultationFee || 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                 <td style={{ textAlign: 'right', fontWeight: '700' }}>R$ {production.consultationsTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
               </tr>
 

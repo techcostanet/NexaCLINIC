@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.17',
+      date: '31/08/2026',
+      title: 'Tabela Oficial de Honorários & Envio de Produção do Mês (NexaMED)',
+      description: 'Cadastro integral dos valores de consultas, plantões e 12 procedimentos cirúrgicos nefrológicos, juntamente com o módulo de despacho e envio de produção mensal por e-mail com seleção de competência e cópia para contabilidade.',
+      changes: [
+        { type: 'Tabela de Honorários e Plantões', text: 'Cadastrados os valores de Consultas (Ambulatorial R$ 100,00, Peritonial R$ 160,00), Plantões por turno (Manhã R$ 726,00, Tarde R$ 726,00, Noite R$ 825,00) e os 12 Procedimentos médicos oficiais com interruptor de vigência e histórico.' },
+        { type: 'Enviar Produção do Mês', text: 'Implementado componente de despacho de produção mensal com seletor de mês/ano, resumo financeiro em tempo real, cadastro de e-mail do contador e envio direto.' }
+      ]
+    },
+    {
       version: 'v4.9.15',
       date: '31/08/2026',
       title: 'Ajustes no NexaMED (Gestão Médica) & Deduplicação Central de Pacientes',

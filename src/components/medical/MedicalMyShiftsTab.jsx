@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
 import { formatDoctorDisplayName } from '../../utils/doctorFormatters';
+import MedicalSendProductionCard from './MedicalSendProductionCard';
 
 export default function MedicalMyShiftsTab({
   doctor,
@@ -12,7 +13,10 @@ export default function MedicalMyShiftsTab({
   patients = [],
   schedules = [],
   procedures = [],
+  appointments = [],
+  settings = {},
   onRequestSwap,
+  onSaveSettings,
   loading = false
 }) {
   const availableDoctors = Array.isArray(doctors) && doctors.length > 0 ? doctors : FALLBACK_DOCTORS;
@@ -177,6 +181,16 @@ export default function MedicalMyShiftsTab({
           </div>
         </div>
       </div>
+
+      {/* Monthly Production Dispatch Card */}
+      <MedicalSendProductionCard
+        doctor={activeDoctor}
+        schedules={schedules}
+        procedures={procedures}
+        appointments={appointments}
+        settings={settings}
+        onSaveSettings={onSaveSettings}
+      />
 
       {/* Modal: Solicitar Troca de Plantão */}
       {showSwapModal && selectedShiftForSwap && (
