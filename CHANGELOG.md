@@ -1,3 +1,17 @@
+## [v4.9.13] - 31 de Agosto, 2026
+### Unificação do Autocomplete e Busca Instantânea de Pacientes (Care, Recepção e Clínico)
+- **Autocomplete Instantâneo na Recepção (`ReceptionPanel.jsx`):**
+  - Adicionado dropdown flutuante de sugestões em tempo real diretamente acoplado à barra de pesquisa da recepção.
+  - Ao pesquisar por nome ou CPF no Check-in/Presença, a busca agora consulta toda a base de pacientes ativos da unidade, eliminando o bloqueio da escala do dia (que anteriormente fazia com que pacientes que não dialisam no dia atual não aparecessem ao digitar o nome).
+- **Autocomplete em Requisições & Sessões no NexaCARE (`CarePanel.jsx`):**
+  - Substituído o antigo `<select>` estático da requisição de insumos por um componente de autocomplete idêntico ao do módulo `Assist` e `Agenda`, permitindo digitar nome ou CPF com seleção imediata ou alternar para uso geral do salão em 1 clique.
+  - Adicionado dropdown de autocomplete instantâneo na barra de pesquisa principal de sessões de hemodiálise.
+- **Busca Omnisearch no Prontuário Clínico (`ClinicalPanel.jsx`):**
+  - Adicionada barra de busca na aba de Acompanhamento de Sessões (`monitoring`), permitindo localizar qualquer paciente por nome, CPF ou poltrona.
+  - Otimizada a lista lateral do prontuário com pesquisa rápida e suporte a nomes sociais, telefones e CPFs limpos.
+
+---
+
 ## [v4.9.9] - 30 de Agosto, 2026
 ### Aprimoramento e Unificação do Motor de Busca de Pacientes
 - **Busca Normalizada e Tolerante a Acentos (Omnisearch):**

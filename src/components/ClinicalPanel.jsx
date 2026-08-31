@@ -100,8 +100,8 @@ export default function ClinicalPanel() {
         dbService.getPatientApacRecords ? dbService.getPatientApacRecords() : []
       ]);
 
-      const activePatients = pList.filter(p => p.treatmentStatus === 'Ativo');
-      setPatients(activePatients);
+      const activePatients = (pList || []).filter(p => p.treatmentStatus !== 'Óbito');
+      setPatients(activePatients.length > 0 ? activePatients : (pList || []));
       setPrescriptions(pRecs || []);
       setSessionsLogs(sLogs || []);
       setClinicalNotes(cNotes || []);
@@ -507,9 +507,48 @@ export default function ClinicalPanel() {
   };
   const todayWeekday = getTodayWeekday();
 
-  const todayPatients = currentPatients.filter(
-    p => p.dialysisFrequency?.includes(todayWeekday) || p.dialysisFrequency === 'Diário'
-  );
+  const todayPatients = useMemo(() => {
+    return currentPatients.filter(
+      p => p.dialysisFrequency?.includes(todayWeekday) || p.dialysisFrequency === 'Diário'
+    );
+  }, [currentPatients, todayWeekday]);
+
+  const monitoringPatients = useMemo(() => {
+    if (searchTerm.trim()) {
+      const term = searchTerm.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+      const termDigits = term.replace(/\D/g, '');
+      return currentPatients.filter(p => {
+        const pName = (p.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const pCpf = (p.cpf || '').replace(/\D/g, '');
+        const pChair = (p.chairNumber || '').toString();
+        const pRoom = (p.room || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        return pName.includes(term) || (termDigits && pCpf.includes(termDigits)) || pRoom.includes(term) || pChair === term;
+      });
+    }
+    return todayPatients;
+  }, [currentPatients, todayPatients, searchTerm]);
+
+  const filteredSidebarPatients = useMemo(() => {
+    if (!searchTerm.trim()) return currentPatients;
+    const term = searchTerm.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const termDigits = term.replace(/\D/g, '');
+    return currentPatients.filter(p => {
+      const pName = (p.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const pSocial = (p.socialName || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const pCpf = (p.cpf || '').replace(/\D/g, '');
+      const pCns = (p.cns || '').replace(/\D/g, '');
+      const pPhone = (p.phone || '').replace(/\D/g, '');
+      const pRoom = (p.room || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const pChart = (p.chartNumber || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      return pName.includes(term) ||
+             (pSocial && pSocial.includes(term)) ||
+             pChart.includes(term) ||
+             (termDigits && pCpf.includes(termDigits)) ||
+             (termDigits && pCns.includes(termDigits)) ||
+             (termDigits && pPhone.includes(termDigits)) ||
+             pRoom.includes(term);
+    });
+  }, [currentPatients, searchTerm]);
 
   return (
     <div style={styles.container}>
@@ -790,6 +829,28 @@ export default function ClinicalPanel() {
               ) : (
                 /* Patient List with session statuses */
                 <div style={styles.tableWrapper}>
+                  <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    <div style={{ ...styles.sidebarSearch, flex: 1, position: 'relative' }}>
+                      <Search size={16} style={styles.sidebarSearchIcon} />
+                      <input 
+                        type="text" 
+                        placeholder="Buscar paciente em sessão por nome, CPF ou poltrona..." 
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        style={styles.sidebarSearchInput}
+                      />
+                      {searchTerm && (
+                        <button 
+                          type="button"
+                          onClick={() => setSearchTerm('')} 
+                          style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   <table style={styles.table}>
                     <thead>
                       <tr>
@@ -803,12 +864,12 @@ export default function ClinicalPanel() {
                       </tr>
                     </thead>
                     <tbody>
-                      {todayPatients.length === 0 ? (
+                      {monitoringPatients.length === 0 ? (
                         <tr>
-                          <td colSpan="7" style={styles.noDataCell}>Nenhum paciente agendado para hemodiálise hoje.</td>
+                          <td colSpan="7" style={styles.noDataCell}>Nenhum paciente encontrado para os critérios de busca.</td>
                         </tr>
                       ) : (
-                        todayPatients.map(pat => {
+                        monitoringPatients.map(pat => {
                           const todayDate = new Date().toISOString().substring(0, 10);
                           const log = currentSessionsLogs.find(l => l.patientId === pat.id && l.date === todayDate);
 
@@ -851,7 +912,7 @@ export default function ClinicalPanel() {
             <div style={styles.selectionLayout}>
               {/* Left Column: Select Patient */}
               <div style={styles.sidebar}>
-                <div style={styles.sidebarSearch}>
+                <div style={{ ...styles.sidebarSearch, position: 'relative' }}>
                   <Search size={16} style={styles.sidebarSearchIcon} />
                   <input 
                     type="text" 
@@ -860,17 +921,23 @@ export default function ClinicalPanel() {
                     onChange={e => setSearchTerm(e.target.value)}
                     style={styles.sidebarSearchInput}
                   />
+                  {searchTerm && (
+                    <button 
+                      type="button"
+                      onClick={() => setSearchTerm('')} 
+                      style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
                 <div style={styles.sidebarList}>
-                  {currentPatients
-                    .filter(p => {
-                      const term = (searchTerm || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-                      const pName = (p.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-                      const pCpf = (p.cpf || '').replace(/\D/g, '');
-                      const termCpf = term.replace(/\D/g, '');
-                      return pName.includes(term) || (termCpf && pCpf.includes(termCpf));
-                    })
-                    .map(p => {
+                  {filteredSidebarPatients.length === 0 ? (
+                    <div style={{ padding: '1rem', fontSize: '0.85rem', color: '#64748b', textAlign: 'center' }}>
+                      Nenhum paciente encontrado.
+                    </div>
+                  ) : (
+                    filteredSidebarPatients.map(p => {
                       const pCount = currentAssistPosts.filter(ap => ap.patientId === p.id).length;
                       return (
                         <div 
@@ -894,7 +961,8 @@ export default function ClinicalPanel() {
                           </div>
                         </div>
                       );
-                    })}
+                    })
+                  )}
                 </div>
               </div>
 

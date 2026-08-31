@@ -74,6 +74,7 @@ export default function CarePanel({ currentUser }) {
   // Requisition Form
   const [reqPatientId, setReqPatientId] = useState('');
   const [reqPatientName, setReqPatientName] = useState('');
+  const [reqPatientSearchTerm, setReqPatientSearchTerm] = useState('');
   const [reqSalonLocation, setReqSalonLocation] = useState('Salão 01');
   const [reqHasKit, setReqHasKit] = useState(false);
   const [reqSelectedKitId, setReqSelectedKitId] = useState('');
@@ -106,8 +107,9 @@ export default function CarePanel({ currentUser }) {
     return list.length > 0 ? list : (patients || []);
   }, [patients, activeUnitId]);
 
-  // Pacientes filtrados para o modal de autocomplete (Idêntico ao AssistPanel)
+  // Pacientes filtrados para o modal de sessão (Idêntico ao AssistPanel)
   const filteredModalPatients = useMemo(() => {
+    if (!patientSearchTerm.trim()) return currentPatients.slice(0, 8);
     const term = (patientSearchTerm || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
     const termCpf = term.replace(/\D/g, '');
     return currentPatients.filter(p => {
@@ -117,6 +119,19 @@ export default function CarePanel({ currentUser }) {
       return pName.includes(term) || (termCpf && pCpf.includes(termCpf)) || pRoom.includes(term);
     }).slice(0, 10);
   }, [currentPatients, patientSearchTerm]);
+
+  // Pacientes filtrados para o modal de requisição
+  const filteredReqPatients = useMemo(() => {
+    if (!reqPatientSearchTerm.trim()) return currentPatients.slice(0, 8);
+    const term = (reqPatientSearchTerm || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const termCpf = term.replace(/\D/g, '');
+    return currentPatients.filter(p => {
+      const pName = (p.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const pCpf = (p.cpf || '').replace(/\D/g, '');
+      const pRoom = (p.room || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      return pName.includes(term) || (termCpf && pCpf.includes(termCpf)) || pRoom.includes(term);
+    }).slice(0, 10);
+  }, [currentPatients, reqPatientSearchTerm]);
 
   const currentRequisitions = useMemo(() => filterByActiveUnit(requisitions), [requisitions, activeUnitId]);
   const currentStockItems = useMemo(() => filterByActiveUnit(stockItems), [stockItems, activeUnitId]);
@@ -591,7 +606,7 @@ export default function CarePanel({ currentUser }) {
         <div style={styles.contentCard}>
           {/* Controls Header */}
           <div style={styles.controlsBar}>
-            <div style={styles.searchWrapper}>
+            <div style={{ ...styles.searchWrapper, position: 'relative' }}>
               <Search size={16} style={styles.searchIcon} />
               <input 
                 type="text" 
@@ -607,6 +622,37 @@ export default function CarePanel({ currentUser }) {
                 >
                   <X size={14} />
                 </button>
+              )}
+              {sessionSearchTerm.trim().length >= 1 && (
+                <div style={styles.patientDropdown}>
+                  {currentPatients
+                    .filter(p => {
+                      const term = sessionSearchTerm.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+                      const termCpf = term.replace(/\D/g, '');
+                      const pName = (p.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+                      const pCpf = (p.cpf || '').replace(/\D/g, '');
+                      const pRoom = (p.room || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+                      const pChair = (p.chairNumber || '').toString();
+                      return pName.includes(term) || (termCpf && pCpf.includes(termCpf)) || pRoom.includes(term) || pChair === term;
+                    })
+                    .slice(0, 6)
+                    .map(pat => (
+                      <div 
+                        key={pat.id}
+                        onClick={() => {
+                          setSessionSearchTerm(pat.name);
+                        }}
+                        style={styles.patientDropdownItem}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+                      >
+                        <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.95rem' }}>{pat.name}</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                          CPF: {pat.cpf || 'N/A'} • {pat.room || 'Sem salão'} ({pat.shift || 'Turno N/A'}) • Cadeira #{pat.chairNumber || '--'}
+                        </div>
+                      </div>
+                    ))}
+                </div>
               )}
             </div>
 
@@ -1364,29 +1410,116 @@ export default function CarePanel({ currentUser }) {
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label>Vincular a Paciente</label>
-                  <select 
-                    className="form-control"
-                    value={reqIsGeneralUse ? 'general' : reqPatientId}
-                    onChange={e => {
-                      if (e.target.value === 'general') {
+                <div className="form-group" style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <label style={{ margin: 0 }}>Paciente</label>
+                    <button 
+                      type="button" 
+                      onClick={() => {
                         setReqIsGeneralUse(true);
                         setReqPatientId('');
                         setReqPatientName('');
-                      } else {
-                        setReqIsGeneralUse(false);
-                        setReqPatientId(e.target.value);
-                        const pat = patients.find(p => p.id === e.target.value);
-                        setReqPatientName(pat?.name || '');
-                      }
-                    }}
-                  >
-                    <option value="general">📦 Uso Geral do Salão</option>
-                    {currentPatients.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} ({p.room || 'Salão'} - Cadeira #{p.chairNumber || '--'})</option>
-                    ))}
-                  </select>
+                        setReqPatientSearchTerm('');
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: reqIsGeneralUse ? '#0d9488' : '#64748b',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {reqIsGeneralUse ? '✓ Uso Geral' : 'Mudar para Uso Geral'}
+                    </button>
+                  </div>
+                  
+                  {reqIsGeneralUse ? (
+                    <div 
+                      onClick={() => setReqIsGeneralUse(false)}
+                      style={{
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px dashed #cbd5e1',
+                        backgroundColor: '#f8fafc',
+                        color: '#475569',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}
+                    >
+                      <span>📦 Uso Geral do Salão</span>
+                      <span style={{ fontSize: '0.75rem', color: '#0d9488', fontWeight: '600' }}>Vincular Paciente</span>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ position: 'relative' }}>
+                        <input 
+                          type="text"
+                          placeholder="Digite o nome ou CPF..."
+                          value={reqPatientSearchTerm}
+                          onChange={(e) => {
+                            setReqPatientSearchTerm(e.target.value);
+                            if (!e.target.value) {
+                              setReqPatientId('');
+                              setReqPatientName('');
+                            }
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '0.65rem 0.85rem',
+                            borderRadius: '8px',
+                            border: '1px solid #d1d5db',
+                            fontSize: '0.9rem',
+                            outline: 'none',
+                            backgroundColor: '#fff',
+                            boxSizing: 'border-box'
+                          }}
+                        />
+                        {reqPatientSearchTerm && !reqPatientId && filteredReqPatients.length > 0 && (
+                          <div style={styles.patientDropdown}>
+                            {filteredReqPatients.map(pat => (
+                              <div 
+                                key={pat.id} 
+                                onClick={() => {
+                                  setReqPatientId(pat.id);
+                                  setReqPatientName(pat.name);
+                                  setReqPatientSearchTerm(pat.name);
+                                  setReqIsGeneralUse(false);
+                                }}
+                                style={styles.patientDropdownItem}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+                              >
+                                <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.95rem' }}>{pat.name}</div>
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                                  CPF: {pat.cpf || 'N/A'} • {pat.room || 'Sem salão'} ({pat.shift || 'Turno N/A'}) • #{pat.chairNumber || '--'}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {reqPatientName && (
+                        <div style={styles.selectedPatientBadge}>
+                          <span>Vinculado a: <strong>{reqPatientName}</strong></span>
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              setReqPatientId('');
+                              setReqPatientName('');
+                              setReqPatientSearchTerm('');
+                            }}
+                            style={styles.removeLinkBtn}
+                          >
+                            Trocar Paciente
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 

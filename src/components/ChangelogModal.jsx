@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.13',
+      date: '31/08/2026',
+      title: 'Unificação do Autocomplete e Busca Instantânea de Pacientes (Care, Recepção e Clínico)',
+      description: 'Padronização comportamental e visual de busca e autocomplete de pacientes em todos os módulos operacionais, garantindo que ao começar a digitar o nome ou CPF, os resultados apareçam imediatamente com dropdown suspenso e seleção em 1 clique, idêntico aos módulos Assist e Agenda.',
+      changes: [
+        { type: 'Autocomplete Instantâneo na Recepção', text: 'Dropdown flutuante na barra de pesquisa com busca global em toda a base ativa de pacientes, eliminando o bloqueio de escala diária que ocultava pacientes não agendados para o dia.' },
+        { type: 'Autocomplete em Requisições & Sessões (NexaCARE)', text: 'Substituição do antigo select por componente de autocomplete com busca em tempo real por nome/CPF em Requisições e Sessões.' },
+        { type: 'Busca Omnisearch no Prontuário Clínico', text: 'Adicionada barra de busca no acompanhamento de sessões e aprimorada a pesquisa da barra lateral do prontuário com suporte a nomes sociais, telefones e CPFs sem pontuação.' }
+      ]
+    },
+    {
       version: 'v4.9.9',
       date: '30/08/2026',
       title: 'Aprimoramento e Unificação do Motor de Busca de Pacientes',

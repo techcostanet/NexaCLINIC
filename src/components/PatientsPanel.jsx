@@ -233,7 +233,10 @@ export default function PatientsPanel() {
   };
 
   // Filtragem de Pacientes pela Unidade Ativa
-  const currentPatients = useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
+  const currentPatients = useMemo(() => {
+    const list = filterByActiveUnit(patients);
+    return list.length > 0 ? list : (patients || []);
+  }, [patients, activeUnitId]);
 
   // Filtered Patients List
   const filteredPatients = currentPatients.filter((pat) => {

@@ -448,31 +448,53 @@ export default function ReceptionPanel() {
     const cleanSearch = normalizeSearch(searchTerm);
     const cleanDigits = searchTerm.replace(/\D/g, '');
 
+    // Se o usuário estiver pesquisando explicitamente por nome ou documento, busca em todos os pacientes ativos
+    if (cleanSearch) {
+      return currentPatients.filter(p => {
+        const pName = normalizeSearch(p.name);
+        const pSocial = normalizeSearch(p.socialName);
+        const pCpf = (p.cpf || '').replace(/\D/g, '');
+        const pCns = (p.cns || '').replace(/\D/g, '');
+        const pChart = normalizeSearch(p.chartNumber);
+        const pChair = (p.chairNumber || p.point || '').toString();
+
+        const matchesSearch = pName.includes(cleanSearch) ||
+                              (pSocial && pSocial.includes(cleanSearch)) ||
+                              (cleanDigits && pCpf.includes(cleanDigits)) ||
+                              (cleanDigits && pCns.includes(cleanDigits)) ||
+                              pChart.includes(cleanSearch) ||
+                              pChair === cleanSearch;
+
+        const matchesShift = filterShift ? p.shift === filterShift : true;
+        const matchesRoom = filterRoom ? p.room === filterRoom : true;
+
+        return matchesSearch && matchesShift && matchesRoom;
+      });
+    }
+
     return currentPatients.filter(p => {
       const matchesFrequency = (p.dialysisFrequency || '').includes(todayScheduleFilter) || p.dialysisFrequency === 'Diário';
       const isActive = p.treatmentStatus === 'Ativo';
-      
+      const matchesShift = filterShift ? p.shift === filterShift : true;
+      const matchesRoom = filterRoom ? p.room === filterRoom : true;
+
+      return matchesFrequency && isActive && matchesShift && matchesRoom;
+    });
+  };
+
+  // Resultados de autocomplete instantâneo para a barra de pesquisa da recepção
+  const searchAutocompleteResults = useMemo(() => {
+    if (!searchTerm.trim()) return [];
+    const clean = normalizeSearch(searchTerm);
+    const cleanDigits = searchTerm.replace(/\D/g, '');
+    return currentPatients.filter(p => {
       const pName = normalizeSearch(p.name);
       const pSocial = normalizeSearch(p.socialName);
       const pCpf = (p.cpf || '').replace(/\D/g, '');
       const pCns = (p.cns || '').replace(/\D/g, '');
-      const pChart = normalizeSearch(p.chartNumber);
-      const pChair = (p.chairNumber || p.point || '').toString();
-
-      const matchesSearch = !cleanSearch || 
-                            pName.includes(cleanSearch) ||
-                            (pSocial && pSocial.includes(cleanSearch)) ||
-                            (cleanDigits && pCpf.includes(cleanDigits)) ||
-                            (cleanDigits && pCns.includes(cleanDigits)) ||
-                            pChart.includes(cleanSearch) ||
-                            pChair === cleanSearch;
-
-      const matchesShift = filterShift ? p.shift === filterShift : true;
-      const matchesRoom = filterRoom ? p.room === filterRoom : true;
-
-      return matchesFrequency && isActive && matchesSearch && matchesShift && matchesRoom;
-    });
-  };
+      return pName.includes(clean) || (pSocial && pSocial.includes(clean)) || (cleanDigits && pCpf.includes(cleanDigits)) || (cleanDigits && pCns.includes(cleanDigits));
+    }).slice(0, 8);
+  }, [currentPatients, searchTerm]);
 
   const getCheckinForPatientToday = (patientId) => {
     const todayDate = new Date().toISOString().substring(0, 10);
@@ -692,7 +714,7 @@ export default function ReceptionPanel() {
       {/* Filters Bar */}
       {activeTab !== 'grid' && (
         <div style={styles.filtersBar}>
-          <div style={styles.searchWrapper}>
+          <div style={{ ...styles.searchWrapper, position: 'relative' }}>
             <Search size={18} style={styles.searchIcon} />
             <input 
               type="text" 
@@ -701,6 +723,40 @@ export default function ReceptionPanel() {
               onChange={e => setSearchTerm(e.target.value)}
               style={styles.searchInput}
             />
+            {searchTerm && (
+              <button 
+                type="button"
+                onClick={() => setSearchTerm('')} 
+                style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
+              >
+                <X size={14} />
+              </button>
+            )}
+            {searchTerm.trim().length >= 1 && searchAutocompleteResults.length > 0 && (
+              <div style={styles.patientDropdown}>
+                {searchAutocompleteResults.map(p => (
+                  <div 
+                    key={p.id} 
+                    onClick={() => {
+                      setSearchTerm(p.name);
+                    }}
+                    style={styles.patientDropdownItem}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.95rem' }}>{p.name}</span>
+                      <span style={{ fontSize: '0.7rem', fontWeight: '700', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: p.treatmentStatus === 'Ativo' ? '#ecfdf5' : '#fef2f2', color: p.treatmentStatus === 'Ativo' ? '#065f46' : '#991b1b' }}>
+                        {p.treatmentStatus || 'Ativo'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                      CPF: {p.cpf || 'N/A'} • {p.room || 'Sem salão'} ({p.shift || 'Turno N/A'}) • Poltrona #{p.chairNumber || '--'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div style={styles.selectsWrapper}>
             <select value={filterShift} onChange={e => setFilterShift(e.target.value)} style={styles.filterSelect}>
@@ -2158,6 +2214,26 @@ const styles = {
     border: '1px solid #cbd5e1',
     fontSize: '0.85rem',
     outline: 'none',
+  },
+  patientDropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    marginTop: '4px',
+    maxHeight: '260px',
+    overflowY: 'auto',
+    zIndex: 1000,
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+  },
+  patientDropdownItem: {
+    padding: '0.55rem 0.75rem',
+    borderBottom: '1px solid #f3f4f6',
+    cursor: 'pointer',
+    transition: 'background-color 0.15s ease',
   },
   selectsWrapper: {
     display: 'flex',
