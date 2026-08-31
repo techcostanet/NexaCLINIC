@@ -1,7 +1,7 @@
 {
   "name": "sistema-indicadores",
   "private": true,
-  "version": "4.9.28",
+  "version": "4.9.29",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "deploy": "node increment-version.cjs && vite build && git add . && git commit -m \"Update and Deploy\" && git push && firebase deploy",
+    "deploy": "node increment-version.cjs && vite build && git add . && git commit -m \"Update and Deploy\" && git push && npx firebase-tools deploy",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
