@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Calendar, RefreshCw, Plus, CheckCircle2, 
+  Calendar, RefreshCw, CheckCircle2, 
   Clock, ShieldAlert, FileText, Send, User, ChevronRight
 } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
@@ -13,7 +13,6 @@ export default function MedicalMyShiftsTab({
   schedules = [],
   procedures = [],
   onRequestSwap,
-  onSaveProcedure,
   loading = false
 }) {
   const availableDoctors = Array.isArray(doctors) && doctors.length > 0 ? doctors : FALLBACK_DOCTORS;
@@ -23,14 +22,6 @@ export default function MedicalMyShiftsTab({
   const [selectedShiftForSwap, setSelectedShiftForSwap] = useState(null);
   const [targetDoctorId, setTargetDoctorId] = useState('');
   const [swapReason, setSwapReason] = useState('');
-
-  const [showProcModal, setShowProcModal] = useState(false);
-  const [procFormData, setProcFormData] = useState({
-    patientId: patients[0]?.id || '',
-    date: new Date().toISOString().substring(0, 10),
-    procedureType: 'Cateter Duplo Lúmen (CDL)',
-    notes: ''
-  });
 
   const mySchedules = schedules
     .filter(s => s.doctorId === activeDoctor?.id || s.doctorId === activeDoctor?.uid)
@@ -68,27 +59,6 @@ export default function MedicalMyShiftsTab({
     setShowSwapModal(false);
   };
 
-  const handleSaveProc = (e) => {
-    e.preventDefault();
-    const pat = patients.find(p => p.id === procFormData.patientId);
-    onSaveProcedure({
-      doctorId: doctor.id,
-      doctorName: doctor.name,
-      patientId: procFormData.patientId,
-      patientName: pat ? pat.name : 'Paciente Não Informado',
-      date: procFormData.date,
-      procedureType: procFormData.procedureType,
-      notes: procFormData.notes
-    });
-    setShowProcModal(false);
-    setProcFormData({
-      patientId: patients[0]?.id || '',
-      date: new Date().toISOString().substring(0, 10),
-      procedureType: 'Cateter Duplo Lúmen (CDL)',
-      notes: ''
-    });
-  };
-
   return (
     <div style={styles.container}>
       {/* Doctor Hero Card */}
@@ -104,15 +74,6 @@ export default function MedicalMyShiftsTab({
             </p>
           </div>
         </div>
-
-        <button 
-          type="button" 
-          onClick={() => setShowProcModal(true)} 
-          style={styles.procActionBtn}
-        >
-          <Plus size={16} />
-          <span>Lançar Procedimento</span>
-        </button>
       </div>
 
       {/* Grid: 2 Columns (My Shifts & Executed Procedures) */}
@@ -277,82 +238,6 @@ export default function MedicalMyShiftsTab({
         </div>
       )}
 
-      {/* Modal: Lançar Procedimento */}
-      {showProcModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalCard}>
-            <h4 style={{ margin: '0 0 1rem 0', fontWeight: '800', color: '#0f172a' }}>
-              Lançar Procedimento
-            </h4>
-
-            <form onSubmit={handleSaveProc}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div className="form-group">
-                  <label>Paciente *</label>
-                  <select 
-                    className="form-control" 
-                    value={procFormData.patientId} 
-                    onChange={e => setProcFormData({ ...procFormData, patientId: e.target.value })}
-                    required
-                  >
-                    {patients.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} ({p.cpf})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Data *</label>
-                  <input 
-                    type="date" 
-                    className="form-control" 
-                    value={procFormData.date} 
-                    onChange={e => setProcFormData({ ...procFormData, date: e.target.value })} 
-                    required 
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Procedimento *</label>
-                  <select 
-                    className="form-control" 
-                    value={procFormData.procedureType} 
-                    onChange={e => setProcFormData({ ...procFormData, procedureType: e.target.value })}
-                    required
-                  >
-                    <option value="Cateter Duplo Lúmen (CDL)">Cateter Duplo Lúmen (CDL)</option>
-                    <option value="Implante de Permcath">Implante de Permcath</option>
-                    <option value="Biópsia Renal">Biópsia Renal</option>
-                    <option value="Mapeamento de Fístula AV">Mapeamento de Fístula AV</option>
-                    <option value="Curativo Especial de Acesso">Curativo Especial de Acesso</option>
-                    <option value="Punção Biópsia / Aspiração">Punção Biópsia / Aspiração</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Observações</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="Ex: Punção em Jugular D guiada por USG sem intercorrências..."
-                    value={procFormData.notes} 
-                    onChange={e => setProcFormData({ ...procFormData, notes: e.target.value })} 
-                  />
-                </div>
-              </div>
-
-              <div style={styles.modalActions}>
-                <button type="button" onClick={() => setShowProcModal(false)} className="btn btn-secondary">
-                  Cancelar
-                </button>
-                <button type="submit" disabled={loading} className="btn btn-primary" style={{ backgroundColor: '#10b981' }}>
-                  {loading ? 'Salvando...' : 'Salvar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -32,11 +32,33 @@ export const getPatients = async (unitId = null) => {
         return patientsList;
       }
 
-      const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      if (list.length === 0) {
+      const rawList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (rawList.length === 0) {
         return mockFirestore.getPatients(unitId);
       }
-      return list;
+
+      // Deduplicate by clean CPF (if valid 11 digits) or by id/normalized name
+      const seen = new Set();
+      const deduplicated = [];
+      for (const pat of rawList) {
+        if (!pat || !pat.name) continue;
+        const cleanCpf = pat.cpf ? String(pat.cpf).replace(/\D/g, '') : '';
+        const normName = (pat.name || '').trim().toLowerCase();
+        const key = cleanCpf && cleanCpf.length === 11 ? `cpf_${cleanCpf}` : `id_${pat.id || normName}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          deduplicated.push(pat);
+        }
+      }
+
+      // Sort alphabetically by patient name (ignoring accents and case)
+      deduplicated.sort((a, b) => {
+        const nameA = (a.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const nameB = (b.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'base' });
+      });
+
+      return deduplicated;
     } catch (err) {
       console.warn('Erro ao consultar Firestore patients, utilizando base mestre local:', err);
       return mockFirestore.getPatients(unitId);

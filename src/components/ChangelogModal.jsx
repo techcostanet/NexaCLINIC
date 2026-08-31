@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.15',
+      date: '31/08/2026',
+      title: 'Ajustes no NexaMED (Gestão Médica) & Deduplicação Central de Pacientes',
+      description: 'Remoção de botão redundante na aba de Plantões, ordenação estrita em ordem alfabética e deduplicação inteligente no lançamento de procedimentos médicos e no serviço central de pacientes.',
+      changes: [
+        { type: 'Aba Plantões NexaMED', text: 'Removido o botão "+ Lançar Procedimento" da aba de Plantões, centralizando os lançamentos exclusivamente na aba dedicada "Procedimentos".' },
+        { type: 'Ordem Alfabética e Deduplicação', text: 'Correção da ordenação alfabética e eliminação de registros duplicados de pacientes no formulário de procedimentos e no retorno central do patientService.' }
+      ]
+    },
+    {
       version: 'v4.9.13',
       date: '31/08/2026',
       title: 'Unificação do Autocomplete e Busca Instantânea de Pacientes (Care, Recepção e Clínico)',

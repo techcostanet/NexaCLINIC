@@ -288,7 +288,10 @@ export default function MedicalPanel({ currentUser, onBack }) {
   const currentSwaps = React.useMemo(() => filterByActiveUnit(swaps), [swaps, activeUnitId]);
   const currentProcedures = React.useMemo(() => filterByActiveUnit(procedures), [procedures, activeUnitId]);
   const currentProductions = React.useMemo(() => filterByActiveUnit(productions), [productions, activeUnitId]);
-  const currentPatients = React.useMemo(() => filterByActiveUnit(patients), [patients, activeUnitId]);
+  const currentPatients = React.useMemo(() => {
+    const list = filterByActiveUnit(patients);
+    return list.length > 0 ? list : (patients || []);
+  }, [patients, activeUnitId]);
   const currentAppointments = React.useMemo(() => filterByActiveUnit(appointments), [appointments, activeUnitId]);
 
   const tabs = [
@@ -374,7 +377,6 @@ export default function MedicalPanel({ currentUser, onBack }) {
             schedules={currentSchedules}
             procedures={currentProcedures}
             onRequestSwap={handleRequestSwap}
-            onSaveProcedure={handleSaveProcedure}
             loading={loading}
           />
         )}

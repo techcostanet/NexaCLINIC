@@ -1,3 +1,13 @@
+## [v4.9.15] - 31 de Agosto, 2026
+### Ajustes no NexaMED (Gestão Médica) & Deduplicação Central de Pacientes
+- **Aba Plantões NexaMED (`MedicalMyShiftsTab.jsx`):**
+  - Removido o botão redundante "+ Lançar Procedimento" da visualização de plantões, mantendo o lançamento centralizado na aba de Procedimentos.
+- **Ordem Alfabética & Deduplicação de Pacientes (`MedicalProceduresTab.jsx` & `patientService.js`):**
+  - Corrigida a ordenação de pacientes para ordem alfabética estrita (`localeCompare` com normalização de acentos).
+  - Implementada deduplicação por CPF e identificador/nome no modal de procedimentos e no método central `patientService.getPatients()`.
+
+---
+
 ## [v4.9.13] - 31 de Agosto, 2026
 ### Unificação do Autocomplete e Busca Instantânea de Pacientes (Care, Recepção e Clínico)
 - **Autocomplete Instantâneo na Recepção (`ReceptionPanel.jsx`):**

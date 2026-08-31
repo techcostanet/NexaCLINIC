@@ -18,9 +18,30 @@ export default function MedicalProceduresTab({
   const [filterDoc, setFilterDoc] = useState('Todos');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const uniqueSortedPatients = React.useMemo(() => {
+    if (!Array.isArray(patients) || patients.length === 0) return [];
+    const seen = new Set();
+    const result = [];
+    for (const pat of patients) {
+      if (!pat || !pat.name) continue;
+      const cleanCpf = pat.cpf ? String(pat.cpf).replace(/\D/g, '') : '';
+      const normName = pat.name.trim().toLowerCase();
+      const key = cleanCpf && cleanCpf.length === 11 ? `cpf_${cleanCpf}` : `id_${pat.id || normName}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(pat);
+      }
+    }
+    return result.sort((a, b) => {
+      const nameA = (a.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const nameB = (b.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'base' });
+    });
+  }, [patients]);
+
   const [formData, setFormData] = useState({
     doctorId: availableDoctors[0]?.id || availableDoctors[0]?.uid || '',
-    patientId: patients[0]?.id || '',
+    patientId: '',
     date: new Date().toISOString().substring(0, 10),
     procedureType: 'Cateter Duplo Lúmen (CDL)',
     notes: ''
@@ -226,8 +247,9 @@ export default function MedicalProceduresTab({
                     onChange={e => setFormData({ ...formData, patientId: e.target.value })}
                     required
                   >
-                    {patients.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} ({p.cpf})</option>
+                    <option value="">Selecione o paciente...</option>
+                    {uniqueSortedPatients.map(p => (
+                      <option key={p.id} value={p.id}>{p.name} {p.cpf ? `(${p.cpf})` : ''}</option>
                     ))}
                   </select>
                 </div>
