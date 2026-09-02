@@ -23,6 +23,7 @@ import AssistPanel from './components/AssistPanel';
 import MedicalPanel from './components/MedicalPanel';
 import SupplierQuotePortal from './components/purchasing/SupplierQuotePortal';
 import MachineTicketPortal from './components/maintenance/MachineTicketPortal';
+import TvCallPanel from './components/tv/TvCallPanel';
 import ErrorBoundary from './components/ErrorBoundary';
 import ModuleGuideModal from './components/common/ModuleGuideModal';
 import { UnitProvider } from './contexts/UnitContext';
@@ -35,10 +36,11 @@ export default function App() {
   const [isReportsOpen, setIsReportsOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
-  // Verificação de Acesso Público de Fornecedor via Token ou QR Code de Manutenção
+  // Verificação de Acesso Público de Fornecedor via Token, QR Code de Manutenção ou Painel TV
   const urlParams = new URLSearchParams(window.location.search);
   const quoteToken = urlParams.get('token') || urlParams.get('cotacao');
   const qrMachineId = urlParams.get('chamado_equipamento') || urlParams.get('eq') || urlParams.get('chamado');
+  const isTvPanel = urlParams.has('painel_tv') || urlParams.has('tv') || urlParams.get('painel') === 'tv' || urlParams.has('chamada_tv');
 
   useEffect(() => {
     let isMounted = true;
@@ -114,6 +116,18 @@ export default function App() {
         onExitPortal={() => {
           window.location.href = window.location.origin;
         }}
+      />
+    );
+  }
+
+  // Se o link acessado for do Painel TV da sala de espera (Smart TV)
+  if (isTvPanel) {
+    return (
+      <TvCallPanel 
+        unitId={urlParams.get('unidade') || urlParams.get('unit')}
+        onExitPortal={() => {
+          window.location.href = window.location.origin;
+        }} 
       />
     );
   }

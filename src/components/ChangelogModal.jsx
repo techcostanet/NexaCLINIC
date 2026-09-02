@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.34',
+      date: '02/09/2026',
+      title: 'Painel TV de Chamada de Pacientes & Vocalização Inteligente (Módulo Agenda)',
+      description: 'Implementação de sistema de chamada de pacientes na sala de espera via Smart TV com link direto, acionado com 1 clique a partir da Agenda. Conta com exibição da logomarca da clínica, aviso sonoro duplo hospitalar (chime via Web Audio API) e sintetizador de voz natural em português brasileiro (TTS) anunciando paciente e consultório.',
+      changes: [
+        { type: 'Painel Smart TV Fullscreen', text: 'Novo portal dedicado para Smart TVs (`TvCallPanel`), com acesso direto via URL (`?painel_tv=1&unidade=betim`) sem exigir login no controle remoto, relógio digital, logomarca institucional e histórico lateral de últimas chamadas.' },
+        { type: 'Aviso Sonoro & Voz Natural', text: 'Sonorização hospitalar de alto padrão com sino suave ("ding-dong") sintetizado via Web Audio API e leitura vocal por Text-to-Speech: "Atenção: Paciente [Nome], favor dirigir-se ao [Consultório]".' },
+        { type: 'Chamada e Rechamada na Agenda', text: 'Botões diretos "Chamar" e "Rechamar" na visão diária e na visão por salas do CalendarPanel, com sincronização em tempo real (Firestore onSnapshot) e contador de chamadas.' },
+        { type: 'Modal de Compartilhamento da TV', text: 'Botão "Painel" no cabeçalho da Agenda com modal informativo para cópia de link direto, teste imediato e instruções de configuração para navegadores de Smart TV.' }
+      ]
+    },
+    {
       version: 'v4.9.31',
       date: '02/09/2026',
       title: 'QR Code de Patrimônio com Abertura Pública de Chamados & Revisão da Manutenção',

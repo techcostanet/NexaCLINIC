@@ -1,3 +1,24 @@
+## [v4.9.34] - 02 de Setembro, 2026
+### Painel TV de Chamada de Pacientes & Vocalização Inteligente (Módulo Agenda)
+- **Painel Smart TV em Tela Cheia (`TvCallPanel.jsx` & `App.jsx`):**
+  - Desenvolvido portal público para Smart TVs em salas de espera, acessível diretamente por link (`?painel_tv=1&unidade=betim`) sem necessidade de login por senha no controle remoto.
+  - Exibição de alta resolução com relógio digital de segundos em tempo real, data completa, logomarca dinâmica da clínica (carregada do branding) e badge da unidade ativa.
+  - Destaque visual luminoso de chamada com tipografia garrafal de alto contraste legível a mais de 5 metros de distância, box do consultório e médico responsável.
+  - Histórico lateral dinâmico exibindo as últimas chamadas realizadas no dia.
+  - Suporte a `navigator.wakeLock` para prevenir que a Smart TV entre em modo de economia/suspensão.
+- **Sonorização Dupla (Chime Hospitalar & Síntese de Voz):**
+  - **Sinal de Atenção (Chime):** Toque duplo harmonioso ("ding-dong") gerado em tempo real via *Web Audio API* (independente de downloads de arquivos MP3 externos).
+  - **Voz Natural em Português:** Vocalização automática por *Web Speech API* sintetizando: *"Atenção: Paciente [Nome], favor dirigir-se ao [Consultório]"*.
+  - Botão de ativação rápida de áudio para conformidade com a política de autoplay de navegadores de Smart TVs.
+- **Integração Completa na Agenda (`CalendarPanel.jsx` & `patientCallService.js`):**
+  - Adicionado botão **`Chamar`** e **`Rechamar`** na tabela de horários do dia e nos cards da visão por consultórios/salas.
+  - Sincronização em tempo real via Firestore `onSnapshot` com feedback imediato ao profissional clínico.
+  - Modal do **`Painel`** no topo da Agenda com cópia de URL direta, teste imediato e instruções de uso na TV.
+- **Documentação & Base de Conhecimento (`moduleGuidesData.js`):**
+  - Atualização completa do manual do módulo Agenda com recursos, tutorial de operação na TV e respostas para dúvidas frequentes.
+
+---
+
 ## [v4.9.31] - 02 de Setembro, 2026
 ### QR Code de Patrimônio com Abertura Pública de Chamados & Revisão da Manutenção
 - **QR Code Inteligente em Alta Resolução (`MaintenancePanel.jsx` & `qrcode`):**

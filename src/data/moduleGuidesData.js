@@ -1661,9 +1661,28 @@ export const MODULE_GUIDES = {
       {
         title: 'Notificações WhatsApp com Nome da Clínica',
         desc: 'Envio de lembretes e confirmações com 1 clique direto para o WhatsApp do paciente com informações de local, horário e nome da clínica configurado no branding.'
+      },
+      {
+        title: 'Painel TV de Chamadas em Tempo Real',
+        desc: 'Painel profissional em tela cheia para Smart TV na sala de espera com logomarca da clínica, relógio digital, aviso sonoro duplo (chime) e sintetizador de voz natural anunciando o nome do paciente e o consultório.'
+      },
+      {
+        title: 'Chamada e Rechamada em 1 Clique',
+        desc: 'Botões diretos na grade diária e na visão multissalas para disparar ou repetir a chamada de pacientes na TV com sincronização instantânea em nuvem.'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Operar o Painel de Chamadas na Smart TV',
+        steps: [
+          'No cabeçalho da Agenda, clique no botão "Painel".',
+          'Copie o link direto gerado para a unidade correspondente (ex: com ?painel_tv=1&unidade=betim).',
+          'No controle remoto da Smart TV, abra o aplicativo de Navegador (Internet) e acesse o link copiado.',
+          'Toque no botão "Tela" para colocar o painel em tela cheia (Fullscreen).',
+          'Toque no botão "Ativar" uma única vez na TV para liberar a reprodução de áudio e voz.',
+          'Na tela do médico ou atendente, clique no botão "Chamar" ao lado do paciente para que a TV anuncie o nome e o consultório.'
+        ]
+      },
       {
         title: 'Como Acessar e Exportar Relatórios da Agenda',
         steps: [
@@ -1712,6 +1731,18 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'É necessário algum aparelho ou computador exclusivo para a TV da sala de espera?',
+        resposta: 'Não. Qualquer Smart TV com navegador de internet (Samsung, LG, TCL, Android TV) consegue abrir o link direto do painel sem necessidade de hardware adicional.'
+      },
+      {
+        pergunta: 'O que fazer se a TV não emitir o som ou a voz da chamada?',
+        resposta: 'As Smart TVs bloqueiam áudio automático por segurança até que haja uma interação. Basta clicar no botão "Ativar" na barra superior da TV uma única vez para liberar o sino e a voz.'
+      },
+      {
+        pergunta: 'O que acontece se eu clicar em "Rechamar" o paciente?',
+        resposta: 'A TV tocará novamente o sino de atenção e repetirá a voz com o nome e consultório, exibindo o selo de rechamada (ex: "2ª Chamada") para destacar a repetição.'
+      },
       {
         pergunta: 'Quais relatórios estão disponíveis na Agenda?',
         resposta: 'São 15 relatórios: 1. Extrato Geral, 2. Produtividade, 3. Faltas (No-Show), 4. Confirmações WhatsApp, 5. Ocupação, 6. Modalidades, 7. Encaixes, 8. Cancelamentos, 9. Cotas, 10. Bloqueios, 11. Pontualidade, 12. Convênios, 13. Busca Ativa de Crônicos Sem Retorno, 14. Feriados e 15. Auditoria.'

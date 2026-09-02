@@ -3,7 +3,8 @@ import {
   Calendar as CalendarIcon, Clock, User, HeartPulse, Building2, Plus, 
   ChevronLeft, ChevronRight, CheckCircle2, AlertTriangle, MessageSquare, Check, X,
   Search, RefreshCw, Phone, Edit2, Trash2, ArrowRight, UserCheck, ShieldAlert, Sparkles,
-  Send, Users, Eye, Filter, Zap, Cake, HelpCircle, Lock, Award, Sliders, ExternalLink
+  Send, Users, Eye, Filter, Zap, Cake, HelpCircle, Lock, Award, Sliders, ExternalLink,
+  Tv, Radio, Volume2, Copy
 } from 'lucide-react';
 import { dbService } from '../firebase';
 import { isBrazilianHoliday, getBrazilianHolidays } from '../utils/brazilHolidays';
@@ -42,6 +43,9 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
   const [showModal, setShowModal] = useState(false);
   const [showDoctorScheduleModal, setShowDoctorScheduleModal] = useState(false);
   const [showScheduleBlockModal, setShowScheduleBlockModal] = useState(false);
+  const [showTvModal, setShowTvModal] = useState(false);
+  const [calledApts, setCalledApts] = useState({});
+  const [copiedTvLink, setCopiedTvLink] = useState(false);
   const [editingApt, setEditingApt] = useState(null);
   const [patientSearchInModal, setPatientSearchInModal] = useState('');
   
@@ -107,18 +111,34 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
 
   useEffect(() => {
     fetchData();
-  }, []);
+
+    // Listener em tempo real para sincronização de chamadas da TV
+    const unsub = dbService.subscribeToPatientCalls ? dbService.subscribeToPatientCalls(activeUnitId, (callList) => {
+      const callMap = {};
+      (callList || []).forEach(c => {
+        if (c.appointmentId) {
+          callMap[c.appointmentId] = Math.max(callMap[c.appointmentId] || 0, c.callCount || 1);
+        }
+      });
+      setCalledApts(callMap);
+    }) : () => {};
+
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
+  }, [activeUnitId]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [aptList, patList, userList, schedList, blockList, tenantData] = await Promise.all([
+      const [aptList, patList, userList, schedList, blockList, tenantData, recentCalls] = await Promise.all([
         dbService.getAppointments(),
         dbService.getPatients(),
         dbService.getUsers(),
         dbService.getDoctorSchedules(),
         dbService.getScheduleBlocks(),
-        dbService.getTenantSettings ? dbService.getTenantSettings().catch(() => null) : Promise.resolve(null)
+        dbService.getTenantSettings ? dbService.getTenantSettings().catch(() => null) : Promise.resolve(null),
+        dbService.getRecentPatientCalls ? dbService.getRecentPatientCalls(activeUnitId).catch(() => []) : Promise.resolve([])
       ]);
 
       setAppointments(aptList || []);
@@ -127,6 +147,15 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
       setScheduleBlocks(blockList || []);
       if (tenantData && tenantData.name) {
         setTenantSettings(tenantData);
+      }
+      if (recentCalls && Array.isArray(recentCalls)) {
+        const callMap = {};
+        recentCalls.forEach(c => {
+          if (c.appointmentId) {
+            callMap[c.appointmentId] = Math.max(callMap[c.appointmentId] || 0, c.callCount || 1);
+          }
+        });
+        setCalledApts(callMap);
       }
 
       // Filter clinical professionals / doctors
@@ -463,6 +492,38 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
       console.error(err);
       showAlert('Erro ao atualizar status na nuvem.', 'danger');
       fetchData();
+    }
+  };
+
+  // Chamar Paciente no Painel da TV
+  const handleCallPatient = async (apt) => {
+    if (!apt) return;
+    try {
+      const roomName = apt.room && apt.room !== 'Nenhum' ? apt.room : 'Consultório 1';
+      const targetUnitId = apt.unitId || (activeUnitId === 'all' ? 'betim' : activeUnitId);
+      const targetUnit = apt.unit || (targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim');
+
+      if (dbService.callPatient) {
+        await dbService.callPatient({
+          patientName: apt.patientName,
+          patientId: apt.patientId,
+          appointmentId: apt.id,
+          room: roomName,
+          doctorName: apt.doctorName || 'Médico Responsável',
+          unitId: targetUnitId,
+          unit: targetUnit
+        });
+      }
+
+      setCalledApts(prev => ({
+        ...prev,
+        [apt.id]: (prev[apt.id] || 0) + 1
+      }));
+
+      showAlert(`Chamando "${apt.patientName}" no Painel da TV (${roomName})!`, 'success');
+    } catch (err) {
+      console.error('Erro ao emitir chamada para a TV:', err);
+      showAlert('Erro ao emitir chamada para o Painel da TV.', 'danger');
     }
   };
 
@@ -1016,6 +1077,20 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
                             {apt.status !== 'Finalizado' && apt.status !== 'Cancelado' && apt.status !== 'Faltou' && (
                               <>
+                                {/* Botão de Chamada na Smart TV */}
+                                <button 
+                                  onClick={() => handleCallPatient(apt)} 
+                                  style={{ 
+                                    ...styles.statusBtn, 
+                                    backgroundColor: calledApts[apt.id] ? '#7c3aed' : '#0284c7',
+                                    boxShadow: calledApts[apt.id] ? '0 0 8px rgba(124, 58, 237, 0.4)' : 'none'
+                                  }}
+                                  title={calledApts[apt.id] ? `Rechamar na TV (${calledApts[apt.id]}x chamado)` : 'Chamar na TV'}
+                                >
+                                  <Radio size={12} />
+                                  <span>{calledApts[apt.id] ? `Rechamar (${calledApts[apt.id]})` : 'Chamar'}</span>
+                                </button>
+
                                 {apt.status === 'Agendado' && (
                                   <button onClick={() => handleUpdateStatus(apt.id, 'Confirmado')} style={{ ...styles.statusBtn, backgroundColor: '#0284c7' }}>
                                     Confirmar
@@ -1109,7 +1184,18 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                       </div>
                       <span style={{ fontWeight: '700', fontSize: '0.85rem', color: '#1e293b' }}>{apt.patientName}</span>
                       <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Médico: {apt.doctorName}</span>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.3rem', marginTop: '0.3rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.3rem', marginTop: '0.3rem', flexWrap: 'wrap' }}>
+                        <button 
+                          onClick={() => handleCallPatient(apt)} 
+                          style={{
+                            ...styles.waActionBtn,
+                            backgroundColor: calledApts[apt.id] ? '#7c3aed' : '#0284c7',
+                            color: '#ffffff'
+                          }}
+                          title="Chamar na TV"
+                        >
+                          <Radio size={11} /> {calledApts[apt.id] ? `Rechamar (${calledApts[apt.id]})` : 'Chamar'}
+                        </button>
                         <button onClick={() => handleSendWhatsApp(apt)} style={styles.waActionBtn}>
                           <Send size={11} /> WhatsApp
                         </button>
@@ -1310,6 +1396,20 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
           >
             <Lock size={15} />
             <span>Bloquear</span>
+          </button>
+          <button 
+            onClick={() => setShowTvModal(true)} 
+            className="btn btn-secondary" 
+            style={{
+              ...styles.configBtn,
+              backgroundColor: '#f0f9ff',
+              borderColor: '#bae6fd',
+              color: '#0284c7'
+            }} 
+            title="Abrir ou copiar o link do Painel da TV"
+          >
+            <Tv size={15} />
+            <span>Painel</span>
           </button>
           <button onClick={fetchData} className="btn btn-secondary" style={styles.refreshBtn} title="Atualizar">
             <RefreshCw size={15} className={loading ? 'spin' : ''} />
@@ -1950,6 +2050,132 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: PAINEL DA SMART TV */}
+      {showTvModal && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalContent, maxWidth: '580px' }}>
+            <div style={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Tv size={20} color="#0284c7" />
+                <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#0f172a', fontWeight: '800' }}>
+                  Painel
+                </h3>
+              </div>
+              <button onClick={() => setShowTvModal(false)} style={styles.closeBtn}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: '#475569', lineHeight: 1.5 }}>
+                  Abra este link no navegador de qualquer Smart TV na sala de espera para exibir e vocalizar as chamadas de pacientes em tempo real.
+                </p>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '10px',
+                  padding: '0.6rem 0.85rem'
+                }}>
+                  <input
+                    readOnly
+                    value={`${window.location.origin}/?painel_tv=1&unidade=${activeUnitId === 'all' ? 'betim' : activeUnitId}`}
+                    style={{
+                      flex: 1,
+                      border: 'none',
+                      backgroundColor: 'transparent',
+                      fontSize: '0.85rem',
+                      color: '#0369a1',
+                      fontWeight: '600',
+                      outline: 'none'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const link = `${window.location.origin}/?painel_tv=1&unidade=${activeUnitId === 'all' ? 'betim' : activeUnitId}`;
+                      navigator.clipboard.writeText(link);
+                      setCopiedTvLink(true);
+                      setTimeout(() => setCopiedTvLink(false), 2500);
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.3rem',
+                      padding: '0.4rem 0.75rem',
+                      borderRadius: '6px',
+                      backgroundColor: copiedTvLink ? '#16a34a' : '#0284c7',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontSize: '0.8rem',
+                      fontWeight: '700',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {copiedTvLink ? <Check size={14} /> : <Copy size={14} />}
+                    <span>{copiedTvLink ? 'Copiado' : 'Copiar'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const link = `${window.location.origin}/?painel_tv=1&unidade=${activeUnitId === 'all' ? 'betim' : activeUnitId}`;
+                      window.open(link, '_blank');
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.3rem',
+                      padding: '0.4rem 0.75rem',
+                      borderRadius: '6px',
+                      backgroundColor: '#f1f5f9',
+                      color: '#334155',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.8rem',
+                      fontWeight: '700',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <ExternalLink size={14} />
+                    <span>Abrir</span>
+                  </button>
+                </div>
+              </div>
+
+              <div style={{
+                backgroundColor: '#f0f9ff',
+                border: '1px solid #bae6fd',
+                borderRadius: '10px',
+                padding: '1rem',
+                fontSize: '0.85rem',
+                color: '#0369a1',
+                lineHeight: 1.6
+              }}>
+                <strong style={{ display: 'block', marginBottom: '0.4rem', color: '#0284c7' }}>
+                  📺 Instruções para a Smart TV:
+                </strong>
+                1. No controle da TV, abra o aplicativo Navegador (Internet).<br />
+                2. Digite o endereço copiado acima e acesse a página.<br />
+                3. Toque no botão "Tela" para colocar o painel em tela cheia.<br />
+                4. Toque no botão "Ativar" na TV uma única vez para autorizar a voz e o sino sonoro.
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowTvModal(false)}
+                  style={styles.cancelBtn}
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
