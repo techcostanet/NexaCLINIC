@@ -11,6 +11,7 @@ import { isBrazilianHoliday, getBrazilianHolidays } from '../utils/brazilHoliday
 import DoctorScheduleModal from './calendar/DoctorScheduleModal';
 import ScheduleBlockModal from './calendar/ScheduleBlockModal';
 import CalendarReportsModal from './CalendarReportsModal';
+import TvTipsManagerModal from './tv/TvTipsManagerModal';
 import { formatDoctorDisplayName, sortDoctorsByName } from '../utils/doctorFormatters';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
@@ -44,6 +45,7 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
   const [showDoctorScheduleModal, setShowDoctorScheduleModal] = useState(false);
   const [showScheduleBlockModal, setShowScheduleBlockModal] = useState(false);
   const [showTvModal, setShowTvModal] = useState(false);
+  const [showTvTipsModal, setShowTvTipsModal] = useState(false);
   const [calledApts, setCalledApts] = useState({});
   const [copiedTvLink, setCopiedTvLink] = useState(false);
   const [editingApt, setEditingApt] = useState(null);
@@ -2166,7 +2168,29 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                 4. Toque no botão "Ativar" na TV uma única vez para autorizar a voz e o sino sonoro.
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowTvTipsModal(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.5rem 0.9rem',
+                    borderRadius: '8px',
+                    backgroundColor: '#f0fdf4',
+                    color: '#166534',
+                    border: '1px solid #bbf7d0',
+                    fontSize: '0.85rem',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                  title="Gerenciar e personalizar as 70 dicas educativas da TV"
+                >
+                  <Sparkles size={16} color="#16a34a" />
+                  <span>Dicas</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setShowTvModal(false)}
@@ -2179,6 +2203,12 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
           </div>
         </div>
       )}
+
+      {/* MODAL: GERENCIAMENTO DE DICAS EDUCATIVAS DA TV */}
+      <TvTipsManagerModal
+        isOpen={showTvTipsModal}
+        onClose={() => setShowTvTipsModal(false)}
+      />
 
       {/* Calendar Reports Modal (NexaCAL) */}
       {isReportsOpen && (

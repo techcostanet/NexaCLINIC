@@ -1,6 +1,22 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Volume2, VolumeX, Maximize, Minimize, Clock, Building2, User, Stethoscope, Sparkles, Radio, CheckCircle2 } from 'lucide-react';
+import { 
+  Volume2, VolumeX, Maximize, Minimize, Clock, Building2, 
+  User, Stethoscope, Sparkles, Radio, CheckCircle2, ChevronLeft, ChevronRight,
+  Apple, Activity, Droplets, Smile, Users, HelpCircle, ShieldCheck, SlidersHorizontal
+} from 'lucide-react';
 import { dbService } from '../../firebase';
+import { TIP_CATEGORIES, DEFAULT_TIPS } from '../../services/firebase/tvTipsService';
+import TvTipsManagerModal from './TvTipsManagerModal';
+
+const CATEGORY_ICONS = {
+  hemodialise: Activity,
+  nutricao: Apple,
+  liquidos: Droplets,
+  mental: Smile,
+  social: Users,
+  mitos: HelpCircle,
+  cuidados: ShieldCheck
+};
 
 export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
   const urlParams = useMemo(() => new URLSearchParams(window.location.search), []);
@@ -9,15 +25,35 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
   const [selectedUnit, setSelectedUnit] = useState(paramUnit);
   const [calls, setCalls] = useState([]);
   const [currentCall, setCurrentCall] = useState(null);
+  const [isCallActive, setIsCallActive] = useState(false);
   const [tenantSettings, setTenantSettings] = useState({ name: 'Nexa Clínica', logo: '', themeColor: '#0891b2' });
   const [currentTime, setCurrentTime] = useState(new Date());
   const [audioUnlocked, setAudioUnlocked] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isFlashing, setIsFlashing] = useState(false);
 
+  // Educational Tips Carousel States
+  const [tips, setTips] = useState(DEFAULT_TIPS);
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  const [tipProgress, setTipProgress] = useState(0);
+  const [isTipsModalOpen, setIsTipsModalOpen] = useState(false);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+
   const lastProcessedCallIdRef = useRef(null);
   const audioCtxRef = useRef(null);
   const wakeLockRef = useRef(null);
+  const callTimerRef = useRef(null);
+
+  // Active tips list (filtered by active !== false)
+  const activeTips = useMemo(() => {
+    const list = tips.filter(t => t.active !== false);
+    return list.length > 0 ? list : DEFAULT_TIPS;
+  }, [tips]);
+
+  const currentTip = useMemo(() => {
+    if (!activeTips || activeTips.length === 0) return DEFAULT_TIPS[0];
+    return activeTips[currentTipIndex % activeTips.length] || activeTips[0];
+  }, [activeTips, currentTipIndex]);
 
   // Digital Clock updates every second
   useEffect(() => {
@@ -45,6 +81,53 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
     };
     loadSettings();
   }, []);
+
+  // Subscribe to Educational Tips
+  useEffect(() => {
+    const unsub = dbService.subscribeToTvTips ? dbService.subscribeToTvTips((items) => {
+      if (items && Array.isArray(items) && items.length > 0) {
+        setTips(items);
+      }
+    }) : () => {};
+
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
+  }, []);
+
+  // Carousel Progress & Slide Rotation Timer
+  useEffect(() => {
+    // If patient call is currently active or carousel is paused, freeze carousel
+    if (isCallActive || isCarouselPaused) {
+      return;
+    }
+
+    const durationSeconds = Number(currentTip?.duration) || 14;
+    const intervalMs = 100;
+    const step = (intervalMs / (durationSeconds * 1000)) * 100;
+
+    const timer = setInterval(() => {
+      setTipProgress(prev => {
+        if (prev + step >= 100) {
+          setCurrentTipIndex(old => (old + 1) % activeTips.length);
+          return 0;
+        }
+        return prev + step;
+      });
+    }, intervalMs);
+
+    return () => clearInterval(timer);
+  }, [isCallActive, isCarouselPaused, currentTip, activeTips.length]);
+
+  const handleNextTip = () => {
+    setTipProgress(0);
+    setCurrentTipIndex(prev => (prev + 1) % activeTips.length);
+  };
+
+  const handlePrevTip = () => {
+    setTipProgress(0);
+    setCurrentTipIndex(prev => (prev - 1 + activeTips.length) % activeTips.length);
+  };
 
   // Screen WakeLock to prevent TV from sleeping
   useEffect(() => {
@@ -91,26 +174,26 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
 
       const now = ctx.currentTime;
 
-      // Tone 1: High harmonic (e.g. 659.25 Hz - E5)
+      // Tone 1: High harmonic (659.25 Hz - E5)
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       osc1.type = 'sine';
       osc1.frequency.setValueAtTime(659.25, now);
       gain1.gain.setValueAtTime(0, now);
-      gain1.gain.linearRampToValueAtTime(0.4, now + 0.05);
+      gain1.gain.linearRampToValueAtTime(0.45, now + 0.05);
       gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
       osc1.connect(gain1);
       gain1.connect(ctx.destination);
       osc1.start(now);
       osc1.stop(now + 0.9);
 
-      // Tone 2: Low harmonic (e.g. 523.25 Hz - C5) starting at 0.5s
+      // Tone 2: Low harmonic (523.25 Hz - C5) starting at 0.5s
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.type = 'sine';
       osc2.frequency.setValueAtTime(523.25, now + 0.5);
       gain2.gain.setValueAtTime(0, now + 0.5);
-      gain2.gain.linearRampToValueAtTime(0.45, now + 0.55);
+      gain2.gain.linearRampToValueAtTime(0.5, now + 0.55);
       gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
       osc2.connect(gain2);
       gain2.connect(ctx.destination);
@@ -126,22 +209,20 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
     try {
       if (!('speechSynthesis' in window)) return;
 
-      window.speechSynthesis.cancel(); // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
 
       const phrase = `Atenção: Paciente ${patientName}. Favor dirigir-se ao ${roomName}.`;
       const utterance = new SpeechSynthesisUtterance(phrase);
       utterance.lang = 'pt-BR';
-      utterance.rate = 0.92; // Slightly calm and clear pace
+      utterance.rate = 0.92;
       utterance.pitch = 1.05;
 
-      // Select natural pt-BR voice if available
       const voices = window.speechSynthesis.getVoices();
       const brVoice = voices.find(v => v.lang === 'pt-BR' || v.lang === 'pt_BR');
       if (brVoice) {
         utterance.voice = brVoice;
       }
 
-      // Small delay after chime before speaking
       setTimeout(() => {
         window.speechSynthesis.speak(utterance);
       }, 1600);
@@ -176,10 +257,11 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
       if (items && items.length > 0) {
         const newest = items[0];
 
-        // Se for uma chamada recente (últimos 3 minutos) ou com ID diferente do já processado
+        // Dispara quando houver uma nova chamada ou rechamada
         if (newest && newest.id !== lastProcessedCallIdRef.current) {
           lastProcessedCallIdRef.current = newest.id;
           setCurrentCall(newest);
+          setIsCallActive(true);
 
           // Disparar Chime e Fala
           playHospitalChime();
@@ -189,13 +271,23 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
           setIsFlashing(true);
           const flashTimer = setTimeout(() => setIsFlashing(false), 8000);
 
-          return () => clearTimeout(flashTimer);
+          // Mantém a chamada do paciente em destaque por 22 segundos, depois volta para as dicas
+          if (callTimerRef.current) clearTimeout(callTimerRef.current);
+          callTimerRef.current = setTimeout(() => {
+            setIsCallActive(false);
+          }, 22000);
+
+          return () => {
+            clearTimeout(flashTimer);
+            if (callTimerRef.current) clearTimeout(callTimerRef.current);
+          };
         }
       }
     });
 
     return () => {
       if (typeof unsub === 'function') unsub();
+      if (callTimerRef.current) clearTimeout(callTimerRef.current);
     };
   }, [selectedUnit]);
 
@@ -225,12 +317,20 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
     });
   }, [currentTime]);
 
-  // Histórico de chamadas anteriores (excluindo a atual)
+  // Histórico de chamadas anteriores
   const historyCalls = useMemo(() => {
     if (!calls || calls.length === 0) return [];
-    if (!currentCall) return calls.slice(0, 5);
+    if (!currentCall || !isCallActive) return calls.slice(0, 5);
     return calls.filter(c => c.id !== currentCall.id).slice(0, 5);
-  }, [calls, currentCall]);
+  }, [calls, currentCall, isCallActive]);
+
+  const categoryConfig = useMemo(() => {
+    return TIP_CATEGORIES[currentTip?.category] || TIP_CATEGORIES.nutricao;
+  }, [currentTip]);
+
+  const CategoryIconComponent = useMemo(() => {
+    return CATEGORY_ICONS[currentTip?.category] || Activity;
+  }, [currentTip]);
 
   return (
     <div style={styles.tvContainer}>
@@ -269,8 +369,21 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
           <div style={styles.dateDisplay}>{formattedDate}</div>
         </div>
 
-        {/* Controles do Painel (Som, Tela Cheia, Troca de Unidade) */}
+        {/* Controles do Painel (Som, Tela Cheia, Dicas, Sair) */}
         <div style={styles.controlsBox}>
+          <button
+            onClick={() => setIsTipsModalOpen(true)}
+            style={{
+              ...styles.controlBtn,
+              borderColor: 'rgba(56, 189, 248, 0.4)',
+              backgroundColor: 'rgba(56, 189, 248, 0.1)'
+            }}
+            title="Gerenciar Dicas Educativas"
+          >
+            <Sparkles size={20} color="#38bdf8" />
+            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#38bdf8' }}>Dicas</span>
+          </button>
+
           <button 
             onClick={audioUnlocked ? () => setAudioUnlocked(false) : unlockAudio} 
             style={{
@@ -280,7 +393,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
             }}
             title={audioUnlocked ? 'Som Ativo' : 'Ativar Áudio'}
           >
-            {audioUnlocked ? <Volume2 size={24} color="#10b981" /> : <VolumeX size={24} color="#ef4444" />}
+            {audioUnlocked ? <Volume2 size={22} color="#10b981" /> : <VolumeX size={22} color="#ef4444" />}
             <span style={{ fontSize: '0.85rem', fontWeight: '600', color: audioUnlocked ? '#10b981' : '#ef4444' }}>
               {audioUnlocked ? 'Áudio' : 'Ativar'}
             </span>
@@ -291,7 +404,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
             style={styles.controlBtn} 
             title="Tela Cheia"
           >
-            {isFullscreen ? <Minimize size={24} color="#e2e8f0" /> : <Maximize size={24} color="#e2e8f0" />}
+            {isFullscreen ? <Minimize size={22} color="#e2e8f0" /> : <Maximize size={22} color="#e2e8f0" />}
             <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#e2e8f0' }}>Tela</span>
           </button>
 
@@ -306,26 +419,26 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
       {/* Banner Informativo se o áudio estiver bloqueado */}
       {!audioUnlocked && (
         <div style={styles.audioAlertBanner} onClick={unlockAudio}>
-          <Volume2 size={28} color="#ffffff" />
-          <span>Toque ou clique em qualquer lugar para ativar a voz e o aviso sonoro da TV</span>
+          <Volume2 size={26} color="#ffffff" />
+          <span>Toque ou clique na tela para ativar o sino e a voz da Smart TV</span>
         </div>
       )}
 
       {/* Área Principal (Corpo do Painel) */}
       <main style={styles.mainGrid}>
-        {/* Lado Esquerdo: Chamada Ativa em Grande Destaque */}
-        <section style={{
-          ...styles.activeCallCard,
-          borderColor: isFlashing ? '#38bdf8' : 'rgba(56, 189, 248, 0.25)',
-          boxShadow: isFlashing 
-            ? '0 0 50px rgba(56, 189, 248, 0.45), inset 0 0 30px rgba(56, 189, 248, 0.2)' 
-            : '0 20px 40px rgba(0, 0, 0, 0.5)'
-        }}>
-          {currentCall ? (
+        {/* Lado Esquerdo: Chamada Ativa OU Carrossel de Dicas Educativas */}
+        {isCallActive && currentCall ? (
+          <section style={{
+            ...styles.activeCallCard,
+            borderColor: isFlashing ? '#38bdf8' : 'rgba(56, 189, 248, 0.3)',
+            boxShadow: isFlashing 
+              ? '0 0 50px rgba(56, 189, 248, 0.5), inset 0 0 30px rgba(56, 189, 248, 0.2)' 
+              : '0 20px 40px rgba(0, 0, 0, 0.5)'
+          }}>
             <div style={styles.activeCallContent}>
               <div style={styles.callingBadgeRow}>
                 <span style={styles.callingBadge}>
-                  <Radio size={20} className="animate-pulse" />
+                  <Radio size={20} />
                   CHAMANDO AGORA
                 </span>
                 {currentCall.callCount > 1 && (
@@ -357,21 +470,104 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
                 </div>
               )}
             </div>
-          ) : (
-            <div style={styles.emptyCallState}>
-              <div style={styles.emptyIconCircle}>
-                <Radio size={48} color="#38bdf8" />
+          </section>
+        ) : (
+          /* Carrossel de Dicas de Saúde & Nefrologia */
+          <section 
+            style={{
+              ...styles.tipsCard,
+              borderColor: categoryConfig.borderColor,
+              background: categoryConfig.gradient,
+              boxShadow: `0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 40px ${categoryConfig.color}15`
+            }}
+            onMouseEnter={() => setIsCarouselPaused(true)}
+            onMouseLeave={() => setIsCarouselPaused(false)}
+          >
+            {/* Barra Superior do Card com Categoria e Controles */}
+            <div style={styles.tipCardHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{
+                  ...styles.categoryIconCircle,
+                  backgroundColor: `${categoryConfig.color}30`,
+                  border: `2px solid ${categoryConfig.color}`
+                }}>
+                  <CategoryIconComponent size={26} color={categoryConfig.color} />
+                </div>
+                <div>
+                  <span style={{
+                    ...styles.categoryPill,
+                    color: categoryConfig.color,
+                    backgroundColor: `${categoryConfig.color}20`,
+                    border: `1px solid ${categoryConfig.borderColor}`
+                  }}>
+                    {categoryConfig.label}
+                  </span>
+                  <div style={styles.tipSequenceText}>
+                    Orientação { (currentTipIndex % activeTips.length) + 1 } de { activeTips.length }
+                  </div>
+                </div>
               </div>
-              <h2 style={styles.emptyTitle}>Painel Pronto</h2>
-              <p style={styles.emptySubtitle}>
-                Aguardando chamadas de atendimento da equipe médica.
-              </p>
-              <div style={styles.emptyFooterNotice}>
-                Acompanhe o painel e aguarde a exibição do seu nome.
+
+              <div style={styles.carouselNavGroup}>
+                <button 
+                  type="button" 
+                  onClick={handlePrevTip} 
+                  style={styles.carouselNavBtn}
+                  title="Anterior"
+                >
+                  <ChevronLeft size={22} color="#cbd5e1" />
+                </button>
+                <button 
+                  type="button" 
+                  onClick={handleNextTip} 
+                  style={styles.carouselNavBtn}
+                  title="Próxima"
+                >
+                  <ChevronRight size={22} color="#cbd5e1" />
+                </button>
               </div>
             </div>
-          )}
-        </section>
+
+            {/* Conteúdo Central da Dica */}
+            <div style={styles.tipBody}>
+              <h2 style={{
+                ...styles.tipTitle,
+                color: '#ffffff',
+                textShadow: `0 0 30px ${categoryConfig.color}60`
+              }}>
+                {currentTip?.title}
+              </h2>
+              <p style={styles.tipText}>
+                {currentTip?.text}
+              </p>
+            </div>
+
+            {/* Rodapé da Dica com Barra de Progresso e Assinatura */}
+            <div style={styles.tipFooter}>
+              <div style={styles.tipFooterRow}>
+                <div style={styles.hospitalSignature}>
+                  <Sparkles size={18} color={categoryConfig.color} />
+                  <span>Espaço Saúde & Cuidado Renal • Equipe Multidisciplinar</span>
+                </div>
+                <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: '600' }}>
+                  Aguarde a sua chamada no painel
+                </span>
+              </div>
+
+              {/* Barra de Progresso do Slide */}
+              <div style={styles.progressBarTrack}>
+                <div 
+                  style={{
+                    ...styles.progressBarFill,
+                    width: `${tipProgress}%`,
+                    backgroundColor: categoryConfig.color,
+                    boxShadow: `0 0 12px ${categoryConfig.color}`
+                  }}
+                />
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Lado Direito: Histórico das Últimas Chamadas */}
         <aside style={styles.historyCard}>
@@ -408,10 +604,16 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
           {/* Rodapé Informativo */}
           <div style={styles.historyFooter}>
             <Sparkles size={18} color="#38bdf8" />
-            <span>NexaCLINIC • Sistema de Chamada Inteligente</span>
+            <span>NexaCLINIC • TV Corporativa Inteligente</span>
           </div>
         </aside>
       </main>
+
+      {/* Modal de Gerenciamento das Dicas */}
+      <TvTipsManagerModal 
+        isOpen={isTipsModalOpen} 
+        onClose={() => setIsTipsModalOpen(false)} 
+      />
     </div>
   );
 }
@@ -544,7 +746,6 @@ const styles = {
     fontSize: '1.1rem',
     fontWeight: '700',
     cursor: 'pointer',
-    animation: 'pulse 2s infinite',
     boxShadow: '0 4px 15px rgba(2, 132, 199, 0.4)'
   },
   mainGrid: {
@@ -556,9 +757,9 @@ const styles = {
     height: 'calc(100vh - 110px)'
   },
   activeCallCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
     borderRadius: '24px',
-    border: '3px solid rgba(56, 189, 248, 0.25)',
+    border: '3px solid rgba(56, 189, 248, 0.3)',
     padding: '3rem',
     display: 'flex',
     flexDirection: 'column',
@@ -651,46 +852,121 @@ const styles = {
     fontWeight: '700',
     color: '#cbd5e1'
   },
-  emptyCallState: {
-    textAlign: 'center',
+
+  /* Tips Card Styles */
+  tipsCard: {
+    borderRadius: '24px',
+    border: '2px solid',
+    padding: '3rem',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '3rem'
+    justifyContent: 'space-between',
+    backdropFilter: 'blur(20px)',
+    position: 'relative',
+    transition: 'all 0.5s ease',
+    overflow: 'hidden'
   },
-  emptyIconCircle: {
-    width: '100px',
-    height: '100px',
-    borderRadius: '50%',
-    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+  tipCardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  categoryIconCircle: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '1.5rem',
-    border: '2px solid rgba(56, 189, 248, 0.2)'
+    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3)'
   },
-  emptyTitle: {
-    fontSize: '2.5rem',
+  categoryPill: {
+    display: 'inline-block',
+    padding: '0.35rem 0.9rem',
+    borderRadius: '100px',
+    fontSize: '1rem',
     fontWeight: '800',
-    color: '#ffffff',
-    margin: '0 0 0.5rem 0'
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em'
   },
-  emptySubtitle: {
-    fontSize: '1.25rem',
+  tipSequenceText: {
+    fontSize: '0.85rem',
     color: '#94a3b8',
-    maxWidth: '500px',
-    lineHeight: 1.5,
-    margin: 0
+    fontWeight: '600',
+    marginTop: '0.2rem'
   },
-  emptyFooterNotice: {
-    marginTop: '2rem',
-    padding: '0.75rem 1.5rem',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  carouselNavGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem'
+  },
+  carouselNavBtn: {
+    width: '44px',
+    height: '44px',
     borderRadius: '12px',
-    fontSize: '0.95rem',
-    color: '#38bdf8'
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
   },
+  tipBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+    margin: 'auto 0'
+  },
+  tipTitle: {
+    margin: 0,
+    fontSize: 'clamp(2.2rem, 3.8vw, 3.5rem)',
+    fontWeight: '900',
+    lineHeight: 1.15,
+    letterSpacing: '-0.02em'
+  },
+  tipText: {
+    margin: 0,
+    fontSize: 'clamp(1.3rem, 2.2vw, 1.95rem)',
+    color: '#e2e8f0',
+    lineHeight: 1.5,
+    fontWeight: '400',
+    maxWidth: '92%'
+  },
+  tipFooter: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem'
+  },
+  tipFooterRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '0.75rem'
+  },
+  hospitalSignature: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.6rem',
+    fontSize: '1rem',
+    fontWeight: '700',
+    color: '#cbd5e1'
+  },
+  progressBarTrack: {
+    width: '100%',
+    height: '6px',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: '100px',
+    overflow: 'hidden'
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: '100px',
+    transition: 'width 0.1s linear'
+  },
+
+  /* History Aside Styles */
   historyCard: {
     backgroundColor: 'rgba(15, 23, 42, 0.65)',
     borderRadius: '24px',

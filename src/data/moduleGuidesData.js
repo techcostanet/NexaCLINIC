@@ -1669,6 +1669,14 @@ export const MODULE_GUIDES = {
       {
         title: 'Chamada e Rechamada em 1 Clique',
         desc: 'Botões diretos na grade diária e na visão multissalas para disparar ou repetir a chamada de pacientes na TV com sincronização instantânea em nuvem.'
+      },
+      {
+        title: 'Carrossel Educativo com 70 Dicas Clínicas',
+        desc: 'Transmissão contínua durante o tempo de espera com 70 orientações em 7 categorias: Nutrição, Hemodiálise, Líquidos, Saúde Mental, Serviço Social, Mitos & Verdades e Cuidados com o Acesso, cada uma com sua cor padrão e micro-animações.'
+      },
+      {
+        title: 'Gerenciador de Dicas da TV',
+        desc: 'Painel administrativo integrado para adicionar, editar, inativar, excluir e restaurar dicas de saúde com sincronização imediata em todas as Smart TVs.'
       }
     ],
     tutorial: [
@@ -1681,6 +1689,16 @@ export const MODULE_GUIDES = {
           'Toque no botão "Tela" para colocar o painel em tela cheia (Fullscreen).',
           'Toque no botão "Ativar" uma única vez na TV para liberar a reprodução de áudio e voz.',
           'Na tela do médico ou atendente, clique no botão "Chamar" ao lado do paciente para que a TV anuncie o nome e o consultório.'
+        ]
+      },
+      {
+        title: 'Como Gerenciar e Criar Dicas Educativas para a TV',
+        steps: [
+          'No cabeçalho da Agenda, clique no botão "Painel" e depois no botão "Dicas".',
+          'Utilize as pílulas de categorias para filtrar (Nutrição, Hemodiálise, Líquidos, Saúde Mental, Serviço Social, Mitos ou Cuidados).',
+          'Para editar uma dica existente, clique no botão do lápis no card correspondente.',
+          'Para criar uma nova recomendação da sua clínica, clique no botão "Novo", preencha o Título, Categoria, Texto e Duração em segundos.',
+          'Clique em "Salvar". A nova dica passará a circular automaticamente no carrossel da TV.'
         ]
       },
       {
@@ -1731,6 +1749,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como o carrossel de dicas se comporta quando o médico chama um paciente?',
+        resposta: 'A chamada do paciente tem prioridade absoluta na tela. O carrossel de dicas é interrompido imediatamente para dar lugar ao aviso sonoro e ao nome do paciente em letras garrafais. Após 22 segundos, o carrossel é retomado suavemente.'
+      },
+      {
+        pergunta: 'Posso personalizar ou criar novas dicas para a TV?',
+        resposta: 'Sim. Pelo botão "Dicas" dentro do modal do Painel, você pode editar qualquer uma das 70 dicas clínicas, desativar itens ou criar novas orientações personalizadas para a sua clínica.'
+      },
       {
         pergunta: 'É necessário algum aparelho ou computador exclusivo para a TV da sala de espera?',
         resposta: 'Não. Qualquer Smart TV com navegador de internet (Samsung, LG, TCL, Android TV) consegue abrir o link direto do painel sem necessidade de hardware adicional.'

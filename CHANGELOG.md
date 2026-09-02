@@ -1,3 +1,23 @@
+## [v4.9.35] - 02 de Setembro, 2026
+### Carrossel Educativo na TV com 70 Dicas Clínicas & Gerenciador de Conteúdo
+- **Carrossel Temático na Smart TV (`TvCallPanel.jsx` & `tvTipsService.js`):**
+  - Implementação de transmissão contínua de orientações clínicas durante o tempo de espera entre chamadas.
+  - 70 recomendações clínicas completas organizadas em 7 categorias nefrológicas:
+    1. **Nutrição:** Potássio, fósforo, sódio, quelantes, carambola e proteínas.
+    2. **Hemodiálise:** Duração, ultrafiltração, exames mensais, EPO/ferro e pressão.
+    3. **Líquidos:** Peso seco, GPID, alívio de sede com gelo e garrafinha graduada.
+    4. **Saúde Mental:** Acolhimento emocional, rotina, convivência e suporte familiar.
+    5. **Serviço Social:** TFD, transporte público, BPC/LOAS, FGTS/PIS e isenções tributárias.
+    6. **Mitos & Verdades:** Diurese residual, viagens em trânsito, mitos do sal light e transplante.
+    7. **Cuidados & Acesso:** Frêmito da fístula (FAV), proteção de curativo de cateter e higiene.
+  - Paleta de cores temática de alto contraste para cada assunto com barra de progresso suave e micro-animações.
+  - **Prioridade Absoluta:** O carrossel é interrompido instantaneamente ao receber chamada de paciente, retornando suavemente após 22 segundos.
+- **Gerenciador de Dicas da TV (`TvTipsManagerModal.jsx`):**
+  - Modal administrativo integrado para criar, editar, inativar, excluir e restaurar dicas em lote.
+  - Botão de acesso rápido integrado tanto no cabeçalho da Smart TV quanto no modal do Painel da Agenda.
+
+---
+
 ## [v4.9.34] - 02 de Setembro, 2026
 ### Painel TV de Chamada de Pacientes & Vocalização Inteligente (Módulo Agenda)
 - **Painel Smart TV em Tela Cheia (`TvCallPanel.jsx` & `App.jsx`):**

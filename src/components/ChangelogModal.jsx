@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.35',
+      date: '02/09/2026',
+      title: 'Carrossel Educativo na TV com 70 Dicas Clínicas & Gerenciador de Conteúdo',
+      description: 'Durante o tempo de espera entre chamadas de pacientes, a Smart TV agora transmite um carrossel visual e dinâmico com 70 dicas de saúde em 7 categorias nefrológicas completas, com cores temáticas personalizadas, barra de progresso suave e painel de edição para a clínica.',
+      changes: [
+        { type: '70 Dicas Clínicas Validadas', text: 'Inclusão de 10 dicas para cada uma das 7 categorias: Nutrição Renal, Hemodiálise, Controle de Líquidos, Saúde Mental, Serviço Social (direitos/TFD/BPC), Mitos & Verdades e Cuidados com o Acesso Vascular.' },
+        { type: 'Cores & Micro-Animações', text: 'Identidade visual temática para cada assunto (Verde Esmeralda, Azul Clínico, Azul Celeste, Roxo, Rosa, Âmbar e Verde Água) com barra de progresso de transição e navegação manual opcional.' },
+        { type: 'Prioridade Absoluta da Chamada', text: 'No exato instante em que o médico clica em "Chamar", a dica dá lugar imediatamente à convocação do paciente com sino e sintetizador de voz, retornando suavemente ao carrossel após 22 segundos.' },
+        { type: 'Gerenciador Completo de Conteúdo', text: 'Novo modal (`TvTipsManagerModal`) acessível tanto pela TV quanto pela Agenda para criar novas recomendações, editar textos, inativar dicas ou restaurar o pacote original.' }
+      ]
+    },
+    {
       version: 'v4.9.34',
       date: '02/09/2026',
       title: 'Painel TV de Chamada de Pacientes & Vocalização Inteligente (Módulo Agenda)',
