@@ -9,7 +9,7 @@ export const TIP_CATEGORIES = {
     id: 'hemodialise',
     label: 'Hemodiálise',
     color: '#0284c7',
-    gradient: 'linear-gradient(135deg, rgba(2, 132, 199, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%)',
+    gradient: 'linear-gradient(135deg, #ffffff 0%, #f0f9ff 60%, #e0f2fe 100%)',
     borderColor: '#38bdf8',
     iconName: 'Activity'
   },
@@ -17,7 +17,7 @@ export const TIP_CATEGORIES = {
     id: 'nutricao',
     label: 'Nutrição',
     color: '#10b981',
-    gradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%)',
+    gradient: 'linear-gradient(135deg, #ffffff 0%, #f0fdf4 60%, #dcfce7 100%)',
     borderColor: '#34d399',
     iconName: 'Apple'
   },
@@ -25,7 +25,7 @@ export const TIP_CATEGORIES = {
     id: 'liquidos',
     label: 'Líquidos',
     color: '#0ea5e9',
-    gradient: 'linear-gradient(135deg, rgba(14, 165, 233, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%)',
+    gradient: 'linear-gradient(135deg, #ffffff 0%, #f0f9ff 60%, #e0f2fe 100%)',
     borderColor: '#7dd3fc',
     iconName: 'Droplets'
   },
@@ -33,7 +33,7 @@ export const TIP_CATEGORIES = {
     id: 'mental',
     label: 'Saúde Mental',
     color: '#8b5cf6',
-    gradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%)',
+    gradient: 'linear-gradient(135deg, #ffffff 0%, #faf5ff 60%, #f3e8ff 100%)',
     borderColor: '#c084fc',
     iconName: 'Smile'
   },
@@ -41,7 +41,7 @@ export const TIP_CATEGORIES = {
     id: 'social',
     label: 'Serviço Social',
     color: '#ec4899',
-    gradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%)',
+    gradient: 'linear-gradient(135deg, #ffffff 0%, #fdf2f8 60%, #fce7f3 100%)',
     borderColor: '#f472b6',
     iconName: 'Users'
   },
@@ -49,7 +49,7 @@ export const TIP_CATEGORIES = {
     id: 'mitos',
     label: 'Mitos & Verdades',
     color: '#f59e0b',
-    gradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%)',
+    gradient: 'linear-gradient(135deg, #ffffff 0%, #fffbeb 60%, #fef3c7 100%)',
     borderColor: '#fbbf24',
     iconName: 'HelpCircle'
   },
@@ -57,7 +57,7 @@ export const TIP_CATEGORIES = {
     id: 'cuidados',
     label: 'Cuidados & Acesso',
     color: '#059669',
-    gradient: 'linear-gradient(135deg, rgba(5, 150, 105, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%)',
+    gradient: 'linear-gradient(135deg, #ffffff 0%, #ecfdf5 60%, #d1fae5 100%)',
     borderColor: '#6ee7b7',
     iconName: 'ShieldCheck'
   }

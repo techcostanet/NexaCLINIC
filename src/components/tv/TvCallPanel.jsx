@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Volume2, VolumeX, Maximize, Minimize, Clock, Building2, 
   User, Stethoscope, Sparkles, Radio, CheckCircle2, ChevronLeft, ChevronRight,
-  Apple, Activity, Droplets, Smile, Users, HelpCircle, ShieldCheck, SlidersHorizontal
+  Apple, Activity, Droplets, Smile, Users, HelpCircle, ShieldCheck
 } from 'lucide-react';
 import { dbService } from '../../firebase';
 import { TIP_CATEGORIES, DEFAULT_TIPS } from '../../services/firebase/tvTipsService';
@@ -97,7 +97,6 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
 
   // Carousel Progress & Slide Rotation Timer
   useEffect(() => {
-    // If patient call is currently active or carousel is paused, freeze carousel
     if (isCallActive || isCarouselPaused) {
       return;
     }
@@ -231,7 +230,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
     }
   };
 
-  // Unlock audio on initial user gesture (Smart TV compliance)
+  // Unlock audio on initial user gesture
   const unlockAudio = () => {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -257,21 +256,17 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
       if (items && items.length > 0) {
         const newest = items[0];
 
-        // Dispara quando houver uma nova chamada ou rechamada
         if (newest && newest.id !== lastProcessedCallIdRef.current) {
           lastProcessedCallIdRef.current = newest.id;
           setCurrentCall(newest);
           setIsCallActive(true);
 
-          // Disparar Chime e Fala
           playHospitalChime();
           speakAnnouncement(newest.patientName, newest.room);
 
-          // Efeito de Flash / Destaque visual
           setIsFlashing(true);
           const flashTimer = setTimeout(() => setIsFlashing(false), 8000);
 
-          // Mantém a chamada do paciente em destaque por 22 segundos, depois volta para as dicas
           if (callTimerRef.current) clearTimeout(callTimerRef.current);
           callTimerRef.current = setTimeout(() => {
             setIsCallActive(false);
@@ -334,7 +329,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
 
   return (
     <div style={styles.tvContainer}>
-      {/* Banner Superior com Logo, Relógio e Controles */}
+      {/* Banner Superior Claro com Logo, Relógio e Controles */}
       <header style={styles.header}>
         <div style={styles.brandingBox}>
           {tenantSettings.logo ? (
@@ -375,26 +370,26 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
             onClick={() => setIsTipsModalOpen(true)}
             style={{
               ...styles.controlBtn,
-              borderColor: 'rgba(56, 189, 248, 0.4)',
-              backgroundColor: 'rgba(56, 189, 248, 0.1)'
+              borderColor: '#bbf7d0',
+              backgroundColor: '#f0fdf4'
             }}
             title="Gerenciar Dicas Educativas"
           >
-            <Sparkles size={20} color="#38bdf8" />
-            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#38bdf8' }}>Dicas</span>
+            <Sparkles size={20} color="#16a34a" />
+            <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#166534' }}>Dicas</span>
           </button>
 
           <button 
             onClick={audioUnlocked ? () => setAudioUnlocked(false) : unlockAudio} 
             style={{
               ...styles.controlBtn,
-              backgroundColor: audioUnlocked ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              borderColor: audioUnlocked ? '#10b981' : '#ef4444'
+              backgroundColor: audioUnlocked ? '#ecfdf5' : '#fef2f2',
+              borderColor: audioUnlocked ? '#a7f3d0' : '#fecaca'
             }}
             title={audioUnlocked ? 'Som Ativo' : 'Ativar Áudio'}
           >
-            {audioUnlocked ? <Volume2 size={22} color="#10b981" /> : <VolumeX size={22} color="#ef4444" />}
-            <span style={{ fontSize: '0.85rem', fontWeight: '600', color: audioUnlocked ? '#10b981' : '#ef4444' }}>
+            {audioUnlocked ? <Volume2 size={22} color="#059669" /> : <VolumeX size={22} color="#dc2626" />}
+            <span style={{ fontSize: '0.85rem', fontWeight: '800', color: audioUnlocked ? '#059669' : '#dc2626' }}>
               {audioUnlocked ? 'Áudio' : 'Ativar'}
             </span>
           </button>
@@ -404,13 +399,13 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
             style={styles.controlBtn} 
             title="Tela Cheia"
           >
-            {isFullscreen ? <Minimize size={22} color="#e2e8f0" /> : <Maximize size={22} color="#e2e8f0" />}
-            <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#e2e8f0' }}>Tela</span>
+            {isFullscreen ? <Minimize size={22} color="#475569" /> : <Maximize size={22} color="#475569" />}
+            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Tela</span>
           </button>
 
           {onExitPortal && (
             <button onClick={onExitPortal} style={styles.controlBtn} title="Sair">
-              <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#94a3b8' }}>Sair</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#64748b' }}>Sair</span>
             </button>
           )}
         </div>
@@ -420,7 +415,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
       {!audioUnlocked && (
         <div style={styles.audioAlertBanner} onClick={unlockAudio}>
           <Volume2 size={26} color="#ffffff" />
-          <span>Toque ou clique na tela para ativar o sino e a voz da Smart TV</span>
+          <span>Toque ou clique na tela para ativar o sino sonoro e a voz da TV</span>
         </div>
       )}
 
@@ -430,10 +425,10 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
         {isCallActive && currentCall ? (
           <section style={{
             ...styles.activeCallCard,
-            borderColor: isFlashing ? '#38bdf8' : 'rgba(56, 189, 248, 0.3)',
+            borderColor: isFlashing ? '#0284c7' : '#38bdf8',
             boxShadow: isFlashing 
-              ? '0 0 50px rgba(56, 189, 248, 0.5), inset 0 0 30px rgba(56, 189, 248, 0.2)' 
-              : '0 20px 40px rgba(0, 0, 0, 0.5)'
+              ? '0 0 50px rgba(2, 132, 199, 0.35), 0 20px 40px rgba(0, 0, 0, 0.1)' 
+              : '0 20px 40px rgba(0, 0, 0, 0.08)'
           }}>
             <div style={styles.activeCallContent}>
               <div style={styles.callingBadgeRow}>
@@ -456,7 +451,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
               <div style={styles.roomBox}>
                 <div style={styles.roomBadgeHeader}>
                   <Building2 size={28} color="#ffffff" />
-                  <span>CONSULTÓRIO / DESTINO</span>
+                  <span>CONSULTÓRIO / SALA</span>
                 </div>
                 <div style={styles.roomNameText}>
                   {currentCall.room || 'Consultório 1'}
@@ -465,20 +460,20 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
 
               {currentCall.doctorName && (
                 <div style={styles.doctorInfoRow}>
-                  <Stethoscope size={24} color="#38bdf8" />
+                  <Stethoscope size={24} color="#0284c7" />
                   <span>{currentCall.doctorName}</span>
                 </div>
               )}
             </div>
           </section>
         ) : (
-          /* Carrossel de Dicas de Saúde & Nefrologia */
+          /* Carrossel de Dicas de Saúde & Nefrologia em Tons Claros */
           <section 
             style={{
               ...styles.tipsCard,
               borderColor: categoryConfig.borderColor,
               background: categoryConfig.gradient,
-              boxShadow: `0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 40px ${categoryConfig.color}15`
+              boxShadow: `0 20px 50px rgba(0, 0, 0, 0.06), 0 4px 15px ${categoryConfig.color}15`
             }}
             onMouseEnter={() => setIsCarouselPaused(true)}
             onMouseLeave={() => setIsCarouselPaused(false)}
@@ -488,8 +483,9 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div style={{
                   ...styles.categoryIconCircle,
-                  backgroundColor: `${categoryConfig.color}30`,
-                  border: `2px solid ${categoryConfig.color}`
+                  backgroundColor: '#ffffff',
+                  border: `2px solid ${categoryConfig.color}`,
+                  boxShadow: `0 4px 12px ${categoryConfig.color}25`
                 }}>
                   <CategoryIconComponent size={26} color={categoryConfig.color} />
                 </div>
@@ -497,8 +493,9 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
                   <span style={{
                     ...styles.categoryPill,
                     color: categoryConfig.color,
-                    backgroundColor: `${categoryConfig.color}20`,
-                    border: `1px solid ${categoryConfig.borderColor}`
+                    backgroundColor: '#ffffff',
+                    border: `1.5px solid ${categoryConfig.borderColor}`,
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.04)'
                   }}>
                     {categoryConfig.label}
                   </span>
@@ -515,7 +512,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
                   style={styles.carouselNavBtn}
                   title="Anterior"
                 >
-                  <ChevronLeft size={22} color="#cbd5e1" />
+                  <ChevronLeft size={22} color="#475569" />
                 </button>
                 <button 
                   type="button" 
@@ -523,7 +520,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
                   style={styles.carouselNavBtn}
                   title="Próxima"
                 >
-                  <ChevronRight size={22} color="#cbd5e1" />
+                  <ChevronRight size={22} color="#475569" />
                 </button>
               </div>
             </div>
@@ -532,8 +529,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
             <div style={styles.tipBody}>
               <h2 style={{
                 ...styles.tipTitle,
-                color: '#ffffff',
-                textShadow: `0 0 30px ${categoryConfig.color}60`
+                color: '#0f172a'
               }}>
                 {currentTip?.title}
               </h2>
@@ -549,7 +545,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
                   <Sparkles size={18} color={categoryConfig.color} />
                   <span>Espaço Saúde & Cuidado Renal • Equipe Multidisciplinar</span>
                 </div>
-                <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: '600' }}>
+                <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '700' }}>
                   Aguarde a sua chamada no painel
                 </span>
               </div>
@@ -561,7 +557,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
                     ...styles.progressBarFill,
                     width: `${tipProgress}%`,
                     backgroundColor: categoryConfig.color,
-                    boxShadow: `0 0 12px ${categoryConfig.color}`
+                    boxShadow: `0 0 10px ${categoryConfig.color}80`
                   }}
                 />
               </div>
@@ -569,10 +565,10 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
           </section>
         )}
 
-        {/* Lado Direito: Histórico das Últimas Chamadas */}
+        {/* Lado Direito: Histórico das Últimas Chamadas Claro */}
         <aside style={styles.historyCard}>
           <div style={styles.historyHeader}>
-            <Clock size={24} color="#38bdf8" />
+            <Clock size={24} color="#0284c7" />
             <h3 style={styles.historyTitle}>Últimas Chamadas</h3>
           </div>
 
@@ -603,7 +599,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
 
           {/* Rodapé Informativo */}
           <div style={styles.historyFooter}>
-            <Sparkles size={18} color="#38bdf8" />
+            <Sparkles size={18} color="#0284c7" />
             <span>NexaCLINIC • TV Corporativa Inteligente</span>
           </div>
         </aside>
@@ -622,8 +618,8 @@ const styles = {
   tvContainer: {
     width: '100vw',
     height: '100vh',
-    backgroundColor: '#090d16',
-    color: '#ffffff',
+    backgroundColor: '#f1f5f9',
+    color: '#0f172a',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
@@ -632,14 +628,14 @@ const styles = {
   },
   header: {
     height: '110px',
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    backdropFilter: 'blur(16px)',
-    borderBottom: '2px solid rgba(56, 189, 248, 0.2)',
+    backgroundColor: '#ffffff',
+    borderBottom: '2px solid #e2e8f0',
     padding: '0 2.5rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    zIndex: 10
+    zIndex: 10,
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)'
   },
   brandingBox: {
     display: 'flex',
@@ -649,8 +645,7 @@ const styles = {
   logoImg: {
     height: '65px',
     maxWidth: '180px',
-    objectFit: 'contain',
-    filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))'
+    objectFit: 'contain'
   },
   logoFallback: {
     width: '58px',
@@ -666,8 +661,7 @@ const styles = {
     fontSize: '1.75rem',
     fontWeight: '800',
     letterSpacing: '-0.02em',
-    color: '#ffffff',
-    textShadow: '0 2px 10px rgba(0,0,0,0.4)'
+    color: '#0f172a'
   },
   unitBadgeRow: {
     display: 'flex',
@@ -677,30 +671,30 @@ const styles = {
   },
   unitBadge: {
     fontSize: '0.85rem',
-    fontWeight: '700',
+    fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
-    padding: '0.2rem 0.6rem',
+    padding: '0.2rem 0.65rem',
     borderRadius: '6px',
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
-    color: '#38bdf8',
-    border: '1px solid rgba(56, 189, 248, 0.3)'
+    backgroundColor: '#e0f2fe',
+    color: '#0369a1',
+    border: '1px solid #bae6fd'
   },
   liveIndicator: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.4rem',
     fontSize: '0.8rem',
-    fontWeight: '600',
-    color: '#10b981',
+    fontWeight: '700',
+    color: '#16a34a',
     textTransform: 'uppercase'
   },
   liveDot: {
     width: '8px',
     height: '8px',
     borderRadius: '50%',
-    backgroundColor: '#10b981',
-    boxShadow: '0 0 8px #10b981'
+    backgroundColor: '#16a34a',
+    boxShadow: '0 0 8px #16a34a'
   },
   clockBox: {
     textAlign: 'center'
@@ -709,15 +703,15 @@ const styles = {
     fontSize: '2.5rem',
     fontWeight: '900',
     letterSpacing: '0.04em',
-    color: '#38bdf8',
-    textShadow: '0 0 20px rgba(56, 189, 248, 0.4)',
+    color: '#0284c7',
     fontVariantNumeric: 'tabular-nums'
   },
   dateDisplay: {
     fontSize: '0.95rem',
-    color: '#94a3b8',
+    color: '#64748b',
     textTransform: 'capitalize',
-    marginTop: '-0.2rem'
+    marginTop: '-0.2rem',
+    fontWeight: '600'
   },
   controlsBox: {
     display: 'flex',
@@ -730,10 +724,11 @@ const styles = {
     gap: '0.5rem',
     padding: '0.6rem 1rem',
     borderRadius: '10px',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    border: '1px solid rgba(255, 255, 255, 0.12)',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #cbd5e1',
     cursor: 'pointer',
-    transition: 'all 0.2s ease'
+    transition: 'all 0.2s ease',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
   },
   audioAlertBanner: {
     backgroundColor: '#0284c7',
@@ -746,7 +741,7 @@ const styles = {
     fontSize: '1.1rem',
     fontWeight: '700',
     cursor: 'pointer',
-    boxShadow: '0 4px 15px rgba(2, 132, 199, 0.4)'
+    boxShadow: '0 4px 15px rgba(2, 132, 199, 0.3)'
   },
   mainGrid: {
     flex: 1,
@@ -757,16 +752,16 @@ const styles = {
     height: 'calc(100vh - 110px)'
   },
   activeCallCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: '#ffffff',
     borderRadius: '24px',
-    border: '3px solid rgba(56, 189, 248, 0.3)',
+    border: '3.5px solid #0284c7',
     padding: '3rem',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
     position: 'relative',
     transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-    backdropFilter: 'blur(20px)'
+    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.08)'
   },
   activeCallContent: {
     display: 'flex',
@@ -789,14 +784,14 @@ const styles = {
     letterSpacing: '0.1em',
     padding: '0.6rem 1.4rem',
     borderRadius: '100px',
-    boxShadow: '0 0 25px rgba(220, 38, 38, 0.6)'
+    boxShadow: '0 4px 15px rgba(220, 38, 38, 0.35)'
   },
   repeatBadge: {
-    backgroundColor: 'rgba(56, 189, 248, 0.2)',
-    color: '#38bdf8',
-    border: '1px solid #38bdf8',
+    backgroundColor: '#e0f2fe',
+    color: '#0369a1',
+    border: '1.5px solid #0284c7',
     fontSize: '1rem',
-    fontWeight: '700',
+    fontWeight: '800',
     padding: '0.4rem 1rem',
     borderRadius: '100px'
   },
@@ -807,25 +802,24 @@ const styles = {
   },
   patientLabel: {
     fontSize: '1.2rem',
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: '0.15em',
-    color: '#94a3b8'
+    color: '#64748b'
   },
   patientNameText: {
     margin: 0,
     fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
     fontWeight: '900',
-    color: '#ffffff',
+    color: '#0f172a',
     lineHeight: 1.1,
-    letterSpacing: '-0.02em',
-    textShadow: '0 4px 25px rgba(0, 0, 0, 0.6)'
+    letterSpacing: '-0.02em'
   },
   roomBox: {
     backgroundColor: '#0284c7',
     borderRadius: '20px',
     padding: '1.75rem 2.5rem',
-    boxShadow: '0 10px 30px rgba(2, 132, 199, 0.4)',
-    border: '1px solid rgba(255, 255, 255, 0.2)'
+    boxShadow: '0 10px 25px rgba(2, 132, 199, 0.3)',
+    border: '1px solid rgba(255, 255, 255, 0.3)'
   },
   roomBadgeHeader: {
     display: 'flex',
@@ -834,7 +828,7 @@ const styles = {
     fontSize: '1.1rem',
     fontWeight: '800',
     letterSpacing: '0.1em',
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: 'rgba(255, 255, 255, 0.9)',
     marginBottom: '0.5rem'
   },
   roomNameText: {
@@ -849,19 +843,18 @@ const styles = {
     alignItems: 'center',
     gap: '1rem',
     fontSize: '1.5rem',
-    fontWeight: '700',
-    color: '#cbd5e1'
+    fontWeight: '800',
+    color: '#334155'
   },
 
-  /* Tips Card Styles */
+  /* Tips Card Styles (Tons Claros) */
   tipsCard: {
     borderRadius: '24px',
-    border: '2px solid',
+    border: '2.5px solid',
     padding: '3rem',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    backdropFilter: 'blur(20px)',
     position: 'relative',
     transition: 'all 0.5s ease',
     overflow: 'hidden'
@@ -877,22 +870,21 @@ const styles = {
     borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3)'
+    justifyContent: 'center'
   },
   categoryPill: {
     display: 'inline-block',
     padding: '0.35rem 0.9rem',
     borderRadius: '100px',
     fontSize: '1rem',
-    fontWeight: '800',
+    fontWeight: '900',
     textTransform: 'uppercase',
     letterSpacing: '0.08em'
   },
   tipSequenceText: {
     fontSize: '0.85rem',
-    color: '#94a3b8',
-    fontWeight: '600',
+    color: '#64748b',
+    fontWeight: '700',
     marginTop: '0.2rem'
   },
   carouselNavGroup: {
@@ -904,13 +896,14 @@ const styles = {
     width: '44px',
     height: '44px',
     borderRadius: '12px',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    border: '1px solid rgba(255, 255, 255, 0.15)',
+    backgroundColor: '#ffffff',
+    border: '1.5px solid #cbd5e1',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    transition: 'all 0.2s ease'
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
   },
   tipBody: {
     display: 'flex',
@@ -928,10 +921,10 @@ const styles = {
   tipText: {
     margin: 0,
     fontSize: 'clamp(1.3rem, 2.2vw, 1.95rem)',
-    color: '#e2e8f0',
-    lineHeight: 1.5,
-    fontWeight: '400',
-    maxWidth: '92%'
+    color: '#334155',
+    lineHeight: 1.55,
+    fontWeight: '500',
+    maxWidth: '94%'
   },
   tipFooter: {
     display: 'flex',
@@ -950,13 +943,13 @@ const styles = {
     alignItems: 'center',
     gap: '0.6rem',
     fontSize: '1rem',
-    fontWeight: '700',
-    color: '#cbd5e1'
+    fontWeight: '800',
+    color: '#475569'
   },
   progressBarTrack: {
     width: '100%',
-    height: '6px',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    height: '7px',
+    backgroundColor: '#e2e8f0',
     borderRadius: '100px',
     overflow: 'hidden'
   },
@@ -966,52 +959,53 @@ const styles = {
     transition: 'width 0.1s linear'
   },
 
-  /* History Aside Styles */
+  /* History Aside Styles (Tons Claros) */
   historyCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: '#ffffff',
     borderRadius: '24px',
-    border: '2px solid rgba(255, 255, 255, 0.08)',
+    border: '2px solid #e2e8f0',
     padding: '2rem',
     display: 'flex',
     flexDirection: 'column',
-    backdropFilter: 'blur(20px)'
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.04)'
   },
   historyHeader: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
     paddingBottom: '1.25rem',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    borderBottom: '1.5px solid #f1f5f9',
     marginBottom: '1.25rem'
   },
   historyTitle: {
     margin: 0,
     fontSize: '1.4rem',
     fontWeight: '800',
-    color: '#ffffff'
+    color: '#0f172a'
   },
   historyList: {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
+    gap: '0.85rem',
     overflowY: 'auto'
   },
   emptyHistoryText: {
     textAlign: 'center',
-    color: '#64748b',
+    color: '#94a3b8',
     fontSize: '1rem',
     marginTop: '2rem'
   },
   historyItem: {
-    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    backgroundColor: '#f8fafc',
     borderRadius: '16px',
     padding: '1.1rem 1.25rem',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    border: '1.5px solid #e2e8f0',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
-    transition: 'transform 0.2s ease'
+    transition: 'transform 0.2s ease',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.02)'
   },
   historyItemTop: {
     display: 'flex',
@@ -1021,12 +1015,12 @@ const styles = {
   historyItemName: {
     fontSize: '1.2rem',
     fontWeight: '800',
-    color: '#ffffff'
+    color: '#0f172a'
   },
   historyItemTime: {
     fontSize: '0.95rem',
-    fontWeight: '700',
-    color: '#38bdf8',
+    fontWeight: '800',
+    color: '#0284c7',
     fontVariantNumeric: 'tabular-nums'
   },
   historyItemBottom: {
@@ -1038,26 +1032,27 @@ const styles = {
   historyRoomBadge: {
     fontSize: '0.85rem',
     fontWeight: '800',
-    backgroundColor: 'rgba(2, 132, 199, 0.25)',
-    color: '#38bdf8',
+    backgroundColor: '#e0f2fe',
+    color: '#0369a1',
     padding: '0.2rem 0.6rem',
     borderRadius: '6px',
-    border: '1px solid rgba(2, 132, 199, 0.4)'
+    border: '1px solid #bae6fd'
   },
   historyDocName: {
     fontSize: '0.9rem',
-    color: '#94a3b8'
+    color: '#64748b',
+    fontWeight: '600'
   },
   historyFooter: {
     marginTop: 'auto',
     paddingTop: '1.25rem',
-    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+    borderTop: '1.5px solid #f1f5f9',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.5rem',
     fontSize: '0.85rem',
     color: '#64748b',
-    fontWeight: '600'
+    fontWeight: '700'
   }
 };

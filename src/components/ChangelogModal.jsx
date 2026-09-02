@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.36',
+      date: '02/09/2026',
+      title: 'Design Hospitalar em Tons Claros para o Painel da Smart TV',
+      description: 'Evolução da identidade visual da Smart TV e do carrossel educativo para um padrão em tons claros (light mode), proporcionando estética limpa e hospitalar com máxima legibilidade e conforto visual na sala de espera.',
+      changes: [
+        { type: 'Paleta em Tons Claros', text: 'Transição completa da interface da TV para fundo perolado suave (`#f1f5f9`), cabeçalho em branco puro com sombra sutil e tipografia em azul marinho profundo (`#0f172a`).' },
+        { type: 'Cards Educativos em Tons Pastel', text: 'Reestilização dos 70 cards de dicas de nefrologia com gradientes claros, bordas em destaque na cor de cada categoria e textos de alto contraste.' },
+        { type: 'Chamada de Paciente de Alto Contraste', text: 'Card de convocação ativo em branco puro com moldura vibrante azul clínica e vermelha para chamada urgente, mantendo visibilidade perfeita a longas distâncias.' },
+        { type: 'Histórico Lateral Clean', text: 'Painel de chamadas recentes com acabamento claro em cartões brancos e marcadores em azul ciano hospitalar.' }
+      ]
+    },
+    {
       version: 'v4.9.35',
       date: '02/09/2026',
       title: 'Carrossel Educativo na TV com 70 Dicas Clínicas & Gerenciador de Conteúdo',

@@ -1,3 +1,12 @@
+## [v4.9.36] - 02 de Setembro, 2026
+### Design Hospitalar em Tons Claros para o Painel da Smart TV
+- **Identidade Visual em Tons Claros (`TvCallPanel.jsx` & `tvTipsService.js`):**
+  - Transição completa da interface da TV para padrão claro/clean hospitalar (fundo perolado `#f1f5f9`, cabeçalho branco `#ffffff` com sombra suave e tipografia em azul marinho escuro `#0f172a`).
+  - Reformulação dos 70 cards do carrossel educativo com gradientes pastel claros, bordas refinadas na cor de cada especialidade e textos de altíssima legibilidade.
+  - Card de chamada ativa em branco puro com bordas de destaque azul/vermelho vibrante e histórico lateral clean.
+
+---
+
 ## [v4.9.35] - 02 de Setembro, 2026
 ### Carrossel Educativo na TV com 70 Dicas Clínicas & Gerenciador de Conteúdo
 - **Carrossel Temático na Smart TV (`TvCallPanel.jsx` & `tvTipsService.js`):**
