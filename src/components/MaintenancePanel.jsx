@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import QRCode from 'qrcode';
 import { dbService } from '../firebase';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
@@ -8,7 +9,7 @@ import {
   AlertTriangle, Clock, Trash2, Edit, AlertCircle, HardDrive, 
   ShieldAlert, Calendar, BarChart3, QrCode, Cpu, Laptop, Layers, 
   ChevronRight, RefreshCw, Check, AlertOctagon, Activity, DollarSign, AlignJustify, List, LayoutGrid,
-  User, CheckSquare, Eye, Printer, ShieldCheck
+  User, CheckSquare, Eye, Printer, ShieldCheck, Copy, ExternalLink, Download
 } from 'lucide-react';
 
 export default function MaintenancePanel({ currentUser }) {
@@ -70,6 +71,8 @@ export default function MaintenancePanel({ currentUser }) {
 
   const [showQrModal, setShowQrModal] = useState(false);
   const [selectedEqQr, setSelectedEqQr] = useState(null);
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Form States - Service Order
   const [orderForm, setOrderForm] = useState({
@@ -622,9 +625,74 @@ export default function MaintenancePanel({ currentUser }) {
     printWindow.document.close();
   };
 
-  const handleOpenQr = (eq) => {
+  const handleOpenQr = async (eq) => {
     setSelectedEqQr(eq);
+    setCopiedLink(false);
     setShowQrModal(true);
+    try {
+      const targetUrl = `${window.location.origin}/?chamado_equipamento=${encodeURIComponent(eq.id)}`;
+      const url = await QRCode.toDataURL(targetUrl, {
+        width: 220,
+        margin: 2,
+        color: {
+          dark: '#0f172a',
+          light: '#ffffff'
+        }
+      });
+      setQrDataUrl(url);
+    } catch (err) {
+      console.error('Erro ao gerar QR Code do equipamento:', err);
+    }
+  };
+
+  const handlePrintAssetTag = (eq, qrUrl) => {
+    if (!eq) return;
+    const printWindow = window.open('', '_blank', 'width=520,height=600');
+    if (!printWindow) {
+      showAlert('Por favor, permita pop-ups para imprimir a etiqueta patrimonial.', 'danger');
+      return;
+    }
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <title>Etiqueta Patrimonial - ${eq.code}</title>
+        <style>
+          @page { size: 80mm 100mm; margin: 4mm; }
+          body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 10px; color: #0f172a; text-align: center; }
+          .tag-card { border: 2px solid #0f172a; border-radius: 8px; padding: 10px; }
+          .header { font-size: 13px; font-weight: 800; color: #0891b2; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #0891b2; padding-bottom: 4px; margin-bottom: 8px; }
+          .code { font-size: 20px; font-weight: 900; color: #0f172a; margin: 4px 0; }
+          .name { font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px; }
+          .sector { font-size: 10px; color: #64748b; margin-bottom: 8px; }
+          .qr-img { width: 170px; height: 170px; margin: 0 auto; display: block; }
+          .instruction { font-size: 9px; font-weight: 700; color: #0891b2; text-transform: uppercase; margin-top: 8px; letter-spacing: 0.3px; }
+          .sub { font-size: 8px; color: #64748b; margin-top: 2px; }
+          @media print { .no-print { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="tag-card">
+          <div class="header">NexaCLINIC • Engenharia Clínica</div>
+          <div class="code">${eq.code}</div>
+          <div class="name">${eq.name}</div>
+          <div class="sector">Setor: ${eq.sector || 'Geral'} • Série: ${eq.serialNumber || 'N/A'}</div>
+          <img src="${qrUrl}" class="qr-img" alt="QR Code" />
+          <div class="instruction">Aponte a Câmera para Abrir Chamado</div>
+          <div class="sub">Sistema Integrado de Manutenção Hospitalar</div>
+        </div>
+        <script>
+          window.onload = function() {
+            setTimeout(function() { window.print(); }, 250);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
   };
 
   const getStatusBadgeStyle = (status) => {
@@ -920,12 +988,12 @@ export default function MaintenancePanel({ currentUser }) {
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Código OS</th>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Equipamento / Ativo</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Código</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Equipamento</th>
                     <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Categoria</th>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Tipo & Prioridade</th>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Solicitante / Setor</th>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Técnico Responsável</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Tipo</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Solicitante</th>
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Técnico</th>
                     <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Status</th>
                     <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Ações</th>
                   </tr>
@@ -1025,19 +1093,19 @@ export default function MaintenancePanel({ currentUser }) {
                         <span style={{ fontWeight: '600', color: '#0891b2' }}>{eq.category} ({eq.subcategory || 'Geral'})</span>
                       </div>
                       <div style={styles.eqInfoRow}>
-                        <span style={styles.eqInfoLabel}>Marca / Modelo:</span>
+                        <span style={styles.eqInfoLabel}>Modelo:</span>
                         <span>{eq.brand} - {eq.model}</span>
                       </div>
                       <div style={styles.eqInfoRow}>
-                        <span style={styles.eqInfoLabel}>Nº de Série:</span>
+                        <span style={styles.eqInfoLabel}>Série:</span>
                         <span>{eq.serialNumber || 'N/A'}</span>
                       </div>
                       <div style={styles.eqInfoRow}>
-                        <span style={styles.eqInfoLabel}>Setor / Sala:</span>
+                        <span style={styles.eqInfoLabel}>Setor:</span>
                         <span style={{ fontWeight: '600', color: '#334155' }}>{eq.sector}</span>
                       </div>
                       <div style={styles.eqInfoRow}>
-                        <span style={styles.eqInfoLabel}>Próxima Preventiva:</span>
+                        <span style={styles.eqInfoLabel}>Preventiva:</span>
                         <span style={{ fontWeight: '600', color: eq.nextPreventiveDate && eq.nextPreventiveDate < new Date().toISOString().split('T')[0] ? '#ef4444' : '#166534' }}>
                           {eq.nextPreventiveDate ? new Date(eq.nextPreventiveDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não agendada'}
                         </span>
@@ -1050,13 +1118,13 @@ export default function MaintenancePanel({ currentUser }) {
                           <Clock size={14} /> Histórico ({relatedOsCount})
                         </button>
                         <button onClick={() => handleOpenQr(eq)} style={styles.btnCardAction} title="Ver QR Code">
-                          <QrCode size={14} /> Tag QR
+                          <QrCode size={14} /> QR
                         </button>
                       </div>
 
                       <div style={{ display: 'flex', gap: '0.3rem' }}>
                         <button onClick={() => handleOpenNewOrder(eq)} style={styles.btnCardPrimary} title="Abrir OS para este equipamento">
-                          <Wrench size={14} /> Abrir OS
+                          <Wrench size={14} /> OS
                         </button>
                         <button onClick={() => handleOpenEditEquipment(eq)} style={styles.actionBtn} title="Editar Cadastro">
                           <Edit size={15} color="#0284c7" />
@@ -1075,10 +1143,10 @@ export default function MaintenancePanel({ currentUser }) {
                     <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Patrimônio</th>
                     <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Equipamento</th>
                     <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Categoria</th>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Marca / Modelo</th>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Nº Série</th>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Setor / Local</th>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Próx. Preventiva</th>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Modelo</th>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Série</th>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Setor</th>
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Preventiva</th>
                     <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Status</th>
                     <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Ações</th>
                   </tr>
@@ -1152,7 +1220,7 @@ export default function MaintenancePanel({ currentUser }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
             <Calendar size={20} color="#0891b2" />
             <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>
-              Cronograma de Manutenções Preventivas & Calibrações
+              Cronograma Preventivo
             </h2>
           </div>
 
@@ -1168,7 +1236,7 @@ export default function MaintenancePanel({ currentUser }) {
                         <span>{eq.category}</span>
                       </div>
                       <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#1e293b', margin: '0.3rem 0' }}>{eq.name}</h4>
-                      <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0.2rem 0' }}>Local: <strong>{eq.sector}</strong></p>
+                      <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0.2rem 0' }}>Setor: <strong>{eq.sector}</strong></p>
                       <p style={{ fontSize: '0.75rem', color: '#475569' }}>Intervalo: Cada {eq.preventiveIntervalDays || 90} dias</p>
                     </div>
                     <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1181,7 +1249,7 @@ export default function MaintenancePanel({ currentUser }) {
                         </div>
                       </div>
                       <button onClick={() => handleOpenNewOrder(eq)} style={{ ...styles.btnPrimary, padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
-                        <Wrench size={12} /> Agendar OS
+                        <Wrench size={12} /> Agendar
                       </button>
                     </div>
                   </div>
@@ -1197,7 +1265,7 @@ export default function MaintenancePanel({ currentUser }) {
                     <div>
                       <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>{eq.code} • {eq.category}</span>
                       <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#1e293b', margin: '0.1rem 0' }}>{eq.name}</h4>
-                      <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Local: {eq.sector} | Periodicidade: Cada {eq.preventiveIntervalDays || 90} dias</p>
+                      <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Setor: {eq.sector} | Intervalo: Cada {eq.preventiveIntervalDays || 90} dias</p>
                     </div>
 
                     <div style={{ textAlign: 'right' }}>
@@ -1208,7 +1276,7 @@ export default function MaintenancePanel({ currentUser }) {
                         {eq.nextPreventiveDate ? new Date(eq.nextPreventiveDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não definida'}
                       </div>
                       <button onClick={() => handleOpenNewOrder(eq)} style={{ ...styles.btnPrimary, padding: '0.25rem 0.5rem', fontSize: '0.75rem', marginTop: '0.4rem' }}>
-                        <Wrench size={12} /> Agendar OS Preventiva
+                        <Wrench size={12} /> Agendar
                       </button>
                     </div>
                   </div>
@@ -1222,11 +1290,11 @@ export default function MaintenancePanel({ currentUser }) {
                   <tr>
                     <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Código</th>
                     <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Equipamento</th>
-                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Setor / Local</th>
-                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Periodicidade</th>
-                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Próxima Preventiva</th>
-                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Situação</th>
-                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Ação</th>
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Setor</th>
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Intervalo</th>
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Preventiva</th>
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Status</th>
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1316,7 +1384,7 @@ export default function MaintenancePanel({ currentUser }) {
           <div style={{ ...styles.modalContent, maxWidth: '650px' }}>
             <div style={styles.modalHeader}>
               <h3 style={styles.modalTitle}>
-                {editingOrder ? `Atendimento Técnico: ${editingOrder.code}` : 'Solicitar Reparo / Nova Ordem de Serviço'}
+                {editingOrder ? `Atendimento Técnico: ${editingOrder.code}` : 'Novo Chamado'}
               </h3>
               <button onClick={() => setShowOrderModal(false)} style={styles.closeBtn}>
                 <X size={20} />
@@ -1365,7 +1433,7 @@ export default function MaintenancePanel({ currentUser }) {
                 ------------------------------------------------------------- */
                 <>
                   <div style={styles.formField}>
-                    <label style={styles.label}>Selecione o Equipamento / Ativo Defeituoso *</label>
+                    <label style={styles.label}>Equipamento *</label>
                     <select 
                       value={orderForm.equipmentId} 
                       onChange={(e) => {
@@ -1379,7 +1447,7 @@ export default function MaintenancePanel({ currentUser }) {
                       style={styles.input}
                       required
                     >
-                      <option value="">Selecione o equipamento ou patrimônio...</option>
+                      <option value="">Selecione o equipamento...</option>
                       {equipments.map(eq => (
                         <option key={eq.id} value={eq.id}>
                           [{eq.code}] {eq.name} — Setor: {eq.sector} ({eq.category})
@@ -1390,35 +1458,35 @@ export default function MaintenancePanel({ currentUser }) {
 
                   <div style={styles.formRow2}>
                     <div style={styles.formField}>
-                      <label style={styles.label}>Tipo de Falha / Ocorrência *</label>
+                      <label style={styles.label}>Tipo *</label>
                       <select 
                         value={orderForm.type} 
                         onChange={(e) => setOrderForm({ ...orderForm, type: e.target.value })}
                         style={styles.input}
                       >
-                        <option value="Corretiva">Equipamento Quebrado / Defeito</option>
-                        <option value="Infraestrutura">Ar Condicionado / Elétrica / Predial</option>
-                        <option value="Preventiva">Solicitação de Revisão / Calibração</option>
+                        <option value="Corretiva">Corretiva (Defeito)</option>
+                        <option value="Infraestrutura">Infraestrutura (Predial)</option>
+                        <option value="Preventiva">Preventiva (Calibração)</option>
                       </select>
                     </div>
 
                     <div style={styles.formField}>
-                      <label style={styles.label}>Urgência / Impacto no Atendimento *</label>
+                      <label style={styles.label}>Prioridade *</label>
                       <select 
                         value={orderForm.priority} 
                         onChange={(e) => setOrderForm({ ...orderForm, priority: e.target.value })}
                         style={styles.input}
                       >
-                        <option value="Baixa">Baixa (Não impede o trabalho)</option>
-                        <option value="Média">Média (Dificulta o trabalho)</option>
-                        <option value="Alta">Alta (Parou o setor / Atendimento afetado)</option>
-                        <option value="Crítico">Crítico (Risco a paciente / Parada Geral)</option>
+                        <option value="Baixa">Baixa</option>
+                        <option value="Média">Média</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Crítico">Crítico</option>
                       </select>
                     </div>
                   </div>
 
                   <div style={styles.formField}>
-                    <label style={styles.label}>Descrição Detalhada do Problema / Sintoma *</label>
+                    <label style={styles.label}>Descrição *</label>
                     <textarea 
                       rows={4} 
                       placeholder="Descreva com detalhes o sintoma apresentado, barulhos, mensagens de erro ou mau funcionamento..."
@@ -1441,14 +1509,14 @@ export default function MaintenancePanel({ currentUser }) {
                 <>
                   <div style={{ padding: '0.75rem', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '0.5rem' }}>
                     <div style={{ fontSize: '0.85rem', color: '#334155', marginBottom: '0.4rem' }}>
-                      <strong>Técnico Responsável:</strong> <span style={{ color: '#0891b2', fontWeight: '600' }}>{editingOrder.assignedTechnician || 'Aguardando atribuição pela equipe'}</span>
+                      <strong>Técnico:</strong> <span style={{ color: '#0891b2', fontWeight: '600' }}>{editingOrder.assignedTechnician || 'Aguardando atribuição pela equipe'}</span>
                     </div>
                     <div style={{ fontSize: '0.85rem', color: '#334155', marginBottom: '0.4rem' }}>
-                      <strong>Prioridade / SLA:</strong> {editingOrder.priority}
+                      <strong>Prioridade:</strong> {editingOrder.priority}
                     </div>
                     {editingOrder.diagnostic && (
                       <div style={{ fontSize: '0.85rem', color: '#166534', background: '#f0fdf4', padding: '0.5rem', borderRadius: '4px', border: '1px solid #bbf7d0', marginTop: '0.4rem' }}>
-                        <strong>Laudo Técnico / Parecer:</strong> {editingOrder.diagnostic}
+                        <strong>Laudo:</strong> {editingOrder.diagnostic}
                       </div>
                     )}
                   </div>
@@ -1456,7 +1524,7 @@ export default function MaintenancePanel({ currentUser }) {
                   {/* Timeline Logs */}
                   {editingOrder.timelineLogs && editingOrder.timelineLogs.length > 0 && (
                     <div style={{ marginTop: '0.5rem' }}>
-                      <label style={{ ...styles.label, marginBottom: '0.4rem', color: '#334155' }}>Histórico de Apontamentos & E-mails Enviados</label>
+                      <label style={{ ...styles.label, marginBottom: '0.4rem', color: '#334155' }}>Histórico</label>
                       <div style={{ maxHeight: '160px', overflowY: 'auto', background: '#f8fafc', padding: '0.6rem', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                         {editingOrder.timelineLogs.map((log, idx) => (
                           <div key={log.id || idx} style={{ fontSize: '0.78rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.3rem' }}>
@@ -1478,23 +1546,23 @@ export default function MaintenancePanel({ currentUser }) {
                 <>
                   <div style={styles.formRow2}>
                     <div style={styles.formField}>
-                      <label style={styles.label}>Status Atual do Atendimento *</label>
+                      <label style={styles.label}>Status *</label>
                       <select 
                         value={orderForm.status} 
                         onChange={(e) => setOrderForm({ ...orderForm, status: e.target.value })}
                         style={{ ...styles.input, fontWeight: '700', color: '#0369a1' }}
                       >
-                        <option value="Aberta">Aberta (Aguardando Triagem)</option>
+                        <option value="Aberta">Aberta</option>
                         <option value="Em Diagnóstico">Em Diagnóstico</option>
-                        <option value="Aguardando Peça">Aguardando Peça / Terceiro</option>
+                        <option value="Aguardando Peça">Aguardando Peça</option>
                         <option value="Em Execução">Em Execução</option>
-                        <option value="Concluída">Concluída (Resolvido)</option>
+                        <option value="Concluída">Concluída</option>
                         <option value="Cancelada">Cancelada</option>
                       </select>
                     </div>
 
                     <div style={styles.formField}>
-                      <label style={styles.label}>Técnico Responsável *</label>
+                      <label style={styles.label}>Técnico *</label>
                       <input 
                         type="text" 
                         placeholder="Nome do técnico ou empresa terceirizada"
@@ -1507,7 +1575,7 @@ export default function MaintenancePanel({ currentUser }) {
 
                   <div style={styles.formRow2}>
                     <div style={styles.formField}>
-                      <label style={styles.label}>Ajustar Prioridade / SLA</label>
+                      <label style={styles.label}>Prioridade</label>
                       <select 
                         value={orderForm.priority} 
                         onChange={(e) => setOrderForm({ ...orderForm, priority: e.target.value })}
@@ -1521,7 +1589,7 @@ export default function MaintenancePanel({ currentUser }) {
                     </div>
 
                     <div style={styles.formField}>
-                      <label style={styles.label}>Custo de Mão de Obra / Serviço (R$)</label>
+                      <label style={styles.label}>Mão de Obra (R$)</label>
                       <input 
                         type="number" 
                         step="0.01"
@@ -1534,7 +1602,7 @@ export default function MaintenancePanel({ currentUser }) {
                   </div>
 
                   <div style={styles.formField}>
-                    <label style={styles.label}>Laudo Técnico & Diagnóstico da Solução</label>
+                    <label style={styles.label}>Laudo</label>
                     <textarea 
                       rows={3} 
                       placeholder="Causa raiz identificada, procedimentos efetuados, testes aplicados e parecer da solução..."
@@ -1545,7 +1613,7 @@ export default function MaintenancePanel({ currentUser }) {
                   </div>
 
                   <div style={styles.formField}>
-                    <label style={styles.label}>Apontamento de Andamento (Notificação ao Solicitante)</label>
+                    <label style={styles.label}>Apontamento</label>
                     <textarea 
                       rows={2} 
                       placeholder="Descreva o que foi feito nesta etapa para enviar por e-mail ao solicitante..."
@@ -1569,7 +1637,7 @@ export default function MaintenancePanel({ currentUser }) {
                   {/* Timeline Logs */}
                   {editingOrder.timelineLogs && editingOrder.timelineLogs.length > 0 && (
                     <div style={{ marginTop: '0.5rem' }}>
-                      <label style={{ ...styles.label, marginBottom: '0.4rem', color: '#334155' }}>Histórico de Apontamentos & E-mails Enviados</label>
+                      <label style={{ ...styles.label, marginBottom: '0.4rem', color: '#334155' }}>Histórico</label>
                       <div style={{ maxHeight: '130px', overflowY: 'auto', background: '#f8fafc', padding: '0.6rem', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                         {editingOrder.timelineLogs.map((log, idx) => (
                           <div key={log.id || idx} style={{ fontSize: '0.78rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.3rem' }}>
@@ -1592,7 +1660,7 @@ export default function MaintenancePanel({ currentUser }) {
                 </button>
                 {(!editingOrder || isTechOrAdmin) && (
                   <button type="submit" style={styles.btnPrimary}>
-                    {editingOrder ? 'Salvar Atendimento Técnico' : 'Enviar Chamado / Abrir OS'}
+                    {editingOrder ? 'Salvar' : 'Salvar'}
                   </button>
                 )}
               </div>
@@ -1607,7 +1675,7 @@ export default function MaintenancePanel({ currentUser }) {
           <div style={styles.modalContent}>
             <div style={styles.modalHeader}>
               <h3 style={styles.modalTitle}>
-                {editingEquipment ? `Editar Equipamento: ${editingEquipment.code}` : 'Novo Equipamento / Ativo'}
+                {editingEquipment ? `Editar: ${editingEquipment.code}` : 'Novo Equipamento'}
               </h3>
               <button onClick={() => setShowEquipmentModal(false)} style={styles.closeBtn}>
                 <X size={20} />
@@ -1617,7 +1685,7 @@ export default function MaintenancePanel({ currentUser }) {
             <form onSubmit={handleSaveEquipment} style={styles.formGrid}>
               <div style={styles.formRow2}>
                 <div style={styles.formField}>
-                  <label style={styles.label}>Código / Patrimônio</label>
+                  <label style={styles.label}>Patrimônio</label>
                   <input 
                     type="text" 
                     placeholder="Ex: PAT-00105 ou código de barra"
@@ -1628,7 +1696,7 @@ export default function MaintenancePanel({ currentUser }) {
                 </div>
 
                 <div style={styles.formField}>
-                  <label style={styles.label}>Nome do Equipamento *</label>
+                  <label style={styles.label}>Equipamento *</label>
                   <input 
                     type="text" 
                     placeholder="Ex: Máquina de Hemodiálise, Gerador, Osmose..."
@@ -1648,13 +1716,13 @@ export default function MaintenancePanel({ currentUser }) {
                     onChange={(e) => setEqForm({ ...eqForm, category: e.target.value })}
                     style={styles.input}
                   >
-                    <option value="Biomédico">Biomédico & Clínico</option>
-                    <option value="Infraestrutura">Infraestrutura & Predial</option>
+                    <option value="Biomédico">Biomédico</option>
+                    <option value="Infraestrutura">Infraestrutura</option>
                   </select>
                 </div>
 
                 <div style={styles.formField}>
-                  <label style={styles.label}>Setor / Localização *</label>
+                  <label style={styles.label}>Setor *</label>
                   <select 
                     value={sectorOptions.includes(eqForm.sector) ? eqForm.sector : (eqForm.sector ? 'Outro' : '')}
                     onChange={(e) => {
@@ -1670,7 +1738,7 @@ export default function MaintenancePanel({ currentUser }) {
                     style={styles.input}
                     required={!isCustomSector}
                   >
-                    <option value="">Selecione o setor ou localização...</option>
+                    <option value="">Selecione o setor...</option>
                     {sectorOptions.map(sec => (
                       <option key={sec} value={sec}>{sec}</option>
                     ))}
@@ -1691,7 +1759,7 @@ export default function MaintenancePanel({ currentUser }) {
 
               <div style={styles.formRow2}>
                 <div style={styles.formField}>
-                  <label style={styles.label}>Marca / Fabricante</label>
+                  <label style={styles.label}>Marca</label>
                   <input 
                     type="text" 
                     placeholder="Ex: Nipro, Fresenius, Stemac, Deltamed..."
@@ -1702,7 +1770,7 @@ export default function MaintenancePanel({ currentUser }) {
                 </div>
 
                 <div style={styles.formField}>
-                  <label style={styles.label}>Modelo / Versão</label>
+                  <label style={styles.label}>Modelo</label>
                   <input 
                     type="text" 
                     placeholder="Ex: 4008S, Diamax 220F, ST-250KVA..."
@@ -1715,7 +1783,7 @@ export default function MaintenancePanel({ currentUser }) {
 
               <div style={styles.formRow2}>
                 <div style={styles.formField}>
-                  <label style={styles.label}>Número de Série</label>
+                  <label style={styles.label}>Série</label>
                   <input 
                     type="text" 
                     placeholder="Número de série de fábrica"
@@ -1726,7 +1794,7 @@ export default function MaintenancePanel({ currentUser }) {
                 </div>
 
                 <div style={styles.formField}>
-                  <label style={styles.label}>Frequência de Preventiva (Dias)</label>
+                  <label style={styles.label}>Intervalo (Dias)</label>
                   <input 
                     type="number" 
                     placeholder="Ex: 90"
@@ -1739,7 +1807,7 @@ export default function MaintenancePanel({ currentUser }) {
 
               <div style={styles.formRow2}>
                 <div style={styles.formField}>
-                  <label style={styles.label}>Próxima Preventiva</label>
+                  <label style={styles.label}>Preventiva</label>
                   <input 
                     type="date" 
                     value={eqForm.nextPreventiveDate}
@@ -1749,7 +1817,7 @@ export default function MaintenancePanel({ currentUser }) {
                 </div>
 
                 <div style={styles.formField}>
-                  <label style={styles.label}>Status de Operação</label>
+                  <label style={styles.label}>Status</label>
                   <select 
                     value={eqForm.status} 
                     onChange={(e) => setEqForm({ ...eqForm, status: e.target.value })}
@@ -1768,7 +1836,7 @@ export default function MaintenancePanel({ currentUser }) {
                   Cancelar
                 </button>
                 <button type="submit" style={styles.btnPrimary}>
-                  Salvar Equipamento
+                  Salvar
                 </button>
               </div>
             </form>
@@ -1798,7 +1866,7 @@ export default function MaintenancePanel({ currentUser }) {
             <div style={{ padding: '1rem 0' }}>
               <div style={{ display: 'flex', gap: '1rem', background: '#f8fafc', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Marca / Modelo:</span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Modelo:</span>
                   <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>{selectedEqHistory.brand} {selectedEqHistory.model}</div>
                 </div>
                 <div>
@@ -1806,7 +1874,7 @@ export default function MaintenancePanel({ currentUser }) {
                   <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>{selectedEqHistory.sector}</div>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Status Operacional:</span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Status:</span>
                   <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#0891b2' }}>{selectedEqHistory.status}</div>
                 </div>
               </div>
@@ -1840,33 +1908,97 @@ export default function MaintenancePanel({ currentUser }) {
         </div>
       )}
 
-      {/* MODAL: GENERATOR DE QR CODE */}
+      {/* MODAL: ETIQUETA PATRIMONIAL COM QR CODE */}
       {showQrModal && selectedEqQr && (
         <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalContent, maxWidth: '400px', textAlign: 'center' }}>
+          <div style={{ ...styles.modalContent, maxWidth: '450px', textAlign: 'center' }}>
             <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>Tag QR Code de Patrimônio</h3>
+              <h3 style={styles.modalTitle}>Etiqueta Patrimonial</h3>
               <button onClick={() => setShowQrModal(false)} style={styles.closeBtn}>
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ padding: '1.5rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ border: '3px solid #0f172a', borderRadius: '12px', padding: '1rem', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                <QrCode size={160} color="#0f172a" />
-                <div style={{ fontSize: '1rem', fontWeight: '800', color: '#0f172a', marginTop: '0.5rem' }}>
+            <div style={{ padding: '1rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ border: '2px solid #0f172a', borderRadius: '12px', padding: '1.25rem', background: '#fff', boxShadow: '0 4px 14px rgba(0,0,0,0.08)', width: '100%', boxSizing: 'border-box' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: '800', color: '#0891b2', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.6rem' }}>
+                  NexaCLINIC • Engenharia Clínica
+                </div>
+
+                <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                  {qrDataUrl ? (
+                    <img 
+                      src={qrDataUrl} 
+                      alt={`QR Code ${selectedEqQr.code}`}
+                      width={210}
+                      height={210}
+                      style={{ display: 'block', borderRadius: '4px' }}
+                    />
+                  ) : (
+                    <div style={{ width: '210px', height: '210px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+                      <RefreshCw size={24} className="spin" />
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ fontSize: '1.25rem', fontWeight: '900', color: '#0f172a' }}>
                   {selectedEqQr.code}
                 </div>
-                <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#0891b2' }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#1e293b', marginTop: '0.2rem' }}>
                   {selectedEqQr.name}
                 </div>
-                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
-                  Setor: {selectedEqQr.sector}
+                <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.2rem' }}>
+                  Setor: <strong>{selectedEqQr.sector}</strong> {selectedEqQr.serialNumber ? `• Série: ${selectedEqQr.serialNumber}` : ''}
+                </div>
+
+                <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#0891b2', textTransform: 'uppercase', marginTop: '0.6rem', letterSpacing: '0.3px' }}>
+                  Aponte a Câmera para Abrir Chamado
                 </div>
               </div>
-              <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '1rem' }}>
-                Imprima esta etiqueta para colar fisicamente no equipamento. Ela permite leitura rápida por câmera para abertura instantânea de OS.
+
+              <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '0.85rem 0 1rem', lineHeight: '1.4' }}>
+                Qualquer pessoa com smartphone pode escanear esta etiqueta no salão para relatar defeitos e abrir chamados diretamente.
               </p>
+
+              <div style={{ display: 'flex', gap: '0.5rem', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={() => handlePrintAssetTag(selectedEqQr, qrDataUrl)}
+                  style={{ ...styles.btnPrimary, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', padding: '0.5rem 0.85rem' }}
+                >
+                  <Printer size={15} /> Imprimir Etiqueta
+                </button>
+                <button 
+                  onClick={() => {
+                    const targetUrl = `${window.location.origin}/?chamado_equipamento=${encodeURIComponent(selectedEqQr.id)}`;
+                    navigator.clipboard.writeText(targetUrl);
+                    setCopiedLink(true);
+                    setTimeout(() => setCopiedLink(false), 2500);
+                  }}
+                  style={{ ...styles.btnSecondary, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', padding: '0.5rem 0.85rem', color: copiedLink ? '#15803d' : '#334155' }}
+                >
+                  {copiedLink ? <Check size={15} color="#15803d" /> : <Copy size={15} />}
+                  {copiedLink ? 'Link Copiado!' : 'Copiar Link'}
+                </button>
+                <button 
+                  onClick={() => {
+                    const targetUrl = `${window.location.origin}/?chamado_equipamento=${encodeURIComponent(selectedEqQr.id)}`;
+                    window.open(targetUrl, '_blank');
+                  }}
+                  style={{ ...styles.btnSecondary, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', padding: '0.5rem 0.85rem' }}
+                  title="Abrir página de chamado em nova aba para testar"
+                >
+                  <ExternalLink size={15} /> Testar Chamado
+                </button>
+                {qrDataUrl && (
+                  <a 
+                    href={qrDataUrl}
+                    download={`QR_${selectedEqQr.code}.png`}
+                    style={{ ...styles.btnSecondary, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', padding: '0.5rem 0.85rem', textDecoration: 'none' }}
+                  >
+                    <Download size={15} /> Baixar QR
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>

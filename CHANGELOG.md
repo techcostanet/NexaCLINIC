@@ -1,3 +1,22 @@
+## [v4.9.31] - 02 de Setembro, 2026
+### QR Code de Patrimônio com Abertura Pública de Chamados & Revisão da Manutenção
+- **QR Code Inteligente em Alta Resolução (`MaintenancePanel.jsx` & `qrcode`):**
+  - Implementada a geração real de QR Code (220px) dinamicamente para cada equipamento clínico ou predial cadastrado.
+  - Adicionados botões de ação rápida no modal da tag: **Imprimir Etiqueta Patrimonial** (formatada para 80x100mm ou A4 com identificação visual do NexaCLINIC), **Copiar Link**, **Testar Chamado** em nova aba e **Baixar QR** em imagem PNG.
+- **Portal Público de Abertura de Chamados (`MachineTicketPortal.jsx` & `App.jsx`):**
+  - Criada tela mobile-first e responsiva com acesso público via escaneamento do QR Code (`?chamado_equipamento=ID`), sem exigir autenticação/login.
+  - Carregamento instantâneo das informações do ativo (Patrimônio, Nome, Setor, Modelo, Série e Status Operacional).
+  - Verificação de chamados em aberto para evitar redundâncias e formulário com validação imediata.
+  - Geração de protocolo sequencial (`OS-2026-XXXX`), timeline rastreável e alteração automática do status da máquina para *Em Manutenção* caso a criticidade seja Alta ou Crítica.
+- **Serviços Resilientes de Manutenção (`maintenanceService.js`):**
+  - Implementadas funções `getEquipmentById` e `createPublicMaintenanceTicket` com persistência direta e seeding aprimorado no Firestore preservando IDs naturais de equipamentos e ordens de serviço.
+- **Revisão Rigorosa de UI/UX (Boy Scout Rule):**
+  - Padronização estrita de rótulos concisos (1 termo único) em todas as tabelas, abas, filtros, cards e modais de Manutenção, eliminando barras e conectivos.
+- **Base de Manuais e Documentação Atualizada (`moduleGuidesData.js`):**
+  - Adicionadas seções completas de Recursos, Tutoriais passo a passo e FAQ de Dúvidas sobre QR Code patrimonial e suporte hospitalar.
+
+---
+
 ## [v4.9.30] - 31 de Agosto, 2026
 ### Melhoria de Layout: Modal de Registro de ASO (Exame Ocupacional)
 - **Design Mais Amplo (Wide):**

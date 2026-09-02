@@ -1,7 +1,7 @@
 {
   "name": "sistema-indicadores",
   "private": true,
-  "version": "4.9.30",
+  "version": "4.9.31",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -20,6 +20,7 @@
     "lucide-react": "^1.24.0",
     "papaparse": "^5.5.4",
     "pdfjs-dist": "^6.2.108",
+    "qrcode": "^1.5.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "recharts": "^3.10.1",

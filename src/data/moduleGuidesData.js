@@ -768,6 +768,14 @@ export const MODULE_GUIDES = {
     color: '#0891b2',
     recursos: [
       {
+        title: 'Etiqueta Patrimonial & QR Code Inteligente',
+        desc: 'Geração de QR Code em alta definição (220px) para cada equipamento clínico ou de infraestrutura, permitindo abertura instantânea de chamados via smartphone por qualquer colaborador.'
+      },
+      {
+        title: 'Portal Público de Chamados por Escaneamento',
+        desc: 'Página mobile-first acessível sem login no salão. Ao apontar a câmera do celular para a etiqueta da máquina, o colaborador visualiza os dados do ativo e abre o chamado em segundos.'
+      },
+      {
         title: 'Central de Chamados de T.I. (Helpdesk)',
         desc: 'Abertura, acompanhamento e triagem de solicitações técnicas para computadores, sistemas, conectividade de rede, impressoras e acessos.'
       },
@@ -776,33 +784,45 @@ export const MODULE_GUIDES = {
         desc: 'Controle dinâmico de prazos limites por prioridade (Crítico 2h, Alta 8h, Média 24h e Baixa 48h) com semáforo visual de conformidade e contagem regressiva.'
       },
       {
-        title: 'Categorias e Subcategorias Especializadas de T.I.',
-        desc: 'Classificação estruturada em Hardware, Sistemas/NexaCLINIC, Rede/Wi-Fi, Impressoras Zebra/Laser, Acessos/Contas, Telefonia, Segurança e Servidores.'
+        title: 'Prontuário de Ativos & Equipamentos Biomédicos',
+        desc: 'Cadastro completo de máquinas de hemodiálise, osmose reversa, geradores e bombas, com marca, modelo, série, setor físico e status operacional em tempo real.'
       },
       {
-        title: 'Roteamento por Setores Hospitalares',
-        desc: 'Vínculo obrigatório do chamado ao setor físico afetado (Salões de Hemodiálise, Recepção, Farmácia, Consultório, CME, CTA, Faturamento, RH, etc.).'
-      },
-      {
-        title: 'Segregação de Acessos e Segurança (RBAC)',
-        desc: 'Colaboradores comuns visualizam exclusivamente os seus próprios chamados, enquanto a equipe de T.I. e Administradores possuem visão 100% ampla de toda a clínica.'
+        title: 'Cronograma Preventivo Automatizado',
+        desc: 'Monitoramento contínuo de vencimentos de preventivas e calibrações por periodicidade em dias, com alertas visuais de atraso e agendamento de OS em 1 clique.'
       },
       {
         title: 'Histórico & Interações na Linha do Tempo',
-        desc: 'Registro cronológico rastreável de todas as mensagens, diagnósticos técnicos, trocas de status e réplicas entre solicitante e técnico.'
+        desc: 'Registro cronológico rastreável de todas as mensagens, diagnósticos técnicos, trocas de status, custos de mão de obra e réplicas entre solicitante e técnico.'
       },
       {
-        title: 'Impressão de O.S. Formatada em A4',
-        desc: 'Emissão com 1 clique de espelho técnico contendo laudo, solução aplicada e campos de assinatura e carimbo para guarda documental.'
-      },
-      {
-        title: 'Gestão de Ativos Clínicos & Engenharia',
-        desc: 'Prontuário técnico de máquinas de hemodiálise, sistemas de osmose reversa, geradores e cronograma de manutenções preventivas.'
+        title: 'Impressão de Etiquetas & Prontuário Técnico em PDF',
+        desc: 'Emissão de etiquetas patrimoniais prontas para impressão física e espelho técnico formatado em A4 com laudos e campos de assinatura.'
       }
     ],
     tutorial: [
       {
-        title: 'Como Abrir um Chamado de T.I.',
+        title: 'Como Imprimir a Etiqueta com QR Code para o Equipamento',
+        steps: [
+          'Acesse a aba "Equipamentos" no módulo de Manutenção.',
+          'Localize a máquina desejada (ex: Máquina de Hemodiálise Fresenius 4008S).',
+          'Clique no botão "QR" no card ou na linha do equipamento.',
+          'No modal que se abrir, clique em "Imprimir Etiqueta" para enviar à impressora térmica ou padrão.',
+          'Cole a etiqueta impressa em local visível na carcaça do equipamento.'
+        ]
+      },
+      {
+        title: 'Como Abrir um Chamado Escaneando o QR Code pelo Smartphone',
+        steps: [
+          'Aponte a câmera do celular para o QR Code colado na máquina.',
+          'Toque na notificação do navegador para abrir o Portal do NexaCLINIC (não exige login).',
+          'Confira os dados do ativo (Patrimônio, Modelo e Setor) exibidos na tela.',
+          'Preencha seu Nome, Contato (WhatsApp/E-mail), Prioridade e Descreva o defeito apresentado.',
+          'Toque em "Enviar Chamado". O protocolo será gerado na hora e a O.S. entrará imediatamente na lista da manutenção.'
+        ]
+      },
+      {
+        title: 'Como Abrir um Chamado de T.I. no Painel',
         steps: [
           'Acesse o módulo "Manutenção" e clique na aba "Chamados T.I." (ou "Meus Chamados T.I.").',
           'Clique no botão "+ Novo Chamado".',
@@ -813,48 +833,44 @@ export const MODULE_GUIDES = {
         ]
       },
       {
-        title: 'Como o Suporte Técnico de T.I. Atende uma Solicitação',
+        title: 'Como Executar o Atendimento Técnico e Lançar Laudo',
         steps: [
-          'Na aba "Chamados T.I.", localize o chamado na lista ou filtre por Status / Prioridade.',
-          'Clique no botão "Atender" na linha correspondente.',
-          'Altere o Status para "Em Atendimento" e preencha seu nome no campo Técnico.',
-          'Adicione o Diagnóstico Técnico preliminar e salve.',
-          'Ao finalizar o reparo, insira a Solução Aplicada, mude o status para "Resolvida" e salve para notificar o usuário e registrar o cumprimento do SLA.'
+          'Na aba "Ordens de Serviço" ou "Chamados T.I.", localize o chamado e clique em "Atender".',
+          'Altere o Status para "Em Diagnóstico" ou "Em Execução" e preencha o Técnico Responsável.',
+          'Caso haja custos, informe o valor de mão de obra e peças.',
+          'Insira o Laudo Técnico detalhando a intervenção realizada.',
+          'Marque o envio de notificação por e-mail para manter o solicitante atualizado e altere o status para "Concluída".'
         ]
       },
       {
-        title: 'Como Acompanhar Prazos no Painel de SLA',
+        title: 'Como Monitorar o Cronograma Preventivo',
         steps: [
-          'No topo da aba de T.I., clique no botão "Painel SLA".',
-          'Consulte o percentual de conformidade geral da clínica (chamados entregues no prazo).',
-          'Monitore os cards de chamados com status 🟡 "Alerta" (próximos do vencimento) e 🔴 "Atrasado" para priorização imediata.'
-        ]
-      },
-      {
-        title: 'Como Imprimir a Ordem de Serviço de T.I.',
-        steps: [
-          'Localize a O.S. na tabela ou abra o modal de detalhes.',
-          'Clique no ícone ou botão "Imprimir".',
-          'Uma janela formatada em padrão A4 abrirá com os dados cadastrais, laudo técnico e campos de assinatura prontos para impressão ou salvamento em PDF.'
+          'Acesse a aba "Cronograma" no painel de Manutenção.',
+          'Analise os equipamentos com status vermelho "ATRASADA!" para priorizar a revisão.',
+          'Clique no botão "Agendar" na linha do equipamento para abrir a Ordem de Serviço Preventiva pré-preenchida.'
         ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'Colaboradores comuns podem visualizar os chamados abertos por outros colegas?',
-        resposta: 'Não. Para garantir privacidade e foco operacional, os colaboradores padrão visualizam estritamente as suas próprias ordens de serviço. Somente a equipe de T.I., técnicos e administradores possuem visualização ampla de todos os chamados da clínica.'
+        pergunta: 'É necessário fazer login para abrir um chamado pelo QR Code?',
+        resposta: 'Não. O portal de chamado por QR Code foi projetado com acesso público e responsivo para permitir que médicos, enfermeiros e técnicos de enfermagem relatem falhas instantaneamente pelo celular sem barreiras de autenticação.'
+      },
+      {
+        pergunta: 'O chamado aberto pelo QR Code atualiza o status da máquina no salão?',
+        resposta: 'Sim. Se o chamado for aberto com prioridade Alta ou Crítica, o sistema altera de imediato a situação do equipamento para "Em Manutenção", sinalizando visualmente a toda a clínica que o ativo está indisponível.'
+      },
+      {
+        pergunta: 'Como testar a página de chamado sem um smartphone em mãos?',
+        resposta: 'Basta abrir a Tag QR no módulo de Equipamentos e clicar no botão "Testar Chamado" ou "Copiar Link". A página pública do ativo se abrirá em uma nova aba para conferência.'
       },
       {
         pergunta: 'Quais são as metas de tempo de cada nível de SLA?',
         resposta: 'Crítico: meta de 2 horas (parada de salão/servidor/PEP). Alta: meta de 8 horas (impacto setorial ou impressoras de prescrição). Média: meta de 24 horas (solicitações e problemas rotineiros). Baixa: meta de 48 horas (dúvidas, melhorias e novos acessos).'
       },
       {
-        pergunta: 'O que acontece quando o prazo de atendimento expira?',
-        resposta: 'O chamado recebe a sinalização visual em vermelho "Atrasado / Estourado" com a indicação exata das horas de estouro, sendo destacado no topo do painel executivo para intervenção da gerência de T.I.'
-      },
-      {
-        pergunta: 'É possível enviar mensagens ou esclarecer dúvidas dentro do chamado?',
-        resposta: 'Sim. Tanto o solicitante quanto o técnico de T.I. podem utilizar a seção "Histórico & Interações" no modal do chamado para enviar mensagens e registrar o andamento em tempo real.'
+        pergunta: 'Como gerar o prontuário técnico completo de uma máquina em PDF?',
+        resposta: 'Na aba "Equipamentos", clique no botão "Histórico" da máquina e, em seguida, clique em "Gerar PDF" no topo do modal para imprimir o prontuário rastreável com todas as manutenções já executadas.'
       }
     ]
   },

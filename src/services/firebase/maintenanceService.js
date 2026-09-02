@@ -2715,18 +2715,54 @@ export const getEquipments = async () => {
       const batch = writeBatch(db);
       const colRef = collection(db, 'equipments');
       for (const eq of INITIAL_EQUIPMENTS) {
-        const newRef = doc(colRef);
+        const newRef = doc(colRef, eq.id);
         batch.set(newRef, { ...eq, createdAt: new Date().toISOString() });
       }
       await batch.commit();
       const newSnap = await getDocs(collection(db, 'equipments'));
-      return sanitizeTIEquipments(newSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      return sanitizeTIEquipments(newSnap.docs.map(d => ({ ...d.data(), id: d.id })));
     }
     return sanitizeTIEquipments(items);
   } catch (err) {
     console.error('Erro ao carregar equipments do Firestore:', err);
     return getStoredEquipments();
   }
+};
+
+export const getEquipmentById = async (idOrCode) => {
+  if (!idOrCode) return null;
+  const search = String(idOrCode).trim().toLowerCase();
+
+  // Busca no Firestore caso online
+  if (!USE_MOCK) {
+    try {
+      const { getFirestore, doc, getDoc, collection, query, where, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+
+      // 1. Tenta buscar diretamente pelo ID do documento
+      const directDoc = await getDoc(doc(db, 'equipments', idOrCode));
+      if (directDoc.exists()) {
+        return { ...directDoc.data(), id: directDoc.id };
+      }
+
+      // 2. Tenta buscar pelo campo 'code' (ex: PAT-HD-001)
+      const qCode = query(collection(db, 'equipments'), where('code', '==', idOrCode));
+      const snapCode = await getDocs(qCode);
+      if (!snapCode.empty) {
+        const d = snapCode.docs[0];
+        return { ...d.data(), id: d.id };
+      }
+    } catch (e) {
+      console.warn('Erro na busca direta do equipamento no Firestore:', e);
+    }
+  }
+
+  // Fallback: busca na lista completa sanitizada
+  const list = await getEquipments();
+  return list.find(e => 
+    String(e.id || '').toLowerCase() === search || 
+    String(e.code || '').toLowerCase() === search
+  ) || null;
 };
 
 export const saveEquipment = async (equipmentData) => {
@@ -2803,12 +2839,12 @@ export const getServiceOrders = async () => {
       const batch = writeBatch(db);
       const colRef = collection(db, 'service_orders');
       for (const os of INITIAL_SERVICE_ORDERS) {
-        const newRef = doc(colRef);
+        const newRef = doc(colRef, os.id);
         batch.set(newRef, { ...os, createdAt: new Date().toISOString() });
       }
       await batch.commit();
       const newSnap = await getDocs(collection(db, 'service_orders'));
-      return sanitizeTIOrders(newSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      return sanitizeTIOrders(newSnap.docs.map(d => ({ ...d.data(), id: d.id })));
     }
     return items;
   } catch (err) {
@@ -2938,6 +2974,56 @@ export const deleteServiceOrder = async (id) => {
     saveStoredOrders(list);
     return { success: true, id };
   }
+};
+
+export const createPublicMaintenanceTicket = async (ticketData) => {
+  const now = new Date().toISOString();
+  const dateStr = new Date().getFullYear();
+  let count = 1;
+  try {
+    const existing = await getServiceOrders();
+    count = (existing?.length || 0) + 1;
+  } catch (e) {
+    count = Math.floor(1000 + Math.random() * 9000);
+  }
+  const seqStr = String(count).padStart(4, '0');
+  const code = `OS-${dateStr}-${seqStr}`;
+
+  const payload = {
+    ...ticketData,
+    code,
+    type: ticketData.type || 'Corretiva',
+    priority: ticketData.priority || 'Média',
+    status: 'Aberta',
+    openDate: now,
+    source: 'QR Code Patrimônio',
+    partsUsed: [],
+    laborCost: 0,
+    totalCost: 0,
+    timelineLogs: [
+      {
+        id: `log-${Date.now()}`,
+        date: now,
+        author: ticketData.requesterName || 'Chamado QR Code',
+        status: 'Aberta',
+        note: `Chamado aberto via QR Code por ${ticketData.requesterName || 'Colaborador'}.`
+      }
+    ]
+  };
+
+  // Se o chamado for grave/urgente, atualiza o status operacional do equipamento
+  if (ticketData.equipmentId && ['Alta', 'Crítico', 'Urgente'].includes(ticketData.priority)) {
+    try {
+      const eq = await getEquipmentById(ticketData.equipmentId);
+      if (eq) {
+        await saveEquipment({ ...eq, status: 'Em Manutenção' });
+      }
+    } catch (err) {
+      console.warn('Erro ao atualizar status do equipamento para Em Manutenção:', err);
+    }
+  }
+
+  return saveServiceOrder(payload, 'Abertura via QR Code no salão', Boolean(ticketData.requesterEmail));
 };
 
 // ----------------------------------------------------------------------

@@ -22,6 +22,7 @@ import SesmtDashboard from './components/sesmt/SesmtDashboard';
 import AssistPanel from './components/AssistPanel';
 import MedicalPanel from './components/MedicalPanel';
 import SupplierQuotePortal from './components/purchasing/SupplierQuotePortal';
+import MachineTicketPortal from './components/maintenance/MachineTicketPortal';
 import ErrorBoundary from './components/ErrorBoundary';
 import ModuleGuideModal from './components/common/ModuleGuideModal';
 import { UnitProvider } from './contexts/UnitContext';
@@ -34,9 +35,10 @@ export default function App() {
   const [isReportsOpen, setIsReportsOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
-  // Verificação de Acesso Público de Fornecedor via Token
+  // Verificação de Acesso Público de Fornecedor via Token ou QR Code de Manutenção
   const urlParams = new URLSearchParams(window.location.search);
   const quoteToken = urlParams.get('token') || urlParams.get('cotacao');
+  const qrMachineId = urlParams.get('chamado_equipamento') || urlParams.get('eq') || urlParams.get('chamado');
 
   useEffect(() => {
     let isMounted = true;
@@ -100,6 +102,18 @@ export default function App() {
         onExitPortal={() => {
           window.location.href = window.location.origin;
         }} 
+      />
+    );
+  }
+
+  // Se o link acessado for de abertura de chamado de manutenção via QR Code da máquina
+  if (qrMachineId) {
+    return (
+      <MachineTicketPortal
+        equipmentId={qrMachineId}
+        onExitPortal={() => {
+          window.location.href = window.location.origin;
+        }}
       />
     );
   }

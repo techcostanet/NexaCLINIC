@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.31',
+      date: '02/09/2026',
+      title: 'QR Code de Patrimônio com Abertura Pública de Chamados & Revisão da Manutenção',
+      description: 'Implementação de geração real de QR Code (220px) para cada ativo da clínica, permitindo que qualquer colaborador no salão escaneie a etiqueta com o celular e abra chamados técnicos sem necessidade de login. Inclui revisão completa da UI de manutenção com rótulos concisos e impressão de etiquetas.',
+      changes: [
+        { type: 'QR Code de Alta Resolução & Impressão', text: 'Geração de QR Code real em alta definição (220px) com botões para impressão de etiqueta patrimonial formatada (80x100mm ou A4), cópia de link direto, teste imediato e download em PNG.' },
+        { type: 'Portal Público de Chamados Mobile', text: 'Novo portal responsivo e seguro (`MachineTicketPortal`), acessível diretamente via escaneamento do QR Code sem necessidade de login, permitindo abertura instantânea de OS vinculada à máquina.' },
+        { type: 'Atualização Automática de Status Operacional', text: 'Chamados abertos com prioridade Alta ou Crítica alteram automaticamente o status do equipamento para "Em Manutenção", sinalizando visualmente a toda a equipe assistencial.' },
+        { type: 'Revisão Boy Scout de Rótulos Concisos', text: 'Padronização estrita de rótulos com termo único em todas as tabelas, modais, cards e cronogramas do módulo de manutenção, eliminando termos duplos com barras e conectivos.' }
+      ]
+    },
+    {
       version: 'v4.9.30',
       date: '31/08/2026',
       title: 'Melhoria de Layout: Modal de Registro de ASO (Exame Ocupacional)',
