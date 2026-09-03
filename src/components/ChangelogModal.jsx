@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.37',
+      date: '02/09/2026',
+      title: 'Entrada de Notas de Serviços (NFS-e) & Integração com Contas a Pagar',
+      description: 'Adaptação completa da aba Entradas do módulo de Estoque para aceitar notas fiscais de serviços prestados (NFS-e) além de mercadorias (NF-e), gerando as parcelas no Contas a Pagar do Financeiro sem interferir no estoque físico de insumos clínicos.',
+      changes: [
+        { type: 'Suporte a NFS-e e Contas a Pagar', text: 'Gravação da nota fiscal de serviços no histórico com lançamento automático de parcelas no Contas a Pagar, mantendo a integridade dos saldos físicos de insumos do almoxarifado.' },
+        { type: 'Leitor Inteligente (XML e PDF)', text: 'Importação com auto-detecção de formato para NF-e de produtos e NFS-e municipais/nacionais, extraindo dados do prestador, CNPJ, parcelas e descrição dos serviços.' },
+        { type: 'Digitação Manual e Filtros', text: 'Opção de lançamento manual direto na tela, filtro por tipo de nota (Todas, Produtos ou Serviços) e modal de visualização detalhada.' }
+      ]
+    },
+    {
       version: 'v4.9.36',
       date: '02/09/2026',
       title: 'Design Hospitalar em Tons Claros para o Painel da Smart TV',

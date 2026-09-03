@@ -5,7 +5,7 @@ import {
   X, FileText, UploadCloud, Briefcase, Warehouse,
   CheckCircle2, AlertTriangle, AlertCircle, ArrowUpRight, ArrowDownLeft, Trash2, Edit,
   ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Send, ClipboardList, Repeat,
-  AlignJustify, Table, LayoutGrid, Building2, ShoppingCart, Layers, DollarSign
+  AlignJustify, Table, LayoutGrid, Building2, ShoppingCart, Layers, DollarSign, Eye
 } from 'lucide-react';
 
 import { useStockLogic } from './Stock/hooks/useStockLogic';
@@ -209,6 +209,17 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
     handleMappingItemChange,
     handleMappingFieldChange,
     handleFinishXmlWizard,
+    entryMode,
+    setEntryMode,
+    handleStartManualServiceEntry,
+    handleStartImportWizard,
+    handleDeleteInvoice,
+    invoiceTypeFilter,
+    setInvoiceTypeFilter,
+    selectedInvoiceDetail,
+    setSelectedInvoiceDetail,
+    showInvoiceDetailModal,
+    setShowInvoiceDetailModal,
     formatCnpj,
     cleanCnpj,
     getExpiryStatus,
@@ -464,9 +475,34 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
             )}
 
             {activeTab === 'invoices' && (
-              <button onClick={() => { setXmlWizardStep(1); setShowXmlWizard(true); }} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f59e0b' }}>
-                <UploadCloud size={16} /> Importar NF-e (XML / PDF)
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <select
+                  value={invoiceTypeFilter}
+                  onChange={e => setInvoiceTypeFilter(e.target.value)}
+                  style={styles.filterSelect}
+                  title="Filtrar por Tipo de Nota"
+                >
+                  <option value="all">Todas as Entradas</option>
+                  <option value="product">Produtos (NF-e)</option>
+                  <option value="service">Serviços (NFS-e)</option>
+                </select>
+                <button 
+                  onClick={handleStartImportWizard} 
+                  className="btn btn-primary" 
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#f59e0b' }}
+                  title="Importar NF-e ou NFS-e via arquivo XML ou PDF"
+                >
+                  <UploadCloud size={16} /> Importar (XML ou PDF)
+                </button>
+                <button 
+                  onClick={() => handleStartManualServiceEntry('service')} 
+                  className="btn btn-primary" 
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#8b5cf6' }}
+                  title="Lançamento manual de nota de serviços prestados"
+                >
+                  <Plus size={16} /> Lançar Serviço
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -1114,12 +1150,12 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th>Data / Hora</th>
-                    <th>Origem (Local)</th>
-                    <th>Destino (Local)</th>
-                    <th>Produto Transferido</th>
+                    <th>Data</th>
+                    <th>Origem</th>
+                    <th>Destino</th>
+                    <th>Produto</th>
                     <th>Quantidade</th>
-                    <th>Lote / Validade</th>
+                    <th>Lote</th>
                     <th>Operador</th>
                     <th>Status</th>
                     <th>Ações</th>
@@ -1161,47 +1197,109 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
           )}
 
           {/* TAB 2: Purchase Invoices List */}
-          {activeTab === 'invoices' && (
-            <div style={styles.tableWrapper}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    {renderSortHeader('NF-e Nº', 'number', invoiceSort, setInvoiceSort)}
-                    {renderSortHeader('Chave de Acesso', 'accessKey', invoiceSort, setInvoiceSort)}
-                    {renderSortHeader('Fornecedor', 'supplierName', invoiceSort, setInvoiceSort)}
-                    {renderSortHeader('Emissão', 'issueDate', invoiceSort, setInvoiceSort)}
-                    {renderSortHeader('Data de Entrada', 'entryDate', invoiceSort, setInvoiceSort)}
-                    {renderSortHeader('Valor Total', 'totalValue', invoiceSort, setInvoiceSort)}
-                    <th style={styles.th}>Itens Recebidos</th>
-                    <th style={styles.th}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoices.length === 0 ? (
+          {activeTab === 'invoices' && (() => {
+            const filteredInvoices = invoices.filter(inv => {
+              if (invoiceTypeFilter === 'product' && inv?.invoiceType === 'service') return false;
+              if (invoiceTypeFilter === 'service' && inv?.invoiceType !== 'service') return false;
+              if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                const num = String(inv?.number || '').toLowerCase();
+                const sup = String(inv?.supplierName || inv?.supplier || '').toLowerCase();
+                const key = String(inv?.accessKey || '').toLowerCase();
+                const desc = String(inv?.serviceDescription || '').toLowerCase();
+                return num.includes(term) || sup.includes(term) || key.includes(term) || desc.includes(term);
+              }
+              return true;
+            });
+
+            return (
+              <div style={styles.tableWrapper}>
+                <table style={styles.table}>
+                  <thead>
                     <tr>
-                      <td colSpan="8" style={styles.noDataCell}>Nenhuma Nota Fiscal importada ou registrada.</td>
+                      <th style={styles.th}>Tipo</th>
+                      {renderSortHeader('Nota', 'number', invoiceSort, setInvoiceSort)}
+                      {renderSortHeader('Código', 'accessKey', invoiceSort, setInvoiceSort)}
+                      {renderSortHeader('Fornecedor', 'supplierName', invoiceSort, setInvoiceSort)}
+                      {renderSortHeader('Emissão', 'issueDate', invoiceSort, setInvoiceSort)}
+                      {renderSortHeader('Entrada', 'entryDate', invoiceSort, setInvoiceSort)}
+                      {renderSortHeader('Valor', 'totalValue', invoiceSort, setInvoiceSort)}
+                      <th style={styles.th}>Detalhes</th>
+                      <th style={styles.th}>Status</th>
+                      <th style={styles.th}>Ações</th>
                     </tr>
-                  ) : (
-                    sortData(invoices, invoiceSort).map((inv, idx) => {
-                      const totalVal = parseFloat(inv?.totalValue) || 0;
-                      return (
-                        <tr key={inv?.id || idx}>
-                          <td style={{ fontWeight: '600' }}>{inv?.number || 'NF-e Sem Nº'}</td>
-                          <td style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{inv?.accessKey || 'N/A'}</td>
-                          <td style={{ fontWeight: '600' }}>{inv?.supplierName || 'Fornecedor Desconhecido'}</td>
-                          <td>{inv?.issueDate && !isNaN(new Date(inv.issueDate).getTime()) ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}</td>
-                          <td>{inv?.entryDate && !isNaN(new Date(inv.entryDate).getTime()) ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}</td>
-                          <td style={{ fontWeight: '700' }}>R$ {totalVal.toFixed(2)}</td>
-                          <td>{inv?.items?.length || 0} produtos</td>
-                          <td><span style={styles.badgeNormal}>Processada</span></td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody>
+                    {filteredInvoices.length === 0 ? (
+                      <tr>
+                        <td colSpan="10" style={styles.noDataCell}>Nenhuma nota fiscal encontrada no filtro selecionado.</td>
+                      </tr>
+                    ) : (
+                      sortData(filteredInvoices, invoiceSort).map((inv, idx) => {
+                        const totalVal = parseFloat(inv?.totalValue) || 0;
+                        const isService = inv?.invoiceType === 'service';
+                        return (
+                          <tr key={inv?.id || idx}>
+                            <td>
+                              <span style={{
+                                padding: '0.2rem 0.55rem',
+                                borderRadius: '12px',
+                                fontSize: '0.72rem',
+                                fontWeight: '700',
+                                backgroundColor: isService ? '#f3e8ff' : '#e0f2fe',
+                                color: isService ? '#7e22ce' : '#0369a1',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}>
+                                {isService ? 'Serviço' : 'Produto'}
+                              </span>
+                            </td>
+                            <td style={{ fontWeight: '700' }}>{inv?.number ? `Nº ${inv.number}` : 'S/N'}</td>
+                            <td style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                              {inv?.accessKey ? (inv.accessKey.length > 18 ? `${inv.accessKey.slice(0, 10)}...${inv.accessKey.slice(-6)}` : inv.accessKey) : '-'}
+                            </td>
+                            <td style={{ fontWeight: '600' }}>{inv?.supplierName || inv?.supplier || 'Fornecedor Desconhecido'}</td>
+                            <td>{inv?.issueDate && !isNaN(new Date(inv.issueDate).getTime()) ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}</td>
+                            <td>{inv?.entryDate && !isNaN(new Date(inv.entryDate).getTime()) ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}</td>
+                            <td style={{ fontWeight: '700' }}>R$ {totalVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', maxWidth: '240px' }}>
+                              {isService ? (
+                                <span title={inv?.serviceDescription || 'Serviço Prestado'}>
+                                  🛠️ {inv?.serviceDescription ? (inv.serviceDescription.length > 35 ? `${inv.serviceDescription.slice(0, 35)}...` : inv.serviceDescription) : 'Serviço Prestado'}
+                                </span>
+                              ) : (
+                                <span>📦 {inv?.items?.length || 0} produto(s)</span>
+                              )}
+                            </td>
+                            <td><span style={styles.badgeNormal}>Processada</span></td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '0.35rem' }}>
+                                <button 
+                                  onClick={() => { setSelectedInvoiceDetail(inv); setShowInvoiceDetailModal(true); }}
+                                  style={styles.actionEditBtn} 
+                                  title="Ver Detalhes da Nota"
+                                >
+                                  <Eye size={13} /> Ver
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteInvoice(inv?.id)} 
+                                  style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} 
+                                  title="Excluir Nota"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
 
           {/* TAB 3: Suppliers Directory */}
           {activeTab === 'suppliers' && (
@@ -2605,50 +2703,310 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
         </div>
       )}
 
-      {/* XML & PDF (DANFE) IMPORT WIZARD */}
+      {/* XML, PDF & MANUAL INVOICE WIZARD (NF-e & NFS-e) */}
       {showXmlWizard && (
         <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalCard, maxWidth: '820px', width: '92%' }}>
+          <div style={{ ...styles.modalCard, maxWidth: '840px', width: '94%', maxHeight: '90vh' }}>
             <div style={styles.modalHeader}>
-              <h2>Importar Nota Fiscal Eletrônica (XML / PDF DANFE)</h2>
+              <div>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem', margin: 0 }}>
+                  <FileText size={20} color="#f59e0b" />
+                  {xmlData?.invoiceType === 'service' ? 'Entrada de Nota Fiscal de Serviços (NFS-e)' : 'Entrada de Nota Fiscal Eletrônica (NF-e)'}
+                </h2>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  {xmlData?.invoiceType === 'service' 
+                    ? 'Registro fiscal de serviços prestados e integração com Contas a Pagar (sem movimentação física de estoque)' 
+                    : 'Abastecimento de insumos clínicos no catálogo e lançamento financeiro'}
+                </span>
+              </div>
               <button onClick={() => setShowXmlWizard(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
             
             <div style={styles.wizardStepsBar}>
-              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 1 ? styles.wizardStepActive : {}) }}>1. Arquivo</div>
+              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 1 ? styles.wizardStepActive : {}) }}>1. Documento</div>
               <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 2 ? styles.wizardStepActive : {}) }}>2. Fornecedor</div>
               <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 3 ? styles.wizardStepActive : {}) }}>3. Financeiro</div>
-              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 4 ? styles.wizardStepActive : {}) }}>4. Mapear Itens</div>
+              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 4 ? styles.wizardStepActive : {}) }}>
+                {xmlData?.invoiceType === 'service' ? '4. Serviço' : '4. Mapear Itens'}
+              </div>
               <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 5 ? styles.wizardStepActive : {}) }}>5. Finalizar</div>
             </div>
 
             <div style={{ padding: '1.25rem 1.5rem', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
-              {/* STEP 1: Upload XML or PDF File */}
+              {/* STEP 1: Upload File or Manual Entry */}
               {xmlWizardStep === 1 && (
-                <div style={styles.xmlUploadArea}>
-                  <UploadCloud size={48} color="#f59e0b" style={{ marginBottom: '1rem' }} />
-                  <p style={{ fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>
-                    Arraste ou clique para selecionar o arquivo XML (.xml) ou DANFE em PDF (.pdf)
-                  </p>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                    Compatível com XML padrão SEFAZ e DANFE em formato PDF
-                  </p>
-                  
-                  <input 
-                    type="file" 
-                    accept=".xml,.pdf,application/pdf,text/xml" 
-                    onChange={handleXmlUpload} 
-                    id="xml-file-upload-input" 
-                    style={{ display: 'none' }} 
-                  />
-                  <label htmlFor="xml-file-upload-input" className="btn btn-primary" style={{ backgroundColor: '#f59e0b', cursor: 'pointer', padding: '0.6rem 1.5rem' }}>
-                    {actionLoading ? 'Processando Arquivo...' : 'Escolher Arquivo (XML ou PDF)'}
-                  </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  {/* Selectors: Tipo de Nota e Modo de Entrada */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                        Tipo
+                      </label>
+                      <div style={{ display: 'flex', gap: '0.35rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setXmlData(prev => ({ ...(prev || {}), invoiceType: 'service' }));
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '0.45rem 0.6rem',
+                            borderRadius: '6px',
+                            fontSize: '0.8rem',
+                            fontWeight: '700',
+                            border: '1px solid',
+                            cursor: 'pointer',
+                            borderColor: (xmlData?.invoiceType === 'service' || !xmlData?.invoiceType) ? '#8b5cf6' : '#cbd5e1',
+                            backgroundColor: (xmlData?.invoiceType === 'service' || !xmlData?.invoiceType) ? '#f3e8ff' : '#fff',
+                            color: (xmlData?.invoiceType === 'service' || !xmlData?.invoiceType) ? '#7e22ce' : 'var(--text-secondary)'
+                          }}
+                        >
+                          🛠️ Serviço (NFS-e)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setXmlData(prev => ({ ...(prev || {}), invoiceType: 'product' }));
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '0.45rem 0.6rem',
+                            borderRadius: '6px',
+                            fontSize: '0.8rem',
+                            fontWeight: '700',
+                            border: '1px solid',
+                            cursor: 'pointer',
+                            borderColor: xmlData?.invoiceType === 'product' ? '#0284c7' : '#cbd5e1',
+                            backgroundColor: xmlData?.invoiceType === 'product' ? '#e0f2fe' : '#fff',
+                            color: xmlData?.invoiceType === 'product' ? '#0369a1' : 'var(--text-secondary)'
+                          }}
+                        >
+                          📦 Produto (NF-e)
+                        </button>
+                      </div>
+                    </div>
 
-                  {xmlError && (
-                    <div style={{ ...styles.alert, marginTop: '1rem', backgroundColor: 'var(--danger-light)', border: '1px solid var(--danger-color)', color: 'var(--danger-color)' }}>
-                      <AlertTriangle size={18} />
-                      <span>{xmlError}</span>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                        Modalidade
+                      </label>
+                      <div style={{ display: 'flex', gap: '0.35rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => setEntryMode('upload')}
+                          style={{
+                            flex: 1,
+                            padding: '0.45rem 0.6rem',
+                            borderRadius: '6px',
+                            fontSize: '0.8rem',
+                            fontWeight: '700',
+                            border: '1px solid',
+                            cursor: 'pointer',
+                            borderColor: entryMode === 'upload' ? '#f59e0b' : '#cbd5e1',
+                            backgroundColor: entryMode === 'upload' ? '#fef3c7' : '#fff',
+                            color: entryMode === 'upload' ? '#92400e' : 'var(--text-secondary)'
+                          }}
+                        >
+                          <UploadCloud size={14} style={{ display: 'inline', marginRight: '4px' }} /> Arquivo
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!xmlData || !xmlData.number) {
+                              handleStartManualServiceEntry(xmlData?.invoiceType || 'service');
+                            } else {
+                              setEntryMode('manual');
+                            }
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '0.45rem 0.6rem',
+                            borderRadius: '6px',
+                            fontSize: '0.8rem',
+                            fontWeight: '700',
+                            border: '1px solid',
+                            cursor: 'pointer',
+                            borderColor: entryMode === 'manual' ? '#f59e0b' : '#cbd5e1',
+                            backgroundColor: entryMode === 'manual' ? '#fef3c7' : '#fff',
+                            color: entryMode === 'manual' ? '#92400e' : 'var(--text-secondary)'
+                          }}
+                        >
+                          <Edit size={14} style={{ display: 'inline', marginRight: '4px' }} /> Digitação
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Upload Mode Area */}
+                  {entryMode === 'upload' && (
+                    <div style={styles.xmlUploadArea}>
+                      <UploadCloud size={48} color="#f59e0b" style={{ marginBottom: '1rem' }} />
+                      <p style={{ fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>
+                        Arraste ou selecione o arquivo XML (.xml) ou PDF (.pdf) da nota
+                      </p>
+                      <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1.25rem', maxWidth: '540px' }}>
+                        Compatível com NF-e de mercadorias (XML SEFAZ / DANFE PDF) e NFS-e de serviços prestados (XML ABRASF / Nacional e PDF de prefeituras).
+                      </p>
+                      
+                      <input 
+                        type="file" 
+                        accept=".xml,.pdf,application/pdf,text/xml" 
+                        onChange={handleXmlUpload} 
+                        id="xml-file-upload-input" 
+                        style={{ display: 'none' }} 
+                      />
+                      <label htmlFor="xml-file-upload-input" className="btn btn-primary" style={{ backgroundColor: '#f59e0b', cursor: 'pointer', padding: '0.6rem 1.5rem', fontWeight: '700' }}>
+                        {actionLoading ? 'Processando Arquivo...' : 'Escolher Arquivo (XML ou PDF)'}
+                      </label>
+
+                      {xmlError && (
+                        <div style={{ ...styles.alert, marginTop: '1rem', backgroundColor: 'var(--danger-light)', border: '1px solid var(--danger-color)', color: 'var(--danger-color)' }}>
+                          <AlertTriangle size={18} />
+                          <span>{xmlError}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Manual Entry Form */}
+                  {entryMode === 'manual' && (
+                    <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1.25rem', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.85rem' }}>
+                        <div className="form-group">
+                          <label>Nota *</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="Ex: 1042" 
+                            value={xmlData?.number || ''}
+                            onChange={e => setXmlData(prev => ({ ...prev, number: e.target.value }))}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Código</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="Código Verificação / Chave" 
+                            value={xmlData?.accessKey || ''}
+                            onChange={e => setXmlData(prev => ({ ...prev, accessKey: e.target.value }))}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Emissão *</label>
+                          <input 
+                            type="date" 
+                            className="form-control" 
+                            value={xmlData?.issueDate || new Date().toISOString().substring(0, 10)}
+                            onChange={e => setXmlData(prev => ({ ...prev, issueDate: e.target.value }))}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Valor *</label>
+                          <input 
+                            type="number" 
+                            step="0.01" 
+                            className="form-control" 
+                            placeholder="0,00"
+                            style={{ fontWeight: '700' }}
+                            value={xmlData?.totalValue || ''}
+                            onChange={e => {
+                              const val = parseFloat(e.target.value) || 0;
+                              setXmlData(prev => {
+                                const insts = (prev?.installments || []).length > 0 
+                                  ? [{ ...prev.installments[0], amount: val }] 
+                                  : [{ installmentNumber: '1/1', dueDate: prev?.issueDate || new Date().toISOString().substring(0, 10), amount: val }];
+                                return { ...prev, totalValue: e.target.value, installments: insts };
+                              });
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.85rem' }}>
+                        <div className="form-group">
+                          <label>Fornecedor *</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="Razão Social / Nome Fantasia"
+                            value={supplierMapping.name || ''}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setSupplierMapping(sm => ({ ...sm, name: val }));
+                              setXmlData(prev => ({ ...prev, supplierName: val }));
+                            }}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>CNPJ *</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="00.000.000/0001-00"
+                            value={supplierMapping.cnpj || ''}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setSupplierMapping(sm => ({ ...sm, cnpj: val }));
+                              setXmlData(prev => ({ ...prev, supplierCnpj: val }));
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {xmlData?.invoiceType === 'service' && (
+                        <div className="form-group">
+                          <label>Serviço *</label>
+                          <textarea 
+                            className="form-control" 
+                            rows={3} 
+                            placeholder="Descreva as atividades ou serviços prestados (ex: Manutenção preventiva de osmose reversa e calibração de dialisadores)..."
+                            value={xmlData?.serviceDescription || ''}
+                            onChange={e => setXmlData(prev => ({ ...prev, serviceDescription: e.target.value }))}
+                          />
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            if (!xmlData?.number || !xmlData?.totalValue || !supplierMapping?.name) {
+                              setXmlError('Preencha os campos obrigatórios: Nota, Fornecedor e Valor.');
+                              return;
+                            }
+                            setXmlError('');
+                            // Procura se fornecedor existe pelo CNPJ ou nome
+                            const exist = suppliers.find(s => 
+                              (supplierMapping.cnpj && cleanCnpj(s.cnpj) === cleanCnpj(supplierMapping.cnpj)) ||
+                              s.name.toLowerCase() === supplierMapping.name.toLowerCase()
+                            );
+                            if (exist) {
+                              setSupplierMapping({
+                                exists: true,
+                                id: exist.id,
+                                name: exist.name,
+                                cnpj: exist.cnpj,
+                                contact: exist.contact || '',
+                                phone: exist.phone || '',
+                                email: exist.email || ''
+                              });
+                            }
+                            setXmlWizardStep(2);
+                          }}
+                          className="btn btn-primary" 
+                          style={{ backgroundColor: '#f59e0b', fontWeight: '700' }}
+                        >
+                          Avançar para Fornecedor
+                        </button>
+                      </div>
+
+                      {xmlError && (
+                        <div style={{ ...styles.alert, backgroundColor: 'var(--danger-light)', color: 'var(--danger-color)', border: '1px solid var(--danger-color)' }}>
+                          <AlertTriangle size={16} />
+                          <span>{xmlError}</span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -2658,16 +3016,16 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
               {xmlWizardStep === 2 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={styles.infoSummaryBox}>
-                    <h4>Dados do Documento ({xmlData?.sourceType || 'XML'})</h4>
-                    <p>Nota Fiscal: <strong>{xmlData?.number}</strong></p>
-                    <p>Chave: <strong>{xmlData?.accessKey || 'Não identificada no arquivo'}</strong></p>
-                    <p>Valor Total: <strong>R$ {xmlData?.totalValue ? parseFloat(xmlData.totalValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00'}</strong></p>
+                    <h4>Dados do Documento ({xmlData?.invoiceType === 'service' ? 'NFS-e de Serviços' : 'NF-e de Produtos'})</h4>
+                    <p>Nota: <strong>{xmlData?.number}</strong></p>
+                    <p>Código: <strong>{xmlData?.accessKey || 'Não informado'}</strong></p>
+                    <p>Valor: <strong>R$ {xmlData?.totalValue ? parseFloat(xmlData.totalValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00'}</strong></p>
                   </div>
                   
                   <div style={styles.mappingCard}>
-                    <h3>Emitente da Nota (Fornecedor)</h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Nome no Documento: <strong>{xmlData?.supplierName}</strong></p>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>CNPJ: <strong>{formatCnpj(xmlData?.supplierCnpj)}</strong></p>
+                    <h3>{xmlData?.invoiceType === 'service' ? 'Prestador de Serviços' : 'Emitente da Nota (Fornecedor)'}</h3>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Nome no Documento: <strong>{xmlData?.supplierName || supplierMapping.name}</strong></p>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>CNPJ: <strong>{formatCnpj(xmlData?.supplierCnpj || supplierMapping.cnpj)}</strong></p>
                     
                     {supplierMapping.exists ? (
                       <div style={{ ...styles.alert, backgroundColor: 'var(--success-light)', color: 'var(--success-color)', border: '1px solid var(--success-color)', marginTop: '0.75rem' }}>
@@ -2680,7 +3038,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>O fornecedor não está cadastrado. Confirme os dados abaixo para cadastrá-lo automaticamente:</p>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                           <div className="form-group">
-                            <label>Nome / Razão Social</label>
+                            <label>Nome</label>
                             <input 
                               type="text" className="form-control" 
                               value={supplierMapping.name} onChange={e => setSupplierMapping({ ...supplierMapping, name: e.target.value })}
@@ -2689,8 +3047,8 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                           <div className="form-group">
                             <label>CNPJ</label>
                             <input 
-                              type="text" className="form-control" disabled
-                              value={supplierMapping.cnpj}
+                              type="text" className="form-control"
+                              value={supplierMapping.cnpj} onChange={e => setSupplierMapping({ ...supplierMapping, cnpj: e.target.value })}
                             />
                           </div>
                         </div>
@@ -2719,7 +3077,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                     <div style={styles.infoSummaryBox}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
                         <div>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Nota Fiscal</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Nota</span>
                           <strong>Nº {xmlData?.number || 'S/N'}</strong>
                         </div>
                         <div>
@@ -2731,7 +3089,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                           <strong>{supplierMapping.name}</strong>
                         </div>
                         <div>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Valor Total da Nota</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Valor</span>
                           <strong style={{ color: '#0369a1', fontSize: '1.05rem' }}>
                             R$ {totalInvoice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </strong>
@@ -2740,13 +3098,13 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                     </div>
 
                     <div style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-md)', padding: '1rem', backgroundColor: '#fff' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                         <div>
                           <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                            Faturas & Duplicatas (Contas a Pagar)
+                            Faturas (Contas a Pagar)
                           </h4>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            Confira ou edite as parcelas identificadas no arquivo que serão lançadas automaticamente no financeiro.
+                            Configure os vencimentos que serão lançados automaticamente no financeiro.
                           </span>
                         </div>
                         <button
@@ -2791,7 +3149,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                   <td style={{ padding: '0.4rem 0.75rem' }}>
                                     <input 
                                       type="date" 
-                                      className="form-control"
+                                      className="form-control" 
                                       style={{ padding: '0.3rem 0.5rem', fontSize: '0.85rem' }}
                                       value={inst.dueDate}
                                       onChange={e => handleUpdateInstallment(idx, 'dueDate', e.target.value)}
@@ -2841,7 +3199,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                             </span>
                           ) : (
                             <span style={{ color: '#b45309', fontWeight: '700', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                              <AlertTriangle size={16} color="#b45309" /> Diferença de R$ {Math.abs(sumInstallments - totalInvoice).toFixed(2)} em relação ao total da NF
+                              <AlertTriangle size={16} color="#b45309" /> Diferença de R$ {Math.abs(sumInstallments - totalInvoice).toFixed(2)} em relação ao total da nota
                             </span>
                           )}
                         </div>
@@ -2851,92 +3209,165 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
                       <button type="button" onClick={() => setXmlWizardStep(2)} className="btn btn-secondary">Voltar</button>
                       <button type="button" onClick={() => setXmlWizardStep(4)} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
-                        Avançar para Mapear Itens
+                        {xmlData?.invoiceType === 'service' ? 'Avançar para Detalhes do Serviço' : 'Avançar para Mapear Itens'}
                       </button>
                     </div>
                   </div>
                 );
               })()}
 
-              {/* STEP 4: Mapeamento de Itens */}
+              {/* STEP 4: Mapeamento de Itens OU Detalhes do Serviço */}
               {xmlWizardStep === 4 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={styles.warningBanner}>
-                    <AlertTriangle size={16} />
-                    <span>Mapeie cada item da nota para um produto do catálogo. Selecione "[Criar como novo]" para incluí-lo automaticamente.</span>
-                  </div>
+                  {xmlData?.invoiceType === 'service' ? (
+                    /* CASO 4A: NOTA DE SERVIÇO PRESTADO */
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div style={{ ...styles.alert, backgroundColor: '#f3e8ff', border: '1px solid #d8b4fe', color: '#6b21a8' }}>
+                        <Briefcase size={20} />
+                        <div>
+                          <strong style={{ display: 'block' }}>Nota Fiscal de Serviços Prestados (NFS-e)</strong>
+                          <span style={{ fontSize: '0.8rem' }}>
+                            Este documento não altera saldos de insumos nem gera lotes clínicos. O registro gerará as parcelas no Contas a Pagar e ficará documentado no histórico de notas.
+                          </span>
+                        </div>
+                      </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {itemMappings.map((m, idx) => (
-                      <div key={m.xmlCode + '-' + idx} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-sm)', padding: '1rem', backgroundColor: '#fafafa' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '1rem', marginBottom: '0.75rem' }}>
-                          <div>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Descrição na Nota (Cód: {m.xmlCode})</span>
-                            <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{m.xmlName}</span>
-                            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                              Quant: <strong>{m.quantity}</strong> | Preço: <strong>R$ {m.price?.toFixed(2)}</strong>
-                            </span>
-                          </div>
-                          <div className="form-group">
-                            <label>Produto no Catálogo *</label>
-                            <select 
-                              className="form-control"
-                              value={m.mappedItemId}
-                              onChange={e => handleMappingItemChange(m.xmlCode, e.target.value)}
-                            >
-                              <option value="CREATE_NEW">[Criar como novo item no estoque]</option>
-                              {items.map(i => <option key={i.id} value={i.id}>{i.name} (Saldo: {i.currentStock})</option>)}
-                            </select>
-                          </div>
+                      <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1.25rem', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div className="form-group">
+                          <label>Serviço *</label>
+                          <textarea 
+                            className="form-control" 
+                            rows={3}
+                            placeholder="Descreva detalhadamente os serviços prestados..."
+                            value={xmlData?.serviceDescription || ''}
+                            onChange={e => setXmlData(prev => ({ ...prev, serviceDescription: e.target.value }))}
+                          />
                         </div>
 
-                        {(() => {
-                          const isBatchTracked = m.mappedItemId === 'CREATE_NEW' || items.find(i => i.id === m.mappedItemId)?.hasBatchControl;
-                          return (
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                              <div className="form-group">
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  Lote {isBatchTracked && <span style={{ color: '#0369a1', fontSize: '0.7rem', fontWeight: '700' }}>(Rastreável)</span>}
-                                </label>
-                                <input 
-                                  type="text" className="form-control" placeholder="Número do lote" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', borderColor: isBatchTracked && !m.batch ? '#f59e0b' : undefined }}
-                                  value={m.batch} onChange={e => handleMappingFieldChange(m.xmlCode, 'batch', e.target.value)}
-                                />
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+                          <div className="form-group">
+                            <label>Categoria *</label>
+                            <select 
+                              className="form-control"
+                              value={xmlData?.serviceCategory || 'Serviços Terceirizados'}
+                              onChange={e => setXmlData(prev => ({ ...prev, serviceCategory: e.target.value }))}
+                            >
+                              <option value="Serviços Terceirizados">Serviços Terceirizados</option>
+                              <option value="Manutenção e Calibração">Manutenção e Calibração</option>
+                              <option value="Serviços Médicos e Laboratoriais">Serviços Médicos e Laboratoriais</option>
+                              <option value="Limpeza e Destinação de Resíduos">Limpeza e Destinação de Resíduos</option>
+                              <option value="Tecnologia da Informação">Tecnologia da Informação</option>
+                              <option value="Consultoria e Assessoria">Consultoria e Assessoria</option>
+                              <option value="Utilidades Hospitalares">Utilidades Hospitalares</option>
+                              <option value="Outros Serviços">Outros Serviços</option>
+                            </select>
+                          </div>
+
+                          <div className="form-group">
+                            <label>Valor Total do Serviço</label>
+                            <input 
+                              type="text" 
+                              className="form-control" 
+                              disabled 
+                              style={{ fontWeight: '700', backgroundColor: '#f8fafc' }}
+                              value={`R$ ${(parseFloat(xmlData?.totalValue) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
+                        <button type="button" onClick={() => setXmlWizardStep(3)} className="btn btn-secondary">Voltar</button>
+                        <button type="button" onClick={() => setXmlWizardStep(5)} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
+                          Revisar e Finalizar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* CASO 4B: NOTA DE PRODUTOS / INSUMOS */
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div style={styles.warningBanner}>
+                        <AlertTriangle size={16} />
+                        <span>Mapeie cada item da nota para um produto do catálogo. Selecione "[Criar como novo]" para incluí-lo automaticamente.</span>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {itemMappings.map((m, idx) => (
+                          <div key={m.xmlCode + '-' + idx} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-sm)', padding: '1rem', backgroundColor: '#fafafa' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '1rem', marginBottom: '0.75rem' }}>
+                              <div>
+                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Descrição na Nota (Cód: {m.xmlCode})</span>
+                                <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{m.xmlName}</span>
+                                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                                  Quant: <strong>{m.quantity}</strong> | Preço: <strong>R$ {m.price?.toFixed(2)}</strong>
+                                </span>
                               </div>
                               <div className="form-group">
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  Validade {isBatchTracked && <span style={{ color: '#0369a1', fontSize: '0.7rem', fontWeight: '700' }}>(Rastreável)</span>}
-                                </label>
-                                <input 
-                                  type="date" className="form-control" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', borderColor: isBatchTracked && !m.expiryDate ? '#f59e0b' : undefined }}
-                                  value={m.expiryDate} onChange={e => handleMappingFieldChange(m.xmlCode, 'expiryDate', e.target.value)}
-                                />
+                                <label>Produto *</label>
+                                <select 
+                                  className="form-control"
+                                  value={m.mappedItemId}
+                                  onChange={e => handleMappingItemChange(m.xmlCode, e.target.value)}
+                                >
+                                  <option value="CREATE_NEW">[Criar como novo item no estoque]</option>
+                                  {items.map(i => <option key={i.id} value={i.id}>{i.name} (Saldo: {i.currentStock})</option>)}
+                                </select>
                               </div>
                             </div>
-                          );
-                        })()}
-                      </div>
-                    ))}
-                  </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
-                    <button type="button" onClick={() => setXmlWizardStep(3)} className="btn btn-secondary">Voltar</button>
-                    <button type="button" onClick={() => setXmlWizardStep(5)} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
-                      Revisar e Finalizar
-                    </button>
-                  </div>
+                            {(() => {
+                              const isBatchTracked = m.mappedItemId === 'CREATE_NEW' || items.find(i => i.id === m.mappedItemId)?.hasBatchControl;
+                              return (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                  <div className="form-group">
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      Lote {isBatchTracked && <span style={{ color: '#0369a1', fontSize: '0.7rem', fontWeight: '700' }}>(Rastreável)</span>}
+                                    </label>
+                                    <input 
+                                      type="text" className="form-control" placeholder="Número do lote" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', borderColor: isBatchTracked && !m.batch ? '#f59e0b' : undefined }}
+                                      value={m.batch} onChange={e => handleMappingFieldChange(m.xmlCode, 'batch', e.target.value)}
+                                    />
+                                  </div>
+                                  <div className="form-group">
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      Validade {isBatchTracked && <span style={{ color: '#0369a1', fontSize: '0.7rem', fontWeight: '700' }}>(Rastreável)</span>}
+                                    </label>
+                                    <input 
+                                      type="date" className="form-control" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', borderColor: isBatchTracked && !m.expiryDate ? '#f59e0b' : undefined }}
+                                      value={m.expiryDate} onChange={e => handleMappingFieldChange(m.xmlCode, 'expiryDate', e.target.value)}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
+                        <button type="button" onClick={() => setXmlWizardStep(3)} className="btn btn-secondary">Voltar</button>
+                        <button type="button" onClick={() => setXmlWizardStep(5)} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
+                          Revisar e Finalizar
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* STEP 5: Review and Finish */}
               {xmlWizardStep === 5 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <h3>Revisão Geral de Entrada da Nota Fiscal</h3>
+                  <h3>Revisão de Entrada da Nota Fiscal</h3>
                   
                   <div style={styles.infoSummaryBox}>
-                    <p>Nota Fiscal: <strong>{xmlData?.number}</strong> ({xmlData?.sourceType || 'XML'})</p>
-                    <p>Fornecedor: <strong>{supplierMapping.name}</strong> ({supplierMapping.cnpj})</p>
-                    <p>Valor Total da Nota: <strong>R$ {xmlData?.totalValue ? parseFloat(xmlData.totalValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00'}</strong></p>
+                    <p>
+                      Tipo: <strong>{xmlData?.invoiceType === 'service' ? 'Nota Fiscal de Serviços Prestados (NFS-e)' : 'Nota Fiscal de Produtos (NF-e)'}</strong>
+                    </p>
+                    <p>Nota: <strong>{xmlData?.number}</strong> ({xmlData?.sourceType || 'MANUAL'})</p>
+                    <p>Fornecedor: <strong>{supplierMapping.name}</strong> ({supplierMapping.cnpj || 'CNPJ não informado'})</p>
+                    <p>Valor: <strong>R$ {xmlData?.totalValue ? parseFloat(xmlData.totalValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00'}</strong></p>
+                    
                     {xmlData?.installments && xmlData.installments.length > 0 && (
                       <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #cbd5e1' }}>
                         <span style={{ fontWeight: '700', fontSize: '0.8rem', color: '#0369a1', display: 'block', marginBottom: '0.25rem' }}>
@@ -2951,44 +3382,185 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                     )}
                   </div>
 
-                  <div>
-                    <h4 style={{ marginBottom: '0.5rem' }}>Itens a serem abastecidos no estoque:</h4>
-                    <table style={styles.table}>
-                      <thead>
-                        <tr>
-                          <th>Produto Catálogo</th>
-                          <th>Quantidade</th>
-                          <th>Preço Un.</th>
-                          <th>Subtotal</th>
-                          <th>Lote / Validade</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {itemMappings.map(m => {
-                          const isNew = m.mappedItemId === 'CREATE_NEW';
-                          const catItemName = isNew ? `[NOVO] ${m.xmlName}` : (items.find(i => i.id === m.mappedItemId)?.name || m.xmlName);
-                          return (
-                            <tr key={m.xmlCode}>
-                              <td style={{ fontWeight: '600' }}>{catItemName}</td>
-                              <td>{m.quantity}</td>
-                              <td>R$ {m.price?.toFixed(2)}</td>
-                              <td>R$ {(m.quantity * m.price).toFixed(2)}</td>
-                              <td>{m.batch || 'N/A'} {m.expiryDate ? `(${new Date(m.expiryDate).toLocaleDateString('pt-BR')})` : ''}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                  {xmlData?.invoiceType === 'service' ? (
+                    <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', backgroundColor: '#faf5ff' }}>
+                      <h4 style={{ margin: '0 0 0.5rem 0', color: '#6b21a8' }}>🛠️ Resumo do Serviço Prestado</h4>
+                      <p style={{ margin: '0 0 0.35rem 0', fontSize: '0.85rem' }}>
+                        <strong>Descrição:</strong> {xmlData?.serviceDescription || 'Serviço Prestado Conforme NFS-e'}
+                      </p>
+                      <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                        <strong>Categoria:</strong> {xmlData?.serviceCategory || 'Serviços Terceirizados'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <h4 style={{ marginBottom: '0.5rem' }}>Itens a serem abastecidos no estoque:</h4>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Preço</th>
+                            <th>Subtotal</th>
+                            <th>Lote</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {itemMappings.map(m => {
+                            const isNew = m.mappedItemId === 'CREATE_NEW';
+                            const catItemName = isNew ? `[NOVO] ${m.xmlName}` : (items.find(i => i.id === m.mappedItemId)?.name || m.xmlName);
+                            return (
+                              <tr key={m.xmlCode}>
+                                <td style={{ fontWeight: '600' }}>{catItemName}</td>
+                                <td>{m.quantity}</td>
+                                <td>R$ {m.price?.toFixed(2)}</td>
+                                <td>R$ {(m.quantity * m.price).toFixed(2)}</td>
+                                <td>{m.batch || 'N/A'} {m.expiryDate ? `(${new Date(m.expiryDate).toLocaleDateString('pt-BR')})` : ''}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
                     <button type="button" onClick={() => setXmlWizardStep(4)} className="btn btn-secondary">Voltar</button>
-                    <button type="button" onClick={handleFinishXmlWizard} disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: 'var(--success-color)' }}>
-                      {actionLoading ? 'Abastecendo Estoque...' : 'Confirmar e Processar Entrada'}
+                    <button 
+                      type="button" 
+                      onClick={handleFinishXmlWizard} 
+                      disabled={actionLoading} 
+                      className="btn btn-primary" 
+                      style={{ backgroundColor: 'var(--success-color)', fontWeight: '700' }}
+                    >
+                      {actionLoading ? 'Processando Entrada...' : (xmlData?.invoiceType === 'service' ? 'Confirmar Entrada de Serviço' : 'Confirmar e Processar Entrada')}
                     </button>
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invoice Detail Modal (Visualização de Detalhes da Nota) */}
+      {showInvoiceDetailModal && selectedInvoiceDetail && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalCard, maxWidth: '720px', width: '92%' }}>
+            <div style={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <FileText size={22} color={selectedInvoiceDetail.invoiceType === 'service' ? '#8b5cf6' : '#0284c7'} />
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '1.2rem' }}>
+                    Nota Fiscal Nº {selectedInvoiceDetail.number || 'S/N'}
+                  </h2>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {selectedInvoiceDetail.invoiceType === 'service' ? 'Nota Fiscal de Serviços Prestados (NFS-e)' : 'Nota Fiscal Eletrônica de Produtos (NF-e)'}
+                  </span>
+                </div>
+              </div>
+              <button onClick={() => setShowInvoiceDetailModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
+            </div>
+
+            <div style={{ padding: '1.25rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Tipo</span>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '0.15rem 0.5rem',
+                    borderRadius: '10px',
+                    fontSize: '0.75rem',
+                    fontWeight: '700',
+                    backgroundColor: selectedInvoiceDetail.invoiceType === 'service' ? '#f3e8ff' : '#e0f2fe',
+                    color: selectedInvoiceDetail.invoiceType === 'service' ? '#7e22ce' : '#0369a1'
+                  }}>
+                    {selectedInvoiceDetail.invoiceType === 'service' ? 'Serviço' : 'Produto'}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Fornecedor</span>
+                  <strong style={{ fontSize: '0.85rem' }}>{selectedInvoiceDetail.supplierName || selectedInvoiceDetail.supplier || 'N/A'}</strong>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>CNPJ</span>
+                  <span style={{ fontSize: '0.85rem', fontFamily: 'monospace' }}>{formatCnpj(selectedInvoiceDetail.supplierCnpj) || 'N/A'}</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Emissão</span>
+                  <span style={{ fontSize: '0.85rem' }}>{selectedInvoiceDetail.issueDate ? new Date(selectedInvoiceDetail.issueDate).toLocaleDateString('pt-BR') : '-'}</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Entrada</span>
+                  <span style={{ fontSize: '0.85rem' }}>{selectedInvoiceDetail.entryDate ? new Date(selectedInvoiceDetail.entryDate).toLocaleDateString('pt-BR') : '-'}</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Valor</span>
+                  <strong style={{ fontSize: '1rem', color: 'var(--success-color)' }}>
+                    R$ {(parseFloat(selectedInvoiceDetail.totalValue) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </strong>
+                </div>
+              </div>
+
+              {selectedInvoiceDetail.accessKey && (
+                <div style={{ backgroundColor: '#fff', border: '1px solid var(--border-color)', padding: '0.75rem', borderRadius: '6px' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Código / Chave</span>
+                  <code style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>{selectedInvoiceDetail.accessKey}</code>
+                </div>
+              )}
+
+              {selectedInvoiceDetail.invoiceType === 'service' ? (
+                <div style={{ border: '1px solid #e9d5ff', backgroundColor: '#faf5ff', padding: '1rem', borderRadius: '8px' }}>
+                  <h4 style={{ margin: '0 0 0.5rem 0', color: '#6b21a8', fontSize: '0.9rem' }}>🛠️ Descrição dos Serviços Prestados</h4>
+                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: '#374151', lineHeight: '1.4' }}>
+                    {selectedInvoiceDetail.serviceDescription || 'Serviço prestado registrado conforme documento fiscal.'}
+                  </p>
+                  <span style={{ fontSize: '0.75rem', color: '#7e22ce', fontWeight: '600' }}>
+                    Categoria Financeira: {selectedInvoiceDetail.serviceCategory || 'Serviços Terceirizados'}
+                  </span>
+                </div>
+              ) : (
+                <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                  <div style={{ padding: '0.6rem 0.85rem', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-color)', fontWeight: '700', fontSize: '0.85rem' }}>
+                    Itens da Nota Fiscal ({selectedInvoiceDetail.items?.length || 0})
+                  </div>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Preço</th>
+                        <th>Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(selectedInvoiceDetail.items || []).map((it, i) => (
+                        <tr key={i}>
+                          <td style={{ fontWeight: '600' }}>{it.name || it.xmlName}</td>
+                          <td>{it.quantity}</td>
+                          <td>R$ {(parseFloat(it.price) || 0).toFixed(2)}</td>
+                          <td style={{ fontWeight: '700' }}>R$ {(parseFloat(it.total) || (parseFloat(it.quantity) * parseFloat(it.price)) || 0).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.85rem', backgroundColor: '#fff' }}>
+                <span style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--text-primary)', display: 'block', marginBottom: '0.35rem' }}>
+                  Status Financeiro
+                </span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  As parcelas desta nota foram emitidas no módulo Financeiro (Contas a Pagar). Consulte o painel financeiro para registrar baixas ou anexar comprovantes de pagamento.
+                </span>
+              </div>
+            </div>
+
+            <div style={styles.modalFooter}>
+              <button type="button" onClick={() => setShowInvoiceDetailModal(false)} className="btn btn-secondary">
+                Fechar
+              </button>
             </div>
           </div>
         </div>

@@ -4165,6 +4165,7 @@ export const mockFirestore = {
     if (!db.stock_transactions) db.stock_transactions = [];
     if (!db.inventory_items) db.inventory_items = [];
 
+    const isService = invoiceData.invoiceType === 'service';
     const newInvoice = {
       id: 'inv-' + Math.random().toString(36).substr(2, 9),
       ...invoiceData,
@@ -4172,32 +4173,45 @@ export const mockFirestore = {
       status: 'Processada'
     };
 
-    // Auto-create transactions and increment stock level
-    for (const item of (invoiceData.items || [])) {
-      const newTx = {
-        id: 'tx-' + Math.random().toString(36).substr(2, 9),
-        itemId: item.itemId,
-        itemName: item.name,
-        quantity: parseFloat(item.quantity) || 0,
-        type: 'Entrada',
-        batch: item.batch || 'XML-IMPORT',
-        expiryDate: item.expiryDate || '',
-        operator: 'Importador XML',
-        date: new Date().toISOString(),
-        notes: `Entrada via NF-e ${invoiceData.number}`
-      };
-      db.stock_transactions.push(newTx);
+    // Auto-create transactions and increment stock level only for physical products
+    if (!isService) {
+      for (const item of (invoiceData.items || [])) {
+        if (!item.itemId) continue;
+        const newTx = {
+          id: 'tx-' + Math.random().toString(36).substr(2, 9),
+          itemId: item.itemId,
+          itemName: item.name,
+          quantity: parseFloat(item.quantity) || 0,
+          type: 'Entrada',
+          batch: item.batch || 'XML-IMPORT',
+          expiryDate: item.expiryDate || '',
+          operator: 'Importador XML',
+          date: new Date().toISOString(),
+          notes: `Entrada via NF-e ${invoiceData.number}`
+        };
+        db.stock_transactions.push(newTx);
 
-      const itemIndex = db.inventory_items.findIndex(i => i.id === item.itemId);
-      if (itemIndex > -1) {
-        const current = parseFloat(db.inventory_items[itemIndex].currentStock) || 0;
-        db.inventory_items[itemIndex].currentStock = current + newTx.quantity;
+        const itemIndex = db.inventory_items.findIndex(i => i.id === item.itemId);
+        if (itemIndex > -1) {
+          const current = parseFloat(db.inventory_items[itemIndex].currentStock) || 0;
+          db.inventory_items[itemIndex].currentStock = current + newTx.quantity;
+        }
       }
     }
 
     db.purchase_invoices.push(newInvoice);
     setDB(db);
     return newInvoice;
+  },
+
+  deletePurchaseInvoice: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.purchase_invoices) {
+      db.purchase_invoices = db.purchase_invoices.filter(inv => inv.id !== id);
+      setDB(db);
+    }
+    return { success: true };
   },
 
   // Employees CRUD

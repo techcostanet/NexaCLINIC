@@ -1,3 +1,20 @@
+## [v4.9.37] - 02 de Setembro, 2026
+### Entrada de Notas de Serviços (NFS-e) & Integração com Contas a Pagar
+- **Suporte a Notas Fiscais de Serviços Prestados (NFS-e):**
+  - Adaptação do módulo de Estoque para receber notas fiscais de serviços tomados/prestados (ex: calibração de máquinas, manutenção, TI, consultoria, limpeza e destinação de resíduos).
+  - O processamento da NFS-e registra o documento fiscal no histórico da clínica (`purchase_invoices`), mas não gera movimentações nem incrementa saldos físicos de insumos do almoxarifado.
+  - Geração atômica das faturas e parcelas programadas no Contas a Pagar (`accounts_payable`) do módulo Financeiro com fornecedor, CNPJ, categoria do serviço, datas de vencimento e valores individuais.
+- **Leitor Inteligente de Arquivos (XML & PDF):**
+  - Identificação e parsing automático de padrões de notas de serviços (XML padrão ABRASF / Nacional e PDFs de prefeituras) e mercadorias (XML SEFAZ e DANFE em PDF).
+  - Extração automática de emitente, CNPJ, número, código de verificação, total, parcelas e descrição detalhada dos serviços prestados.
+- **Digitação Manual & Filtro Unificado de Entradas:**
+  - Novo fluxo de digitação direta na tela para inclusão de notas de compras ou serviços sem necessidade de anexar arquivo digital.
+  - Filtro por tipo de nota na tabela de Entradas: Todas as Entradas, Produtos (NF-e) ou Serviços (NFS-e).
+  - Modal de visualização detalhada (`InvoiceDetailModal`) com conferência de parcelas e dados do prestador.
+  - Adequação rigorosa à regra de rótulos concisos (1 termo único) em cabeçalhos e campos.
+
+---
+
 ## [v4.9.36] - 02 de Setembro, 2026
 ### Design Hospitalar em Tons Claros para o Painel da Smart TV
 - **Identidade Visual em Tons Claros (`TvCallPanel.jsx` & `tvTipsService.js`):**

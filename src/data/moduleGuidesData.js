@@ -244,131 +244,21 @@ export const MODULE_GUIDES = {
     color: '#f59e0b',
     recursos: [
       {
-        title: 'Múltiplos Modos de Visualização do Catálogo',
-        desc: '3 visualizações operacionais: Compacta (padrão de alta densidade), Normal (detalhada com nível e valor estocado) e Cards (grade visual de suprimentos com barras de nível e valor).'
+        title: 'Entrada de Notas de Mercadorias (NF-e) e Serviços Prestados (NFS-e)',
+        desc: 'Suporte completo a notas de produtos (com abastecimento físico de estoque, controle de lotes e validades) e notas de serviços prestados/tomados (sem incremento físico de estoque, com registro fiscal e geração automática no Contas a Pagar do Financeiro).'
       },
       {
-        title: 'Gestão de Kits de Insumos & Procedimentos',
-        desc: 'Cadastro e manutenção de kits clínicos padronizados (ex: Kit Conexão de Fístula, Kit Punção, Kit Curativo) com cálculo automático de custo e vinculação ao salão físico.'
+        title: 'Leitor Inteligente de Arquivos (XML & PDF DANFE / NFS-e)',
+        desc: 'Importação com auto-reconhecimento de formato: XML SEFAZ para NF-e, XML ABRASF/nacional para NFS-e e PDFs oficiais (DANFE ou espelhos de prefeitura), com extração de número, código, prestador, valores, parcelas e descrição dos serviços.'
       },
       {
-        title: 'Sinalização Visual de Medicamentos Controlados',
-        desc: 'Identificação visual imediata (Portaria 344/ANVISA) em vermelho de alerta em todo o catálogo, kits, requisições do salão e atendimento da farmácia.'
+        title: 'Lançamento e Digitação Manual de Notas',
+        desc: 'Opção de entrada rápida por digitação direta na tela para notas de serviços ou compras que não disponham de arquivo digital (XML ou PDF).'
       },
       {
-        title: 'Logística de Salões de Diálise Integrada',
-        desc: 'Roteamento físico obrigatório de pedidos de kits para Salão 1, Salão 2 ou Salão 3, permitindo separação e entrega no posto correto.'
+        title: 'Filtro e Auditoria Unificada de Entradas',
+        desc: 'Consulta organizada com filtro por tipo (Todas as Entradas, Produtos NF-e ou Serviços NFS-e), busca por número/fornecedor/serviço e modal de visualização completa com conferência de parcelas financeiras.'
       },
-      {
-        title: 'Central de Relatórios (15 Tipos)',
-        desc: 'Suíte completa com 15 relatórios analíticos: Curva ABC, Posição Geral, Itens Críticos, Validades FEFO, Recall e Kardex.'
-      },
-      {
-        title: 'Gestão de Inventários Físicos & Auditoria',
-        desc: 'Criação e execução de contagens de estoque por local com apuração imediata de divergências e ajuste automático de saldo.'
-      },
-      {
-        title: 'Transferências Entre Locais de Armazenamento',
-        desc: 'Transferência rápida e rastreável de insumos e medicamentos entre estoques e almoxarifados setoriais.'
-      },
-      {
-        title: 'Empréstimos Inter-Hospitalares Inteligentes',
-        desc: 'Controle de insumos concedidos e recebidos de clínicas parceiras com auto-sugestão dinâmica de instituições cadastradas.'
-      },
-      {
-        title: 'Controle de Lotes & Rastreabilidade',
-        desc: 'Gestão atômica de múltiplos lotes com saldos individuais, validade, fornecedor e nota fiscal de origem.'
-      },
-      {
-        title: 'Dispensação com Sugestão FEFO',
-        desc: 'Atendimento de requisições com seleção de lote físico e recomendação automática do lote mais próximo do vencimento.'
-      },
-      {
-        title: 'Painel de Busca Reversa (Recall)',
-        desc: 'Rastreabilidade completa de ponta a ponta: fornecedor, nota fiscal de compra e todos os pacientes que receberam o lote.'
-      }
-    ],
-    tutorial: [
-      {
-        title: 'Como Cadastrar um Kit de Insumos',
-        steps: [
-          'Acesse a aba "Kits" no painel de Estoque.',
-          'Clique no botão "+ Novo Kit".',
-          'Preencha o Código (ex: KIT-HEMO-01), Nome do Kit, Categoria e Salão Padrão sugerido.',
-          'No seletor de composição, escolha os insumos e ajuste as quantidades necessárias.',
-          'Confira o custo estimado total do pacote e clique em "Salvar Kit".'
-        ]
-      },
-      {
-        title: 'Como Identificar e Cadastrar Medicamentos Controlados',
-        steps: [
-          'No cadastro de insumos ou edição de produto, marque a opção "🔒 Medicamento Controlado (Portaria 344)".',
-          'O sistema passará a exibir a tarja e o badge de segurança vermelho no catálogo, na lista de kits e nas requisições da enfermagem.',
-          'Itens controlados exigem atenção redobrada na dispensação e guarda em armário trancado.'
-        ]
-      },
-      {
-        title: 'Como Alternar as Visualizações do Catálogo de Produtos',
-        steps: [
-          'Acesse a aba "Catálogo".',
-          'Na barra de ferramentas, clique em "Compacta" (padrão rápida), "Normal" (tabela detalhada com saldo financeiro) ou "Cards" (grade visual com status e nível de estoque).',
-          'Os filtros de busca e categoria permanecem ativos em qualquer modo de exibição selecionado.'
-        ]
-      },
-      {
-        title: 'Como Atender Requisições Vindas dos Salões',
-        steps: [
-          'Acesse a aba "Requisições".',
-          'Verifique na coluna "Destino" o Salão de destino (Salão 1, Salão 2, Salão 3) e o paciente.',
-          'Observe os alertas de "📦 Kit" e "🔒 CONTROLADO" nos itens solicitados.',
-          'Clique em "Atender Requisição", selecione os lotes físicos (sugestão FEFO) e confirme a entrega.'
-        ]
-      },
-      {
-        title: 'Como Realizar uma Transferência de Estoque',
-        steps: [
-          'Acesse a aba "Transferências".',
-          'Clique no botão "+ Nova Transferência" no cabeçalho da tabela.',
-          'Selecione a origem, o destino, o insumo, a quantidade e o lote correspondente.',
-          'Confirme o lançamento para movimentar o saldo entre os locais instantaneamente.'
-        ]
-      },
-      {
-        title: 'Como Cadastrar um Empréstimo com Parceiro',
-        steps: [
-          'Acesse a aba "Empréstimos".',
-          'Clique em "+ Novo Empréstimo".',
-          'No campo "Parceiro", selecione uma clínica da lista de sugestões ou digite um novo nome.',
-          'O novo parceiro digitado passará a ser sugerido automaticamente nos próximos empréstimos.'
-        ]
-      }
-    ],
-    duvidas: [
-      {
-        pergunta: 'Por que o saldo em estoque não aparece para a equipe de enfermagem ao requisitar?',
-        resposta: 'Para garantir que as solicitações de materiais sejam estritamente pautadas pela necessidade clínica do paciente em diálise, sem interferência ou viés pelo nível de estoque da farmácia central.'
-      },
-      {
-        pergunta: 'Por que o campo Salão é obrigatório ao requisitar um Kit?',
-        resposta: 'Porque os kits de procedimentos são entregues fisicamente nas bancadas de cada salão de diálise. Informar o salão correto evita erros e atrasos na entrega.'
-      },
-      {
-        pergunta: 'Qual o modo padrão de visualização do Catálogo de Insumos?',
-        resposta: 'O modo padrão é a "Visualização Compacta", configurada para agilidade operacional e máxima densidade de itens na tela.'
-      },
-      {
-        pergunta: 'Como funciona a sinalização visual de medicamentos controlados?',
-        resposta: 'Todos os medicamentos sujeitos a controle especial pela Portaria 344/ANVISA recebem badges em vermelho de alto contraste (🔒 Controlado / Portaria 344) em todas as telas, alertas e relatórios.'
-      }
-    ]
-  },
-
-  stock: {
-    id: 'stock',
-    name: 'Estoque & Farmácia',
-    subtitle: 'NexaSTOCK — Farmácia Clínica & Insumos',
-    color: '#f59e0b',
-    recursos: [
       {
         title: 'Modelo dos 4 Saldos de Estoque',
         desc: 'Visão fidedigna do estoque: Físico (na prateleira), Reservado (solicitado pelos salões), Disponível (livre para novas demandas) e Trânsito (pedidos de compras abertos).'
@@ -428,6 +318,37 @@ export const MODULE_GUIDES = {
     ],
     tutorial: [
       {
+        title: 'Como Dar Entrada em Notas de Serviços Prestados (NFS-e)',
+        steps: [
+          'Acesse a aba "Entradas" no painel de Estoque.',
+          'Clique no botão "+ Lançar Serviço" para preenchimento direto ou em "Importar (XML ou PDF)" se possuir o arquivo digital emitido pela prefeitura.',
+          'Selecione a modalidade (Arquivo ou Digitação) e confirme que o tipo é "🛠️ Serviço (NFS-e)".',
+          'Preencha ou confirme o Número da Nota, Código/Chave, Data de Emissão, Prestador/Fornecedor, CNPJ e Valor Total.',
+          'No passo "Financeiro", configure os vencimentos e valores das parcelas a serem geradas no Contas a Pagar.',
+          'No passo "Serviço", descreva o serviço realizado (ex: Manutenção preventiva de osmose reversa) e escolha a Categoria Financeira.',
+          'Revise os dados e clique em "Confirmar Entrada de Serviço". A nota será arquivada e as duplicatas serão criadas no Financeiro sem alterar o estoque físico de insumos.'
+        ]
+      },
+      {
+        title: 'Como Dar Entrada em Notas de Mercadorias (NF-e)',
+        steps: [
+          'Acesse a aba "Entradas" e clique em "Importar (XML ou PDF)".',
+          'Arraste ou selecione o arquivo XML da NF-e (padrão SEFAZ) ou o arquivo PDF da DANFE.',
+          'O sistema extrairá o fornecedor, CNPJ, itens, quantidades, valores e faturas.',
+          'Confirme os dados do fornecedor e as parcelas no passo Financeiro.',
+          'No passo "Mapear Itens", vincule os itens da nota aos produtos do catálogo da clínica, informando número de lote e validade para os insumos rastreáveis.',
+          'Revise o resumo geral e confirme a operação. Os saldos físicos de estoque serão incrementados imediatamente e o Contas a Pagar será abastecido.'
+        ]
+      },
+      {
+        title: 'Como Filtrar e Visualizar Detalhes das Notas de Entrada',
+        steps: [
+          'Na aba "Entradas", utilize o menu suspenso de filtro para alternar entre "Todas as Entradas", "Produtos (NF-e)" ou "Serviços (NFS-e)".',
+          'Use o campo de busca para encontrar notas por número, nome do fornecedor ou palavras da descrição do serviço.',
+          'Na tabela, localize a nota desejada e clique no botão "Ver" na coluna Ações para abrir o detalhamento completo do documento, emitente e parcelas.'
+        ]
+      },
+      {
         title: 'Como Atender Requisições com Controle de Urgência',
         steps: [
           'Acesse a aba "Requisições" no painel de Estoque.',
@@ -463,9 +384,30 @@ export const MODULE_GUIDES = {
           'Selecione a origem, o destino, o insumo, a quantidade e o lote correspondente.',
           'Confirme o lançamento para movimentar o saldo entre os locais instantaneamente.'
         ]
+      },
+      {
+        title: 'Como Cadastrar um Empréstimo com Parceiro',
+        steps: [
+          'Acesse a aba "Empréstimos".',
+          'Clique em "+ Novo Empréstimo".',
+          'No campo "Parceiro", selecione uma clínica da lista de sugestões ou digite um novo nome.',
+          'O novo parceiro digitado passará a ser sugerido automaticamente nos próximos empréstimos.'
+        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'A entrada de uma Nota de Serviços (NFS-e) afeta a quantidade de produtos ou insumos no estoque?',
+        resposta: 'Não. Notas fiscais de serviços prestados (NFS-e) registram contratações como calibração de equipamentos, manutenção, TI, consultoria ou terceirização. Elas não interferem no saldo físico de insumos clínicos, garantindo a integridade dos inventários e abastecendo automaticamente o Contas a Pagar no Financeiro.'
+      },
+      {
+        pergunta: 'Quais formatos de arquivo são aceitos na importação de notas fiscais?',
+        resposta: 'O sistema aceita tanto arquivos XML (padrão SEFAZ para NF-e e padrão ABRASF/nacional para NFS-e) quanto documentos em formato PDF (DANFE para mercadorias e espelhos de NFS-e municipais de prefeituras). Também é possível realizar o lançamento por digitação manual caso você possua apenas os dados da nota.'
+      },
+      {
+        pergunta: 'Como as parcelas da nota fiscal chegam ao setor financeiro?',
+        resposta: 'Ao concluir a importação ou lançamento manual da nota, cada parcela configurada no assistente é gravada no Contas a Pagar com fornecedor, CNPJ, número do documento, vencimento e valor especificados, integrando compras e financeiro.'
+      },
       {
         pergunta: 'O que é o Estoque Reservado e como ele afeta o Almoxarifado?',
         resposta: 'O Estoque Reservado é a soma de todos os insumos solicitados pela enfermagem que ainda estão pendentes de entrega. O saldo Disponível (Físico - Reservado) reflete o que realmente pode ser usado ou prometido.'

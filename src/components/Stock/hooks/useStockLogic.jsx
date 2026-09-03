@@ -171,11 +171,15 @@ export function useStockLogic(currentUser) {
     sectorId: ''
   });
 
-  // XML Import Wizard States
+  // XML & NFS-e Import Wizard States
   const [showXmlWizard, setShowXmlWizard] = useState(false);
   const [xmlWizardStep, setXmlWizardStep] = useState(1);
   const [xmlData, setXmlData] = useState(null);
   const [xmlError, setXmlError] = useState('');
+  const [entryMode, setEntryMode] = useState('upload'); // 'upload' | 'manual'
+  const [invoiceTypeFilter, setInvoiceTypeFilter] = useState('all'); // 'all' | 'product' | 'service'
+  const [selectedInvoiceDetail, setSelectedInvoiceDetail] = useState(null);
+  const [showInvoiceDetailModal, setShowInvoiceDetailModal] = useState(false);
   const [supplierMapping, setSupplierMapping] = useState({
     exists: false,
     id: '',
@@ -1290,7 +1294,77 @@ export function useStockLogic(currentUser) {
   };
 
   // ----------------------------------------------------
-  // XML & PDF (DANFE) Import Methods (Parser)
+  // Início de Entrada Manual de Nota (Serviço ou Produto)
+  // ----------------------------------------------------
+  const handleStartManualServiceEntry = (type = 'service') => {
+    const today = new Date().toISOString().substring(0, 10);
+    const defaultDueDate = new Date();
+    defaultDueDate.setDate(defaultDueDate.getDate() + 30);
+
+    setXmlData({
+      number: '',
+      accessKey: '',
+      issueDate: today,
+      totalValue: '',
+      supplierName: '',
+      supplierCnpj: '',
+      serviceDescription: '',
+      serviceCategory: 'Serviços Terceirizados',
+      items: [{
+        xmlCode: 'SERV-01',
+        xmlName: 'Serviço Prestado',
+        quantity: 1,
+        price: 0,
+        total: 0,
+        batch: '',
+        expiryDate: '',
+        isService: true
+      }],
+      installments: [{
+        installmentNumber: '1/1',
+        dueDate: defaultDueDate.toISOString().substring(0, 10),
+        amount: ''
+      }],
+      sourceType: 'MANUAL',
+      invoiceType: type
+    });
+
+    setSupplierMapping({
+      exists: false,
+      id: '',
+      name: '',
+      cnpj: '',
+      contact: 'Prestador de Serviço',
+      phone: '',
+      email: ''
+    });
+
+    setItemMappings([{
+      xmlCode: 'SERV-01',
+      xmlName: 'Serviço Prestado',
+      quantity: 1,
+      price: 0,
+      batch: '',
+      expiryDate: '',
+      mappedItemId: 'SERVICE_NO_STOCK'
+    }]);
+
+    setXmlError('');
+    setEntryMode('manual');
+    setXmlWizardStep(1);
+    setShowXmlWizard(true);
+  };
+
+  const handleStartImportWizard = () => {
+    setXmlData(null);
+    setEntryMode('upload');
+    setXmlWizardStep(1);
+    setXmlError('');
+    setShowXmlWizard(true);
+  };
+
+  // ----------------------------------------------------
+  // XML & PDF (DANFE / NFS-e) Import Methods (Parser)
   // ----------------------------------------------------
   const handleXmlUpload = async (e) => {
     setXmlError('');
@@ -1304,6 +1378,7 @@ export function useStockLogic(currentUser) {
       try {
         const arrayBuffer = await file.arrayBuffer();
         const parsed = await parseDanfePdf(arrayBuffer);
+        const isService = parsed.invoiceType === 'service';
 
         setXmlData({
           number: parsed.number,
@@ -1314,7 +1389,10 @@ export function useStockLogic(currentUser) {
           supplierCnpj: parsed.supplierCnpj,
           items: parsed.items,
           installments: parsed.installments,
-          sourceType: 'PDF'
+          sourceType: 'PDF',
+          invoiceType: parsed.invoiceType || 'product',
+          serviceDescription: parsed.serviceDescription || '',
+          serviceCategory: 'Serviços Terceirizados'
         });
 
         // Step 2 Setup: Check if supplier exists
@@ -1337,35 +1415,47 @@ export function useStockLogic(currentUser) {
             id: '',
             name: parsed.supplierName,
             cnpj: formattedCnpj,
-            contact: 'Contato DANFE PDF',
+            contact: isService ? 'Prestador NFS-e' : 'Contato DANFE PDF',
             phone: '',
             email: ''
           });
         }
 
         // Step 3 Setup: Build item mappings
-        const mappings = parsed.items.map(pi => {
-          const matchedItem = items.find(item => 
-            item.name.toLowerCase().includes(pi.xmlName.toLowerCase()) || 
-            pi.xmlName.toLowerCase().includes(item.name.toLowerCase())
-          );
+        if (isService) {
+          setItemMappings([{
+            xmlCode: 'SERV-01',
+            xmlName: parsed.serviceDescription || `Serviço NFS-e Nº ${parsed.number}`,
+            quantity: 1,
+            price: parsed.totalValue,
+            batch: '',
+            expiryDate: '',
+            mappedItemId: 'SERVICE_NO_STOCK'
+          }]);
+        } else {
+          const mappings = parsed.items.map(pi => {
+            const matchedItem = items.find(item => 
+              item.name.toLowerCase().includes(pi.xmlName.toLowerCase()) || 
+              pi.xmlName.toLowerCase().includes(item.name.toLowerCase())
+            );
 
-          return {
-            xmlCode: pi.xmlCode,
-            xmlName: pi.xmlName,
-            quantity: pi.quantity,
-            price: pi.price,
-            batch: pi.batch || '',
-            expiryDate: pi.expiryDate || '',
-            mappedItemId: matchedItem ? matchedItem.id : 'CREATE_NEW'
-          };
-        });
+            return {
+              xmlCode: pi.xmlCode,
+              xmlName: pi.xmlName,
+              quantity: pi.quantity,
+              price: pi.price,
+              batch: pi.batch || '',
+              expiryDate: pi.expiryDate || '',
+              mappedItemId: matchedItem ? matchedItem.id : 'CREATE_NEW'
+            };
+          });
+          setItemMappings(mappings);
+        }
 
-        setItemMappings(mappings);
         setXmlWizardStep(2);
       } catch (err) {
         console.error(err);
-        setXmlError(err.message || 'Erro ao processar o arquivo PDF da DANFE.');
+        setXmlError(err.message || 'Erro ao processar o arquivo PDF da DANFE/NFS-e.');
       } finally {
         setActionLoading(false);
       }
@@ -1379,10 +1469,123 @@ export function useStockLogic(currentUser) {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(evt.target.result, 'text/xml');
         
-        // Basic validation
+        // Verifica se é XML de NFS-e (padrão ABRASF, municipal ou nacional)
+        const isNfseXml = xmlDoc.getElementsByTagName('CompNfse').length > 0 ||
+                          xmlDoc.getElementsByTagName('Nfse').length > 0 ||
+                          xmlDoc.getElementsByTagName('InfNfse').length > 0 ||
+                          xmlDoc.getElementsByTagName('tcCompNfse').length > 0 ||
+                          xmlDoc.getElementsByTagName('ConsultarNfseResposta').length > 0 ||
+                          xmlDoc.getElementsByTagName('NFSe').length > 0 ||
+                          xmlDoc.getElementsByTagName('infNFSe').length > 0;
+
+        if (isNfseXml) {
+          const numNfse = xmlDoc.getElementsByTagName('Numero')[0]?.textContent ||
+                          xmlDoc.getElementsByTagName('nNFSe')[0]?.textContent ||
+                          xmlDoc.getElementsByTagName('NumeroRps')[0]?.textContent ||
+                          String(Math.floor(100000 + Math.random() * 900000));
+
+          const codVerif = xmlDoc.getElementsByTagName('CodigoVerificacao')[0]?.textContent ||
+                           xmlDoc.getElementsByTagName('cVerif')[0]?.textContent || '';
+
+          const dEmiRaw = xmlDoc.getElementsByTagName('DataEmissao')[0]?.textContent ||
+                          xmlDoc.getElementsByTagName('dEmi')[0]?.textContent || '';
+          const issueDate = dEmiRaw ? dEmiRaw.substring(0, 10) : new Date().toISOString().substring(0, 10);
+
+          const prestadorNome = xmlDoc.querySelector('PrestadorServico RazaoSocial')?.textContent ||
+                                xmlDoc.querySelector('Prestador RazaoSocial')?.textContent ||
+                                xmlDoc.querySelector('emit xNome')?.textContent ||
+                                xmlDoc.getElementsByTagName('RazaoSocial')[0]?.textContent ||
+                                'Prestador de Serviço';
+
+          const prestadorCnpj = xmlDoc.querySelector('PrestadorServico Cnpj')?.textContent ||
+                                xmlDoc.querySelector('IdentificacaoPrestador Cnpj')?.textContent ||
+                                xmlDoc.querySelector('emit CNPJ')?.textContent ||
+                                xmlDoc.getElementsByTagName('Cnpj')[0]?.textContent ||
+                                xmlDoc.getElementsByTagName('CNPJ')[0]?.textContent || '';
+
+          const vServ = parseFloat(xmlDoc.getElementsByTagName('ValorServicos')[0]?.textContent ||
+                                   xmlDoc.getElementsByTagName('ValorLiquidoNfse')[0]?.textContent ||
+                                   xmlDoc.getElementsByTagName('vServPrest')[0]?.textContent ||
+                                   xmlDoc.getElementsByTagName('vNFSe')[0]?.textContent || 0);
+
+          const discriminacao = xmlDoc.getElementsByTagName('Discriminacao')[0]?.textContent ||
+                                xmlDoc.getElementsByTagName('xDescServ')[0]?.textContent ||
+                                `Prestação de serviços conforme NFS-e Nº ${numNfse}`;
+
+          const defaultDueDate = new Date();
+          defaultDueDate.setDate(defaultDueDate.getDate() + 30);
+
+          setXmlData({
+            number: numNfse,
+            accessKey: codVerif,
+            issueDate: issueDate,
+            totalValue: vServ,
+            supplierName: prestadorNome,
+            supplierCnpj: prestadorCnpj,
+            serviceDescription: discriminacao.trim().slice(0, 300),
+            serviceCategory: 'Serviços Terceirizados',
+            items: [{
+              xmlCode: 'SERV-01',
+              xmlName: discriminacao.trim().slice(0, 200) || `Serviço NFS-e Nº ${numNfse}`,
+              quantity: 1,
+              price: vServ,
+              total: vServ,
+              batch: '',
+              expiryDate: '',
+              isService: true
+            }],
+            installments: [{
+              installmentNumber: '1/1',
+              dueDate: defaultDueDate.toISOString().substring(0, 10),
+              amount: vServ
+            }],
+            sourceType: 'XML',
+            invoiceType: 'service'
+          });
+
+          const formattedCnpj = formatCnpj(prestadorCnpj);
+          const existingSupplier = suppliers.find(s => cleanCnpj(s.cnpj) === cleanCnpj(prestadorCnpj));
+
+          if (existingSupplier) {
+            setSupplierMapping({
+              exists: true,
+              id: existingSupplier.id,
+              name: existingSupplier.name,
+              cnpj: existingSupplier.cnpj,
+              contact: existingSupplier.contact || '',
+              phone: existingSupplier.phone || '',
+              email: existingSupplier.email || ''
+            });
+          } else {
+            setSupplierMapping({
+              exists: false,
+              id: '',
+              name: prestadorNome,
+              cnpj: formattedCnpj,
+              contact: 'Prestador XML NFS-e',
+              phone: '',
+              email: ''
+            });
+          }
+
+          setItemMappings([{
+            xmlCode: 'SERV-01',
+            xmlName: discriminacao.trim().slice(0, 200) || `Serviço NFS-e Nº ${numNfse}`,
+            quantity: 1,
+            price: vServ,
+            batch: '',
+            expiryDate: '',
+            mappedItemId: 'SERVICE_NO_STOCK'
+          }]);
+
+          setXmlWizardStep(2);
+          return;
+        }
+
+        // Caso seja NF-e de Produtos
         const nNF = xmlDoc.getElementsByTagName('nNF')[0]?.textContent;
         if (!nNF) {
-          throw new Error('Nós obrigatórios de NF-e não encontrados. Certifique-se de que é um XML de Nota Fiscal Eletrônica válido.');
+          throw new Error('Nós obrigatórios de NF-e ou NFS-e não encontrados. Certifique-se de que é um XML de Nota Fiscal válido.');
         }
 
         const chNFe = xmlDoc.getElementsByTagName('chNFe')[0]?.textContent || 
@@ -1457,7 +1660,9 @@ export function useStockLogic(currentUser) {
             dueDate: issueDate,
             amount: vNF
           }],
-          sourceType: 'XML'
+          sourceType: 'XML',
+          invoiceType: 'product',
+          serviceDescription: ''
         });
 
         // Step 2 Setup: Check if supplier exists
@@ -1604,6 +1809,72 @@ export function useStockLogic(currentUser) {
     const currentUnitId = getSelectedUnit();
     const currentUnitName = currentUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
     try {
+      const isService = xmlData?.invoiceType === 'service';
+
+      if (isService) {
+        // --- FLUXO DE NOTA DE SERVIÇOS PRESTADOS (NFS-e) ---
+        const serviceItems = [{
+          name: xmlData.serviceDescription || 'Serviço Prestado',
+          quantity: 1,
+          price: parseFloat(xmlData.totalValue) || 0,
+          total: parseFloat(xmlData.totalValue) || 0,
+          isService: true
+        }];
+
+        // Step 1: Gravar NFS-e no histórico de notas fiscais
+        await dbService.createPurchaseInvoice({
+          number: xmlData.number,
+          accessKey: xmlData.accessKey || '',
+          issueDate: xmlData.issueDate,
+          supplierId: supplierMapping.id,
+          supplierName: supplierMapping.name,
+          supplierCnpj: supplierMapping.cnpj,
+          totalValue: parseFloat(xmlData.totalValue) || 0,
+          items: serviceItems,
+          unitId: currentUnitId,
+          unit: currentUnitName,
+          invoiceType: 'service',
+          serviceDescription: xmlData.serviceDescription || '',
+          serviceCategory: xmlData.serviceCategory || 'Serviços Terceirizados'
+        });
+
+        // Step 2: Lançamento automático no Contas a Pagar do Financeiro para cada parcela
+        if (dbService.saveAccountsPayable) {
+          const instList = (xmlData.installments && xmlData.installments.length > 0) 
+            ? xmlData.installments 
+            : [{ installmentNumber: '1/1', dueDate: xmlData.issueDate || new Date().toISOString().substring(0, 10), amount: xmlData.totalValue }];
+
+          for (const inst of instList) {
+            const defaultDueDate = new Date();
+            defaultDueDate.setDate(defaultDueDate.getDate() + 30);
+            const finalDueDate = inst.dueDate || defaultDueDate.toISOString().substring(0, 10);
+
+            await dbService.saveAccountsPayable({
+              supplier: supplierMapping.name,
+              cnpj: supplierMapping.cnpj || '00.000.000/0001-00',
+              description: `Entrada NFS-e Nº ${xmlData.number} - ${(xmlData.serviceDescription || 'Serviço Prestado').slice(0, 45)} (Parcela ${inst.installmentNumber})`,
+              amount: parseFloat(inst.amount) || parseFloat(xmlData.totalValue) || 0,
+              dueDate: finalDueDate,
+              category: xmlData.serviceCategory || 'Serviços Terceirizados',
+              invoiceNumber: xmlData.number,
+              accessKey: xmlData.accessKey || '',
+              documentType: 'NFS-e',
+              status: 'Pendente',
+              unitId: currentUnitId,
+              unit: currentUnitName
+            });
+          }
+        }
+
+        showAlert(`Nota Fiscal de Serviços Nº ${xmlData.number} processada! Documento arquivado e ${(xmlData.installments || []).length || 1} conta(s) a pagar lançada(s) no Financeiro.`, 'success');
+        setShowXmlWizard(false);
+        const invList = await (dbService.getPurchaseInvoices ? dbService.getPurchaseInvoices().catch(() => []) : []);
+        setInvoices(safeArray(invList));
+        fetchData();
+        return;
+      }
+
+      // --- FLUXO DE NOTA FISCAL DE PRODUTOS / INSUMOS (NF-e) ---
       // Step 1: Create all new items if mapped to CREATE_NEW
       const finalItemsList = [];
       const updatedItemList = [...items];
@@ -1679,10 +1950,12 @@ export function useStockLogic(currentUser) {
         issueDate: xmlData.issueDate,
         supplierId: supplierMapping.id,
         supplierName: supplierMapping.name,
+        supplierCnpj: supplierMapping.cnpj,
         totalValue: xmlData.totalValue,
         items: finalItemsList,
         unitId: currentUnitId,
-        unit: currentUnitName
+        unit: currentUnitName,
+        invoiceType: 'product'
       });
 
       // Step 3: Automate Payable Account creation in Finance for every installment/duplicata
@@ -1705,6 +1978,7 @@ export function useStockLogic(currentUser) {
             category: 'Insumo Clínico',
             invoiceNumber: xmlData.number,
             accessKey: xmlData.accessKey || '',
+            documentType: 'NF-e',
             status: 'Pendente',
             unitId: currentUnitId,
             unit: currentUnitName
@@ -1728,10 +2002,30 @@ export function useStockLogic(currentUser) {
 
       showAlert(`Nota Fiscal Nº ${xmlData.number} processada! Estoque abastecido e ${(xmlData.installments || []).length || 1} conta(s) a pagar lançada(s) no Financeiro.`, 'success');
       setShowXmlWizard(false);
+      const invList = await (dbService.getPurchaseInvoices ? dbService.getPurchaseInvoices().catch(() => []) : []);
+      setInvoices(safeArray(invList));
       fetchData();
     } catch (err) {
       console.error(err);
       showAlert('Erro ao finalizar importação da nota fiscal.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteInvoice = async (id) => {
+    if (!window.confirm('Deseja realmente remover esta nota fiscal do histórico de entradas?')) return;
+    setActionLoading(true);
+    try {
+      if (dbService.deletePurchaseInvoice) {
+        await dbService.deletePurchaseInvoice(id);
+      }
+      showAlert('Nota fiscal excluída com sucesso!', 'success');
+      const invList = await (dbService.getPurchaseInvoices ? dbService.getPurchaseInvoices().catch(() => []) : []);
+      setInvoices(safeArray(invList));
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao excluir nota fiscal.', 'danger');
     } finally {
       setActionLoading(false);
     }
@@ -2025,7 +2319,17 @@ export function useStockLogic(currentUser) {
     handleKitItemRemove,
     handleKitItemQtyChange,
     handleSaveKit,
-    handleDeleteKit,
+    entryMode,
+    setEntryMode,
+    handleStartManualServiceEntry,
+    handleStartImportWizard,
+    handleDeleteInvoice,
+    invoiceTypeFilter,
+    setInvoiceTypeFilter,
+    selectedInvoiceDetail,
+    setSelectedInvoiceDetail,
+    showInvoiceDetailModal,
+    setShowInvoiceDetailModal,
     filteredItems,
     lowStockItems,
     expiryList,
