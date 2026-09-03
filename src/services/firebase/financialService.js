@@ -275,6 +275,14 @@ export const deletePurchaseInvoice = async (id) => {
     return { success: true };
   };
 
+export const updatePurchaseInvoice = async (id, updateData) => {
+    if (USE_MOCK) return mockFirestore.updatePurchaseInvoice(id, updateData);
+    const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await updateDoc(doc(db, 'purchase_invoices', id), updateData);
+    return { id, ...updateData };
+  };
+
 export const getXmlImports = async () => {
     if (USE_MOCK) return mockFirestore.getXmlImports();
     try {

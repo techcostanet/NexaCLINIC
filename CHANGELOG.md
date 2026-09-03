@@ -1,3 +1,18 @@
+## [v4.9.39] - 02 de Setembro, 2026
+### Fluxo Otimizado para Entrada de Serviços (NFS-e) & Auditoria de Notas
+- **Omissão Automática da Etapa de Produtos no Wizard:**
+  - O assistente de importação de notas fiscais identifica documentos de serviço e omite a etapa 4 de mapeamento de catálogo ("Mapear Itens").
+  - O fluxo para NFS-e opera em 4 etapas diretas: `1. Documento -> 2. Fornecedor -> 3. Financeiro & Serviço -> 4. Finalizar`.
+- **Prevenção de Total Zerado & Cálculo pelas Parcelas:**
+  - Caso o valor total no cabeçalho de uma NFS-e em PDF não seja extraído pelo leitor municipal, o sistema calcula o valor total automaticamente através da soma das duplicatas/parcelas identificadas.
+  - Disponibilizado botão de sincronização e campo de edição direta de valor total na etapa financeira.
+- **Identificação Visual na Tabela de Entradas:**
+  - Na coluna "Detalhes", notas de serviço exibem agora a identificação `🛠️ Serviço` acompanhada da descrição e categoria, eliminando a exibição equivocada de `0 produto(s)`.
+- **Ferramenta de Correção de Notas Anteriores:**
+  - Inclusão do botão `🔄 Salvar como Serviço` no modal de detalhes (`InvoiceDetailModal`) e ação rápida na tabela, permitindo converter notas salvas anteriormente com tipo ou valor incorretos em 1 clique.
+
+---
+
 ## [v4.9.37] - 02 de Setembro, 2026
 ### Entrada de Notas de Serviços (NFS-e) & Integração com Contas a Pagar
 - **Suporte a Notas Fiscais de Serviços Prestados (NFS-e):**

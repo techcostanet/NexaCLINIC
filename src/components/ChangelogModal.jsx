@@ -17,6 +17,30 @@ export default function ChangelogModal({ isOpen, onClose }) {
       ]
     },
     {
+      version: 'v4.9.39',
+      date: '02/09/2026',
+      title: 'Fluxo Otimizado para Entrada de Serviços (NFS-e) & Auditoria de Notas',
+      description: 'Evolução completa da entrada de notas de serviços prestados (NFS-e), simplificando o assistente de importação para 4 etapas com eliminação automática da etapa de produtos, extração e conferência precisa de valores pelas parcelas e ferramenta de correção de notas.',
+      changes: [
+        { type: 'Etapa de Produtos Omitida para Serviços', text: 'O assistente de importação (Wizard) detecta notas de serviços e pula automaticamente a etapa de mapeamento de catálogo de produtos, avançando diretamente de Financeiro & Serviço para a Finalização.' },
+        { type: 'Cálculo e Sincronização Automática de Valor', text: 'Prevenção de notas com valor zerado: o sistema agora identifica e soma automaticamente as parcelas do Contas a Pagar quando o valor total do cabeçalho da nota não for extraído pelo PDF.' },
+        { type: 'Exibição Visual de Serviços no Histórico', text: 'A tabela de entradas agora exibe badge roxo distintivo de "Serviço" e a descrição/categoria correspondente na coluna de detalhes, evitando a exibição indevida de "0 produto(s)".' },
+        { type: 'Ferramenta de Correção de Tipo e Valor', text: 'Disponibilizada ação direta no modal de detalhes da nota fiscal para converter documentos salvos anteriormente como produto para "Serviço", recalculando e gravando o valor total correto.' }
+      ]
+    },
+    {
+      version: 'v4.9.37',
+      date: '02/09/2026',
+      title: 'Entrada de Notas de Serviços (NFS-e) & Integração com Contas a Pagar',
+      description: 'Adaptação do módulo de Estoque para receber notas de serviços prestados (NFS-e) via XML ou PDF de prefeitura, com arquivamento fiscal do documento e geração atômica de parcelas no Contas a Pagar do Financeiro sem movimentação de estoque físico.',
+      changes: [
+        { type: 'Suporte Completo a NFS-e', text: 'Opção de entrada para prestadores de serviços, locações de máquinas e manutenções com geração de faturas a pagar.' },
+        { type: 'Leitor Híbrido XML & PDF', text: 'Extração automática de arquivos de notas de mercadorias (NF-e/DANFE) e serviços (NFS-e).' },
+        { type: 'Digitação Manual', text: 'Fluxo direto para inserção de notas sem arquivo digital.' },
+        { type: 'Filtro por Tipo', text: 'Visualização segregada entre Produtos (NF-e) e Serviços (NFS-e) na tabela de Entradas.' }
+      ]
+    },
+    {
       version: 'v4.9.36',
       date: '02/09/2026',
       title: 'Design Hospitalar em Tons Claros para o Painel da Smart TV',

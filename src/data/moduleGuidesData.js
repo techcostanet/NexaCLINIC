@@ -321,12 +321,12 @@ export const MODULE_GUIDES = {
         title: 'Como Dar Entrada em Notas de Serviços Prestados (NFS-e)',
         steps: [
           'Acesse a aba "Entradas" no painel de Estoque.',
-          'Clique no botão "+ Lançar Serviço" para preenchimento direto ou em "Importar (XML ou PDF)" se possuir o arquivo digital emitido pela prefeitura.',
-          'Selecione a modalidade (Arquivo ou Digitação) e confirme que o tipo é "🛠️ Serviço (NFS-e)".',
-          'Preencha ou confirme o Número da Nota, Código/Chave, Data de Emissão, Prestador/Fornecedor, CNPJ e Valor Total.',
-          'No passo "Financeiro", configure os vencimentos e valores das parcelas a serem geradas no Contas a Pagar.',
-          'No passo "Serviço", descreva o serviço realizado (ex: Manutenção preventiva de osmose reversa) e escolha a Categoria Financeira.',
-          'Revise os dados e clique em "Confirmar Entrada de Serviço". A nota será arquivada e as duplicatas serão criadas no Financeiro sem alterar o estoque físico de insumos.'
+          'Clique no botão "+ Lançar Serviço" para preenchimento direto ou em "Importar (XML ou PDF)" se possuir o arquivo digital emitido pela prefeitura ou prestador.',
+          'Selecione a modalidade (Arquivo ou Digitação) e confirme o tipo "🛠️ Serviço (NFS-e)".',
+          'No passo "Documento" e "Fornecedor", confirme os dados cadastrais do prestador e da nota.',
+          'No passo "Financeiro & Serviço", configure as parcelas do Contas a Pagar e informe a descrição e categoria do serviço.',
+          'Para notas de serviços, a etapa de produtos é pulada automaticamente, direcionando diretamente para a revisão.',
+          'Clique em "Confirmar Entrada de Serviço". A nota será arquivada e as duplicatas serão criadas no Financeiro sem alterar o estoque físico de insumos.'
         ]
       },
       {
@@ -396,6 +396,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Por que a etapa de produtos é pulada nas notas fiscais de serviço?',
+        resposta: 'Como serviços prestados (manutenções, locações, consultorias) não geram movimentação de insumos físicos nem controle de lotes, o assistente omite automaticamente a etapa de mapeamento de catálogo, tornando a entrada mais rápida em 4 passos diretos.'
+      },
+      {
+        pergunta: 'Como corrigir uma nota fiscal que foi importada com tipo ou valor divergente?',
+        resposta: 'Na aba "Entradas", clique no botão "Ver" em qualquer nota para abrir o detalhamento. Se ela foi classificada com tipo ou valor divergente, clique no botão "Salvar como Serviço" para atualizar o tipo e recalcular o total a partir das parcelas do Contas a Pagar.'
+      },
       {
         pergunta: 'A entrada de uma Nota de Serviços (NFS-e) afeta a quantidade de produtos ou insumos no estoque?',
         resposta: 'Não. Notas fiscais de serviços prestados (NFS-e) registram contratações como calibração de equipamentos, manutenção, TI, consultoria ou terceirização. Elas não interferem no saldo físico de insumos clínicos, garantindo a integridade dos inventários e abastecendo automaticamente o Contas a Pagar no Financeiro.'

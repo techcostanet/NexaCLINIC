@@ -44,12 +44,21 @@ export async function parseDanfePdf(arrayBuffer) {
     }
 
     // Identificação de Tipo: Nota de Serviço (NFS-e) vs Nota de Produto (NF-e)
-    const isServiceNfse = /NOTA\s+FISCAL\s+(?:DE\s+)?SERVI[ÇC]O/i.test(fullText) ||
-                          /NFS-?E\b/i.test(fullText) ||
-                          /DANFSE\b/i.test(fullText) ||
-                          /DISCRIMINA[ÇC][ÃA]O\s+DOS\s+SERVI[ÇC]OS/i.test(fullText) ||
-                          /PRESTADOR\s+(?:DE\s+)?SERVI[ÇC]OS?/i.test(fullText) ||
-                          /C[ÓO]DIGO\s+DE\s+VERIFICA[ÇC][ÃA]O/i.test(fullText);
+    let isServiceNfse = /NOTA\s+FISCAL\s+(?:DE\s+)?SERVI[ÇC]O/i.test(fullText) ||
+                        /NFS-?E\b/i.test(fullText) ||
+                        /DANFSE\b/i.test(fullText) ||
+                        /DISCRIMINA[ÇC][ÃA]O\s+DOS\s+SERVI[ÇC]OS/i.test(fullText) ||
+                        /PRESTADOR\s+(?:DE\s+)?SERVI[ÇC]OS?/i.test(fullText) ||
+                        /C[ÓO]DIGO\s+DE\s+VERIFICA[ÇC][ÃA]O/i.test(fullText) ||
+                        /PREFEITURA\s+MUNICIPAL/i.test(fullText) ||
+                        /SECRETARIA\s+(?:MUNICIPAL\s+)?DE\s+FINAN[ÇC]AS/i.test(fullText) ||
+                        /LOCA[ÇC][ÃA]O/i.test(fullText) ||
+                        /M[ÁA]QUINAS/i.test(fullText) ||
+                        /ISSQN\b/i.test(fullText) ||
+                        /TOMADOR\s+(?:DE\s+SERVI[ÇC]OS?)?/i.test(fullText) ||
+                        /VALOR\s+DOS\s+SERVI[ÇC]OS/i.test(fullText) ||
+                        /FATURA\s+(?:DE\s+)?LOCA[ÇC][ÃA]O/i.test(fullText) ||
+                        /RECIBO\s+(?:DE\s+)?LOCA[ÇC][ÃA]O/i.test(fullText);
 
     // 1. Chave de Acesso (44 dígitos para NF-e) ou Código de Verificação (NFS-e)
     let accessKey = '';
@@ -120,10 +129,13 @@ export async function parseDanfePdf(arrayBuffer) {
     // 6. Valor Total da Nota
     let totalValue = 0;
     const valMatch = fullText.match(/VALOR\s+TOTAL\s+DA\s+NOTA[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
-                     fullText.match(/VALOR\s+(?:L[ÍI]QUIDO|DOS\s+SERVI[ÇC]OS)[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
+                     fullText.match(/VALOR\s+(?:L[ÍI]QUIDO|DOS\s+SERVI[ÇC]OS|TOTAL|DA\s+FATURA|COBRADO|DO\s+DOCUMENTO|A\s+PAGAR)[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
                      fullText.match(/V\.?\s*TOTAL\s+DA\s+NOTA[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
                      fullText.match(/TOTAL\s+DA\s+NOTA[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
-                     fullText.match(/VALOR\s+TOTAL\s+L[ÍI]QUIDO[:\s]*R?\$?\s*([0-9\.,]+)/i);
+                     fullText.match(/VALOR\s+TOTAL\s+L[ÍI]QUIDO[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
+                     fullText.match(/VALOR\s+L[ÍI]QUIDO\s+DA\s+NOTA[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
+                     fullText.match(/VALOR\s+A\s+PAGAR[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
+                     fullText.match(/TOTAL\s+(?:G?ERAL|FATURA|A\s+PAGAR)?[:\s]*R?\$?\s*([0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})/i);
     if (valMatch) {
       const rawVal = valMatch[1].replace(/\./g, '').replace(',', '.');
       totalValue = parseFloat(rawVal) || 0;
@@ -131,15 +143,14 @@ export async function parseDanfePdf(arrayBuffer) {
 
     // 6.1 Discriminação dos Serviços Prestados (caso NFS-e)
     let serviceDescription = '';
-    if (isServiceNfse) {
-      const discMatch = fullText.match(/DISCRIMINA[ÇC][ÃA]O\s+DOS\s+SERVI[ÇC]OS[:\s]*([\s\S]+?)(?=VALOR|RETEN[ÇC][ÕO]ES|C[ÓO]DIGO|IMPOSTOS|BASE\s+DE\s+C[ÁA]LCULO|INFORMA[ÇC][ÕO]ES|DADOS\s+ADICIONAIS|$)/i) ||
-                        fullText.match(/DESCRI[ÇC][ÃA]O\s+DOS\s+SERVI[ÇC]OS[:\s]*([\s\S]+?)(?=VALOR|RETEN[ÇC][ÕO]ES|C[ÓO]DIGO|IMPOSTOS|$)/i);
-      if (discMatch && discMatch[1]) {
-        serviceDescription = discMatch[1].trim().replace(/\s{2,}/g, ' ').slice(0, 300);
-      }
-      if (!serviceDescription) {
-        serviceDescription = `Prestação de serviços hospitalares/clínicos conforme NFS-e Nº ${number || 'S/N'}`;
-      }
+    const discMatch = fullText.match(/DISCRIMINA[ÇC][ÃA]O\s+DOS\s+SERVI[ÇC]OS[:\s]*([\s\S]+?)(?=VALOR|RETEN[ÇC][ÕO]ES|C[ÓO]DIGO|IMPOSTOS|BASE\s+DE\s+C[ÁA]LCULO|INFORMA[ÇC][ÕO]ES|DADOS\s+ADICIONAIS|$)/i) ||
+                      fullText.match(/DESCRI[ÇC][ÃA]O\s+DOS\s+SERVI[ÇC]OS[:\s]*([\s\S]+?)(?=VALOR|RETEN[ÇC][ÕO]ES|C[ÓO]DIGO|IMPOSTOS|$)/i) ||
+                      fullText.match(/DADOS\s+DO\s+SERVI[ÇC]O[:\s]*([\s\S]+?)(?=VALOR|IMPOSTO|$)/i);
+    if (discMatch && discMatch[1]) {
+      serviceDescription = discMatch[1].trim().replace(/\s{2,}/g, ' ').slice(0, 300);
+    }
+    if (!serviceDescription && isServiceNfse) {
+      serviceDescription = `Prestação de serviços hospitalares/clínicos conforme NFS-e Nº ${number || 'S/N'}`;
     }
 
     // 7. Faturas / Duplicatas / Parcelas
@@ -151,7 +162,7 @@ export async function parseDanfePdf(arrayBuffer) {
       const dParts = dupMatch[2].split('/');
       const dVenc = `${dParts[2]}-${dParts[1]}-${dParts[0]}`;
       const vVal = parseFloat(dupMatch[3].replace(/\./g, '').replace(',', '.')) || 0;
-      if (vVal > 0 && vVal <= (totalValue * 1.05 || 1000000)) {
+      if (vVal > 0) {
         installments.push({
           installmentNumber: dupMatch[1] || String(instIndex),
           dueDate: dVenc,
@@ -159,6 +170,12 @@ export async function parseDanfePdf(arrayBuffer) {
         });
         instIndex++;
       }
+    }
+
+    // Fallback de Valor Total: Se o cabeçalho não continha o valor total mas as parcelas foram encontradas
+    const sumInstallments = installments.reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
+    if (totalValue <= 0 && sumInstallments > 0) {
+      totalValue = sumInstallments;
     }
 
     // 8. Itens / Produtos da Nota
@@ -187,47 +204,36 @@ export async function parseDanfePdf(arrayBuffer) {
         }
       }
 
-      // Se nenhum item detalhado foi capturado por regex estrita, cria um item consolidado com o valor total
-      if (items.length === 0 && totalValue > 0) {
-        items.push({
-          xmlCode: 'PDF-01',
-          xmlName: `Insumos Conforme DANFE NF-e Nº ${number || 'S/N'} (${supplierName})`,
-          quantity: 1,
-          price: totalValue,
-          total: totalValue,
-          batch: '',
-          expiryDate: ''
-        });
+      // Se nenhum item detalhado foi encontrado e não há chave de 44 dígitos,
+      // classifica como NFS-e / Serviços para não forçar mapeamento de estoque!
+      if (items.length === 0 && !keyMatch) {
+        isServiceNfse = true;
       }
-    } else {
-      // Para NFS-e: gera item descritivo de serviço
-      items.push({
-        xmlCode: 'SERV-01',
-        xmlName: serviceDescription || `Serviço Prestado Conforme NFS-e Nº ${number || 'S/N'} (${supplierName})`,
-        quantity: 1,
-        price: totalValue,
-        total: totalValue,
-        batch: '',
-        expiryDate: '',
-        isService: true
-      });
+    }
+
+    if (isServiceNfse) {
+      if (!serviceDescription) {
+        serviceDescription = `Prestação de serviços conforme documento Nº ${number || 'S/N'} (${supplierName})`;
+      }
     }
 
     const defaultDueDate = new Date();
     defaultDueDate.setDate(defaultDueDate.getDate() + 30);
 
+    const calculatedTotal = totalValue > 0 ? totalValue : (sumInstallments > 0 ? sumInstallments : 0);
+
     return {
       number: number || String(Math.floor(100000 + Math.random() * 900000)),
       accessKey: accessKey || '',
       issueDate: issueDate,
-      totalValue: totalValue || items.reduce((acc, it) => acc + (it.total || 0), 0),
+      totalValue: calculatedTotal,
       supplierName: supplierName,
       supplierCnpj: supplierCnpj,
-      items: items,
+      items: isServiceNfse ? [] : items,
       installments: installments.length > 0 ? installments : [{
         installmentNumber: '1/1',
         dueDate: defaultDueDate.toISOString().substring(0, 10),
-        amount: totalValue
+        amount: calculatedTotal
       }],
       sourceType: 'PDF',
       invoiceType: isServiceNfse ? 'service' : 'product',

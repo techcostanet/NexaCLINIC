@@ -4214,6 +4214,20 @@ export const mockFirestore = {
     return { success: true };
   },
 
+  updatePurchaseInvoice: async (id, updateData) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.purchase_invoices) {
+      const idx = db.purchase_invoices.findIndex(inv => inv.id === id);
+      if (idx > -1) {
+        db.purchase_invoices[idx] = { ...db.purchase_invoices[idx], ...updateData };
+        setDB(db);
+        return db.purchase_invoices[idx];
+      }
+    }
+    return { id, ...updateData };
+  },
+
   // Employees CRUD
   getEmployees: async () => {
     const db = getDB();

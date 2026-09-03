@@ -214,6 +214,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
     handleStartManualServiceEntry,
     handleStartImportWizard,
     handleDeleteInvoice,
+    handleFixInvoiceType,
     invoiceTypeFilter,
     setInvoiceTypeFilter,
     selectedInvoiceDetail,
@@ -1199,8 +1200,9 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
           {/* TAB 2: Purchase Invoices List */}
           {activeTab === 'invoices' && (() => {
             const filteredInvoices = invoices.filter(inv => {
-              if (invoiceTypeFilter === 'product' && inv?.invoiceType === 'service') return false;
-              if (invoiceTypeFilter === 'service' && inv?.invoiceType !== 'service') return false;
+              const isServ = inv?.invoiceType === 'service' || (!inv?.items || inv?.items.length === 0) || Boolean(inv?.serviceDescription);
+              if (invoiceTypeFilter === 'product' && isServ) return false;
+              if (invoiceTypeFilter === 'service' && !isServ) return false;
               if (searchTerm) {
                 const term = searchTerm.toLowerCase();
                 const num = String(inv?.number || '').toLowerCase();
@@ -1236,8 +1238,16 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                       </tr>
                     ) : (
                       sortData(filteredInvoices, invoiceSort).map((inv, idx) => {
-                        const totalVal = parseFloat(inv?.totalValue) || 0;
-                        const isService = inv?.invoiceType === 'service';
+                        const sumInst = (inv?.installments && inv.installments.length > 0)
+                          ? inv.installments.reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0)
+                          : 0;
+                        const totalVal = (parseFloat(inv?.totalValue) > 0)
+                          ? parseFloat(inv.totalValue)
+                          : (sumInst > 0 ? sumInst : (parseFloat(inv?.amount) || 0));
+
+                        const isService = inv?.invoiceType === 'service' || 
+                                          (!inv?.items || inv?.items.length === 0) || 
+                                          Boolean(inv?.serviceDescription);
                         return (
                           <tr key={inv?.id || idx}>
                             <td>
@@ -1265,9 +1275,14 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                             <td style={{ fontWeight: '700' }}>R$ {totalVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                             <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', maxWidth: '240px' }}>
                               {isService ? (
-                                <span title={inv?.serviceDescription || 'Serviço Prestado'}>
-                                  🛠️ {inv?.serviceDescription ? (inv.serviceDescription.length > 35 ? `${inv.serviceDescription.slice(0, 35)}...` : inv.serviceDescription) : 'Serviço Prestado'}
-                                </span>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span style={{ fontWeight: '600', color: '#7e22ce' }} title={inv?.serviceDescription || 'Serviço Prestado'}>
+                                    🛠️ Serviço
+                                  </span>
+                                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                    {inv?.serviceCategory || (inv?.serviceDescription ? (inv.serviceDescription.length > 25 ? `${inv.serviceDescription.slice(0, 25)}...` : inv.serviceDescription) : 'Prestado')}
+                                  </span>
+                                </div>
                               ) : (
                                 <span>📦 {inv?.items?.length || 0} produto(s)</span>
                               )}
@@ -1282,6 +1297,15 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                 >
                                   <Eye size={13} /> Ver
                                 </button>
+                                {isService && inv?.invoiceType !== 'service' && (
+                                  <button
+                                    onClick={() => handleFixInvoiceType(inv, 'service')}
+                                    style={{ ...styles.actionEditBtn, backgroundColor: '#f3e8ff', color: '#7e22ce' }}
+                                    title="Corrigir Tipo para Serviço"
+                                  >
+                                    <RefreshCw size={13} />
+                                  </button>
+                                )}
                                 <button 
                                   onClick={() => handleDeleteInvoice(inv?.id)} 
                                   style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} 
@@ -2723,13 +2747,22 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
             </div>
             
             <div style={styles.wizardStepsBar}>
-              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 1 ? styles.wizardStepActive : {}) }}>1. Documento</div>
-              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 2 ? styles.wizardStepActive : {}) }}>2. Fornecedor</div>
-              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 3 ? styles.wizardStepActive : {}) }}>3. Financeiro</div>
-              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 4 ? styles.wizardStepActive : {}) }}>
-                {xmlData?.invoiceType === 'service' ? '4. Serviço' : '4. Mapear Itens'}
-              </div>
-              <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 5 ? styles.wizardStepActive : {}) }}>5. Finalizar</div>
+              {xmlData?.invoiceType === 'service' ? (
+                <>
+                  <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 1 ? styles.wizardStepActive : {}) }}>1. Documento</div>
+                  <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 2 ? styles.wizardStepActive : {}) }}>2. Fornecedor</div>
+                  <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 3 ? styles.wizardStepActive : {}) }}>3. Financeiro & Serviço</div>
+                  <div style={{ ...styles.wizardStep, ...(xmlWizardStep === 5 ? styles.wizardStepActive : {}) }}>4. Finalizar</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 1 ? styles.wizardStepActive : {}) }}>1. Documento</div>
+                  <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 2 ? styles.wizardStepActive : {}) }}>2. Fornecedor</div>
+                  <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 3 ? styles.wizardStepActive : {}) }}>3. Financeiro</div>
+                  <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 4 ? styles.wizardStepActive : {}) }}>4. Mapear Itens</div>
+                  <div style={{ ...styles.wizardStep, ...(xmlWizardStep >= 5 ? styles.wizardStepActive : {}) }}>5. Finalizar</div>
+                </>
+              )}
             </div>
 
             <div style={{ padding: '1.25rem 1.5rem', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -3069,7 +3102,8 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
               {xmlWizardStep === 3 && (() => {
                 const installmentsList = xmlData?.installments || [];
                 const sumInstallments = installmentsList.reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
-                const totalInvoice = parseFloat(xmlData?.totalValue) || 0;
+                const rawTotal = parseFloat(xmlData?.totalValue) || 0;
+                const totalInvoice = rawTotal > 0 ? rawTotal : sumInstallments;
                 const isDifference = Math.abs(sumInstallments - totalInvoice) > 0.05;
 
                 return (
@@ -3090,9 +3124,21 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                         </div>
                         <div>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Valor</span>
-                          <strong style={{ color: '#0369a1', fontSize: '1.05rem' }}>
-                            R$ {totalInvoice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </strong>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <strong style={{ color: '#0369a1', fontSize: '1.05rem' }}>
+                              R$ {totalInvoice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </strong>
+                            {rawTotal <= 0 && sumInstallments > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setXmlData(prev => ({ ...prev, totalValue: sumInstallments }))}
+                                style={{ padding: '0.2rem 0.45rem', fontSize: '0.7rem', backgroundColor: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', borderRadius: '4px', cursor: 'pointer', fontWeight: '700' }}
+                                title="Sincronizar total com a soma das parcelas"
+                              >
+                                Fixar
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -3101,7 +3147,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                         <div>
                           <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                            Faturas (Contas a Pagar)
+                            Faturas
                           </h4>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                             Configure os vencimentos que serão lançados automaticamente no financeiro.
@@ -3195,21 +3241,68 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                         <div>
                           {!isDifference ? (
                             <span style={{ color: '#166534', fontWeight: '700', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                              <CheckCircle2 size={16} color="#166534" /> Total confere com o valor da nota
+                              <CheckCircle2 size={16} color="#166534" /> Total confere
                             </span>
                           ) : (
                             <span style={{ color: '#b45309', fontWeight: '700', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                              <AlertTriangle size={16} color="#b45309" /> Diferença de R$ {Math.abs(sumInstallments - totalInvoice).toFixed(2)} em relação ao total da nota
+                              <AlertTriangle size={16} color="#b45309" /> Diferença de R$ {Math.abs(sumInstallments - totalInvoice).toFixed(2)}
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
 
+                    {/* Bloco de Serviço embutido para NFS-e */}
+                    {xmlData?.invoiceType === 'service' && (
+                      <div style={{ border: '1px solid #e9d5ff', backgroundColor: '#faf5ff', borderRadius: 'var(--border-radius-md)', padding: '1rem' }}>
+                        <h4 style={{ margin: '0 0 0.5rem 0', color: '#7e22ce', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <Briefcase size={16} /> Serviço
+                        </h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem' }}>
+                          <div className="form-group">
+                            <label style={{ fontSize: '0.75rem', fontWeight: '700' }}>Descrição</label>
+                            <input 
+                              type="text" 
+                              className="form-control" 
+                              placeholder="Descrição dos serviços (ex: Locação de máquinas, manutenção...)"
+                              value={xmlData?.serviceDescription || ''}
+                              onChange={e => setXmlData(prev => ({ ...prev, serviceDescription: e.target.value }))}
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label style={{ fontSize: '0.75rem', fontWeight: '700' }}>Categoria</label>
+                            <select
+                              className="form-control"
+                              value={xmlData?.serviceCategory || 'Serviços Terceirizados'}
+                              onChange={e => setXmlData(prev => ({ ...prev, serviceCategory: e.target.value }))}
+                            >
+                              <option value="Serviços Terceirizados">Serviços Terceirizados</option>
+                              <option value="Locação de Equipamentos">Locação de Equipamentos</option>
+                              <option value="Manutenção e Conservação">Manutenção e Conservação</option>
+                              <option value="Tecnologia da Informação">Tecnologia da Informação</option>
+                              <option value="Consultoria e Assessoria">Consultoria e Assessoria</option>
+                              <option value="Limpeza e Higienização">Limpeza e Higienização</option>
+                              <option value="Outros Serviços">Outros Serviços</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
                       <button type="button" onClick={() => setXmlWizardStep(2)} className="btn btn-secondary">Voltar</button>
-                      <button type="button" onClick={() => setXmlWizardStep(4)} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
-                        {xmlData?.invoiceType === 'service' ? 'Avançar para Detalhes do Serviço' : 'Avançar para Mapear Itens'}
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          if ((!xmlData?.totalValue || parseFloat(xmlData.totalValue) <= 0) && sumInstallments > 0) {
+                            setXmlData(prev => ({ ...prev, totalValue: sumInstallments }));
+                          }
+                          setXmlWizardStep(xmlData?.invoiceType === 'service' ? 5 : 4);
+                        }} 
+                        className="btn btn-primary" 
+                        style={{ backgroundColor: xmlData?.invoiceType === 'service' ? '#8b5cf6' : '#f59e0b', fontWeight: '700' }}
+                      >
+                        {xmlData?.invoiceType === 'service' ? 'Finalizar' : 'Avançar'}
                       </button>
                     </div>
                   </div>
@@ -3366,7 +3459,13 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                     </p>
                     <p>Nota: <strong>{xmlData?.number}</strong> ({xmlData?.sourceType || 'MANUAL'})</p>
                     <p>Fornecedor: <strong>{supplierMapping.name}</strong> ({supplierMapping.cnpj || 'CNPJ não informado'})</p>
-                    <p>Valor: <strong>R$ {xmlData?.totalValue ? parseFloat(xmlData.totalValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00'}</strong></p>
+                    {(() => {
+                      const sumReviewInst = (xmlData?.installments || []).reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
+                      const totalReviewVal = (parseFloat(xmlData?.totalValue) > 0) ? parseFloat(xmlData.totalValue) : sumReviewInst;
+                      return (
+                        <p>Valor: <strong>R$ {totalReviewVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></p>
+                      );
+                    })()}
                     
                     {xmlData?.installments && xmlData.installments.length > 0 && (
                       <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #cbd5e1' }}>
@@ -3425,7 +3524,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                   )}
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
-                    <button type="button" onClick={() => setXmlWizardStep(4)} className="btn btn-secondary">Voltar</button>
+                    <button type="button" onClick={() => setXmlWizardStep(xmlData?.invoiceType === 'service' ? 3 : 4)} className="btn btn-secondary">Voltar</button>
                     <button 
                       type="button" 
                       onClick={handleFinishXmlWizard} 
@@ -3444,127 +3543,154 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
       )}
 
       {/* Invoice Detail Modal (Visualização de Detalhes da Nota) */}
-      {showInvoiceDetailModal && selectedInvoiceDetail && (
-        <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalCard, maxWidth: '720px', width: '92%' }}>
-            <div style={styles.modalHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FileText size={22} color={selectedInvoiceDetail.invoiceType === 'service' ? '#8b5cf6' : '#0284c7'} />
-                <div>
-                  <h2 style={{ margin: 0, fontSize: '1.2rem' }}>
-                    Nota Fiscal Nº {selectedInvoiceDetail.number || 'S/N'}
-                  </h2>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    {selectedInvoiceDetail.invoiceType === 'service' ? 'Nota Fiscal de Serviços Prestados (NFS-e)' : 'Nota Fiscal Eletrônica de Produtos (NF-e)'}
-                  </span>
-                </div>
-              </div>
-              <button onClick={() => setShowInvoiceDetailModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
-            </div>
+      {showInvoiceDetailModal && selectedInvoiceDetail && (() => {
+        const isDetailService = selectedInvoiceDetail.invoiceType === 'service' || 
+                                (!selectedInvoiceDetail.items || selectedInvoiceDetail.items.length === 0) || 
+                                Boolean(selectedInvoiceDetail.serviceDescription);
 
-            <div style={{ padding: '1.25rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <div>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Tipo</span>
-                  <span style={{
-                    display: 'inline-block',
-                    padding: '0.15rem 0.5rem',
-                    borderRadius: '10px',
-                    fontSize: '0.75rem',
-                    fontWeight: '700',
-                    backgroundColor: selectedInvoiceDetail.invoiceType === 'service' ? '#f3e8ff' : '#e0f2fe',
-                    color: selectedInvoiceDetail.invoiceType === 'service' ? '#7e22ce' : '#0369a1'
-                  }}>
-                    {selectedInvoiceDetail.invoiceType === 'service' ? 'Serviço' : 'Produto'}
-                  </span>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Fornecedor</span>
-                  <strong style={{ fontSize: '0.85rem' }}>{selectedInvoiceDetail.supplierName || selectedInvoiceDetail.supplier || 'N/A'}</strong>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>CNPJ</span>
-                  <span style={{ fontSize: '0.85rem', fontFamily: 'monospace' }}>{formatCnpj(selectedInvoiceDetail.supplierCnpj) || 'N/A'}</span>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Emissão</span>
-                  <span style={{ fontSize: '0.85rem' }}>{selectedInvoiceDetail.issueDate ? new Date(selectedInvoiceDetail.issueDate).toLocaleDateString('pt-BR') : '-'}</span>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Entrada</span>
-                  <span style={{ fontSize: '0.85rem' }}>{selectedInvoiceDetail.entryDate ? new Date(selectedInvoiceDetail.entryDate).toLocaleDateString('pt-BR') : '-'}</span>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Valor</span>
-                  <strong style={{ fontSize: '1rem', color: 'var(--success-color)' }}>
-                    R$ {(parseFloat(selectedInvoiceDetail.totalValue) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </strong>
-                </div>
-              </div>
+        const sumInst = (selectedInvoiceDetail.installments && selectedInvoiceDetail.installments.length > 0)
+          ? selectedInvoiceDetail.installments.reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0)
+          : 0;
 
-              {selectedInvoiceDetail.accessKey && (
-                <div style={{ backgroundColor: '#fff', border: '1px solid var(--border-color)', padding: '0.75rem', borderRadius: '6px' }}>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Código / Chave</span>
-                  <code style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>{selectedInvoiceDetail.accessKey}</code>
-                </div>
-              )}
+        const totalVal = (parseFloat(selectedInvoiceDetail.totalValue) > 0)
+          ? parseFloat(selectedInvoiceDetail.totalValue)
+          : (sumInst > 0 ? sumInst : (parseFloat(selectedInvoiceDetail.amount) || 0));
 
-              {selectedInvoiceDetail.invoiceType === 'service' ? (
-                <div style={{ border: '1px solid #e9d5ff', backgroundColor: '#faf5ff', padding: '1rem', borderRadius: '8px' }}>
-                  <h4 style={{ margin: '0 0 0.5rem 0', color: '#6b21a8', fontSize: '0.9rem' }}>🛠️ Descrição dos Serviços Prestados</h4>
-                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: '#374151', lineHeight: '1.4' }}>
-                    {selectedInvoiceDetail.serviceDescription || 'Serviço prestado registrado conforme documento fiscal.'}
-                  </p>
-                  <span style={{ fontSize: '0.75rem', color: '#7e22ce', fontWeight: '600' }}>
-                    Categoria Financeira: {selectedInvoiceDetail.serviceCategory || 'Serviços Terceirizados'}
-                  </span>
-                </div>
-              ) : (
-                <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
-                  <div style={{ padding: '0.6rem 0.85rem', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-color)', fontWeight: '700', fontSize: '0.85rem' }}>
-                    Itens da Nota Fiscal ({selectedInvoiceDetail.items?.length || 0})
+        return (
+          <div style={styles.modalOverlay}>
+            <div style={{ ...styles.modalCard, maxWidth: '720px', width: '92%' }}>
+              <div style={styles.modalHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={22} color={isDetailService ? '#8b5cf6' : '#0284c7'} />
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '1.2rem' }}>
+                      Nota Fiscal Nº {selectedInvoiceDetail.number || 'S/N'}
+                    </h2>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {isDetailService ? 'Nota Fiscal de Serviços Prestados (NFS-e)' : 'Nota Fiscal Eletrônica de Produtos (NF-e)'}
+                    </span>
                   </div>
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th>Produto</th>
-                        <th>Quantidade</th>
-                        <th>Preço</th>
-                        <th>Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(selectedInvoiceDetail.items || []).map((it, i) => (
-                        <tr key={i}>
-                          <td style={{ fontWeight: '600' }}>{it.name || it.xmlName}</td>
-                          <td>{it.quantity}</td>
-                          <td>R$ {(parseFloat(it.price) || 0).toFixed(2)}</td>
-                          <td style={{ fontWeight: '700' }}>R$ {(parseFloat(it.total) || (parseFloat(it.quantity) * parseFloat(it.price)) || 0).toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
-              )}
-
-              <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.85rem', backgroundColor: '#fff' }}>
-                <span style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--text-primary)', display: 'block', marginBottom: '0.35rem' }}>
-                  Status Financeiro
-                </span>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  As parcelas desta nota foram emitidas no módulo Financeiro (Contas a Pagar). Consulte o painel financeiro para registrar baixas ou anexar comprovantes de pagamento.
-                </span>
+                <button onClick={() => setShowInvoiceDetailModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
               </div>
-            </div>
 
-            <div style={styles.modalFooter}>
-              <button type="button" onClick={() => setShowInvoiceDetailModal(false)} className="btn btn-secondary">
-                Fechar
-              </button>
+              <div style={{ padding: '1.25rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <div>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Tipo</span>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '0.15rem 0.5rem',
+                      borderRadius: '10px',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      backgroundColor: isDetailService ? '#f3e8ff' : '#e0f2fe',
+                      color: isDetailService ? '#7e22ce' : '#0369a1'
+                    }}>
+                      {isDetailService ? 'Serviço' : 'Produto'}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Fornecedor</span>
+                    <strong style={{ fontSize: '0.85rem' }}>{selectedInvoiceDetail.supplierName || selectedInvoiceDetail.supplier || 'N/A'}</strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>CNPJ</span>
+                    <span style={{ fontSize: '0.85rem', fontFamily: 'monospace' }}>{formatCnpj(selectedInvoiceDetail.supplierCnpj) || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Emissão</span>
+                    <span style={{ fontSize: '0.85rem' }}>{selectedInvoiceDetail.issueDate ? new Date(selectedInvoiceDetail.issueDate).toLocaleDateString('pt-BR') : '-'}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Entrada</span>
+                    <span style={{ fontSize: '0.85rem' }}>{selectedInvoiceDetail.entryDate ? new Date(selectedInvoiceDetail.entryDate).toLocaleDateString('pt-BR') : '-'}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Valor</span>
+                    <strong style={{ fontSize: '1rem', color: 'var(--success-color)' }}>
+                      R$ {totalVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </strong>
+                  </div>
+                </div>
+
+                {selectedInvoiceDetail.accessKey && (
+                  <div style={{ backgroundColor: '#fff', border: '1px solid var(--border-color)', padding: '0.75rem', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Código</span>
+                    <code style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>{selectedInvoiceDetail.accessKey}</code>
+                  </div>
+                )}
+
+                {isDetailService ? (
+                  <div style={{ border: '1px solid #e9d5ff', backgroundColor: '#faf5ff', padding: '1rem', borderRadius: '8px' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#6b21a8', fontSize: '0.9rem' }}>🛠️ Descrição dos Serviços Prestados</h4>
+                    <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: '#374151', lineHeight: '1.4' }}>
+                      {selectedInvoiceDetail.serviceDescription || `Prestação de serviços registrada conforme documento Nº ${selectedInvoiceDetail.number}.`}
+                    </p>
+                    <span style={{ fontSize: '0.75rem', color: '#7e22ce', fontWeight: '600' }}>
+                      Categoria: {selectedInvoiceDetail.serviceCategory || 'Serviços Terceirizados'}
+                    </span>
+                  </div>
+                ) : (
+                  <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                    <div style={{ padding: '0.6rem 0.85rem', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-color)', fontWeight: '700', fontSize: '0.85rem' }}>
+                      Itens ({selectedInvoiceDetail.items?.length || 0})
+                    </div>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr>
+                          <th>Produto</th>
+                          <th>Quantidade</th>
+                          <th>Preço</th>
+                          <th>Subtotal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(selectedInvoiceDetail.items || []).map((it, i) => (
+                          <tr key={i}>
+                            <td style={{ fontWeight: '600' }}>{it.name || it.xmlName}</td>
+                            <td>{it.quantity}</td>
+                            <td>R$ {(parseFloat(it.price) || 0).toFixed(2)}</td>
+                            <td style={{ fontWeight: '700' }}>R$ {(parseFloat(it.total) || (parseFloat(it.quantity) * parseFloat(it.price)) || 0).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.85rem', backgroundColor: '#fff' }}>
+                  <span style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--text-primary)', display: 'block', marginBottom: '0.35rem' }}>
+                    Financeiro
+                  </span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    As parcelas desta nota foram emitidas no módulo Financeiro (Contas a Pagar). Consulte o painel financeiro para registrar baixas ou anexar comprovantes de pagamento.
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ ...styles.modalFooter, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  {(selectedInvoiceDetail.invoiceType !== 'service' || parseFloat(selectedInvoiceDetail.totalValue) <= 0) && (
+                    <button
+                      type="button"
+                      onClick={() => handleFixInvoiceType(selectedInvoiceDetail, 'service')}
+                      className="btn btn-primary"
+                      style={{ backgroundColor: '#8b5cf6', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                      title="Salvar como Serviço e atualizar valor total das parcelas"
+                    >
+                      <RefreshCw size={14} /> Salvar como Serviço
+                    </button>
+                  )}
+                </div>
+                <button type="button" onClick={() => setShowInvoiceDetailModal(false)} className="btn btn-secondary">
+                  Fechar
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Loan Modal (Empréstimos de Produtos / Medicamentos) */}
       {showLoanModal && (

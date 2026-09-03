@@ -1378,21 +1378,28 @@ export function useStockLogic(currentUser) {
       try {
         const arrayBuffer = await file.arrayBuffer();
         const parsed = await parseDanfePdf(arrayBuffer);
-        const isService = parsed.invoiceType === 'service';
+        const isService = (xmlData?.invoiceType === 'service') || (parsed.invoiceType === 'service') || (!parsed.items || parsed.items.length === 0);
+
+        const sumInst = (parsed.installments || []).reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
+        const finalTotal = (parseFloat(parsed.totalValue) > 0) ? parseFloat(parsed.totalValue) : sumInst;
 
         setXmlData({
           number: parsed.number,
           accessKey: parsed.accessKey,
           issueDate: parsed.issueDate,
-          totalValue: parsed.totalValue,
+          totalValue: finalTotal,
           supplierName: parsed.supplierName,
           supplierCnpj: parsed.supplierCnpj,
-          items: parsed.items,
-          installments: parsed.installments,
+          items: isService ? [] : parsed.items,
+          installments: (parsed.installments && parsed.installments.length > 0) ? parsed.installments : [{
+            installmentNumber: '1/1',
+            dueDate: parsed.issueDate || new Date().toISOString().substring(0, 10),
+            amount: finalTotal
+          }],
           sourceType: 'PDF',
-          invoiceType: parsed.invoiceType || 'product',
-          serviceDescription: parsed.serviceDescription || '',
-          serviceCategory: 'Serviços Terceirizados'
+          invoiceType: isService ? 'service' : 'product',
+          serviceDescription: parsed.serviceDescription || (isService ? `Prestação de serviços conforme documento Nº ${parsed.number}` : ''),
+          serviceCategory: xmlData?.serviceCategory || 'Serviços Terceirizados'
         });
 
         // Step 2 Setup: Check if supplier exists
@@ -1423,17 +1430,9 @@ export function useStockLogic(currentUser) {
 
         // Step 3 Setup: Build item mappings
         if (isService) {
-          setItemMappings([{
-            xmlCode: 'SERV-01',
-            xmlName: parsed.serviceDescription || `Serviço NFS-e Nº ${parsed.number}`,
-            quantity: 1,
-            price: parsed.totalValue,
-            batch: '',
-            expiryDate: '',
-            mappedItemId: 'SERVICE_NO_STOCK'
-          }]);
+          setItemMappings([]);
         } else {
-          const mappings = parsed.items.map(pi => {
+          const mappings = (parsed.items || []).map(pi => {
             const matchedItem = items.find(item => 
               item.name.toLowerCase().includes(pi.xmlName.toLowerCase()) || 
               pi.xmlName.toLowerCase().includes(item.name.toLowerCase())
@@ -1809,15 +1808,17 @@ export function useStockLogic(currentUser) {
     const currentUnitId = getSelectedUnit();
     const currentUnitName = currentUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
     try {
-      const isService = xmlData?.invoiceType === 'service';
+      const isService = xmlData?.invoiceType === 'service' || (!itemMappings || itemMappings.length === 0);
+      const sumInst = (xmlData?.installments || []).reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
+      const finalInvoiceTotal = (parseFloat(xmlData?.totalValue) > 0) ? parseFloat(xmlData.totalValue) : (sumInst > 0 ? sumInst : 0);
 
       if (isService) {
         // --- FLUXO DE NOTA DE SERVIÇOS PRESTADOS (NFS-e) ---
         const serviceItems = [{
           name: xmlData.serviceDescription || 'Serviço Prestado',
           quantity: 1,
-          price: parseFloat(xmlData.totalValue) || 0,
-          total: parseFloat(xmlData.totalValue) || 0,
+          price: finalInvoiceTotal,
+          total: finalInvoiceTotal,
           isService: true
         }];
 
@@ -1829,8 +1830,9 @@ export function useStockLogic(currentUser) {
           supplierId: supplierMapping.id,
           supplierName: supplierMapping.name,
           supplierCnpj: supplierMapping.cnpj,
-          totalValue: parseFloat(xmlData.totalValue) || 0,
+          totalValue: finalInvoiceTotal,
           items: serviceItems,
+          installments: xmlData.installments || [],
           unitId: currentUnitId,
           unit: currentUnitName,
           invoiceType: 'service',
@@ -1842,7 +1844,7 @@ export function useStockLogic(currentUser) {
         if (dbService.saveAccountsPayable) {
           const instList = (xmlData.installments && xmlData.installments.length > 0) 
             ? xmlData.installments 
-            : [{ installmentNumber: '1/1', dueDate: xmlData.issueDate || new Date().toISOString().substring(0, 10), amount: xmlData.totalValue }];
+            : [{ installmentNumber: '1/1', dueDate: xmlData.issueDate || new Date().toISOString().substring(0, 10), amount: finalInvoiceTotal }];
 
           for (const inst of instList) {
             const defaultDueDate = new Date();
@@ -1853,7 +1855,7 @@ export function useStockLogic(currentUser) {
               supplier: supplierMapping.name,
               cnpj: supplierMapping.cnpj || '00.000.000/0001-00',
               description: `Entrada NFS-e Nº ${xmlData.number} - ${(xmlData.serviceDescription || 'Serviço Prestado').slice(0, 45)} (Parcela ${inst.installmentNumber})`,
-              amount: parseFloat(inst.amount) || parseFloat(xmlData.totalValue) || 0,
+              amount: parseFloat(inst.amount) || finalInvoiceTotal || 0,
               dueDate: finalDueDate,
               category: xmlData.serviceCategory || 'Serviços Terceirizados',
               invoiceNumber: xmlData.number,
@@ -1887,7 +1889,7 @@ export function useStockLogic(currentUser) {
           // Auto create in inventory catalog
           const newCat = await dbService.createInventoryItem({
             name: name,
-            category: 'Insumo Clínico / MatMed',
+            category: 'Insumo Clínico',
             currentStock: 0,
             minStock: 10,
             unit: 'unidades',
@@ -1951,8 +1953,9 @@ export function useStockLogic(currentUser) {
         supplierId: supplierMapping.id,
         supplierName: supplierMapping.name,
         supplierCnpj: supplierMapping.cnpj,
-        totalValue: xmlData.totalValue,
+        totalValue: finalInvoiceTotal,
         items: finalItemsList,
+        installments: xmlData.installments || [],
         unitId: currentUnitId,
         unit: currentUnitName,
         invoiceType: 'product'
@@ -1962,7 +1965,7 @@ export function useStockLogic(currentUser) {
       if (dbService.saveAccountsPayable) {
         const instList = (xmlData.installments && xmlData.installments.length > 0) 
           ? xmlData.installments 
-          : [{ installmentNumber: '1/1', dueDate: xmlData.issueDate || new Date().toISOString().substring(0, 10), amount: xmlData.totalValue }];
+          : [{ installmentNumber: '1/1', dueDate: xmlData.issueDate || new Date().toISOString().substring(0, 10), amount: finalInvoiceTotal }];
 
         for (const inst of instList) {
           const defaultDueDate = new Date();
@@ -1973,7 +1976,7 @@ export function useStockLogic(currentUser) {
             supplier: supplierMapping.name,
             cnpj: supplierMapping.cnpj || '00.000.000/0001-00',
             description: `Entrada NF-e Nº ${xmlData.number} (Parcela ${inst.installmentNumber})`,
-            amount: parseFloat(inst.amount) || parseFloat(xmlData.totalValue) || 0,
+            amount: parseFloat(inst.amount) || finalInvoiceTotal || 0,
             dueDate: finalDueDate,
             category: 'Insumo Clínico',
             invoiceNumber: xmlData.number,
@@ -2026,6 +2029,35 @@ export function useStockLogic(currentUser) {
     } catch (err) {
       console.error(err);
       showAlert('Erro ao excluir nota fiscal.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleFixInvoiceType = async (invoice, newType = 'service') => {
+    setActionLoading(true);
+    try {
+      const sumInst = (invoice?.installments || []).reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
+      const newTotal = (parseFloat(invoice?.totalValue) > 0) ? parseFloat(invoice.totalValue) : (sumInst > 0 ? sumInst : 0);
+      
+      const updateData = {
+        invoiceType: newType,
+        totalValue: newTotal,
+        serviceDescription: invoice.serviceDescription || (newType === 'service' ? `Prestação de serviços conforme NFS-e Nº ${invoice.number}` : '')
+      };
+
+      if (dbService.updatePurchaseInvoice) {
+        await dbService.updatePurchaseInvoice(invoice.id, updateData);
+      }
+      
+      setInvoices(prev => prev.map(inv => inv.id === invoice.id ? { ...inv, ...updateData } : inv));
+      if (selectedInvoiceDetail?.id === invoice.id) {
+        setSelectedInvoiceDetail(prev => ({ ...prev, ...updateData }));
+      }
+      showAlert(`Nota Fiscal Nº ${invoice.number} atualizada para ${newType === 'service' ? 'Serviço' : 'Produto'} com valor de R$ ${newTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}!`, 'success');
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao atualizar nota.', 'danger');
     } finally {
       setActionLoading(false);
     }
@@ -2324,6 +2356,7 @@ export function useStockLogic(currentUser) {
     handleStartManualServiceEntry,
     handleStartImportWizard,
     handleDeleteInvoice,
+    handleFixInvoiceType,
     invoiceTypeFilter,
     setInvoiceTypeFilter,
     selectedInvoiceDetail,
