@@ -17,6 +17,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
       ]
     },
     {
+      version: 'v4.9.40',
+      date: '02/09/2026',
+      title: 'Edição Direta de Valor & Auto-Recuperação pelo Contas a Pagar',
+      description: 'Implementação de edição rápida de valores na tabela de entradas de notas e recuperação automática de valores de notas legadas via cruzamento com o módulo financeiro.',
+      changes: [
+        { type: 'Edição Inline de Valor na Tabela', text: 'Adicionada edição rápida direta na coluna "Valor" da tabela de entradas: basta clicar no valor para digitar a quantia correta e salvar com Enter ou botão de confirmação.' },
+        { type: 'Recuperação Automática via Financeiro', text: 'Notas fiscais com valor zerado agora cruzam automaticamente com o Contas a Pagar do financeiro pelo número/código, recuperando a soma das parcelas e auto-corrigindo no banco de dados.' },
+        { type: 'Ajuste de Valor no Modal de Detalhes', text: 'O modal de detalhes da nota fiscal agora inclui campo de edição e botão "Salvar", além de sincronizar o valor correto ao utilizar a ação "Salvar como Serviço".' }
+      ]
+    },
+    {
       version: 'v4.9.39',
       date: '02/09/2026',
       title: 'Fluxo Otimizado para Entrada de Serviços (NFS-e) & Auditoria de Notas',

@@ -3,7 +3,7 @@ import { dbService } from '../firebase';
 import { 
   Package, Boxes, Clock, Calendar, Plus, Search, 
   X, FileText, UploadCloud, Briefcase, Warehouse,
-  CheckCircle2, AlertTriangle, AlertCircle, ArrowUpRight, ArrowDownLeft, Trash2, Edit,
+  CheckCircle2, AlertTriangle, AlertCircle, ArrowUpRight, ArrowDownLeft, Trash2, Edit, Edit2, Check,
   ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, Send, ClipboardList, Repeat,
   AlignJustify, Table, LayoutGrid, Building2, ShoppingCart, Layers, DollarSign, Eye
 } from 'lucide-react';
@@ -215,6 +215,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
     handleStartImportWizard,
     handleDeleteInvoice,
     handleFixInvoiceType,
+    handleSaveInvoiceValue,
     invoiceTypeFilter,
     setInvoiceTypeFilter,
     selectedInvoiceDetail,
@@ -237,6 +238,9 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
 
   // View Mode: 'compact' (Padrão) | 'normal' | 'cards'
   const [productViewMode, setProductViewMode] = useState('compact');
+  const [editingInvoiceValueId, setEditingInvoiceValueId] = useState(null);
+  const [tempInvoiceValue, setTempInvoiceValue] = useState('');
+  const [detailValueInput, setDetailValueInput] = useState('');
 
   return (
     <div style={styles.container}>
@@ -1272,7 +1276,61 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                             <td style={{ fontWeight: '600' }}>{inv?.supplierName || inv?.supplier || 'Fornecedor Desconhecido'}</td>
                             <td>{inv?.issueDate && !isNaN(new Date(inv.issueDate).getTime()) ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}</td>
                             <td>{inv?.entryDate && !isNaN(new Date(inv.entryDate).getTime()) ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}</td>
-                            <td style={{ fontWeight: '700' }}>R$ {totalVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td style={{ fontWeight: '700' }}>
+                              {editingInvoiceValueId === inv?.id ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>R$</span>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    autoFocus
+                                    value={tempInvoiceValue}
+                                    onChange={e => setTempInvoiceValue(e.target.value)}
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter') {
+                                        handleSaveInvoiceValue(inv.id, tempInvoiceValue);
+                                        setEditingInvoiceValueId(null);
+                                      }
+                                      if (e.key === 'Escape') setEditingInvoiceValueId(null);
+                                    }}
+                                    style={{ width: '95px', padding: '0.2rem 0.35rem', fontSize: '0.82rem', fontWeight: '700', borderRadius: '4px', border: '1px solid #0284c7' }}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      handleSaveInvoiceValue(inv.id, tempInvoiceValue);
+                                      setEditingInvoiceValueId(null);
+                                    }}
+                                    style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.25rem 0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                    title="Salvar valor"
+                                  >
+                                    <Check size={13} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingInvoiceValueId(null)}
+                                    style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.25rem 0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                    title="Cancelar"
+                                  >
+                                    <X size={13} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <div 
+                                  onClick={() => {
+                                    setEditingInvoiceValueId(inv.id);
+                                    setTempInvoiceValue(totalVal > 0 ? totalVal : '');
+                                  }}
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '0.2rem 0.4rem', borderRadius: '4px', border: '1px dashed transparent', transition: 'all 0.2s' }}
+                                  title="Clique para editar o valor da nota"
+                                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
+                                >
+                                  <span>R$ {totalVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  <Edit2 size={12} color="#0284c7" style={{ opacity: 0.85 }} />
+                                </div>
+                              )}
+                            </td>
                             <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', maxWidth: '240px' }}>
                               {isService ? (
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -3608,9 +3666,28 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                   </div>
                   <div>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Valor</span>
-                    <strong style={{ fontSize: '1rem', color: 'var(--success-color)' }}>
-                      R$ {totalVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </strong>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '2px' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--success-color)' }}>R$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={detailValueInput !== '' ? detailValueInput : (totalVal > 0 ? totalVal : '')}
+                        onChange={e => setDetailValueInput(e.target.value)}
+                        placeholder="0,00"
+                        style={{ width: '105px', padding: '0.2rem 0.4rem', fontSize: '0.9rem', fontWeight: '700', color: 'var(--success-color)', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const valToSave = detailValueInput !== '' ? detailValueInput : totalVal;
+                          handleSaveInvoiceValue(selectedInvoiceDetail.id, valToSave);
+                        }}
+                        style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem', fontWeight: '700', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                        title="Salvar valor no banco"
+                      >
+                        Salvar
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -3674,10 +3751,13 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                   {(selectedInvoiceDetail.invoiceType !== 'service' || parseFloat(selectedInvoiceDetail.totalValue) <= 0) && (
                     <button
                       type="button"
-                      onClick={() => handleFixInvoiceType(selectedInvoiceDetail, 'service')}
+                      onClick={() => {
+                        const valToSave = detailValueInput !== '' ? detailValueInput : totalVal;
+                        handleFixInvoiceType(selectedInvoiceDetail, 'service', valToSave);
+                      }}
                       className="btn btn-primary"
                       style={{ backgroundColor: '#8b5cf6', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-                      title="Salvar como Serviço e atualizar valor total das parcelas"
+                      title="Salvar como Serviço e atualizar valor total"
                     >
                       <RefreshCw size={14} /> Salvar como Serviço
                     </button>

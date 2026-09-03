@@ -1,3 +1,17 @@
+## [v4.9.40] - 02 de Setembro, 2026
+### Edição Direta de Valor & Auto-Recuperação pelo Contas a Pagar
+- **Edição Inline de Valor na Tabela de Entradas:**
+  - A coluna "Valor" agora é clicável e exibe ícone de lápis para permitir edição rápida e direta.
+  - Permite digitar o valor correto (ex: R$ 3.988,63) e salvar instantaneamente no banco de dados pressionando Enter ou o botão verde de confirmação.
+- **Auto-Recuperação de Notas Zeradas pelo Financeiro:**
+  - Ao carregar a lista de notas de entrada, o sistema cruza notas com valor zerado com as faturas ativas em Contas a Pagar pelo número da nota ou código.
+  - Se parcelas forem localizadas, o valor é recuperado e sincronizado automaticamente no banco de dados.
+- **Ajuste de Valor no Modal de Detalhes:**
+  - Inserido campo numérico de edição de valor e botão "Salvar" no modal de detalhes da nota.
+  - O botão "Salvar como Serviço" agora sincroniza e grava o valor digitado junto com o tipo de documento.
+
+---
+
 ## [v4.9.39] - 02 de Setembro, 2026
 ### Fluxo Otimizado para Entrada de Serviços (NFS-e) & Auditoria de Notas
 - **Omissão Automática da Etapa de Produtos no Wizard:**

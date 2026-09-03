@@ -402,7 +402,7 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'Como corrigir uma nota fiscal que foi importada com tipo ou valor divergente?',
-        resposta: 'Na aba "Entradas", clique no botão "Ver" em qualquer nota para abrir o detalhamento. Se ela foi classificada com tipo ou valor divergente, clique no botão "Salvar como Serviço" para atualizar o tipo e recalcular o total a partir das parcelas do Contas a Pagar.'
+        resposta: 'Na aba "Entradas", você pode clicar diretamente em cima do valor da nota (ícone de lápis) para digitar a quantia correta e salvar instantaneamente. Além disso, ao clicar em "Ver", o modal de detalhes disponibiliza campo de edição de valor e o botão "Salvar como Serviço" para sincronizar o tipo e o total correto no banco de dados.'
       },
       {
         pergunta: 'A entrada de uma Nota de Serviços (NFS-e) afeta a quantidade de produtos ou insumos no estoque?',

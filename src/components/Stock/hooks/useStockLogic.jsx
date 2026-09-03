@@ -288,9 +288,44 @@ export function useStockLogic(currentUser) {
 
   const fetchTabData = async (tab) => {
     try {
-      if (tab === 'invoices' && invoices.length === 0) {
+      if (tab === 'invoices') {
         const invList = await (dbService.getPurchaseInvoices ? dbService.getPurchaseInvoices().catch(() => []) : []);
-        setInvoices(safeArray(invList));
+        let payList = [];
+        try {
+          if (dbService.getAccountsPayable) {
+            payList = await dbService.getAccountsPayable().catch(() => []);
+          }
+        } catch (e) {
+          console.warn('Erro ao carregar accounts_payable para cruzar valores:', e);
+        }
+
+        const enrichedInvoices = safeArray(invList).map(inv => {
+          let val = parseFloat(inv.totalValue) || 0;
+          if (val <= 0) {
+            // 1. Tentar soma das parcelas registradas no documento
+            const instSum = (inv.installments || []).reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
+            if (instSum > 0) {
+              val = instSum;
+            } else if (payList.length > 0) {
+              // 2. Cruzar com Contas a Pagar do financeiro gerado durante a entrada
+              const matched = payList.filter(p => 
+                (inv.number && String(p.invoiceNumber) === String(inv.number)) ||
+                (inv.accessKey && p.accessKey && String(p.accessKey) === String(inv.accessKey)) ||
+                (inv.number && (p.description || '').includes(String(inv.number)))
+              );
+              const paySum = matched.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
+              if (paySum > 0) {
+                val = paySum;
+                // Auto-correção persistente no banco de dados
+                if (dbService.updatePurchaseInvoice) {
+                  dbService.updatePurchaseInvoice(inv.id, { totalValue: paySum, invoiceType: 'service' }).catch(() => {});
+                }
+              }
+            }
+          }
+          return { ...inv, totalValue: val };
+        });
+        setInvoices(enrichedInvoices);
       } else if (tab === 'transactions' && transactions.length === 0) {
         const txList = await (dbService.getStockTransactions ? dbService.getStockTransactions().catch(() => []) : []);
         // Slice to 100 max to prevent React memory rendering crash (Tela Branca)
@@ -2034,11 +2069,46 @@ export function useStockLogic(currentUser) {
     }
   };
 
-  const handleFixInvoiceType = async (invoice, newType = 'service') => {
+  const handleSaveInvoiceValue = async (invoiceId, newValue) => {
+    const val = parseFloat(newValue) || 0;
     setActionLoading(true);
     try {
-      const sumInst = (invoice?.installments || []).reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
-      const newTotal = (parseFloat(invoice?.totalValue) > 0) ? parseFloat(invoice.totalValue) : (sumInst > 0 ? sumInst : 0);
+      if (dbService.updatePurchaseInvoice) {
+        await dbService.updatePurchaseInvoice(invoiceId, { totalValue: val });
+      }
+      setInvoices(prev => prev.map(inv => inv.id === invoiceId ? { ...inv, totalValue: val } : inv));
+      if (selectedInvoiceDetail?.id === invoiceId) {
+        setSelectedInvoiceDetail(prev => ({ ...prev, totalValue: val }));
+      }
+      showAlert(`Valor da nota fiscal atualizado para R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}!`, 'success');
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao atualizar valor da nota.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleFixInvoiceType = async (invoice, newType = 'service', explicitValue = null) => {
+    setActionLoading(true);
+    try {
+      let newTotal = explicitValue !== null ? parseFloat(explicitValue) : (parseFloat(invoice?.totalValue) || 0);
+
+      if (newTotal <= 0) {
+        const sumInst = (invoice?.installments || []).reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
+        if (sumInst > 0) {
+          newTotal = sumInst;
+        } else if (dbService.getAccountsPayable) {
+          const payList = await dbService.getAccountsPayable().catch(() => []);
+          const matched = payList.filter(p => 
+            (invoice.number && String(p.invoiceNumber) === String(invoice.number)) ||
+            (invoice.accessKey && p.accessKey && String(p.accessKey) === String(invoice.accessKey)) ||
+            (invoice.number && (p.description || '').includes(String(invoice.number)))
+          );
+          const paySum = matched.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
+          if (paySum > 0) newTotal = paySum;
+        }
+      }
       
       const updateData = {
         invoiceType: newType,
@@ -2357,6 +2427,7 @@ export function useStockLogic(currentUser) {
     handleStartImportWizard,
     handleDeleteInvoice,
     handleFixInvoiceType,
+    handleSaveInvoiceValue,
     invoiceTypeFilter,
     setInvoiceTypeFilter,
     selectedInvoiceDetail,
