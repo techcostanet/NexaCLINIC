@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { authService } from '../firebase';
-import { Activity, Mail, Lock, ShieldAlert } from 'lucide-react';
+import { Activity, Mail, Lock, ShieldAlert, Tv } from 'lucide-react';
 
 export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -23,10 +23,8 @@ export default function Login({ onLoginSuccess }) {
       let msg = 'Falha ao autenticar no sistema.';
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
         msg = 'E-mail ou senha incorretos. Por favor, verifique suas credenciais.';
-      } else if (err.code === 'auth/invalid-api-key') {
-        msg = 'Chave de API do Firebase não configurada. Re-tentativa automática em andamento.';
       } else if (err.message) {
-        msg = err.message.replace(/^Firebase:\s*/, '');
+        msg = err.message;
       }
       setError(msg);
     } finally {
@@ -36,14 +34,14 @@ export default function Login({ onLoginSuccess }) {
 
   return (
     <div style={styles.container}>
-      <div className="card" style={styles.card}>
+      <div className="card shadow-sm" style={styles.card}>
         <div style={styles.header}>
           <div style={styles.logoContainer}>
-            <img src="/logo.png" alt="Costa Systems Logo" style={styles.logoImg} />
+            <Activity size={32} color="var(--primary-color)" />
           </div>
-          <h1 style={styles.title}>NexaCLINIC</h1>
-          <p style={styles.subtitle}>Sistema de Gestão de Clínicas e Hospitais</p>
-          <span style={styles.versionLabel}>v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0'}</span>
+          <h2 style={styles.title}>NexaCLINIC</h2>
+          <p style={styles.subtitle}>Gestão de Indicadores e Qualidade</p>
+          <span style={styles.versionLabel}>v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '4.9'}</span>
         </div>
 
         {error && (
@@ -55,7 +53,7 @@ export default function Login({ onLoginSuccess }) {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">E-mail funcional</label>
+            <label htmlFor="email">E-mail</label>
             <div style={styles.inputWrapper}>
               <Mail size={18} style={styles.inputIcon} />
               <input
@@ -96,8 +94,32 @@ export default function Login({ onLoginSuccess }) {
             disabled={loading}
             style={styles.submitBtn}
           >
-            {loading ? 'Autenticando...' : 'Entrar no Sistema'}
+            {loading ? 'Autenticando...' : 'Entrar'}
           </button>
+
+          <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <a
+              href="/tv"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                width: '100%',
+                padding: '0.65rem 1rem',
+                borderRadius: '8px',
+                backgroundColor: '#f0f9ff',
+                color: '#0284c7',
+                border: '1px solid #bae6fd',
+                fontSize: '0.875rem',
+                fontWeight: '700',
+                textDecoration: 'none'
+              }}
+            >
+              <Tv size={18} />
+              <span>Painel</span>
+            </a>
+          </div>
         </form>
       </div>
     </div>

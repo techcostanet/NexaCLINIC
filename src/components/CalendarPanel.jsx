@@ -12,6 +12,7 @@ import DoctorScheduleModal from './calendar/DoctorScheduleModal';
 import ScheduleBlockModal from './calendar/ScheduleBlockModal';
 import CalendarReportsModal from './CalendarReportsModal';
 import TvTipsManagerModal from './tv/TvTipsManagerModal';
+import QRCode from 'qrcode';
 import { formatDoctorDisplayName, sortDoctorsByName } from '../utils/doctorFormatters';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
@@ -48,6 +49,7 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
   const [showTvTipsModal, setShowTvTipsModal] = useState(false);
   const [calledApts, setCalledApts] = useState({});
   const [copiedTvLink, setCopiedTvLink] = useState(false);
+  const [tvQrDataUrl, setTvQrDataUrl] = useState('');
   const [editingApt, setEditingApt] = useState(null);
   const [patientSearchInModal, setPatientSearchInModal] = useState('');
   
@@ -129,6 +131,15 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
       if (typeof unsub === 'function') unsub();
     };
   }, [activeUnitId]);
+
+  useEffect(() => {
+    if (showTvModal) {
+      const tvUrl = `${window.location.origin}/tv${activeUnitId && activeUnitId !== 'all' ? `/${activeUnitId}` : ''}`;
+      QRCode.toDataURL(tvUrl, { width: 140, margin: 1, color: { dark: '#0284c7', light: '#ffffff' } })
+        .then(url => setTvQrDataUrl(url))
+        .catch(err => console.error('Erro ao gerar QR Code TV:', err));
+    }
+  }, [showTvModal, activeUnitId]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -2059,7 +2070,7 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
       {/* MODAL: PAINEL DA SMART TV */}
       {showTvModal && (
         <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalContent, maxWidth: '580px' }}>
+          <div style={{ ...styles.modalContent, maxWidth: '620px' }}>
             <div style={styles.modalHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Tv size={20} color="#0284c7" />
@@ -2074,8 +2085,8 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
 
             <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div>
-                <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: '#475569', lineHeight: 1.5 }}>
-                  Abra este link no navegador de qualquer Smart TV na sala de espera para exibir e vocalizar as chamadas de pacientes em tempo real.
+                <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', color: '#475569', lineHeight: 1.5 }}>
+                  Abra este link no aplicativo <strong>Samsung Internet</strong> ou navegador da Smart TV na sala de espera para exibir e vocalizar as chamadas de pacientes em tempo real.
                 </p>
                 <div style={{
                   display: 'flex',
@@ -2088,21 +2099,21 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                 }}>
                   <input
                     readOnly
-                    value={`${window.location.origin}/?painel_tv=1&unidade=${activeUnitId === 'all' ? 'betim' : activeUnitId}`}
+                    value={`${window.location.origin}/tv${activeUnitId && activeUnitId !== 'all' ? `/${activeUnitId}` : ''}`}
                     style={{
                       flex: 1,
                       border: 'none',
                       backgroundColor: 'transparent',
-                      fontSize: '0.85rem',
+                      fontSize: '0.95rem',
                       color: '#0369a1',
-                      fontWeight: '600',
+                      fontWeight: '700',
                       outline: 'none'
                     }}
                   />
                   <button
                     type="button"
                     onClick={() => {
-                      const link = `${window.location.origin}/?painel_tv=1&unidade=${activeUnitId === 'all' ? 'betim' : activeUnitId}`;
+                      const link = `${window.location.origin}/tv${activeUnitId && activeUnitId !== 'all' ? `/${activeUnitId}` : ''}`;
                       navigator.clipboard.writeText(link);
                       setCopiedTvLink(true);
                       setTimeout(() => setCopiedTvLink(false), 2500);
@@ -2111,7 +2122,7 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '0.3rem',
-                      padding: '0.4rem 0.75rem',
+                      padding: '0.45rem 0.85rem',
                       borderRadius: '6px',
                       backgroundColor: copiedTvLink ? '#16a34a' : '#0284c7',
                       color: '#ffffff',
@@ -2127,14 +2138,14 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                   <button
                     type="button"
                     onClick={() => {
-                      const link = `${window.location.origin}/?painel_tv=1&unidade=${activeUnitId === 'all' ? 'betim' : activeUnitId}`;
+                      const link = `${window.location.origin}/tv${activeUnitId && activeUnitId !== 'all' ? `/${activeUnitId}` : ''}`;
                       window.open(link, '_blank');
                     }}
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '0.3rem',
-                      padding: '0.4rem 0.75rem',
+                      padding: '0.45rem 0.85rem',
                       borderRadius: '6px',
                       backgroundColor: '#f1f5f9',
                       color: '#334155',
@@ -2150,22 +2161,38 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                 </div>
               </div>
 
+              {/* Bloco com QR Code + Instruções Diretas */}
               <div style={{
+                display: 'grid',
+                gridTemplateColumns: tvQrDataUrl ? '130px 1fr' : '1fr',
+                gap: '1rem',
+                alignItems: 'center',
                 backgroundColor: '#f0f9ff',
                 border: '1px solid #bae6fd',
-                borderRadius: '10px',
-                padding: '1rem',
-                fontSize: '0.85rem',
-                color: '#0369a1',
-                lineHeight: 1.6
+                borderRadius: '12px',
+                padding: '1rem'
               }}>
-                <strong style={{ display: 'block', marginBottom: '0.4rem', color: '#0284c7' }}>
-                  📺 Instruções para a Smart TV:
-                </strong>
-                1. No controle da TV, abra o aplicativo Navegador (Internet).<br />
-                2. Digite o endereço copiado acima e acesse a página.<br />
-                3. Toque no botão "Tela" para colocar o painel em tela cheia.<br />
-                4. Toque no botão "Ativar" na TV uma única vez para autorizar a voz e o sino sonoro.
+                {tvQrDataUrl && (
+                  <div style={{ textAlign: 'center' }}>
+                    <img 
+                      src={tvQrDataUrl} 
+                      alt="QR Code TV" 
+                      style={{ width: '120px', height: '120px', borderRadius: '8px', border: '1px solid #93c5fd', backgroundColor: '#fff', padding: '4px' }} 
+                    />
+                    <span style={{ fontSize: '0.725rem', color: '#0369a1', display: 'block', marginTop: '4px', fontWeight: '700' }}>
+                      QR Code
+                    </span>
+                  </div>
+                )}
+                <div style={{ fontSize: '0.85rem', color: '#0369a1', lineHeight: 1.6 }}>
+                  <strong style={{ display: 'block', marginBottom: '0.35rem', color: '#0284c7' }}>
+                    📺 Instruções para Samsung Internet / Smart TV:
+                  </strong>
+                  1. No controle da TV, abra o app <strong>Samsung Internet</strong>.<br />
+                  2. Digite <strong>{window.location.host}/tv</strong> e tecle OK no controle.<br />
+                  3. Pressione qualquer botão no controle ou clique na tela para ativar o som.<br />
+                  4. Clique no botão <strong>Tela</strong> para expandir em tela cheia.
+                </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>

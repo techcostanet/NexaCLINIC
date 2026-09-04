@@ -110,7 +110,16 @@ service cloud.firestore {
     match /doctor_schedules/{id} { allow read, write: if isAuthenticated(); }
     match /schedule_blocks/{id} { allow read, write: if isAuthenticated(); }
     match /audit_logs/{logId} { allow read, write: if isAuthenticated(); }
-    match /tenant_settings/{settingId} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    // TV Panel & Public Waiting Room Rules
+    match /patient_calls/{callId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    match /tv_educational_tips/{tipId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    match /tenant_settings/{settingId} { allow read: if true; allow write: if isAdmin(); }
     match /user_profiles/{profileId} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
 
     // Additional Stock & Purchasing Collections

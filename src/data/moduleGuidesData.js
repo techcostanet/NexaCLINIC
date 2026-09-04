@@ -1358,6 +1358,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Notificações via WhatsApp',
         desc: 'Envio de lembretes e confirmações com 1 clique direto para o WhatsApp do paciente com informações de local e horário.'
+      },
+      {
+        title: 'Painel TV Inteligente para Sala de Espera',
+        desc: 'Exibição em Smart TVs (Samsung Internet, LG WebOS, Android TV) com chamadas em tempo real, anúncio vocalizado por voz, sino sonoro e carrossel de 70 orientações clínicas educativas.'
       }
     ],
     tutorial: [
@@ -1368,6 +1372,17 @@ export const MODULE_GUIDES = {
           'Selecione na barra lateral o relatório desejado (ex: "Extrato Geral", "Produtividade por Médico", "Taxa de Faltas No-Show" ou "Busca Ativa").',
           'Defina os filtros de Período (Início e Fim), Médico, Consultório/Sala e Status.',
           'Clique em "Exportar PDF" para gerar o documento timbrado A4 ou "Exportar Excel" para obter a planilha XLSX.'
+        ]
+      },
+      {
+        title: 'Como Configurar e Conectar a Smart TV na Sala de Espera',
+        steps: [
+          'No cabeçalho da Agenda, clique no botão "Painel" com ícone de TV.',
+          'Copie o endereço direto exibido (ex: nexa-index.web.app/tv) ou escaneie o QR Code com o celular para testar.',
+          'No controle remoto da Smart TV Samsung, abra o aplicativo "Samsung Internet" (ou navegador nativo da TV).',
+          'Digite o endereço curto nexa-index.web.app/tv e confirme.',
+          'Pressione qualquer botão no controle da TV ou clique na tela uma vez para ativar a voz e o sino sonoro.',
+          'Clique no botão "Tela" no topo direito do painel para expandir em tela cheia na TV.'
         ]
       },
       {
@@ -1399,6 +1414,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'A TV da sala de espera precisa de login e senha para funcionar?',
+        resposta: 'Não. O painel da TV (/tv) foi projetado com acesso público e seguro para exibição direta na sala de espera, conectando-se em tempo real às chamadas da recepção e consultórios sem exigir autenticação.'
+      },
+      {
+        pergunta: 'Por que o som da TV não toca imediatamente ao abrir a página?',
+        resposta: 'Por política de segurança de navegadores modernos e Smart TVs (Samsung Tizen, LG WebOS), o áudio automático exige um primeiro gesto do usuário. Basta pressionar qualquer botão no controle remoto ou clicar na tela uma única vez para autorizar a fala e o sino sonoro.'
+      },
       {
         pergunta: 'Quais relatórios estão disponíveis na Agenda?',
         resposta: 'São 15 relatórios: 1. Extrato Geral, 2. Produtividade por Médico, 3. Taxa de Faltas (No-Show), 4. Confirmações WhatsApp, 5. Ocupação de Consultórios, 6. Consultas por Modalidade, 7. Encaixes & Urgências, 8. Cancelamentos, 9. Cotas Anuais & Metas, 10. Bloqueios & Afastamentos, 11. Tempo de Espera & Pontualidade, 12. Distribuição por Convênio, 13. Busca Ativa de Crônicos Sem Retorno, 14. Escala em Feriados e 15. Auditoria de Modificações.'

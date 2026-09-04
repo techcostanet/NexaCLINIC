@@ -1,7 +1,7 @@
 {
   "name": "sistema-indicadores",
   "private": true,
-  "version": "4.9.43",
+  "version": "4.9.45",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -30,9 +30,11 @@
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-legacy": "^8.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "oxlint": "^1.71.0",
     "puppeteer": "^25.4.0",
+    "terser": "^5.51.2",
     "typescript": "^7.0.2",
     "vite": "^8.1.1"
   }

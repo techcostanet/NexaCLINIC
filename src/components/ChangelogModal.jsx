@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.45',
+      date: '04/09/2026',
+      title: 'Compatibilidade Universal Smart TV & Samsung Internet para Painel da Sala de Espera',
+      description: 'Resolução completa de compatibilidade com Smart TVs Samsung (Tizen OS / Samsung Internet) e navegadores legados, empacotamento com polyfills ES5/SystemJS, roteamento simplificado por URL curta (/tv), detecção por QR Code e regras públicas de tempo real no Firestore.',
+      changes: [
+        { type: 'Suporte a Smart TVs Legadas (@vitejs/plugin-legacy)', text: 'Configuração do Vite com geração de bundle legado (SystemJS e polyfills para navegadores Chromium 56-85 presentes no Tizen OS da Samsung), eliminando erros de sintaxe fatal como Optional Chaining (?.) e Nullish Coalescing (??).' },
+        { type: 'Roteamento Universal por URL Curta (/tv)', text: 'Detecção aprimorada e universal do painel nas rotas /tv, /tv/betim, /tv/taguatinga e #tv, permitindo abrir o painel na TV digitando um endereço simples sem query parameters complexos.' },
+        { type: 'Regras de Segurança Públicas no Firestore', text: 'Atualização do firestore.rules para permitir leitura sem autenticação das coleções patient_calls, tv_educational_tips e tenant_settings, permitindo que Smart TVs em salas de espera operem sem necessidade de login.' },
+        { type: 'Desbloqueio de Áudio por Controle Remoto', text: 'Adição de listener global para qualquer tecla do controle remoto da TV (keydown/click/touch) para autorizar e desbloquear o sintetizador de voz e o chime sonoro hospitalar.' },
+        { type: 'QR Code no Modal da Agenda & Botão no Login', text: 'Geração de QR Code instantâneo no modal de TV da Agenda para escaneamento rápido por celular ou tablet, e atalho direto "Painel" na tela de login para TVs que acessem a raiz do sistema.' }
+      ]
+    },
+    {
       version: 'v4.9.43',
       date: '04/09/2026',
       title: 'Entrada de Notas Parceladas & Remessa Bancária CNAB 240 Sicoob',

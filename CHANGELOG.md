@@ -1,3 +1,22 @@
+## [v4.9.45] - 04 de Setembro, 2026
+### Compatibilidade Universal Smart TV & Samsung Internet para Painel da Sala de Espera
+- **Suporte a Smart TVs e Tizen OS com Polyfills (@vitejs/plugin-legacy & Terser):**
+  - Configuração do Vite para compilação dual: ES Modules modernos para desktops/smartphones e bundles legados com SystemJS e polyfills (Chromium >= 58, Samsung Internet >= 8, Safari >= 11).
+  - Eliminação de quebra de sintaxe fatal (`Uncaught SyntaxError: Unexpected token '.'`) causada por *Optional Chaining* (`?.`) e *Nullish Coalescing* (`??`) no motor Chromium do Tizen OS da Samsung.
+- **Roteamento Universal por URL Curta (/tv, /tv/betim, /tv/taguatinga):**
+  - Resolução direta de rotas curtas e fáceis de digitar no controle remoto da TV (`/tv`, `/tv/betim`, `/tv/taguatinga`, `/#tv`, `?tv=betim`, `?painel_tv=1`).
+  - Associação automática da unidade da clínica sem necessidade de parâmetros de consulta extensos.
+- **Regras de Acesso Público no Firestore (`firestore.rules`):**
+  - Liberação de leitura não autenticada para `patient_calls`, `tv_educational_tips` e `tenant_settings`, viabilizando o funcionamento em tempo real de Smart TVs em salas de espera sem exigir login de usuário.
+- **Desbloqueio de Áudio Amigável para TV:**
+  - Listener global para teclas do controle remoto (`keydown`), toques e cliques para desbloquear o sintetizador de voz (TTS) e o chime sonoro hospitalar na primeira interação.
+  - Suporte resiliente a APIs de tela cheia com prefixos proprietários (`webkit`, `moz`, `ms`).
+- **QR Code & Acesso Rápido na Agenda e Login:**
+  - Modal da Smart TV no módulo de Agenda atualizado com exibição da URL curta e geração de QR Code dinâmico via `qrcode`.
+  - Botão de atalho rápido "Painel" incorporado na tela de login para redirecionamento imediato caso a TV acerte a URL raiz do sistema.
+
+---
+
 ## [v4.9.43] - 04 de Setembro, 2026
 ### Entrada de Notas Parceladas & Remessa Bancária CNAB 240 Sicoob
 - **Leitura Automática de Parcelas em NF-e e NFS-e (`danfePdfParser.js` & `useStockLogic.jsx`):**

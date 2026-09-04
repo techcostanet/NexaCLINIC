@@ -40,7 +40,29 @@ export default function App() {
   const urlParams = new URLSearchParams(window.location.search);
   const quoteToken = urlParams.get('token') || urlParams.get('cotacao');
   const qrMachineId = urlParams.get('chamado_equipamento') || urlParams.get('eq') || urlParams.get('chamado');
-  const isTvPanel = urlParams.has('painel_tv') || urlParams.has('tv') || urlParams.get('painel') === 'tv' || urlParams.has('chamada_tv');
+
+  // Detecção flexível e universal do Painel da TV (suporta /tv, /tv/betim, hash #tv ou query ?painel_tv=1)
+  const pathname = (window.location.pathname || '').toLowerCase();
+  const hash = (window.location.hash || '').toLowerCase();
+  const isTvPath = pathname === '/tv' || pathname.startsWith('/tv/') || pathname.includes('painel_tv') || pathname.includes('painel-tv') || pathname.includes('chamada_tv');
+  const isTvHash = hash.includes('tv') || hash.includes('painel');
+  const isTvQuery = urlParams.has('painel_tv') || urlParams.has('tv') || urlParams.get('painel') === 'tv' || urlParams.has('chamada_tv');
+  const isTvPanel = isTvPath || isTvHash || isTvQuery;
+
+  // Identificação automática da filial da TV (/tv/betim, /tv/taguatinga, ?unidade=betim)
+  let tvUnit = urlParams.get('unidade') || urlParams.get('unit');
+  if (!tvUnit && urlParams.get('tv') && urlParams.get('tv') !== '1' && urlParams.get('tv') !== 'true') {
+    tvUnit = urlParams.get('tv');
+  }
+  if (!tvUnit) {
+    if (pathname.includes('taguatinga') || hash.includes('taguatinga') || pathname.includes('/tag') || hash.includes('/tag')) {
+      tvUnit = 'taguatinga';
+    } else if (pathname.includes('betim') || hash.includes('betim') || pathname.includes('/btm') || hash.includes('/btm')) {
+      tvUnit = 'betim';
+    } else if (pathname.includes('geral') || pathname.includes('all') || hash.includes('all')) {
+      tvUnit = 'all';
+    }
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -123,12 +145,14 @@ export default function App() {
   // Se o link acessado for do Painel TV da sala de espera (Smart TV)
   if (isTvPanel) {
     return (
-      <TvCallPanel 
-        unitId={urlParams.get('unidade') || urlParams.get('unit')}
-        onExitPortal={() => {
-          window.location.href = window.location.origin;
-        }} 
-      />
+      <ErrorBoundary>
+        <TvCallPanel 
+          unitId={tvUnit || urlParams.get('unidade') || urlParams.get('unit')}
+          onExitPortal={() => {
+            window.location.href = window.location.origin;
+          }} 
+        />
+      </ErrorBoundary>
     );
   }
 

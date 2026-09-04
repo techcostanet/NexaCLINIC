@@ -206,52 +206,87 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
   // Text-to-Speech Voice Announcement
   const speakAnnouncement = (patientName, roomName) => {
     try {
-      if (!('speechSynthesis' in window)) return;
+      if (typeof window === 'undefined' || !('speechSynthesis' in window) || !window.speechSynthesis) return;
 
-      window.speechSynthesis.cancel();
+      if (typeof window.speechSynthesis.cancel === 'function') {
+        window.speechSynthesis.cancel();
+      }
 
       const phrase = `Atenção: Paciente ${patientName}. Favor dirigir-se ao ${roomName}.`;
+      if (typeof SpeechSynthesisUtterance === 'undefined') return;
       const utterance = new SpeechSynthesisUtterance(phrase);
       utterance.lang = 'pt-BR';
       utterance.rate = 0.92;
       utterance.pitch = 1.05;
 
-      const voices = window.speechSynthesis.getVoices();
-      const brVoice = voices.find(v => v.lang === 'pt-BR' || v.lang === 'pt_BR');
-      if (brVoice) {
-        utterance.voice = brVoice;
+      if (typeof window.speechSynthesis.getVoices === 'function') {
+        const voices = window.speechSynthesis.getVoices() || [];
+        const brVoice = voices.find(v => v && (v.lang === 'pt-BR' || v.lang === 'pt_BR'));
+        if (brVoice) {
+          utterance.voice = brVoice;
+        }
       }
 
       setTimeout(() => {
-        window.speechSynthesis.speak(utterance);
+        try {
+          if (window.speechSynthesis && typeof window.speechSynthesis.speak === 'function') {
+            window.speechSynthesis.speak(utterance);
+          }
+        } catch (e) {
+          console.warn('Erro ao reproduzir fala no painel:', e);
+        }
       }, 1600);
     } catch (e) {
       console.warn('Erro na síntese de voz do painel:', e);
     }
   };
 
-  // Unlock audio on initial user gesture
+  // Unlock audio on initial user gesture (Click, Tap or TV Remote Key)
   const unlockAudio = () => {
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        if (!audioCtxRef.current) {
-          audioCtxRef.current = new AudioContext();
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+          audioCtxRef.current = new AudioContextClass();
         }
-        audioCtxRef.current.resume();
+        if (audioCtxRef.current.state === 'suspended' && typeof audioCtxRef.current.resume === 'function') {
+          audioCtxRef.current.resume();
+        }
       }
       playHospitalChime();
       setAudioUnlocked(true);
     } catch (e) {
-      console.error(e);
+      console.error('Erro ao desbloquear áudio:', e);
       setAudioUnlocked(true);
     }
   };
 
+  // Global Remote Control & Gesture listener for Smart TV
+  useEffect(() => {
+    const handleRemoteOrTouch = () => {
+      unlockAudio();
+    };
+
+    window.addEventListener('keydown', handleRemoteOrTouch, { once: true });
+    window.addEventListener('click', handleRemoteOrTouch, { once: true });
+    window.addEventListener('touchstart', handleRemoteOrTouch, { once: true });
+
+    return () => {
+      window.removeEventListener('keydown', handleRemoteOrTouch);
+      window.removeEventListener('click', handleRemoteOrTouch);
+      window.removeEventListener('touchstart', handleRemoteOrTouch);
+    };
+  }, []);
+
   // Subscribe to Realtime Patient Calls
   useEffect(() => {
+    if (!dbService || typeof dbService.subscribeToPatientCalls !== 'function') {
+      console.warn('dbService.subscribeToPatientCalls não disponível.');
+      return;
+    }
+
     const unsub = dbService.subscribeToPatientCalls(selectedUnit, (items) => {
-      setCalls(items);
+      setCalls(items || []);
 
       if (items && items.length > 0) {
         const newest = items[0];
@@ -286,12 +321,22 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
     };
   }, [selectedUnit]);
 
-  // Fullscreen Toggle
+  // Fullscreen Toggle (with webkit / moz / ms vendor prefixes for Smart TVs)
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+    const doc = document;
+    const docEl = document.documentElement;
+    const isFs = doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement;
+
+    if (!isFs) {
+      const req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+      if (req) {
+        req.call(docEl).then(() => setIsFullscreen(true)).catch(() => setIsFullscreen(true));
+      }
     } else {
-      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+      const exit = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+      if (exit) {
+        exit.call(doc).then(() => setIsFullscreen(false)).catch(() => setIsFullscreen(false));
+      }
     }
   };
 
@@ -415,7 +460,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
       {!audioUnlocked && (
         <div style={styles.audioAlertBanner} onClick={unlockAudio}>
           <Volume2 size={26} color="#ffffff" />
-          <span>Toque ou clique na tela para ativar o sino sonoro e a voz da TV</span>
+          <span>Pressione qualquer botão no controle ou clique na tela para ativar o som</span>
         </div>
       )}
 
