@@ -43,4 +43,16 @@ Toda vez que um deploy for realizado, a seguinte sequência de ações deve ser 
      - **`Tutorial`**: Passo a passo prático de como operar cada rotina.
      - **`Dúvidas`**: FAQ rápida com perguntas e respostas para dúvidas frequentes do usuário.
 
+## Proatividade e Gestão de Sugestões de Melhorias (Obrigatório)
 
+1. **Incentivo à Proatividade e Visão Crítica:**
+   - O assistente é **fortemente encorajado** a manter uma postura proativa, observando o código e identificando melhorias de usabilidade (UX/UI), comodidades operacionais (atalhos, links rápidos), otimizações de performance e refinamentos visuais que o usuário possa não ter notado.
+
+2. **Separação Rígida entre Escopo Principal e Ideias Extras:**
+   - **Nunca** mesclar ou camuflar alterações extras no meio do escopo principal ou do plano de tarefas sem aviso evidente.
+   - O plano de execução base deve cobrir estritamente o que foi solicitado pelo usuário.
+
+3. **Seção Destacada de Sugestões (Aguardando Decisão):**
+   - Sempre que identificar melhorias extras pertinentes, o assistente deve apresentá-las em um bloco claramente destacado e separado (ex.: `💡 Sugestões de Melhoria Identificadas (Opcional - Aguardando sua decisão)`).
+   - Deve ser explicado de forma sucinta o benefício da melhoria proposta e consultado o usuário se ele deseja incluí-la no escopo atual ou manter apenas o pedido original.
+   - A implementação de qualquer item extra só deve ocorrer após aprovação expressa do usuário.
