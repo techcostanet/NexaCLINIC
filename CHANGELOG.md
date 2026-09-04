@@ -1,3 +1,28 @@
+## [v4.9.43] - 04 de Setembro, 2026
+### Entrada de Notas Parceladas & Remessa Bancária CNAB 240 Sicoob
+- **Leitura Automática de Parcelas em NF-e e NFS-e (`danfePdfParser.js` & `useStockLogic.jsx`):**
+  - Identificação estruturada de duplicatas e faturas em XML (`<dup>`, `<cobr>`, `<condicaoPagamento>`).
+  - Reconhecimento avançado em PDFs de notas fiscais de produtos (DANFE) e serviços (NFS-e), extraindo datas, valores e identificadores de parcelas.
+  - Suporte a termos de faturamento em texto livre (ex: "30 / 60 / 90 dias" ou "1/3, 2/3, 3/3") com distribuição temporal automática.
+- **Assistente de Importação com Gestão de Parcelas (`StockPanel.jsx`):**
+  - Tabela financeira com cabeçalhos e termos concisos (`Parcela`, `Vencimento`, `Valor`, `Código`, `Ações`).
+  - Botões de divisão rápida em 1 clique (`1x`, `2x`, `3x`, `4x`, `6x`) com espaçamento automático de 30 dias.
+  - Botão de equilíbrio de saldo (`Equilibrar`) para eliminar centavos de arredondamento diretamente na última parcela.
+  - Suporte a linha digitável e código de boleto específico para cada parcela.
+- **Gerador de Arquivo de Remessa CNAB 240 Sicoob (`sicoobCnab240.js`):**
+  - Em estrita conformidade com a FEBRABAN e com o manual oficial Sicoob v3.3 (Banco 756).
+  - Geração dos 6 tipos de registros obrigatórios: Header de Arquivo (v087), Header de Lote (v040), Segmento J (pagamento de títulos), Segmento J-52 (sacado e cedente obrigatório), Trailer de Lote e Trailer de Arquivo.
+  - Conversão algorítmica exata de Linha Digitável de 47 dígitos para Código de Barras de 44 dígitos.
+  - Rigorosa validação de 240 caracteres por linha e terminação `\r\n`.
+- **Módulo de Remessa no Contas a Pagar (`FinancePanel.jsx` & `CnabExportModal.jsx`):**
+  - Novo botão `Remessa` na barra de ações do Contas a Pagar.
+  - Modal interativo para seleção de títulos a pagar, filtragem por código de barras e totalizador dinâmico.
+  - Edição inline de linha digitável para inclusão rápida de boletos pendentes.
+  - Painel de configuração de conta bancária Sicoob (Convênio, Agência, Conta, DV, Sequencial NSA) com persistência automática no Firestore e no armazenamento local.
+  - Download automático do arquivo `.REM` pronto para importação direta no Sicoob Internet Banking.
+
+---
+
 ## [v4.9.41] - 04 de Setembro, 2026
 ### Gestão Inteligente de Boletos Bancários: Anexo na Entrada de Notas & Contas a Pagar em 1 Clique
 - **Utilitário de Extração de Boletos (`boletoParser.js`):**

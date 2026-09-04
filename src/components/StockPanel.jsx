@@ -206,6 +206,8 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
     handleUpdateInstallment,
     handleAddInstallment,
     handleRemoveInstallment,
+    handleSplitInstallments,
+    handleBalanceInstallments,
     handleMappingItemChange,
     handleMappingFieldChange,
     handleFinishXmlWizard,
@@ -3217,30 +3219,45 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                             Configure os vencimentos que serão lançados automaticamente no financeiro.
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={handleAddInstallment}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.65rem', borderRadius: '6px', border: '1px solid #0284c7', backgroundColor: '#f0f9ff', color: '#0284c7', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
-                        >
-                          <Plus size={14} /> Adicionar Parcela
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '600' }}>Dividir:</span>
+                          {[1, 2, 3, 4, 6].map(num => (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() => handleSplitInstallments(num)}
+                              style={{ padding: '0.25rem 0.45rem', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: '#fff', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', color: 'var(--text-primary)' }}
+                              title={`Dividir total em ${num} parcelas de 30 em 30 dias`}
+                            >
+                              {num}x
+                            </button>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={handleAddInstallment}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.65rem', borderRadius: '6px', border: '1px solid #0284c7', backgroundColor: '#f0f9ff', color: '#0284c7', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                          >
+                            <Plus size={14} /> Parcela
+                          </button>
+                        </div>
                       </div>
 
                       <div style={{ overflowX: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px', marginBottom: '0.75rem' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                           <thead style={{ backgroundColor: '#f8fafc', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
                             <tr>
-                              <th style={{ padding: '0.5rem 0.75rem', width: '120px' }}>Parcela</th>
-                              <th style={{ padding: '0.5rem 0.75rem', width: '180px' }}>Vencimento</th>
-                              <th style={{ padding: '0.5rem 0.75rem' }}>Valor (R$)</th>
-                              <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', width: '70px' }}>Ações</th>
+                              <th style={{ padding: '0.5rem 0.75rem', width: '90px' }}>Parcela</th>
+                              <th style={{ padding: '0.5rem 0.75rem', width: '150px' }}>Vencimento</th>
+                              <th style={{ padding: '0.5rem 0.75rem', width: '130px' }}>Valor</th>
+                              <th style={{ padding: '0.5rem 0.75rem' }}>Código</th>
+                              <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', width: '60px' }}>Ações</th>
                             </tr>
                           </thead>
                           <tbody>
                             {installmentsList.length === 0 ? (
                               <tr>
-                                <td colSpan="4" style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                  Nenhuma parcela configurada. Clique em "+ Adicionar Parcela".
+                                <td colSpan="5" style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                  Nenhuma parcela configurada. Clique em "+ Parcela".
                                 </td>
                               </tr>
                             ) : (
@@ -3253,7 +3270,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                       style={{ padding: '0.3rem 0.5rem', fontSize: '0.85rem', fontWeight: '600' }}
                                       value={inst.installmentNumber}
                                       onChange={e => handleUpdateInstallment(idx, 'installmentNumber', e.target.value)}
-                                      placeholder="Ex: 1/2"
+                                      placeholder="1/2"
                                     />
                                   </td>
                                   <td style={{ padding: '0.4rem 0.75rem' }}>
@@ -3273,6 +3290,16 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                       style={{ padding: '0.3rem 0.5rem', fontSize: '0.85rem', fontWeight: '700' }}
                                       value={inst.amount}
                                       onChange={e => handleUpdateInstallment(idx, 'amount', e.target.value)}
+                                    />
+                                  </td>
+                                  <td style={{ padding: '0.4rem 0.75rem' }}>
+                                    <input 
+                                      type="text" 
+                                      className="form-control"
+                                      style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', fontFamily: 'monospace' }}
+                                      value={inst.digitableLine || ''}
+                                      onChange={e => handleUpdateInstallment(idx, 'digitableLine', e.target.value)}
+                                      placeholder="Linha digitável"
                                     />
                                   </td>
                                   <td style={{ padding: '0.4rem 0.75rem', textAlign: 'center' }}>
@@ -3295,22 +3322,32 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                       </div>
 
                       {/* Totalization feedback banner */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '0.6rem 0.85rem', borderRadius: '6px', fontSize: '0.85rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '0.6rem 0.85rem', borderRadius: '6px', fontSize: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                         <div>
-                          <span>Soma das Parcelas: </span>
+                          <span>Soma: </span>
                           <strong style={{ fontSize: '0.95rem' }}>
                             R$ {sumInstallments.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </strong>
                         </div>
-                        <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           {!isDifference ? (
                             <span style={{ color: '#166534', fontWeight: '700', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                               <CheckCircle2 size={16} color="#166534" /> Total confere
                             </span>
                           ) : (
-                            <span style={{ color: '#b45309', fontWeight: '700', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                              <AlertTriangle size={16} color="#b45309" /> Diferença de R$ {Math.abs(sumInstallments - totalInvoice).toFixed(2)}
-                            </span>
+                            <>
+                              <span style={{ color: '#b45309', fontWeight: '700', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <AlertTriangle size={16} color="#b45309" /> Diferença: R$ {Math.abs(sumInstallments - totalInvoice).toFixed(2)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={handleBalanceInstallments}
+                                style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', border: '1px solid #b45309', backgroundColor: '#fffbeb', color: '#b45309', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                                title="Ajustar diferença na última parcela"
+                              >
+                                Equilibrar
+                              </button>
+                            </>
                           )}
                         </div>
                       </div>

@@ -47,6 +47,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Gestão de Boletos & Cópia em 1 Clique',
         desc: 'Visualização direta do PDF/imagem do boleto e botão de cópia instantânea da linha digitável para agendamento no Internet Banking sem risco de erros de digitação.'
+      },
+      {
+        title: 'Remessa Bancária CNAB 240 (Banco Sicoob 756)',
+        desc: 'Geração de arquivo de remessa Febraban CNAB 240 v3.3 (Segmentos J e J-52) para pagamento em lote de títulos e boletos de fornecedores via Sicoob Internet Banking.'
       }
     ],
     tutorial: [
@@ -66,6 +70,16 @@ export const MODULE_GUIDES = {
           'Clique no botão "Baixar" na coluna de Ações.',
           'Confirme a Data do Pagamento, Meio Utilizado (PIX, Boleto, Débito) e Conta Bancária.',
           'O status mudará para "Pago" e o valor será lançado automaticamente no DRE.'
+        ]
+      },
+      {
+        title: 'Como Gerar Arquivo de Remessa CNAB 240 Sicoob',
+        steps: [
+          'No módulo Financeiro, acesse a aba "Contas a Pagar".',
+          'Clique no botão "Remessa" na barra superior de ações.',
+          'Na primeira utilização, informe os parâmetros bancários do Sicoob (Convênio, Agência, Conta e DV) e clique em "Salvar".',
+          'Selecione os títulos pendentes que deseja pagar em lote. É possível editar ou incluir a linha digitável diretamente na tabela se algum boleto não possuir código.',
+          'Clique em "Exportar". O arquivo .REM será baixado automaticamente com os registros Febraban prontos para importação no Sicoob Internet Banking.'
         ]
       },
       {
@@ -109,6 +123,10 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Como funciona o acesso de operadoras de filiais remotas (ex: Taguatinga)?',
         resposta: 'Colaboradores com acesso restrito a Taguatinga só visualizam e lançam despesas e notas da sua respectiva unidade. Já a Gestora Financeira e Administradores possuem visão de Todas as Unidades simultaneamente.'
+      },
+      {
+        pergunta: 'Qual o formato do arquivo de remessa gerado para o Sicoob?',
+        resposta: 'O arquivo é gerado estritamente no padrão CNAB 240 v3.3 do Sicoob (Banco 756), com 240 caracteres por linha, contendo Header de Arquivo, Header de Lote (Serviço 20 Fornecedores), Segmentos J (código de barras e valores) e J-52 (sacado e cedente obrigatório), além dos trailers de fechamento.'
       },
       {
         pergunta: 'Os relatórios exportam com o "R$" na frente do valor?',
@@ -281,6 +299,10 @@ export const MODULE_GUIDES = {
         desc: 'Anexo de boletos bancários em PDF ou imagem com extração automática da linha digitável (47 ou 48 dígitos) e sincronização direta com o Contas a Pagar do financeiro.'
       },
       {
+        title: 'Entrada Parcelada & Divisão Rápida de Duplicatas',
+        desc: 'Detecção inteligente de múltiplas parcelas em XML e PDF (DANFE e NFS-e), com botões de divisão rápida (1x, 2x, 3x, 4x, 6x), ajuste automático de centavos (Equilibrar) e lançamento individual no Contas a Pagar.'
+      },
+      {
         title: 'Modelo dos 4 Saldos de Estoque',
         desc: 'Visão fidedigna do estoque: Físico (na prateleira), Reservado (solicitado pelos salões), Disponível (livre para novas demandas) e Trânsito (pedidos de compras abertos).'
       },
@@ -424,9 +446,23 @@ export const MODULE_GUIDES = {
           'O sistema lerá e preencherá automaticamente a Linha Digitável. Se desejar, faça ajustes manuais.',
           'Conclua o assistente. O boleto e a linha digitável serão vinculados às contas a pagar geradas no Financeiro.'
         ]
+      },
+      {
+        title: 'Como Gerenciar Parcelas na Entrada de Notas',
+        steps: [
+          'No assistente de importação de notas (XML ou PDF), avance até o passo "Financeiro".',
+          'O sistema identifica automaticamente as parcelas da nota (duplicatas ou termos descritivos como "30/60/90 dias").',
+          'Utilize os botões de atalho "1x", "2x", "3x", "4x" ou "6x" caso deseje recalcular as parcelas a cada 30 dias.',
+          'Se houver diferença de centavos, clique em "Equilibrar" para ajustar o total na última parcela.',
+          'Informe ou confira a linha digitável de cada parcela antes de confirmar a entrada.'
+        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'O que fazer se a nota fiscal tiver pagamento parcelado?',
+        resposta: 'O sistema detecta automaticamente as parcelas no XML ou PDF. Você pode conferir os vencimentos e valores na tabela, usar os botões de divisão rápida (ex: 3x), adicionar parcelas com o botão "+ Parcela" ou clicar em "Equilibrar" para acertar os centavos.'
+      },
       {
         pergunta: 'É obrigatório anexar o boleto para importar uma nota fiscal?',
         resposta: 'Não, o anexo do boleto é opcional. Se a nota já foi paga ou for paga via PIX/depósito, o assistente pode ser concluído sem anexar o boleto.'

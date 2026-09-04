@@ -1561,6 +1561,56 @@ export function useStockLogic(currentUser) {
           const defaultDueDate = new Date();
           defaultDueDate.setDate(defaultDueDate.getDate() + 30);
 
+          // Extração estruturada de parcelas da NFS-e (ABRASF ou formatos municipais)
+          let nfseInstallments = [];
+          const parcNodes = xmlDoc.querySelectorAll('Parcelas Parcela, CondicaoPagamento Parcela, CondicoesPagamento Parcela, Parcela, duplicata, infNfse Parcela');
+          if (parcNodes && parcNodes.length > 0) {
+            parcNodes.forEach((pNode, idx) => {
+              const pNum = pNode.querySelector('Numero, nDup, NumeroParcela')?.textContent || `${idx + 1}/${parcNodes.length}`;
+              const pVenc = pNode.querySelector('DataVencimento, dVenc, Vencimento')?.textContent || '';
+              const pVal = parseFloat(pNode.querySelector('Valor, vDup, ValorParcela')?.textContent || 0);
+              if (pVal > 0) {
+                nfseInstallments.push({
+                  installmentNumber: pNum.includes('/') ? pNum : `${idx + 1}/${parcNodes.length}`,
+                  dueDate: pVenc ? pVenc.substring(0, 10) : defaultDueDate.toISOString().substring(0, 10),
+                  amount: pVal
+                });
+              }
+            });
+          }
+
+          // Fallback: busca por condições de prazo no texto da discriminação (ex: 30 / 60 / 90 dias)
+          if (nfseInstallments.length === 0 && vServ > 0) {
+            const daysMatch = discriminacao.match(/(\d{1,3})\s*\/\s*(\d{1,3})(?:\s*\/\s*(\d{1,3}))?(?:\s*\/\s*(\d{1,3}))?\s*(?:DIAS|DD)/i);
+            if (daysMatch) {
+              const days = [daysMatch[1], daysMatch[2], daysMatch[3], daysMatch[4]].filter(Boolean).map(Number);
+              if (days.length > 1) {
+                const baseDate = new Date(issueDate);
+                const partVal = Math.round((vServ / days.length) * 100) / 100;
+                let sumP = 0;
+                days.forEach((dayOffset, idx) => {
+                  const dDate = new Date(baseDate);
+                  dDate.setDate(dDate.getDate() + dayOffset);
+                  const thisVal = (idx === days.length - 1) ? Math.round((vServ - sumP) * 100) / 100 : partVal;
+                  sumP += thisVal;
+                  nfseInstallments.push({
+                    installmentNumber: `${idx + 1}/${days.length}`,
+                    dueDate: dDate.toISOString().substring(0, 10),
+                    amount: thisVal
+                  });
+                });
+              }
+            }
+          }
+
+          if (nfseInstallments.length === 0) {
+            nfseInstallments = [{
+              installmentNumber: '1/1',
+              dueDate: defaultDueDate.toISOString().substring(0, 10),
+              amount: vServ
+            }];
+          }
+
           setXmlData({
             number: numNfse,
             accessKey: codVerif,
@@ -1580,11 +1630,7 @@ export function useStockLogic(currentUser) {
               expiryDate: '',
               isService: true
             }],
-            installments: [{
-              installmentNumber: '1/1',
-              dueDate: defaultDueDate.toISOString().substring(0, 10),
-              amount: vServ
-            }],
+            installments: nfseInstallments,
             sourceType: 'XML',
             invoiceType: 'service'
           });
@@ -1833,6 +1879,47 @@ export function useStockLogic(currentUser) {
     });
   };
 
+  const handleSplitInstallments = (count) => {
+    setXmlData(prev => {
+      if (!prev) return prev;
+      const total = parseFloat(prev.totalValue) || 0;
+      if (total <= 0 || count <= 0) return prev;
+      const baseDate = prev.issueDate ? new Date(prev.issueDate) : new Date();
+      const partVal = Math.round((total / count) * 100) / 100;
+      let sumP = 0;
+      const newInst = [];
+      for (let i = 0; i < count; i++) {
+        const d = new Date(baseDate);
+        d.setDate(d.getDate() + (30 * (i + 1)));
+        const val = (i === count - 1) ? Math.round((total - sumP) * 100) / 100 : partVal;
+        sumP += val;
+        newInst.push({
+          installmentNumber: `${i + 1}/${count}`,
+          dueDate: d.toISOString().substring(0, 10),
+          amount: val,
+          digitableLine: (count === 1 ? (prev.installments?.[0]?.digitableLine || '') : '')
+        });
+      }
+      return { ...prev, installments: newInst };
+    });
+  };
+
+  const handleBalanceInstallments = () => {
+    setXmlData(prev => {
+      if (!prev || !prev.installments || prev.installments.length === 0) return prev;
+      const total = parseFloat(prev.totalValue) || 0;
+      if (total <= 0) return prev;
+      const list = [...prev.installments];
+      const sumOthers = list.slice(0, -1).reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
+      const remainder = Math.max(0, Math.round((total - sumOthers) * 100) / 100);
+      list[list.length - 1] = {
+        ...list[list.length - 1],
+        amount: remainder
+      };
+      return { ...prev, installments: list };
+    });
+  };
+
   const handleMappingItemChange = (xmlCode, itemId) => {
     setItemMappings(prev => prev.map(m => m.xmlCode === xmlCode ? { ...m, mappedItemId: itemId } : m));
   };
@@ -1963,6 +2050,9 @@ export function useStockLogic(currentUser) {
             const defaultDueDate = new Date();
             defaultDueDate.setDate(defaultDueDate.getDate() + 30);
             const finalDueDate = inst.dueDate || defaultDueDate.toISOString().substring(0, 10);
+            const instBoletoUrl = inst.boletoUrl || (instList.length === 1 || instList[0] === inst ? (boletoData?.fileUrl || '') : '');
+            const instBoletoFileName = inst.boletoFileName || (instList.length === 1 || instList[0] === inst ? (boletoData?.fileName || '') : '');
+            const instDigitableLine = inst.digitableLine || (instList.length === 1 || instList[0] === inst ? (boletoData?.digitableLine || '') : '');
 
             await dbService.saveAccountsPayable({
               supplier: supplierMapping.name,
@@ -1976,7 +2066,11 @@ export function useStockLogic(currentUser) {
               documentType: 'NFS-e',
               status: 'Pendente',
               unitId: currentUnitId,
-              unit: currentUnitName
+              unit: currentUnitName,
+              boletoUrl: instBoletoUrl,
+              boletoFileName: instBoletoFileName,
+              digitableLine: instDigitableLine,
+              hasBoleto: !!(instBoletoUrl || instDigitableLine)
             });
           }
         }
@@ -2084,6 +2178,9 @@ export function useStockLogic(currentUser) {
           const defaultDueDate = new Date();
           defaultDueDate.setDate(defaultDueDate.getDate() + 30);
           const finalDueDate = inst.dueDate || defaultDueDate.toISOString().substring(0, 10);
+          const instBoletoUrl = inst.boletoUrl || (instList.length === 1 || instList[0] === inst ? (boletoData?.fileUrl || '') : '');
+          const instBoletoFileName = inst.boletoFileName || (instList.length === 1 || instList[0] === inst ? (boletoData?.fileName || '') : '');
+          const instDigitableLine = inst.digitableLine || (instList.length === 1 || instList[0] === inst ? (boletoData?.digitableLine || '') : '');
 
           await dbService.saveAccountsPayable({
             supplier: supplierMapping.name,
@@ -2098,10 +2195,10 @@ export function useStockLogic(currentUser) {
             status: 'Pendente',
             unitId: currentUnitId,
             unit: currentUnitName,
-            boletoUrl: boletoData?.fileUrl || '',
-            boletoFileName: boletoData?.fileName || '',
-            digitableLine: boletoData?.digitableLine || '',
-            hasBoleto: !!(boletoData?.fileUrl || boletoData?.digitableLine)
+            boletoUrl: instBoletoUrl,
+            boletoFileName: instBoletoFileName,
+            digitableLine: instDigitableLine,
+            hasBoleto: !!(instBoletoUrl || instDigitableLine)
           });
         }
       }
@@ -2479,6 +2576,8 @@ export function useStockLogic(currentUser) {
     handleUpdateInstallment,
     handleAddInstallment,
     handleRemoveInstallment,
+    handleSplitInstallments,
+    handleBalanceInstallments,
     handleMappingItemChange,
     handleMappingFieldChange,
     handleFinishXmlWizard,

@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.43',
+      date: '04/09/2026',
+      title: 'Entrada de Notas Parceladas & Remessa Bancária CNAB 240 Sicoob',
+      description: 'Implementação completa das Fases 2 e 3: identificação e divisão automática de parcelas em notas fiscais de produtos (NF-e) e serviços (NFS-e), e geração de arquivo de remessa Febraban CNAB 240 para pagamento em lote de boletos no Banco Sicoob.',
+      changes: [
+        { type: 'Identificação Inteligente de Parcelas (NF-e & NFS-e)', text: 'Parser avançado de duplicatas e condições de pagamento em XML e PDF, identificando prazos, datas de vencimento e valores individuais das parcelas automaticamente.' },
+        { type: 'Assistente de Parcelas com Ações Rápidas', text: 'Novo painel no passo de faturas com botões de divisão rápida (1x a 6x de 30 em 30 dias), botão Equilibrar para ajuste de centavos e campo para código individual de cada boleto.' },
+        { type: 'Geração de Remessa CNAB 240 Sicoob', text: 'Módulo exportador em estrita conformidade com a FEBRABAN e manual v3.3 do Sicoob (Banco 756, Layout 087/040, Segmentos J e J-52) para pagamento de títulos.' },
+        { type: 'Gestão de Títulos & Linha Digitável no Contas a Pagar', text: 'Novo modal de Remessa com seleção de títulos pendentes, edição inline de linha digitável, conferência de código de 44 dígitos e download do arquivo .REM com incremento sequencial automático.' },
+        { type: 'Padronização Rigorosa de Rótulos', text: 'Aplicação contínua da diretriz de termos únicos e concisos em todas as telas e cabeçalhos de parcelamento e remessa bancária.' }
+      ]
+    },
+    {
       version: 'v4.9.41',
       date: '04/09/2026',
       title: 'Gestão Inteligente de Boletos Bancários: Anexo na Entrada de Notas & Contas a Pagar em 1 Clique',

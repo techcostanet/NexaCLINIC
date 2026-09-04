@@ -44,6 +44,7 @@ import {
 import { dbService } from '../firebase';
 import { parseBoletoPdf, parseBoletoImage, cleanDigitableLine } from '../utils/boletoParser';
 import FinanceReportsModal from './FinanceReportsModal';
+import CnabExportModal from './CnabExportModal';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
 
@@ -95,6 +96,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const [suppliersList, setSuppliersList] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState(() => activeUnit?.shortName || (activeUnitId === 'all' ? 'Todas' : (activeUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim')));
   const [loading, setLoading] = useState(true);
+  const [tenantSettings, setTenantSettings] = useState(null);
+  const [showCnabModal, setShowCnabModal] = useState(false);
 
   useEffect(() => {
     setSelectedUnit(activeUnit?.shortName || (activeUnitId === 'all' ? 'Todas' : (activeUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim')));
@@ -392,6 +395,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       const bPlans = dbService.getBudgetPlans ? await dbService.getBudgetPlans() : [];
       const agrs = dbService.getAgreements ? await dbService.getAgreements() : [];
       const sups = dbService.getSuppliers ? await dbService.getSuppliers() : [];
+      const tSettings = dbService.getTenantSettings ? await dbService.getTenantSettings().catch(() => ({})) : {};
 
       setPayableList(pay);
       setReceivableList(rec);
@@ -401,6 +405,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       setBudgetPlans(bPlans);
       setAgreementsList(agrs);
       setSuppliersList(sups);
+      if (tSettings) setTenantSettings(tSettings);
     } catch (err) {
       console.error('Erro ao buscar dados financeiros:', err);
     } finally {
@@ -2143,7 +2148,28 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <button 
+                type="button"
+                onClick={() => setShowCnabModal(true)}
+                style={{
+                  ...styles.btnSecondary,
+                  backgroundColor: '#f0f9ff',
+                  color: '#0284c7',
+                  border: '1px solid #bae6fd',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  fontWeight: '700',
+                  padding: '0.45rem 0.75rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+                title="Gerar arquivo de remessa Sicoob CNAB 240 para pagamento de boletos"
+              >
+                <FileSpreadsheet size={15} />
+                <span>Remessa</span>
+              </button>
               <button 
                 onClick={() => {
                   setEditingPayable(null);
@@ -4381,7 +4407,17 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
           payableList={currentPayableList}
           receivableList={currentReceivableList}
           costCenters={costCenters}
-          // Assuming tenantSettings might be globally fetched, pass default for now
+          tenantSettings={tenantSettings || undefined}
+        />
+      )}
+
+      {/* Sicoob CNAB 240 Remessa Modal */}
+      {showCnabModal && (
+        <CnabExportModal
+          onClose={() => setShowCnabModal(false)}
+          payableList={payableList}
+          tenantSettings={tenantSettings}
+          onSaveTenantSettings={setTenantSettings}
         />
       )}
 

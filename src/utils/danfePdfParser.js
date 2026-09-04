@@ -154,22 +154,93 @@ export async function parseDanfePdf(arrayBuffer) {
     }
 
     // 7. Faturas / Duplicatas / Parcelas
-    const installments = [];
-    const dupRegex = /(?:(\d{3}|\d{1,2}\/\d{1,2}|\d+)\s+)?(\d{2}\/\d{2}\/\d{4})\s+(?:R\$\s*)?([0-9\.,]+)/g;
+    let installments = [];
+
+    // 7.1 Busca por seção explícita de Faturas/Duplicatas (DANFE ou NFS-e)
+    const faturaSectionMatch = fullText.match(/(?:FATURA|DUPLICATA|PARCELAS|DADOS\s+DA\s+FATURA|CONDI[ÇC][ÕO]ES\s+DE\s+PAGAMENTO)[\s\S]{1,600}?(?=(?:C[ÁA]LCULO\s+DO\s+IMPOSTO|DADOS\s+DO\s+PRODUTO|TRANSPORTADOR|DADOS\s+ADICIONAIS|DISCRIMINA[ÇC][ÃA]O|VALOR\s+TOTAL|$))/i);
+    const textToSearchInstallments = faturaSectionMatch ? faturaSectionMatch[0] : fullText;
+
+    // Padrão A: Número + Data + Valor (ex: 001 15/10/2026 1.500,00 ou 1 15/10/2026 R$ 1.500,00)
+    const dupRegex = /(?:(\d{1,3}|\d{1,2}\/\d{1,2})\s+)?(\d{2}\/\d{2}\/\d{4})\s+(?:R\$\s*)?([0-9\.,]{3,15})/g;
     let dupMatch;
-    let instIndex = 1;
-    while ((dupMatch = dupRegex.exec(fullText)) !== null) {
+    const seenInstallments = new Set();
+
+    while ((dupMatch = dupRegex.exec(textToSearchInstallments)) !== null) {
       const dParts = dupMatch[2].split('/');
-      const dVenc = `${dParts[2]}-${dParts[1]}-${dParts[0]}`;
-      const vVal = parseFloat(dupMatch[3].replace(/\./g, '').replace(',', '.')) || 0;
-      if (vVal > 0) {
-        installments.push({
-          installmentNumber: dupMatch[1] || String(instIndex),
-          dueDate: dVenc,
-          amount: vVal
-        });
-        instIndex++;
+      const year = parseInt(dParts[2], 10);
+      // Validar se é um ano plausível (2020 a 2035)
+      if (year >= 2020 && year <= 2035) {
+        const dVenc = `${dParts[2]}-${dParts[1]}-${dParts[0]}`;
+        const vVal = parseFloat(dupMatch[3].replace(/\./g, '').replace(',', '.')) || 0;
+        const key = `${dVenc}_${vVal.toFixed(2)}`;
+        
+        // Evitar pegar a própria data de emissão com o valor total se houver duplicatas reais
+        if (vVal > 0 && !seenInstallments.has(key)) {
+          seenInstallments.add(key);
+          installments.push({
+            installmentNumber: dupMatch[1] || String(installments.length + 1),
+            dueDate: dVenc,
+            amount: vVal
+          });
+        }
       }
+    }
+
+    // Padrão B: NFS-e comum "Parcela 1: DD/MM/AAAA - R$ X.XXX,XX"
+    if (installments.length === 0) {
+      const nfseParcRegex = /(?:PARCELA|VENCIMENTO)\s*(?:N[º°]?\s*)?(\d{1,2})?[:\s]+(?:EM\s+)?(\d{2}\/\d{2}\/\d{4})[^\d\n\r]*?(?:R\$\s*)?([0-9\.,]{3,15})/gi;
+      let nfseMatch;
+      while ((nfseMatch = nfseParcRegex.exec(fullText)) !== null) {
+        const dParts = nfseMatch[2].split('/');
+        const year = parseInt(dParts[2], 10);
+        if (year >= 2020 && year <= 2035) {
+          const dVenc = `${dParts[2]}-${dParts[1]}-${dParts[0]}`;
+          const vVal = parseFloat(nfseMatch[3].replace(/\./g, '').replace(',', '.')) || 0;
+          const key = `${dVenc}_${vVal.toFixed(2)}`;
+          if (vVal > 0 && !seenInstallments.has(key)) {
+            seenInstallments.add(key);
+            installments.push({
+              installmentNumber: nfseMatch[1] || String(installments.length + 1),
+              dueDate: dVenc,
+              amount: vVal
+            });
+          }
+        }
+      }
+    }
+
+    // Padrão C: Se o texto mencionar prazo (ex: "30 / 60 / 90 DIAS" ou "28 / 56 DIAS") e valor total existe mas sem parcelas explícitas
+    if (installments.length === 0 && totalValue > 0) {
+      const daysPattern = fullText.match(/(\d{1,3})\s*\/\s*(\d{1,3})(?:\s*\/\s*(\d{1,3}))?(?:\s*\/\s*(\d{1,3}))?\s*(?:DIAS|DD)/i);
+      if (daysPattern) {
+        const days = [daysPattern[1], daysPattern[2], daysPattern[3], daysPattern[4]].filter(Boolean).map(Number);
+        if (days.length > 1) {
+          const baseDate = issueDate ? new Date(issueDate) : new Date();
+          const partVal = Math.round((totalValue / days.length) * 100) / 100;
+          let sumParts = 0;
+          days.forEach((dayOffset, idx) => {
+            const dueDate = new Date(baseDate);
+            dueDate.setDate(dueDate.getDate() + dayOffset);
+            const thisVal = (idx === days.length - 1) ? Math.round((totalValue - sumParts) * 100) / 100 : partVal;
+            sumParts += thisVal;
+            installments.push({
+              installmentNumber: `${idx + 1}/${days.length}`,
+              dueDate: dueDate.toISOString().substring(0, 10),
+              amount: thisVal
+            });
+          });
+        }
+      }
+    }
+
+    // Formatar número da parcela com padrão "1/N, 2/N, 3/N" se houver mais de uma
+    if (installments.length > 1) {
+      installments = installments.map((inst, idx) => ({
+        ...inst,
+        installmentNumber: inst.installmentNumber && inst.installmentNumber.includes('/') 
+          ? inst.installmentNumber 
+          : `${idx + 1}/${installments.length}`
+      }));
     }
 
     // Fallback de Valor Total: Se o cabeçalho não continha o valor total mas as parcelas foram encontradas
