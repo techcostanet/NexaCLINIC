@@ -1,3 +1,26 @@
+## [v4.9.41] - 04 de Setembro, 2026
+### Gestão Inteligente de Boletos Bancários: Anexo na Entrada de Notas & Contas a Pagar em 1 Clique
+- **Utilitário de Extração de Boletos (`boletoParser.js`):**
+  - Leitura estruturada de arquivos em PDF (via `pdfjs-dist`) e imagens com detecção de código de barras.
+  - Reconhecimento automático de Linha Digitável de 47 dígitos (cobrança bancária) e 48 dígitos (concessionárias/tributos).
+  - Extração de data de vencimento e valor nominal da cobrança com formatação FEBRABAN.
+- **Integração na Entrada de Notas Fiscais (`StockPanel.jsx` & `useStockLogic.jsx`):**
+  - Nova seção no passo 3 (Financeiro) do assistente de importação de NF-e (XML/PDF) para anexar o boleto bancário (opcional).
+  - Extração automática da linha digitável com possibilidade de conferência, edição manual e cópia instantânea.
+  - Upload seguro para o Firebase Storage com fallback local resiliente.
+  - Propagação direta dos dados e anexos do boleto para as faturas de `accounts_payable` criadas.
+- **Aceleração Operacional no Contas a Pagar (`FinancePanel.jsx`):**
+  - Nova coluna "Boleto" na tabela de Contas a Pagar (modos Compacto e Normal).
+  - Botão de **Copiar em 1 Clique** da Linha Digitável com feedback visual via toast para agendamento ágil no Internet Banking sem erros de digitação.
+  - Botão **Boleto** com modal de visualização do documento original (PDF/Imagem) diretamente na tela sem perder o contexto dos lançamentos.
+  - Inclusão de suporte a upload de boleto e linha digitável também no formulário de cadastro manual de despesas.
+- **Roadmap e Arquitetura Arquivados (`docs/roadmap_boletos_bancarios.md`):**
+  - Especificação funcional e técnica detalhada da **Fase 2** (Múltiplos Boletos e Parcelamento N:N) e **Fase 3** (Geração de Remessa CNAB 240 Padrão FEBRABAN para Pagamento a Fornecedores e APIs Bancárias PJ).
+- **Manuais e Documentação Atualizados (`moduleGuidesData.js`):**
+  - Atualização completa dos manuais de Estoque e Financeiro com novos Recursos, Tutoriais passo a passo e FAQ de Dúvidas.
+
+---
+
 ## [v4.9.40] - 02 de Setembro, 2026
 ### Edição Direta de Valor & Auto-Recuperação pelo Contas a Pagar
 - **Edição Inline de Valor na Tabela de Entradas:**

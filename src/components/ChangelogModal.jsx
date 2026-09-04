@@ -6,14 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v4.9.37',
-      date: '02/09/2026',
-      title: 'Entrada de Notas de Serviços (NFS-e) & Integração com Contas a Pagar',
-      description: 'Adaptação completa da aba Entradas do módulo de Estoque para aceitar notas fiscais de serviços prestados (NFS-e) além de mercadorias (NF-e), gerando as parcelas no Contas a Pagar do Financeiro sem interferir no estoque físico de insumos clínicos.',
+      version: 'v4.9.41',
+      date: '04/09/2026',
+      title: 'Gestão Inteligente de Boletos Bancários: Anexo na Entrada de Notas & Contas a Pagar em 1 Clique',
+      description: 'Implementação completa da Fase 1 da esteira bancária: anexo e extração automática da linha digitável de boletos bancários (PDF e imagem) durante a importação de NF-e no Estoque, integração com o Contas a Pagar com cópia em 1 clique e visualizador do documento original em modal.',
       changes: [
-        { type: 'Suporte a NFS-e e Contas a Pagar', text: 'Gravação da nota fiscal de serviços no histórico com lançamento automático de parcelas no Contas a Pagar, mantendo a integridade dos saldos físicos de insumos do almoxarifado.' },
-        { type: 'Leitor Inteligente (XML e PDF)', text: 'Importação com auto-detecção de formato para NF-e de produtos e NFS-e municipais/nacionais, extraindo dados do prestador, CNPJ, parcelas e descrição dos serviços.' },
-        { type: 'Digitação Manual e Filtros', text: 'Opção de lançamento manual direto na tela, filtro por tipo de nota (Todas, Produtos ou Serviços) e modal de visualização detalhada.' }
+        { type: 'Leitura Inteligente de Boletos (PDF e Imagem)', text: 'Novo utilitário boletoParser.js capaz de extrair automaticamente a Linha Digitável de 47 dígitos (cobrança) ou 48 dígitos (concessionárias), vencimento e valor via PDF.js e BarcodeDetector.' },
+        { type: 'Anexo de Boleto no Assistente de Importação de NF-e', text: 'Seção dedicada e opcional no passo 3 (Financeiro) da entrada de notas do Estoque, permitindo anexar o boleto, conferir a linha digitável e transmiti-la diretamente para o financeiro.' },
+        { type: 'Contas a Pagar com Ação Rápida em 1 Clique', text: 'Tabela de Contas a Pagar com botões dedicados de "Copiar" (código pronto para colar no Internet Banking sem erro de digitação) e "Boleto" (visualizador interativo em modal sem sair da página).' },
+        { type: 'Lançamento Manual com Suporte a Boletos', text: 'Formulário de Nova Despesa e Edição no Financeiro agora permite upload de arquivo de boleto com preenchimento assistido e linha digitável.' },
+        { type: 'Roadmap Bancário Arquivado', text: 'Especificação técnica e arquitetural das Fases 2 (múltiplas parcelas) e 3 (geração de remessa CNAB 240 e APIs bancárias) arquivada na pasta do sistema em docs/roadmap_boletos_bancarios.md.' }
       ]
     },
     {

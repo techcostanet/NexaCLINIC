@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../../../firebase';
 import { useUnit } from '../../../contexts/UnitContext';
 import { parseDanfePdf } from '../../../utils/danfePdfParser';
+import { parseBoletoPdf, parseBoletoImage, formatDigitableLine, cleanDigitableLine } from '../../../utils/boletoParser';
 import { 
   Package, Boxes, Clock, Calendar, Plus, Search, 
   X, FileText, UploadCloud, Briefcase, Warehouse,
@@ -190,6 +191,17 @@ export function useStockLogic(currentUser) {
     email: ''
   });
   const [itemMappings, setItemMappings] = useState([]);
+
+  // Boleto Bancário no Assistente de Entrada
+  const [boletoData, setBoletoData] = useState({
+    fileUrl: '',
+    fileName: '',
+    digitableLine: '',
+    dueDate: '',
+    amount: ''
+  });
+  const [boletoLoading, setBoletoLoading] = useState(false);
+  const [boletoError, setBoletoError] = useState('');
 
   useEffect(() => {
     fetchInitialData();
@@ -1829,6 +1841,72 @@ export function useStockLogic(currentUser) {
     setItemMappings(prev => prev.map(m => m.xmlCode === xmlCode ? { ...m, [field]: value } : m));
   };
 
+  // Upload e leitura do Boleto Bancário
+  const handleBoletoUpload = async (e) => {
+    setBoletoError('');
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setBoletoLoading(true);
+    try {
+      const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+      let parsed = { digitableLine: '', dueDate: '', amount: null };
+
+      if (isPdf) {
+        const buffer = await file.arrayBuffer();
+        parsed = await parseBoletoPdf(buffer);
+      } else {
+        parsed = await parseBoletoImage(file);
+      }
+
+      const currentUnitId = getSelectedUnit();
+      const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const storagePath = `boletos/${currentUnitId}/${Date.now()}_${cleanFileName}`;
+      let uploadedUrl = '';
+
+      if (dbService.uploadFileToStorage) {
+        uploadedUrl = await dbService.uploadFileToStorage(file, storagePath);
+      }
+
+      setBoletoData({
+        fileUrl: uploadedUrl,
+        fileName: file.name,
+        digitableLine: parsed.digitableLine || '',
+        dueDate: parsed.dueDate || '',
+        amount: parsed.amount ? String(parsed.amount) : ''
+      });
+
+      if (parsed.digitableLine) {
+        showAlert('Boleto lido com sucesso! Linha digitável identificada.', 'success');
+      } else {
+        showAlert('Boleto anexado. Não identificamos o código automaticamente, mas você pode digitá-lo.', 'info');
+      }
+    } catch (err) {
+      console.error('Erro ao ler boleto:', err);
+      setBoletoError('Falha ao processar o boleto. Você pode preencher os dados manualmente.');
+    } finally {
+      setBoletoLoading(false);
+    }
+  };
+
+  const handleRemoveBoleto = () => {
+    setBoletoData({
+      fileUrl: '',
+      fileName: '',
+      digitableLine: '',
+      dueDate: '',
+      amount: ''
+    });
+    setBoletoError('');
+  };
+
+  const handleBoletoChange = (field, value) => {
+    setBoletoData(prev => ({
+      ...prev,
+      [field]: field === 'digitableLine' ? cleanDigitableLine(value) : value
+    }));
+  };
+
   const getSelectedUnit = () => {
     try {
       const stored = localStorage.getItem('nexa_active_unit');
@@ -2019,7 +2097,11 @@ export function useStockLogic(currentUser) {
             documentType: 'NF-e',
             status: 'Pendente',
             unitId: currentUnitId,
-            unit: currentUnitName
+            unit: currentUnitName,
+            boletoUrl: boletoData?.fileUrl || '',
+            boletoFileName: boletoData?.fileName || '',
+            digitableLine: boletoData?.digitableLine || '',
+            hasBoleto: !!(boletoData?.fileUrl || boletoData?.digitableLine)
           });
         }
       }
@@ -2039,6 +2121,7 @@ export function useStockLogic(currentUser) {
       });
 
       showAlert(`Nota Fiscal Nº ${xmlData.number} processada! Estoque abastecido e ${(xmlData.installments || []).length || 1} conta(s) a pagar lançada(s) no Financeiro.`, 'success');
+      handleRemoveBoleto();
       setShowXmlWizard(false);
       const invList = await (dbService.getPurchaseInvoices ? dbService.getPurchaseInvoices().catch(() => []) : []);
       setInvoices(safeArray(invList));
@@ -2399,6 +2482,13 @@ export function useStockLogic(currentUser) {
     handleMappingItemChange,
     handleMappingFieldChange,
     handleFinishXmlWizard,
+    boletoData,
+    setBoletoData,
+    boletoLoading,
+    boletoError,
+    handleBoletoUpload,
+    handleRemoveBoleto,
+    handleBoletoChange,
     formatCnpj,
     cleanCnpj,
     getExpiryStatus,

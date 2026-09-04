@@ -37,10 +37,12 @@ import {
   ShieldCheck,
   Target,
   Search,
-  Activity
+  Activity,
+  Copy
 } from 'lucide-react';
 
 import { dbService } from '../firebase';
+import { parseBoletoPdf, parseBoletoImage, cleanDigitableLine } from '../utils/boletoParser';
 import FinanceReportsModal from './FinanceReportsModal';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
@@ -221,6 +223,11 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const [editingPayable, setEditingPayable] = useState(null);
   const [editingReceivable, setEditingReceivable] = useState(null);
 
+  // Estados de Boletos Bancários no Financeiro
+  const [previewBoletoItem, setPreviewBoletoItem] = useState(null);
+  const [copiedToast, setCopiedToast] = useState('');
+  const [manualBoletoLoading, setManualBoletoLoading] = useState(false);
+
   const [newPayable, setNewPayable] = useState({
     supplier: '',
     cnpj: '',
@@ -232,7 +239,10 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     invoiceNumber: '',
     paymentMethod: 'PIX',
     bankAccount: 'Itaú Unibanco (PJ)',
-    natureType: 'Custo Variável / Operacional'
+    natureType: 'Custo Variável / Operacional',
+    boletoUrl: '',
+    boletoFileName: '',
+    digitableLine: ''
   });
 
   const [newReceivable, setNewReceivable] = useState({
@@ -806,11 +816,57 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         paymentMethod: 'PIX',
         bankAccount: 'Itaú Unibanco (PJ)',
         natureType: 'Custo Variável / Operacional',
-        unitId: activeUnitId === 'all' ? 'betim' : activeUnitId
+        unitId: activeUnitId === 'all' ? 'betim' : activeUnitId,
+        boletoUrl: '',
+        boletoFileName: '',
+        digitableLine: ''
       });
       loadData();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleManualBoletoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setManualBoletoLoading(true);
+    try {
+      const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+      let parsed = { digitableLine: '', dueDate: '', amount: null };
+      if (isPdf) {
+        const buffer = await file.arrayBuffer();
+        parsed = await parseBoletoPdf(buffer);
+      } else {
+        parsed = await parseBoletoImage(file);
+      }
+      const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
+      const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const storagePath = `boletos/${targetUnitId}/${Date.now()}_${cleanFileName}`;
+      let uploadedUrl = '';
+      if (dbService.uploadFileToStorage) {
+        uploadedUrl = await dbService.uploadFileToStorage(file, storagePath);
+      }
+      const patch = {
+        boletoUrl: uploadedUrl,
+        boletoFileName: file.name,
+        digitableLine: parsed.digitableLine || '',
+        hasBoleto: true
+      };
+      if (parsed.dueDate) patch.dueDate = parsed.dueDate;
+      if (parsed.amount) patch.amount = String(parsed.amount);
+
+      if (editingPayable) {
+        setEditingPayable(prev => ({ ...prev, ...patch }));
+      } else {
+        setNewPayable(prev => ({ ...prev, ...patch, paymentMethod: 'Boleto Bancário' }));
+      }
+      setCopiedToast('Boleto anexado com sucesso!');
+      setTimeout(() => setCopiedToast(''), 3000);
+    } catch (err) {
+      console.error('Erro no upload de boleto manual:', err);
+    } finally {
+      setManualBoletoLoading(false);
     }
   };
 
@@ -2265,7 +2321,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Filial / Unidade</label>
+                  <label style={styles.label}>Filial</label>
                   <select 
                     value={editingPayable ? (editingPayable.unitId || 'betim') : (newPayable.unitId || (activeUnitId === 'all' ? 'betim' : activeUnitId))} 
                     onChange={e => {
@@ -2279,6 +2335,56 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                     <option value="betim">🏢 Unidade Betim - MG</option>
                     <option value="taguatinga">🏢 Unidade Taguatinga - DF</option>
                   </select>
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Boleto</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                    <input
+                      type="file"
+                      id="manual-payable-boleto-input"
+                      accept=".pdf,application/pdf,image/*"
+                      onChange={handleManualBoletoUpload}
+                      style={{ display: 'none' }}
+                    />
+                    <label
+                      htmlFor="manual-payable-boleto-input"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        padding: '0.45rem 0.75rem',
+                        backgroundColor: '#f0f9ff',
+                        color: '#0369a1',
+                        border: '1px solid #bae6fd',
+                        borderRadius: '6px',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Upload size={14} />
+                      {manualBoletoLoading ? 'Lendo...' : (editingPayable?.boletoUrl || newPayable.boletoUrl ? 'Alterar' : 'Anexar')}
+                    </label>
+                    {(editingPayable?.boletoFileName || newPayable.boletoFileName) && (
+                      <span style={{ fontSize: '0.75rem', color: '#166534', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }} title={editingPayable?.boletoFileName || newPayable.boletoFileName}>
+                        ✓ {editingPayable?.boletoFileName || newPayable.boletoFileName}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ ...styles.inputGroup, gridColumn: 'span 2' }}>
+                  <label style={styles.label}>Linha Digitável</label>
+                  <input 
+                    type="text" 
+                    value={editingPayable ? (editingPayable.digitableLine || '') : (newPayable.digitableLine || '')} 
+                    onChange={e => {
+                      const val = cleanDigitableLine(e.target.value);
+                      if (editingPayable) setEditingPayable({ ...editingPayable, digitableLine: val });
+                      else setNewPayable({ ...newPayable, digitableLine: val });
+                    }} 
+                    placeholder="00000000000000000000000000000000000000000000000"
+                    style={{ ...styles.input, fontFamily: 'monospace', fontSize: '0.85rem' }} 
+                  />
                 </div>
               </div>
 
@@ -2307,6 +2413,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 <tr>
                   {renderSortableHeader('Fornecedor', 'supplier', payableSort, setPayableSort)}
                   {renderSortableHeader('Nota Fiscal', 'invoiceNumber', payableSort, setPayableSort)}
+                  {renderSortableHeader('Boleto', 'digitableLine', payableSort, setPayableSort)}
                   {renderSortableHeader('Parcela', 'installmentInfo', payableSort, setPayableSort)}
                   {renderSortableHeader('Centro de Custo', 'costCenterId', payableSort, setPayableSort)}
                   {renderSortableHeader('Vencimento', 'dueDate', payableSort, setPayableSort)}
@@ -2404,6 +2511,65 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#0f172a' }}>NF #{p.invoiceNumber || '-'}</span>
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ ...styles.td, padding: cellPadding, fontSize: cellFontSize, whiteSpace: 'nowrap' }}>
+                        {isCompact ? (
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            {p.boletoUrl && (
+                              <button
+                                type="button"
+                                onClick={() => setPreviewBoletoItem(p)}
+                                style={{ padding: '0.15rem 0.35rem', fontSize: '0.68rem', backgroundColor: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px', fontWeight: '600' }}
+                                title="Visualizar Boleto"
+                              >
+                                <FileText size={11} /> Boleto
+                              </button>
+                            )}
+                            {p.digitableLine && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard?.writeText(p.digitableLine);
+                                  setCopiedToast(`Código copiado (${p.supplier})`);
+                                  setTimeout(() => setCopiedToast(''), 3000);
+                                }}
+                                style={{ padding: '0.15rem 0.35rem', fontSize: '0.68rem', backgroundColor: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '2px', fontWeight: '600' }}
+                                title={`Copiar: ${p.digitableLine}`}
+                              >
+                                <Copy size={11} /> Copiar
+                              </button>
+                            )}
+                            {!p.boletoUrl && !p.digitableLine && <span style={{ color: '#cbd5e1' }}>-</span>}
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                            {p.boletoUrl && (
+                              <button
+                                type="button"
+                                onClick={() => setPreviewBoletoItem(p)}
+                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.72rem', backgroundColor: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}
+                                title="Visualizar Boleto"
+                              >
+                                <FileText size={12} /> Boleto
+                              </button>
+                            )}
+                            {p.digitableLine && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard?.writeText(p.digitableLine);
+                                  setCopiedToast(`Código copiado (${p.supplier})`);
+                                  setTimeout(() => setCopiedToast(''), 3000);
+                                }}
+                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.72rem', backgroundColor: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}
+                                title={`Copiar Linha Digitável: ${p.digitableLine}`}
+                              >
+                                <Copy size={12} /> Copiar
+                              </button>
+                            )}
+                            {!p.boletoUrl && !p.digitableLine && <span style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>-</span>}
                           </div>
                         )}
                       </td>
@@ -4217,6 +4383,111 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
           costCenters={costCenters}
           // Assuming tenantSettings might be globally fetched, pass default for now
         />
+      )}
+
+      {/* Modal de Pré-visualização do Boleto */}
+      {previewBoletoItem && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalCard, maxWidth: '840px', width: '92%', height: '85vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', borderBottom: '1px solid var(--border-color)', backgroundColor: '#fff' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={20} color="#0284c7" />
+                  Boleto — {previewBoletoItem.supplier}
+                </h3>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  NF #{previewBoletoItem.invoiceNumber || 'S/N'} • Vencimento: {previewBoletoItem.dueDate ? previewBoletoItem.dueDate.split('-').reverse().join('/') : '-'} • R$ {parseFloat(previewBoletoItem.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <button onClick={() => setPreviewBoletoItem(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+                <X size={20} color="var(--text-secondary)" />
+              </button>
+            </div>
+
+            {/* Linha digitável com botão de cópia */}
+            {previewBoletoItem.digitableLine && (
+              <div style={{ padding: '0.75rem 1.25rem', backgroundColor: '#f0fdf4', borderBottom: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '240px' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#166534', whiteSpace: 'nowrap' }}>Linha Digitável:</span>
+                  <code style={{ fontSize: '0.85rem', color: '#14532d', backgroundColor: '#fff', padding: '0.2rem 0.5rem', borderRadius: '4px', border: '1px solid #86efac', fontFamily: 'monospace', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {previewBoletoItem.digitableLine}
+                  </code>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(previewBoletoItem.digitableLine);
+                      setCopiedToast('Linha digitável copiada!');
+                      setTimeout(() => setCopiedToast(''), 3000);
+                    }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.75rem', backgroundColor: '#166534', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer' }}
+                  >
+                    <Copy size={14} /> Copiar
+                  </button>
+                  {previewBoletoItem.boletoUrl && (
+                    <a
+                      href={previewBoletoItem.boletoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.75rem', backgroundColor: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.8rem', fontWeight: '600', textDecoration: 'none', cursor: 'pointer' }}
+                    >
+                      <ArrowUpRight size={14} /> Abrir
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Visualizador do Arquivo */}
+            <div style={{ flex: 1, backgroundColor: '#f8fafc', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+              {previewBoletoItem.boletoUrl ? (
+                previewBoletoItem.boletoUrl.includes('image') || previewBoletoItem.boletoFileName?.match(/\.(png|jpg|jpeg|webp)$/i) ? (
+                  <img
+                    src={previewBoletoItem.boletoUrl}
+                    alt="Boleto"
+                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                  />
+                ) : (
+                  <iframe
+                    src={previewBoletoItem.boletoUrl}
+                    title="Boleto PDF"
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                  />
+                )
+              ) : (
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <FileText size={48} style={{ opacity: 0.3, marginBottom: '0.5rem' }} />
+                  <p>Arquivo do boleto não anexado ou indisponível.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Toast Notification for Copy */}
+      {copiedToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          backgroundColor: '#065f46',
+          color: '#fff',
+          padding: '0.65rem 1.25rem',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          fontSize: '0.85rem',
+          fontWeight: '600',
+          zIndex: 9999
+        }}>
+          <Check size={16} />
+          <span>{copiedToast}</span>
+        </div>
       )}
     </div>
   );

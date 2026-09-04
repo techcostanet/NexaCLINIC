@@ -222,6 +222,12 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
     setSelectedInvoiceDetail,
     showInvoiceDetailModal,
     setShowInvoiceDetailModal,
+    boletoData,
+    boletoLoading,
+    boletoError,
+    handleBoletoUpload,
+    handleRemoveBoleto,
+    handleBoletoChange,
     formatCnpj,
     cleanCnpj,
     getExpiryStatus,
@@ -3347,6 +3353,133 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                       </div>
                     )}
 
+                    {/* Seção Boleto Bancário (Opcional) */}
+                    <div style={{ border: '1px solid #cbd5e1', borderRadius: 'var(--border-radius-md)', padding: '1rem', backgroundColor: '#f8fafc' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <FileText size={18} color="#0284c7" />
+                          <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Boleto</h4>
+                          <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.45rem', backgroundColor: '#e0f2fe', color: '#0369a1', borderRadius: '4px', fontWeight: '600' }}>Opcional</span>
+                        </div>
+                        {boletoData?.fileUrl && (
+                          <button
+                            type="button"
+                            onClick={handleRemoveBoleto}
+                            style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                          >
+                            <Trash2 size={14} /> Remover
+                          </button>
+                        )}
+                      </div>
+
+                      {!boletoData?.fileUrl ? (
+                        <div>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                            Anexe o boleto bancário (PDF ou imagem). O sistema fará a leitura automática da linha digitável para facilitar o agendamento no financeiro.
+                          </p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                            <input
+                              type="file"
+                              id="wizard-boleto-upload-input"
+                              accept=".pdf,application/pdf,image/*"
+                              onChange={handleBoletoUpload}
+                              style={{ display: 'none' }}
+                            />
+                            <label
+                              htmlFor="wizard-boleto-upload-input"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                padding: '0.5rem 1rem',
+                                backgroundColor: '#0284c7',
+                                color: '#fff',
+                                borderRadius: '6px',
+                                fontSize: '0.85rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                border: 'none'
+                              }}
+                            >
+                              <UploadCloud size={16} />
+                              {boletoLoading ? 'Processando Boleto...' : 'Anexar Boleto'}
+                            </label>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Formatos: PDF, PNG, JPG</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#ecfdf5', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid #a7f3d0' }}>
+                            <CheckCircle2 size={16} color="#166534" />
+                            <span style={{ fontSize: '0.82rem', color: '#166534', fontWeight: '600' }}>
+                              Anexo: {boletoData.fileName || 'boleto.pdf'}
+                            </span>
+                            {boletoData.fileUrl && (
+                              <a
+                                href={boletoData.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#0284c7', textDecoration: 'underline', fontWeight: '600' }}
+                              >
+                                Visualizar
+                              </a>
+                            )}
+                          </div>
+
+                          <div className="form-group" style={{ margin: 0 }}>
+                            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                              <span>Linha Digitável</span>
+                              {boletoData.digitableLine && (
+                                <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: '700' }}>
+                                  ✓ {boletoData.digitableLine.length} dígitos
+                                </span>
+                              )}
+                            </label>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <input
+                                type="text"
+                                className="form-control"
+                                style={{ fontFamily: 'monospace', fontSize: '0.85rem', letterSpacing: '0.03rem' }}
+                                value={boletoData.digitableLine}
+                                onChange={e => handleBoletoChange('digitableLine', e.target.value)}
+                                placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
+                              />
+                              {boletoData.digitableLine && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard?.writeText(boletoData.digitableLine);
+                                    showAlert('Linha digitável copiada!', 'success');
+                                  }}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.25rem',
+                                    padding: '0.4rem 0.75rem',
+                                    backgroundColor: '#f1f5f9',
+                                    border: '1px solid #cbd5e1',
+                                    borderRadius: '6px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                >
+                                  Copiar
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {boletoError && (
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <AlertCircle size={14} /> {boletoError}
+                        </div>
+                      )}
+                    </div>
+
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
                       <button type="button" onClick={() => setXmlWizardStep(2)} className="btn btn-secondary">Voltar</button>
                       <button 
@@ -3524,7 +3657,11 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                         <p>Valor: <strong>R$ {totalReviewVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></p>
                       );
                     })()}
-                    
+                    {boletoData?.fileUrl && (
+                      <p style={{ marginTop: '0.35rem', color: '#0369a1', fontSize: '0.85rem' }}>
+                        Boleto: <strong>{boletoData.fileName}</strong> {boletoData.digitableLine ? `(Linha: ${boletoData.digitableLine.slice(0, 15)}...)` : ''}
+                      </p>
+                    )}
                     {xmlData?.installments && xmlData.installments.length > 0 && (
                       <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #cbd5e1' }}>
                         <span style={{ fontWeight: '700', fontSize: '0.8rem', color: '#0369a1', display: 'block', marginBottom: '0.25rem' }}>
@@ -3560,6 +3697,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                             <th>Preço</th>
                             <th>Subtotal</th>
                             <th>Lote</th>
+                            <th>Validade</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -3572,7 +3710,8 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                 <td>{m.quantity}</td>
                                 <td>R$ {m.price?.toFixed(2)}</td>
                                 <td>R$ {(m.quantity * m.price).toFixed(2)}</td>
-                                <td>{m.batch || 'N/A'} {m.expiryDate ? `(${new Date(m.expiryDate).toLocaleDateString('pt-BR')})` : ''}</td>
+                                <td>{m.batch || 'N/A'}</td>
+                                <td>{m.expiryDate ? new Date(m.expiryDate).toLocaleDateString('pt-BR') : '-'}</td>
                               </tr>
                             );
                           })}

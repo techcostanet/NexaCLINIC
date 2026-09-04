@@ -43,6 +43,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Catálogo de Fornecedores',
         desc: 'Autocompletar inteligente com mais de 480 parceiros e credores cadastrados e segmentados por filial (Betim e Taguatinga) para agilizar o preenchimento de lançamentos de despesas.'
+      },
+      {
+        title: 'Gestão de Boletos & Cópia em 1 Clique',
+        desc: 'Visualização direta do PDF/imagem do boleto e botão de cópia instantânea da linha digitável para agendamento no Internet Banking sem risco de erros de digitação.'
       }
     ],
     tutorial: [
@@ -62,6 +66,15 @@ export const MODULE_GUIDES = {
           'Clique no botão "Baixar" na coluna de Ações.',
           'Confirme a Data do Pagamento, Meio Utilizado (PIX, Boleto, Débito) e Conta Bancária.',
           'O status mudará para "Pago" e o valor será lançado automaticamente no DRE.'
+        ]
+      },
+      {
+        title: 'Como Visualizar e Pagar Boletos Bancários',
+        steps: [
+          'Acesse a aba "Contas a Pagar" e localize a despesa na tabela.',
+          'Na coluna "Boleto", clique no botão "Copiar" para transferir a Linha Digitável de 47 dígitos diretamente para sua área de transferência.',
+          'Acesse o Internet Banking ou aplicativo bancário e cole o código para efetuar o pagamento ou agendamento.',
+          'Para visualizar ou imprimir o documento original, clique no botão "Boleto" para abrir o visualizador interativo em modal sem sair da página.'
         ]
       },
       {
@@ -108,6 +121,10 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'O DRE considera contas pendentes?',
         resposta: 'O DRE opera pelo Regime de Caixa e contabiliza exclusivamente as receitas recebidas e as despesas que já foram baixadas como "Pago".'
+      },
+      {
+        pergunta: 'Como o boleto bancário é vinculado à conta a pagar?',
+        resposta: 'Ele pode ser anexado automaticamente na entrada da Nota Fiscal no módulo de Estoque (com leitura inteligente do código de barras) ou anexado manualmente no formulário de Nova Despesa.'
       }
     ]
   },
@@ -260,6 +277,10 @@ export const MODULE_GUIDES = {
         desc: 'Consulta organizada com filtro por tipo (Todas as Entradas, Produtos NF-e ou Serviços NFS-e), busca por número/fornecedor/serviço e modal de visualização completa com conferência de parcelas financeiras.'
       },
       {
+        title: 'Leitura e Anexo de Boletos na Entrada de Notas',
+        desc: 'Anexo de boletos bancários em PDF ou imagem com extração automática da linha digitável (47 ou 48 dígitos) e sincronização direta com o Contas a Pagar do financeiro.'
+      },
+      {
         title: 'Modelo dos 4 Saldos de Estoque',
         desc: 'Visão fidedigna do estoque: Físico (na prateleira), Reservado (solicitado pelos salões), Disponível (livre para novas demandas) e Trânsito (pedidos de compras abertos).'
       },
@@ -393,9 +414,27 @@ export const MODULE_GUIDES = {
           'No campo "Parceiro", selecione uma clínica da lista de sugestões ou digite um novo nome.',
           'O novo parceiro digitado passará a ser sugerido automaticamente nos próximos empréstimos.'
         ]
+      },
+      {
+        title: 'Como Anexar e Ler o Boleto na Entrada da NF-e',
+        steps: [
+          'Abra o assistente de importação de NF-e na aba "Entradas" do Estoque.',
+          'Carregue o arquivo XML ou DANFE em PDF da nota.',
+          'Na Etapa 3 (Financeiro), na seção "Boleto", selecione o arquivo PDF ou imagem do boleto.',
+          'O sistema lerá e preencherá automaticamente a Linha Digitável. Se desejar, faça ajustes manuais.',
+          'Conclua o assistente. O boleto e a linha digitável serão vinculados às contas a pagar geradas no Financeiro.'
+        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'É obrigatório anexar o boleto para importar uma nota fiscal?',
+        resposta: 'Não, o anexo do boleto é opcional. Se a nota já foi paga ou for paga via PIX/depósito, o assistente pode ser concluído sem anexar o boleto.'
+      },
+      {
+        pergunta: 'Quais formatos de boleto o leitor suporta?',
+        resposta: 'O leitor suporta boletos bancários em PDF ou imagem (PNG, JPG), decodificando automaticamente o código de barras ou a linha digitável de 47 dígitos (bancário) e 48 dígitos (concessionárias).'
+      },
       {
         pergunta: 'Por que a etapa de produtos é pulada nas notas fiscais de serviço?',
         resposta: 'Como serviços prestados (manutenções, locações, consultorias) não geram movimentação de insumos físicos nem controle de lotes, o assistente omite automaticamente a etapa de mapeamento de catálogo, tornando a entrada mais rápida em 4 passos diretos.'
