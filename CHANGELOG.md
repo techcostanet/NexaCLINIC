@@ -1,3 +1,26 @@
+## [v4.9.46] - 04 de Setembro, 2026
+### Escala Recorrente por Dias da Semana & Cópia Inteligente de Mês Anterior
+- **Escala Recorrente por Dias da Semana (`MedicalScheduleTab.jsx`):**
+  - Novo alternador de modo no modal de escala médica: `Individual` vs `Recorrente`.
+  - Seleção ágil de dias da semana (Seg, Ter, Qua, Qui, Sex, Sáb, Dom) e presets instantâneos (`Seg/Qua/Sex`, `Ter/Qui/Sáb`, `Seg a Sex`, `Todos`).
+  - Cálculo dinâmico das datas do mês de competência com exibição de chips das datas calculadas e totalizador de plantões gerados.
+  - Opção de sobrescrita seletiva para plantões já preenchidos nas datas selecionadas.
+- **Cópia Inteligente do Mês Anterior (`MedicalScheduleTab.jsx`):**
+  - Botão dedicado `Copiar` no cabeçalho da escala médica abrindo assistente de clonagem de grade.
+  - Mapeamento por **Dia da Semana** (1ª segunda-feira do mês anterior alinhada à 1ª segunda-feira do mês atual), preservando os ciclos de nefrologia sem defasagem de calendário.
+  - Suporte opcional a mapeamento por **Dia do Mês** (dia 01 para dia 01).
+  - Seleção granular de setores a copiar (`Salão 1`, `Salão 2`, `Salão 3`, `DP`).
+  - Painel de substituição de médicos em massa: remapeamento de nefrologistas atuantes no mês de origem para novos responsáveis com 1 clique.
+- **Prevenção e Alerta Ativo de Conflitos de Salão:**
+  - Checagem cruzada que impede dupla alocação despercebida: se um médico for escalado em múltiplos salões no mesmo turno e data, a célula ganha destaque em vermelho com selo `Conflito` e tooltip explicativo.
+  - Faixa superior exibe badge com a contagem total de conflitos de salão pendentes no mês.
+- **Limpeza de Escala do Mês em Lote (`MedicalPanel.jsx` & `medicalService.js`):**
+  - Ação `Limpar` no cabeçalho para resetar ou refazer a grade mensal com confirmação de segurança.
+- **Padronização Rigorosa de Rótulos (Boy Scout Rule):**
+  - Varrida e saneamento de rótulos compostos ou duplos no módulo médico, adotando estritamente termos únicos e concisos (`Troca`, `Titular`, `Salão`, `Turno`, `Médico`, `Origem`, `Destino`, `Método`, `Setores`).
+
+---
+
 ## [v4.9.45] - 04 de Setembro, 2026
 ### Compatibilidade Universal Smart TV & Samsung Internet para Painel da Sala de Espera
 - **Suporte a Smart TVs e Tizen OS com Polyfills (@vitejs/plugin-legacy & Terser):**

@@ -165,11 +165,45 @@ export default function MedicalPanel({ currentUser, onBack }) {
   const handleSaveSchedule = async (shiftData) => {
     try {
       setLoading(true);
-      await dbService.saveMedicalSchedule(shiftData);
-      showToast('Plantão salvo na escala com sucesso!');
+      if (Array.isArray(shiftData)) {
+        if (dbService.saveMedicalSchedulesBatch) {
+          await dbService.saveMedicalSchedulesBatch(shiftData);
+        } else {
+          for (const s of shiftData) {
+            await dbService.saveMedicalSchedule(s);
+          }
+        }
+        showToast(`${shiftData.length} plantões salvos na escala com sucesso!`);
+      } else {
+        await dbService.saveMedicalSchedule(shiftData);
+        showToast('Plantão salvo na escala com sucesso!');
+      }
       await loadAllData();
     } catch (err) {
       console.error(err);
+      showToast('Erro ao salvar escala.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearMonthSchedule = async (month) => {
+    if (!window.confirm(`Deseja realmente apagar todos os plantões do mês ${month}? Esta ação é irreversível.`)) return;
+    try {
+      setLoading(true);
+      if (dbService.clearMedicalSchedulesMonth) {
+        await dbService.clearMedicalSchedulesMonth(month);
+      } else {
+        const toDelete = schedules.filter(s => s.month === month);
+        for (const s of toDelete) {
+          await dbService.deleteMedicalSchedule(s.id);
+        }
+      }
+      showToast(`Escala de ${month} limpa com sucesso!`);
+      await loadAllData();
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao limpar escala do mês.');
     } finally {
       setLoading(false);
     }
@@ -386,6 +420,7 @@ export default function MedicalPanel({ currentUser, onBack }) {
             onChangeMonth={setSelectedMonth}
             onSaveSchedule={handleSaveSchedule}
             onDeleteSchedule={handleDeleteSchedule}
+            onClearMonth={handleClearMonthSchedule}
             loading={loading}
           />
         )}

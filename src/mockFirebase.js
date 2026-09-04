@@ -3661,6 +3661,42 @@ export const mockFirestore = {
     return { success: true };
   },
 
+  saveMedicalSchedulesBatch: async (shiftsList) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (!db.medical_schedules) db.medical_schedules = [];
+    const results = [];
+    for (const shiftData of shiftsList) {
+      const index = db.medical_schedules.findIndex(s => 
+        (shiftData.id && s.id === shiftData.id) || 
+        (s.date === shiftData.date && s.sector === shiftData.sector && s.shift === shiftData.shift)
+      );
+      const item = {
+        id: shiftData.id || (index > -1 ? db.medical_schedules[index].id : 'sch-' + Math.random().toString(36).substr(2, 9)),
+        ...shiftData,
+        updatedAt: new Date().toISOString()
+      };
+      if (index > -1) {
+        db.medical_schedules[index] = item;
+      } else {
+        db.medical_schedules.push(item);
+      }
+      results.push(item);
+    }
+    setDB(db);
+    return results;
+  },
+
+  clearMedicalSchedulesMonth: async (month) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.medical_schedules) {
+      db.medical_schedules = db.medical_schedules.filter(s => s.month !== month);
+      setDB(db);
+    }
+    return { success: true };
+  },
+
   recordMedicalCheckin: async (scheduleId, checkinStatus, checkedBy, notes = '') => {
     await new Promise(resolve => setTimeout(resolve, 300));
     const db = getDB();

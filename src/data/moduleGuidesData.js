@@ -1244,6 +1244,18 @@ export const MODULE_GUIDES = {
       {
         title: 'Cadastro Completo de Médicos & Integração T.I.',
         desc: 'Fluxo centralizado onde o T.I. cria o login com perfil RBAC "Médico" e a Coordenação Médica completa os dados cadastrais (CPF, Cartão SUS, Celular, CRM/UF, Especialidade, Vínculo, Chave PIX e Dados Bancários) na aba Honorários.'
+      },
+      {
+        title: 'Escala Recorrente por Dias da Semana',
+        desc: 'Geração em lote de plantões para o mês selecionado escolhendo dias específicos da semana (ex: todas as segundas, ou seg/qua/sex) para o nefrologista com prévia de datas e substituição opcional.'
+      },
+      {
+        title: 'Cópia Inteligente da Escala Anterior',
+        desc: 'Replicação ágil da grade de plantões do mês anterior para o mês vigente, com mapeamento automático por dia da semana (1ª Seg ➔ 1ª Seg), seleção de setores, substituição em massa de nefrologistas e detecção de conflitos.'
+      },
+      {
+        title: 'Detecção Ativa de Conflitos de Salão',
+        desc: 'Alerta visual em tempo real na matriz e cabeçalho indicando quando um mesmo nefrologista foi escalado simultaneamente em salões distintos na mesma data e turno.'
       }
     ],
     tutorial: [
@@ -1264,6 +1276,28 @@ export const MODULE_GUIDES = {
           'Utilize os filtros por Salão (Salão 1, 2, 3 ou DP) e Turno para verificar a cobertura.',
           'Clique em "+ Escalar" para adicionar um plantão ou no ícone de lápis para alterar o médico responsável.',
           'Verifique a faixa de alerta: se houver turnos sem médico, a Trava Anti-Buraco sinalizará em vermelho.'
+        ]
+      },
+      {
+        title: 'Como Escalar Plantões Recorrentes por Dias da Semana',
+        steps: [
+          'Na aba "Escala", clique no botão "+ Escalar".',
+          'No topo do modal, selecione a aba "Recorrente".',
+          'Escolha o Mês de competência e selecione os dias da semana desejados (ex: Seg, Qua, Sex ou utilize os botões de atalho rápido).',
+          'Confira a quantidade e a lista de datas calculadas na prévia dinâmica.',
+          'Selecione o Salão, o Turno e o Médico nefrologista responsável.',
+          'Marque se deseja sobrescrever plantões já preenchidos nestas datas e clique em "Salvar Plantões".'
+        ]
+      },
+      {
+        title: 'Como Copiar e Adaptar a Escala do Mês Anterior',
+        steps: [
+          'No cabeçalho da aba "Escala", clique no botão "Copiar".',
+          'Defina o mês de Origem (por padrão, o mês imediatamente anterior). O Destino será o mês selecionado.',
+          'Escolha o método de cópia: "Dia da Semana" (recomendado para hemodiálise: a 1ª segunda vai para a 1ª segunda) ou "Dia do Mês".',
+          'Filtre quais setores deseja clonar (Salões 1, 2, 3 e/ou DP).',
+          'Se houver substituição médica no novo mês, utilize a tabela "Substituição" para apontar qual colega assumirá a carga horária em massa.',
+          'Confira o total de plantões na prévia e clique em "Copiar". A escala é gerada instantaneamente.'
         ]
       },
       {
@@ -1310,6 +1344,18 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'A Coordenação Médica precisa ter acesso ao Módulo Financeiro para pagar os médicos?',
         resposta: 'Não! O NexaMED foi desenhado com total segregação de acessos (RBAC). A coordenação audita e clica em "Homologar" diretamente no NexaMED. Em segundo plano, o sistema lança automaticamente a conta a pagar no NexaFINANCE para o setor financeiro quitar.'
+      },
+      {
+        pergunta: 'Como funciona o mapeamento por dia da semana ao copiar a escala?',
+        resposta: 'Como clínicas de diálise operam por dias fixos semanais (ex: Seg/Qua/Sex ou Ter/Qui/Sáb), o método "Dia da Semana" alinha a primeira segunda-feira do mês anterior à primeira segunda-feira do mês de destino, mantendo a rotina dos nefrologistas perfeitamente alinhada.'
+      },
+      {
+        pergunta: 'Posso substituir médicos em lote ao copiar a escala do mês anterior?',
+        resposta: 'Sim. No modal de cópia, o sistema identifica automaticamente todos os nefrologistas atuantes no mês de origem e disponibiliza seletores individuais para direcionar a grade inteira daquele médico para outro colega com um único clique.'
+      },
+      {
+        pergunta: 'Como o sistema alerta caso um médico seja escalado em dois salões ao mesmo tempo?',
+        resposta: 'O sistema realiza checagem cruzada de horários e datas: se um nefrologista for escalado no mesmo turno em salões diferentes, a célula na matriz ganha destaque em vermelho com selo "Conflito" e o cabeçalho exibe o número de conflitos pendentes.'
       },
       {
         pergunta: 'Como as consultas da agenda médica entram na produção do profissional?',

@@ -304,6 +304,63 @@ export const deleteMedicalSchedule = async (id) => {
   return deleteDoc(doc(db, 'medical_schedules', id));
 };
 
+export const saveMedicalSchedulesBatch = async (shiftsList) => {
+  if (!Array.isArray(shiftsList) || shiftsList.length === 0) return [];
+  if (USE_MOCK) {
+    return mockFirestore.saveMedicalSchedulesBatch 
+      ? mockFirestore.saveMedicalSchedulesBatch(shiftsList) 
+      : Promise.all(shiftsList.map(s => mockFirestore.saveMedicalSchedule(s)));
+  }
+
+  const { getFirestore, collection, doc, writeBatch } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  
+  const batchSize = 400;
+  const results = [];
+
+  for (let i = 0; i < shiftsList.length; i += batchSize) {
+    const chunk = shiftsList.slice(i, i + batchSize);
+    const batch = writeBatch(db);
+
+    for (const item of chunk) {
+      if (item.id) {
+        const docRef = doc(db, 'medical_schedules', item.id);
+        batch.update(docRef, { ...item, updatedAt: new Date().toISOString() });
+        results.push(item);
+      } else {
+        const colRef = collection(db, 'medical_schedules');
+        const docRef = doc(colRef);
+        batch.set(docRef, { ...item, id: docRef.id, createdAt: new Date().toISOString() });
+        results.push({ ...item, id: docRef.id });
+      }
+    }
+
+    await batch.commit();
+  }
+
+  return results;
+};
+
+export const clearMedicalSchedulesMonth = async (month) => {
+  if (!month) return;
+  if (USE_MOCK) {
+    return mockFirestore.clearMedicalSchedulesMonth 
+      ? mockFirestore.clearMedicalSchedulesMonth(month)
+      : null;
+  }
+  const { getFirestore, collection, getDocs, query, where, doc, writeBatch } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  const q = query(collection(db, 'medical_schedules'), where('month', '==', month));
+  const snap = await getDocs(q);
+  if (snap.empty) return;
+
+  const batch = writeBatch(db);
+  snap.docs.forEach(d => {
+    batch.delete(doc(db, 'medical_schedules', d.id));
+  });
+  await batch.commit();
+};
+
 export const recordMedicalCheckin = async (scheduleId, checkinStatus, checkedBy, notes = '') => {
   if (USE_MOCK) return mockFirestore.recordMedicalCheckin(scheduleId, checkinStatus, checkedBy, notes);
   const { getFirestore, doc, updateDoc } = await import('firebase/firestore');

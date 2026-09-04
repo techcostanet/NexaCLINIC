@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.46',
+      date: '04/09/2026',
+      title: 'Escala Recorrente por Dias da Semana & Cópia Inteligente de Mês Anterior',
+      description: 'Aprimoramento do módulo de Gestão Médica (NexaMED) com geração em lote de plantões recorrentes por dias da semana para nefrologistas, clonagem inteligente da escala do mês anterior com alinhamento semanal, substituição em massa de médicos e prevenção ativa de conflitos de salão.',
+      changes: [
+        { type: 'Escala Recorrente por Dias da Semana', text: 'Novo modo no modal "Escalar Médico" permitindo selecionar dias da semana específicos (ex: todas as segundas, ou Seg/Qua/Sex) no mês, gerando todos os plantões do período em 1 clique com prévia dinâmica de datas.' },
+        { type: 'Cópia Inteligente do Mês Anterior', text: 'Novo modal "Copiar Escala" capaz de replicar toda a grade do mês anterior para o mês atual com estratégia por Dia da Semana (1ª Seg ➔ 1ª Seg) ou Dia do Mês, seleção de setores e sobrescrita configurável.' },
+        { type: 'Substituição Médica em Massa na Cópia', text: 'Tabela de remapeamento no modal de cópia permitindo substituir nefrologistas do mês anterior por novos colegas para assumir toda a carga horária copiada com facilidade.' },
+        { type: 'Detecção Ativa de Conflitos de Salão', text: 'Checagem cruzada que alerta visualmente no cabeçalho e destaca em vermelho na matriz qualquer nefrologista escalado simultaneamente em mais de um salão na mesma data e turno.' },
+        { type: 'Padronização Rigorosa de Rótulos (Boy Scout)', text: 'Adequação dos rótulos do modal de escala para termos diretos e concisos (Troca, Titular, Salão, Turno, Médico, Destino, Método).' }
+      ]
+    },
+    {
       version: 'v4.9.45',
       date: '04/09/2026',
       title: 'Compatibilidade Universal Smart TV & Samsung Internet para Painel da Sala de Espera',
