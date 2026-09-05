@@ -25,7 +25,7 @@ export default function PurchaseOrderModal({
       `${idx + 1}. ${it.productName} - ${it.quantity} ${it.unit} x ${it.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} = ${it.totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} ${it.brand ? `(Marca: ${it.brand})` : ''}`
     ).join('\n');
 
-    const summary = `*ORDEM DE COMPRA #${order.code || 'PO'} — NexaCLINIC (${order.unit || 'Clínica'})*\n` +
+    const summary = `*ORDEM DE COMPRA #${order.code || 'PO'} — Nex-Ai CLINIC (${order.unit || 'Clínica'})*\n` +
       `*Fornecedor:* ${order.supplierName} (${order.cnpj || 'CNPJ não informado'})\n` +
       `*Data de Emissão:* ${new Date(order.createdAt || Date.now()).toLocaleDateString('pt-BR')}\n` +
       `*Previsão de Entrega:* ${order.estimatedDeliveryDate ? new Date(order.estimatedDeliveryDate).toLocaleDateString('pt-BR') : 'A combinar'}\n` +
@@ -47,7 +47,7 @@ export default function PurchaseOrderModal({
     ).join('\n');
 
     const text = `Olá, *${order.supplierContact || order.supplierName}*!\n\n` +
-      `Segue a *Ordem de Compra Oficial #${order.code}* emitida pela *NexaCLINIC (${order.unit || 'Clínica'})* referente à cotação *#${order.quotationCode || quotation?.code}*:\n\n` +
+      `Segue a *Ordem de Compra Oficial #${order.code}* emitida pela *Nex-Ai CLINIC (${order.unit || 'Clínica'})* referente à cotação *#${order.quotationCode || quotation?.code}*:\n\n` +
       `📦 *Valor Total:* ${order.totalGrandAmount?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n` +
       `💳 *Condição:* ${order.paymentTerm || 'Boleto'}\n` +
       `🚚 *Frete:* ${order.freightType || 'CIF'}\n` +
@@ -59,7 +59,7 @@ export default function PurchaseOrderModal({
     window.open(whatsappUrl, '_blank');
   };
 
-  const unitName = order.unit === 'Taguatinga' ? 'NexaCLINIC — Unidade Taguatinga/DF' : 'NexaCLINIC — Unidade Betim/MG';
+  const unitName = order.unit === 'Taguatinga' ? 'Nex-Ai CLINIC — Unidade Taguatinga/DF' : 'Nex-Ai CLINIC — Unidade Betim/MG';
   const unitAddress = order.unit === 'Taguatinga' 
     ? 'QNA 30, Lote 12 — Taguatinga Norte, Brasília - DF | CEP: 72110-300'
     : 'Av. Governador Valadares, 450 — Centro, Betim - MG | CEP: 32600-115';
@@ -130,9 +130,9 @@ export default function PurchaseOrderModal({
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={styles.logoBadge}>Nexa</div>
+                    <div style={styles.logoBadge}>Nex-Ai</div>
                     <div>
-                      <h1 style={styles.brandTitle}>NexaCLINIC</h1>
+                      <h1 style={styles.brandTitle}>Nex-Ai CLINIC</h1>
                       <span style={styles.brandSubtitle}>Sistema Integrado de Gestão em Nefrologia & Saúde</span>
                     </div>
                   </div>
@@ -325,7 +325,7 @@ export default function PurchaseOrderModal({
               <div style={styles.sigBox}>
                 <div style={styles.sigLine}></div>
                 <strong>{order.buyerName || currentUser?.name || 'Comprador Responsável'}</strong>
-                <span>Setor de Compras • NexaCLINIC</span>
+                <span>Setor de Compras • Nex-Ai CLINIC</span>
               </div>
 
               <div style={styles.sigBox}>

@@ -527,12 +527,12 @@ export default function MaintenancePanel({ currentUser }) {
 
         <div class="header">
           <div>
-            <div class="header-title">NexaCLINIC - Prontuário Técnico do Equipamento</div>
+            <div class="header-title">Nex-Ai CLINIC - Prontuário Técnico do Equipamento</div>
             <div class="header-sub">Histórico Rastreável de Manutenção, Engenharia Clínica & T.I.</div>
           </div>
           <div style="text-align: right;">
             <div style="font-weight: bold; font-size: 11px;">Emissão: ${issueDate}</div>
-            <div style="font-size: 10px; color: #64748b;">Sistema NexaSERVICE v3.1.0</div>
+            <div style="font-size: 10px; color: #64748b;">Sistema Nex-Ai.SERVICE</div>
           </div>
         </div>
 
@@ -674,7 +674,7 @@ export default function MaintenancePanel({ currentUser }) {
       </head>
       <body>
         <div class="tag-card">
-          <div class="header">NexaCLINIC • Engenharia Clínica</div>
+          <div class="header">Nex-Ai CLINIC • Engenharia Clínica</div>
           <div class="code">${eq.code}</div>
           <div class="name">${eq.name}</div>
           <div class="sector">Setor: ${eq.sector || 'Geral'} • Série: ${eq.serialNumber || 'N/A'}</div>
@@ -1922,7 +1922,7 @@ export default function MaintenancePanel({ currentUser }) {
             <div style={{ padding: '1rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ border: '2px solid #0f172a', borderRadius: '12px', padding: '1.25rem', background: '#fff', boxShadow: '0 4px 14px rgba(0,0,0,0.08)', width: '100%', boxSizing: 'border-box' }}>
                 <div style={{ fontSize: '0.75rem', fontWeight: '800', color: '#0891b2', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.6rem' }}>
-                  NexaCLINIC • Engenharia Clínica
+                  Nex-Ai CLINIC • Engenharia Clínica
                 </div>
 
                 <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>

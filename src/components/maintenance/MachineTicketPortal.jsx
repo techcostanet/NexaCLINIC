@@ -122,13 +122,13 @@ export default function MachineTicketPortal({ equipmentId, onExitPortal }) {
               <Wrench size={22} color="#ffffff" />
             </div>
             <div>
-              <h1 style={styles.brandTitle}>NexaCLINIC</h1>
+              <h1 style={styles.brandTitle}>Nex-Ai CLINIC</h1>
               <span style={styles.brandSubtitle}>Central de Manutenção & Engenharia</span>
             </div>
           </div>
           {onExitPortal && (
             <button onClick={onExitPortal} style={styles.btnExit}>
-              Acessar Sistema
+              Entrar
             </button>
           )}
         </div>

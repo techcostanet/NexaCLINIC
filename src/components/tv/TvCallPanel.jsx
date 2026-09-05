@@ -645,7 +645,7 @@ export default function TvCallPanel({ unitId: initialUnitId, onExitPortal }) {
           {/* Rodapé Informativo */}
           <div style={styles.historyFooter}>
             <Sparkles size={18} color="#0284c7" />
-            <span>NexaCLINIC • TV Corporativa Inteligente</span>
+            <span>Nex-Ai CLINIC • TV Corporativa Inteligente</span>
           </div>
         </aside>
       </main>

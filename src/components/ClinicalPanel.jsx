@@ -241,7 +241,7 @@ export default function ClinicalPanel() {
       if (dbService.createRequisition) {
         await dbService.createRequisition({
           sector: activePat.room || 'Salão 1',
-          requester: 'Prescrição Médica (NexaCLINIC)',
+          requester: 'Prescrição Médica (Nex-Ai.CLINIC)',
           shift: activePat.shift || '1º Turno',
           patientId: activePat.id,
           patientName: activePat.name,
@@ -556,7 +556,7 @@ export default function ClinicalPanel() {
       <div style={styles.cardHeader}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 style={styles.title}>NexaCLINIC - Módulo Clínico & Assistencial</h1>
+            <h1 style={styles.title}>Nex-Ai.CLINIC</h1>
             <p style={styles.subtitle}>Prontuário eletrônico nefrológico, prescrições dialíticas, farmacoterapia e regulação APAC.</p>
           </div>
           <UnitSelector compact showLabel={false} />
@@ -1468,7 +1468,7 @@ export default function ClinicalPanel() {
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                         <span style={styles.timelineAuthor}>{post.author}</span>
                                         <span style={{ fontSize: '0.75rem', backgroundColor: '#f3f4f6', padding: '0.15rem 0.4rem', borderRadius: '4px', color: '#4b5563' }}>
-                                          {post.source === 'email' ? '✉️ Via E-mail' : '💻 NexaCLINIC'}
+                                          {post.source === 'email' ? '✉️ Via E-mail' : '💻 Nex-Ai.CLINIC'}
                                         </span>
                                         {isUrgent && (
                                           <span style={{ fontSize: '0.7rem', backgroundColor: '#fee2e2', color: '#b91c1c', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>

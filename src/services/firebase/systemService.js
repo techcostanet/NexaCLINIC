@@ -136,7 +136,7 @@ export const deleteStockTransfer = async (id) => {
 
 export const DEFAULT_EMAIL_SETTINGS = {
   enabled: true,
-  senderName: 'NexaCLINIC — Notificações Automáticas',
+  senderName: 'Nex-Ai CLINIC — Notificações Automáticas',
   senderEmail: 'notificacoes@clinica.med.br',
   replyToEmail: 'contato@clinica.med.br',
   provider: 'smtp', // 'smtp' | 'gmail' | 'outlook' | 'ses' | 'resend'
@@ -146,13 +146,13 @@ export const DEFAULT_EMAIL_SETTINGS = {
   smtpUser: 'notificacoes@clinica.med.br',
   smtpPassword: '',
   bccAudit: 'ti.auditoria@clinica.med.br',
-  footerSignature: 'NexaCLINIC — Gestão Hospitalar & Nefrologia Integrada\nEsta é uma notificação automática gerada pelo sistema. Por favor, não responda diretamente a este e-mail.',
+  footerSignature: 'Nex-Ai CLINIC — Ecossistema Inteligente de Gestão em Saúde\nEsta é uma notificação automática gerada pelo sistema. Por favor, não responda diretamente a este e-mail.',
   notifications: {
-    medicalSwaps: true,       // NexaMED: Trocas e homologações de plantão
-    serviceOrders: true,      // NexaSERVICE: Ordens de serviço e chamados
-    hrAdmissions: true,       // NexaHR: Admissões, férias e holerites
-    purchasingQuotes: true,   // NexaPROCURE: Cotações e pedidos de compra
-    calendarReminders: true,  // NexaCAL: Confirmações de agenda e consultas
+    medicalSwaps: true,       // Nex-Ai.MED: Trocas e homologações de plantão
+    serviceOrders: true,      // Nex-Ai.SERVICE: Ordens de serviço e chamados
+    hrAdmissions: true,       // Nex-Ai.HR: Admissões, férias e holerites
+    purchasingQuotes: true,   // Nex-Ai.PROCURE: Cotações e pedidos de compra
+    calendarReminders: true,  // Nex-Ai.CAL: Confirmações de agenda e consultas
     assistAlerts: true,       // NexaASSIST: Altas e internações críticas
     securityAlerts: true      // NexaCONFIG: Alertas de T.I. e acessos
   }
@@ -237,14 +237,14 @@ export const getEmailLogs = async () => {
 
 export const testEmailConnection = async (testRecipientEmail, currentSettings) => {
   const target = testRecipientEmail || currentSettings.senderEmail || 'ti@clinica.med.br';
-  const testSubject = `[NexaCLINIC Teste de E-mail] Conexão com Servidor de Disparo (${currentSettings.provider || 'SMTP'})`;
-  const testBody = `Este é um e-mail de validação emitido pelo painel de T.I. (NexaCONFIG).\n\nServidor SMTP: ${currentSettings.smtpHost}:${currentSettings.smtpPort}\nRemetente: ${currentSettings.senderName} <${currentSettings.senderEmail}>\nCriptografia: ${currentSettings.encryption}\nData/Hora: ${new Date().toLocaleString('pt-BR')}\n\nSe você recebeu esta mensagem, o canal institucional de e-mails está ativo e pronto para atender todos os módulos do sistema.`;
+  const testSubject = `[Nex-Ai CLINIC Teste de E-mail] Conexão com Servidor de Disparo (${currentSettings.provider || 'SMTP'})`;
+  const testBody = `Este é um e-mail de validação emitido pelo painel de T.I. (Nex-Ai.CONFIG).\n\nServidor SMTP: ${currentSettings.smtpHost}:${currentSettings.smtpPort}\nRemetente: ${currentSettings.senderName} <${currentSettings.senderEmail}>\nCriptografia: ${currentSettings.encryption}\nData/Hora: ${new Date().toLocaleString('pt-BR')}\n\nSe você recebeu esta mensagem, o canal institucional de e-mails está ativo e pronto para atender todos os módulos do sistema.`;
 
   return await sendSystemEmail({
     to: target,
     subject: testSubject,
     body: testBody,
-    moduleSource: 'T.I. (NexaCONFIG)'
+    moduleSource: 'T.I. (Nex-Ai.CONFIG)'
   });
 };
 

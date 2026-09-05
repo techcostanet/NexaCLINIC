@@ -3,17 +3,18 @@ import { authService, dbService } from '../firebase';
 import { Activity, LogOut, Menu, X, BarChart3, UploadCloud, Users, HeartPulse, FileText, LayoutGrid, Megaphone, ShoppingCart, BookOpen } from 'lucide-react';
 import ChangelogModal from './ChangelogModal';
 import UnitSelector from './common/UnitSelector';
+import NexAiBrand from './common/NexAiBrand';
 
 export default function Navbar({ user, currentPage, setCurrentPage, currentModule, setCurrentModule, setIsReportsOpen, setIsGuideOpen }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
-  const [tenantSettings, setTenantSettings] = useState({ name: 'Nexa Nefrologia', logo: '' });
+  const [tenantSettings, setTenantSettings] = useState({ name: 'Nex-Ai CLINIC', logo: '' });
 
   const loadBranding = async () => {
     try {
       const settings = await dbService.getTenantSettings();
       if (settings) {
-        setTenantSettings({ name: settings.name, logo: settings.logo });
+        setTenantSettings({ name: settings.name || 'Nex-Ai CLINIC', logo: settings.logo || '' });
       }
     } catch (e) {
       console.error(e);
@@ -55,34 +56,34 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
   };
 
   const portalName = currentModule === 'assist'
-    ? 'NexaASSIST - Feed Assistencial'
+    ? 'Nex-Ai.ASSIST'
     : currentModule === 'reception' 
-    ? 'NexaCLINIC - Recepção' 
+    ? 'Nex-Ai.RECEPTION' 
     : currentModule === 'clinical'
-    ? 'NexaCLINIC - Clínico'
+    ? 'Nex-Ai.CLINIC'
     : currentModule === 'stock'
-    ? 'NexaSTOCK'
+    ? 'Nex-Ai.STOCK'
     : currentModule === 'maintenance'
-    ? 'NexaSERVICE - Manutenção'
+    ? 'Nex-Ai.SERVICE'
     : currentModule === 'hr'
-    ? 'NexaHR'
+    ? 'Nex-Ai.HR'
     : currentModule === 'finance'
-    ? 'NexaFINANCE'
+    ? 'Nex-Ai.FINANCE'
     : currentModule === 'apac'
-    ? 'NexaAPAC - Faturamento'
+    ? 'Nex-Ai.APAC'
     : currentModule === 'purchasing'
-    ? 'NexaPROCURE'
+    ? 'Nex-Ai.PROCURE'
     : currentModule === 'calendar'
-    ? 'NexaCAL'
+    ? 'Nex-Ai.CAL'
     : currentModule === 'config'
-    ? 'NexaCONFIG'
+    ? 'Nex-Ai.CONFIG'
     : currentModule === 'requisitions'
-    ? 'NexaCARE — Enfermagem'
+    ? 'Nex-Ai.CARE'
     : currentModule === 'sesmt'
-    ? 'NexaSAFE - SESMT'
+    ? 'Nex-Ai.SAFE'
     : currentModule === 'medical'
-    ? 'NexaMED — Gestão Médica'
-    : 'NexaINDEX';
+    ? 'Nex-Ai.MED'
+    : 'Nex-Ai.INDEX';
 
   return (
     <nav style={styles.nav}>
@@ -91,10 +92,23 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
         <div style={styles.brand} onClick={() => currentModule === 'quality' ? navigateTo('dashboard') : handleBackToSelector()}>
           {tenantSettings.logo ? (
             <img src={tenantSettings.logo} alt="Logo" style={styles.brandLogoImg} />
-          ) : (
-            <img src="/logo.png" alt="Logo" style={styles.brandLogoImg} />
+          ) : null}
+          <NexAiBrand size="md" showIcon={!tenantSettings.logo} suffix="" />
+          {portalName && (
+            <span style={{ 
+              fontSize: '0.75rem', 
+              fontWeight: '700', 
+              color: '#4f46e5',
+              backgroundColor: '#eef2ff',
+              padding: '0.2rem 0.5rem',
+              borderRadius: '6px',
+              border: '1px solid #c7d2fe',
+              marginLeft: '0.4rem',
+              letterSpacing: '0.02em'
+            }}>
+              {portalName}
+            </span>
           )}
-          <span style={styles.brandText}>{tenantSettings.name} <span style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 'normal' }}>({portalName})</span></span>
         </div>
 
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

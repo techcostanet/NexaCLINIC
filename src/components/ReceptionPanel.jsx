@@ -8,7 +8,7 @@ import {
   MapPin, Clock, Armchair, AlertTriangle, ShieldCheck,
   UserCheck, RefreshCw, Phone, MessageSquare, Heart,
   Activity, ShieldAlert, Sparkles, Send, Building2,
-  Droplets, Stethoscope, ChevronRight, ExternalLink
+  Droplets, Stethoscope, ChevronRight, ExternalLink, Tv
 } from 'lucide-react';
 
 export default function ReceptionPanel() {
@@ -618,12 +618,36 @@ export default function ReceptionPanel() {
       {/* Header */}
       <div style={styles.cardHeader}>
         <div>
-          <h1 style={styles.title}>NexaCLINIC — Recepção</h1>
+          <h1 style={styles.title}>Nex-Ai.RECEPTION</h1>
           <p style={styles.subtitle}>
             Admissão completa de pacientes, regulação APAC, controle de presença diário e alocação de poltronas.
           </p>
         </div>
-        <UnitSelector compact showLabel={false} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <UnitSelector compact showLabel={false} />
+          <button
+            type="button"
+            onClick={() => window.open('/tv', '_blank')}
+            title="Abrir Painel de TV da Sala de Espera"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.4rem 0.75rem',
+              borderRadius: '8px',
+              backgroundColor: '#f0f9ff',
+              color: '#0284c7',
+              border: '1px solid #bae6fd',
+              fontSize: '0.825rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            <Tv size={15} />
+            <span>TV</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards Row */}

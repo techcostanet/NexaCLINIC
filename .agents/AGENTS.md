@@ -1,4 +1,4 @@
-# Diretrizes do Projeto NexaCLINIC
+# Diretrizes do Projeto Nex-Ai CLINIC
 
 ## Regras Obrigatórias de Deploy e Versionamento
 

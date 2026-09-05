@@ -11,7 +11,7 @@ import {
 
 const IT_CATEGORIES = [
   { id: 'Hardware', name: 'Hardware', subcategories: ['Desktop', 'Notebook', 'Monitor', 'Nobreak', 'Teclado/Mouse', 'Fonte/Cabos', 'Outro'] },
-  { id: 'Sistemas', name: 'Sistemas', subcategories: ['NexaCLINIC', 'Windows', 'Microsoft 365', 'Antivírus', 'Certificado Digital', 'Navegador', 'Outro'] },
+  { id: 'Sistemas', name: 'Sistemas', subcategories: ['Nex-Ai CLINIC', 'Windows', 'Microsoft 365', 'Antivírus', 'Certificado Digital', 'Navegador', 'Outro'] },
   { id: 'Rede', name: 'Rede', subcategories: ['Wi-Fi', 'Cabo Desconectado', 'Lentidão', 'Queda de Link', 'Switch/Roteador', 'Outro'] },
   { id: 'Impressoras', name: 'Impressoras', subcategories: ['Zebra / Etiquetadora', 'Laser / Prescrição', 'Leitor de Barras', 'Scanner', 'Outro'] },
   { id: 'Acessos', name: 'Acessos', subcategories: ['Novo Usuário', 'Redefinição de Senha', 'Permissão de Módulo', 'E-mail Corporativo', 'Outro'] },
@@ -483,7 +483,7 @@ export default function ITServiceOrdersTab({
 
         <div class="header">
           <div>
-            <div class="title">NexaCLINIC — Ordem de Serviço de T.I.</div>
+            <div class="title">Nex-Ai CLINIC — Ordem de Serviço de T.I.</div>
             <div class="subtitle">Departamento de Tecnologia da Informação & Suporte Técnico</div>
           </div>
           <div style="text-align: right;">

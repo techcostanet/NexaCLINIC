@@ -1,3 +1,24 @@
+## [v4.9.54] - 05 de Setembro, 2026
+### Rebranding Global — Nex-Ai CLINIC (AI-Powered Healthcare Ecosystem)
+- **Evolução da Marca Institucional para `Nex-Ai CLINIC`:**
+  - Lançamento oficial da nova identidade da plataforma, destacando a inteligência artificial embarcada na gestão hospitalar e hemodiálise.
+  - Estilização do termo **`Ai`** com o gradiente prismático de alta definição inspirado no ícone do **Antigravity IDE** (`linear-gradient(135deg, #06b6d4 0%, #3b82f6 30%, #8b5cf6 65%, #ec4899 100%)`).
+  - Criação do componente unificado de branding `NexAiBrand.jsx` com suporte a tamanhos dinâmicos, símbolos vetoriais e micro-interação de glow/brilho no hover.
+- **Higienização & Foco na Tela de Login:**
+  - Remoção definitiva do botão de acesso à TV pública do formulário de login (`Login.jsx`), garantindo maior sobriedade, foco e segurança no ambiente de autenticação.
+- **Atalho do Painel TV no Portal de Recepção (`ReceptionPanel.jsx`):**
+  - Inclusão de botão dedicado `TV` na barra superior da Recepção, permitindo que a equipe de acolhimento acione a TV da sala de espera em nova aba com 1 clique direto.
+- **Harmonização dos 15 Módulos Operacionais:**
+  - Padronização de todas as insígnias e cartões de módulos sob a taxonomia oficial:
+    `Nex-Ai.CLINIC`, `Nex-Ai.INDEX`, `Nex-Ai.ASSIST`, `Nex-Ai.MED`, `Nex-Ai.CARE`, `Nex-Ai.RECEPTION`, `Nex-Ai.STOCK`, `Nex-Ai.SERVICE`, `Nex-Ai.FINANCE`, `Nex-Ai.HR`, `Nex-Ai.SAFE`, `Nex-Ai.APAC`, `Nex-Ai.CAL`, `Nex-Ai.PROCURE` e `Nex-Ai.CONFIG`.
+- **Favicon & Portais Integrados:**
+  - Atualização do `favicon.svg` com a nova geometria prismática Antigravity.
+  - Atualização do título global no `index.html` e nos portais integrados (Fornecedores, QR Code de Manutenção e Painel TV).
+- **Diretrizes e Manuais:**
+  - Atualização das regras do repositório (`.agents/AGENTS.md`) e da base de manuais operacionais (`moduleGuidesData.js`).
+
+---
+
 ## [v4.9.53] - 05 de Setembro, 2026
 ### NexaASSIST — Refinamento de Remanejamento, Nomes em Caixa Alta & Pré-seleção de Pacientes no Comunicado
 - **Feedback Visual Claro no Remanejamento (`DialysisScheduleTab.jsx`):**

@@ -1,11 +1,11 @@
-// Base de Conhecimento e Manuais dos Módulos do NexaCLINIC
+// Base de Conhecimento e Manuais dos Módulos do Nex-Ai CLINIC
 // ATENÇÃO: Regra do Projeto - Toda nova funcionalidade deve ser refletida aqui nas seções recursos, tutorial e duvidas.
 
 export const MODULE_GUIDES = {
   finance: {
     id: 'finance',
     name: 'Módulo Financeiro',
-    subtitle: 'NexaFINANCE — Controladoria & Caixa',
+    subtitle: 'Nex-Ai.FINANCE — Controladoria & Caixa',
     color: '#10b981',
     recursos: [
       {
@@ -150,7 +150,7 @@ export const MODULE_GUIDES = {
   hr: {
     id: 'hr',
     name: 'Recursos Humanos & Gestão de Pessoas',
-    subtitle: 'NexaHR — Gestão Estratégica & Benefícios',
+    subtitle: 'Nex-Ai.HR — Gestão Estratégica & Benefícios',
     color: '#ec4899',
     recursos: [
       {
@@ -190,7 +190,7 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Lançar e Renovar Exames Ocupacionais (ASO)',
         steps: [
-          'Acesse a aba "Exames" no painel NexaHR.',
+          'Acesse a aba "Exames" no painel Nex-Ai.HR.',
           'Clique no botão "+ Lançar ASO" ou localize o colaborador e clique em "Renovar".',
           'Selecione o Colaborador (CLT ou PJ), Tipo de Exame (Admissional, Periódico, etc.) e a Data do Exame.',
           'O sistema calculará automaticamente o próximo vencimento para +1 ano (para Admissionais e Periódicos).',
@@ -200,7 +200,7 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Monitorar Alertas de Exames na Dashboard',
         steps: [
-          'Acesse o "Painel de Controle" do NexaHR.',
+          'Acesse o "Painel de Controle" do Nex-Ai.HR.',
           'Consulte o card "Alertas de Exames Periódicos (ASO)" para conferir o resumo de exames vencidos, em 7d, 14d e 30d.',
           'Clique no botão "Lançar" diretamente na lista de alertas para realizar a renovação imediata do colaborador prestes a vencer.'
         ]
@@ -225,7 +225,7 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Cadastrar um Novo Colaborador',
         steps: [
-          'No topo do módulo NexaHR, clique em "Novo Funcionário".',
+          'No topo do módulo Nex-Ai.HR, clique em "Novo Funcionário".',
           'Preencha a ficha com Dados Pessoais, Contato, Contrato, Dados Bancários, Dependentes e Vacinas.',
           'Clique em "Salvar Funcionário" para registrar na base operacional.'
         ]
@@ -275,7 +275,7 @@ export const MODULE_GUIDES = {
   stock: {
     id: 'stock',
     name: 'Estoque & Farmácia',
-    subtitle: 'NexaSTOCK — Farmácia Clínica & Insumos',
+    subtitle: 'Nex-Ai.STOCK — Farmácia Clínica & Insumos',
     color: '#f59e0b',
     recursos: [
       {
@@ -513,7 +513,7 @@ export const MODULE_GUIDES = {
   requisitions: {
     id: 'requisitions',
     name: 'Enfermagem & Salão',
-    subtitle: 'NexaCARE — Operação & Assistência de Salão',
+    subtitle: 'Nex-Ai.CARE — Operação & Assistência de Salão',
     color: '#14b8a6',
     recursos: [
       {
@@ -530,7 +530,7 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Abertura Direta de Chamados de Máquinas',
-        desc: 'Comunicação imediata de alarmes e falhas em máquinas de hemodiálise e poltronas diretamente para a equipe de Engenharia Clínica no NexaSERVICE.'
+        desc: 'Comunicação imediata de alarmes e falhas em máquinas de hemodiálise e poltronas diretamente para a equipe de Engenharia Clínica no Nex-Ai.SERVICE.'
       },
       {
         title: 'Controle de Alertas & Intercorrências',
@@ -572,14 +572,14 @@ export const MODULE_GUIDES = {
           'Na aba "Chamados", clique no botão "+ Abrir Chamado".',
           'Selecione a máquina pelo número e salão (ex: Máquina 04 - Salão 01).',
           'Escolha a prioridade e selecione o defeito comum (ex: Alarme de Condutividade, Vazamento) ou digite a descrição.',
-          'Clique em "Transmitir para Manutenção". O chamado será recebido imediatamente pelos técnicos no NexaSERVICE.'
+          'Clique em "Transmitir para Manutenção". O chamado será recebido imediatamente pelos técnicos no Nex-Ai.SERVICE.'
         ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'As sessões salvas no NexaCARE ficam registradas no prontuário do paciente?',
-        resposta: 'Sim. Todo o acompanhamento horário, peso pré/pós e intercorrências registradas no NexaCARE são sincronizados em tempo real com o prontuário eletrônico do paciente e com os indicadores de qualidade.'
+        pergunta: 'As sessões salvas no Nex-Ai.CARE ficam registradas no prontuário do paciente?',
+        resposta: 'Sim. Todo o acompanhamento horário, peso pré/pós e intercorrências registradas no Nex-Ai.CARE são sincronizados em tempo real com o prontuário eletrônico do paciente e com os indicadores de qualidade.'
       },
       {
         pergunta: 'Como sei se a máquina que apresentou defeito já foi consertada?',
@@ -595,7 +595,7 @@ export const MODULE_GUIDES = {
   sesmt: {
     id: 'sesmt',
     name: 'SESMT & Segurança do Trabalho',
-    subtitle: 'NexaSAFE — Prevenção & Normas Regulamentadoras',
+    subtitle: 'Nex-Ai.SAFE — Prevenção & Normas Regulamentadoras',
     color: '#10b981',
     recursos: [
       {
@@ -658,7 +658,7 @@ export const MODULE_GUIDES = {
   assist: {
     id: 'assist',
     name: 'Assistência Clínica & Escalas',
-    subtitle: 'NexaASSIST — Gestão de Enfermagem & Mural',
+    subtitle: 'Nex-Ai.ASSIST — Gestão de Enfermagem & Mural',
     color: '#ec4899',
     recursos: [
       {
@@ -708,9 +708,9 @@ export const MODULE_GUIDES = {
     ],
     tutorial: [
       {
-        title: 'Como Utilizar a Central de Relatórios do NexaASSIST',
+        title: 'Como Utilizar a Central de Relatórios do Nex-Ai.ASSIST',
         steps: [
-          'Clique no botão "Relatórios" na barra superior do sistema (ou no topo do módulo NexaASSIST).',
+          'Clique no botão "Relatórios" na barra superior do sistema (ou no topo do módulo Nex-Ai.ASSIST).',
           'Alterne entre as abas temáticas "Todos (15)", "Escala (5)", "Mural (5)" ou "Cirurgias (5)".',
           'Selecione o relatório desejado na lista lateral para carregar os dados e os cards de indicadores (KPIs).',
           'Ajuste os filtros de Data Inicial, Data Final e Unidade.',
@@ -720,7 +720,7 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Navegar no Mapa de Salões da Hemodiálise',
         steps: [
-          'No topo do módulo NexaASSIST, clique na aba "Escala".',
+          'No topo do módulo Nex-Ai.ASSIST, clique na aba "Escala".',
           'Selecione o Salão desejado (Salão 01, Salão 02 ou Salão 03).',
           'Selecione o Turno (1º Turno, 2º Turno ou 3º Turno).',
           'Alterne entre as cadências "Segunda • Quarta • Sexta" e "Terça • Quinta • Sábado".',
@@ -755,7 +755,7 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Agendar uma Cirurgia e Publicar no Mural',
         steps: [
-          'No topo do NexaASSIST, clique na aba "Cirurgias".',
+          'No topo do Nex-Ai.ASSIST, clique na aba "Cirurgias".',
           'Escolha o modo de visualização desejado: Semana, Mês, Dia ou Compacto.',
           'Clique no botão "Cirurgia", selecione o paciente, procedimento, cirurgião, horário e observações.',
           'Mantenha ativada a opção "Publicar no Mural" e clique em "Salvar". O agendamento constará imediatamente na agenda e no mural.'
@@ -801,7 +801,7 @@ export const MODULE_GUIDES = {
   reception: {
     id: 'reception',
     name: 'Recepção & Cadastro',
-    subtitle: 'NexaCLINIC — Admissão & Acolhimento',
+    subtitle: 'Nex-Ai.RECEPTION — Admissão & Acolhimento',
     color: '#0ea5e9',
     recursos: [
       { title: 'Admissão de Pacientes', desc: 'Cadastro de dados pessoais, convênios, contatos de emergência e documentos digitalizados.' },
@@ -818,7 +818,7 @@ export const MODULE_GUIDES = {
   clinical: {
     id: 'clinical',
     name: 'Módulo Clínico & Prescrição',
-    subtitle: 'NexaCLINIC — Prontuário Eletrônico & Evoluções',
+    subtitle: 'Nex-Ai.CLINIC — Prontuário Eletrônico & Evoluções',
     color: '#8b5cf6',
     recursos: [
       { title: 'Prontuário Médico & Diálise', desc: 'Prescrição de hemodiálise, parâmetros de fluxo, heparina e dialisador.' },
@@ -835,7 +835,7 @@ export const MODULE_GUIDES = {
   maintenance: {
     id: 'maintenance',
     name: 'Manutenção & Engenharia Clínica',
-    subtitle: 'NexaSERVICE — Ativos, T.I. & SLA',
+    subtitle: 'Nex-Ai.SERVICE — Ativos, T.I. & SLA',
     color: '#0891b2',
     recursos: [
       {
@@ -886,7 +886,7 @@ export const MODULE_GUIDES = {
         title: 'Como Abrir um Chamado Escaneando o QR Code pelo Smartphone',
         steps: [
           'Aponte a câmera do celular para o QR Code colado na máquina.',
-          'Toque na notificação do navegador para abrir o Portal do NexaCLINIC (não exige login).',
+          'Toque na notificação do navegador para abrir o Portal do Nex-Ai CLINIC (não exige login).',
           'Confira os dados do ativo (Patrimônio, Modelo e Setor) exibidos na tela.',
           'Preencha seu Nome, Contato (WhatsApp/E-mail), Prioridade e Descreva o defeito apresentado.',
           'Toque em "Enviar Chamado". O protocolo será gerado na hora e a O.S. entrará imediatamente na lista da manutenção.'
@@ -949,7 +949,7 @@ export const MODULE_GUIDES = {
   apac: {
     id: 'apac',
     name: 'APACs & Faturamento',
-    subtitle: 'NexaAPAC — Regulação SUS & Faturamento',
+    subtitle: 'Nex-Ai.APAC — Regulação SUS & Faturamento',
     color: '#ef4444',
     recursos: [
       { title: 'Gestão de Guias APAC', desc: 'Controle de validade de laudos de diálise, autorizações SUS e auditoria de glosas.' }
@@ -965,7 +965,7 @@ export const MODULE_GUIDES = {
   quality: {
     id: 'quality',
     name: 'Gestão da Qualidade & BI',
-    subtitle: 'NexaINDEX — Indicadores & Governança',
+    subtitle: 'Nex-Ai.INDEX — Indicadores & Governança',
     color: '#3b82f6',
     recursos: [
       { title: 'Indicadores Hospitalares', desc: 'Métricas assistenciais, Kt/V, taxas de infecção e metas de qualidade.' }
@@ -981,7 +981,7 @@ export const MODULE_GUIDES = {
   config: {
     id: 'config',
     name: 'Configurações & TI',
-    subtitle: 'NexaCONFIG — Administração & Acessos',
+    subtitle: 'Nex-Ai.CONFIG — Administração & Acessos',
     color: '#8b5cf6',
     recursos: [
       { title: 'Gestão de Usuários & RBAC', desc: 'Controle de permissões, papéis de acesso e customização de tema.' },
@@ -1006,7 +1006,7 @@ export const MODULE_GUIDES = {
   assist: {
     id: 'assist',
     name: 'Assistência Clínica',
-    subtitle: 'NexaASSIST — Feed Assistencial & Comunicados Rápidos',
+    subtitle: 'Nex-Ai.ASSIST — Feed Assistencial & Comunicados Rápidos',
     color: '#ec4899',
     recursos: [
       {
@@ -1074,7 +1074,7 @@ export const MODULE_GUIDES = {
   purchasing: {
     id: 'purchasing',
     name: 'Compras & Suprimentos',
-    subtitle: 'NexaPROCURE — Cotações & Reposição de Estoque',
+    subtitle: 'Nex-Ai.PROCURE — Cotações & Reposição de Estoque',
     color: '#0891b2',
     recursos: [
       {
@@ -1142,7 +1142,7 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'A finalização de uma compra gera movimentações automáticas em outros módulos?',
-        resposta: 'Sim! Ao finalizar a compra na sala de cotações, o NexaPROCURE gera automaticamente a entrada do lote no módulo de Estoque (NexaSTOCK) e lança a duplicata a pagar no módulo Financeiro (NexaFINANCE).'
+        resposta: 'Sim! Ao finalizar a compra na sala de cotações, o Nex-Ai.PROCURE gera automaticamente a entrada do lote no módulo de Estoque (Nex-Ai.STOCK) e lança a duplicata a pagar no módulo Financeiro (Nex-Ai.FINANCE).'
       }
     ]
   },
@@ -1150,7 +1150,7 @@ export const MODULE_GUIDES = {
   clinical: {
     id: 'clinical',
     name: 'Módulo Clínico & Assistencial',
-    subtitle: 'NexaCLINIC — Prontuário Renal & Prescrições',
+    subtitle: 'Nex-Ai.CLINIC — Prontuário Renal & Prescrições',
     color: '#8b5cf6',
     recursos: [
       {
@@ -1240,7 +1240,7 @@ export const MODULE_GUIDES = {
   medical: {
     id: 'medical',
     name: 'Gestão Médica & Escalas',
-    subtitle: 'NexaMED — Corpo Clínico & Produção',
+    subtitle: 'Nex-Ai.MED — Corpo Clínico & Produção',
     color: '#6366f1',
     recursos: [
       {
@@ -1272,7 +1272,7 @@ export const MODULE_GUIDES = {
         desc: 'Registro de procedimentos nefrológicos executados (CDL, Permcath, biópsias, mapeamentos de FAV) vinculando paciente e data.'
       },
       {
-        title: 'Integração com Agenda (NexaCAL)',
+        title: 'Integração com Agenda (Nex-Ai.CAL)',
         desc: 'Captura automática de atendimentos e consultas concluídas na agenda para a apuração da produção médica.'
       },
       {
@@ -1281,7 +1281,7 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Fechamento de Honorários & Repasse Automático',
-        desc: 'Homologação da produção pela coordenação com geração automática do título no Contas a Pagar do NexaFINANCE sem expor dados financeiros sigilosos.'
+        desc: 'Homologação da produção pela coordenação com geração automática do título no Contas a Pagar do Nex-Ai.FINANCE sem expor dados financeiros sigilosos.'
       },
       {
         title: 'Extrato / Holerite Médico em PDF',
@@ -1308,8 +1308,8 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Cadastrar e Completar a Ficha do Médico',
         steps: [
-          'O Administrador de T.I. cria o usuário no módulo NexaCONFIG com o perfil "Médico / Corpo Clínico".',
-          'A Coordenação Médica acessa o módulo NexaMED e entra na aba "Honorários".',
+          'O Administrador de T.I. cria o usuário no módulo Nex-Ai.CONFIG com o perfil "Médico / Corpo Clínico".',
+          'A Coordenação Médica acessa o módulo Nex-Ai.MED e entra na aba "Honorários".',
           'Na tabela "Profissionais", localiza o médico recém-criado (sinalizado com a etiqueta amarela "Completar") e clica no botão "Completar" ou "Editar".',
           'Preenche o CPF, Cartão SUS (CNS), Celular, CRM/UF, Especialidade, Vínculo Contratual (PJ, CLT, Autônomo, Cooperado), Chave PIX e Dados Bancários.',
           'Clica em "Salvar". Os dados são sincronizados em nuvem e integrados aos módulos de Escala, Agenda e Fechamento Financeiro.'
@@ -1375,21 +1375,21 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Homologar a Produção Médica e Enviar ao Financeiro',
         steps: [
-          'A Coordenação Médica acessa a aba "Produção" do NexaMED.',
+          'A Coordenação Médica acessa a aba "Produção" do Nex-Ai.MED.',
           'Confere o espelho de cada médico (soma de plantões auditados + consultas concluídas na agenda + procedimentos).',
-          'Clica no botão "Homologar". O sistema cria instantaneamente a duplicata a pagar no Contas a Pagar do NexaFINANCE.',
+          'Clica no botão "Homologar". O sistema cria instantaneamente a duplicata a pagar no Contas a Pagar do Nex-Ai.FINANCE.',
           'Clique em "Extrato" para gerar e imprimir o holerite detalhado do médico em PDF.'
         ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'Por que o cadastro médico é feito em 2 etapas (T.I. e NexaMED)?',
+        pergunta: 'Por que o cadastro médico é feito em 2 etapas (T.I. e Nex-Ai.MED)?',
         resposta: 'Para garantir máxima segurança: a criação da conta e concessão do perfil RBAC "Médico" fica centralizada no T.I., enquanto a complementação de dados sensíveis da prática médica (CRM, SUS, CPF, PIX e banco) fica sob gestão da Coordenação Médica.'
       },
       {
         pergunta: 'A Coordenação Médica precisa ter acesso ao Módulo Financeiro para pagar os médicos?',
-        resposta: 'Não! O NexaMED foi desenhado com total segregação de acessos (RBAC). A coordenação audita e clica em "Homologar" diretamente no NexaMED. Em segundo plano, o sistema lança automaticamente a conta a pagar no NexaFINANCE para o setor financeiro quitar.'
+        resposta: 'Não! O Nex-Ai.MED foi desenhado com total segregação de acessos (RBAC). A coordenação audita e clica em "Homologar" diretamente no Nex-Ai.MED. Em segundo plano, o sistema lança automaticamente a conta a pagar no Nex-Ai.FINANCE para o setor financeiro quitar.'
       },
       {
         pergunta: 'Como funciona o mapeamento por dia da semana ao copiar a escala?',
@@ -1405,7 +1405,7 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'Como as consultas da agenda médica entram na produção do profissional?',
-        resposta: 'Quando o médico atende um paciente no consultório e marca o agendamento como "Finalizado" ou "Concluído" no módulo Agenda (NexaCAL), a consulta é contabilizada instantaneamente na produção mensal daquele médico.'
+        resposta: 'Quando o médico atende um paciente no consultório e marca o agendamento como "Finalizado" ou "Concluído" no módulo Agenda (Nex-Ai.CAL), a consulta é contabilizada instantaneamente na produção mensal daquele médico.'
       },
       {
         pergunta: 'O que acontece se um médico faltar ao plantão e não avisar?',
@@ -1416,7 +1416,7 @@ export const MODULE_GUIDES = {
   calendar: {
     id: 'calendar',
     name: 'Agenda & Consultórios',
-    subtitle: 'NexaCAL — Gestão de Agendamentos & Cotas',
+    subtitle: 'Nex-Ai.CAL — Gestão de Agendamentos & Cotas',
     color: '#0891b2',
     recursos: [
       {
@@ -1528,14 +1528,14 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'Como o médico visualiza as consultas finalizadas na sua produção?',
-        resposta: 'Todas as consultas concluídas e finalizadas no módulo Agenda entram automaticamente na apuração de honorários do módulo NexaMED.'
+        resposta: 'Todas as consultas concluídas e finalizadas no módulo Agenda entram automaticamente na apuração de honorários do módulo Nex-Ai.MED.'
       }
     ]
   },
   config: {
     id: 'config',
     name: 'Configurações & T.I.',
-    subtitle: 'NexaCONFIG — Administração & Segurança',
+    subtitle: 'Nex-Ai.CONFIG — Administração & Segurança',
     color: '#8b5cf6',
     recursos: [
       {
@@ -1548,7 +1548,7 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Controle de Gatilhos por Módulo',
-        desc: 'Permissões granulares para definir quais módulos (NexaMED, NexaSERVICE, NexaHR, NexaPROCURE, NexaCAL, NexaASSIST) podem disparar notificações eletrônicas.'
+        desc: 'Permissões granulares para definir quais módulos (Nex-Ai.MED, Nex-Ai.SERVICE, Nex-Ai.HR, Nex-Ai.PROCURE, Nex-Ai.CAL, Nex-Ai.ASSIST) podem disparar notificações eletrônicas.'
       },
       {
         title: 'Histórico de Disparos de E-mail',
@@ -1560,7 +1560,7 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Matriz de Perfis & Permissões RBAC Completa',
-        desc: 'Controle granular de acessos (Bloqueado, Leitura, Escrita) por perfil em todos os módulos, incluindo Feed Assistencial (NexaASSIST) e Gestão Médica (NexaMED).'
+        desc: 'Controle granular de acessos (Bloqueado, Leitura, Escrita) por perfil em todos os módulos, incluindo Feed Assistencial (Nex-Ai.ASSIST) e Gestão Médica (Nex-Ai.MED).'
       },
       {
         title: 'Gestão Ágil de Usuários & Vínculo com RH',
@@ -1596,7 +1596,7 @@ export const MODULE_GUIDES = {
         steps: [
           'Acesse o módulo "Configurações & TI" e clique na aba "E-mail".',
           'Selecione o provedor pré-configurado desejado (Google/Gmail, Microsoft 365, Amazon SES, Resend ou SMTP Personalizado).',
-          'Preencha o Nome do Remetente (ex: "NexaCLINIC — Notificações") e o E-mail de Envio.',
+          'Preencha o Nome do Remetente (ex: "Nex-Ai CLINIC — Notificações") e o E-mail de Envio.',
           'Informe o Usuário e a Senha de Aplicativo (ou API Key) do seu provedor de e-mail.',
           'Personalize a assinatura padrão que aparecerá no rodapé das notificações.',
           'Clique no botão "Salvar" para gravar os parâmetros.'
@@ -1615,7 +1615,7 @@ export const MODULE_GUIDES = {
         title: 'Como Habilitar ou Desabilitar Disparos por Módulo',
         steps: [
           'Na aba "E-mail", localize o quadro "Módulos Conectados".',
-          'Ative ou desative os switches de acordo com a política da clínica (ex: desativar notificações do NexaCAL e manter ativas as do NexaMED e NexaSERVICE).',
+          'Ative ou desative os switches de acordo com a política da clínica (ex: desativar notificações do Nex-Ai.CAL e manter ativas as do Nex-Ai.MED e Nex-Ai.SERVICE).',
           'Clique em "Salvar" para aplicar a regra imediatamente.'
         ]
       }
@@ -1623,7 +1623,7 @@ export const MODULE_GUIDES = {
     duvidas: [
       {
         pergunta: 'Como faço para que determinado perfil veja o Feed Assistencial?',
-        resposta: 'Na aba "Perfis de Acesso", altere a coluna "Assistencial" do perfil desejado para "Leitura" ou "Escrita". Ao logar com esse perfil, o módulo NexaASSIST aparecerá disponível na tela inicial.'
+        resposta: 'Na aba "Perfis de Acesso", altere a coluna "Assistencial" do perfil desejado para "Leitura" ou "Escrita". Ao logar com esse perfil, o módulo Nex-Ai.ASSIST aparecerá disponível na tela inicial.'
       },
       {
         pergunta: 'Como obtenho a senha para usar o Gmail ou Google Workspace?',
@@ -1642,7 +1642,7 @@ export const MODULE_GUIDES = {
   purchasing: {
     id: 'purchasing',
     name: 'Módulo de Compras',
-    subtitle: 'NexaPROCURE — Gestão de Suprimentos & E-Procurement',
+    subtitle: 'Nex-Ai.PROCURE — Gestão de Suprimentos & E-Procurement',
     color: '#0891b2',
     recursos: [
       {
@@ -1694,7 +1694,7 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Criar um Pedido Multi-Itens',
         steps: [
-          'Acesse o NexaPROCURE e clique no botão "+ Nova Solicitação".',
+          'Acesse o Nex-Ai.PROCURE e clique no botão "+ Nova Solicitação".',
           'Selecione o Setor demandante e informe a Prioridade (Normal ou Urgente) e a Justificativa.',
           'No quadro de insumos, escolha entre "Estoque" ou "Novo", informe a Quantidade, Unidade e Especificação e clique em "+ Adicionar".',
           'Repita o passo anterior para quantos insumos desejar incluir no mesmo pedido.',
@@ -1712,7 +1712,7 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Criar uma Cotação Web e Homologar',
         steps: [
-          'Acesse a aba "Cotações" no NexaPROCURE e clique no botão "+ Nova Cotação".',
+          'Acesse a aba "Cotações" no Nex-Ai.PROCURE e clique no botão "+ Nova Cotação".',
           'Informe o Título, o Prazo Limite e adicione os insumos digitando no campo de busca com autocomplete (ordenado alfabeticamente) ou importando o estoque crítico.',
           'Filtre e selecione os distribuidores desejados (com apoio dos botões "Selecionar Todos" / "Desmarcar Todos") na grade com rolagem independente.',
           'Clique em "Publicar Cotação e Gerar Links" no rodapé fixo do modal.',
@@ -1763,7 +1763,7 @@ export const MODULE_GUIDES = {
   calendar: {
     id: 'calendar',
     name: 'Agenda & Consultórios',
-    subtitle: 'NexaCAL — Gestão de Agendamentos, Grade & Cotas',
+    subtitle: 'Nex-Ai.CAL — Gestão de Agendamentos, Grade & Cotas',
     color: '#0891b2',
     recursos: [
       {
@@ -1927,14 +1927,14 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'Como o médico visualiza as consultas finalizadas na sua produção?',
-        resposta: 'Todas as consultas concluídas e finalizadas no módulo Agenda entram automaticamente na apuração de honorários do módulo NexaMED.'
+        resposta: 'Todas as consultas concluídas e finalizadas no módulo Agenda entram automaticamente na apuração de honorários do módulo Nex-Ai.MED.'
       }
     ]
   },
   reception: {
     id: 'reception',
     name: 'Recepção & Admissão',
-    subtitle: 'NexaCLINIC — Front-Office & Base Mestre de Pacientes',
+    subtitle: 'Nex-Ai.RECEPTION — Front-Office & Base Mestre de Pacientes',
     color: '#0d9488',
     recursos: [
       {
@@ -2030,14 +2030,14 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'Onde o médico visualiza as alergias cadastradas pela recepção?',
-        resposta: 'As alergias informadas na admissão aparecem automaticamente com badge de alerta de segurança no topo do Cockpit Clínico do Prontuário Médico (NexaCLINIC).'
+        resposta: 'As alergias informadas na admissão aparecem automaticamente com badge de alerta de segurança no topo do Cockpit Clínico do Prontuário Médico (Nex-Ai CLINIC).'
       }
     ]
   },
   config: {
     id: 'config',
     name: 'Administração & T.I.',
-    subtitle: 'NexaCONFIG — Governança SaaS, Segurança & Procedimentos',
+    subtitle: 'Nex-Ai.CONFIG — Governança SaaS, Segurança & Procedimentos',
     color: '#8b5cf6',
     recursos: [
       {
@@ -2050,11 +2050,11 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Ocultação de Valores nos Seletores',
-        desc: 'Segurança e sigilo nas interfaces operacionais: nenhum seletor do sistema (NexaMED, NexaASSIST) exibe os valores em R$ ao médico ou usuário durante a escolha do procedimento.'
+        desc: 'Segurança e sigilo nas interfaces operacionais: nenhum seletor do sistema (Nex-Ai.MED, Nex-Ai.ASSIST) exibe os valores em R$ ao médico ou usuário durante a escolha do procedimento.'
       },
       {
         title: 'Controle de Acesso por Perfis (RBAC)',
-        desc: 'Matriz granular de permissões por perfil (Leitura, Escrita ou Sem Acesso) para todos os módulos do ecossistema NexaCLINIC.'
+        desc: 'Matriz granular de permissões por perfil (Leitura, Escrita ou Sem Acesso) para todos os módulos do ecossistema Nex-Ai CLINIC.'
       },
       {
         title: 'Gestão de Usuários & Senhas Provisórias',
@@ -2069,7 +2069,7 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Cadastrar um Novo Procedimento e Definir sua Visibilidade',
         steps: [
-          'Acesse o módulo de T.I. (NexaCONFIG) e clique na aba "Procedimentos".',
+          'Acesse o módulo de T.I. (Nex-Ai.CONFIG) e clique na aba "Procedimentos".',
           'Clique no botão "+ Novo" no canto superior direito.',
           'Informe o Nome oficial do procedimento (ex: CONFECÇÃO DE FAV SIMPLES), o Código SUS/TUSS opcional e o Valor em R$.',
           'Na seção "Onde deve aparecer", marque os módulos desejados (Cirurgias, Médico, Prontuário e/ou APAC).',
@@ -2091,8 +2091,8 @@ export const MODULE_GUIDES = {
         resposta: 'Não. Os valores monetários foram totalmente retirados da visualização no seletor de procedimentos. O sistema armazena e computa os valores internamente para a apuração da produção médica sem expor os números na tela de seleção.'
       },
       {
-        pergunta: 'Como controlar se um procedimento aparece nas Cirurgias do NexaASSIST ou apenas no NexaMED?',
-        resposta: 'No cadastro de procedimentos do T.I., basta marcar ou desmarcar a caixa "Cirurgias (NexaASSIST)" e "Médico (NexaMED)". O sistema filtra dinamicamente as listas de cada módulo de acordo com essas marcações.'
+        pergunta: 'Como controlar se um procedimento aparece nas Cirurgias do Nex-Ai.ASSIST ou apenas no Nex-Ai.MED?',
+        resposta: 'No cadastro de procedimentos do T.I., basta marcar ou desmarcar a caixa "Cirurgias (Nex-Ai.ASSIST)" e "Médico (Nex-Ai.MED)". O sistema filtra dinamicamente as listas de cada módulo de acordo com essas marcações.'
       },
       {
         pergunta: 'O que acontece ao desativar um procedimento?',

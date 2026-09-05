@@ -282,7 +282,7 @@ export default function SupplierQuotePortal({ token: propToken, onExitPortal }) 
               <Building2 size={24} color="#fff" />
             </div>
             <div>
-              <h1 style={styles.portalTitle}>NexaCLINIC — Portal de Cotações</h1>
+              <h1 style={styles.portalTitle}>Nex-Ai CLINIC — Portal de Cotações</h1>
               <span style={styles.portalSubtitle}>
                 Unidade {quotation?.unit} • Comprador: {quotation?.buyerName}
               </span>
@@ -339,7 +339,7 @@ export default function SupplierQuotePortal({ token: propToken, onExitPortal }) 
             <div style={{ flex: 1 }}>
               <h3 style={{ margin: 0, fontSize: '1rem', color: '#166534', fontWeight: '800' }}>Proposta Comercial Enviada com Sucesso!</h3>
               <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.82rem', color: '#15803d' }}>
-                O comprador da NexaCLINIC já recebeu os seus valores em tempo real. Você pode atualizar seus lances a qualquer momento antes do prazo limite.
+                O comprador da Nex-Ai CLINIC já recebeu os seus valores em tempo real. Você pode atualizar seus lances a qualquer momento antes do prazo limite.
               </p>
             </div>
           </div>
@@ -657,7 +657,7 @@ export default function SupplierQuotePortal({ token: propToken, onExitPortal }) 
       </main>
 
       <footer style={styles.portalFooter}>
-        <span>© {new Date().getFullYear()} NexaCLINIC — Sistema Integrado de Compras Hospitalares</span>
+        <span>© {new Date().getFullYear()} Nex-Ai CLINIC — Sistema Integrado de Compras Hospitalares</span>
       </footer>
     </div>
   );

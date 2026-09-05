@@ -67,7 +67,7 @@ export default function AwardReportModal({
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('NexaCLINIC - RECURSOS HUMANOS', 14, 12);
+      doc.text('Nex-Ai.HR - RECURSOS HUMANOS', 14, 12);
 
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
@@ -309,7 +309,7 @@ export default function AwardReportModal({
           <div className="print-only-header" style={{ display: 'none', marginBottom: '1.5rem', borderBottom: '2px solid #10b981', paddingBottom: '0.75rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h1 style={{ margin: 0, fontSize: '1.4rem', color: '#0f172a' }}>NexaCLINIC - Recursos Humanos</h1>
+                <h1 style={{ margin: 0, fontSize: '1.4rem', color: '#0f172a' }}>Nex-Ai.HR - Recursos Humanos</h1>
                 <h2 style={{ margin: '0.2rem 0', fontSize: '1.1rem', color: '#10b981' }}>Comprovante de Concessão: Presença Premiada ({formattedPeriodTitle})</h2>
                 <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
                   Regra: Contratos CLT ativos com mais de 90 dias de contrato sem advertências ou ausências no período.

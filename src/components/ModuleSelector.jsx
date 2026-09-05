@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { authService } from '../firebase';
 import UnitSelector from './common/UnitSelector';
+import NexAiBrand from './common/NexAiBrand';
 
 export default function ModuleSelector({ user, onSelectModule }) {
   const [viewMode, setViewMode] = React.useState('grid'); // 'grid' (padrão), 'list', 'compact', 'expanded'
@@ -23,7 +24,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'assist',
       title: 'Feed Assistencial & Alertas',
-      subtitle: 'NexaASSIST — Comunicação IA',
+      subtitle: 'Nex-Ai.ASSIST — Comunicação IA',
       description: 'Mural de comunicados rápidos, altas hospitalares, internações por salão/turno e leitor de e-mails com IA.',
       icon: Megaphone,
       color: '#ec4899', // pink-500
@@ -32,7 +33,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'medical',
       title: 'Gestão Médica & Escalas',
-      subtitle: 'NexaMED — Corpo Clínico',
+      subtitle: 'Nex-Ai.MED — Corpo Clínico',
       description: 'Escala mensal de plantões por salão/DP, bolsa de trocas com e-mail, portal do médico e fechamento de honorários.',
       icon: Stethoscope,
       color: '#0284c7', // sky-600
@@ -41,7 +42,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'reception',
       title: 'Recepção & Cadastro',
-      subtitle: 'NexaCLINIC — Recepção',
+      subtitle: 'Nex-Ai.RECEPTION — Recepção',
       description: 'Admissão de pacientes, regulação de guias/APACs e controle presencial de diálise diária.',
       icon: Users,
       color: 'var(--secondary-color)',
@@ -50,7 +51,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'clinical',
       title: 'Módulo Clínico & Prescrição',
-      subtitle: 'NexaCLINIC — Assistencial',
+      subtitle: 'Nex-Ai.CLINIC — Assistencial',
       description: 'Prescrições de diálise, prontuário médico, evoluções multiprofissionais e acompanhamento de sessões.',
       icon: HeartPulse,
       color: '#8b5cf6', // purple-500
@@ -59,7 +60,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'stock',
       title: 'Estoque & Farmácia',
-      subtitle: 'NexaSTOCK - Logística',
+      subtitle: 'Nex-Ai.STOCK — Insumos',
       description: 'Controle de farmácia clínica, dispensação de medicamentos, inventário e validade de insumos.',
       icon: Package,
       color: '#f59e0b', // amber-500
@@ -68,7 +69,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'maintenance',
       title: 'Manutenção & Engenharia Clínica',
-      subtitle: 'NexaSERVICE - Ordem de Serviço',
+      subtitle: 'Nex-Ai.SERVICE — Engenharia',
       description: 'Gestão de ativos biomédicos e prediais com histórico técnico por equipamento e chamados de ordem de serviço.',
       icon: Wrench,
       color: '#0891b2', // cyan-600
@@ -77,7 +78,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'quality',
       title: 'Gestão da Qualidade & BI',
-      subtitle: 'NexaINDEX - BI',
+      subtitle: 'Nex-Ai.INDEX — BI',
       description: 'Métricas assistenciais, metas de indicadores hospitalares e auditoria de faturamento.',
       icon: BarChart3,
       color: 'var(--primary-color)',
@@ -86,7 +87,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'hr',
       title: 'Recursos Humanos & Benefícios',
-      subtitle: 'NexaHR - Pessoal',
+      subtitle: 'Nex-Ai.HR — Pessoal',
       description: 'Gestão de funcionários, admissões, controle de passagens VT, ausências e indicadores de turnover.',
       icon: Users,
       color: '#ec4899', // pink-500
@@ -95,7 +96,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'finance',
       title: 'Módulo Financeiro',
-      subtitle: 'NexaFINANCE - Financeiro',
+      subtitle: 'Nex-Ai.FINANCE — Financeiro',
       description: 'Fluxo de caixa, contas a pagar e receber, conciliação bancária, parcelamentos e importação de XML NF-e.',
       icon: DollarSign,
       color: '#10b981', // emerald-500
@@ -104,7 +105,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'apac',
       title: 'APACs & Faturamento',
-      subtitle: 'NexaAPAC - Faturamento',
+      subtitle: 'Nex-Ai.APAC — Faturamento',
       description: 'Auditoria de guias APAC, faturamento SUS/Convênios, gestão de glosas e exportação de remessas BPA.',
       icon: FileText,
       color: '#ef4444', // red-500
@@ -113,7 +114,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'calendar',
       title: 'Agenda & Consultas',
-      subtitle: 'NexaCAL - Agendamentos',
+      subtitle: 'Nex-Ai.CAL — Agendamento',
       description: 'Grade horária diária, semanal e mensal, controle de salas, confirmação de pacientes e bloqueio de conflito de escalas.',
       icon: Calendar,
       color: '#06b6d4', // cyan-500
@@ -122,7 +123,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'purchasing',
       title: 'Compras & Cotações',
-      subtitle: 'NexaPROCURE - Suprimentos',
+      subtitle: 'Nex-Ai.PROCURE — Suprimentos',
       description: 'Solicitações de reposição/novos itens, aprovação de verba, cotação de 3 orçamentos e entrada automática no estoque.',
       icon: ShoppingCart,
       color: '#f59e0b', // amber-500
@@ -131,7 +132,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'requisitions',
       title: 'Enfermagem & Salão',
-      subtitle: 'NexaCARE — Assistência',
+      subtitle: 'Nex-Ai.CARE — Assistência',
       description: 'Digitação de sessões de hemodiálise, escala de salão, requisição de insumos e abertura de chamados de máquinas.',
       icon: HeartPulse,
       color: '#14b8a6', // teal-500
@@ -140,7 +141,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'config',
       title: 'Configurações & TI',
-      subtitle: 'NexaCONFIG - Administração',
+      subtitle: 'Nex-Ai.CONFIG — Governança',
       description: 'Gestão de acessos RBAC, tema visual dinâmico, logs de auditoria geral, API keys e backups do banco JSON.',
       icon: Settings,
       color: '#8b5cf6', // violet-500
@@ -149,7 +150,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
     {
       id: 'sesmt',
       title: 'SESMT & Segurança',
-      subtitle: 'NexaSAFE - Segurança',
+      subtitle: 'Nex-Ai.SAFE — Segurança',
       description: 'Checklists de EPI, inspeções de extintores e hidrantes, e painel de conformidade e riscos.',
       icon: ShieldCheck,
       color: '#059669', // emerald-600
@@ -243,8 +244,8 @@ export default function ModuleSelector({ user, onSelectModule }) {
     <div style={styles.container}>
       <div style={styles.wrapper}>
         <div style={styles.header}>
-          <div style={styles.logoContainer}>
-            <img src="/logo.png" alt="Logo" style={styles.logo} />
+          <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'center' }}>
+            <NexAiBrand size="xl" showIcon={true} showSubtitle={true} subtitle="Selecione o portal operacional" />
           </div>
           <h1 style={styles.welcome}>Olá, {user?.name || 'Profissional'}</h1>
           <p style={styles.instructions}>Selecione abaixo o portal que deseja acessar para continuar o trabalho:</p>
@@ -346,7 +347,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
                   <p style={styles.cardDesc}>{mod.description}</p>
                   
                   <button style={{ ...styles.btn, backgroundColor: mod.color }}>
-                    Entrar no Portal
+                    Entrar
                   </button>
                 </div>
               );
@@ -641,11 +642,15 @@ const styles = {
     lineHeight: '1.2',
   },
   cardSubtitle: {
-    fontSize: '0.65rem',
+    fontSize: '0.675rem',
     fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+    letterSpacing: '0.04em',
     marginBottom: '0.75rem',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '6px',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    display: 'inline-block',
   },
   cardDesc: {
     fontSize: '0.775rem',

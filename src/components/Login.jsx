@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { authService } from '../firebase';
-import { Activity, Mail, Lock, ShieldAlert, Tv } from 'lucide-react';
+import { Mail, Lock, ShieldAlert } from 'lucide-react';
+import NexAiBrand from './common/NexAiBrand';
 
 export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -36,11 +37,9 @@ export default function Login({ onLoginSuccess }) {
     <div style={styles.container}>
       <div className="card shadow-sm" style={styles.card}>
         <div style={styles.header}>
-          <div style={styles.logoContainer}>
-            <Activity size={32} color="var(--primary-color)" />
+          <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'center' }}>
+            <NexAiBrand size="xl" showIcon={true} showSubtitle={true} subtitle="Inteligência Clínica & Gestão Integrada" />
           </div>
-          <h2 style={styles.title}>NexaCLINIC</h2>
-          <p style={styles.subtitle}>Gestão de Indicadores e Qualidade</p>
           <span style={styles.versionLabel}>v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '4.9'}</span>
         </div>
 
@@ -60,7 +59,7 @@ export default function Login({ onLoginSuccess }) {
                 id="email"
                 type="email"
                 className="form-control"
-                placeholder="usuario@nexa.com"
+                placeholder="usuario@nexai.med.br"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -96,30 +95,6 @@ export default function Login({ onLoginSuccess }) {
           >
             {loading ? 'Autenticando...' : 'Entrar'}
           </button>
-
-          <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-            <a
-              href="/tv"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                width: '100%',
-                padding: '0.65rem 1rem',
-                borderRadius: '8px',
-                backgroundColor: '#f0f9ff',
-                color: '#0284c7',
-                border: '1px solid #bae6fd',
-                fontSize: '0.875rem',
-                fontWeight: '700',
-                textDecoration: 'none'
-              }}
-            >
-              <Tv size={18} />
-              <span>Painel</span>
-            </a>
-          </div>
         </form>
       </div>
     </div>
@@ -143,33 +118,7 @@ const styles = {
   },
   header: {
     textAlign: 'center',
-    marginBottom: '2rem',
-  },
-  logoContainer: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '75px',
-    height: '75px',
-    borderRadius: '50%',
-    backgroundColor: 'var(--primary-light)',
-    marginBottom: '1rem',
-    overflow: 'hidden',
-  },
-  logoImg: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-  title: {
-    fontSize: '1.75rem',
-    fontWeight: '700',
-    color: 'var(--text-primary)',
-    marginBottom: '0.25rem',
-  },
-  subtitle: {
-    fontSize: '0.875rem',
-    color: 'var(--text-secondary)',
+    marginBottom: '1.5rem',
   },
   versionLabel: {
     fontSize: '0.725rem',

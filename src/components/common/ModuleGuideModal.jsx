@@ -12,7 +12,7 @@ export default function ModuleGuideModal({ moduleId, onClose }) {
   const guide = MODULE_GUIDES[moduleId] || {
     id: moduleId,
     name: 'Guia do Módulo',
-    subtitle: 'NexaCLINIC — Manual Operacional',
+    subtitle: 'Nex-Ai CLINIC — Manual Operacional',
     color: '#10b981',
     recursos: [],
     tutorial: [],
@@ -246,7 +246,7 @@ export default function ModuleGuideModal({ moduleId, onClose }) {
         <div style={styles.footer}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#64748b' }}>
             <ShieldCheck size={16} color="#10b981" />
-            <span>Documentação oficial NexaCLINIC — Sempre atualizada a cada versão.</span>
+            <span>Documentação oficial Nex-Ai CLINIC — Sempre atualizada a cada versão.</span>
           </div>
           <button onClick={onClose} style={styles.confirmBtn}>
             Entendi

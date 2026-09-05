@@ -147,7 +147,7 @@ export default function EmailSettingsTab({
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Ex: NexaCLINIC — Notificações"
+                  placeholder="Ex: Nex-Ai CLINIC — Notificações"
                   value={emailSettings.senderName || ''}
                   onChange={e => setEmailSettings({ ...emailSettings, senderName: e.target.value })}
                   required

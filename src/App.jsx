@@ -161,7 +161,7 @@ export default function App() {
       <div style={styles.loadingContainer}>
         <div style={styles.spinner}></div>
         <p style={{ marginTop: '1rem', color: 'var(--text-secondary)', fontWeight: '500' }}>
-          Carregando NexaCLINIC...
+          Carregando Nex-Ai CLINIC...
         </p>
       </div>
     );

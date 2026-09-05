@@ -425,7 +425,7 @@ export default function WebQuotationsTab({
         title: newQuoteForm.title,
         unitId: activeUnitId || 'geral',
         unit: activeUnitId === 'betim' ? 'Betim' : activeUnitId === 'taguatinga' ? 'Taguatinga' : 'Geral',
-        buyerName: currentUser?.name || 'Comprador NexaCLINIC',
+        buyerName: currentUser?.name || 'Comprador Nex-Ai CLINIC',
         buyerEmail: currentUser?.email || '',
         status: 'Aberta',
         deadline: newQuoteForm.deadline,
@@ -463,7 +463,7 @@ export default function WebQuotationsTab({
     const cleanPhone = (supplier.phone || '').replace(/\D/g, '');
     const deadlineFormatted = new Date(quote.deadline).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
     
-    const text = `Olá, *${supplier.contactPerson || supplier.name}*!\n\nA *NexaCLINIC (${quote.unit})* abriu a Cotação *#${quote.code}* com ${quote.items.length} itens.\n\nPor favor, acesse o link seguro abaixo para digitar seus preços, prazos e condições comerciais até *${deadlineFormatted}*:\n🔗 ${portalUrl}\n\nObrigado!`;
+    const text = `Olá, *${supplier.contactPerson || supplier.name}*!\n\nA *Nex-Ai CLINIC (${quote.unit})* abriu a Cotação *#${quote.code}* com ${quote.items.length} itens.\n\nPor favor, acesse o link seguro abaixo para digitar seus preços, prazos e condições comerciais até *${deadlineFormatted}*:\n🔗 ${portalUrl}\n\nObrigado!`;
 
     const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone ? '55' + cleanPhone : ''}&text=${encodeURIComponent(text)}`;
     window.open(whatsappUrl, '_blank');

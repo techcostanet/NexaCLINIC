@@ -41,7 +41,7 @@ export default function ConfigPanel() {
   // Email Server State (Módulo T.I)
   const [emailSettings, setEmailSettings] = useState({
     enabled: true,
-    senderName: 'NexaCLINIC — Notificações Automáticas',
+    senderName: 'Nex-Ai CLINIC — Notificações Automáticas',
     senderEmail: 'notificacoes@clinica.med.br',
     replyToEmail: 'contato@clinica.med.br',
     provider: 'smtp',
@@ -51,7 +51,7 @@ export default function ConfigPanel() {
     smtpUser: 'notificacoes@clinica.med.br',
     smtpPassword: '',
     bccAudit: 'ti.auditoria@clinica.med.br',
-    footerSignature: 'NexaCLINIC — Gestão Hospitalar & Nefrologia Integrada\nEsta é uma notificação automática gerada pelo sistema. Por favor, não responda diretamente a este e-mail.',
+    footerSignature: 'Nex-Ai CLINIC — Ecossistema Inteligente de Gestão em Saúde\nEsta é uma notificação automática gerada pelo sistema. Por favor, não responda diretamente a este e-mail.',
     notifications: {
       medicalSwaps: true,
       serviceOrders: true,

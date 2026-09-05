@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.54',
+      date: '05/09/2026',
+      title: 'Rebranding Global — Nex-Ai CLINIC (AI-Powered Healthcare Ecosystem)',
+      description: 'Transição histórica de marca e identidade visual para Nex-Ai CLINIC: introdução da tipografia futurista com "Ai" em gradiente prismático inspirado no Antigravity IDE, ícone holográfico vetorial, remoção do botão de TV da tela pública de login, atalho direto de TV no portal de Recepção e harmonização dos 15 módulos operacionais sob a taxonomia Nex-Ai.*.',
+      changes: [
+        { type: 'Identidade Nex-Ai CLINIC', text: 'Evolução da marca institucional com símbolo prismático vetorial e partículas "Ai" estilizadas com o gradiente cósmico do Antigravity IDE (Ciano, Azul, Púrpura e Magenta).' },
+        { type: 'Higienização do Login', text: 'Remoção do botão de TV pública da tela de autenticação para foco exclusivo em credenciais de acesso seguro.' },
+        { type: 'Atalho TV na Recepção', text: 'Inclusão de botão dedicado "TV" na barra de ferramentas do portal Recepção (Nex-Ai.RECEPTION) para abertura em 1 clique.' },
+        { type: 'Harmonização de 15 Módulos', text: 'Padronização oficial dos identificadores: Nex-Ai.CLINIC, Nex-Ai.INDEX, Nex-Ai.ASSIST, Nex-Ai.MED, Nex-Ai.CARE, Nex-Ai.RECEPTION, Nex-Ai.STOCK, Nex-Ai.SERVICE, Nex-Ai.FINANCE, Nex-Ai.HR, Nex-Ai.SAFE, Nex-Ai.APAC, Nex-Ai.CAL, Nex-Ai.PROCURE e Nex-Ai.CONFIG.' },
+        { type: 'Favicon & Portais Externos', text: 'Atualização do favicon SVG em alta resolução vetorial e harmonização dos portais de fornecedores, QR code de máquinas e chamadas de TV.' }
+      ]
+    },
+    {
       version: 'v4.9.53',
       date: '05/09/2026',
       title: 'NexaASSIST — Refinamento de Remanejamento, Nomes em Caixa Alta & Pré-seleção no Comunicado',
