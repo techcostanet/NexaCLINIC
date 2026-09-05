@@ -1,3 +1,24 @@
+## [v4.9.53] - 05 de Setembro, 2026
+### NexaASSIST — Refinamento de Remanejamento, Nomes em Caixa Alta & Pré-seleção de Pacientes no Comunicado
+- **Feedback Visual Claro no Remanejamento (`DialysisScheduleTab.jsx`):**
+  - Ao clicar no botão **`Desocupar`**, o sistema exibe imediatamente um alerta em destaque com ícone e aviso em vermelho: *"Vaga Selecionada para Desocupação: O paciente será desvinculado e o leito ficará VAGO ao clicar em Desocupar"*.
+  - O campo de pesquisa do paciente é limpo automaticamente e o botão de confirmação passa a exibir expressamente o rótulo **`Desocupar`** em tom vermelho de segurança, evitando qualquer sensação de inação.
+  - Opção instantânea **`Desfazer`** caso o operador deseje retornar ao estado anterior ou escolher outro paciente.
+  - Badge visual em verde confirmando a seleção de um novo paciente ao escolhê-lo na lista.
+- **Padronização Universal de Nomes em Caixa Alta (MAIÚSCULAS):**
+  - Aplicação de `text-transform: uppercase` e normalização programática `.toUpperCase()` em todos os nomes de pacientes do sistema:
+    - Cards de hemodiálise (leitos e boxes), avatares e listas de turnos.
+    - Modal de remanejamento, busca global de pacientes e máquinas.
+    - Mural e comunicados clínicos (feed compacto e expandido, campo de busca e etiquetas de vínculo).
+    - Mapa cirúrgico vascular (semana, mês, dia e compacto) e formulário de agendamento de cirurgias.
+    - Central de Relatórios Assistenciais (tabelas de visualização, relatórios em PDF e planilhas Excel).
+    - Camada de serviços (`dialysisScheduleService.js`, `patientService.js` e `mockFirebase.js`).
+- **Pré-seleção Automática de Pacientes ao Clicar em Comunicado:**
+  - Correção na passagem de parâmetros do card de hemodiálise para o modal de novo comunicado (`handleOpenCreateModal`): o nome do paciente, salão e turno são pré-preenchidos e vinculados imediatamente.
+  - Exibição direta do paciente no campo de texto e na etiqueta de paciente vinculado, com botão direto de 1 palavra **`Remover`**.
+
+---
+
 ## [v4.9.52] - 05 de Setembro, 2026
 ### NexaASSIST — Central de Relatórios Assistenciais (15 Relatórios Especializados: Escala, Mural e Cirurgias)
 - **Central Unificada de Relatórios (`AssistReportsModal.jsx`):**

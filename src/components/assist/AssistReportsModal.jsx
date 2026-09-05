@@ -1091,7 +1091,10 @@ export default function AssistReportsModal({
                       reportData.map((row, i) => (
                         <tr key={i} style={i % 2 === 1 ? styles.trZebra : {}}>
                           {reportColumns.map(col => (
-                            <td key={col.key} style={styles.td}>
+                            <td key={col.key} style={{
+                              ...styles.td,
+                              textTransform: col.key === 'paciente' ? 'uppercase' : 'none'
+                            }}>
                               {row[col.key] ?? '-'}
                             </td>
                           ))}

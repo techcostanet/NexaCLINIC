@@ -42,8 +42,9 @@ export const getPatients = async (unitId = null) => {
       const deduplicated = [];
       for (const pat of rawList) {
         if (!pat || !pat.name) continue;
+        pat.name = pat.name.trim().toUpperCase();
         const cleanCpf = pat.cpf ? String(pat.cpf).replace(/\D/g, '') : '';
-        const normName = (pat.name || '').trim().toLowerCase();
+        const normName = pat.name.toLowerCase();
         const key = cleanCpf && cleanCpf.length === 11 ? `cpf_${cleanCpf}` : `id_${pat.id || normName}`;
         if (!seen.has(key)) {
           seen.add(key);
@@ -61,7 +62,8 @@ export const getPatients = async (unitId = null) => {
       return deduplicated;
     } catch (err) {
       console.warn('Erro ao consultar Firestore patients, utilizando base mestre local:', err);
-      return mockFirestore.getPatients(unitId);
+      const fallbackList = await mockFirestore.getPatients(unitId);
+      return fallbackList.map(p => ({ ...p, name: (p.name || '').trim().toUpperCase() }));
     }
   };
 

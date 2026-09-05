@@ -308,16 +308,40 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
   // Ações de Criação/Edição
   const handleOpenCreateModal = (patient = null) => {
     setEditingPost(null);
-    setPatientSearchTerm(patient ? patient.name : '');
+    let pName = '';
+    let pId = '';
+    let pRoom = 'Salão 1';
+    let pShift = '1º Turno';
+
+    if (patient) {
+      pName = (patient.name || patient.patientName || '').trim().toUpperCase();
+      pId = patient.id || patient.patientId || '';
+
+      const found = currentPatients.find(p => p.name?.trim().toUpperCase() === pName);
+      if (found) {
+        pId = found.id || pId;
+      }
+
+      let r = patient.room || patient.salao || '';
+      if (r === 'Salão 01' || r === 'Salão 1') pRoom = 'Salão 1';
+      else if (r === 'Salão 02' || r === 'Salão 2') pRoom = 'Salão 2';
+      else if (r === 'Salão 03' || r === 'Salão 3') pRoom = 'Salão 3';
+      else if (r) pRoom = r;
+
+      let s = patient.shift || patient.turno || '';
+      if (s) pShift = s;
+    }
+
+    setPatientSearchTerm(pName);
     setPostForm({
-      title: patient ? `Comunicado - ${patient.name}` : '',
+      title: pName ? `Comunicado - ${pName}` : '',
       message: '',
       category: 'Internação',
       urgency: 'Urgente',
-      patientId: patient ? patient.id : '',
-      patientName: patient ? patient.name : '',
-      room: patient ? (patient.room || 'Salão 1') : 'Salão 1',
-      shift: patient ? (patient.shift || '1º Turno') : '1º Turno'
+      patientId: pId || (pName ? 'selected' : ''),
+      patientName: pName,
+      room: pRoom,
+      shift: pShift
     });
     setShowPostModal(true);
   };
@@ -329,14 +353,14 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
     }
 
     setEditingPost(post);
-    setPatientSearchTerm(post.patientName || '');
+    setPatientSearchTerm(post.patientName ? post.patientName.toUpperCase() : '');
     setPostForm({
       title: post.title || '',
       message: post.message || '',
       category: post.category || 'Geral',
       urgency: post.urgency || 'Informativo',
       patientId: post.patientId || '',
-      patientName: post.patientName || '',
+      patientName: post.patientName ? post.patientName.toUpperCase() : '',
       room: post.room || 'Salão 1',
       shift: post.shift || '1º Turno'
     });
@@ -344,15 +368,16 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
   };
 
   const handleSelectPatient = (patient) => {
+    const pName = (patient.name || '').trim().toUpperCase();
     setPostForm(prev => ({
       ...prev,
       patientId: patient.id,
-      patientName: patient.name,
+      patientName: pName,
       room: patient.room || prev.room,
       shift: patient.shift || prev.shift,
-      title: prev.title || `Comunicado - ${patient.name}`
+      title: prev.title || `Comunicado - ${pName}`
     }));
-    setPatientSearchTerm(patient.name);
+    setPatientSearchTerm(pName);
   };
 
   const handleSavePost = async (e) => {
@@ -829,7 +854,7 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
                         {post.patientName && (
                           <span style={styles.compactPatientBadge}>
                             <User size={12} />
-                            <strong>{post.patientName}</strong>
+                            <strong>{post.patientName ? post.patientName.toUpperCase() : ''}</strong>
                           </span>
                         )}
 
@@ -937,7 +962,7 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
                       <div style={styles.patientInfoBox}>
                         <div style={styles.patientNameWrapper}>
                           <User size={15} color="var(--primary-color)" style={{ flexShrink: 0 }} />
-                          <span style={styles.patientNameText}>{post.patientName}</span>
+                          <span style={styles.patientNameText}>{post.patientName ? post.patientName.toUpperCase() : ''}</span>
                         </div>
                         {(post.room || post.shift) && (
                           <div style={styles.locationBadge}>
@@ -1029,12 +1054,15 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
                     placeholder="Digite o nome ou CPF..."
                     value={patientSearchTerm}
                     onChange={(e) => {
-                      setPatientSearchTerm(e.target.value);
-                      if (!e.target.value) {
+                      const val = e.target.value;
+                      setPatientSearchTerm(val);
+                      if (!val) {
                         setPostForm(prev => ({ ...prev, patientId: '', patientName: '' }));
+                      } else {
+                        setPostForm(prev => ({ ...prev, patientName: val.toUpperCase() }));
                       }
                     }}
-                    style={styles.modalInput}
+                    style={{ ...styles.modalInput, textTransform: 'uppercase' }}
                   />
                   {patientSearchTerm && !postForm.patientId && filteredPatients.length > 0 && (
                     <div style={styles.patientDropdown}>
@@ -1044,7 +1072,7 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
                           onClick={() => handleSelectPatient(pat)}
                           style={styles.patientDropdownItem}
                         >
-                          <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{pat.name}</div>
+                          <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{pat.name ? pat.name.toUpperCase() : ''}</div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                             CPF: {pat.cpf || 'N/A'} • {pat.room || 'Sem salão'} ({pat.shift || 'Turno N/A'})
                           </div>
@@ -1055,7 +1083,7 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
                 </div>
                 {postForm.patientName && (
                   <div style={styles.selectedPatientBadge}>
-                    <span>Vinculado a: <strong>{postForm.patientName}</strong></span>
+                    <span>Vinculado a: <strong>{postForm.patientName ? postForm.patientName.toUpperCase() : ''}</strong></span>
                     <button 
                       type="button" 
                       onClick={() => {
@@ -1064,7 +1092,7 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
                       }}
                       style={styles.removeLinkBtn}
                     >
-                      Remover Vínculo
+                      Remover
                     </button>
                   </div>
                 )}
@@ -1500,7 +1528,8 @@ const styles = {
     fontSize: '0.85rem',
     fontWeight: '700',
     color: '#0f172a',
-    letterSpacing: '0.01em'
+    letterSpacing: '0.01em',
+    textTransform: 'uppercase'
   },
   locationBadge: {
     display: 'inline-flex',
@@ -1585,7 +1614,8 @@ const styles = {
     gap: '0.35rem',
     fontSize: '0.8rem',
     color: '#1e293b',
-    whiteSpace: 'nowrap'
+    whiteSpace: 'nowrap',
+    textTransform: 'uppercase'
   },
   compactMessageText: {
     fontSize: '0.82rem',

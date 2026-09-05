@@ -2889,7 +2889,7 @@ export const mockFirestore = {
   // Patients Methods
   getPatients: async (unitId = null) => {
     const db = getDB();
-    const list = db.patients || [];
+    const list = (db.patients || []).map(p => ({ ...p, name: (p.name || '').trim().toUpperCase() }));
     if (unitId && unitId !== 'all') {
       return list.filter(p => !p.unitId || p.unitId === unitId);
     }

@@ -1767,7 +1767,8 @@ const styles = {
   },
   tdPatient: {
     padding: '12px 14px',
-    color: '#0f172a'
+    color: '#0f172a',
+    textTransform: 'uppercase'
   },
   tdProc: {
     padding: '12px 14px',
@@ -1939,7 +1940,8 @@ const styles = {
     margin: 0,
     fontSize: '0.98rem',
     fontWeight: '800',
-    color: '#0f172a'
+    color: '#0f172a',
+    textTransform: 'uppercase'
   },
   timelineDetailsGrid: {
     display: 'grid',

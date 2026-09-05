@@ -4,17 +4,68 @@ import initialDialysisSchedule from '../../data/initialDialysisSchedule.json';
 
 const STORAGE_KEY = 'nexa_dialysis_schedules';
 
+// Helpers para garantir nomes de pacientes estritamente em caixa alta
+const uppercasePatient = (p) => {
+  if (!p) return null;
+  return {
+    ...p,
+    name: (p.name || '').trim().toUpperCase()
+  };
+};
+
+const uppercaseSlot = (slot) => {
+  if (!slot) return slot;
+  return {
+    ...slot,
+    segunda: uppercasePatient(slot.segunda),
+    terca: uppercasePatient(slot.terca),
+    quarta: uppercasePatient(slot.quarta),
+    quinta: uppercasePatient(slot.quinta),
+    sexta: uppercasePatient(slot.sexta),
+    sabado: uppercasePatient(slot.sabado),
+    mainPatient: uppercasePatient(slot.mainPatient)
+  };
+};
+
+const uppercasePoints = (points = []) => {
+  return points.map(pt => ({
+    ...pt,
+    sqs: uppercaseSlot(pt.sqs),
+    tqs: uppercaseSlot(pt.tqs)
+  }));
+};
+
+const normalizeScheduleData = (data) => {
+  if (!data || !data.points) return data;
+  return {
+    ...data,
+    points: uppercasePoints(data.points)
+  };
+};
+
+const normalizeAllSchedules = (all) => {
+  if (!all) return all;
+  const result = {};
+  for (const salao of Object.keys(all)) {
+    result[salao] = {};
+    for (const turno of Object.keys(all[salao])) {
+      result[salao][turno] = normalizeScheduleData(all[salao][turno]);
+    }
+  }
+  return result;
+};
+
 // Helper to get local state
 const getLocalSchedules = () => {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (data) {
-      return JSON.parse(data);
+      return normalizeAllSchedules(JSON.parse(data));
     }
   } catch (e) {
     console.warn('Erro ao carregar escalas do localStorage:', e);
   }
-  return JSON.parse(JSON.stringify(initialDialysisSchedule));
+  return normalizeAllSchedules(JSON.parse(JSON.stringify(initialDialysisSchedule)));
 };
 
 const saveLocalSchedules = (schedules) => {
@@ -28,7 +79,7 @@ const saveLocalSchedules = (schedules) => {
 export const getDialysisSchedule = async (salao = 'Salão 01', turno = '1º Turno') => {
   if (USE_MOCK) {
     const all = getLocalSchedules();
-    return (all[salao] && all[salao][turno]) ? all[salao][turno] : { salao, turno, points: [] };
+    return (all[salao] && all[salao][turno]) ? normalizeScheduleData(all[salao][turno]) : { salao, turno, points: [] };
   }
 
   try {
@@ -39,18 +90,18 @@ export const getDialysisSchedule = async (salao = 'Salão 01', turno = '1º Turn
     const snap = await getDoc(docRef);
 
     if (snap.exists()) {
-      return snap.data();
+      return normalizeScheduleData(snap.data());
     } else {
       // Seed from initial data
       const all = getLocalSchedules();
-      const initialData = (all[salao] && all[salao][turno]) ? all[salao][turno] : { salao, turno, points: [] };
+      const initialData = (all[salao] && all[salao][turno]) ? normalizeScheduleData(all[salao][turno]) : { salao, turno, points: [] };
       await setDoc(docRef, initialData);
       return initialData;
     }
   } catch (err) {
     console.warn('Firestore fallback to local schedules:', err);
     const all = getLocalSchedules();
-    return (all[salao] && all[salao][turno]) ? all[salao][turno] : { salao, turno, points: [] };
+    return (all[salao] && all[salao][turno]) ? normalizeScheduleData(all[salao][turno]) : { salao, turno, points: [] };
   }
 };
 
@@ -73,7 +124,7 @@ export const getAllDialysisSchedules = async () => {
       const data = doc.data();
       if (data.salao && data.turno) {
         if (!result[data.salao]) result[data.salao] = {};
-        result[data.salao][data.turno] = data;
+        result[data.salao][data.turno] = normalizeScheduleData(data);
       }
     });
     return result;
@@ -85,22 +136,23 @@ export const getAllDialysisSchedules = async () => {
 
 export const updatePointPatient = async (salao, turno, pointId, cadence, patientData) => {
   const all = getLocalSchedules();
+  const normalizedPatient = uppercasePatient(patientData);
   if (all[salao] && all[salao][turno]) {
     const pIdx = all[salao][turno].points.findIndex(p => p.id === pointId || p.ponto === pointId);
     if (pIdx !== -1) {
       if (cadence === 'SQS') {
         all[salao][turno].points[pIdx].sqs = {
-          segunda: patientData,
-          quarta: patientData,
-          sexta: patientData,
-          mainPatient: patientData
+          segunda: normalizedPatient,
+          quarta: normalizedPatient,
+          sexta: normalizedPatient,
+          mainPatient: normalizedPatient
         };
       } else if (cadence === 'TQS') {
         all[salao][turno].points[pIdx].tqs = {
-          terca: patientData,
-          quinta: patientData,
-          sabado: patientData,
-          mainPatient: patientData
+          terca: normalizedPatient,
+          quinta: normalizedPatient,
+          sabado: normalizedPatient,
+          mainPatient: normalizedPatient
         };
       }
       saveLocalSchedules(all);

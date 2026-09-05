@@ -736,20 +736,20 @@ export const MODULE_GUIDES = {
         ]
       },
       {
-        title: 'Como Remanejar um Paciente ou Ocupar Vaga Livre',
+        title: 'Como Remanejar um Paciente ou Liberar Leito',
         steps: [
           'Localize o ponto desejado no mapa de leitos.',
           'Em vagas livres, clique em "+ Alocar" e selecione o paciente cadastrado.',
-          'Em pontos já ocupados, clique em "Remanejar" para trocar de leito ou liberar a vaga.',
-          'Confirme a operação para atualizar a escala imediatamente.'
+          'Em pontos ocupados, clique em "Remanejar". Para desocupar e liberar a vaga, clique em "Desocupar" e veja a confirmação visual destacada.',
+          'Clique em "Confirmar" ou "Desocupar" para atualizar a escala imediatamente.'
         ]
       },
       {
         title: 'Como Publicar um Comunicado a Partir do Mapa de Leitos',
         steps: [
           'No card do paciente na escala, clique no botão "Comunicado".',
-          'O modal abrirá já pré-preenchido com o nome do paciente, salão e turno.',
-          'Selecione a categoria clínica, digite o aviso e clique em "Publicar".'
+          'O modal abrirá já pré-preenchido e vinculado com o nome do paciente em caixa alta, salão e turno.',
+          'Selecione a categoria clínica, digite a ocorrência e clique em "Publicar".'
         ]
       },
       {

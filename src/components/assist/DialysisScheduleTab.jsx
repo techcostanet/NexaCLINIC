@@ -4,7 +4,7 @@ import {
   Calendar, Search, Filter, Printer, User, Activity, AlertTriangle, 
   CheckCircle2, RefreshCw, ArrowRightLeft, ShieldAlert, Cpu, 
   MapPin, Clock, Plus, X, ChevronRight, Eye, Wrench, HeartPulse,
-  Sparkles, Layers, Info
+  Sparkles, Layers, Info, UserMinus
 } from 'lucide-react';
 import { useUnit } from '../../contexts/UnitContext';
 
@@ -176,13 +176,26 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
     setActionLoading(true);
     try {
       let patientToSave = null;
-      if (selectedNewPatient && !selectedNewPatient.isVacant) {
+      let isClearing = false;
+
+      if (selectedNewPatient?.isVacant) {
+        patientToSave = null;
+        isClearing = true;
+      } else if (selectedNewPatient) {
         patientToSave = {
-          name: selectedNewPatient.name,
-          dn: selectedNewPatient.birthDate ? selectedNewPatient.birthDate.split('-').reverse().join('/') : '',
+          name: (selectedNewPatient.name || '').trim().toUpperCase(),
+          dn: selectedNewPatient.birthDate ? selectedNewPatient.birthDate.split('-').reverse().join('/') : (selectedNewPatient.dn || ''),
           accessType: selectedNewPatient.accessType || 'Fístula Arteriovenosa',
           needleSize: selectedNewPatient.needleSize || '16',
           isolation: selectedNewPatient.isolation || null
+        };
+      } else if (reallocatePatientTerm.trim()) {
+        patientToSave = {
+          name: reallocatePatientTerm.trim().toUpperCase(),
+          dn: '',
+          accessType: 'Fístula Arteriovenosa',
+          needleSize: '16',
+          isolation: null
         };
       }
 
@@ -194,10 +207,14 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
         patientToSave
       );
 
-      setMessage({ text: 'Escala atualizada com sucesso!', type: 'success' });
+      setMessage({ 
+        text: isClearing ? 'Vaga desocupada com sucesso!' : 'Escala atualizada com sucesso!', 
+        type: 'success' 
+      });
       setShowReallocateModal(false);
       setSelectedSlotForReallocate(null);
       setSelectedNewPatient(null);
+      setReallocatePatientTerm('');
       loadSchedule();
     } catch (err) {
       console.error(err);
@@ -529,11 +546,11 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                             {/* Patient Name */}
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
                               <div style={tabStyles.patientAvatar}>
-                                {patient.name.charAt(0).toUpperCase()}
+                                {patient.name ? patient.name.trim().charAt(0).toUpperCase() : '?'}
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <h4 style={tabStyles.patientName} title={patient.name}>
-                                  {patient.name}
+                                  {patient.name ? patient.name.toUpperCase() : ''}
                                 </h4>
                                 {patient.dn && (
                                   <div style={{ fontSize: '0.73rem', color: '#64748b', marginTop: '2px' }}>
@@ -623,7 +640,8 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                               <button
                                 type="button"
                                 onClick={() => onOpenPostModalWithPatient({
-                                  patientName: patient.name,
+                                  name: (patient.name || '').toUpperCase(),
+                                  patientName: (patient.name || '').toUpperCase(),
                                   room: selectedSalon,
                                   shift: selectedShift,
                                   point: pt.ponto,
@@ -701,7 +719,7 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                   >
                     <div>
                       <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: '#1e293b' }}>
-                        {res.patient.name}
+                        {res.patient.name ? res.patient.name.toUpperCase() : ''}
                       </h4>
                       <p style={{ margin: '3px 0 0 0', fontSize: '0.78rem', color: '#64748b' }}>
                         <strong style={{ color: '#4f46e5' }}>{res.salao}</strong> • {res.turno} • {res.box} • <strong>Ponto {res.ponto}</strong> • {res.cadence}
@@ -724,7 +742,7 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <ArrowRightLeft size={18} color="#4f46e5" />
                 <h3 style={tabStyles.modalHeading}>
-                  {selectedSlotForReallocate.currentPatient ? 'Remanejar Paciente' : 'Alocar Paciente no Leito'}
+                  {selectedSlotForReallocate.currentPatient ? 'Remanejar' : 'Alocar'}
                 </h3>
               </div>
               <button
@@ -746,62 +764,159 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                 <p style={{ margin: 0 }}><strong>Local:</strong> {selectedSalon} • {selectedShift} • {selectedSlotForReallocate.box} • Ponto {selectedSlotForReallocate.ponto}</p>
                 <p style={{ margin: '4px 0 0 0' }}><strong>Cadência:</strong> {cadence === 'SQS' ? 'Segunda, Quarta e Sexta' : 'Terça, Quinta e Sábado'}</p>
                 {selectedSlotForReallocate.currentPatient && (
-                  <p style={{ margin: '4px 0 0 0' }}><strong>Paciente Atual:</strong> {selectedSlotForReallocate.currentPatient.name}</p>
+                  <p style={{ margin: '4px 0 0 0' }}><strong>Paciente:</strong> {selectedSlotForReallocate.currentPatient.name ? selectedSlotForReallocate.currentPatient.name.toUpperCase() : ''}</p>
                 )}
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>
-                  Selecionar Novo Paciente
-                </label>
-                <input
-                  type="text"
-                  value={reallocatePatientTerm}
-                  onChange={(e) => setReallocatePatientTerm(e.target.value)}
-                  placeholder="Buscar paciente cadastrado..."
-                  style={tabStyles.modalSearchInput}
-                />
+              {selectedNewPatient?.isVacant ? (
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: '8px',
+                  backgroundColor: '#fff1f2',
+                  border: '2px dashed #fda4af',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <UserMinus size={18} color="#e11d48" />
+                      <strong style={{ color: '#9f1239', fontSize: '0.88rem' }}>
+                        Vaga Selecionada para Desocupação
+                      </strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedNewPatient(null);
+                        setReallocatePatientTerm('');
+                      }}
+                      style={{
+                        border: '1px solid #fda4af',
+                        backgroundColor: '#ffffff',
+                        color: '#be123c',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Desfazer
+                    </button>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: '#be123c', lineHeight: 1.4 }}>
+                    O paciente <strong>{selectedSlotForReallocate.currentPatient?.name ? selectedSlotForReallocate.currentPatient.name.toUpperCase() : ''}</strong> será desvinculado e o leito ficará <strong>VAGO</strong> ao clicar em Desocupar.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#475569', marginBottom: '4px' }}>
+                      Paciente
+                    </label>
+                    <input
+                      type="text"
+                      value={reallocatePatientTerm}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setReallocatePatientTerm(val);
+                        if (!val) {
+                          setSelectedNewPatient(null);
+                        }
+                      }}
+                      placeholder="Buscar paciente cadastrado..."
+                      style={{ ...tabStyles.modalSearchInput, textTransform: 'uppercase' }}
+                    />
 
-                {reallocatePatientTerm.trim() && (
-                  <div style={tabStyles.dropdownList}>
-                    {patients
-                      .filter(p => (p.name || '').toLowerCase().includes(reallocatePatientTerm.toLowerCase()))
-                      .slice(0, 8)
-                      .map(p => (
+                    {reallocatePatientTerm.trim() && !selectedNewPatient && (
+                      <div style={tabStyles.dropdownList}>
+                        {patients
+                          .filter(p => (p.name || '').toLowerCase().includes(reallocatePatientTerm.toLowerCase()))
+                          .slice(0, 8)
+                          .map(p => (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedNewPatient(p);
+                                setReallocatePatientTerm((p.name || '').toUpperCase());
+                              }}
+                              style={tabStyles.dropdownItem}
+                            >
+                              <span style={{ fontWeight: '600' }}>{p.name ? p.name.toUpperCase() : ''}</span>
+                              <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{p.accessType || 'FAV'}</span>
+                            </button>
+                          ))}
+                      </div>
+                    )}
+
+                    {selectedNewPatient && !selectedNewPatient.isVacant && (
+                      <div style={{
+                        marginTop: '8px',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        backgroundColor: '#f0fdf4',
+                        border: '1px solid #bbf7d0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        fontSize: '0.82rem',
+                        color: '#15803d'
+                      }}>
+                        <div>
+                          <span>Novo: <strong>{selectedNewPatient.name ? selectedNewPatient.name.toUpperCase() : ''}</strong></span>
+                          <div style={{ fontSize: '0.72rem', color: '#166534' }}>{selectedNewPatient.accessType || 'FAV'}</div>
+                        </div>
                         <button
-                          key={p.id}
                           type="button"
                           onClick={() => {
-                            setSelectedNewPatient(p);
-                            setReallocatePatientTerm(p.name);
+                            setSelectedNewPatient(null);
+                            setReallocatePatientTerm('');
                           }}
-                          style={tabStyles.dropdownItem}
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            color: '#15803d',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem'
+                          }}
                         >
-                          <span style={{ fontWeight: '600' }}>{p.name}</span>
-                          <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{p.accessType || 'FAV'}</span>
+                          ✕
                         </button>
-                      ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              {selectedSlotForReallocate.currentPatient && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedNewPatient({ name: '', isVacant: true })}
-                  style={{
-                    border: 'none',
-                    background: 'none',
-                    color: '#e11d48',
-                    fontSize: '0.8rem',
-                    fontWeight: '600',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    padding: 0
-                  }}
-                >
-                  ✕ Desocupar esta vaga (liberar leito)
-                </button>
+                  {selectedSlotForReallocate.currentPatient && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedNewPatient({ name: '', isVacant: true });
+                        setReallocatePatientTerm('');
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        border: '1px solid #fecdd3',
+                        backgroundColor: '#fff1f2',
+                        color: '#be123c',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        width: 'fit-content',
+                        marginTop: '4px'
+                      }}
+                    >
+                      <UserMinus size={14} />
+                      <span>Desocupar</span>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
@@ -812,6 +927,7 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                   setShowReallocateModal(false);
                   setSelectedSlotForReallocate(null);
                   setSelectedNewPatient(null);
+                  setReallocatePatientTerm('');
                 }}
                 style={tabStyles.cancelBtn}
               >
@@ -820,10 +936,15 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
               <button
                 type="button"
                 onClick={handleSaveReallocation}
-                disabled={actionLoading}
-                style={tabStyles.confirmBtn}
+                disabled={actionLoading || (!selectedNewPatient && !reallocatePatientTerm.trim())}
+                style={{
+                  ...tabStyles.confirmBtn,
+                  backgroundColor: selectedNewPatient?.isVacant ? '#e11d48' : tabStyles.confirmBtn.backgroundColor,
+                  opacity: (actionLoading || (!selectedNewPatient && !reallocatePatientTerm.trim())) ? 0.6 : 1,
+                  cursor: (actionLoading || (!selectedNewPatient && !reallocatePatientTerm.trim())) ? 'not-allowed' : 'pointer'
+                }}
               >
-                {actionLoading ? 'Salvando...' : 'Confirmar'}
+                {actionLoading ? 'Salvando...' : (selectedNewPatient?.isVacant ? 'Desocupar' : 'Confirmar')}
               </button>
             </div>
           </div>
@@ -1218,7 +1339,8 @@ const tabStyles = {
     color: '#0f172a',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
-    textOverflow: 'ellipsis'
+    textOverflow: 'ellipsis',
+    textTransform: 'uppercase'
   },
   accessFAV: {
     fontSize: '0.68rem',

@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.53',
+      date: '05/09/2026',
+      title: 'NexaASSIST — Refinamento de Remanejamento, Nomes em Caixa Alta & Pré-seleção no Comunicado',
+      description: 'Correções operacionais no NexaASSIST: feedback visual imediato ao desocupar leito no remanejamento, padronização universal dos nomes dos pacientes em caixa alta (MAIÚSCULAS) e vinculação automática do paciente ao abrir comunicados a partir de seu card.',
+      changes: [
+        { type: 'Feedback de Desocupação', text: 'Ao clicar em Desocupar, a vaga é marcada visualmente com alerta destacado e o botão de confirmação passa a exibir Desocupar em vermelho, com opção de Desfazer.' },
+        { type: 'Nomes em Caixa Alta', text: 'Todos os nomes de pacientes em cards de hemodiálise, relatórios, modais, cirurgias e comunicados foram atualizados para exibição uniforme em maiúsculas.' },
+        { type: 'Pré-seleção no Comunicado', text: 'O botão Comunicado no card do paciente agora pré-carrega automaticamente o paciente, salão e turno no formulário do mural.' },
+        { type: 'Padrão Rigoroso de UI', text: 'Limpeza de rótulos duplos e garantia de termos diretos de 1 palavra nos botões e formulários.' }
+      ]
+    },
+    {
       version: 'v4.9.52',
       date: '05/09/2026',
       title: 'NexaASSIST — Central de Relatórios Assistenciais (15 Relatórios Especializados)',
