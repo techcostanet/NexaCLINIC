@@ -81,12 +81,12 @@ export default function MedicalSwapsTab({
         emailLogs: [
           {
             to: chosenTargetDoc.email || 'secretariabetim@dialize.com.br',
-            subject: `[NexaMED] Solicitação de Troca de Plantão — ${chosenShift.date}`,
+            subject: `[Nex-Ai.MED] Solicitação de Troca de Plantão — ${chosenShift.date}`,
             date: new Date().toLocaleString('pt-BR')
           },
           {
             to: activeDoc.email || 'contato@techcosta.net',
-            subject: `[NexaMED] Comprovante de Solicitação de Troca — ${chosenShift.date}`,
+            subject: `[Nex-Ai.MED] Comprovante de Solicitação de Troca — ${chosenShift.date}`,
             date: new Date().toLocaleString('pt-BR')
           }
         ]

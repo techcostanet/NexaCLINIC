@@ -45,7 +45,7 @@ export default function MedicalStatementModal({
           <div style={styles.docHeader}>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: '900', color: '#0f172a', letterSpacing: '-0.5px' }}>
-                NexaCLINIC • Nefrologia & Terapia Renal Substitutiva
+                Nex-Ai CLINIC • Nefrologia & Terapia Renal Substitutiva
               </h2>
               <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.75rem', color: '#64748b' }}>
                 Demonstrativo Mensal de Produção Médica & Honorários Profissionais

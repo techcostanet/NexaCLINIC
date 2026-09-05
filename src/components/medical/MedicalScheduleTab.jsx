@@ -695,7 +695,7 @@ export default function MedicalScheduleTab({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0f172a', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
           <div>
             <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', color: '#0f172a' }}>
-              Dialize / NexaCLINIC — Escala Médica de Plantões
+              Dialize Betim • Nex-Ai CLINIC — Escala Médica de Plantões
             </h2>
             <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.85rem', color: '#475569' }}>
               Unidade Betim / Salões de Hemodiálise e Diálise Peritoneal — Competência: {selectedMonth}
@@ -1132,59 +1132,74 @@ export default function MedicalScheduleTab({
       {showAddModal && (
         <div style={styles.modalOverlay} className="no-print">
           <div style={styles.modalCard}>
-            <h4 style={{ margin: '0 0 1rem 0', fontWeight: '800', color: '#0f172a' }}>
-              {editingItem ? 'Editar Plantão' : (scheduleMode === 'recurring' ? 'Escalar por Semana' : 'Escalar Médico')}
-            </h4>
-
-            {/* Alternador de Modo: Individual vs Recorrente */}
-            {!editingItem && (
-              <div style={{ display: 'flex', gap: '0.35rem', marginBottom: '1rem', padding: '3px', backgroundColor: '#f1f5f9', borderRadius: '8px' }}>
+            {/* Header Fixo */}
+            <div style={styles.modalHeader}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h4 style={{ margin: 0, fontWeight: '800', color: '#0f172a', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Calendar size={18} color="#0284c7" />
+                  <span>{editingItem ? 'Editar Plantão' : (scheduleMode === 'recurring' ? 'Escalar por Semana' : 'Escalar Médico')}</span>
+                </h4>
                 <button
                   type="button"
-                  onClick={() => setScheduleMode('single')}
-                  style={{
-                    flex: 1,
-                    padding: '0.45rem',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '0.82rem',
-                    fontWeight: scheduleMode === 'single' ? '800' : '600',
-                    backgroundColor: scheduleMode === 'single' ? '#ffffff' : 'transparent',
-                    color: scheduleMode === 'single' ? '#0284c7' : '#64748b',
-                    boxShadow: scheduleMode === 'single' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                    cursor: 'pointer'
-                  }}
+                  onClick={() => setShowAddModal(false)}
+                  style={styles.modalCloseBtn}
+                  title="Fechar"
                 >
-                  Individual
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setScheduleMode('recurring')}
-                  style={{
-                    flex: 1,
-                    padding: '0.45rem',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '0.82rem',
-                    fontWeight: scheduleMode === 'recurring' ? '800' : '600',
-                    backgroundColor: scheduleMode === 'recurring' ? '#ffffff' : 'transparent',
-                    color: scheduleMode === 'recurring' ? '#0284c7' : '#64748b',
-                    boxShadow: scheduleMode === 'recurring' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.3rem'
-                  }}
-                >
-                  <Sparkles size={14} color="#0284c7" />
-                  <span>Recorrente</span>
+                  <X size={18} />
                 </button>
               </div>
-            )}
 
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {/* Alternador de Modo: Individual vs Recorrente */}
+              {!editingItem && (
+                <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.75rem', padding: '3px', backgroundColor: '#f1f5f9', borderRadius: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setScheduleMode('single')}
+                    style={{
+                      flex: 1,
+                      padding: '0.45rem',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.82rem',
+                      fontWeight: scheduleMode === 'single' ? '800' : '600',
+                      backgroundColor: scheduleMode === 'single' ? '#ffffff' : 'transparent',
+                      color: scheduleMode === 'single' ? '#0284c7' : '#64748b',
+                      boxShadow: scheduleMode === 'single' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Individual
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setScheduleMode('recurring')}
+                    style={{
+                      flex: 1,
+                      padding: '0.45rem',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.82rem',
+                      fontWeight: scheduleMode === 'recurring' ? '800' : '600',
+                      backgroundColor: scheduleMode === 'recurring' ? '#ffffff' : 'transparent',
+                      color: scheduleMode === 'recurring' ? '#0284c7' : '#64748b',
+                      boxShadow: scheduleMode === 'recurring' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.3rem'
+                    }}
+                  >
+                    <Sparkles size={14} color="#0284c7" />
+                    <span>Recorrente</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Formulário com corpo rolável e rodapé fixo */}
+            <form onSubmit={handleSubmit} style={styles.modalForm}>
+              <div style={styles.modalBody}>
                 {/* Modo Individual: Escolha de Data */}
                 {(scheduleMode === 'single' || editingItem) ? (
                   <div className="form-group">
@@ -1386,7 +1401,7 @@ export default function MedicalScheduleTab({
                 </div>
 
                 <div className="form-group">
-                  <label>Observações</label>
+                  <label>Observação</label>
                   <input 
                     type="text" 
                     className="form-control" 
@@ -1395,22 +1410,23 @@ export default function MedicalScheduleTab({
                     onChange={e => setFormData({ ...formData, notes: e.target.value })}
                   />
                 </div>
+              </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowAddModal(false)} 
-                    style={styles.cancelBtn}
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    type="submit" 
-                    style={styles.saveBtn}
-                  >
-                    {scheduleMode === 'recurring' && !editingItem ? `Salvar (${recurringDates.length})` : 'Salvar'}
-                  </button>
-                </div>
+              {/* Rodapé Fixo com Botões (Nunca desaparece da tela) */}
+              <div style={styles.modalFooter}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowAddModal(false)} 
+                  style={styles.cancelBtn}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  style={styles.saveBtn}
+                >
+                  {scheduleMode === 'recurring' && !editingItem ? `Salvar (${recurringDates.length})` : 'Salvar'}
+                </button>
               </div>
             </form>
           </div>
@@ -2159,16 +2175,63 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 99999,
-    padding: '1rem'
+    padding: '1rem',
+    overflowY: 'auto'
   },
   modalCard: {
     backgroundColor: '#ffffff',
-    borderRadius: '12px',
+    borderRadius: '16px',
     width: '100%',
-    maxWidth: '480px',
-    padding: '1.5rem',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-    border: '1px solid #e2e8f0'
+    maxWidth: '520px',
+    maxHeight: 'min(90vh, 740px)',
+    display: 'flex',
+    flexDirection: 'column',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    border: '1px solid #e2e8f0',
+    overflow: 'hidden'
+  },
+  modalHeader: {
+    padding: '1.25rem 1.5rem 0.85rem 1.5rem',
+    borderBottom: '1px solid #f1f5f9',
+    backgroundColor: '#ffffff',
+    flexShrink: 0
+  },
+  modalCloseBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '4px',
+    color: '#94a3b8',
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'color 0.15s ease'
+  },
+  modalForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+    overflow: 'hidden'
+  },
+  modalBody: {
+    flex: 1,
+    overflowY: 'auto',
+    padding: '1rem 1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    minHeight: 0
+  },
+  modalFooter: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '0.75rem',
+    padding: '0.85rem 1.5rem',
+    backgroundColor: '#f8fafc',
+    borderTop: '1px solid #e2e8f0',
+    flexShrink: 0
   },
   cancelBtn: {
     padding: '0.45rem 0.9rem',

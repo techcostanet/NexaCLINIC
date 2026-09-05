@@ -356,7 +356,7 @@ export default function MedicalDoctorsTab({
                     <input 
                       type="email" 
                       className="form-control" 
-                      placeholder="medico@nexaclinic.med.br"
+                      placeholder="medico@nexai.med.br"
                       value={doctorForm.email} 
                       onChange={e => setDoctorForm({ ...doctorForm, email: e.target.value })}
                       style={styles.input}

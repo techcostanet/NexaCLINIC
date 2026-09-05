@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
 import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
-import MedicalSendProductionCard from './MedicalSendProductionCard';
 
 export default function MedicalMyShiftsTab({
   doctor,
@@ -83,12 +82,12 @@ export default function MedicalMyShiftsTab({
           emailLogs: [
             {
               to: targetDoc.email || 'secretariabetim@dialize.com.br',
-              subject: `[NexaMED] Solicitação de Troca de Plantão — ${selectedShiftForSwap.date}`,
+              subject: `[Nex-Ai.MED] Solicitação de Troca de Plantão — ${selectedShiftForSwap.date}`,
               date: new Date().toLocaleString('pt-BR')
             },
             {
               to: activeDoctor.email || 'contato@techcosta.net',
-              subject: `[NexaMED] Comprovante de Solicitação de Troca — ${selectedShiftForSwap.date}`,
+              subject: `[Nex-Ai.MED] Comprovante de Solicitação de Troca — ${selectedShiftForSwap.date}`,
               date: new Date().toLocaleString('pt-BR')
             }
           ]
@@ -182,16 +181,6 @@ export default function MedicalMyShiftsTab({
           )}
         </div>
       </div>
-
-      {/* Monthly Production Dispatch Card */}
-      <MedicalSendProductionCard
-        doctor={activeDoctor}
-        schedules={schedules}
-        procedures={procedures}
-        appointments={appointments}
-        settings={settings}
-        onSaveSettings={onSaveSettings}
-      />
 
       {/* Modal: Solicitar Troca de Plantão */}
       {showSwapModal && selectedShiftForSwap && (

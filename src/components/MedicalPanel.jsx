@@ -17,6 +17,7 @@ import MedicalSettingsTab from './medical/MedicalSettingsTab';
 import MedicalStatementModal from './medical/MedicalStatementModal';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
+import NexAiBrand from './common/NexAiBrand';
 
 export default function MedicalPanel({ currentUser, onBack }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
@@ -376,9 +377,11 @@ export default function MedicalPanel({ currentUser, onBack }) {
             <Stethoscope size={28} color="#fff" />
           </div>
           <div>
-            <h1 style={styles.heroTitle}>NexaMED — Gestão Médica & Escalas</h1>
+            <h1 style={styles.heroTitle}>
+              <NexAiBrand size="lg" suffix=".MED" showIcon={false} />
+            </h1>
             <p style={styles.heroSubtitle}>
-              Escala de plantões nos salões/DP, produção ambulatorial, bolsa de trocas e repasse financeiro.
+              Escala de plantões nos salões, produção ambulatorial, bolsa de trocas e repasse financeiro.
             </p>
           </div>
         </div>
@@ -574,7 +577,10 @@ const styles = {
     fontSize: '1.6rem',
     fontWeight: '800',
     color: 'var(--text-primary, #0f172a)',
-    margin: 0
+    margin: 0,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
   },
   heroSubtitle: {
     fontSize: '0.9rem',

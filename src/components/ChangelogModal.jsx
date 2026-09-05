@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.57',
+      date: '05/09/2026',
+      title: 'Nex-Ai.MED — Modal Recorrente com Rodapé Fixo, Branding Oficial & Desconexão de Envio de E-mail',
+      description: 'Aprimoramento da usabilidade e alinhamento do módulo Gestão Médica (Nex-Ai.MED): correção estrutural no modal de escala recorrente eliminando a necessidade de diminuir o zoom do navegador para salvar, aplicação do novo branding oficial com gradiente Antigravity IDE e remoção definitiva da tela/card de envio de produção por e-mail e suas conexões.',
+      changes: [
+        { type: 'Modal Recorrente Responsivo', text: 'Restruturação arquitetural do modal com cabeçalho fixo, corpo rolável independente e rodapé sticky com botões Cancelar e Salvar permanentemente visíveis em qualquer resolução sem ajuste de zoom.' },
+        { type: 'Branding Oficial Nex-Ai.MED', text: 'Aplicação da identidade Nex-Ai com gradiente Antigravity IDE no título do módulo, no demonstrativo mensal impresso e nos e-mails de solicitação de trocas.' },
+        { type: 'Remoção de Envio de E-mail', text: 'Eliminação definitiva do card e telas de envio de produção mensal por e-mail e desconexão completa das abas Produção e Meus Plantões.' },
+        { type: 'Padrão Rigoroso de Rótulos', text: 'Adesão estrita ao padrão de 1 palavra nos campos e botões do formulário de escala (Data, Mês, Dias, Setor, Turno, Médico, Titular, Observação, Cancelar e Salvar).' }
+      ]
+    },
+    {
       version: 'v4.9.56',
       date: '05/09/2026',
       title: 'Organização da Raiz do Projeto — Centralização de Documentos, Escalas e Planilhas em docs/',

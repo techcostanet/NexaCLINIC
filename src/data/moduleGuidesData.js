@@ -1359,7 +1359,7 @@ export const MODULE_GUIDES = {
           'Escolha o Mês de competência e selecione os dias da semana desejados (ex: Seg, Qua, Sex ou utilize os botões de atalho rápido).',
           'Confira a quantidade e a lista de datas calculadas na prévia dinâmica.',
           'Selecione o Salão, o Turno e o Médico nefrologista responsável.',
-          'Marque se deseja sobrescrever plantões já preenchidos nestas datas e clique em "Salvar Plantões".'
+          'Marque se deseja sobrescrever plantões já preenchidos nestas datas e clique no botão fixo "Salvar", que permanece sempre visível na base do modal sem necessidade de diminuir o zoom do navegador.'
         ]
       },
       {

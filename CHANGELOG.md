@@ -1,3 +1,20 @@
+## [v4.9.57] - 05 de Setembro, 2026
+### Nex-Ai.MED — Modal Recorrente com Rodapé Fixo, Branding Oficial & Desconexão de Envio de E-mail
+- **Modal Recorrente Responsivo sem Necessidade de Zoom (`MedicalScheduleTab.jsx`):**
+  - Restruturação arquitetural do modal de adicionar e editar escala com altura máxima contida (`maxHeight: min(90vh, 740px)`), cabeçalho fixo com fechamento rápido, corpo com rolagem suave independente (`overflowY: auto`) e rodapé sticky com os botões "Cancelar" e "Salvar".
+  - Eliminação definitiva da necessidade de diminuir o zoom do navegador (`Ctrl -`) para alcançar o botão de finalização em monitores de menor resolução ou telas escaladas.
+- **Branding Oficial `Nex-Ai.MED` (`MedicalPanel.jsx`, `MedicalStatementModal.jsx`, `MedicalScheduleTab.jsx`):**
+  - Aplicação do componente oficial `NexAiBrand` com gradiente prismático Antigravity IDE e identificador de módulo `.MED`.
+  - Atualização dos demonstrativos mensais impressos para `Nex-Ai CLINIC • Nefrologia & Terapia Renal Substitutiva` e dos registros de log de e-mail de trocas para `[Nex-Ai.MED]`.
+- **Desconexão e Remoção da Tela de Envio de E-mail (`MedicalSendProductionCard.jsx`):**
+  - Remoção definitiva do card e do formulário "Enviar produção do mês" e desconexão das abas de Produção (`MedicalProductionTab.jsx`) e Meus Plantões (`MedicalMyShiftsTab.jsx`), higienizando o fluxo financeiro/ambulatorial.
+- **Padrão Rigoroso de Rótulos de 1 Palavra:**
+  - Padronização concisa de campos e botões: "Data", "Mês", "Dias", "Setor", "Turno", "Médico", "Titular", "Observação", "Cancelar" e "Salvar".
+- **Atualização da Base de Manuais:**
+  - Atualização do tutorial de escala recorrente no arquivo `src/data/moduleGuidesData.js`.
+
+---
+
 ## [v4.9.56] - 05 de Setembro, 2026
 ### Organização da Raiz do Projeto — Centralização de Documentos, Escalas e Planilhas em docs/
 - **Realocação da Pasta `Escalas de Pacientes` para `docs/Escalas de Pacientes/`:**

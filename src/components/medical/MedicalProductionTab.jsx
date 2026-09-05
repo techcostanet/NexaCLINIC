@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
 import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
-import MedicalSendProductionCard from './MedicalSendProductionCard';
 
 export default function MedicalProductionTab({
   selectedMonth,
@@ -252,15 +251,6 @@ export default function MedicalProductionTab({
           </tbody>
         </table>
       </div>
-
-      {/* Monthly Production Dispatch Card */}
-      <MedicalSendProductionCard
-        schedules={schedules}
-        procedures={procedures}
-        appointments={appointments}
-        settings={settings}
-        onSaveSettings={onSaveSettings}
-      />
     </div>
   );
 }
