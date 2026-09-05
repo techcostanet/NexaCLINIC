@@ -3,9 +3,10 @@ import { dbService } from '../firebase';
 import { 
   Megaphone, Search, Plus, Clock, User, RefreshCw, Building2, 
   Trash2, Edit3, AlertTriangle, List, LayoutList, LayoutGrid, X,
-  Calendar, MessageSquare
+  Calendar, MessageSquare, Activity
 } from 'lucide-react';
 import DialysisScheduleTab from './assist/DialysisScheduleTab';
+import AssistSurgeriesTab from './assist/AssistSurgeriesTab';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
 
@@ -71,6 +72,7 @@ export default function AssistPanel({ currentUser }) {
     { id: 'Hemotransfusão', label: 'Hemotransfusão', color: '#e11d48', bg: '#fff1f2', border: '#fecdd3', icon: '🩸' },
     { id: 'Infecção', label: 'Infecção', color: '#9333ea', bg: '#faf5ff', border: '#e9d5ff', icon: '🦠' },
     { id: 'Acesso Vascular', label: 'Acesso Vascular', color: '#0d9488', bg: '#f0fdfa', border: '#99f6e4', icon: '💉' },
+    { id: 'Cirurgias', label: 'Cirurgias', color: '#0284c7', bg: '#f0f9ff', border: '#bae6fd', icon: '🩺' },
     { id: 'Precaução de Contato', label: 'Precaução de Contato', color: '#c2410c', bg: '#fff7ed', border: '#ffedd5', icon: '🛑' },
     { id: 'Transferência', label: 'Transferência', color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe', icon: '🔵' },
     { id: 'Nutrição', label: 'Nutrição', color: '#059669', bg: '#ecfdf5', border: '#6ee7b7', icon: '🥗' },
@@ -510,6 +512,27 @@ export default function AssistPanel({ currentUser }) {
               <MessageSquare size={16} />
               <span>Mural</span>
             </button>
+            <button
+              onClick={() => setActiveAssistTab('cirurgias')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 18px',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: activeAssistTab === 'cirurgias' ? '700' : '600',
+                fontSize: '0.88rem',
+                backgroundColor: activeAssistTab === 'cirurgias' ? '#0284c7' : 'transparent',
+                color: activeAssistTab === 'cirurgias' ? '#ffffff' : '#64748b',
+                boxShadow: activeAssistTab === 'cirurgias' ? '0 2px 8px rgba(2, 132, 199, 0.25)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Activity size={16} />
+              <span>Cirurgias</span>
+            </button>
           </div>
 
           <UnitSelector compact showLabel={false} />
@@ -526,6 +549,11 @@ export default function AssistPanel({ currentUser }) {
 
       {activeAssistTab === 'escala' ? (
         <DialysisScheduleTab
+          currentUser={currentUser}
+          onOpenPostModalWithPatient={(pData) => handleOpenCreateModal(pData)}
+        />
+      ) : activeAssistTab === 'cirurgias' ? (
+        <AssistSurgeriesTab
           currentUser={currentUser}
           onOpenPostModalWithPatient={(pData) => handleOpenCreateModal(pData)}
         />
@@ -944,7 +972,7 @@ export default function AssistPanel({ currentUser }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Megaphone size={20} color="var(--primary-color)" />
                 <h3 style={styles.modalTitle}>
-                  {editingPost ? 'Editar Comunicado' : 'Novo Comunicado'}
+                  {editingPost ? 'Editar' : 'Comunicado'}
                 </h3>
               </div>
               <button onClick={() => setShowPostModal(false)} style={styles.modalCloseBtn}>×</button>

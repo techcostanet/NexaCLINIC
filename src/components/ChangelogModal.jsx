@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.47',
+      date: '05/09/2026',
+      title: 'NexaASSIST — Agendamento de Cirurgias Vasculares, 4 Modos de Visualização & Integração com o Mural',
+      description: 'Implementação do agendamento cirúrgico para pacientes renais no módulo NexaASSIST: nova aba Cirurgias no topo, 4 modos operacionais (Semana, Mês, Dia e Compacto), categoria Cirurgias no Mural e disparo automático de comunicados clínicos a cada agendamento.',
+      changes: [
+        { type: 'Aba Cirurgias no NexaASSIST', text: 'Novo botão de aba ao lado do Mural com acesso direto ao agendamento de fístulas (FAV), implantes/retiradas de cateter (Permcath/CDL) e exames duplex.' },
+        { type: '4 Modos de Visualização', text: 'Visualizações por Semana (fiel ao documento Mapa Cirúrgico Vascular), Mês (calendário), Dia (timeline detalhada) e Compacto (tabela de alta densidade).' },
+        { type: 'Integração com o Mural', text: 'Criação da categoria Cirurgias no feed com publicação instantânea dos dados cirúrgicos, cirurgião, anestesista, hospital, ATB profilático e materiais.' },
+        { type: 'Padrão do Mapa Cirúrgico', text: 'Alertas visuais para vagas de urgência ("CDL de Urgência"), pendências ("Aguardando PTFE", "Pendente Risco Cirúrgico"), bloqueio de feriados e impressão para pranchetas.' }
+      ]
+    },
+    {
       version: 'v4.9.46',
       date: '04/09/2026',
       title: 'Escala Recorrente por Dias da Semana & Cópia Inteligente de Mês Anterior',

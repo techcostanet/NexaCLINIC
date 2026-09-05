@@ -16,6 +16,7 @@ import * as storageFunctions from './services/firebase/storageService';
 import * as purchasingFunctions from './services/firebase/purchasingService';
 import * as patientCallFunctions from './services/firebase/patientCallService';
 import * as tvTipsFunctions from './services/firebase/tvTipsService';
+import * as surgeriesFunctions from './services/firebase/surgeriesService';
 
 // Standard exports for the rest of the application
 export const authService = {
@@ -37,6 +38,7 @@ export const dbService = {
   ...maintenanceFunctions,
   ...sesmtFunctions,
   ...assistFunctions,
+  ...surgeriesFunctions,
   ...medicalFunctions,
   ...dialysisScheduleFunctions,
   ...storageFunctions,

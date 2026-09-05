@@ -5265,6 +5265,442 @@ export const mockFirestore = {
     );
     dispensations.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
     return { batches, dispensations };
+  },
+
+  // NexaASSIST - Agendamento de Cirurgias
+  getSurgeries: async (filters = {}) => {
+    await new Promise(resolve => setTimeout(resolve, 80));
+    const db = getDB();
+    if (!db.surgeries || db.surgeries.length === 0) {
+      db.surgeries = [
+        // Terça-feira 08/09/2026
+        {
+          id: 'surg-1',
+          date: '2026-09-08',
+          time: '12:00',
+          patientName: 'EDNALVA SILVA DAS FLORES',
+          procedure: 'IMPLANTE DE PERMCATH',
+          indication: 'ACESSO',
+          motive: 'ACESSO',
+          surgeon: 'Moisés Arantes Diniz',
+          anesthesiologist: 'Sem Agenda',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Agendado',
+          antibiotic: 'Cefazolina 2g IV',
+          observations: '',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-2',
+          date: '2026-09-08',
+          time: '13:00',
+          patientName: 'CDL DE URGENCIA',
+          procedure: 'CDL DE URGENCIA',
+          indication: 'URGÊNCIA',
+          motive: 'URGÊNCIA',
+          surgeon: 'Moisés Arantes Diniz',
+          anesthesiologist: 'Sem Agenda',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Urgência',
+          antibiotic: '',
+          observations: 'Reserva de leito/bloco para urgência vascular',
+          isUrgency: true,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-3',
+          date: '2026-09-08',
+          time: '12:00',
+          patientName: 'ANDERSON DE CARVALHO',
+          procedure: 'DUPLEX',
+          indication: 'DOR PUNÇÃO FAV',
+          motive: 'DOR PUNÇÃO FAV',
+          surgeon: 'Moisés Arantes Diniz',
+          anesthesiologist: 'Sem Agenda',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Agendado',
+          antibiotic: '',
+          observations: '',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-4',
+          date: '2026-09-08',
+          time: '12:00',
+          patientName: 'ELENA SILVANA DE REZENDE',
+          procedure: 'DUPLEX',
+          indication: 'DOR EM FAV',
+          motive: 'DOR EM FAV',
+          surgeon: 'Moisés Arantes Diniz',
+          anesthesiologist: 'Sem Agenda',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Agendado',
+          antibiotic: '',
+          observations: '',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-5',
+          date: '2026-09-08',
+          time: '12:00',
+          patientName: 'ANGELA MARIA BARROSO DA SILVA',
+          procedure: 'DUPLEX',
+          indication: 'DIFICULDADE DE PUNÇÃO',
+          motive: 'DIFICULDADE DE PUNÇÃO',
+          surgeon: 'Moisés Arantes Diniz',
+          anesthesiologist: 'Sem Agenda',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Agendado',
+          antibiotic: '',
+          observations: '',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-6',
+          date: '2026-09-08',
+          time: '12:00',
+          patientName: 'GERALDA DA SILVA FERREIRA',
+          procedure: 'DUPLEX',
+          indication: 'ACESSO',
+          motive: 'ACESSO',
+          surgeon: 'Moisés Arantes Diniz',
+          anesthesiologist: 'Sem Agenda',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Agendado',
+          antibiotic: '',
+          observations: '',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-7',
+          date: '2026-09-08',
+          time: '12:00',
+          patientName: 'JANETHE MARIA DO NASCIMENTO SANTOS',
+          procedure: 'DUPLEX',
+          indication: 'ABAULAMENTO DE FAV',
+          motive: 'ABAULAMENTO DE FAV',
+          surgeon: 'Moisés Arantes Diniz',
+          anesthesiologist: 'Sem Agenda',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Agendado',
+          antibiotic: '',
+          observations: '',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-8',
+          date: '2026-09-08',
+          time: '13:00',
+          patientName: 'ISABEL EVANGELISTA GANGANA',
+          procedure: 'DUPLEX',
+          indication: 'DOR EM FAV APÓS HEMATOMA',
+          motive: 'DOR EM FAV APÓS HEMATOMA',
+          surgeon: 'Moisés Arantes Diniz',
+          anesthesiologist: 'Sem Agenda',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Agendado',
+          antibiotic: '',
+          observations: '',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-9',
+          date: '2026-09-08',
+          time: '13:00',
+          patientName: 'HUANDER DE FARIA EUZEVIO',
+          procedure: 'DUPLEX',
+          indication: 'DIFICULDADE DE PUNÇÃO+DOR',
+          motive: 'DIFICULDADE DE PUNÇÃO+DOR',
+          surgeon: 'Moisés Arantes Diniz',
+          anesthesiologist: 'Sem Agenda',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Agendado',
+          antibiotic: '',
+          observations: '',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        // Quarta-feira 09/09/2026
+        {
+          id: 'surg-10',
+          date: '2026-09-09',
+          time: '13:00',
+          patientName: 'LEONARD JANNEU FERREIRA',
+          procedure: 'DUPLEX',
+          indication: 'FALENCIA PRIMARIA',
+          motive: 'FALENCIA PRIMARIA',
+          surgeon: 'Alexandre Jesus',
+          anesthesiologist: 'Sem Agenda',
+          hospital: 'Clínica Dialize',
+          status: 'Agendado',
+          antibiotic: '',
+          observations: '',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        // Quinta-feira 10/09/2026
+        {
+          id: 'surg-11',
+          date: '2026-09-10',
+          time: '08:00',
+          patientName: 'MARIA REGINA MAXIMO',
+          procedure: 'FAV SIMPLES COM SUPORTE ANESTESICO',
+          indication: 'ACESSO',
+          motive: 'ACESSO',
+          surgeon: 'Alexandre Jesus',
+          anesthesiologist: 'Matheus',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Agendado',
+          antibiotic: 'Cefazolina 2g IV',
+          observations: '',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-12',
+          date: '2026-09-10',
+          time: '08:00',
+          patientName: 'EUSTAQUIO FERNANDES GONÇALVES',
+          procedure: 'FAV BASILICA',
+          indication: 'ACESSO',
+          motive: 'ACESSO',
+          surgeon: 'Alexandre Jesus',
+          anesthesiologist: 'Matheus',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Agendado',
+          antibiotic: 'Cefazolina 2g IV',
+          observations: '',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-13',
+          date: '2026-09-10',
+          time: '10:00',
+          patientName: 'PAULO SERGIO DA ROCHA',
+          procedure: 'FAV COM PTFE',
+          indication: 'ACESSO',
+          motive: 'ACESSO',
+          surgeon: 'Alexandre Jesus',
+          anesthesiologist: 'Matheus',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Pendente',
+          antibiotic: 'Cefazolina 2g IV',
+          observations: 'AGUARDANDO CHEGADA DE PTFE',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-14',
+          date: '2026-09-10',
+          time: '15:00',
+          patientName: 'CDL DE URGENCIA',
+          procedure: 'CDL DE URGENCIA',
+          indication: 'URGÊNCIA',
+          motive: 'URGÊNCIA',
+          surgeon: 'Alexandre Jesus',
+          anesthesiologist: 'Matheus',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Urgência',
+          antibiotic: '',
+          observations: 'Encaixe de urgência vascular no bloco',
+          isUrgency: true,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        // Sexta-feira 11/09/2026
+        {
+          id: 'surg-15',
+          date: '2026-09-11',
+          time: '08:00',
+          patientName: 'MARCIA DE OLIVEIRA SILVA',
+          procedure: 'FAV SIMPLES COM SUPORTE ANESTESICO',
+          indication: 'ACESSO',
+          motive: 'ACESSO',
+          surgeon: 'Moisés Arantes Diniz',
+          anesthesiologist: 'Bruno Xavier',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Pendente',
+          antibiotic: 'Cefazolina 2g IV',
+          observations: 'PENDENTE RISCO CIRURGICO',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-16',
+          date: '2026-09-11',
+          time: '08:00',
+          patientName: 'VALDNEY SALUSTIANO DE CARVALHO',
+          procedure: 'FAV SIMPLES COM SUPORTE ANESTESICO',
+          indication: 'ACESSO',
+          motive: 'ACESSO',
+          surgeon: 'Moisés Arantes Diniz',
+          anesthesiologist: 'Bruno Xavier',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Pendente',
+          antibiotic: 'Cefazolina 2g IV',
+          observations: 'PENDENTE RISCO CIRURGICO',
+          isUrgency: false,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        },
+        {
+          id: 'surg-17',
+          date: '2026-09-11',
+          time: '12:00',
+          patientName: 'CDL DE URGENCIA',
+          procedure: 'CDL DE URGENCIA',
+          indication: 'URGÊNCIA',
+          motive: 'URGÊNCIA',
+          surgeon: 'Alexandre Jesus',
+          anesthesiologist: 'Sem Agenda',
+          hospital: 'Hospital Regional – Portaria Principal – Sala Cirúrgica 5º Andar',
+          status: 'Urgência',
+          antibiotic: '',
+          observations: 'Encaixe de urgência vascular no bloco',
+          isUrgency: true,
+          unitId: 'betim',
+          createdAt: '2026-09-01T10:00:00.000Z'
+        }
+      ];
+
+      // Semeia também os posts correspondentes no mural para a categoria 'Cirurgias'
+      if (!db.assist_posts) db.assist_posts = [];
+      const hasSurgeryPosts = db.assist_posts.some(p => p.category === 'Cirurgias');
+      if (!hasSurgeryPosts) {
+        db.surgeries.slice(0, 4).forEach((surg, idx) => {
+          db.assist_posts.unshift({
+            id: `post-surg-${surg.id}`,
+            source: 'surgery_schedule',
+            title: `Cirurgia: ${surg.procedure} — ${surg.patientName}`,
+            message: `📅 Data: ${surg.date.split('-').reverse().join('/')} às ${surg.time}\n🏥 Local: ${surg.hospital}\n👨‍⚕️ Cirurgião: ${surg.surgeon}\n💉 Anestesista: ${surg.anesthesiologist}\n🩺 Procedimento: ${surg.procedure}\n🎯 Motivo: ${surg.indication}${surg.observations ? '\n📝 Obs: ' + surg.observations : ''}`,
+            category: 'Cirurgias',
+            urgency: surg.isUrgency ? 'Urgente' : (surg.observations ? 'Atenção' : 'Informativo'),
+            patientName: surg.patientName,
+            room: surg.hospital,
+            shift: surg.time,
+            status: 'published',
+            author: 'Agendamento Cirúrgico',
+            authorRole: 'Cirurgias',
+            surgeryId: surg.id,
+            unitId: surg.unitId || 'betim',
+            createdAt: new Date(Date.now() - idx * 3600000).toISOString(),
+            readBy: []
+          });
+        });
+      }
+
+      setDB(db);
+    }
+
+    let list = [...db.surgeries];
+    if (filters.unitId && filters.unitId !== 'all') {
+      list = list.filter(item => !item.unitId || item.unitId === 'all' || item.unitId === filters.unitId);
+    }
+    return list;
+  },
+
+  createSurgery: async (surgeryData) => {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const db = getDB();
+    if (!db.surgeries) db.surgeries = [];
+    const newDoc = {
+      id: `surg_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      ...surgeryData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    db.surgeries.push(newDoc);
+    setDB(db);
+    return newDoc;
+  },
+
+  updateSurgery: async (id, surgeryData) => {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const db = getDB();
+    if (!db.surgeries) db.surgeries = [];
+    const idx = db.surgeries.findIndex(s => s.id === id);
+    if (idx !== -1) {
+      db.surgeries[idx] = { ...db.surgeries[idx], ...surgeryData, updatedAt: new Date().toISOString() };
+      setDB(db);
+      return db.surgeries[idx];
+    }
+    return { id, ...surgeryData };
+  },
+
+  deleteSurgery: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 80));
+    const db = getDB();
+    if (!db.surgeries) db.surgeries = [];
+    db.surgeries = db.surgeries.filter(s => s.id !== id);
+    setDB(db);
+    return true;
+  },
+
+  getSurgeryBlocks: async () => {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const db = getDB();
+    if (!db.surgery_blocks) {
+      db.surgery_blocks = [
+        {
+          id: 'block-1',
+          date: '2026-09-07',
+          reason: 'NÃO TEREMOS AGENDAMENTO DEVIDO FERIADO',
+          unitId: 'betim'
+        }
+      ];
+      setDB(db);
+    }
+    return db.surgery_blocks;
+  },
+
+  toggleSurgeryBlock: async (blockData) => {
+    await new Promise(resolve => setTimeout(resolve, 80));
+    const db = getDB();
+    if (!db.surgery_blocks) db.surgery_blocks = [];
+    const existingIdx = db.surgery_blocks.findIndex(b => b.date === blockData.date);
+
+    if (existingIdx !== -1) {
+      if (!blockData.reason) {
+        db.surgery_blocks.splice(existingIdx, 1);
+        setDB(db);
+        return { unblocked: true, date: blockData.date };
+      } else {
+        db.surgery_blocks[existingIdx] = { ...db.surgery_blocks[existingIdx], ...blockData, updatedAt: new Date().toISOString() };
+        setDB(db);
+        return db.surgery_blocks[existingIdx];
+      }
+    } else {
+      const newBlock = {
+        id: `block_${Date.now()}`,
+        ...blockData,
+        createdAt: new Date().toISOString()
+      };
+      db.surgery_blocks.push(newBlock);
+      setDB(db);
+      return newBlock;
+    }
   }
 };
 

@@ -683,11 +683,19 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Mural de Comunicados Clínicos',
-        desc: 'Feed ágil categorizado com 14 tipos clínicos (Internação, Alta, Intercorrência, Evento Adverso, Hemotransfusão, Infecção, Acesso Vascular, Precaução de Contato, Transferência, Nutrição, Psicologia, Serviço Social, Óbito e Geral) com 3 modos de visualização (Compacta, Normal e Grade).'
+        desc: 'Feed ágil categorizado com 15 tipos clínicos (Internação, Alta, Intercorrência, Evento Adverso, Hemotransfusão, Infecção, Acesso Vascular, Cirurgias, Precaução de Contato, Transferência, Nutrição, Psicologia, Serviço Social, Óbito e Geral) com 3 modos de visualização (Compacta, Normal e Grade).'
       },
       {
-        title: 'Impressão A4 da Escala Operacional',
-        desc: 'Geração de espelho formatado em A4 da escala diária/semanal para afixação nas pranchetas dos postos de enfermagem dos salões.'
+        title: 'Agendamento de Cirurgias Vasculares & 4 Modos de Visualização',
+        desc: 'Controle cirúrgico completo dos pacientes renais (FAV, Permcath, Duplex, PTFE) com visualizações por Semana (fiel ao formato do Mapa Cirúrgico Vascular), Mês, Dia e Compacto com impressão para pranchetas.'
+      },
+      {
+        title: 'Integração Direta do Agendamento ao Mural Clínico',
+        desc: 'Publicação e sincronização automática de comunicados na categoria Cirurgias com dados operacionais, cirurgião, anestesista, hospital, ATB profilático e alertas de materiais (PTFE e risco cirúrgico).'
+      },
+      {
+        title: 'Impressão A4 da Escala Operacional & Mapa Cirúrgico',
+        desc: 'Geração de espelhos formatados em A4 da escala diária/semanal e do mapa cirúrgico vascular para afixação nas pranchetas dos postos de enfermagem dos salões.'
       },
       {
         title: 'Isolamento de Filiais (Betim / MG vs Taguatinga / DF)',
@@ -729,12 +737,36 @@ export const MODULE_GUIDES = {
           'O modal abrirá já pré-preenchido com o nome do paciente, salão e turno.',
           'Selecione a categoria clínica, digite o aviso e clique em "Publicar".'
         ]
+      },
+      {
+        title: 'Como Agendar uma Cirurgia e Publicar no Mural',
+        steps: [
+          'No topo do NexaASSIST, clique na aba "Cirurgias".',
+          'Escolha o modo de visualização desejado: Semana, Mês, Dia ou Compacto.',
+          'Clique no botão "Cirurgia", selecione o paciente, procedimento, cirurgião, horário e observações.',
+          'Mantenha ativada a opção "Publicar no Mural" e clique em "Salvar". O agendamento constará imediatamente na agenda e no mural.'
+        ]
+      },
+      {
+        title: 'Como Imprimir o Mapa Cirúrgico ou Bloquear Feriado',
+        steps: [
+          'Na aba "Cirurgias", selecione o período desejado e clique no botão "Imprimir" para gerar a folha em formato A4.',
+          'Para marcar dias sem agendamento (feriados ou manutenção do bloco), clique em "Bloquear" no cabeçalho do dia e confirme a justificativa.'
+        ]
       }
     ],
     duvidas: [
       {
         pergunta: 'Por que ao trocar para Taguatinga a escala de diálise aparece vazia/zerada?',
         resposta: 'Porque a filial Taguatinga / DF é uma nova unidade sem pacientes legados de Betim. Os novos pacientes e leitos de Taguatinga passarão a aparecer conforme forem admitidos no sistema.'
+      },
+      {
+        pergunta: 'Como funciona a integração entre o Agendamento de Cirurgias e o Mural?',
+        resposta: 'Ao confirmar um agendamento na aba Cirurgias, o sistema gera automaticamente um comunicado oficial na categoria "Cirurgias" do Mural com os dados de data, horário, cirurgião, procedimento, hospital e observações.'
+      },
+      {
+        pergunta: 'Como registrar reservas e encaixes de urgência cirúrgica?',
+        resposta: 'No formulário de agendamento, utilize o botão rápido "Urgência" ou digite "CDL DE URGENCIA". A linha será destacada visualmente em amarelo na grade com status Urgência.'
       },
       {
         pergunta: 'Como saber o status de manutenção de uma máquina de hemodiálise?',
@@ -745,8 +777,8 @@ export const MODULE_GUIDES = {
         resposta: 'Verde (🟢) representa FAV (Fístula Arteriovenosa com calibre de agulha 15, 16 ou 17), Amarelo (🟡) representa CDL (Cateter Duplo Lúmen), Roxo (🟣) representa Permcath e Vermelho (🔴) indica protocolo de Uso Único / Isolamento (HIV/Hepatite).'
       },
       {
-        pergunta: 'As alterações na escala são salvas em tempo real?',
-        resposta: 'Sim. Qualquer remanejamento, alocação de vaga ou troca é sincronizado instantaneamente na base de dados para toda a equipe assistencial.'
+        pergunta: 'As alterações na escala e cirurgias são salvas em tempo real?',
+        resposta: 'Sim. Qualquer agendamento, remanejamento, alocação de vaga ou troca é sincronizado instantaneamente na base de dados para toda a equipe assistencial.'
       }
     ]
   },

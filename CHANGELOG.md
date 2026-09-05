@@ -1,3 +1,23 @@
+## [v4.9.47] - 05 de Setembro, 2026
+### NexaASSIST — Agendamento de Cirurgias Vasculares, 4 Modos de Visualização & Integração com o Mural
+- **Aba Cirurgias no NexaASSIST (`AssistPanel.jsx` & `AssistSurgeriesTab.jsx`):**
+  - Adição do botão/aba **`Cirurgias`** no seletor do Hero Banner ao lado de `Mural`.
+  - Submódulo de agendamento cirúrgico especializado para pacientes renais e cirurgias vasculares (FAV simples com suporte anestésico, FAV basílica, FAV com PTFE, implante e retirada de permcath, duplex vascular e ligaduras).
+- **4 Modos de Visualização Operacional:**
+  - **Semana:** Fiel ao modelo do documento oficial *Mapa Cirúrgico Vascular*, organizado por blocos diários de segunda a sexta com cabeçalhos de início, cirurgião responsável, anestesista, local/hospital e tabela detalhada de procedimentos.
+  - **Mês:** Calendário mensal com distribuição de procedimentos e marcadores de status.
+  - **Dia:** Linha do tempo horária cronológica detalhada com ficha completa do procedimento e condutas.
+  - **Compacto:** Tabela densa de dados com pesquisa rápida instantânea e ordenação.
+- **Integração Automática com o Mural de Notícias:**
+  - Nova categoria **`Cirurgias`** no Mural com card de contadores em tempo real.
+  - Ao salvar um agendamento, o sistema publica automaticamente um comunicado no Mural detalhando data, horário, cirurgião, anestesista, procedimento, motivo clínico, ATB profilático e observações de materiais.
+- **Padronização Fiel ao Mapa Cirúrgico & Impressão Formatada:**
+  - Suporte a alertas e destaques visuais para vagas de urgência ("CDL de Urgência"), pendências de materiais ("Aguardando PTFE") e pendências de exames ("Pendente Risco Cirúrgico").
+  - Botão **`Imprimir`** para espelho A4 de prancheta e rotina de **`Bloquear`** para feriados e manutenções de bloco.
+  - Aplicação estrita da diretriz de rótulos de 1 termo e documentação completa em `moduleGuidesData.js`.
+
+---
+
 ## [v4.9.46] - 04 de Setembro, 2026
 ### Escala Recorrente por Dias da Semana & Cópia Inteligente de Mês Anterior
 - **Escala Recorrente por Dias da Semana (`MedicalScheduleTab.jsx`):**
