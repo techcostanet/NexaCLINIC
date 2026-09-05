@@ -158,5 +158,19 @@ service cloud.firestore {
 
     // NexaASSIST Collections
     match /assist_posts/{id} { allow read, write: if isAuthenticated(); }
+    match /surgeries/{id} { allow read, write: if isAuthenticated(); }
+    match /surgery_blocks/{id} { allow read, write: if isAuthenticated(); }
+
+    // Central Procedures Catalog & Medical Management Collections
+    match /clinical_procedures/{id} { allow read, write: if isAuthenticated(); }
+    match /medical_doctors/{id} { allow read, write: if isAuthenticated(); }
+    match /medical_schedules/{id} { allow read, write: if isAuthenticated(); }
+    match /medical_swaps/{id} { allow read, write: if isAuthenticated(); }
+    match /medical_procedures/{id} { allow read, write: if isAuthenticated(); }
+    match /settings/{id} { allow read, write: if isAuthenticated(); }
+    match /email_logs/{id} { allow read, write: if isAuthenticated(); }
+    match /patient_dispensations/{id} { allow read, write: if isAuthenticated(); }
+    match /product_batches/{id} { allow read, write: if isAuthenticated(); }
+    match /product_kits/{id} { allow read, write: if isAuthenticated(); }
   }
 }

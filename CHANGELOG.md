@@ -1,3 +1,17 @@
+## [v4.9.51] - 05 de Setembro, 2026
+### NexaASSIST — Sincronização e Listagem Completa de Procedimentos Cirúrgicos & Permissões do Firestore
+- **Exibição Universal de Procedimentos no NexaASSIST (`AssistSurgeriesTab.jsx`):**
+  - Substituição do campo de autocompletar restritivo (`<input list>`) por um `<select>` moderno e dinâmico, garantindo a exibição de **todos os 13 procedimentos** marcados com o módulo `Cirurgias` (`assist: true`) no catálogo do T.I.
+  - Ordenação alfabética instantânea dos procedimentos para facilitar a localização ágil pelo operador.
+  - Opção integrada `➕ Outro (Digitar manualmente)...` caso a equipe cirúrgica precise registrar procedimentos específicos não catalogados, com botão para alternar de volta para a lista central.
+  - Omissão de valores monetários no dropdown, mantendo a diretriz de sigilo de custos na área operacional.
+- **Resiliência e Carregamento Assíncrono (`AssistSurgeriesTab.jsx`):**
+  - Utilização de `Promise.allSettled` e fallback inteligente (`INITIAL_PROCEDURES`) para garantir que os procedimentos cadastrados estejam imediatamente disponíveis na abertura do modal, mesmo durante carregamento inicial ou oscilações de rede.
+- **Atualização de Permissões de Segurança (`firestore.rules`):**
+  - Adição de regras para as coleções `clinical_procedures`, `surgeries`, `surgery_blocks`, `medical_doctors`, `medical_schedules`, `medical_swaps`, `medical_procedures`, `settings` e `email_logs`.
+
+---
+
 ## [v4.9.50] - 05 de Setembro, 2026
 ### NexaCONFIG — Catálogo Central de Procedimentos no T.I. & Ocultação de Valores nos Seletores
 - **Catálogo Central de Procedimentos (`ConfigPanel.jsx` & `procedureService.js`):**

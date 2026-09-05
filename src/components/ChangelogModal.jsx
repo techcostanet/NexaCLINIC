@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.51',
+      date: '05/09/2026',
+      title: 'NexaASSIST — Listagem Completa de Procedimentos Cirúrgicos & Permissões do Firestore',
+      description: 'Aprimoramento da seleção de procedimentos no agendamento cirúrgico do NexaASSIST: dropdown universal com todos os procedimentos marcados como "Cirurgias" no T.I., opção de digitação manual e atualização de regras de segurança no Firestore.',
+      changes: [
+        { type: 'Dropdown de Procedimentos no NexaASSIST', text: 'Substituição do campo com autocompletar restritivo por um seletor dropdown abrangente com todos os procedimentos configurados com a flag Cirurgias no T.I.' },
+        { type: 'Ordenação Alfabética & Sigilo de Valores', text: 'Procedimentos exibidos em ordem alfabética sem exibição de valores em R$, mantendo a interface limpa e confidencial.' },
+        { type: 'Suporte a Procedimento Manual', text: 'Opção "Outro (Digitar manualmente)" para procedimentos atípicos não cadastrados no catálogo padrão.' },
+        { type: 'Regras de Segurança no Firestore', text: 'Autorização das coleções clinical_procedures, surgeries e surgery_blocks no firestore.rules para sincronização em nuvem sem bloqueios.' }
+      ]
+    },
+    {
       version: 'v4.9.50',
       date: '05/09/2026',
       title: 'NexaCONFIG — Catálogo Central de Procedimentos no T.I. & Ocultação de Valores nos Seletores',

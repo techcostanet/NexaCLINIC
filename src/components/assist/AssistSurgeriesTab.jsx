@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { dbService } from '../../firebase';
+import { INITIAL_PROCEDURES } from '../../services/firebase/procedureService';
 import { 
   Calendar as CalendarIcon, Clock, User, Plus, Search, Filter, 
   Printer, ChevronLeft, ChevronRight, Edit3, Trash2, CheckCircle2, 
@@ -56,8 +57,8 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
   // Estados Principais
   const [surgeries, setSurgeries] = useState([]);
   const [blocks, setBlocks] = useState([]);
-  const [patients, setPatients] = useState([]);
-  const [catalogProcedures, setCatalogProcedures] = useState([]);
+  const [catalogProcedures, setCatalogProcedures] = useState(INITIAL_PROCEDURES);
+  const [isCustomProcedure, setIsCustomProcedure] = useState(false);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -87,7 +88,7 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
     time: '08:00',
     patientId: '',
     patientName: '',
-    procedure: 'FAV SIMPLES COM SUPORTE ANESTESICO',
+    procedure: 'CONFECÇÃO DE FAV SIMPLES',
     indication: 'ACESSO',
     surgeon: 'Moisés Arantes Diniz',
     anesthesiologist: 'Sem Agenda',
@@ -106,36 +107,43 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
     setTimeout(() => setMessage({ text: '', type: '' }), 4000);
   };
 
-  // Carregar Dados
+  // Carregar Dados com resiliência total (allSettled)
   const loadData = async () => {
     setLoading(true);
     try {
-      const [surgList, blockList, patList, procList] = await Promise.all([
-        dbService.getSurgeries ? dbService.getSurgeries({ unitId: activeUnitId }) : [],
-        dbService.getSurgeryBlocks ? dbService.getSurgeryBlocks() : [],
-        dbService.getPatients ? dbService.getPatients() : [],
-        dbService.getProcedures ? dbService.getProcedures() : []
+      const [surgRes, blockRes, patRes, procRes] = await Promise.allSettled([
+        dbService.getSurgeries ? dbService.getSurgeries({ unitId: activeUnitId }) : Promise.resolve([]),
+        dbService.getSurgeryBlocks ? dbService.getSurgeryBlocks() : Promise.resolve([]),
+        dbService.getPatients ? dbService.getPatients() : Promise.resolve([]),
+        dbService.getProcedures ? dbService.getProcedures() : Promise.resolve([])
       ]);
-      setSurgeries(surgList || []);
-      setBlocks(blockList || []);
-      setPatients(patList || []);
-      setCatalogProcedures(procList || []);
+
+      if (surgRes.status === 'fulfilled') setSurgeries(surgRes.value || []);
+      if (blockRes.status === 'fulfilled') setBlocks(blockRes.value || []);
+      if (patRes.status === 'fulfilled') setPatients(patRes.value || []);
+      if (procRes.status === 'fulfilled' && Array.isArray(procRes.value) && procRes.value.length > 0) {
+        setCatalogProcedures(procRes.value);
+      } else {
+        setCatalogProcedures(INITIAL_PROCEDURES);
+      }
     } catch (err) {
       console.error('Erro ao carregar cirurgias:', err);
       showAlert('Erro ao sincronizar cirurgias.', 'danger');
+      setCatalogProcedures(INITIAL_PROCEDURES);
     } finally {
       setLoading(false);
     }
   };
 
   const availableProcedures = useMemo(() => {
-    if (catalogProcedures && catalogProcedures.length > 0) {
-      const activeForAssist = catalogProcedures
-        .filter(p => p.active !== false && p.modules?.assist !== false)
-        .map(p => p.name);
-      if (activeForAssist.length > 0) return activeForAssist;
-    }
-    return COMMON_PROCEDURES;
+    const list = (catalogProcedures && catalogProcedures.length > 0) ? catalogProcedures : INITIAL_PROCEDURES;
+    const filtered = list
+      .filter(p => p.active !== false && (p.modules ? p.modules.assist === true : true))
+      .map(p => (p.name || '').trim().toUpperCase())
+      .filter(Boolean);
+    const unique = Array.from(new Set(filtered));
+    unique.sort((a, b) => a.localeCompare(b));
+    return unique.length > 0 ? unique : COMMON_PROCEDURES;
   }, [catalogProcedures]);
 
   useEffect(() => {
@@ -267,12 +275,14 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
   // Abertura do Modal de Criação / Edição
   const handleOpenCreateModal = (targetDate = null, defaultTime = '08:00') => {
     setEditingSurgery(null);
+    setIsCustomProcedure(false);
+    const initialProc = availableProcedures[0] || 'CONFECÇÃO DE FAV SIMPLES';
     setFormData({
       date: targetDate || currentDate,
       time: defaultTime,
       patientId: '',
       patientName: '',
-      procedure: 'FAV SIMPLES COM SUPORTE ANESTESICO',
+      procedure: initialProc,
       indication: 'ACESSO',
       surgeon: 'Moisés Arantes Diniz',
       anesthesiologist: 'Sem Agenda',
@@ -288,12 +298,15 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
 
   const handleOpenEditModal = (surgery) => {
     setEditingSurgery(surgery);
+    const currentProc = surgery.procedure || '';
+    const isCustom = !!(currentProc && !availableProcedures.includes(currentProc));
+    setIsCustomProcedure(isCustom);
     setFormData({
       date: surgery.date || currentDate,
       time: surgery.time || '08:00',
       patientId: surgery.patientId || '',
       patientName: surgery.patientName || '',
-      procedure: surgery.procedure || '',
+      procedure: currentProc || availableProcedures[0] || 'CONFECÇÃO DE FAV SIMPLES',
       indication: surgery.indication || surgery.motive || 'ACESSO',
       surgeon: surgery.surgeon || 'Moisés Arantes Diniz',
       anesthesiologist: surgery.anesthesiologist || 'Sem Agenda',
@@ -1141,17 +1154,53 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
               <div style={styles.formGrid2}>
                 <div>
                   <label style={styles.label}>Procedimento</label>
-                  <input
-                    type="text"
-                    required
-                    list="procList"
-                    value={formData.procedure}
-                    onChange={(e) => setFormData({ ...formData, procedure: e.target.value })}
-                    style={styles.input}
-                  />
-                  <datalist id="procList">
-                    {availableProcedures.map(p => <option key={p} value={p} />)}
-                  </datalist>
+                  {!isCustomProcedure ? (
+                    <select
+                      required
+                      value={formData.procedure}
+                      onChange={(e) => {
+                        if (e.target.value === '__custom__') {
+                          setIsCustomProcedure(true);
+                          setFormData({ ...formData, procedure: '' });
+                        } else {
+                          setFormData({ ...formData, procedure: e.target.value });
+                        }
+                      }}
+                      style={styles.select}
+                    >
+                      <option value="">Selecione o procedimento...</option>
+                      {availableProcedures.map(p => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                      {formData.procedure && !availableProcedures.includes(formData.procedure) && (
+                        <option value={formData.procedure}>{formData.procedure}</option>
+                      )}
+                      <option value="__custom__">➕ Outro (Digitar manualmente)...</option>
+                    </select>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <input
+                        type="text"
+                        placeholder="Digite o procedimento..."
+                        value={formData.procedure}
+                        onChange={(e) => setFormData({ ...formData, procedure: e.target.value })}
+                        style={{ ...styles.input, flex: 1 }}
+                        autoFocus
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCustomProcedure(false);
+                          setFormData({ ...formData, procedure: availableProcedures[0] || '' });
+                        }}
+                        style={{ ...styles.todayBtn, padding: '0 10px', fontSize: '0.78rem' }}
+                        title="Voltar para a lista de procedimentos"
+                      >
+                        Lista
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div>
