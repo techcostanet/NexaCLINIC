@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.56',
+      date: '05/09/2026',
+      title: 'Organização da Raiz do Projeto — Centralização de Documentos, Escalas e Planilhas em docs/',
+      description: 'Higienização e estruturação da arquitetura de pastas do repositório: realocação da pasta "Escalas de Pacientes" e de todos os arquivos de dados (.pdf e .csv) da raiz diretamente para o diretório docs/, com sincronização de caminhos em scripts e controle de versão via Git.',
+      changes: [
+        { type: 'Escalas de Pacientes em docs/', text: 'Transferência da pasta de escalas operacionais dos salões e turnos de hemodiálise para docs/Escalas de Pacientes/.' },
+        { type: 'Centralização de Arquivos .pdf e .csv', text: 'Movimentação de comprovantes bancários, apresentações institucionais e planilhas de carga para docs/.' },
+        { type: 'Atualização de Scripts', text: 'Ajuste no script de sincronização de profissionais (sync_doctors_csv.mjs) para ler a base a partir de docs/prodissionais.CSV.' },
+        { type: 'Sincronização Multi-Ambiente', text: 'Commit e push estruturado para o GitHub garantindo a replicação automática da organização em todos os computadores que clonarem ou puxarem o projeto.' }
+      ]
+    },
+    {
       version: 'v4.9.55',
       date: '05/09/2026',
       title: 'Nex-Ai.ASSIST — Modernização do Agendamento Cirúrgico, KPIs Clínicos & Refinamento de Interface',

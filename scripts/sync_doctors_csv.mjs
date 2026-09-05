@@ -23,7 +23,8 @@ const auth = getAuth();
 async function syncDoctors() {
   console.log('Iniciando sincronização de médicos a partir de prodissionais.CSV...');
   
-  const csvBuffer = fs.readFileSync('prodissionais.CSV');
+  const csvPath = fs.existsSync('docs/prodissionais.CSV') ? 'docs/prodissionais.CSV' : 'prodissionais.CSV';
+  const csvBuffer = fs.readFileSync(csvPath);
   const csvText = csvBuffer.toString('latin1');
   const lines = csvText.split('\n').map(l => l.trim()).filter(Boolean);
   

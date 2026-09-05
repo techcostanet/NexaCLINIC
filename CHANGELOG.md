@@ -1,3 +1,16 @@
+## [v4.9.56] - 05 de Setembro, 2026
+### Organização da Raiz do Projeto — Centralização de Documentos, Escalas e Planilhas em docs/
+- **Realocação da Pasta `Escalas de Pacientes` para `docs/Escalas de Pacientes/`:**
+  - Transferência e controle de versão de todas as planilhas CSV de escalas de pacientes dos salões 01, 02 e 03 por turnos para dentro do diretório padronizado `docs/`.
+- **Centralização de Arquivos `.pdf` e `.csv`:**
+  - Higienização da raiz do projeto, movendo comprovantes bancários (`betim-comprovante_17-08-2026 13-10-04.pdf`), apresentações (`Apresentacao_Modulo_Agenda_NexaCLINIC.pdf`) e planilhas de teste/extração (`amostra_teste.csv`, `debitos_extrato.csv`, `prodissionais.CSV`) para `docs/`.
+- **Atualização de Scripts de Dados:**
+  - Adaptação do script `scripts/sync_doctors_csv.mjs` para buscar a base de profissionais preferencialmente em `docs/prodissionais.CSV`.
+- **Replicação Multi-Ambiente:**
+  - Todas as movimentações registradas via Git para sincronização automática em todos os computadores de trabalho da clínica após `git pull`.
+
+---
+
 ## [v4.9.55] - 05 de Setembro, 2026
 ### Nex-Ai.ASSIST — Modernização do Agendamento Cirúrgico, KPIs Clínicos & Refinamento de Interface
 - **Redesign Completo do Agendamento Cirúrgico (`AssistSurgeriesTab.jsx`):**
