@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.55',
+      date: '05/09/2026',
+      title: 'Nex-Ai.ASSIST — Modernização do Agendamento Cirúrgico, KPIs Clínicos & Refinamento de Interface',
+      description: 'Evolução profunda do agendamento de cirurgias vasculares no Nex-Ai.ASSIST: abandono do layout estático inspirado em cópia de PDF por um hub interativo moderno com cards clínicos ricos, painel de métricas KPI em tempo real, alternância entre visualizações Cards/Linhas, atualização do título do módulo com o gradiente oficial Nex-Ai.ASSIST e remoção de botões redundantes.',
+      changes: [
+        { type: 'Modernização de Cirurgias', text: 'Redesign completo da aba Cirurgias: transição de tabela rígida de papel para cards clínicos elegantes com time chips, badges coloridos por procedimento e ações rápidas de 1 clique.' },
+        { type: 'Painel KPI no Topo', text: '5 cartões de métricas dinâmicas computadas em tempo real: Total Agendadas, Fístulas (FAV), Cateteres (Permcath/CDL), Urgências e Concluídas/Realizadas.' },
+        { type: 'Visão Cards & Linhas', text: 'Seletor na visão semanal permitindo alternar entre Cartões Interativos e Tabela Hospitalar Moderna com cabeçalhos diretos.' },
+        { type: 'Branding Nex-Ai.ASSIST', text: 'Atualização do título principal do painel assistencial com o componente NexAiBrand e gradiente prismático Antigravity IDE.' },
+        { type: 'Higienização de Header', text: 'Remoção do botão redundante Relatórios ao lado de Comunicado, mantendo o acesso centralizado na barra superior.' },
+        { type: 'Padrão Rigoroso de UI', text: 'Adesão estrita ao padrão de rótulos de 1 palavra em todos os seletores, botões, modais e cabeçalhos.' }
+      ]
+    },
+    {
       version: 'v4.9.54',
       date: '05/09/2026',
       title: 'Rebranding Global — Nex-Ai CLINIC (AI-Powered Healthcare Ecosystem)',

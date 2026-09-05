@@ -1,3 +1,24 @@
+## [v4.9.55] - 05 de Setembro, 2026
+### Nex-Ai.ASSIST — Modernização do Agendamento Cirúrgico, KPIs Clínicos & Refinamento de Interface
+- **Redesign Completo do Agendamento Cirúrgico (`AssistSurgeriesTab.jsx`):**
+  - Superação do modelo antigo (cópia estática de PDF impresso) por um hub interativo e dinâmico de alta performance clínica.
+  - Novos cartões de agendamento ricos com visualização de horário em destaque (`Clock`), nome do paciente em caixa alta, crachás de procedimento coloridos por categoria e chips clínicos de indicação e antibiótico profilático (`ATB`).
+  - Ação rápida de 1 clique para concluir cirurgia (`Realizado`), alternando o status em tempo real no Firestore e na interface.
+- **Painel KPI de Cirurgias Vasculares no Topo:**
+  - 5 métricas dinâmicas com contadores automáticos calculados a partir dos filtros ativos: **Agendadas**, **Fístulas (FAV)**, **Cateteres (Permcath/CDL)**, **Urgências** e **Realizadas**.
+- **Alternância entre Visualizações na Semana (Cards vs Linhas):**
+  - Introdução de seletor rápido no topo da semana permitindo alternar entre a grade de cartões modernos e uma tabela hospitalar limpa e espaçosa com ações atômicas.
+- **Branding Oficial `Nex-Ai.ASSIST`:**
+  - Atualização do cabeçalho do módulo no `AssistPanel.jsx` utilizando o componente vetorial `NexAiBrand` com gradiente prismático Antigravity no termo "Ai".
+- **Higienização do Cabeçalho Hero:**
+  - Remoção do botão redundante "Relatórios" ao lado de "Comunicado", mantendo a central de 15 relatórios assistenciais no botão padronizado da barra superior.
+- **Padrão Rigoroso de Rótulos de 1 Palavra:**
+  - Conformidade estrita com o padrão de termos únicos em todos os botões (`Agendar`, `Imprimir`, `Salvar`, `Cancelar`, `Hoje`, `Semana`, `Mês`, `Dia`, `Tabela`, `Cards`, `Linhas`) e cabeçalhos de tabela (`Horário`, `Paciente`, `Procedimento`, `Motivo`, `ATB`, `Observação`, `Situação`, `Ações`).
+- **Atualização da Base de Manuais:**
+  - Inclusão dos tutoriais, recursos e dúvidas de agendamento cirúrgico no arquivo `src/data/moduleGuidesData.js`.
+
+---
+
 ## [v4.9.54] - 05 de Setembro, 2026
 ### Rebranding Global — Nex-Ai CLINIC (AI-Powered Healthcare Ecosystem)
 - **Evolução da Marca Institucional para `Nex-Ai CLINIC`:**

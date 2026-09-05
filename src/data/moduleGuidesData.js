@@ -1006,7 +1006,7 @@ export const MODULE_GUIDES = {
   assist: {
     id: 'assist',
     name: 'Assistência Clínica',
-    subtitle: 'Nex-Ai.ASSIST — Feed Assistencial & Comunicados Rápidos',
+    subtitle: 'Nex-Ai.ASSIST — Gestão de Enfermagem, Mural & Cirurgias',
     color: '#ec4899',
     recursos: [
       {
@@ -1014,8 +1014,20 @@ export const MODULE_GUIDES = {
         desc: 'Feed ágil de comunicados clínicos rápidos para passagem de plantão e alinhamento direto entre enfermagem, médicos, nutrição, psicologia e serviço social.'
       },
       {
-        title: '3 Modos de Visualização',
-        desc: 'Alternância instantânea entre modo Normal (Cards detalhados), Compacta (Lista ágil e densa em tabela) e Grade (Cards em múltiplas colunas para monitores).'
+        title: 'Agendamento de Cirurgias Vasculares',
+        desc: 'Hub completo para programação cirúrgica de acessos vasculares (confecção e revisão de FAV simples, basílica, PTFE), implantes/retiradas de Permcath, CDL de urgência e exames Duplex.'
+      },
+      {
+        title: 'Painel KPI de Agendamentos',
+        desc: 'Métricas em tempo real no topo do módulo exibindo total de agendadas, fístulas (FAV), cateteres (Permcath/CDL), urgências e procedimentos realizados.'
+      },
+      {
+        title: 'Múltiplos Modos de Visualização',
+        desc: 'Alternância instantânea entre Semana (com opção de Cards Interativos ou Linhas de Tabela), Mês (visão calendário), Dia (linha do tempo cronológica) e Tabela Compacta de alta densidade.'
+      },
+      {
+        title: 'Bloqueio de Dias e Feriados',
+        desc: 'Recurso para sinalizar recessos ou feriados em dias específicos da semana com aviso em destaque, bloqueando agendamentos indevidos.'
       },
       {
         title: 'Grade de Categorias sem Cortes',
@@ -1032,41 +1044,56 @@ export const MODULE_GUIDES = {
     ],
     tutorial: [
       {
-        title: 'Como Alternar entre os Modos de Visualização',
+        title: 'Como Agendar um Procedimento Cirúrgico',
         steps: [
-          'Na barra de ferramentas, localize o seletor com os botões "Compacta", "Normal" e "Grade".',
-          'Clique em "Compacta" para ver uma tabela de alta densidade com uma linha por ocorrência (ideal para passagens de plantão rápidas).',
-          'Clique em "Normal" para a visualização padrão em cards detalhados.',
-          'Clique em "Grade" para organizar os comunicados em múltiplas colunas simultâneas.'
+          'No painel Nex-Ai.ASSIST, clique na aba "Cirurgias" no topo.',
+          'Clique no botão "+ Agendar" no canto superior direito ou no "+ Agendar" do dia desejado.',
+          'Selecione a Data e Horário da cirurgia.',
+          'Digite o nome do Paciente (ou utilize o botão rápido "Urgência" para vaga reservada de CDL).',
+          'Escolha o Procedimento utilizando os atalhos rápidos (FAV Simples, Permcath, Duplex, etc.) ou selecione do catálogo hospitalar.',
+          'Informe o Motivo/Indicação, Cirurgião responsável, Anestesista, Local (Hospital/Sala) e Antibiótico profilático.',
+          'Mantenha marcada a opção de publicar no Mural se desejar alertar toda a equipe clínica e clique em "Salvar".'
         ]
       },
       {
-        title: 'Como Publicar um Comunicado Rápido',
+        title: 'Como Alternar entre Cards e Linhas na Visão Semanal',
         steps: [
-          'No topo do mural, clique no botão "+ Novo Comunicado".',
+          'Acesse a aba "Cirurgias" e certifique-se de estar no modo "Semana".',
+          'No canto superior direito, localize o seletor com os botões "Cards" e "Linhas".',
+          'Selecione "Cards" para uma visualização moderna com cartões ricos, badges coloridos e ações de 1 clique.',
+          'Selecione "Linhas" para exibir uma grade tabular compacta e direta com cabeçalhos padronizados.'
+        ]
+      },
+      {
+        title: 'Como Concluir uma Cirurgia com 1 Clique',
+        steps: [
+          'No card ou linha do agendamento, clique no botão "Concluir".',
+          'O status será atualizado imediatamente para "Realizado", com badge verde indicativo e sincronização em tempo real.'
+        ]
+      },
+      {
+        title: 'Como Publicar um Comunicado Rápido no Mural',
+        steps: [
+          'No topo do módulo Nex-Ai.ASSIST, clique no botão "+ Comunicado".',
           'Selecione a Categoria clínica desejada (Internação, Alta, Intercorrência, etc.).',
           'Busque e selecione o paciente para vincular o aviso diretamente ao prontuário.',
           'Defina o Salão, Turno e nível de Urgência.',
           'Digite a mensagem clínica e clique em "Publicar".'
         ]
-      },
-      {
-        title: 'Como Filtrar Comunicados por Categoria',
-        steps: [
-          'Dê um clique direto no card da categoria desejada na grade superior (ex: "🔴 Internação" ou "🟢 Alta").',
-          'O card ficará realçado e o feed exibirá imediatamente apenas os comunicados correspondentes.',
-          'Para voltar a ver todos os avisos, clique novamente no mesmo card ou clique no card "Todos".'
-        ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'Quem pode editar ou excluir um comunicado?',
-        resposta: 'Por segurança e rastreabilidade clínica, apenas o profissional que redigiu o comunicado (autor) ou usuários com perfil de Administrador têm permissão para editar ou excluir a postagem.'
+        pergunta: 'Como o agendamento de cirurgias se integra ao Mural Clínico?',
+        resposta: 'Ao cadastrar uma nova cirurgia com a caixa "Publicar no Mural" marcada, o sistema gera automaticamente um comunicado assistencial no mural com os detalhes do paciente, cirurgião e procedimento, garantindo que toda a equipe de enfermagem esteja alinhada.'
       },
       {
-        pergunta: 'Como funciona a filtragem rápida na grade superior?',
-        resposta: 'Basta clicar no card de qualquer categoria na grade superior para filtrar o mural. Um segundo clique no mesmo card desativa o filtro e volta a exibir todos os comunicados.'
+        pergunta: 'Como bloquear um dia específico para feriado?',
+        resposta: 'Na visão semanal ou diária de cirurgias, localize o dia desejado e clique no botão "Bloquear". Digite a justificativa (ex: Feriado Nacional) e confirme. O dia exibirá uma faixa de alerta e impedirá agendamentos até ser desbloqueado.'
+      },
+      {
+        pergunta: 'Quem pode editar ou excluir um comunicado do mural?',
+        resposta: 'Por segurança e rastreabilidade clínica, apenas o profissional que redigiu o comunicado (autor) ou usuários com perfil de Administrador têm permissão para editar ou excluir a postagem.'
       }
     ]
   },

@@ -10,6 +10,7 @@ import AssistSurgeriesTab from './assist/AssistSurgeriesTab';
 import AssistReportsModal from './assist/AssistReportsModal';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
+import NexAiBrand from './common/NexAiBrand';
 
 const isSamePosts = (a, b) => {
   if (!a || !b || a.length !== b.length) return false;
@@ -479,7 +480,9 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
             <Megaphone size={28} color="#fff" />
           </div>
           <div>
-            <h1 style={styles.heroTitle}>NexaASSIST</h1>
+            <h1 style={styles.heroTitle}>
+              <NexAiBrand size="lg" suffix=".ASSIST" showIcon={false} />
+            </h1>
             <p style={styles.heroSubtitle}>
               Gestão assistencial de enfermagem, mapa de leitos por salões e mural clínico.
             </p>
@@ -562,17 +565,6 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
           </div>
 
           <UnitSelector compact showLabel={false} />
-
-          {setIsReportsOpen && (
-            <button 
-              onClick={() => setIsReportsOpen(true)}
-              style={styles.reportsBtn}
-              title="Central de Relatórios Assistenciais (15 Relatórios)"
-            >
-              <FileText size={16} />
-              <span>Relatórios</span>
-            </button>
-          )}
 
           <button 
             onClick={() => handleOpenCreateModal()}
