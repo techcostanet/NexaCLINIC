@@ -1,3 +1,37 @@
+## [v4.9.52] - 05 de Setembro, 2026
+### NexaASSIST — Central de Relatórios Assistenciais (15 Relatórios Especializados: Escala, Mural e Cirurgias)
+- **Central Unificada de Relatórios (`AssistReportsModal.jsx`):**
+  - Integração ao botão **`Relatórios`** na barra superior e no cabeçalho do NexaASSIST, seguindo o padrão consagrado da Central de Relatórios Financeiros (`FinanceReportsModal`).
+  - Total de **15 relatórios gerenciais e assistenciais**, distribuídos em 3 categorias operacionais (5 por pilar):
+    - **Escala (5 relatórios):**
+      1. *Ocupação de Leitos:* Censo em tempo real por salão e turno, capacidade total, leitos ocupados, livres e taxa percentual de ocupação.
+      2. *Escala Nominal de Pacientes:* Distribuição de pacientes por máquina, box, turno e frequência semanal (Seg/Qua/Sex ou Ter/Qui/Sáb).
+      3. *Censo de Acessos Vasculares:* Indicadores de pacientes por tipo de acesso (FAV, Duplo Lúmen, Permcath), lado e tempo de uso.
+      4. *Inventário de Máquinas de Hemodiálise:* Relação de equipamentos ativos, marcas, modelos, números de patrimônio e status operacional.
+      5. *Pacientes em Precaução & Isolamento:* Monitoramento de precauções de contato, hepatites (HBV/HCV), HIV, isolamentos e condutas de enfermagem.
+    - **Mural (5 relatórios):**
+      6. *Extrato Geral de Publicações:* Registro cronológico completo de comunicados, avisos e despachos clínicos com autor e turno.
+      7. *Intercorrências & Eventos Adversos:* Relatório de quedas, hipotensão grave, coagulação de capilares e eventos críticos.
+      8. *Movimentação de Pacientes:* Balanço consolidado de novas admissões, internações hospitalares, transferências, altas e óbitos.
+      9. *Transfusões de Hemocomponentes & Infecções:* Controle de transfusões sanguíneas realizadas na clínica e notificações de infecção de acesso.
+      10. *Volumetria por Categoria & Turno:* Estatística quantitativa de comunicados postados por turno e tipo de postagem.
+    - **Cirurgias (5 relatórios):**
+      11. *Mapa Cirúrgico Geral:* Relação cronológica detalhada de todos os agendamentos cirúrgicos com paciente, procedimento, cirurgião, hospital e status.
+      12. *Produção por Cirurgião:* Quantidade de atos cirúrgicos executados por cada cirurgião vascular com taxa de realização.
+      13. *Cirurgias de Fístula (FAV) vs Cateteres:* Comparativo de confecção de fístulas arteriovenosas contra implantes e retiradas de cateteres.
+      14. *Casos de Urgência & Pendências:* Painel de triagem para procedimentos com alerta de urgência ("CDL de Urgência"), pendência de risco cirúrgico ou PTFE.
+      15. *Perfil por Hospital & Antibioticoprofilaxia:* Distribuição dos procedimentos por hospital conveniado e antibióticos profiláticos padronizados.
+- **Recursos de Exportação e Filtragem:**
+  - **Exportação para PDF (`jsPDF` + `autoTable`):** Cabeçalho hospitalar oficial, logotipo do NexaCLINIC, paleta corporativa elegante, sumário estatístico e quebra de páginas inteligente.
+  - **Exportação para Excel (`xlsx`):** Planilhas tabuladas com colunas dimensionadas, cabeçalhos destacados e compatibilidade nativa com Excel e Google Sheets.
+  - **Impressão Direta do Navegador:** Estilos `@media print` otimizados para impressoras térmicas e pranchetas hospitalares.
+  - **Filtros Dinâmicos:** Filtro por período de datas (`Início` e `Fim`) e seletor de unidade assistencial (`Unidade`).
+- **Conformidade Estrita de UI/UX (`.agents/AGENTS.md`):**
+  - Rótulos de formulário, abas, botões e cabeçalhos em termo único indispensável (`Data`, `Turno`, `Paciente`, `Cirurgião`, `Hospital`, `Situação`, etc.).
+  - Total sigilo de valores financeiros na interface assistencial.
+
+---
+
 ## [v4.9.51] - 05 de Setembro, 2026
 ### NexaASSIST — Sincronização e Listagem Completa de Procedimentos Cirúrgicos & Permissões do Firestore
 - **Exibição Universal de Procedimentos no NexaASSIST (`AssistSurgeriesTab.jsx`):**

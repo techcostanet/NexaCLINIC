@@ -185,7 +185,7 @@ export default function App() {
   const renderContent = () => {
     switch (currentModule) {
       case 'assist':
-        return <ErrorBoundary><AssistPanel currentUser={user} /></ErrorBoundary>;
+        return <ErrorBoundary><AssistPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'reception':
         return <ErrorBoundary><ReceptionPanel currentUser={user} /></ErrorBoundary>;
       case 'clinical':

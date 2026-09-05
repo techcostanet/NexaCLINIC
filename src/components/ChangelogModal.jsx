@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.52',
+      date: '05/09/2026',
+      title: 'NexaASSIST — Central de Relatórios Assistenciais (15 Relatórios Especializados)',
+      description: 'Implementação da Central de Relatórios do NexaASSIST integrada ao botão superior "Relatórios", fornecendo 15 relatórios operacionais divididos igualmente entre Escala (5), Mural (5) e Cirurgias (5), com exportação para PDF profissional, Excel (.xlsx) e impressão.',
+      changes: [
+        { type: '15 Relatórios Especializados', text: '5 relatórios para Escala (Ocupação, Escala Nominal, Acessos Vasculares, Máquinas e Precauções), 5 para Mural (Extrato Geral, Intercorrências, Movimentação, Transfusões e Volumetria) e 5 para Cirurgias (Mapa Geral, Cirurgião, FAV vs Cateter, Urgências/Pendências e Hospitais/ATB).' },
+        { type: 'Exportação em PDF e Excel', text: 'Geração de PDF hospitalar estilizado via jsPDF-autotable com sumário estatístico e planilhas formatadas em Excel (.xlsx).' },
+        { type: 'Filtros Dinâmicos', text: 'Seleção ágil por período de datas (Início/Fim) e unidade assistencial com atualização instantânea das tabelas e KPIs.' },
+        { type: 'Padrão Rigoroso de UI', text: 'Rótulos estritamente diretos de 1 palavra e sigilo total de dados financeiros na interface assistencial.' }
+      ]
+    },
+    {
       version: 'v4.9.51',
       date: '05/09/2026',
       title: 'NexaASSIST — Listagem Completa de Procedimentos Cirúrgicos & Permissões do Firestore',

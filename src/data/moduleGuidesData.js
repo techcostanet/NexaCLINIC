@@ -698,11 +698,25 @@ export const MODULE_GUIDES = {
         desc: 'Geração de espelhos formatados em A4 da escala diária/semanal e do mapa cirúrgico vascular para afixação nas pranchetas dos postos de enfermagem dos salões.'
       },
       {
+        title: 'Central de Relatórios Assistenciais (15 Relatórios Especializados)',
+        desc: 'Painel completo de inteligência assistencial acessível pelo botão Relatórios no topo do sistema, com 15 relatórios categorizados (5 para Escala de Diálise, 5 para Mural Clínico e 5 para Cirurgias Vasculares), filtros por período/unidade e exportação nativa em PDF e Excel.'
+      },
+      {
         title: 'Isolamento de Filiais (Betim / MG vs Taguatinga / DF)',
         desc: 'Escalas de hemodiálise, pontos de diálise e comunicados do mural 100% segregados pela filial ativa, com visualização zerada para novas unidades em fase de implantação.'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Utilizar a Central de Relatórios do NexaASSIST',
+        steps: [
+          'Clique no botão "Relatórios" na barra superior do sistema (ou no topo do módulo NexaASSIST).',
+          'Alterne entre as abas temáticas "Todos (15)", "Escala (5)", "Mural (5)" ou "Cirurgias (5)".',
+          'Selecione o relatório desejado na lista lateral para carregar os dados e os cards de indicadores (KPIs).',
+          'Ajuste os filtros de Data Inicial, Data Final e Unidade.',
+          'Clique em "PDF" para baixar o documento com cabeçalho oficial da clínica ou "Excel" para exportar a planilha.'
+        ]
+      },
       {
         title: 'Como Navegar no Mapa de Salões da Hemodiálise',
         steps: [

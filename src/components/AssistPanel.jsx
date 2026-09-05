@@ -3,10 +3,11 @@ import { dbService } from '../firebase';
 import { 
   Megaphone, Search, Plus, Clock, User, RefreshCw, Building2, 
   Trash2, Edit3, AlertTriangle, List, LayoutList, LayoutGrid, X,
-  Calendar, MessageSquare, Activity
+  Calendar, MessageSquare, Activity, FileText
 } from 'lucide-react';
 import DialysisScheduleTab from './assist/DialysisScheduleTab';
 import AssistSurgeriesTab from './assist/AssistSurgeriesTab';
+import AssistReportsModal from './assist/AssistReportsModal';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
 
@@ -24,7 +25,7 @@ const isSamePosts = (a, b) => {
   return true;
 };
 
-export default function AssistPanel({ currentUser }) {
+export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
   const [activeAssistTab, setActiveAssistTab] = useState('escala'); // 'escala' | 'mural'
   const [posts, setPosts] = useState([]);
@@ -536,6 +537,17 @@ export default function AssistPanel({ currentUser }) {
           </div>
 
           <UnitSelector compact showLabel={false} />
+
+          {setIsReportsOpen && (
+            <button 
+              onClick={() => setIsReportsOpen(true)}
+              style={styles.reportsBtn}
+              title="Central de Relatórios Assistenciais (15 Relatórios)"
+            >
+              <FileText size={16} />
+              <span>Relatórios</span>
+            </button>
+          )}
 
           <button 
             onClick={() => handleOpenCreateModal()}
@@ -1137,6 +1149,17 @@ export default function AssistPanel({ currentUser }) {
           </div>
         </div>
       )}
+
+      {/* Central de Relatórios Assistenciais (15 Relatórios: Escala, Mural, Cirurgias) */}
+      {isReportsOpen && (
+        <AssistReportsModal
+          isOpen={isReportsOpen}
+          onClose={() => setIsReportsOpen && setIsReportsOpen(false)}
+          posts={posts}
+          patients={patients}
+          currentUser={currentUser}
+        />
+      )}
     </div>
   );
 }
@@ -1219,6 +1242,21 @@ const styles = {
     fontSize: '0.9rem',
     cursor: 'pointer',
     boxShadow: '0 4px 12px rgba(236, 72, 153, 0.25)',
+    transition: 'all 0.15s ease'
+  },
+  reportsBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    backgroundColor: '#ecfdf5',
+    color: '#047857',
+    border: '1px solid #10b981',
+    padding: '0.7rem 1.15rem',
+    borderRadius: '10px',
+    fontWeight: '700',
+    fontSize: '0.86rem',
+    cursor: 'pointer',
+    boxShadow: '0 2px 6px rgba(16, 185, 129, 0.2)',
     transition: 'all 0.15s ease'
   },
   compactCategoryGrid: {
