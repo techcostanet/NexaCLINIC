@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.50',
+      date: '05/09/2026',
+      title: 'NexaCONFIG — Catálogo Central de Procedimentos no T.I. & Ocultação de Valores nos Seletores',
+      description: 'Implementação do cadastro centralizado de procedimentos clínicos, cirúrgicos e médicos no módulo de Administração e T.I. (NexaCONFIG), com opções de marcação de exibição por módulo, definição de valores em R$ e ocultação da exibição de valores nos seletores operacionais do sistema.',
+      changes: [
+        { type: 'Catálogo de Procedimentos no T.I.', text: 'Nova aba Procedimentos no NexaCONFIG com gestão centralizada de procedimentos, busca em tempo real, códigos TUSS/SUS e controle de valores.' },
+        { type: 'Marcação de Visibilidade por Módulo', text: 'Caixas de seleção (checkboxes) para determinar onde cada procedimento deve aparecer: Cirurgias (NexaASSIST), Médico (NexaMED), Prontuário (NexaCLINIC) ou Faturamento (NexaAPAC).' },
+        { type: 'Ocultação de Valores nos Seletores', text: 'Remoção total da exibição de valores monetários (R$) no seletor de procedimentos do NexaMED e no modal de agendamento cirúrgico do NexaASSIST, preservando a confidencialidade durante a operação.' },
+        { type: 'Sincronização Bidirecional com Honorários', text: 'Sincronização automática entre o catálogo central de T.I. e a tabela de honorários do NexaMED para apuração de repasses médicos e fechamento mensal.' },
+        { type: 'Filtros Rápidos por Módulo', text: 'Botões de filtro no topo da tabela de T.I. para conferir com 1 clique os procedimentos cadastrados para cada módulo do sistema.' }
+      ]
+    },
+    {
       version: 'v4.9.47',
       date: '05/09/2026',
       title: 'NexaASSIST — Agendamento de Cirurgias Vasculares, 4 Modos de Visualização & Integração com o Mural',

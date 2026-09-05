@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Trash2, Edit2, Activity, CheckCircle, Search } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
 import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
+import { dbService } from '../../firebase';
 
 export default function MedicalProceduresTab({
   procedures = [],
@@ -39,22 +40,51 @@ export default function MedicalProceduresTab({
     });
   }, [patients]);
 
-  const procedureTypes = (settings.procedureFees && Object.keys(settings.procedureFees).length > 0)
-    ? Object.keys(settings.procedureFees)
-    : [
-        'AVALIAÇÃO/CONSULTA - POR MÉDICO CIRURGIÃO',
-        'CONFECÇÃO DE FAV COM PRÓTESE - PTFE',
-        'CONFECÇÃO DE FAV SIMPLES',
-        'COORDENAÇÃO DP',
-        'COORDENAÇÃO GERAL',
-        'DUPLEX SCAN VENOSO OU ARTERIAL – DSV/DAS',
-        'IMPLANTE DE CATETER DE HEMODIÁLISE - CDL',
-        'IMPLANTE DE CATETER DE LONGA PERMCATH',
-        'INTERVENÇÃO DE FAV',
-        'LIGADURA FAV',
-        'RETIRADA DE CATETER PERMCATH',
-        'SUPERFI. BASÍLICA, LUNAR, SAFENA, CEFALICA'
-      ];
+  const [catalogProcedures, setCatalogProcedures] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadCatalog = async () => {
+      try {
+        if (dbService?.getProcedures) {
+          const list = await dbService.getProcedures();
+          if (isMounted && Array.isArray(list) && list.length > 0) {
+            setCatalogProcedures(list);
+          }
+        }
+      } catch (err) {
+        console.warn('Falha ao carregar catálogo unificado no NexaMED:', err);
+      }
+    };
+    loadCatalog();
+    return () => { isMounted = false; };
+  }, []);
+
+  const procedureTypes = useMemo(() => {
+    if (catalogProcedures.length > 0) {
+      const activeForMedical = catalogProcedures
+        .filter(p => p.active !== false && p.modules?.medical !== false)
+        .map(p => p.name);
+      if (activeForMedical.length > 0) return activeForMedical;
+    }
+    if (settings.procedureFees && Object.keys(settings.procedureFees).length > 0) {
+      return Object.keys(settings.procedureFees).filter(k => settings.procedureStatus?.[k] !== false);
+    }
+    return [
+      'AVALIAÇÃO/CONSULTA - POR MÉDICO CIRURGIÃO',
+      'CONFECÇÃO DE FAV COM PRÓTESE - PTFE',
+      'CONFECÇÃO DE FAV SIMPLES',
+      'COORDENAÇÃO DP',
+      'COORDENAÇÃO GERAL',
+      'DUPLEX SCAN VENOSO OU ARTERIAL – DSV/DAS',
+      'IMPLANTE DE CATETER DE HEMODIÁLISE - CDL',
+      'IMPLANTE DE CATETER DE LONGA PERMCATH',
+      'INTERVENÇÃO DE FAV',
+      'LIGADURA FAV',
+      'RETIRADA DE CATETER PERMCATH',
+      'SUPERFI. BASÍLICA, LUNAR, SAFENA, CEFALICA'
+    ];
+  }, [catalogProcedures, settings]);
 
   const [formData, setFormData] = useState({
     doctorId: availableDoctors[0]?.id || availableDoctors[0]?.uid || '',
@@ -83,6 +113,14 @@ export default function MedicalProceduresTab({
     const doc = availableDoctors.find(d => (d.id === formData.doctorId || d.uid === formData.doctorId));
     const pat = patients.find(p => p.id === formData.patientId);
 
+    let procFee = 350.0;
+    const catItem = catalogProcedures.find(p => p.name === formData.procedureType);
+    if (catItem && typeof catItem.value === 'number') {
+      procFee = catItem.value;
+    } else if (settings.procedureFees?.[formData.procedureType] !== undefined) {
+      procFee = settings.procedureFees[formData.procedureType];
+    }
+
     onSaveProcedure({
       doctorId: formData.doctorId,
       doctorName: doc ? formatDoctorDisplayName(doc.name) : 'Médico Não Informado',
@@ -90,7 +128,7 @@ export default function MedicalProceduresTab({
       patientName: pat ? pat.name : 'Paciente Não Informado',
       date: formData.date,
       procedureType: formData.procedureType,
-      value: settings.procedureFees?.[formData.procedureType] || 350.0,
+      value: procFee,
       notes: formData.notes
     });
     setShowModal(false);
@@ -283,7 +321,7 @@ export default function MedicalProceduresTab({
                   >
                     {procedureTypes.map(pt => (
                       <option key={pt} value={pt}>
-                        {pt} (R$ {(settings.procedureFees?.[pt] || 350).toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
+                        {pt}
                       </option>
                     ))}
                   </select>

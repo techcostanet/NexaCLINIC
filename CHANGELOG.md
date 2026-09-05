@@ -1,3 +1,27 @@
+## [v4.9.50] - 05 de Setembro, 2026
+### NexaCONFIG — Catálogo Central de Procedimentos no T.I. & Ocultação de Valores nos Seletores
+- **Catálogo Central de Procedimentos (`ConfigPanel.jsx` & `procedureService.js`):**
+  - Nova aba **`Procedimentos`** no módulo NexaCONFIG (Administração & T.I.) com gestão centralizada de procedimentos cirúrgicos, médicos e clínicos.
+  - Campos completos de cadastro: `Nome`, `Código` (SUS/TUSS), `Valor` em R$, `Situação` (Ativo/Inativo) e opções de visibilidade modular.
+- **Marcação de Visibilidade por Módulo:**
+  - Caixas de seleção (checkboxes) para determinar com precisão em quais módulos cada procedimento deve ser disponibilizado:
+    - `Cirurgias (NexaASSIST)`
+    - `Médico (NexaMED)`
+    - `Prontuário (NexaCLINIC)`
+    - `APAC (Faturamento)`
+- **Ocultação da Visualização de Valores nos Seletores:**
+  - Remoção dos valores `(R$ ...)` no `<select>` de procedimentos do formulário "Lançar Procedimento" no NexaMED.
+  - Remoção de qualquer exibição de valor no seletor de procedimentos do modal de agendamento de cirurgias no NexaASSIST.
+  - Preservação integral do cálculo de honorários médicos nos bastidores e fechamento mensal.
+- **Sincronização Bidirecional com a Tabela de Honorários:**
+  - Alterações e criações de procedimentos realizadas no T.I. refletem na tabela de honorários do NexaMED e vice-versa.
+- **Filtros Rápidos por Módulo:**
+  - Botões de alternância rápida no topo da tabela de T.I. (`Todos`, `Cirurgias`, `Médico`, `Prontuário`, `APAC`).
+- **Atualização da Documentação & Manuais (`moduleGuidesData.js`):**
+  - Adição do manual completo do NexaCONFIG com Recursos, Tutorial e Dúvidas Frequentes.
+
+---
+
 ## [v4.9.47] - 05 de Setembro, 2026
 ### NexaASSIST — Agendamento de Cirurgias Vasculares, 4 Modos de Visualização & Integração com o Mural
 - **Aba Cirurgias no NexaASSIST (`AssistPanel.jsx` & `AssistSurgeriesTab.jsx`):**

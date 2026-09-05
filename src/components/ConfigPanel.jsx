@@ -3,7 +3,7 @@ import { dbService } from '../firebase';
 import { 
   Settings, Users, Shield, Globe, Database, Key, Check, Plus, X, 
   Trash2, ShieldAlert, CheckCircle2, Copy, Download, Upload, Palette,
-  ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock, Mail
+  ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock, Mail, Activity
 } from 'lucide-react';
 import EmailSettingsTab from './config/EmailSettingsTab';
 
@@ -18,6 +18,25 @@ export default function ConfigPanel() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [categoriesList, setCategoriesList] = useState([]);
   const [stockLocations, setStockLocations] = useState([]);
+
+  // Catálogo Central de Procedimentos (Módulo T.I)
+  const [proceduresList, setProceduresList] = useState([]);
+  const [procedureSearch, setProcedureSearch] = useState('');
+  const [procedureModuleFilter, setProcedureModuleFilter] = useState('all'); // 'all' | 'assist' | 'medical' | 'clinical' | 'apac'
+  const [showProcedureModal, setShowProcedureModal] = useState(false);
+  const [editingProcedure, setEditingProcedure] = useState(null);
+  const [procedureForm, setProcedureForm] = useState({
+    name: '',
+    code: '',
+    value: '',
+    active: true,
+    modules: {
+      assist: true,
+      medical: true,
+      clinical: true,
+      apac: false
+    }
+  });
 
   // Email Server State (Módulo T.I)
   const [emailSettings, setEmailSettings] = useState({
@@ -102,7 +121,7 @@ export default function ConfigPanel() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [settings, profileList, users, empList, logs, catList, locList, emailConf, emailLogs] = await Promise.all([
+      const [settings, profileList, users, empList, logs, catList, locList, emailConf, emailLogs, procList] = await Promise.all([
         dbService.getTenantSettings(),
         dbService.getUserProfiles(),
         dbService.getUsers(),
@@ -111,7 +130,8 @@ export default function ConfigPanel() {
         dbService.getProductCategories ? dbService.getProductCategories() : [],
         dbService.getStockLocations ? dbService.getStockLocations() : [],
         dbService.getEmailSettings ? dbService.getEmailSettings() : null,
-        dbService.getEmailLogs ? dbService.getEmailLogs() : []
+        dbService.getEmailLogs ? dbService.getEmailLogs() : [],
+        dbService.getProcedures ? dbService.getProcedures() : []
       ]);
       setTenantSettings(settings);
       setProfiles(profileList);
@@ -123,6 +143,7 @@ export default function ConfigPanel() {
       setAuditLogs(logs);
       setCategoriesList(catList);
       setStockLocations(locList);
+      setProceduresList(procList || []);
       if (emailConf) setEmailSettings(emailConf);
       if (emailLogs) setEmailLogsList(emailLogs);
 
@@ -498,6 +519,108 @@ export default function ConfigPanel() {
   };
 
   // ----------------------------------------------------
+  // Central Procedures Catalog Methods (Módulo T.I)
+  // ----------------------------------------------------
+  const handleOpenProcedureAdd = () => {
+    setEditingProcedure(null);
+    setProcedureForm({
+      name: '',
+      code: '',
+      value: '',
+      active: true,
+      modules: {
+        assist: true,
+        medical: true,
+        clinical: true,
+        apac: false
+      }
+    });
+    setShowProcedureModal(true);
+  };
+
+  const handleOpenProcedureEdit = (proc) => {
+    setEditingProcedure(proc);
+    setProcedureForm({
+      name: proc.name || '',
+      code: proc.code || '',
+      value: proc.value !== undefined ? proc.value : '',
+      active: proc.active !== false,
+      modules: {
+        assist: !!proc.modules?.assist,
+        medical: !!proc.modules?.medical,
+        clinical: !!proc.modules?.clinical,
+        apac: !!proc.modules?.apac
+      }
+    });
+    setShowProcedureModal(true);
+  };
+
+  const handleSaveProcedure = async (e) => {
+    e.preventDefault();
+    if (!procedureForm.name.trim()) return showAlert('Nome do procedimento é obrigatório.', 'warning');
+    if (procedureForm.value === '' || isNaN(parseFloat(procedureForm.value))) {
+      return showAlert('Valor do procedimento deve ser numérico.', 'warning');
+    }
+
+    setActionLoading(true);
+    try {
+      const payload = {
+        ...(editingProcedure ? { id: editingProcedure.id } : {}),
+        name: procedureForm.name.trim().toUpperCase(),
+        code: procedureForm.code.trim(),
+        value: parseFloat(procedureForm.value) || 0,
+        active: procedureForm.active !== false,
+        modules: procedureForm.modules
+      };
+      await dbService.saveProcedure(payload);
+      showAlert(editingProcedure ? 'Procedimento atualizado!' : 'Procedimento cadastrado com sucesso!', 'success');
+      logAudit('Cadastro de Procedimento', `Procedimento "${payload.name}" cadastrado/atualizado no T.I. com valor R$ ${payload.value}.`);
+      setShowProcedureModal(false);
+      const updated = await dbService.getProcedures();
+      setProceduresList(updated || []);
+    } catch (err) {
+      showAlert('Erro ao salvar procedimento.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteProcedure = async (id, name) => {
+    if (!window.confirm(`Deseja realmente remover o procedimento "${name}" do catálogo do sistema?`)) return;
+    setActionLoading(true);
+    try {
+      await dbService.deleteProcedure(id);
+      showAlert(`Procedimento "${name}" excluído!`, 'success');
+      logAudit('Exclusão de Procedimento', `Procedimento "${name}" excluído pelo T.I.`);
+      const updated = await dbService.getProcedures();
+      setProceduresList(updated || []);
+    } catch (err) {
+      showAlert('Erro ao excluir procedimento.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleProcedureActive = async (proc) => {
+    setActionLoading(true);
+    try {
+      const updatedItem = {
+        ...proc,
+        active: proc.active === false ? true : false
+      };
+      await dbService.saveProcedure(updatedItem);
+      showAlert(`Procedimento "${proc.name}" ${updatedItem.active ? 'ativado' : 'desativado'}!`, 'success');
+      logAudit('Alteração de Procedimento', `Procedimento "${proc.name}" alterado para ${updatedItem.active ? 'Ativo' : 'Inativo'}.`);
+      const updated = await dbService.getProcedures();
+      setProceduresList(updated || []);
+    } catch (err) {
+      showAlert('Erro ao alterar situação do procedimento.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ----------------------------------------------------
   // Email Server Configuration (Módulo T.I)
   // ----------------------------------------------------
   const handleSaveEmailSettings = async (e) => {
@@ -571,6 +694,9 @@ export default function ConfigPanel() {
         </button>
         <button onClick={() => setActiveTab('categories')} style={{ ...styles.tabBtn, ...(activeTab === 'categories' ? styles.tabBtnActive : {}) }}>
           <ListFilter size={16} /> Categorias ({categoriesList.length})
+        </button>
+        <button onClick={() => setActiveTab('procedures')} style={{ ...styles.tabBtn, ...(activeTab === 'procedures' ? styles.tabBtnActive : {}) }}>
+          <Activity size={16} /> Procedimentos ({proceduresList.length})
         </button>
         <button onClick={() => setActiveTab('email')} style={{ ...styles.tabBtn, ...(activeTab === 'email' ? styles.tabBtnActive : {}) }}>
           <Mail size={16} /> E-mail
@@ -1078,6 +1204,213 @@ export default function ConfigPanel() {
             />
           )}
 
+          {/* TAB: Procedures Catalog (Módulo T.I Centralizado) */}
+          {activeTab === 'procedures' && (
+            <div style={styles.tableCard}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>📋 Procedimentos</h3>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    Catálogo centralizado com parametrização de valores e visibilidade por módulo.
+                  </span>
+                </div>
+                <button 
+                  onClick={handleOpenProcedureAdd} 
+                  className="btn btn-primary" 
+                  style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
+                  <Plus size={16} /> Novo
+                </button>
+              </div>
+
+              {/* Filtros e Busca */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+                <div style={{ flex: '1', minWidth: '260px' }}>
+                  <input
+                    type="text"
+                    placeholder="Buscar por nome ou código..."
+                    className="form-control"
+                    value={procedureSearch}
+                    onChange={e => setProcedureSearch(e.target.value)}
+                    style={{ width: '100%', padding: '0.55rem 0.85rem', fontSize: '0.86rem' }}
+                  />
+                </div>
+
+                {/* Filtros Rápidos por Módulo (Aprovado) */}
+                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                  {[
+                    { id: 'all', label: 'Todos', count: proceduresList.length },
+                    { id: 'assist', label: 'Cirurgias', count: proceduresList.filter(p => p.modules?.assist).length },
+                    { id: 'medical', label: 'Médico', count: proceduresList.filter(p => p.modules?.medical).length },
+                    { id: 'clinical', label: 'Prontuário', count: proceduresList.filter(p => p.modules?.clinical).length },
+                    { id: 'apac', label: 'APAC', count: proceduresList.filter(p => p.modules?.apac).length }
+                  ].map(f => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setProcedureModuleFilter(f.id)}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '6px',
+                        fontSize: '0.8rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        border: procedureModuleFilter === f.id ? '1px solid #0284c7' : '1px solid #cbd5e1',
+                        backgroundColor: procedureModuleFilter === f.id ? '#0284c7' : '#ffffff',
+                        color: procedureModuleFilter === f.id ? '#ffffff' : '#475569',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {f.label} ({f.count})
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tabela de Procedimentos */}
+              <div style={{ overflowX: 'auto' }}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Procedimento</th>
+                      <th>Código</th>
+                      <th>Módulos</th>
+                      <th>Valor</th>
+                      <th>Situação</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const filtered = proceduresList.filter(p => {
+                        if (procedureModuleFilter === 'assist' && !p.modules?.assist) return false;
+                        if (procedureModuleFilter === 'medical' && !p.modules?.medical) return false;
+                        if (procedureModuleFilter === 'clinical' && !p.modules?.clinical) return false;
+                        if (procedureModuleFilter === 'apac' && !p.modules?.apac) return false;
+
+                        if (procedureSearch.trim()) {
+                          const term = procedureSearch.trim().toLowerCase();
+                          const matchName = (p.name || '').toLowerCase().includes(term);
+                          const matchCode = (p.code || '').toLowerCase().includes(term);
+                          if (!matchName && !matchCode) return false;
+                        }
+                        return true;
+                      });
+
+                      if (filtered.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                              Nenhum procedimento encontrado para os filtros selecionados.
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return filtered.map(proc => (
+                        <tr key={proc.id}>
+                          <td style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
+                            {proc.name}
+                          </td>
+                          <td>
+                            {proc.code ? (
+                              <span style={{
+                                padding: '0.15rem 0.45rem',
+                                borderRadius: '4px',
+                                fontSize: '0.74rem',
+                                fontFamily: 'monospace',
+                                backgroundColor: '#f1f5f9',
+                                color: '#475569'
+                              }}>
+                                {proc.code}
+                              </span>
+                            ) : (
+                              <span style={{ color: '#94a3b8', fontSize: '0.76rem' }}>—</span>
+                            )}
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                              {proc.modules?.assist && (
+                                <span style={{ padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: '700', fontSize: '0.7rem', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
+                                  Cirurgias
+                                </span>
+                              )}
+                              {proc.modules?.medical && (
+                                <span style={{ padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: '700', fontSize: '0.7rem', backgroundColor: '#f3e8ff', color: '#7e22ce' }}>
+                                  Médico
+                                </span>
+                              )}
+                              {proc.modules?.clinical && (
+                                <span style={{ padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: '700', fontSize: '0.7rem', backgroundColor: '#dcfce7', color: '#15803d' }}>
+                                  Prontuário
+                                </span>
+                              )}
+                              {proc.modules?.apac && (
+                                <span style={{ padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: '700', fontSize: '0.7rem', backgroundColor: '#fef3c7', color: '#b45309' }}>
+                                  APAC
+                                </span>
+                              )}
+                              {!proc.modules?.assist && !proc.modules?.medical && !proc.modules?.clinical && !proc.modules?.apac && (
+                                <span style={{ color: '#94a3b8', fontSize: '0.72rem' }}>Oculto</span>
+                              )}
+                            </div>
+                          </td>
+                          <td style={{ fontWeight: '800', color: '#059669', whiteSpace: 'nowrap' }}>
+                            R$ {(parseFloat(proc.value) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleProcedureActive(proc)}
+                              style={{
+                                border: 'none',
+                                background: 'none',
+                                cursor: 'pointer',
+                                padding: 0
+                              }}
+                              title={proc.active !== false ? 'Clique para desativar' : 'Clique para ativar'}
+                            >
+                              <span style={{
+                                padding: '0.2rem 0.55rem',
+                                borderRadius: '12px',
+                                fontWeight: '700',
+                                fontSize: '0.74rem',
+                                backgroundColor: proc.active !== false ? '#dcfce7' : '#f1f5f9',
+                                color: proc.active !== false ? '#15803d' : '#64748b'
+                              }}>
+                                {proc.active !== false ? 'Ativo' : 'Inativo'}
+                              </span>
+                            </button>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '0.35rem' }}>
+                              <button 
+                                onClick={() => handleOpenProcedureEdit(proc)} 
+                                className="btn btn-secondary" 
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                title="Editar Procedimento"
+                              >
+                                <Edit size={13} /> Editar
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteProcedure(proc.id, proc.name)} 
+                                className="btn btn-secondary" 
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none' }}
+                                title="Excluir Procedimento"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* TAB 4: Integrations & Backup */}
           {activeTab === 'integrations' && (
             <div style={styles.panelGrid}>
@@ -1436,6 +1769,164 @@ export default function ConfigPanel() {
                 <button type="button" onClick={() => setShowCategoryModal(false)} className="btn btn-secondary" style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer' }}>Cancelar</button>
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', color: '#ffffff', padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}>
                   {actionLoading ? 'Salvando...' : (editingCategory ? 'Salvar Categoria' : 'Cadastrar Categoria')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Cadastro e Edição de Procedimentos (Módulo T.I) */}
+      {showProcedureModal && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalCard, maxWidth: '520px' }}>
+            <div style={styles.modalHeader}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                {editingProcedure ? 'Editar Procedimento' : 'Novo Procedimento'}
+              </h3>
+              <button onClick={() => setShowProcedureModal(false)} style={styles.modalCloseBtn}>
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSaveProcedure} style={styles.modalForm}>
+              <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>
+                  Nome *
+                </label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  required 
+                  placeholder="Ex: CONFECÇÃO DE FAV SIMPLES" 
+                  value={procedureForm.name} 
+                  onChange={e => setProcedureForm({ ...procedureForm, name: e.target.value })} 
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '0.85rem' }}>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>
+                    Código
+                  </label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="Ex: 04.06.01.001-5" 
+                    value={procedureForm.code} 
+                    onChange={e => setProcedureForm({ ...procedureForm, code: e.target.value })} 
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>
+                    Valor *
+                  </label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    min="0" 
+                    required 
+                    placeholder="0,00" 
+                    value={procedureForm.value} 
+                    onChange={e => setProcedureForm({ ...procedureForm, value: e.target.value })} 
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>
+                  Situação
+                </label>
+                <select 
+                  className="form-control" 
+                  value={procedureForm.active ? 'active' : 'inactive'} 
+                  onChange={e => setProcedureForm({ ...procedureForm, active: e.target.value === 'active' })} 
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }}
+                >
+                  <option value="active">Ativo</option>
+                  <option value="inactive">Inativo</option>
+                </select>
+              </div>
+
+              {/* Marcação de Onde Deve Aparecer (Módulos) */}
+              <div style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1.25rem' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: '700', color: '#1e293b', marginBottom: '8px', display: 'block' }}>
+                  Onde deve aparecer:
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.84rem', color: '#334155', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={procedureForm.modules?.assist} 
+                      onChange={e => setProcedureForm({
+                        ...procedureForm,
+                        modules: { ...procedureForm.modules, assist: e.target.checked }
+                      })}
+                      style={{ accentColor: '#0284c7' }}
+                    />
+                    <span>Cirurgias (NexaASSIST)</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.84rem', color: '#334155', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={procedureForm.modules?.medical} 
+                      onChange={e => setProcedureForm({
+                        ...procedureForm,
+                        modules: { ...procedureForm.modules, medical: e.target.checked }
+                      })}
+                      style={{ accentColor: '#7e22ce' }}
+                    />
+                    <span>Médico (NexaMED)</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.84rem', color: '#334155', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={procedureForm.modules?.clinical} 
+                      onChange={e => setProcedureForm({
+                        ...procedureForm,
+                        modules: { ...procedureForm.modules, clinical: e.target.checked }
+                      })}
+                      style={{ accentColor: '#15803d' }}
+                    />
+                    <span>Prontuário (NexaCLINIC)</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.84rem', color: '#334155', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={procedureForm.modules?.apac} 
+                      onChange={e => setProcedureForm({
+                        ...procedureForm,
+                        modules: { ...procedureForm.modules, apac: e.target.checked }
+                      })}
+                      style={{ accentColor: '#b45309' }}
+                    />
+                    <span>APAC (Faturamento)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div style={styles.modalFooter}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowProcedureModal(false)} 
+                  className="btn btn-secondary" 
+                  style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer' }}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={actionLoading} 
+                  className="btn btn-primary" 
+                  style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', color: '#ffffff', padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}
+                >
+                  {actionLoading ? 'Salvando...' : 'Salvar'}
                 </button>
               </div>
             </form>

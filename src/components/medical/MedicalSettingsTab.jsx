@@ -4,6 +4,7 @@ import {
   X, AlertCircle, History, Trash2, Plus
 } from 'lucide-react';
 import { DEFAULT_MEDICAL_SETTINGS } from '../../services/firebase/medicalService';
+import { dbService } from '../../firebase';
 
 export default function MedicalSettingsTab({
   settings = {},
@@ -107,6 +108,15 @@ export default function MedicalSettingsTab({
     };
     setFormData(updated);
     handleSave(updated);
+
+    if (dbService?.saveProcedure && dbService?.getProcedures) {
+      dbService.getProcedures().then(list => {
+        const match = list.find(p => p.name === procName);
+        if (match) {
+          dbService.saveProcedure({ ...match, active: !current });
+        }
+      }).catch(e => console.warn('Erro ao sincronizar status com T.I:', e));
+    }
   };
 
   const handleDeleteProcedure = (procName) => {
@@ -122,20 +132,47 @@ export default function MedicalSettingsTab({
     };
     setFormData(updated);
     handleSave(updated);
+
+    if (dbService?.deleteProcedure && dbService?.getProcedures) {
+      dbService.getProcedures().then(list => {
+        const match = list.find(p => p.name === procName);
+        if (match) {
+          dbService.deleteProcedure(match.id);
+        }
+      }).catch(e => console.warn('Erro ao excluir procedimento no T.I:', e));
+    }
   };
 
   const handleSaveEditedProc = (e) => {
     e.preventDefault();
     if (!editingProcItem) return;
+    const numVal = parseFloat(editingProcItem.value) || 0;
     const updated = {
       ...formData,
       procedureFees: {
         ...formData.procedureFees,
-        [editingProcItem.name]: parseFloat(editingProcItem.value) || 0
+        [editingProcItem.name]: numVal
       }
     };
     setFormData(updated);
     handleSave(updated);
+
+    if (dbService?.saveProcedure && dbService?.getProcedures) {
+      dbService.getProcedures().then(list => {
+        const match = list.find(p => p.name === editingProcItem.name);
+        if (match) {
+          dbService.saveProcedure({ ...match, value: numVal });
+        } else {
+          dbService.saveProcedure({
+            name: editingProcItem.name,
+            value: numVal,
+            active: true,
+            modules: { assist: true, medical: true, clinical: true, apac: false }
+          });
+        }
+      }).catch(e => console.warn('Erro ao atualizar procedimento no T.I:', e));
+    }
+
     setEditingProcItem(null);
   };
 
@@ -157,6 +194,16 @@ export default function MedicalSettingsTab({
     };
     setFormData(updated);
     handleSave(updated);
+
+    if (dbService?.saveProcedure) {
+      dbService.saveProcedure({
+        name: procName,
+        value: val,
+        active: true,
+        modules: { assist: true, medical: true, clinical: true, apac: false }
+      }).catch(e => console.warn('Erro ao criar procedimento no T.I:', e));
+    }
+
     setNewProcName('');
     setNewProcValue('');
     setShowNewProcModal(false);

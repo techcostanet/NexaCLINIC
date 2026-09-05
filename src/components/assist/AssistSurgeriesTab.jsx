@@ -57,6 +57,7 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
   const [surgeries, setSurgeries] = useState([]);
   const [blocks, setBlocks] = useState([]);
   const [patients, setPatients] = useState([]);
+  const [catalogProcedures, setCatalogProcedures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -109,14 +110,16 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
   const loadData = async () => {
     setLoading(true);
     try {
-      const [surgList, blockList, patList] = await Promise.all([
+      const [surgList, blockList, patList, procList] = await Promise.all([
         dbService.getSurgeries ? dbService.getSurgeries({ unitId: activeUnitId }) : [],
         dbService.getSurgeryBlocks ? dbService.getSurgeryBlocks() : [],
-        dbService.getPatients ? dbService.getPatients() : []
+        dbService.getPatients ? dbService.getPatients() : [],
+        dbService.getProcedures ? dbService.getProcedures() : []
       ]);
       setSurgeries(surgList || []);
       setBlocks(blockList || []);
       setPatients(patList || []);
+      setCatalogProcedures(procList || []);
     } catch (err) {
       console.error('Erro ao carregar cirurgias:', err);
       showAlert('Erro ao sincronizar cirurgias.', 'danger');
@@ -124,6 +127,16 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
       setLoading(false);
     }
   };
+
+  const availableProcedures = useMemo(() => {
+    if (catalogProcedures && catalogProcedures.length > 0) {
+      const activeForAssist = catalogProcedures
+        .filter(p => p.active !== false && p.modules?.assist !== false)
+        .map(p => p.name);
+      if (activeForAssist.length > 0) return activeForAssist;
+    }
+    return COMMON_PROCEDURES;
+  }, [catalogProcedures]);
 
   useEffect(() => {
     loadData();
@@ -1137,7 +1150,7 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
                     style={styles.input}
                   />
                   <datalist id="procList">
-                    {COMMON_PROCEDURES.map(p => <option key={p} value={p} />)}
+                    {availableProcedures.map(p => <option key={p} value={p} />)}
                   </datalist>
                 </div>
 

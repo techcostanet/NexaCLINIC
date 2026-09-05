@@ -3850,6 +3850,89 @@ export const mockFirestore = {
     return { success: true };
   },
 
+  // Central Procedures Catalog (Módulo T.I. & Integração com Módulos)
+  getProcedures: async () => {
+    const db = getDB();
+    if (!db.clinical_procedures || db.clinical_procedures.length === 0) {
+      db.clinical_procedures = [
+        { id: 'proc-1', name: 'AVALIAÇÃO/CONSULTA - POR MÉDICO CIRURGIÃO', code: '10101012', value: 55.0, active: true, modules: { assist: false, medical: true, clinical: true, apac: false }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-2', name: 'CONFECÇÃO DE FAV COM PRÓTESE - PTFE', code: '04.06.01.002-3', value: 891.0, active: true, modules: { assist: true, medical: true, clinical: true, apac: true }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-3', name: 'CONFECÇÃO DE FAV SIMPLES', code: '04.06.01.001-5', value: 668.25, active: true, modules: { assist: true, medical: true, clinical: true, apac: true }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-4', name: 'COORDENAÇÃO DP', code: '', value: 2800.0, active: true, modules: { assist: false, medical: true, clinical: false, apac: false }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-5', name: 'COORDENAÇÃO GERAL', code: '', value: 28000.0, active: true, modules: { assist: false, medical: true, clinical: false, apac: false }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-6', name: 'DUPLEX SCAN VENOSO OU ARTERIAL – DSV/DAS', code: '40901174', value: 119.79, active: true, modules: { assist: true, medical: true, clinical: true, apac: true }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-7', name: 'IMPLANTE DE CATETER DE HEMODIÁLISE - CDL', code: '04.06.01.008-2', value: 270.0, active: true, modules: { assist: true, medical: true, clinical: true, apac: true }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-8', name: 'IMPLANTE DE CATETER DE LONGA PERMCATH', code: '04.06.01.009-0', value: 668.25, active: true, modules: { assist: true, medical: true, clinical: true, apac: true }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-9', name: 'INTERVENÇÃO DE FAV', code: '04.06.01.005-8', value: 668.25, active: true, modules: { assist: true, medical: true, clinical: true, apac: true }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-10', name: 'LIGADURA FAV', code: '04.06.01.006-6', value: 668.25, active: true, modules: { assist: true, medical: true, clinical: true, apac: true }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-11', name: 'RETIRADA DE CATETER PERMCATH', code: '04.06.01.010-4', value: 400.0, active: true, modules: { assist: true, medical: true, clinical: true, apac: true }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-12', name: 'SUPERFI. BASÍLICA, LUNAR, SAFENA, CEFALICA', code: '04.06.01.003-1', value: 1217.7, active: true, modules: { assist: true, medical: true, clinical: true, apac: true }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-13', name: 'FAV SIMPLES COM SUPORTE ANESTESICO', code: '04.06.01.001-5-AN', value: 750.0, active: true, modules: { assist: true, medical: true, clinical: true, apac: false }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-14', name: 'FAV BASILICA', code: '04.06.01.004-0', value: 950.0, active: true, modules: { assist: true, medical: true, clinical: true, apac: false }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-15', name: 'REVISÃO DE FAV', code: '04.06.01.007-4', value: 500.0, active: true, modules: { assist: true, medical: true, clinical: true, apac: false }, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'proc-16', name: 'CDL DE URGENCIA', code: '04.06.01.008-2-URG', value: 350.0, active: true, modules: { assist: true, medical: true, clinical: true, apac: false }, createdAt: '2026-01-01T00:00:00.000Z' }
+      ];
+      setDB(db);
+    }
+    return db.clinical_procedures;
+  },
+
+  saveProcedure: async (procData) => {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const db = getDB();
+    if (!db.clinical_procedures) db.clinical_procedures = [];
+    const cleanItem = {
+      id: procData.id || 'proc-' + Math.random().toString(36).substr(2, 9),
+      name: (procData.name || '').trim().toUpperCase(),
+      code: (procData.code || '').trim(),
+      value: parseFloat(procData.value) || 0,
+      active: procData.active !== false,
+      modules: {
+        assist: !!procData.modules?.assist,
+        medical: !!procData.modules?.medical,
+        clinical: !!procData.modules?.clinical,
+        apac: !!procData.modules?.apac
+      },
+      updatedAt: new Date().toISOString()
+    };
+
+    const idx = db.clinical_procedures.findIndex(p => p.id === cleanItem.id);
+    if (idx > -1) {
+      db.clinical_procedures[idx] = { ...db.clinical_procedures[idx], ...cleanItem };
+    } else {
+      cleanItem.createdAt = new Date().toISOString();
+      db.clinical_procedures.push(cleanItem);
+    }
+
+    // Sincronização automática com tabela de honorários do NexaMED
+    if (db.medical_settings) {
+      if (!db.medical_settings.procedureFees) db.medical_settings.procedureFees = {};
+      if (!db.medical_settings.procedureStatus) db.medical_settings.procedureStatus = {};
+      if (cleanItem.modules.medical) {
+        db.medical_settings.procedureFees[cleanItem.name] = cleanItem.value;
+        db.medical_settings.procedureStatus[cleanItem.name] = cleanItem.active;
+      }
+    }
+
+    setDB(db);
+    return cleanItem;
+  },
+
+  deleteProcedure: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const db = getDB();
+    if (db.clinical_procedures) {
+      const removed = db.clinical_procedures.find(p => p.id === id);
+      db.clinical_procedures = db.clinical_procedures.filter(p => p.id !== id);
+      if (removed && db.medical_settings) {
+        if (db.medical_settings.procedureFees) delete db.medical_settings.procedureFees[removed.name];
+        if (db.medical_settings.procedureStatus) delete db.medical_settings.procedureStatus[removed.name];
+      }
+      setDB(db);
+    }
+    return { success: true };
+  },
+
   // Monthly Production Homologation & Finance Integration
   getMedicalProductions: async (month) => {
     const db = getDB();

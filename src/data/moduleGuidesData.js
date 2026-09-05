@@ -2019,6 +2019,72 @@ export const MODULE_GUIDES = {
         resposta: 'As alergias informadas na admissão aparecem automaticamente com badge de alerta de segurança no topo do Cockpit Clínico do Prontuário Médico (NexaCLINIC).'
       }
     ]
+  },
+  config: {
+    id: 'config',
+    name: 'Administração & T.I.',
+    subtitle: 'NexaCONFIG — Governança SaaS, Segurança & Procedimentos',
+    color: '#8b5cf6',
+    recursos: [
+      {
+        title: 'Catálogo Central de Procedimentos',
+        desc: 'Cadastro unificado de procedimentos cirúrgicos, intervencionistas e clínicos com parametrização de valores monetários (R$), código TUSS/SUS e interruptor de vigência ativo/inativo.'
+      },
+      {
+        title: 'Visibilidade por Módulo (Cirurgias, Médico, Prontuário e APAC)',
+        desc: 'Opções em caixas de seleção (checkboxes) para determinar com precisão em quais módulos do sistema cada procedimento deve ser exibido.'
+      },
+      {
+        title: 'Ocultação de Valores nos Seletores',
+        desc: 'Segurança e sigilo nas interfaces operacionais: nenhum seletor do sistema (NexaMED, NexaASSIST) exibe os valores em R$ ao médico ou usuário durante a escolha do procedimento.'
+      },
+      {
+        title: 'Controle de Acesso por Perfis (RBAC)',
+        desc: 'Matriz granular de permissões por perfil (Leitura, Escrita ou Sem Acesso) para todos os módulos do ecossistema NexaCLINIC.'
+      },
+      {
+        title: 'Gestão de Usuários & Senhas Provisórias',
+        desc: 'Criação e manutenção de contas de colaboradores com geração de senhas temporárias seguras e bloqueio instantâneo.'
+      },
+      {
+        title: 'Servidor de E-mails SMTP & Logs de Disparo',
+        desc: 'Parametrização do servidor corporativo de envio de e-mails para notificações de trocas de plantões, ordens de serviço e alertas.'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Cadastrar um Novo Procedimento e Definir sua Visibilidade',
+        steps: [
+          'Acesse o módulo de T.I. (NexaCONFIG) e clique na aba "Procedimentos".',
+          'Clique no botão "+ Novo" no canto superior direito.',
+          'Informe o Nome oficial do procedimento (ex: CONFECÇÃO DE FAV SIMPLES), o Código SUS/TUSS opcional e o Valor em R$.',
+          'Na seção "Onde deve aparecer", marque os módulos desejados (Cirurgias, Médico, Prontuário e/ou APAC).',
+          'Selecione a situação "Ativo" e clique em "Salvar". O procedimento estará imediatamente disponível nos módulos selecionados sem exibir os valores nos seletores.'
+        ]
+      },
+      {
+        title: 'Como Filtrar e Ajustar Valores de Procedimentos',
+        steps: [
+          'Na aba "Procedimentos", utilize a barra de busca por nome/código ou clique nos botões de filtro rápido ("Cirurgias", "Médico", "Prontuário", "APAC").',
+          'Localize o procedimento desejado e clique no botão "Editar".',
+          'Ajuste o valor monetário ou alterne os módulos autorizados e clique em "Salvar". Os novos valores sincronizam automaticamente com os honorários médicos.'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'Os médicos conseguem ver os valores dos procedimentos ao lançar na sua aba?',
+        resposta: 'Não. Os valores monetários foram totalmente retirados da visualização no seletor de procedimentos. O sistema armazena e computa os valores internamente para a apuração da produção médica sem expor os números na tela de seleção.'
+      },
+      {
+        pergunta: 'Como controlar se um procedimento aparece nas Cirurgias do NexaASSIST ou apenas no NexaMED?',
+        resposta: 'No cadastro de procedimentos do T.I., basta marcar ou desmarcar a caixa "Cirurgias (NexaASSIST)" e "Médico (NexaMED)". O sistema filtra dinamicamente as listas de cada módulo de acordo com essas marcações.'
+      },
+      {
+        pergunta: 'O que acontece ao desativar um procedimento?',
+        resposta: 'Ao clicar no botão de situação e marcá-lo como "Inativo", o procedimento deixa de aparecer nas opções de lançamento de novos agendamentos e atendimentos, mas permanece registrado no histórico anterior para integridade contábil.'
+      }
+    ]
   }
 };
 
