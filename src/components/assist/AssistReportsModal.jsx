@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  X, FileText, Download, Filter, FileSpreadsheet, Calendar, 
-  CheckCircle2, AlertTriangle, Stethoscope, Printer, Activity, 
-  Users, Layers, ShieldAlert, Cpu, HeartPulse, Clock, Sparkles
+  X, FileText, Download, FileSpreadsheet, Calendar, 
+  AlertTriangle, Stethoscope, Printer, Activity, 
+  Users, Layers, ShieldAlert, Cpu, HeartPulse, Clock,
+  Syringe
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { dbService } from '../../firebase';
-import { INITIAL_PROCEDURES } from '../../services/firebase/procedureService';
 
 export default function AssistReportsModal({
   isOpen,
@@ -17,8 +17,6 @@ export default function AssistReportsModal({
   patients = [],
   currentUser
 }) {
-  if (!isOpen) return null;
-
   // Seletor de Categoria e Relatório
   const [activeSection, setActiveSection] = useState('ALL'); // 'ALL' | 'ESCALA' | 'MURAL' | 'CIRURGIAS'
   const [selectedReport, setSelectedReport] = useState('ESCALA_OCUPACAO');
@@ -56,28 +54,32 @@ export default function AssistReportsModal({
   const [reportColumns, setReportColumns] = useState([]);
   const [reportKpis, setReportKpis] = useState([]);
 
-  // Catálogo dos 15 Relatórios
+  // Catálogo de Relatórios Assistenciais (19 Relatórios)
   const REPORTS = [
-    // Seção Escala (5)
+    // Seção Escala (9)
     { id: 'ESCALA_OCUPACAO', section: 'ESCALA', name: '1. Ocupação de Leitos', icon: Layers, desc: 'Censo e taxa de ocupação por salão, turno e cadência.' },
     { id: 'ESCALA_NOMINAL', section: 'ESCALA', name: '2. Escala Nominal de Pacientes', icon: Users, desc: 'Listagem dos pacientes distribuídos por box, turno e frequência.' },
     { id: 'ESCALA_ACESSOS', section: 'ESCALA', name: '3. Censo de Acessos Vasculares', icon: Activity, desc: 'Distribuição de pacientes em diálise por FAV, CDL e Permcath.' },
     { id: 'ESCALA_MAQUINAS', section: 'ESCALA', name: '4. Inventário de Máquinas', icon: Cpu, desc: 'Relação de equipamentos por salão, box, marca e patrimônio.' },
     { id: 'ESCALA_ISOLAMENTO', section: 'ESCALA', name: '5. Precaução & Isolamento', icon: ShieldAlert, desc: 'Pacientes em precaução de contato ou isolamento sorológico.' },
+    { id: 'ESCALA_HEPARINA_TURNO', section: 'ESCALA', name: '6. Mapa de Heparina do Turno', icon: Syringe, desc: 'Guia de checagem e dosagem de heparina por leito, box, paciente e acesso para a enfermagem.' },
+    { id: 'ESCALA_HEPARINA_CENSO', section: 'ESCALA', name: '7. Censo de Anticoagulação & Heparina', icon: Activity, desc: 'Consolidado clínico de doses de heparina, pacientes sem anticoagulação e consumo estimado por salão e turno.' },
+    { id: 'ESCALA_MAPA_POSTO', section: 'ESCALA', name: '8. Mapa Operacional da Escala (Posto)', icon: Printer, desc: 'Espelho operacional hospitalar do turno para impressão e afixação no posto de enfermagem.' },
+    { id: 'ESCALA_GRADE_GERAL', section: 'ESCALA', name: '9. Grade Consolidada de Turnos & Poltronas', icon: Layers, desc: 'Visão analítica completa de alocação de poltronas e máquinas por turnos (1º, 2º, 3º) e cadências (SQS/TQS).' },
 
     // Seção Mural (5)
-    { id: 'MURAL_EXTRATO', section: 'MURAL', name: '6. Extrato Geral de Comunicados', icon: FileText, desc: 'Histórico cronológico de comunicados postados no feed.' },
-    { id: 'MURAL_INTERCORRENCIAS', section: 'MURAL', name: '7. Ocorrências & Intercorrências', icon: AlertTriangle, desc: 'Eventos adversos e intercorrências clínicas registradas.' },
-    { id: 'MURAL_MOVIMENTACAO', section: 'MURAL', name: '8. Movimentação de Pacientes', icon: Users, desc: 'Censo de internações, transferências, altas e óbitos.' },
-    { id: 'MURAL_TRANSFUSAO_INFECCAO', section: 'MURAL', name: '9. Transfusões & Infecções', icon: HeartPulse, desc: 'Casos relatados de hemotransfusão, bacteremia ou febre.' },
-    { id: 'MURAL_INDICADORES', section: 'MURAL', name: '10. Volumetria por Categoria', icon: Activity, desc: 'Consolidação quantitativa de comunicados por categoria e turno.' },
+    { id: 'MURAL_EXTRATO', section: 'MURAL', name: '10. Extrato Geral de Comunicados', icon: FileText, desc: 'Histórico cronológico de comunicados postados no feed.' },
+    { id: 'MURAL_INTERCORRENCIAS', section: 'MURAL', name: '11. Ocorrências & Intercorrências', icon: AlertTriangle, desc: 'Eventos adversos e intercorrências clínicas registradas.' },
+    { id: 'MURAL_MOVIMENTACAO', section: 'MURAL', name: '12. Movimentação de Pacientes', icon: Users, desc: 'Censo de internações, transferências, altas e óbitos.' },
+    { id: 'MURAL_TRANSFUSAO_INFECCAO', section: 'MURAL', name: '13. Transfusões & Infecções', icon: HeartPulse, desc: 'Casos relatados de hemotransfusão, bacteremia ou febre.' },
+    { id: 'MURAL_INDICADORES', section: 'MURAL', name: '14. Volumetria por Categoria', icon: Activity, desc: 'Consolidação quantitativa de comunicados por categoria e turno.' },
 
     // Seção Cirurgias (5)
-    { id: 'CIRURGIAS_MAPA_GERAL', section: 'CIRURGIAS', name: '11. Mapa Cirúrgico Geral', icon: Stethoscope, desc: 'Espelho cronológico de agendamentos cirúrgicos vasculares.' },
-    { id: 'CIRURGIAS_POR_CIRURGIAO', section: 'CIRURGIAS', name: '12. Procedimentos por Cirurgião', icon: Users, desc: 'Volume e taxa de procedimentos realizados por médico cirurgião.' },
-    { id: 'CIRURGIAS_ACESSOS', section: 'CIRURGIAS', name: '13. FAV vs Cateter', icon: Activity, desc: 'Balanço comparativo entre confecção de FAV e implantes.' },
-    { id: 'CIRURGIAS_URGENCIAS', section: 'CIRURGIAS', name: '14. Urgências & Pendências', icon: AlertTriangle, desc: 'Cirurgias urgentes e pendências de PTFE ou risco cirúrgico.' },
-    { id: 'CIRURGIAS_ATB_LOGISTICA', section: 'CIRURGIAS', name: '15. Antibióticos & Hospitais', icon: Clock, desc: 'Protocolo de antibioticoprofilaxia, anestesistas e hospitais.' }
+    { id: 'CIRURGIAS_MAPA_GERAL', section: 'CIRURGIAS', name: '15. Mapa Cirúrgico Geral', icon: Stethoscope, desc: 'Espelho cronológico de agendamentos cirúrgicos vasculares.' },
+    { id: 'CIRURGIAS_POR_CIRURGIAO', section: 'CIRURGIAS', name: '16. Procedimentos por Cirurgião', icon: Users, desc: 'Volume e taxa de procedimentos realizados por médico cirurgião.' },
+    { id: 'CIRURGIAS_ACESSOS', section: 'CIRURGIAS', name: '17. FAV vs Cateter', icon: Activity, desc: 'Balanço comparativo entre confecção de FAV e implantes.' },
+    { id: 'CIRURGIAS_URGENCIAS', section: 'CIRURGIAS', name: '18. Urgências & Pendências', icon: AlertTriangle, desc: 'Cirurgias urgentes e pendências de PTFE ou risco cirúrgico.' },
+    { id: 'CIRURGIAS_ATB_LOGISTICA', section: 'CIRURGIAS', name: '19. Antibióticos & Hospitais', icon: Clock, desc: 'Protocolo de antibioticoprofilaxia, anestesistas e hospitais.' }
   ];
 
   // Carregar Dados do Firestore / Mock
@@ -410,6 +412,290 @@ export default function AssistReportsModal({
           { label: 'Pacientes em Isolamento', value: `${data.length}`, color: '#b45309' },
           { label: 'Máquinas Dedicadas', value: '2 Máquinas', color: '#0284c7' },
           { label: 'Protocolo ANVISA', value: '100% Conforme', color: '#059669' }
+        ];
+        break;
+      }
+
+      case 'ESCALA_HEPARINA_TURNO': {
+        const pool = [];
+        let comHeparina = 0;
+        let semHeparina = 0;
+        let volTotal = 0;
+
+        if (allSchedules) {
+          Object.keys(allSchedules).forEach(sal => {
+            if (salonFilter !== 'Todos' && sal !== salonFilter) return;
+            Object.keys(allSchedules[sal]).forEach(tur => {
+              if (shiftFilter !== 'Todos' && tur !== shiftFilter) return;
+              const points = allSchedules[sal][tur]?.points || [];
+              ['SQS', 'TQS'].forEach(cad => {
+                points.forEach(p => {
+                  const pat = cad === 'SQS' ? p.sqs?.mainPatient : p.tqs?.mainPatient;
+                  if (!pat || !pat.name) return;
+
+                  const hep = pat.heparina || (pat.accessRaw && pat.accessRaw.match(/Heparina:([^\s]+)/i)?.[1]) || 'NA';
+                  const isNA = !hep || hep.toUpperCase() === 'NA' || hep.toUpperCase().includes('SEM');
+                  
+                  if (isNA) {
+                    semHeparina++;
+                  } else {
+                    comHeparina++;
+                    const numMatch = hep.replace(',', '.').match(/(\d+(\.\d+)?)/);
+                    if (numMatch) volTotal += parseFloat(numMatch[1]);
+                  }
+
+                  pool.push({
+                    salao: sal,
+                    turno: tur,
+                    cadencia: cad === 'SQS' ? 'Seg/Qua/Sex' : 'Ter/Qui/Sáb',
+                    box: p.box || 'Box Geral',
+                    ponto: `Ponto ${p.ponto || '01'}`,
+                    paciente: (pat.name || '').toUpperCase(),
+                    acesso: pat.accessType || pat.accessRaw || 'FAV',
+                    agulha: pat.needleSize ? `Agulha ${pat.needleSize}` : '-',
+                    heparina: hep,
+                    visto: ''
+                  });
+                });
+              });
+            });
+          });
+        }
+
+        data = pool;
+        cols = [
+          { header: 'Salão', key: 'salao' },
+          { header: 'Turno', key: 'turno' },
+          { header: 'Cadência', key: 'cadencia' },
+          { header: 'Box', key: 'box' },
+          { header: 'Ponto', key: 'ponto' },
+          { header: 'Paciente', key: 'paciente' },
+          { header: 'Acesso', key: 'acesso' },
+          { header: 'Agulha', key: 'agulha' },
+          { header: 'Heparina', key: 'heparina' },
+          { header: 'Checagem', key: 'visto' }
+        ];
+
+        kpis = [
+          { label: 'Com Heparina', value: `${comHeparina} pacientes`, color: '#2563eb' },
+          { label: 'Sem Anticoagulação', value: `${semHeparina} pacientes`, color: '#64748b' },
+          { label: 'Volume Estimado', value: `${volTotal.toFixed(1)} mL`, color: '#059669' }
+        ];
+        break;
+      }
+
+      case 'ESCALA_HEPARINA_CENSO': {
+        const rows = [];
+        let totalGlobal = 0;
+        let comHepGlobal = 0;
+        let semHepGlobal = 0;
+        let volGlobal = 0;
+
+        if (allSchedules) {
+          Object.keys(allSchedules).forEach(sal => {
+            if (salonFilter !== 'Todos' && sal !== salonFilter) return;
+            Object.keys(allSchedules[sal]).forEach(tur => {
+              if (shiftFilter !== 'Todos' && tur !== shiftFilter) return;
+              ['SQS', 'TQS'].forEach(cad => {
+                const points = allSchedules[sal][tur]?.points || [];
+                let cTotal = 0;
+                let cCom = 0;
+                let cSem = 0;
+                let cVol = 0;
+
+                points.forEach(p => {
+                  const pat = cad === 'SQS' ? p.sqs?.mainPatient : p.tqs?.mainPatient;
+                  if (!pat || !pat.name) return;
+                  cTotal++;
+                  const hep = pat.heparina || (pat.accessRaw && pat.accessRaw.match(/Heparina:([^\s]+)/i)?.[1]) || 'NA';
+                  const isNA = !hep || hep.toUpperCase() === 'NA' || hep.toUpperCase().includes('SEM');
+                  if (isNA) {
+                    cSem++;
+                  } else {
+                    cCom++;
+                    const numMatch = hep.replace(',', '.').match(/(\d+(\.\d+)?)/);
+                    if (numMatch) cVol += parseFloat(numMatch[1]);
+                  }
+                });
+
+                if (cTotal > 0) {
+                  const taxa = Math.round((cCom / cTotal) * 100);
+                  const doseMedia = cCom > 0 ? (cVol / cCom).toFixed(2) : '0.00';
+                  totalGlobal += cTotal;
+                  comHepGlobal += cCom;
+                  semHepGlobal += cSem;
+                  volGlobal += cVol;
+
+                  rows.push({
+                    salao: sal,
+                    turno: tur,
+                    cadencia: cad === 'SQS' ? 'Seg/Qua/Sex' : 'Ter/Qui/Sáb',
+                    pacientes: cTotal,
+                    comHeparina: cCom,
+                    semHeparina: cSem,
+                    taxa: `${taxa}%`,
+                    doseMedia: `${doseMedia} mL`,
+                    volTotal: `${cVol.toFixed(1)} mL`
+                  });
+                }
+              });
+            });
+          });
+        }
+
+        data = rows;
+        cols = [
+          { header: 'Salão', key: 'salao' },
+          { header: 'Turno', key: 'turno' },
+          { header: 'Cadência', key: 'cadencia' },
+          { header: 'Pacientes', key: 'pacientes' },
+          { header: 'Com Heparina', key: 'comHeparina' },
+          { header: 'Sem Heparina', key: 'semHeparina' },
+          { header: 'Adesão', key: 'taxa' },
+          { header: 'Dose Média', key: 'doseMedia' },
+          { header: 'Consumo', key: 'volTotal' }
+        ];
+
+        const taxaGeral = totalGlobal > 0 ? Math.round((comHepGlobal / totalGlobal) * 100) : 0;
+        kpis = [
+          { label: 'Total Escalados', value: `${totalGlobal} pacientes`, color: '#4f46e5' },
+          { label: 'Taxa de Anticoagulação', value: `${taxaGeral}%`, color: '#2563eb' },
+          { label: 'Consumo da Clínica', value: `${volGlobal.toFixed(1)} mL/sessão`, color: '#059669' }
+        ];
+        break;
+      }
+
+      case 'ESCALA_MAPA_POSTO': {
+        const pool = [];
+        let totalPontos = 0;
+        let ocupados = 0;
+        let vagos = 0;
+        let isolados = 0;
+
+        if (allSchedules) {
+          Object.keys(allSchedules).forEach(sal => {
+            if (salonFilter !== 'Todos' && sal !== salonFilter) return;
+            Object.keys(allSchedules[sal]).forEach(tur => {
+              if (shiftFilter !== 'Todos' && tur !== shiftFilter) return;
+              ['SQS', 'TQS'].forEach(cad => {
+                const points = allSchedules[sal][tur]?.points || [];
+                points.forEach(p => {
+                  totalPontos++;
+                  const pat = cad === 'SQS' ? p.sqs?.mainPatient : p.tqs?.mainPatient;
+                  const hasPat = pat && pat.name;
+                  if (hasPat) {
+                    ocupados++;
+                    if (pat.isolation || (pat.accessRaw && pat.accessRaw.toUpperCase().includes('ÚNICO'))) isolados++;
+                  } else {
+                    vagos++;
+                  }
+
+                  pool.push({
+                    salao: sal,
+                    turno: tur,
+                    cadencia: cad === 'SQS' ? 'Seg/Qua/Sex' : 'Ter/Qui/Sáb',
+                    box: p.box || 'Box Geral',
+                    ponto: `P${p.ponto || '01'}`,
+                    maquina: p.serialNumber || 'Reserva',
+                    paciente: hasPat ? pat.name.toUpperCase() : 'VAGA LIVRE',
+                    dn: pat?.dn || '-',
+                    acesso: hasPat ? (pat.accessType || pat.accessRaw || 'FAV') : '-',
+                    agulha: pat?.needleSize ? `Ag. ${pat.needleSize}` : '-',
+                    heparina: pat?.heparina || '-',
+                    isolamento: (pat?.isolation || (pat?.accessRaw && pat.accessRaw.toUpperCase().includes('ÚNICO'))) ? 'SIM' : 'Não'
+                  });
+                });
+              });
+            });
+          });
+        }
+
+        data = pool;
+        cols = [
+          { header: 'Salão', key: 'salao' },
+          { header: 'Turno', key: 'turno' },
+          { header: 'Cadência', key: 'cadencia' },
+          { header: 'Box', key: 'box' },
+          { header: 'Ponto', key: 'ponto' },
+          { header: 'Máquina', key: 'maquina' },
+          { header: 'Paciente', key: 'paciente' },
+          { header: 'DN', key: 'dn' },
+          { header: 'Acesso', key: 'acesso' },
+          { header: 'Agulha', key: 'agulha' },
+          { header: 'Heparina', key: 'heparina' },
+          { header: 'Isolamento', key: 'isolamento' }
+        ];
+
+        kpis = [
+          { label: 'Leitos Avaliados', value: `${totalPontos}`, color: '#0284c7' },
+          { label: 'Leitos Ocupados', value: `${ocupados}`, color: '#059669' },
+          { label: 'Vagas Livres', value: `${vagos}`, color: '#64748b' },
+          { label: 'Isolamentos', value: `${isolados}`, color: '#dc2626' }
+        ];
+        break;
+      }
+
+      case 'ESCALA_GRADE_GERAL': {
+        const matrix = [];
+        let totalPoltronas = 0;
+        let totalSessoes = 0;
+
+        if (allSchedules) {
+          Object.keys(allSchedules).forEach(sal => {
+            if (salonFilter !== 'Todos' && sal !== salonFilter) return;
+            const basePoints = allSchedules[sal]?.['1º Turno']?.points || allSchedules[sal]?.['2º Turno']?.points || [];
+            basePoints.forEach(pt => {
+              totalPoltronas++;
+              const pNum = pt.ponto;
+
+              const getPName = (tur, cad) => {
+                const sched = allSchedules[sal]?.[tur];
+                const found = sched?.points?.find(p => p.ponto === pNum || p.id === pt.id);
+                const pat = cad === 'SQS' ? found?.sqs?.mainPatient : found?.tqs?.mainPatient;
+                if (pat && pat.name) {
+                  totalSessoes++;
+                  return pat.name.toUpperCase();
+                }
+                return 'Livre';
+              };
+
+              matrix.push({
+                salao: sal,
+                ponto: `Ponto ${pNum}`,
+                box: pt.box || 'Geral',
+                maquina: pt.serialNumber || 'Reserva',
+                sqs1: getPName('1º Turno', 'SQS'),
+                sqs2: getPName('2º Turno', 'SQS'),
+                sqs3: getPName('3º Turno', 'SQS'),
+                tqs1: getPName('1º Turno', 'TQS'),
+                tqs2: getPName('2º Turno', 'TQS'),
+                tqs3: getPName('3º Turno', 'TQS')
+              });
+            });
+          });
+        }
+
+        data = matrix;
+        cols = [
+          { header: 'Salão', key: 'salao' },
+          { header: 'Ponto', key: 'ponto' },
+          { header: 'Box', key: 'box' },
+          { header: 'Máquina', key: 'maquina' },
+          { header: '1º SQS', key: 'sqs1' },
+          { header: '2º SQS', key: 'sqs2' },
+          { header: '3º SQS', key: 'sqs3' },
+          { header: '1º TQS', key: 'tqs1' },
+          { header: '2º TQS', key: 'tqs2' },
+          { header: '3º TQS', key: 'tqs3' }
+        ];
+
+        const capSemanal = totalPoltronas * 6;
+        const txOcupacao = capSemanal > 0 ? Math.round((totalSessoes / capSemanal) * 100) : 0;
+
+        kpis = [
+          { label: 'Poltronas Ativas', value: `${totalPoltronas}`, color: '#0284c7' },
+          { label: 'Sessões Semanais', value: `${totalSessoes} / ${capSemanal}`, color: '#059669' },
+          { label: 'Ocupação da Grade', value: `${txOcupacao}%`, color: '#4f46e5' }
         ];
         break;
       }
@@ -888,6 +1174,8 @@ export default function AssistReportsModal({
   const handlePrint = () => {
     window.print();
   };
+
+  if (!isOpen) return null;
 
   return (
     <div style={styles.overlay}>

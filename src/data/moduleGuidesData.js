@@ -1076,6 +1076,18 @@ export const MODULE_GUIDES = {
       {
         title: 'Filtro Dinâmico por Período de Data',
         desc: 'Seletor de intervalo temporal (Hoje, Ontem, 7 Dias, 30 Dias, Este Mês ou Personalizado com início e fim) que recalcula automaticamente métricas e comunicados.'
+      },
+      {
+        title: 'Escala de Diálise com Indicadores Unificados',
+        desc: 'Visão de 7 indicadores operacionais em linha única (Capacidade, Ocupação, Vagas, Fístulas por calibre, Cateteres CDL/Permcath, Isolamento e Heparina), com mapeamento por box e poltrona.'
+      },
+      {
+        title: 'Central de Relatórios de Escala e Heparina',
+        desc: 'Catálogo de relatórios acessível no topo do módulo com 4 novos relatórios: Mapa de Heparina do Turno (com campo de checagem), Censo de Anticoagulação, Mapa Operacional do Posto e Grade Geral Consolidada.'
+      },
+      {
+        title: 'Edição Rápida de Parâmetros de Diálise',
+        desc: 'Modal ergonômico para edição ágil no card do paciente: Acesso (FAV, Cateter, Permcath, Prótese), Agulhas (15, 16, 17), Dose de Heparina (com atalhos rápidos de 0,5 a 2,5 ml) e Isolamento.'
       }
     ],
     tutorial: [
@@ -1116,6 +1128,24 @@ export const MODULE_GUIDES = {
           'Defina o Salão, Turno e nível de Urgência.',
           'Digite a mensagem clínica e clique em "Publicar".'
         ]
+      },
+      {
+        title: 'Como Emitir os Relatórios de Escala e Heparina',
+        steps: [
+          'No cabeçalho do módulo Nex-Ai.ASSIST, clique no botão "Relatórios".',
+          'No menu lateral, selecione o relatório desejado sob a categoria Escala (Mapa de Heparina, Censo de Anticoagulação, Mapa do Posto ou Grade Geral).',
+          'Filtre por Salão, Turno ou Cadência (Seg/Qua/Sex ou Ter/Qui/Sáb) conforme a rotina do plantão.',
+          'Clique em "Exportar PDF", "Excel" ou "Imprimir" para gerar o documento hospitalar formatado.'
+        ]
+      },
+      {
+        title: 'Como Editar os Parâmetros do Paciente na Escala',
+        steps: [
+          'Acesse a aba "Escala" e selecione o Salão, Turno e Cadência desejados.',
+          'Clique diretamente sobre o card do paciente alocado.',
+          'No modal, atualize o tipo de Acesso, Agulha, dose de Heparina (usando os atalhos ou digitando) e marque se houver Isolamento.',
+          'Clique em "Salvar". A escala e o prontuário do paciente serão sincronizados instantaneamente.'
+        ]
       }
     ],
     duvidas: [
@@ -1130,6 +1160,10 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Quem pode editar ou excluir um comunicado do mural?',
         resposta: 'Por segurança e rastreabilidade clínica, apenas o profissional que redigiu o comunicado (autor) ou usuários com perfil de Administrador têm permissão para editar ou excluir a postagem.'
+      },
+      {
+        pergunta: 'Onde encontro o mapa de heparina e a escala para imprimir no posto de enfermagem?',
+        resposta: 'Todos os relatórios operacionais da escala foram consolidados no botão "Relatórios" do topo do módulo Nex-Ai.ASSIST. Lá você encontra o Mapa de Heparina do Turno (com coluna de checagem/visto da enfermagem), Censo de Anticoagulação, Mapa Operacional do Posto e a Grade Geral Consolidada, com suporte a impressão e exportação em PDF ou Excel.'
       }
     ]
   },

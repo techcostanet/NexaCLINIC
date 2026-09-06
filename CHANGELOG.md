@@ -1,3 +1,24 @@
+## [v4.9.59] - 06 de Setembro, 2026
+### Nex-Ai.ASSIST — Espaçamento Padrão no Modal de Escala, 7 KPIs em Linha Única & 4 Novos Relatórios de Escala e Heparina
+- **Espaçamento e Harmonia no Modal de Edição da Escala (`DialysisScheduleTab.jsx`):**
+  - Correção do corpo do formulário (`modalBody`) com espaçamento lateral ergonômico padrão do sistema (`padding: 1.5rem 1.75rem`), eliminando a sensação de formulário apertado e trazendo respiro harmônico aos cards e campos.
+- **Unificação dos 7 Indicadores em Linha Única (`DialysisScheduleTab.jsx`):**
+  - Reestruturação do grid de indicadores para grade de 7 colunas (`repeat(7, minmax(0, 1fr))`) com dimensionamento compacto e layout horizontal, alinhando Capacidade, Ocupação, Vagas, Fístulas, Cateteres, Isolamento e Heparina estritamente em uma linha sem quebra de página.
+- **Remoção de Botões na Escala & Criação de 4 Novos Relatórios (`AssistReportsModal.jsx`):**
+  - Remoção dos botões `[💉 Heparina]` e `[🖨️ Imprimir]` da barra da escala, centralizando a gestão documental no botão de "Relatórios" do topo do módulo Nex-Ai.ASSIST.
+  - Criação de 4 novos relatórios analíticos e operacionais sob a seção Escala:
+    1. **Mapa de Heparina do Turno**: identificação de box, ponto, paciente, acesso, dose prescrita de heparina e campo de checagem/visto da equipe de enfermagem.
+    2. **Censo de Anticoagulação & Heparina**: análise clínica com total de pacientes, percentual sob anticoagulação, dose média e consumo total previsto em mL.
+    3. **Mapa Operacional da Escala (Posto)**: escala completa de diálise formatada para impressão hospitalar e afixação no posto de enfermagem.
+    4. **Grade Consolidada de Turnos & Poltronas**: matriz consolidada cruzando alocações de poltronas/máquinas entre os turnos (1º, 2º, 3º) e cadências (SQS e TQS).
+  - Suporte completo a exportação em PDF, planilha Excel (.xlsx) e impressão direta.
+- **Rótulos Concisos & Boy Scout Rule:**
+  - Padronização de rótulos do modal para termo único conciso (`Isolamento`).
+- **Atualização do Manual do Módulo (`src/data/moduleGuidesData.js`):**
+  - Atualização completa das seções Recursos, Tutorial e Dúvidas com os novos relatórios e rotinas da escala.
+
+---
+
 ## [v4.9.58] - 06 de Setembro, 2026
 ### Nex-Ai.ASSIST — Escala Interativa Clicável, Gestão de Heparina & Carga CSV Salão 02
 - **Escala de Diálise Interativa e Clicável (`DialysisScheduleTab.jsx`):**

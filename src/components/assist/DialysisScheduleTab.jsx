@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../../firebase';
 import { 
-  Calendar, Search, Printer, AlertTriangle, 
+  Calendar, Search, AlertTriangle, 
   CheckCircle2, RefreshCw, ArrowRightLeft, ShieldAlert, Cpu, 
   MapPin, Clock, Plus, X, ChevronRight, Wrench,
-  UserMinus, Syringe, Pencil
+  UserMinus, Pencil
 } from 'lucide-react';
 import { useUnit } from '../../contexts/UnitContext';
 
@@ -42,9 +42,6 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
   // Edit Access & Heparin Modal
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [selectedSlotForEdit, setSelectedSlotForEdit] = useState(null);
-
-  // Heparin Sheet Modal
-  const [showHeparinSheetModal, setShowHeparinSheetModal] = useState(false);
 
   // Auto-detect today's cadence
   useEffect(() => {
@@ -306,10 +303,6 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
     <div style={tabStyles.container}>
       {/* Toast Alert */}
@@ -376,7 +369,7 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
             </div>
           </div>
 
-          {/* Quick Actions (Search, Heparina & Print) */}
+          {/* Quick Actions (Search) */}
           <div style={tabStyles.actionBtnsGroup}>
             <button
               onClick={() => setShowSearchModal(true)}
@@ -385,22 +378,6 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
             >
               <Search size={15} color="#4f46e5" />
               <span>Localizar</span>
-            </button>
-            <button
-              onClick={() => setShowHeparinSheetModal(true)}
-              style={tabStyles.heparinSheetBtn}
-              title="Mapa de Heparina do turno para checagem da enfermagem"
-            >
-              <Syringe size={15} color="#2563eb" />
-              <span>Heparina</span>
-            </button>
-            <button
-              onClick={handlePrint}
-              style={tabStyles.printBtn}
-              title="Imprimir escala em A4 para o posto de enfermagem"
-            >
-              <Printer size={15} />
-              <span>Imprimir</span>
             </button>
           </div>
         </div>
@@ -446,7 +423,7 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
         </div>
       </div>
 
-      {/* KPI Stats Bar */}
+      {/* KPI Stats Bar - 7 Indicadores em Linha Única */}
       <div style={tabStyles.statsGrid}>
         <div style={tabStyles.statCard}>
           <span style={tabStyles.statLabel}>Capacidade</span>
@@ -481,19 +458,19 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
 
         <div style={tabStyles.statCard}>
           <span style={tabStyles.statLabel}>Fístulas</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
-            <span style={{ ...tabStyles.statNumber, color: '#047857' }}>{metrics.favCount || 0}</span>
-            <span style={tabStyles.needlePill}>15: {metrics.needle15 || 0}</span>
-            <span style={tabStyles.needlePill}>16: {metrics.needle16 || 0}</span>
-            <span style={tabStyles.needlePill}>17: {metrics.needle17 || 0}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px', flexWrap: 'wrap' }}>
+            <span style={{ ...tabStyles.statNumber, color: '#047857', marginRight: '2px' }}>{metrics.favCount || 0}</span>
+            <span style={tabStyles.needlePill}>15:{metrics.needle15 || 0}</span>
+            <span style={tabStyles.needlePill}>16:{metrics.needle16 || 0}</span>
+            <span style={tabStyles.needlePill}>17:{metrics.needle17 || 0}</span>
           </div>
         </div>
 
         <div style={tabStyles.statCard}>
           <span style={tabStyles.statLabel}>Cateteres</span>
-          <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#b45309' }}>CDL: {metrics.cdlCount || 0}</span>
-            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#7e22ce' }}>Perm: {metrics.permcathCount || 0}</span>
+          <div style={{ display: 'flex', gap: '5px', marginTop: '4px', alignItems: 'baseline' }}>
+            <span style={{ fontSize: '0.74rem', fontWeight: '700', color: '#b45309', whiteSpace: 'nowrap' }}>CDL: {metrics.cdlCount || 0}</span>
+            <span style={{ fontSize: '0.74rem', fontWeight: '700', color: '#7e22ce', whiteSpace: 'nowrap' }}>Perm: {metrics.permcathCount || 0}</span>
           </div>
         </div>
 
@@ -1180,14 +1157,15 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
             <div style={tabStyles.modalHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
                   backgroundColor: '#eff6ff',
                   color: '#2563eb',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  boxShadow: '0 1px 3px rgba(37, 99, 235, 0.15)'
                 }}>
                   <Pencil size={18} />
                 </div>
@@ -1210,27 +1188,30 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
               </button>
             </div>
 
-            <div style={{ ...tabStyles.modalBody, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={tabStyles.modalBody}>
               {/* Paciente Identificação */}
               <div style={{
                 backgroundColor: '#f8fafc',
                 border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                padding: '10px 14px',
+                borderRadius: '12px',
+                padding: '12px 16px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px'
+                gap: '12px'
               }}>
-                <div style={{ ...tabStyles.patientAvatar, width: '36px', height: '36px', fontSize: '1rem' }}>
+                <div style={{ ...tabStyles.patientAvatar, width: '40px', height: '40px', fontSize: '1.05rem' }}>
                   {selectedSlotForEdit.patient.name ? selectedSlotForEdit.patient.name.charAt(0).toUpperCase() : '?'}
                 </div>
-                <div>
-                  <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '0.92rem' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '0.95rem', letterSpacing: '-0.01em' }}>
                     {selectedSlotForEdit.patient.name?.toUpperCase()}
                   </div>
                   {selectedSlotForEdit.patient.dn && (
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '2px' }}>
                       DN: {selectedSlotForEdit.patient.dn}
+                      {calculateAge(null, selectedSlotForEdit.patient.dn) && (
+                        <span style={{ color: '#475569', fontWeight: '600' }}> • {calculateAge(null, selectedSlotForEdit.patient.dn)}</span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1255,7 +1236,7 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
               {selectedSlotForEdit.accessType === 'Fístula Arteriovenosa' && (
                 <div>
                   <label style={tabStyles.formLabel}>Agulha</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '10px' }}>
                     {['15', '16', '17'].map(size => (
                       <button
                         key={size}
@@ -1263,14 +1244,16 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                         onClick={() => setSelectedSlotForEdit({ ...selectedSlotForEdit, needleSize: size })}
                         style={{
                           flex: 1,
-                          padding: '8px',
-                          borderRadius: '8px',
-                          border: '1px solid',
+                          padding: '10px',
+                          borderRadius: '10px',
+                          border: '1.5px solid',
                           borderColor: selectedSlotForEdit.needleSize === size ? '#059669' : '#cbd5e1',
                           backgroundColor: selectedSlotForEdit.needleSize === size ? '#ecfdf5' : '#ffffff',
                           color: selectedSlotForEdit.needleSize === size ? '#065f46' : '#475569',
-                          fontWeight: selectedSlotForEdit.needleSize === size ? '700' : '500',
-                          cursor: 'pointer'
+                          fontWeight: selectedSlotForEdit.needleSize === size ? '800' : '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          fontSize: '0.88rem'
                         }}
                       >
                         Agulha {size}
@@ -1291,21 +1274,23 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                   style={tabStyles.modalSearchInput}
                 />
                 {/* Sugestões rápidas de heparina */}
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
                   {['0,5 ml', '1,0 ml', '1,5 ml', '1,8 ml', '2,0 ml', '2,5 ml', 'NA'].map(sug => (
                     <button
                       key={sug}
                       type="button"
                       onClick={() => setSelectedSlotForEdit({ ...selectedSlotForEdit, heparina: sug })}
                       style={{
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        border: '1px solid #bfdbfe',
+                        padding: '5px 11px',
+                        borderRadius: '8px',
+                        border: '1px solid',
+                        borderColor: selectedSlotForEdit.heparina === sug ? '#2563eb' : '#bfdbfe',
                         backgroundColor: selectedSlotForEdit.heparina === sug ? '#2563eb' : '#eff6ff',
                         color: selectedSlotForEdit.heparina === sug ? '#ffffff' : '#1d4ed8',
-                        fontSize: '0.72rem',
-                        fontWeight: '600',
-                        cursor: 'pointer'
+                        fontSize: '0.78rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
                       }}
                     >
                       {sug}
@@ -1314,22 +1299,25 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                 </div>
               </div>
 
-              {/* Isolamento / Uso Único */}
+              {/* Isolamento */}
               <div style={{
+                backgroundColor: '#f8fafc',
+                borderRadius: '10px',
+                border: '1px solid #e2e8f0',
+                padding: '10px 14px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                paddingTop: '6px'
+                gap: '10px'
               }}>
                 <input
                   id="chk-isolation"
                   type="checkbox"
                   checked={selectedSlotForEdit.isolation}
                   onChange={(e) => setSelectedSlotForEdit({ ...selectedSlotForEdit, isolation: e.target.checked })}
-                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#2563eb' }}
                 />
-                <label htmlFor="chk-isolation" style={{ fontSize: '0.84rem', fontWeight: '600', color: '#475569', cursor: 'pointer' }}>
-                  Isolamento (Uso Único)
+                <label htmlFor="chk-isolation" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#334155', cursor: 'pointer' }}>
+                  Isolamento
                 </label>
               </div>
             </div>
@@ -1349,99 +1337,14 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                 type="button"
                 onClick={handleSaveEditPatient}
                 disabled={actionLoading}
-                style={tabStyles.confirmBtn}
+                style={{
+                  ...tabStyles.confirmBtn,
+                  backgroundColor: '#2563eb',
+                  opacity: actionLoading ? 0.7 : 1,
+                  cursor: actionLoading ? 'not-allowed' : 'pointer'
+                }}
               >
                 {actionLoading ? 'Salvando...' : 'Salvar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Mapa de Heparina para Enfermagem */}
-      {showHeparinSheetModal && (
-        <div style={tabStyles.modalBackdrop}>
-          <div style={{ ...tabStyles.modalCard, maxWidth: '780px', width: '92vw' }}>
-            <div style={tabStyles.modalHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  backgroundColor: '#eff6ff',
-                  color: '#2563eb',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Syringe size={18} />
-                </div>
-                <div>
-                  <h3 style={tabStyles.modalTitle}>Heparina</h3>
-                  <span style={tabStyles.modalSubtitle}>
-                    {selectedSalon} • {selectedShift} • {cadence === 'SQS' ? 'Seg/Qua/Sex' : 'Ter/Qui/Sáb'}
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowHeparinSheetModal(false)}
-                style={tabStyles.modalCloseBtn}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ ...tabStyles.modalBody, maxHeight: '65vh', overflowY: 'auto' }}>
-              <table style={tabStyles.sheetTable}>
-                <thead>
-                  <tr>
-                    <th style={tabStyles.sheetTh}>Box</th>
-                    <th style={tabStyles.sheetTh}>Ponto</th>
-                    <th style={tabStyles.sheetTh}>Paciente</th>
-                    <th style={tabStyles.sheetTh}>Acesso</th>
-                    <th style={tabStyles.sheetTh}>Heparina</th>
-                    <th style={tabStyles.sheetTh}>Checagem</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(activeScheduleData?.points || []).map(pt => {
-                    const pat = cadence === 'SQS' ? pt.sqs?.mainPatient : pt.tqs?.mainPatient;
-                    if (!pat || !pat.name) return null;
-                    return (
-                      <tr key={pt.id || pt.ponto}>
-                        <td style={tabStyles.sheetTd}><strong>{pt.box}</strong></td>
-                        <td style={tabStyles.sheetTd}>P{pt.ponto}</td>
-                        <td style={{ ...tabStyles.sheetTd, fontWeight: '600' }}>{pat.name.toUpperCase()}</td>
-                        <td style={tabStyles.sheetTd}>{pat.accessType || pat.accessRaw || 'FAV'}</td>
-                        <td style={tabStyles.sheetTd}>
-                          <span style={tabStyles.accessHeparina}>
-                            {pat.heparina || 'N/D'}
-                          </span>
-                        </td>
-                        <td style={{ ...tabStyles.sheetTd, width: '120px', borderBottom: '1px dashed #cbd5e1' }}></td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div style={tabStyles.modalFooter}>
-              <button
-                type="button"
-                onClick={() => setShowHeparinSheetModal(false)}
-                style={tabStyles.cancelBtn}
-              >
-                Fechar
-              </button>
-              <button
-                type="button"
-                onClick={() => window.print()}
-                style={tabStyles.confirmBtn}
-              >
-                <Printer size={15} style={{ marginRight: '4px' }} />
-                Imprimir
               </button>
             </div>
           </div>
@@ -1591,45 +1494,55 @@ const tabStyles = {
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
-    gap: '0.75rem'
+    gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+    gap: '0.5rem',
+    width: '100%',
+    alignItems: 'stretch'
   },
   statCard: {
     backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    padding: '0.85rem 1rem',
+    borderRadius: '10px',
+    padding: '0.65rem 0.75rem',
     border: '1px solid #e2e8f0',
     boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    minWidth: 0
   },
   statLabel: {
-    fontSize: '0.72rem',
+    fontSize: '0.68rem',
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: '0.04em',
-    color: '#475569'
+    letterSpacing: '0.03em',
+    color: '#475569',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
   },
   statValueRow: {
     display: 'flex',
     alignItems: 'baseline',
-    gap: '6px',
-    marginTop: '4px'
+    gap: '4px',
+    marginTop: '3px',
+    flexWrap: 'nowrap',
+    overflow: 'hidden'
   },
   statNumber: {
-    fontSize: '1.4rem',
+    fontSize: '1.25rem',
     fontWeight: '900',
-    color: '#1e293b'
+    color: '#1e293b',
+    lineHeight: 1.1
   },
   statSub: {
-    fontSize: '0.75rem',
-    color: '#475569'
+    fontSize: '0.7rem',
+    color: '#475569',
+    whiteSpace: 'nowrap'
   },
   needlePill: {
-    fontSize: '0.68rem',
+    fontSize: '0.62rem',
     fontWeight: '700',
-    padding: '2px 5px',
+    padding: '1px 4px',
     backgroundColor: '#ecfdf5',
     color: '#065f46',
     borderRadius: '4px',
@@ -1856,34 +1769,55 @@ const tabStyles = {
   modalCard: {
     backgroundColor: '#ffffff',
     width: '100%',
-    maxWidth: '620px',
+    maxWidth: '560px',
     borderRadius: '16px',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
     maxHeight: '85vh'
   },
   modalHeader: {
-    padding: '1rem 1.25rem',
+    padding: '1.25rem 1.75rem',
     borderBottom: '1px solid #e2e8f0',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffff',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between'
   },
   modalHeading: {
     margin: 0,
-    fontSize: '1rem',
+    fontSize: '1.05rem',
     fontWeight: '800',
     color: '#1e293b'
+  },
+  modalTitle: {
+    margin: 0,
+    fontSize: '1.05rem',
+    fontWeight: '800',
+    color: '#1e293b'
+  },
+  modalSubtitle: {
+    fontSize: '0.78rem',
+    color: '#64748b',
+    display: 'block',
+    marginTop: '2px'
+  },
+  modalBody: {
+    padding: '1.5rem 1.75rem',
+    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.2rem'
   },
   modalCloseBtn: {
     background: 'none',
     border: 'none',
     color: '#94a3b8',
     cursor: 'pointer',
-    padding: '4px'
+    padding: '4px',
+    fontSize: '1.1rem',
+    lineHeight: 1
   },
   modalSearchInput: {
     width: '100%',
@@ -1945,15 +1879,15 @@ const tabStyles = {
     fontSize: '0.8rem'
   },
   modalFooter: {
-    padding: '0.85rem 1.25rem',
+    padding: '1rem 1.75rem',
     borderTop: '1px solid #e2e8f0',
     backgroundColor: '#f8fafc',
     display: 'flex',
     justifyContent: 'flex-end',
-    gap: '8px'
+    gap: '10px'
   },
   cancelBtn: {
-    padding: '7px 14px',
+    padding: '8px 16px',
     borderRadius: '10px',
     fontSize: '0.85rem',
     fontWeight: '600',
@@ -1963,7 +1897,7 @@ const tabStyles = {
     cursor: 'pointer'
   },
   confirmBtn: {
-    padding: '7px 18px',
+    padding: '8px 20px',
     borderRadius: '10px',
     fontSize: '0.85rem',
     fontWeight: '700',
@@ -2034,23 +1968,10 @@ const tabStyles = {
     alignItems: 'center',
     padding: '2px 4px'
   },
-  heparinSheetBtn: {
-    padding: '6px 12px',
-    borderRadius: '8px',
-    border: '1px solid #bfdbfe',
-    backgroundColor: '#eff6ff',
-    color: '#1d4ed8',
-    fontSize: '0.82rem',
-    fontWeight: '600',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px'
-  },
   modalSelect: {
     width: '100%',
-    padding: '9px 12px',
-    borderRadius: '8px',
+    padding: '10px 12px',
+    borderRadius: '10px',
     border: '1px solid #cbd5e1',
     fontSize: '0.88rem',
     backgroundColor: '#ffffff',
@@ -2062,25 +1983,6 @@ const tabStyles = {
     fontSize: '0.8rem',
     fontWeight: '700',
     color: '#475569',
-    marginBottom: '4px'
-  },
-  sheetTable: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '0.85rem'
-  },
-  sheetTh: {
-    textAlign: 'left',
-    padding: '8px 10px',
-    borderBottom: '2px solid #e2e8f0',
-    color: '#475569',
-    fontWeight: '700',
-    fontSize: '0.78rem',
-    textTransform: 'uppercase'
-  },
-  sheetTd: {
-    padding: '8px 10px',
-    borderBottom: '1px solid #f1f5f9',
-    color: '#1e293b'
+    marginBottom: '6px'
   }
 };

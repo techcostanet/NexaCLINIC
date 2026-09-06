@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.59',
+      date: '06/09/2026',
+      title: 'Nex-Ai.ASSIST — Espaçamento Padrão no Modal de Escala, 7 KPIs em Linha Única & 4 Novos Relatórios',
+      description: 'Refinamento de layout no modal de edição de parâmetros da escala com espaçamento padrão respirável nas laterais, alinhamento unificado dos 7 cartões indicadores em linha única e criação de 4 relatórios especializados de escala e heparina no catálogo central de relatórios.',
+      changes: [
+        { type: 'Espaçamento Padrão no Modal', text: 'Correção do espaçamento lateral do formulário de edição de escala com padding ergonômico padrão de 1.75rem, eliminando o aspecto apertado.' },
+        { type: '7 Indicadores em Linha Única', text: 'Redimensionamento dos indicadores operacionais da escala em grade de 7 colunas perfeitamente ajustadas em uma linha horizontal sem quebras.' },
+        { type: '4 Novos Relatórios de Escala & Heparina', text: 'Criação dos relatórios Mapa de Heparina do Turno (com checagem da enfermagem), Censo de Anticoagulação, Mapa Operacional do Posto e Grade Consolidada no botão de Relatórios.' },
+        { type: 'Remoção de Botões Redundantes', text: 'Retirada dos botões Heparina e Imprimir da barra da escala, centralizando todas as emissões documentais no catálogo oficial.' },
+        { type: 'Rótulos Concisos & Manuais', text: 'Padronização de termos diretos (Isolamento) e atualização das seções de tutoriais e dúvidas na base de conhecimento do módulo.' }
+      ]
+    },
+    {
       version: 'v4.9.58',
       date: '06/09/2026',
       title: 'Nex-Ai.ASSIST — Escala Interativa Clicável, Gestão de Heparina & Carga CSV Salão 02',
