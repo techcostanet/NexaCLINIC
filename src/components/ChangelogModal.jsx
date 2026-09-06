@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.61',
+      date: '06/09/2026',
+      title: 'Nex-Ai.RECEPTION — Design NexAiBrand, 3 Formas de Visualização (Compacto, Normal, Cards) & Filtro por Status',
+      description: 'Padronização visual do título oficial do módulo com o componente NexAiBrand e ícone em gradiente teal, criação de 3 modos de visualização rápida de pacientes (Compacto padrão, Normal tabular e Cards responsivos), novo filtro avançado por status com pílulas interativas e contadores em tempo real, alinhamento dos filtros na barra superior e remoção do indicador obsoleto de APACs.',
+      changes: [
+        { type: 'Branding NexAiBrand Oficial', text: 'Aplicação da tipografia e degradê oficial do sistema no título do módulo com o componente NexAiBrand e badge .RECEPTION, acompanhado de ícone estilizado em gradiente teal.' },
+        { type: '3 Formas de Visualização', text: 'Inclusão do seletor Visão com 3 modos: Compacto (padrão de alta densidade hospitalar com linhas finas para máxima visualização), Normal (tabular espaçada tradicional) e Cards (grade responsiva com crachás visuais e ações).' },
+        { type: 'Filtro por Status & Pílulas', text: 'Filtro duplo por situação clínica através de menu suspenso e barra de pílulas rápidas com contadores em tempo real (Todos, Ativo, Suspenso, Em Trânsito, Transplantado e Óbito).' },
+        { type: 'Alinhamento da Barra de Filtros', text: 'Padronização de rótulos superiores alinhados (Paciente, Turno, Sala, Status, Visão e Admissão) com rigoroso padrão de termo único.' },
+        { type: 'Remoção do Card de APACs', text: 'Retirada do indicador obsoleto de APACs dos KPIs superiores, consolidando o topo em 3 cartões diretos e limpos (Pacientes, Ativos com filtro interativo e Ronda Médica).' }
+      ]
+    },
+    {
       version: 'v4.9.60',
       date: '06/09/2026',
       title: 'Nex-Ai.RECEPTION — Busca no Padrão Assist, Nova Ronda Médica Completa & Unificação na Escala',

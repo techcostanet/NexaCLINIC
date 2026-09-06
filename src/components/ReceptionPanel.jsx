@@ -2,12 +2,14 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { dbService } from '../firebase';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
+import NexAiBrand from './common/NexAiBrand';
 import { 
   Plus, Search, Edit2, Trash2, User, Calendar, 
   Check, X, FileText, CheckCircle2, AlertCircle, 
   MapPin, Clock, AlertTriangle, ShieldCheck,
   UserCheck, RefreshCw, Phone, MessageSquare, Heart,
-  Activity, ShieldAlert, Sparkles, Tv, ChevronLeft, ChevronRight
+  Activity, ShieldAlert, Sparkles, Tv, ChevronLeft, ChevronRight,
+  List, LayoutList, LayoutGrid
 } from 'lucide-react';
 
 export default function ReceptionPanel() {
@@ -31,6 +33,7 @@ export default function ReceptionPanel() {
   const [filterShift, setFilterShift] = useState('');
   const [filterRoom, setFilterRoom] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [patientViewMode, setPatientViewMode] = useState('compact'); // 'compact' | 'normal' | 'cards'
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const searchWrapperRef = useRef(null);
 
@@ -506,7 +509,8 @@ export default function ReceptionPanel() {
 
       const matchesShift = filterShift ? p.shift === filterShift : true;
       const matchesRoom = filterRoom ? p.room === filterRoom : true;
-      const matchesStatus = filterStatus ? p.treatmentStatus === filterStatus : true;
+      const patStatus = p.treatmentStatus || 'Ativo';
+      const matchesStatus = filterStatus ? patStatus === filterStatus : true;
       return matchesSearch && matchesShift && matchesRoom && matchesStatus;
     });
   };
@@ -617,19 +621,45 @@ export default function ReceptionPanel() {
     return { total, presentes, atrasos, substituidos, ausentes, pendentes };
   }, [currentMedicalSchedules, rondaDate]);
 
-  // KPIs Superiores
-  const activePatientsCount = currentPatients.filter(p => p.treatmentStatus === 'Ativo').length;
-  const apacWarningCount = currentPatients.filter(p => getApacStatus(p.apacExpiry).isWarning).length;
+  // KPIs Superiores & Contagem por Status
+  const statusCounts = useMemo(() => {
+    const counts = { total: currentPatients.length, Ativo: 0, Suspenso: 0, 'Em Trânsito': 0, Transplantado: 0, Óbito: 0 };
+    currentPatients.forEach(p => {
+      const st = p.treatmentStatus || 'Ativo';
+      if (counts[st] !== undefined) counts[st]++;
+      else counts.Ativo++;
+    });
+    return counts;
+  }, [currentPatients]);
+
+  const activePatientsCount = statusCounts.Ativo;
 
   return (
     <div style={styles.container}>
-      {/* Header */}
+      {/* Header com Design Oficial NexAiBrand Padronizado */}
       <div style={styles.cardHeader}>
-        <div>
-          <h1 style={styles.title}>Nex-Ai.RECEPTION</h1>
-          <p style={styles.subtitle}>
-            Admissão completa de pacientes, regulação APAC, cadastro clínico e auditoria presencial de ronda médica.
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <div style={{
+            width: '46px',
+            height: '46px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #0d9488, #0f766e)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(13, 148, 136, 0.25)',
+            flexShrink: 0
+          }}>
+            <UserCheck size={26} color="#fff" />
+          </div>
+          <div>
+            <h1 style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+              <NexAiBrand size="lg" suffix=".RECEPTION" showIcon={false} />
+            </h1>
+            <p style={styles.subtitle}>
+              Admissão completa de pacientes, cadastro clínico e auditoria presencial de ronda médica.
+            </p>
+          </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <UnitSelector compact showLabel={false} />
@@ -641,7 +671,7 @@ export default function ReceptionPanel() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.35rem',
-              padding: '0.4rem 0.75rem',
+              padding: '0.45rem 0.8rem',
               borderRadius: '8px',
               backgroundColor: '#f0f9ff',
               color: '#0284c7',
@@ -658,9 +688,13 @@ export default function ReceptionPanel() {
         </div>
       </div>
 
-      {/* KPI Cards Row */}
-      <div style={styles.kpiRow}>
-        <div style={styles.kpiCard}>
+      {/* KPI Cards Row (3 Indicadores Consolidados) */}
+      <div style={{ ...styles.kpiRow, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+        <div 
+          style={{ ...styles.kpiCard, cursor: 'pointer' }}
+          onClick={() => setFilterStatus('')}
+          title="Ver todos os pacientes"
+        >
           <div style={styles.kpiIconWrap}>
             <User size={20} color="var(--primary-color)" />
           </div>
@@ -671,7 +705,16 @@ export default function ReceptionPanel() {
           </div>
         </div>
 
-        <div style={{ ...styles.kpiCard, borderLeft: '4px solid #10b981' }}>
+        <div 
+          style={{ 
+            ...styles.kpiCard, 
+            borderLeft: '4px solid #10b981',
+            cursor: 'pointer',
+            backgroundColor: filterStatus === 'Ativo' ? '#f0fdf4' : '#fff'
+          }}
+          onClick={() => setFilterStatus(filterStatus === 'Ativo' ? '' : 'Ativo')}
+          title={filterStatus === 'Ativo' ? 'Filtro de Ativos ativo (clique para limpar)' : 'Filtrar apenas pacientes Ativos'}
+        >
           <div style={{ ...styles.kpiIconWrap, backgroundColor: '#ecfdf5' }}>
             <CheckCircle2 size={20} color="#10b981" />
           </div>
@@ -682,18 +725,11 @@ export default function ReceptionPanel() {
           </div>
         </div>
 
-        <div style={{ ...styles.kpiCard, borderLeft: '4px solid #ef4444' }}>
-          <div style={{ ...styles.kpiIconWrap, backgroundColor: '#fee2e2' }}>
-            <ShieldAlert size={20} color="#ef4444" />
-          </div>
-          <div>
-            <span style={styles.kpiLabel}>APACs</span>
-            <div style={{ ...styles.kpiValue, color: '#ef4444' }}>{apacWarningCount}</div>
-            <span style={styles.kpiSub}>A vencer ou vencidas</span>
-          </div>
-        </div>
-
-        <div style={{ ...styles.kpiCard, borderLeft: '4px solid #3b82f6' }}>
+        <div 
+          style={{ ...styles.kpiCard, borderLeft: '4px solid #3b82f6', cursor: 'pointer' }}
+          onClick={() => setActiveTab('ronda')}
+          title="Ir para a auditoria de ronda"
+        >
           <div style={{ ...styles.kpiIconWrap, backgroundColor: '#eff6ff' }}>
             <UserCheck size={20} color="#2563eb" />
           </div>
@@ -733,85 +769,190 @@ export default function ReceptionPanel() {
         </div>
       )}
 
-      {/* Filters Bar (Pacientes) */}
+      {/* Filters & Actions Bar (Pacientes) */}
       {activeTab === 'patients' && (
-        <div style={styles.filtersBar}>
-          <div ref={searchWrapperRef} style={{ ...styles.searchWrapper, position: 'relative' }}>
-            <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569', marginBottom: '4px', display: 'block' }}>
-              Paciente:
-            </label>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <Search size={18} style={styles.searchIcon} />
-              <input 
-                type="text" 
-                placeholder="Pesquisar por paciente, CPF, CNS ou poltrona..."
-                value={searchTerm}
-                onFocus={() => setIsSearchDropdownOpen(true)}
-                onChange={e => {
-                  setSearchTerm(e.target.value);
-                  setIsSearchDropdownOpen(true);
-                }}
-                style={{ ...styles.searchInput, textTransform: 'uppercase' }}
-              />
-              {searchTerm && (
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setSearchTerm('');
-                    setIsSearchDropdownOpen(false);
-                  }} 
-                  style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
-                >
-                  <X size={14} />
-                </button>
+        <div style={styles.filtersContainer}>
+          <div style={styles.filtersBar}>
+            {/* Campo de Busca do Paciente */}
+            <div ref={searchWrapperRef} style={{ ...styles.searchWrapper, position: 'relative' }}>
+              <label style={styles.filterLabel}>
+                Paciente:
+              </label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <Search size={18} style={styles.searchIcon} />
+                <input 
+                  type="text" 
+                  placeholder="Pesquisar por paciente, CPF, CNS ou poltrona..."
+                  value={searchTerm}
+                  onFocus={() => setIsSearchDropdownOpen(true)}
+                  onChange={e => {
+                    setSearchTerm(e.target.value);
+                    setIsSearchDropdownOpen(true);
+                  }}
+                  style={{ ...styles.searchInput, textTransform: 'uppercase' }}
+                />
+                {searchTerm && (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setIsSearchDropdownOpen(false);
+                    }} 
+                    style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              {isSearchDropdownOpen && searchTerm.trim().length >= 1 && searchAutocompleteResults.length > 0 && (
+                <div style={styles.patientDropdown}>
+                  {searchAutocompleteResults.map(p => (
+                    <div 
+                      key={p.id} 
+                      onClick={() => {
+                        setSearchTerm(p.name);
+                        setIsSearchDropdownOpen(false);
+                      }}
+                      style={styles.patientDropdownItem}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+                    >
+                      <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '0.92rem', textTransform: 'uppercase' }}>
+                        {p.name}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>
+                        CPF: {p.cpf || 'N/A'} • {p.room || 'Sem salão'} ({p.shift || 'Turno N/A'})
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
-            {isSearchDropdownOpen && searchTerm.trim().length >= 1 && searchAutocompleteResults.length > 0 && (
-              <div style={styles.patientDropdown}>
-                {searchAutocompleteResults.map(p => (
-                  <div 
-                    key={p.id} 
-                    onClick={() => {
-                      setSearchTerm(p.name);
-                      setIsSearchDropdownOpen(false);
-                    }}
-                    style={styles.patientDropdownItem}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
-                  >
-                    <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '0.92rem', textTransform: 'uppercase' }}>
-                      {p.name}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>
-                      CPF: {p.cpf || 'N/A'} • {p.room || 'Sem salão'} ({p.shift || 'Turno N/A'})
-                    </div>
-                  </div>
-                ))}
+            {/* Select Turno */}
+            <div style={styles.filterCol}>
+              <label style={styles.filterLabel}>Turno:</label>
+              <select value={filterShift} onChange={e => setFilterShift(e.target.value)} style={styles.filterSelect}>
+                <option value="">Todos</option>
+                {shifts.map(s => <option key={s.id || s.name} value={s.name}>{s.name}</option>)}
+              </select>
+            </div>
+
+            {/* Select Sala */}
+            <div style={styles.filterCol}>
+              <label style={styles.filterLabel}>Sala:</label>
+              <select value={filterRoom} onChange={e => setFilterRoom(e.target.value)} style={styles.filterSelect}>
+                <option value="">Todas</option>
+                {rooms.map(r => <option key={r.id || r.name} value={r.name}>{r.name}</option>)}
+              </select>
+            </div>
+
+            {/* Select Status */}
+            <div style={styles.filterCol}>
+              <label style={styles.filterLabel}>Status:</label>
+              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={styles.filterSelect}>
+                <option value="">Todos</option>
+                <option value="Ativo">Ativo</option>
+                <option value="Suspenso">Suspenso</option>
+                <option value="Em Trânsito">Em Trânsito</option>
+                <option value="Transplantado">Transplantado</option>
+                <option value="Óbito">Óbito</option>
+              </select>
+            </div>
+
+            {/* Seletor de Visão (Compacto / Normal / Cards) */}
+            <div style={styles.filterCol}>
+              <label style={styles.filterLabel}>Visão:</label>
+              <div style={styles.viewToggleGroup}>
+                <button
+                  type="button"
+                  onClick={() => setPatientViewMode('compact')}
+                  style={{
+                    ...styles.viewToggleBtn,
+                    ...(patientViewMode === 'compact' ? styles.viewToggleBtnActive : {})
+                  }}
+                  title="Visão Compacta (Alta densidade, padrão)"
+                >
+                  <List size={14} />
+                  <span>Compacto</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPatientViewMode('normal')}
+                  style={{
+                    ...styles.viewToggleBtn,
+                    ...(patientViewMode === 'normal' ? styles.viewToggleBtnActive : {})
+                  }}
+                  title="Visão Normal (Tabular detalhada)"
+                >
+                  <LayoutList size={14} />
+                  <span>Normal</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPatientViewMode('cards')}
+                  style={{
+                    ...styles.viewToggleBtn,
+                    ...(patientViewMode === 'cards' ? styles.viewToggleBtnActive : {})
+                  }}
+                  title="Visão em Cards (Grade responsiva)"
+                >
+                  <LayoutGrid size={14} />
+                  <span>Cards</span>
+                </button>
               </div>
-            )}
+            </div>
+
+            {/* Botão Admissão */}
+            <div style={styles.filterCol}>
+              <label style={{ ...styles.filterLabel, visibility: 'hidden' }}>Ação:</label>
+              <button onClick={handleOpenAddModal} style={styles.addBtn}>
+                <Plus size={16} /> Admissão
+              </button>
+            </div>
           </div>
 
-          <div style={styles.selectsWrapper}>
-            <select value={filterShift} onChange={e => setFilterShift(e.target.value)} style={styles.filterSelect}>
-              <option value="">Turnos</option>
-              {shifts.map(s => <option key={s.id || s.name} value={s.name}>{s.name}</option>)}
-            </select>
-            <select value={filterRoom} onChange={e => setFilterRoom(e.target.value)} style={styles.filterSelect}>
-              <option value="">Salas</option>
-              {rooms.map(r => <option key={r.id || r.name} value={r.name}>{r.name}</option>)}
-            </select>
-            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={styles.filterSelect}>
-              <option value="">Status</option>
-              <option value="Ativo">Ativo</option>
-              <option value="Suspenso">Suspenso</option>
-              <option value="Em Trânsito">Em Trânsito</option>
-              <option value="Transplantado">Transplantado</option>
-              <option value="Óbito">Óbito</option>
-            </select>
-            <button onClick={handleOpenAddModal} style={styles.addBtn}>
-              <Plus size={16} /> Admissão
-            </button>
+          {/* Barra de Pílulas Rápidas de Status com Contadores */}
+          <div style={styles.statusChipsBar}>
+            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', alignSelf: 'center', marginRight: '4px' }}>
+              Status:
+            </span>
+            {[
+              { key: '', label: 'Todos', count: statusCounts.total, color: '#475569', bg: '#f1f5f9' },
+              { key: 'Ativo', label: 'Ativo', count: statusCounts.Ativo, color: '#15803d', bg: '#dcfce7' },
+              { key: 'Suspenso', label: 'Suspenso', count: statusCounts.Suspenso, color: '#b45309', bg: '#fef3c7' },
+              { key: 'Em Trânsito', label: 'Em Trânsito', count: statusCounts['Em Trânsito'], color: '#2563eb', bg: '#eff6ff' },
+              { key: 'Transplantado', label: 'Transplantado', count: statusCounts.Transplantado, color: '#7c3aed', bg: '#f3e8ff' },
+              { key: 'Óbito', label: 'Óbito', count: statusCounts.Óbito, color: '#64748b', bg: '#f1f5f9' },
+            ].map(pill => {
+              const isSelected = filterStatus === pill.key;
+              return (
+                <button
+                  key={pill.label}
+                  type="button"
+                  onClick={() => setFilterStatus(isSelected && pill.key !== '' ? '' : pill.key)}
+                  style={{
+                    ...styles.statusChip,
+                    backgroundColor: isSelected ? pill.color : pill.bg,
+                    color: isSelected ? '#ffffff' : pill.color,
+                    border: isSelected ? `1px solid ${pill.color}` : '1px solid transparent',
+                    boxShadow: isSelected ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+                  }}
+                >
+                  <span>{pill.label}</span>
+                  <span style={{
+                    fontSize: '0.7rem',
+                    fontWeight: '800',
+                    padding: '0.1rem 0.4rem',
+                    borderRadius: '999px',
+                    backgroundColor: isSelected ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.06)'
+                  }}>
+                    {pill.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -820,119 +961,353 @@ export default function ReceptionPanel() {
         <div style={styles.loadingBox}>Carregando recepção...</div>
       ) : (
         <>
-          {/* TAB 1: Patients List */}
+          {/* TAB 1: Patients List (3 Formas de Visualização) */}
           {activeTab === 'patients' && (
-            <div style={styles.tableWrapper}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Paciente</th>
-                    <th>Documento</th>
-                    <th>Nascimento</th>
-                    <th>Convênio</th>
-                    <th>Frequência</th>
-                    <th>Acesso</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPatients.length === 0 ? (
-                    <tr>
-                      <td colSpan="8" style={styles.noDataCell}>Nenhum paciente cadastrado para os filtros atuais.</td>
-                    </tr>
-                  ) : (
-                    filteredPatients.map(pat => {
-                      const apacInfo = getApacStatus(pat.apacExpiry);
-                      const age = calculateAge(pat.birthDate);
-                      return (
-                        <tr key={pat.id}>
-                          <td>
-                            <div style={styles.patientCell}>
-                              {pat.photo ? (
-                                <img src={pat.photo} alt={pat.name} style={styles.tablePhoto} />
-                              ) : (
-                                <div style={styles.tablePhotoPlaceholder}>
-                                  {pat.name.charAt(0)}
+            <>
+              {filteredPatients.length === 0 ? (
+                <div style={styles.noDataBox}>
+                  <AlertCircle size={36} color="#94a3b8" />
+                  <div style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem', marginTop: '0.5rem' }}>
+                    Nenhum paciente cadastrado para os filtros atuais.
+                  </div>
+                  {(searchTerm || filterShift || filterRoom || filterStatus) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setFilterShift('');
+                        setFilterRoom('');
+                        setFilterStatus('');
+                      }}
+                      style={styles.clearFiltersBtn}
+                    >
+                      Limpar filtros
+                    </button>
+                  )}
+                </div>
+              ) : patientViewMode === 'compact' ? (
+                /* 1. VISÃO COMPACTA (PADRÃO) */
+                <div style={styles.tableWrapper}>
+                  <table style={styles.compactTable}>
+                    <thead>
+                      <tr style={styles.compactTheadRow}>
+                        <th style={styles.compactTh}>Paciente</th>
+                        <th style={styles.compactTh}>Documento</th>
+                        <th style={styles.compactTh}>Nascimento</th>
+                        <th style={styles.compactTh}>Convênio</th>
+                        <th style={styles.compactTh}>Frequência</th>
+                        <th style={styles.compactTh}>Acesso</th>
+                        <th style={styles.compactTh}>Status</th>
+                        <th style={{ ...styles.compactTh, textAlign: 'center' }}>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPatients.map(pat => {
+                        const age = calculateAge(pat.birthDate);
+                        const isAtivo = (pat.treatmentStatus || 'Ativo') === 'Ativo';
+                        return (
+                          <tr key={pat.id} style={styles.compactTr}>
+                            <td style={styles.compactTd}>
+                              <div style={styles.compactPatientCell}>
+                                {pat.photo ? (
+                                  <img src={pat.photo} alt={pat.name} style={styles.compactPhoto} />
+                                ) : (
+                                  <div style={styles.compactPhotoPlaceholder}>
+                                    {pat.name.charAt(0)}
+                                  </div>
+                                )}
+                                <div style={styles.compactNameBlock}>
+                                  <span style={styles.compactPatName}>{pat.name}</span>
+                                  <span style={styles.compactPhoneLabel}>☎ {pat.phone || 'Sem telefone'}</span>
                                 </div>
-                              )}
-                              <div style={styles.patientNameBlock}>
-                                <span style={styles.patName}>{pat.name}</span>
-                                <span style={styles.phoneLabel}>☎ {pat.phone || 'Sem telefone'}</span>
-                                {pat.contacts && pat.contacts.length > 0 && (
-                                  <span style={styles.contactsSummary}>
-                                    Recado ({pat.contacts[0].relationship}): {pat.contacts[0].name}
+                              </div>
+                            </td>
+                            <td style={styles.compactTd}>
+                              <div style={styles.compactDocCell}>
+                                <span style={styles.compactCpf}>{pat.cpf || '-'}</span>
+                                <small style={styles.compactCns}>CNS: {pat.cns || '-'}</small>
+                              </div>
+                            </td>
+                            <td style={styles.compactTd}>
+                              <span style={{ fontSize: '0.8rem', color: '#334155' }}>
+                                {pat.birthDate ? new Date(pat.birthDate).toLocaleDateString('pt-BR') : '-'}
+                              </span>
+                              <small style={{ color: '#64748b', fontSize: '0.72rem', marginLeft: '3px' }}>({age}a)</small>
+                            </td>
+                            <td style={styles.compactTd}>
+                              <span style={styles.compactInsuranceBadge}>{pat.insurance || 'SUS'}</span>
+                            </td>
+                            <td style={styles.compactTd}>
+                              <span style={{ fontSize: '0.8rem', color: '#475569' }}>
+                                {pat.dialysisFrequency || 'Seg/Qua/Sex'}
+                              </span>
+                            </td>
+                            <td style={styles.compactTd}>
+                              <span style={styles.compactAccessBadge}>{pat.accessType || 'FAV'}</span>
+                            </td>
+                            <td style={styles.compactTd}>
+                              <span style={{
+                                fontSize: '0.72rem',
+                                fontWeight: '700',
+                                padding: '0.15rem 0.5rem',
+                                borderRadius: '4px',
+                                backgroundColor: isAtivo ? '#dcfce7' : '#fee2e2',
+                                color: isAtivo ? '#15803d' : '#b91c1c'
+                              }}>
+                                {pat.treatmentStatus || 'Ativo'}
+                              </span>
+                            </td>
+                            <td style={{ ...styles.compactTd, textAlign: 'center' }}>
+                              <div style={styles.compactActionButtons}>
+                                <button 
+                                  onClick={() => openWhatsApp(pat.phone, pat.name)} 
+                                  style={styles.compactActionWhatsBtn} 
+                                  title="Conversar no WhatsApp"
+                                >
+                                  <MessageSquare size={13} />
+                                </button>
+                                <button 
+                                  onClick={() => handleOpenEditModal(pat)} 
+                                  style={styles.compactActionEditBtn} 
+                                  title="Editar cadastro"
+                                >
+                                  <Edit2 size={13} />
+                                </button>
+                                <button 
+                                  onClick={() => handleDeletePatient(pat.id)} 
+                                  style={styles.compactActionDeleteBtn} 
+                                  title="Excluir cadastro"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : patientViewMode === 'normal' ? (
+                /* 2. VISÃO NORMAL (TABULAR DETALHADA) */
+                <div style={styles.tableWrapper}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Paciente</th>
+                        <th>Documento</th>
+                        <th>Nascimento</th>
+                        <th>Convênio</th>
+                        <th>Frequência</th>
+                        <th>Acesso</th>
+                        <th>Status</th>
+                        <th style={{ textAlign: 'center' }}>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPatients.map(pat => {
+                        const apacInfo = getApacStatus(pat.apacExpiry);
+                        const age = calculateAge(pat.birthDate);
+                        const isAtivo = (pat.treatmentStatus || 'Ativo') === 'Ativo';
+                        return (
+                          <tr key={pat.id}>
+                            <td>
+                              <div style={styles.patientCell}>
+                                {pat.photo ? (
+                                  <img src={pat.photo} alt={pat.name} style={styles.tablePhoto} />
+                                ) : (
+                                  <div style={styles.tablePhotoPlaceholder}>
+                                    {pat.name.charAt(0)}
+                                  </div>
+                                )}
+                                <div style={styles.patientNameBlock}>
+                                  <span style={styles.patName}>{pat.name}</span>
+                                  <span style={styles.phoneLabel}>☎ {pat.phone || 'Sem telefone'}</span>
+                                  {pat.contacts && pat.contacts.length > 0 && (
+                                    <span style={styles.contactsSummary}>
+                                      Recado ({pat.contacts[0].relationship}): {pat.contacts[0].name}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <div style={styles.docCell}>
+                                <span style={styles.cpfLabel}>{pat.cpf || '-'}</span>
+                                <small style={styles.cnsMuted}>CNS: {pat.cns || '-'}</small>
+                              </div>
+                            </td>
+                            <td>
+                              <span>{pat.birthDate ? new Date(pat.birthDate).toLocaleDateString('pt-BR') : '-'}</span>
+                              <small style={styles.ageMuted}> ({age} anos)</small>
+                            </td>
+                            <td>
+                              <div style={styles.insuranceCell}>
+                                <span style={styles.insuranceBadge}>{pat.insurance || 'SUS'}</span>
+                                {pat.apacNumber && (
+                                  <span style={{ ...styles.apacBadge, color: apacInfo.color, backgroundColor: apacInfo.bg, marginTop: '2px' }}>
+                                    APAC: {apacInfo.text}
                                   </span>
                                 )}
                               </div>
+                            </td>
+                            <td>{pat.dialysisFrequency || 'Seg/Qua/Sex'}</td>
+                            <td><span style={styles.accessBadge}>{pat.accessType || 'FAV'}</span></td>
+                            <td>
+                              <span style={{
+                                fontSize: '0.75rem',
+                                fontWeight: '700',
+                                padding: '0.2rem 0.6rem',
+                                borderRadius: '6px',
+                                backgroundColor: isAtivo ? '#dcfce7' : '#fee2e2',
+                                color: isAtivo ? '#15803d' : '#b91c1c'
+                              }}>
+                                {pat.treatmentStatus || 'Ativo'}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              <div style={{ ...styles.actionButtons, justifyContent: 'center' }}>
+                                <button 
+                                  onClick={() => openWhatsApp(pat.phone, pat.name)} 
+                                  style={styles.actionWhatsBtn} 
+                                  title="Conversar no WhatsApp"
+                                >
+                                  <MessageSquare size={14} />
+                                </button>
+                                <button 
+                                  onClick={() => handleOpenEditModal(pat)} 
+                                  style={styles.actionEditBtn} 
+                                  title="Editar cadastro"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button 
+                                  onClick={() => handleDeletePatient(pat.id)} 
+                                  style={styles.actionDeleteBtn} 
+                                  title="Excluir cadastro"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                /* 3. VISÃO EM CARDS (GRADE RESPONSIVA) */
+                <div style={styles.cardsGrid}>
+                  {filteredPatients.map(pat => {
+                    const age = calculateAge(pat.birthDate);
+                    const hasEmergency = pat.contacts && pat.contacts.length > 0;
+                    const isAtivo = (pat.treatmentStatus || 'Ativo') === 'Ativo';
+                    return (
+                      <div key={pat.id} style={styles.patientCard}>
+                        {/* Card Header */}
+                        <div style={styles.cardTop}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0, flex: 1 }}>
+                            {pat.photo ? (
+                              <img src={pat.photo} alt={pat.name} style={styles.cardPhoto} />
+                            ) : (
+                              <div style={styles.cardPhotoPlaceholder}>
+                                {pat.name.charAt(0)}
+                              </div>
+                            )}
+                            <div style={{ minWidth: 0 }}>
+                              <div style={styles.cardPatName} title={pat.name}>{pat.name}</div>
+                              <div style={styles.cardMeta}>
+                                <span>CPF: {pat.cpf || '-'}</span>
+                                <span>•</span>
+                                <span>{age} anos</span>
+                              </div>
                             </div>
-                          </td>
-                          <td>
-                            <div style={styles.docCell}>
-                              <span style={styles.cpfLabel}>{pat.cpf || '-'}</span>
-                              <small style={styles.cnsMuted}>CNS: {pat.cns || '-'}</small>
+                          </div>
+                          <span style={{
+                            fontSize: '0.72rem',
+                            fontWeight: '700',
+                            padding: '0.2rem 0.55rem',
+                            borderRadius: '6px',
+                            backgroundColor: isAtivo ? '#dcfce7' : '#fee2e2',
+                            color: isAtivo ? '#15803d' : '#b91c1c',
+                            flexShrink: 0
+                          }}>
+                            {pat.treatmentStatus || 'Ativo'}
+                          </span>
+                        </div>
+
+                        {/* Alocação (Sala, Turno, Poltrona) */}
+                        <div style={styles.cardAlocacao}>
+                          <div style={styles.cardAlocacaoItem}>
+                            <span style={styles.cardAlocacaoLabel}>Sala</span>
+                            <span style={styles.cardAlocacaoVal}>{pat.room || 'Sem sala'}</span>
+                          </div>
+                          <div style={styles.cardAlocacaoItem}>
+                            <span style={styles.cardAlocacaoLabel}>Turno</span>
+                            <span style={styles.cardAlocacaoVal}>{pat.shift || 'Sem turno'}</span>
+                          </div>
+                          <div style={styles.cardAlocacaoItem}>
+                            <span style={styles.cardAlocacaoLabel}>Poltrona</span>
+                            <span style={styles.cardAlocacaoVal}>{pat.chairNumber ? `Nº ${pat.chairNumber}` : '-'}</span>
+                          </div>
+                        </div>
+
+                        {/* Detalhes Clínicos */}
+                        <div style={styles.cardTagsRow}>
+                          <span style={styles.cardTag}>{pat.insurance || 'SUS'}</span>
+                          <span style={styles.cardTagFrequency}>{pat.dialysisFrequency || 'Seg/Qua/Sex'}</span>
+                          <span style={styles.cardTagAccess}>{pat.accessType || 'FAV'}</span>
+                        </div>
+
+                        {/* Contato e Recado */}
+                        <div style={styles.cardContactInfo}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#334155' }}>
+                            <Phone size={13} color="#64748b" />
+                            <span style={{ fontWeight: '600' }}>{pat.phone || 'Sem telefone'}</span>
+                          </div>
+                          {hasEmergency && (
+                            <div style={{ fontSize: '0.73rem', color: '#0284c7', marginTop: '2px' }}>
+                              Recado ({pat.contacts[0].relationship}): {pat.contacts[0].name}
                             </div>
-                          </td>
-                          <td>
-                            <span>{pat.birthDate ? new Date(pat.birthDate).toLocaleDateString('pt-BR') : '-'}</span>
-                            <small style={styles.ageMuted}> ({age} anos)</small>
-                          </td>
-                          <td>
-                            <div style={styles.insuranceCell}>
-                              <span style={styles.insuranceBadge}>{pat.insurance || 'SUS'}</span>
-                              {pat.apacNumber && (
-                                <span style={{ ...styles.apacBadge, color: apacInfo.color, backgroundColor: apacInfo.bg, marginTop: '2px' }}>
-                                  APAC: {apacInfo.text}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td>{pat.dialysisFrequency || 'Seg/Qua/Sex'}</td>
-                          <td><span style={styles.accessBadge}>{pat.accessType || 'FAV'}</span></td>
-                          <td>
-                            <span style={{
-                              fontSize: '0.75rem',
-                              fontWeight: '700',
-                              padding: '0.2rem 0.6rem',
-                              borderRadius: '6px',
-                              backgroundColor: pat.treatmentStatus === 'Ativo' ? '#dcfce7' : '#fee2e2',
-                              color: pat.treatmentStatus === 'Ativo' ? '#15803d' : '#b91c1c'
-                            }}>
-                              {pat.treatmentStatus || 'Ativo'}
-                            </span>
-                          </td>
-                          <td>
-                            <div style={styles.actionButtons}>
-                              <button 
-                                onClick={() => openWhatsApp(pat.phone, pat.name)} 
-                                style={styles.actionWhatsBtn} 
-                                title="Conversar no WhatsApp"
-                              >
-                                <MessageSquare size={14} />
-                              </button>
-                              <button 
-                                onClick={() => handleOpenEditModal(pat)} 
-                                style={styles.actionEditBtn} 
-                                title="Editar cadastro"
-                              >
-                                <Edit2 size={14} />
-                              </button>
-                              <button 
-                                onClick={() => handleDeletePatient(pat.id)} 
-                                style={styles.actionDeleteBtn} 
-                                title="Excluir cadastro"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+                          )}
+                        </div>
+
+                        {/* Rodapé com Ações */}
+                        <div style={styles.cardActionsRow}>
+                          <button
+                            type="button"
+                            onClick={() => openWhatsApp(pat.phone, pat.name)}
+                            style={styles.cardActionWhats}
+                            title="WhatsApp"
+                          >
+                            <MessageSquare size={13} />
+                            <span>WhatsApp</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditModal(pat)}
+                            style={styles.cardActionEdit}
+                            title="Editar cadastro"
+                          >
+                            <Edit2 size={13} />
+                            <span>Editar</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePatient(pat.id)}
+                            style={styles.cardActionDelete}
+                            title="Excluir cadastro"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
 
           {/* TAB 2: Ronda Médica Presencial */}
@@ -2468,16 +2843,32 @@ const styles = {
     borderBottom: '3px solid var(--primary-color)',
     boxShadow: '0 -2px 5px rgba(0,0,0,0.03)',
   },
+  filtersContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.65rem',
+    backgroundColor: '#fff',
+    padding: '0.85rem',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+  },
   filtersBar: {
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     gap: '0.75rem',
     flexWrap: 'wrap',
-    backgroundColor: '#fff',
-    padding: '0.75rem',
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0',
+  },
+  filterCol: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  filterLabel: {
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    color: '#475569',
+    display: 'block',
   },
   searchWrapper: {
     position: 'relative',
@@ -2498,6 +2889,7 @@ const styles = {
     border: '1px solid #cbd5e1',
     fontSize: '0.85rem',
     outline: 'none',
+    transition: 'border-color 0.2s',
   },
   patientDropdown: {
     position: 'absolute',
@@ -2519,11 +2911,6 @@ const styles = {
     cursor: 'pointer',
     transition: 'background-color 0.15s ease',
   },
-  selectsWrapper: {
-    display: 'flex',
-    gap: '0.5rem',
-    flexWrap: 'wrap',
-  },
   filterSelect: {
     padding: '0.55rem 0.75rem',
     borderRadius: '8px',
@@ -2532,9 +2919,38 @@ const styles = {
     backgroundColor: '#fff',
     color: '#334155',
     outline: 'none',
+    cursor: 'pointer',
+    minWidth: '110px',
+  },
+  viewToggleGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    padding: '2px',
+    borderRadius: '8px',
+    border: '1px solid #cbd5e1',
+  },
+  viewToggleBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.45rem 0.65rem',
+    fontSize: '0.78rem',
+    fontWeight: '700',
+    color: '#64748b',
+    backgroundColor: 'transparent',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+  },
+  viewToggleBtnActive: {
+    backgroundColor: '#ffffff',
+    color: 'var(--primary-color)',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
   },
   addBtn: {
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
     gap: '0.4rem',
     backgroundColor: 'var(--primary-color)',
@@ -2545,6 +2961,26 @@ const styles = {
     fontSize: '0.85rem',
     fontWeight: '700',
     cursor: 'pointer',
+    boxShadow: '0 2px 4px rgba(13, 148, 136, 0.2)',
+  },
+  statusChipsBar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.45rem',
+    flexWrap: 'wrap',
+    paddingTop: '0.5rem',
+    borderTop: '1px solid #f1f5f9',
+  },
+  statusChip: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.25rem 0.65rem',
+    borderRadius: '999px',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
   },
   tableWrapper: {
     backgroundColor: '#fff',
@@ -2736,6 +3172,353 @@ const styles = {
     textAlign: 'center',
     padding: '3rem 1rem',
     color: '#94a3b8',
+  },
+  noDataBox: {
+    backgroundColor: '#fff',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    padding: '3.5rem 1.5rem',
+    textAlign: 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+  },
+  clearFiltersBtn: {
+    marginTop: '1rem',
+    padding: '0.45rem 0.9rem',
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    color: 'var(--primary-color)',
+    backgroundColor: '#f0fdfa',
+    border: '1px solid #99f6e4',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+  },
+  // Visão Compacta (Alta Densidade)
+  compactTable: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    textAlign: 'left',
+    fontSize: '0.82rem',
+  },
+  compactTheadRow: {
+    backgroundColor: '#f8fafc',
+    borderBottom: '2px solid #e2e8f0',
+  },
+  compactTh: {
+    padding: '0.45rem 0.65rem',
+    fontSize: '0.74rem',
+    fontWeight: '800',
+    color: '#475569',
+    textTransform: 'uppercase',
+    letterSpacing: '0.03em',
+  },
+  compactTr: {
+    borderBottom: '1px solid #f1f5f9',
+    transition: 'background-color 0.15s',
+  },
+  compactTd: {
+    padding: '0.35rem 0.65rem',
+    verticalAlign: 'middle',
+  },
+  compactPatientCell: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  compactPhoto: {
+    width: '28px',
+    height: '28px',
+    borderRadius: '6px',
+    objectFit: 'cover',
+    border: '1px solid #e2e8f0',
+    flexShrink: 0,
+  },
+  compactPhotoPlaceholder: {
+    width: '28px',
+    height: '28px',
+    borderRadius: '6px',
+    backgroundColor: 'rgba(13, 148, 136, 0.12)',
+    color: 'var(--primary-color)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: '800',
+    fontSize: '0.85rem',
+    flexShrink: 0,
+  },
+  compactNameBlock: {
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 0,
+  },
+  compactPatName: {
+    fontWeight: '800',
+    color: '#0f172a',
+    fontSize: '0.84rem',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: '260px',
+  },
+  compactPhoneLabel: {
+    fontSize: '0.7rem',
+    color: '#64748b',
+  },
+  compactDocCell: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  compactCpf: {
+    fontWeight: '600',
+    color: '#334155',
+    fontSize: '0.78rem',
+  },
+  compactCns: {
+    fontSize: '0.68rem',
+    color: '#94a3b8',
+  },
+  compactInsuranceBadge: {
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    backgroundColor: '#f8fafc',
+    color: '#334155',
+    border: '1px solid #e2e8f0',
+    padding: '0.1rem 0.4rem',
+    borderRadius: '4px',
+  },
+  compactAccessBadge: {
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    backgroundColor: '#ede9fe',
+    color: '#6d28d9',
+    padding: '0.12rem 0.45rem',
+    borderRadius: '4px',
+  },
+  compactActionButtons: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.25rem',
+  },
+  compactActionWhatsBtn: {
+    backgroundColor: '#25d366',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '5px',
+    width: '26px',
+    height: '26px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'opacity 0.15s',
+  },
+  compactActionEditBtn: {
+    backgroundColor: '#f1f5f9',
+    color: '#475569',
+    border: '1px solid #cbd5e1',
+    borderRadius: '5px',
+    width: '26px',
+    height: '26px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'background-color 0.15s',
+  },
+  compactActionDeleteBtn: {
+    backgroundColor: '#fee2e2',
+    color: '#dc2626',
+    border: '1px solid #fca5a5',
+    borderRadius: '5px',
+    width: '26px',
+    height: '26px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'background-color 0.15s',
+  },
+  // Visão em Cards (Grade Moderna)
+  cardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+    gap: '1rem',
+  },
+  patientCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    padding: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+  },
+  cardTop: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+  },
+  cardPhoto: {
+    width: '42px',
+    height: '42px',
+    borderRadius: '10px',
+    objectFit: 'cover',
+    border: '1px solid #e2e8f0',
+    flexShrink: 0,
+  },
+  cardPhotoPlaceholder: {
+    width: '42px',
+    height: '42px',
+    borderRadius: '10px',
+    backgroundColor: 'rgba(13, 148, 136, 0.12)',
+    color: 'var(--primary-color)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: '800',
+    fontSize: '1.1rem',
+    flexShrink: 0,
+  },
+  cardPatName: {
+    fontWeight: '800',
+    color: '#0f172a',
+    fontSize: '0.92rem',
+    lineHeight: 1.2,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: '190px',
+  },
+  cardMeta: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    fontSize: '0.75rem',
+    color: '#64748b',
+    marginTop: '3px',
+  },
+  cardAlocacao: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    borderRadius: '8px',
+    border: '1px solid #f1f5f9',
+    padding: '0.45rem 0.65rem',
+  },
+  cardAlocacaoItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1px',
+  },
+  cardAlocacaoLabel: {
+    fontSize: '0.68rem',
+    fontWeight: '700',
+    color: '#94a3b8',
+    textTransform: 'uppercase',
+  },
+  cardAlocacaoVal: {
+    fontSize: '0.78rem',
+    fontWeight: '700',
+    color: '#334155',
+  },
+  cardTagsRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    flexWrap: 'wrap',
+  },
+  cardTag: {
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    backgroundColor: '#f1f5f9',
+    color: '#334155',
+    padding: '0.15rem 0.5rem',
+    borderRadius: '4px',
+    border: '1px solid #e2e8f0',
+  },
+  cardTagFrequency: {
+    fontSize: '0.72rem',
+    fontWeight: '600',
+    backgroundColor: '#eff6ff',
+    color: '#1e40af',
+    padding: '0.15rem 0.5rem',
+    borderRadius: '4px',
+  },
+  cardTagAccess: {
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    backgroundColor: '#ede9fe',
+    color: '#6d28d9',
+    padding: '0.15rem 0.5rem',
+    borderRadius: '4px',
+  },
+  cardContactInfo: {
+    backgroundColor: '#fafafa',
+    borderRadius: '8px',
+    padding: '0.4rem 0.6rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+  },
+  cardActionsRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginTop: 'auto',
+    paddingTop: '0.5rem',
+    borderTop: '1px solid #f1f5f9',
+  },
+  cardActionWhats: {
+    flex: 1,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.35rem',
+    backgroundColor: '#25d366',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '0.45rem 0.6rem',
+    fontSize: '0.78rem',
+    fontWeight: '700',
+    cursor: 'pointer',
+    transition: 'opacity 0.15s',
+  },
+  cardActionEdit: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.35rem',
+    backgroundColor: '#f1f5f9',
+    color: '#475569',
+    border: '1px solid #cbd5e1',
+    borderRadius: '8px',
+    padding: '0.45rem 0.65rem',
+    fontSize: '0.78rem',
+    fontWeight: '700',
+    cursor: 'pointer',
+    transition: 'background-color 0.15s',
+  },
+  cardActionDelete: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fee2e2',
+    color: '#dc2626',
+    border: '1px solid #fca5a5',
+    borderRadius: '8px',
+    padding: '0.45rem 0.6rem',
+    cursor: 'pointer',
+    transition: 'background-color 0.15s',
   },
   loadingBox: {
     textAlign: 'center',
@@ -3040,25 +3823,5 @@ const styles = {
     padding: '0.75rem 1rem',
     borderRadius: '8px',
     border: '1px solid #e2e8f0',
-  },
-  patientDropdown: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    backgroundColor: '#ffffff',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
-    marginTop: '4px',
-    maxHeight: '260px',
-    overflowY: 'auto',
-    zIndex: 100,
-    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-  },
-  patientDropdownItem: {
-    padding: '0.65rem 0.85rem',
-    borderBottom: '1px solid #f1f5f9',
-    cursor: 'pointer',
-    transition: 'background-color 0.12s ease',
   },
 };

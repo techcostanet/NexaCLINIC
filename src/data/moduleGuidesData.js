@@ -2022,6 +2022,14 @@ export const MODULE_GUIDES = {
         desc: 'Cadastro único e centralizado de pacientes integrado em tempo real a todos os módulos do sistema (Prontuário Clínico, Enfermagem/Sessões, Alertas Assistenciais, Procedimentos Médicos, Agenda e Faturamento APAC).'
       },
       {
+        title: '3 Formas de Visualização (Compacto, Normal e Cards)',
+        desc: 'Seletor rápido de modo de exibição: Compacto (padrão otimizado de alta densidade hospitalar para ver mais registros na tela), Normal (tabular respirável com detalhes completos de recado) e Cards (grade visual de crachás com foto, dados de alocação e botões de ação).'
+      },
+      {
+        title: 'Filtro por Status & Pílulas com Contagem em Tempo Real',
+        desc: 'Filtro dinâmico por status clínico (Todos, Ativo, Suspenso, Em Trânsito, Transplantado e Óbito) tanto por seletor dropdown quanto por pílulas interativas com badges coloridos e contadores atualizados instantaneamente.'
+      },
+      {
         title: 'Admissão Nefrológica Completa em 6 Abas',
         desc: 'Cadastro estruturado com Identificação (CPF/CNS e desambiguação de homônimos), Contatos com Busca de CEP, Convênio/APAC, Logística de Salão, Nefrologia (Histórico da 1ª diálise, Etiologia DRC, Alergias e Comorbidades) e Regulação de Transplante Renal (RBT).'
       },
@@ -2039,14 +2047,28 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Comunicação Direta via WhatsApp em 1 Clique',
-        desc: 'Atalhos integrados em cada linha de paciente e contato de emergência para abertura instantânea do WhatsApp com mensagem de suporte pré-formatada.'
-      },
-      {
-        title: 'Monitoramento Preditivo de Validade de APACs',
-        desc: 'Sinalização automática com badges coloridos para APACs regulares (verde), a vencer em menos de 30 dias (âmbar) ou vencidas (vermelho).'
+        desc: 'Atalhos integrados em cada linha de paciente, card e contato de emergência para abertura instantânea do WhatsApp com mensagem de suporte pré-formatada.'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Alternar entre as 3 Formas de Visualização',
+        steps: [
+          'No painel de Recepção, localize o controle "Visão:" na barra de ferramentas da aba Pacientes.',
+          'Clique em "Compacto" (padrão) para uma tabela de alta densidade com linhas finas e máxima produtividade.',
+          'Clique em "Normal" para visualização tabular detalhada com dados completos de recados e parentesco.',
+          'Clique em "Cards" para exibir os pacientes em formato de crachás visuais com atalhos de WhatsApp, edição e alocação por salão/turno.'
+        ]
+      },
+      {
+        title: 'Como Filtrar Pacientes por Status Clínico',
+        steps: [
+          'Utilize o seletor "Status:" ou clique diretamente nas pílulas rápidas coloridas logo abaixo da barra de filtros.',
+          'Clique em "Ativo", "Suspenso", "Em Trânsito", "Transplantado" ou "Óbito" para isolar o grupo desejado.',
+          'Os contadores em cada pílula mostram o número exato de pacientes em cada situação na unidade selecionada.',
+          'Para voltar a ver todos os pacientes, clique em "Todos" ou desmarque a pílula ativa.'
+        ]
+      },
       {
         title: 'Como Realizar a Admissão de um Paciente',
         steps: [
@@ -2078,16 +2100,17 @@ export const MODULE_GUIDES = {
           'Conforme os médicos comparecerem, utilize as ações rápidas do card: "✓ Presente", "⚠ Atraso", "🔄 Troca" ou "✕ Falta".',
           'Caso não haja escala agendada para a data ou deseje cadastrar um novo plantão na hora, clique em "+ Registrar Ronda", selecione o nefrologista, o setor, o turno e o horário de entrada.'
         ]
-      },
-      {
-        title: 'Como Monitorar APACs e Falar com Familiares',
-        steps: [
-          'Consulte o card de KPI "APACs" no topo do painel para verificar pendências.',
-          'Na tabela de pacientes, clique no ícone do WhatsApp para disparar uma mensagem direta ao paciente ou familiar de recado.'
-        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Qual a diferença entre os 3 modos de visualização de pacientes?',
+        resposta: 'O modo Compacto (padrão) exibe mais de 20 pacientes por tela em formato condensado para agilizar o atendimento da recepção. O modo Normal traz espaçamento tradicional com nomes de contatos de recado e parentesco. O modo Cards exibe uma grade responsiva com crachás visuais dos pacientes, alocação de sala/poltrona e botões de ação.'
+      },
+      {
+        pergunta: 'Por que o card de APACs não aparece mais no topo do módulo de Recepção?',
+        resposta: 'O card KPI de APACs foi removido para manter o painel limpo e focado no atendimento imediato da recepção (Pacientes, Ativos e Ronda Médica). A gestão aprofundada de APACs, renovações e auditoria continua disponível no módulo de Faturamento APAC (Nex-Ai.APAC).'
+      },
       {
         pergunta: 'Onde foram parar as abas de Presença e Poltronas da Recepção?',
         resposta: 'O controle operacional diário de sessões, ganho de peso, sinais vitais e distribuição física de poltronas foi centralizado na aba "Escala" do módulo Assistencial (Nex-Ai.ASSIST), evitando duplicidade e otimizando a rotina do posto de enfermagem.'
@@ -2099,14 +2122,6 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Como as alterações feitas no cadastro de pacientes se refletem nos outros módulos?',
         resposta: 'O sistema utiliza uma Base Central Unificada (Master Patient Record). Ao salvar qualquer alteração (endereço, telefone, peso seco, alergias ou APAC), os novos dados são propagados instantaneamente para o Prontuário Clínico, Enfermagem, Faturamento APAC, Feed Assistencial e Agenda de Consultas.'
-      },
-      {
-        pergunta: 'Por que o formulário de admissão possui dados de nefrologia e transplante?',
-        resposta: 'Para garantir que o paciente admitido pela recepção já entre no sistema com dados cruciais para a segurança clínica (alergias em destaque, tipo sanguíneo, acesso vascular e histórico de diálise) e faturamento APAC (CNS, CID-10 e número da APAC).'
-      },
-      {
-        pergunta: 'Como funciona a busca de CEP?',
-        resposta: 'Basta digitar os 8 números do CEP na aba de contatos e clicar em "Buscar". O sistema consulta a API oficial do ViaCEP e preenche imediatamente o logradouro, bairro, cidade e estado.'
       }
     ]
   },

@@ -1,3 +1,24 @@
+## [v4.9.61] - 06 de Setembro, 2026
+### Nex-Ai.RECEPTION — Design NexAiBrand Oficial, 3 Formas de Visualização (Compacto, Normal e Cards) & Filtro por Status
+- **Design do Título com NexAiBrand Oficial (`ReceptionPanel.jsx`):**
+  - Aplicação do componente `<NexAiBrand size="lg" suffix=".RECEPTION" showIcon={false} />` garantindo o mesmo padrão tipográfico e degradê característico do sistema (igual aos módulos Assist e Med).
+  - Ícone de cabeçalho estilizado em degrade teal (`linear-gradient(135deg, #0d9488, #0f766e)`) com sombra suave e harmonização visual.
+- **3 Formas de Visualização de Pacientes (`ReceptionPanel.jsx`):**
+  - Criação do seletor `Visão` com 3 modos de exibição rápidos com ícones e labels diretos:
+    1. **`Compacto` (Padrão)**: tabela hospitalar de alta densidade com linhas finas (`padding: 0.35rem`), avatares reduzidos (28px), fonte condensada e botões compactos (26px), permitindo visualizar dezenas de pacientes simultaneamente sem rolagem excessiva.
+    2. **`Normal`**: visualização tabular tradicional respirável com avatar de 38px, detalhes de recado com parentesco e ações completas.
+    3. **`Cards`**: grade moderna responsiva de crachás visuais com foto/avatar, alocação física detalhada (Sala, Turno e Poltrona), tags clínicas (Convênio, Frequência, Acesso) e botões de ação (WhatsApp direto, Editar e Excluir).
+- **Filtro por Status & Barra de Pílulas Interativas (`ReceptionPanel.jsx`):**
+  - Filtro por situação clínica acessível tanto pelo `<select>` de Status quanto por uma barra horizontal de pílulas rápidas com badges coloridos e contagens em tempo real (`Todos`, `Ativo`, `Suspenso`, `Em Trânsito`, `Transplantado`, `Óbito`).
+  - Sincronização automática entre o card superior de "Ativos", o select de Status e as pílulas rápidas.
+  - Alinhamento vertical aperfeiçoado de todos os campos da barra de filtros com labels superiores (`Paciente:`, `Turno:`, `Sala:`, `Status:`, `Visão:` e `Admissão`).
+- **Retirada do Indicador de APACs dos KPIs Superiores (`ReceptionPanel.jsx`):**
+  - Remoção definitiva do card métrico de APACs do topo do módulo de Recepção, consolidando os KPIs em 3 cartões objetivos e equilibrados (`Pacientes`, `Ativos` e `Ronda`).
+- **Base de Conhecimento e Manuais Atualizados (`src/data/moduleGuidesData.js`):**
+  - Atualização completa do guia interativo Nex-Ai.RECEPTION documentando as 3 formas de visualização, as pílulas de status e a nova organização da recepção.
+
+---
+
 ## [v4.9.60] - 06 de Setembro, 2026
 ### Nex-Ai.RECEPTION — Busca de Pacientes com Autocomplete no Padrão Assist, Nova Ronda Médica Completa & Unificação de Presença/Poltronas na Escala
 - **Autocomplete Inteligente na Busca de Pacientes (`ReceptionPanel.jsx`):**
