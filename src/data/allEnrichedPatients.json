@@ -1088,7 +1088,7 @@
     "machineSerial": "24J35583P",
     "needleSize": "16",
     "dryWeight": 57,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "MSD (Membro Superior Direito)",
     "isolation": null,
     "attendingDoctor": "Dra. Camila Soares",
@@ -1147,7 +1147,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.048Z"
+    "updatedAt": "2026-08-30T15:29:44.048Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-11",
@@ -3332,7 +3333,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.049Z"
+    "updatedAt": "2026-08-30T15:29:44.049Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-30",
@@ -3907,7 +3909,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.049Z"
+    "updatedAt": "2026-08-30T15:29:44.049Z",
+    "heparina": "2,0 ml"
   },
   {
     "id": "pat-35",
@@ -4473,7 +4476,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.049Z"
+    "updatedAt": "2026-08-30T15:29:44.049Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-40",
@@ -4818,7 +4822,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.049Z"
+    "updatedAt": "2026-08-30T15:29:44.049Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-43",
@@ -5316,7 +5321,7 @@
     "machineSerial": "24J34985P",
     "needleSize": "16",
     "dryWeight": 50,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "VJID",
     "isolation": null,
     "attendingDoctor": "Dr. Rodrigo Menezes",
@@ -5375,7 +5380,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.049Z"
+    "updatedAt": "2026-08-30T15:29:44.049Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-48",
@@ -5546,7 +5552,7 @@
     "machineSerial": "24J35594P",
     "needleSize": "16",
     "dryWeight": 70,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Fístula Arteriovenosa",
     "accessSide": "MSE (Membro Superior Esquerdo)",
     "isolation": null,
     "attendingDoctor": "Dr. Matheus Ramos",
@@ -5605,7 +5611,8 @@
     "abortions": 0,
     "transfusions": 1,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.049Z"
+    "updatedAt": "2026-08-30T15:29:44.049Z",
+    "heparina": "2,0 ml"
   },
   {
     "id": "pat-50",
@@ -5776,7 +5783,7 @@
     "machineSerial": "24J35587P",
     "needleSize": "16",
     "dryWeight": 79,
-    "accessType": "Fístula Arteriovenosa",
+    "accessType": "Permcath",
     "accessSide": "VJID",
     "isolation": null,
     "attendingDoctor": "Dr. Rodrigo Menezes",
@@ -5835,7 +5842,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.050Z"
+    "updatedAt": "2026-08-30T15:29:44.050Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-52",
@@ -6640,7 +6648,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.050Z"
+    "updatedAt": "2026-08-30T15:29:44.050Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-59",
@@ -8816,7 +8825,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.050Z"
+    "updatedAt": "2026-08-30T15:29:44.050Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-78",
@@ -8931,7 +8941,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.050Z"
+    "updatedAt": "2026-08-30T15:29:44.050Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-79",
@@ -9161,7 +9172,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.050Z"
+    "updatedAt": "2026-08-30T15:29:44.050Z",
+    "heparina": "2,0 ml"
   },
   {
     "id": "pat-81",
@@ -11116,7 +11128,8 @@
     "abortions": 0,
     "transfusions": 1,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.050Z"
+    "updatedAt": "2026-08-30T15:29:44.050Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-98",
@@ -12773,7 +12786,7 @@
     "machineSerial": "24J35256P",
     "needleSize": "16",
     "dryWeight": 56,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "VJIE",
     "isolation": null,
     "attendingDoctor": "Dra. Vanessa Andrade",
@@ -12832,7 +12845,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.051Z"
+    "updatedAt": "2026-08-30T15:29:44.051Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-113",
@@ -12947,7 +12961,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.051Z"
+    "updatedAt": "2026-08-30T15:29:44.051Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-114",
@@ -13003,7 +13018,7 @@
     "machineSerial": "24J35293P",
     "needleSize": "16",
     "dryWeight": 64,
-    "accessType": "Fístula Arteriovenosa",
+    "accessType": "Permcath",
     "accessSide": "MSD (Membro Superior Direito)",
     "isolation": null,
     "attendingDoctor": "Dra. Camila Soares",
@@ -13062,7 +13077,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.051Z"
+    "updatedAt": "2026-08-30T15:29:44.051Z",
+    "heparina": "2,5 ml"
   },
   {
     "id": "pat-115",
@@ -13752,7 +13768,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.051Z"
+    "updatedAt": "2026-08-30T15:29:44.051Z",
+    "heparina": "0,5 ml"
   },
   {
     "id": "pat-121",
@@ -14153,7 +14170,7 @@
     "machineSerial": "24J34987P",
     "needleSize": "17",
     "dryWeight": 49.9,
-    "accessType": "Fístula Arteriovenosa",
+    "accessType": "Permcath",
     "accessSide": "VJIE",
     "isolation": null,
     "attendingDoctor": "Dra. Vanessa Andrade",
@@ -14212,7 +14229,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-125",
@@ -15707,7 +15725,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "1,0ml"
   },
   {
     "id": "pat-138",
@@ -16356,7 +16375,7 @@
     "machineSerial": "24J35256P",
     "needleSize": "16",
     "dryWeight": 74,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "VJID",
     "isolation": null,
     "attendingDoctor": "Dr. Rodrigo Menezes",
@@ -16415,7 +16434,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-144",
@@ -16990,7 +17010,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "1,0ml"
   },
   {
     "id": "pat-149",
@@ -17161,7 +17182,7 @@
     "machineSerial": "24J35580P",
     "needleSize": "16",
     "dryWeight": 75,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "MSD (Membro Superior Direito)",
     "isolation": null,
     "attendingDoctor": "Dra. Camila Soares",
@@ -17220,7 +17241,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-151",
@@ -17736,7 +17758,7 @@
     "machineSerial": "24J35557P",
     "needleSize": "16",
     "dryWeight": 99.5,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Fístula Arteriovenosa",
     "accessSide": "VJID",
     "isolation": null,
     "attendingDoctor": "Dr. Rodrigo Menezes",
@@ -17795,7 +17817,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "1,5ml"
   },
   {
     "id": "pat-156",
@@ -18081,7 +18104,7 @@
     "machineSerial": "24J35577P",
     "needleSize": "16",
     "dryWeight": 81.5,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "MSD (Membro Superior Direito)",
     "isolation": null,
     "attendingDoctor": "Dra. Camila Soares",
@@ -18140,7 +18163,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "2,0 ml"
   },
   {
     "id": "pat-159",
@@ -19635,7 +19659,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "2,0 ml"
   },
   {
     "id": "pat-172",
@@ -20679,7 +20704,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-181",
@@ -21254,7 +21280,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-186",
@@ -23209,7 +23236,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-203",
@@ -24704,7 +24732,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "2,0 ml"
   },
   {
     "id": "pat-216",
@@ -25394,7 +25423,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-222",
@@ -25450,7 +25480,7 @@
     "machineSerial": "24J35583P",
     "needleSize": "16",
     "dryWeight": 66.5,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "MSD (Membro Superior Direito)",
     "isolation": null,
     "attendingDoctor": "Dra. Camila Soares",
@@ -25509,7 +25539,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.052Z"
+    "updatedAt": "2026-08-30T15:29:44.052Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-223",
@@ -25739,7 +25770,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.053Z"
+    "updatedAt": "2026-08-30T15:29:44.053Z",
+    "heparina": "2,0 ml"
   },
   {
     "id": "pat-225",
@@ -28154,7 +28186,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.053Z"
+    "updatedAt": "2026-08-30T15:29:44.053Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-246",
@@ -29419,7 +29452,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.053Z"
+    "updatedAt": "2026-08-30T15:29:44.053Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-257",
@@ -29994,7 +30028,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.053Z"
+    "updatedAt": "2026-08-30T15:29:44.053Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-262",
@@ -32869,7 +32904,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.053Z"
+    "updatedAt": "2026-08-30T15:29:44.053Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-287",
@@ -34134,7 +34170,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.053Z"
+    "updatedAt": "2026-08-30T15:29:44.053Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-298",
@@ -34824,7 +34861,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.053Z"
+    "updatedAt": "2026-08-30T15:29:44.053Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-304",
@@ -37746,7 +37784,7 @@
     "machineSerial": "24J35274P",
     "needleSize": "16",
     "dryWeight": 81,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "MSE (Membro Superior Esquerdo)",
     "isolation": null,
     "attendingDoctor": "Dr. Matheus Ramos",
@@ -37805,7 +37843,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "2,0 ml"
   },
   {
     "id": "pat-330",
@@ -38955,7 +38994,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-340",
@@ -39241,7 +39281,7 @@
     "machineSerial": "24J35296P",
     "needleSize": "16",
     "dryWeight": 63,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "MSD (Membro Superior Direito)",
     "isolation": null,
     "attendingDoctor": "Dra. Camila Soares",
@@ -39300,7 +39340,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-343",
@@ -41514,7 +41555,7 @@
     "machineSerial": "24J35557P",
     "needleSize": "16",
     "dryWeight": 67,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "MSD (Membro Superior Direito)",
     "isolation": "Uso Único (HIV)",
     "attendingDoctor": "Dra. Camila Soares",
@@ -41573,7 +41614,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,5"
   },
   {
     "id": "pat-363",
@@ -41744,7 +41786,7 @@
     "machineSerial": "24J34990P",
     "needleSize": "16",
     "dryWeight": 266.8,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "VJIE",
     "isolation": null,
     "attendingDoctor": "Dra. Vanessa Andrade",
@@ -41794,7 +41836,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-365",
@@ -42254,7 +42297,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-369",
@@ -42655,7 +42699,7 @@
     "machineSerial": "24J35271P",
     "needleSize": "15",
     "dryWeight": 83.2,
-    "accessType": "Fístula Arteriovenosa",
+    "accessType": "Permcath",
     "accessSide": "VJIE",
     "isolation": null,
     "attendingDoctor": "Dra. Vanessa Andrade",
@@ -42714,7 +42758,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-373",
@@ -43000,7 +43045,7 @@
     "machineSerial": "24J35270P",
     "needleSize": "16",
     "dryWeight": 52,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "VJID",
     "isolation": null,
     "attendingDoctor": "Dr. Rodrigo Menezes",
@@ -43059,7 +43104,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-376",
@@ -43625,7 +43671,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-381",
@@ -44209,7 +44256,8 @@
     "abortions": 0,
     "transfusions": 1,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-386",
@@ -44554,7 +44602,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "2,0 ml"
   },
   {
     "id": "pat-389",
@@ -44784,7 +44833,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-391",
@@ -45014,7 +45064,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-393",
@@ -45070,7 +45121,7 @@
     "machineSerial": "24J35270P",
     "needleSize": "16",
     "dryWeight": 46,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "MSE (Membro Superior Esquerdo)",
     "isolation": null,
     "attendingDoctor": "Dr. Matheus Ramos",
@@ -45120,7 +45171,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-394",
@@ -46049,7 +46101,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.054Z"
+    "updatedAt": "2026-08-30T15:29:44.054Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-402",
@@ -48101,7 +48154,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.055Z"
+    "updatedAt": "2026-08-30T15:29:44.055Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-420",
@@ -51560,7 +51614,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.055Z"
+    "updatedAt": "2026-08-30T15:29:44.055Z",
+    "heparina": "NA"
   },
   {
     "id": "pat-450",
@@ -52595,7 +52650,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.055Z"
+    "updatedAt": "2026-08-30T15:29:44.055Z",
+    "heparina": "0,8 ml"
   },
   {
     "id": "pat-459",
@@ -53046,7 +53102,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.055Z"
+    "updatedAt": "2026-08-30T15:29:44.055Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-463",
@@ -53391,7 +53448,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.055Z"
+    "updatedAt": "2026-08-30T15:29:44.055Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-466",
@@ -54771,7 +54829,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.055Z"
+    "updatedAt": "2026-08-30T15:29:44.055Z",
+    "heparina": "2,0 ml"
   },
   {
     "id": "pat-478",
@@ -55116,7 +55175,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.055Z"
+    "updatedAt": "2026-08-30T15:29:44.055Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-481",
@@ -55691,7 +55751,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.055Z"
+    "updatedAt": "2026-08-30T15:29:44.055Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-486",
@@ -56841,7 +56902,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.056Z"
+    "updatedAt": "2026-08-30T15:29:44.056Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-496",
@@ -56956,7 +57018,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.056Z"
+    "updatedAt": "2026-08-30T15:29:44.056Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-497",
@@ -57186,7 +57249,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.056Z"
+    "updatedAt": "2026-08-30T15:29:44.056Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-499",
@@ -58336,7 +58400,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.056Z"
+    "updatedAt": "2026-08-30T15:29:44.056Z",
+    "heparina": "1,8ml"
   },
   {
     "id": "pat-509",
@@ -59141,7 +59206,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.056Z"
+    "updatedAt": "2026-08-30T15:29:44.056Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-516",
@@ -59946,7 +60012,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.056Z"
+    "updatedAt": "2026-08-30T15:29:44.056Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-523",
@@ -60857,7 +60924,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.056Z"
+    "updatedAt": "2026-08-30T15:29:44.056Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-531",
@@ -61892,7 +61960,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.056Z"
+    "updatedAt": "2026-08-30T15:29:44.056Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-540",
@@ -63272,7 +63341,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.056Z"
+    "updatedAt": "2026-08-30T15:29:44.056Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-552",
@@ -63502,7 +63572,8 @@
     "abortions": 0,
     "transfusions": 1,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.056Z"
+    "updatedAt": "2026-08-30T15:29:44.056Z",
+    "heparina": "2,0 ml"
   },
   {
     "id": "pat-554",
@@ -65610,7 +65681,7 @@
     "machineSerial": "24J35584P",
     "needleSize": "16",
     "dryWeight": 81.5,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "VJIE",
     "isolation": null,
     "attendingDoctor": "Dra. Vanessa Andrade",
@@ -65669,7 +65740,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.057Z"
+    "updatedAt": "2026-08-30T15:29:44.057Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-573",
@@ -65784,7 +65856,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.057Z"
+    "updatedAt": "2026-08-30T15:29:44.057Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-574",
@@ -66014,7 +66087,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.057Z"
+    "updatedAt": "2026-08-30T15:29:44.057Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-576",
@@ -66580,7 +66654,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.057Z"
+    "updatedAt": "2026-08-30T15:29:44.057Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-581",
@@ -67615,7 +67690,8 @@
     "abortions": 0,
     "transfusions": 1,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.058Z"
+    "updatedAt": "2026-08-30T15:29:44.058Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-590",
@@ -67730,7 +67806,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.058Z"
+    "updatedAt": "2026-08-30T15:29:44.058Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-591",
@@ -68075,7 +68152,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.058Z"
+    "updatedAt": "2026-08-30T15:29:44.058Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-594",
@@ -68190,7 +68268,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.058Z"
+    "updatedAt": "2026-08-30T15:29:44.058Z",
+    "heparina": "2,0 ml"
   },
   {
     "id": "pat-595",
@@ -68765,7 +68844,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.058Z"
+    "updatedAt": "2026-08-30T15:29:44.058Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-600",
@@ -68995,7 +69075,8 @@
     "abortions": 0,
     "transfusions": 1,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.058Z"
+    "updatedAt": "2026-08-30T15:29:44.058Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-602",
@@ -69915,7 +69996,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.058Z"
+    "updatedAt": "2026-08-30T15:29:44.058Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-610",
@@ -70260,7 +70342,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.058Z"
+    "updatedAt": "2026-08-30T15:29:44.058Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-613",
@@ -71304,7 +71387,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.058Z"
+    "updatedAt": "2026-08-30T15:29:44.058Z",
+    "heparina": "1,5 ml"
   },
   {
     "id": "pat-622",
@@ -71419,7 +71503,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-07-15T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.058Z"
+    "updatedAt": "2026-08-30T15:29:44.058Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-623",
@@ -74668,7 +74753,7 @@
     "machineSerial": "24J35272P",
     "needleSize": "16",
     "dryWeight": 65,
-    "accessType": "Cateter Duplo Lúmen",
+    "accessType": "Permcath",
     "accessSide": "VJID",
     "isolation": null,
     "attendingDoctor": "Dr. Rodrigo Menezes",
@@ -74727,7 +74812,8 @@
     "abortions": 0,
     "transfusions": 0,
     "createdAt": "2026-08-24T12:00:00.000Z",
-    "updatedAt": "2026-08-30T15:29:44.059Z"
+    "updatedAt": "2026-08-30T15:29:44.059Z",
+    "heparina": "1,0 ml"
   },
   {
     "id": "pat-652",

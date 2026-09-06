@@ -7,8 +7,7 @@ import {
   Check, X, FileText, CheckCircle2, AlertCircle, 
   MapPin, Clock, Armchair, AlertTriangle, ShieldCheck,
   UserCheck, RefreshCw, Phone, MessageSquare, Heart,
-  Activity, ShieldAlert, Sparkles, Send, Building2,
-  Droplets, Stethoscope, ChevronRight, ExternalLink, Tv
+  Activity, ShieldAlert, Sparkles, Tv
 } from 'lucide-react';
 
 export default function ReceptionPanel() {
@@ -87,6 +86,8 @@ export default function ReceptionPanel() {
     chairNumber: '1',
     dryWeight: '',
     accessType: 'Fístula Arteriovenosa',
+    needleSize: '16',
+    heparina: '',
     accessSide: 'MSE (Membro Superior Esquerdo)',
     attendingDoctor: '',
 
@@ -869,7 +870,25 @@ export default function ReceptionPanel() {
                             <td><span style={styles.badgeRoom}>{pat.room}</span></td>
                             <td style={{ fontWeight: '700', textAlign: 'center' }}>#{pat.chairNumber || '-'}</td>
                             <td>
-                              <span style={styles.accessBadge}>{pat.accessType || 'FAV'}</span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                <span style={styles.accessBadge}>
+                                  {pat.accessType || 'FAV'} {pat.needleSize ? `(Ag.${pat.needleSize})` : ''}
+                                </span>
+                                {pat.heparina && (
+                                  <span style={{
+                                    fontSize: '0.68rem',
+                                    fontWeight: '700',
+                                    padding: '1px 5px',
+                                    borderRadius: '4px',
+                                    backgroundColor: '#eff6ff',
+                                    color: '#1d4ed8',
+                                    border: '1px solid #bfdbfe',
+                                    width: 'fit-content'
+                                  }}>
+                                    💉 {pat.heparina}
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td>
                               <span style={{ ...styles.apacBadge, color: apacInfo.color, backgroundColor: apacInfo.bg }}>
@@ -1698,14 +1717,14 @@ export default function ReceptionPanel() {
                         </select>
                       </div>
                       <div className="form-group">
-                        <label>Nº Poltrona *</label>
+                        <label>Poltrona *</label>
                         <input 
                           type="number" min="1" max="20" className="form-control"
                           value={patientForm.chairNumber} onChange={e => setPatientForm({ ...patientForm, chairNumber: e.target.value })}
                         />
                       </div>
                       <div className="form-group">
-                        <label>Acesso Vascular *</label>
+                        <label>Acesso *</label>
                         <select 
                           className="form-control" value={patientForm.accessType}
                           onChange={e => setPatientForm({ ...patientForm, accessType: e.target.value })}
@@ -1713,22 +1732,43 @@ export default function ReceptionPanel() {
                           {accessTypes.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
                         </select>
                       </div>
+                      {patientForm.accessType === 'Fístula Arteriovenosa' && (
+                        <div className="form-group">
+                          <label>Agulha</label>
+                          <select
+                            className="form-control"
+                            value={patientForm.needleSize || '16'}
+                            onChange={e => setPatientForm({ ...patientForm, needleSize: e.target.value })}
+                          >
+                            <option value="15">Agulha 15</option>
+                            <option value="16">Agulha 16</option>
+                            <option value="17">Agulha 17</option>
+                          </select>
+                        </div>
+                      )}
                       <div className="form-group">
-                        <label>Local do Acesso</label>
+                        <label>Heparina</label>
+                        <input 
+                          type="text" className="form-control" placeholder="Ex: 1,5 ml, 2,0 ml, NA"
+                          value={patientForm.heparina || ''} onChange={e => setPatientForm({ ...patientForm, heparina: e.target.value })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Sítio</label>
                         <input 
                           type="text" className="form-control" placeholder="Ex: MSE Rádio-Cefálica, Jugular D"
                           value={patientForm.accessSide} onChange={e => setPatientForm({ ...patientForm, accessSide: e.target.value })}
                         />
                       </div>
                       <div className="form-group">
-                        <label>Peso Seco Alvo (kg)</label>
+                        <label>Peso (kg)</label>
                         <input 
                           type="number" step="0.1" className="form-control" placeholder="65.0"
                           value={patientForm.dryWeight} onChange={e => setPatientForm({ ...patientForm, dryWeight: e.target.value })}
                         />
                       </div>
                       <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                        <label>Médico Assistente</label>
+                        <label>Médico</label>
                         <input 
                           type="text" className="form-control" placeholder="Nome do nefrologista de referência"
                           value={patientForm.attendingDoctor} onChange={e => setPatientForm({ ...patientForm, attendingDoctor: e.target.value })}

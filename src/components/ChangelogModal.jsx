@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.58',
+      date: '06/09/2026',
+      title: 'Nex-Ai.ASSIST — Escala Interativa Clicável, Gestão de Heparina & Carga CSV Salão 02',
+      description: 'Evolução da escala de diálise com cards de pacientes clicáveis e interativos para edição ágil de Acesso Vascular, Agulha e Heparina com sincronização no cadastro geral, badge de heparina ao lado do acesso vascular, KPI totalizador, folha de heparina impressa e carga dos dados operacionais do Salão 02 via planilhas CSV.',
+      changes: [
+        { type: 'Escala Clicável & Edição Ágil', text: 'Cards de pacientes na escala agora são clicáveis com modal de edição de parâmetros (Acesso, Agulha, Heparina e Isolamento) e sincronização imediata no cadastro do paciente.' },
+        { type: 'Badge de Heparina', text: 'Selo visual com dose de heparina exibido diretamente no card do paciente ao lado do acesso vascular para checagem rápida da enfermagem.' },
+        { type: 'KPI & Folha de Heparina', text: 'Novo indicador métrico de heparina no topo da escala e modal com botão de impressão de tabela de checagem da enfermagem do turno.' },
+        { type: 'Campos no Cadastro Geral', text: 'Inclusão dos campos de Heparina e Agulha nos módulos de Pacientes e Recepção com conformidade de termos únicos.' },
+        { type: 'Carga CSV Salão 02', text: 'Sincronização integral das planilhas 1.CSV, 2.CSV e 3.CSV para os turnos 1º e 2º SQS e 1º TQS do Salão 02.' }
+      ]
+    },
+    {
       version: 'v4.9.57',
       date: '05/09/2026',
       title: 'Nex-Ai.MED — Modal Recorrente com Rodapé Fixo, Branding Oficial & Desconexão de Envio de E-mail',

@@ -1,3 +1,24 @@
+## [v4.9.58] - 06 de Setembro, 2026
+### Nex-Ai.ASSIST — Escala Interativa Clicável, Gestão de Heparina & Carga CSV Salão 02
+- **Escala de Diálise Interativa e Clicável (`DialysisScheduleTab.jsx`):**
+  - Cada card de paciente na escala agora possui indicador visual de clique (`cursor: pointer`, micro-animação hover) e botão "Editar" na barra do ponto.
+  - Ao clicar no paciente, abre modal moderno de edição rápida de parâmetros clínicos de sessão: **Acesso Vascular** (FAV, CDL, Permcath, Prótese), **Calibre da Agulha** (15G, 16G, 17G) e **Heparina** (com botões de preenchimento rápido de 0,5 ml a 2,5 ml e NA).
+  - A edição na escala sincroniza automaticamente os parâmetros atualizados no cadastro central do paciente (`dbService.updatePatient`).
+- **Badge de Heparina no Card do Paciente:**
+  - Inclusão do indicador visual de Heparina (`💉 [Dose]`) no card do paciente, posicionado estrategicamente ao lado do selo de acesso vascular para checagem rápida da enfermagem.
+- **Painel KPI de Heparina & Folha de Checagem da Enfermagem:**
+  - Adicionado card de métricas dinâmicas de Heparina no topo da escala (quantitativo de pacientes com anticoagulação, sem heparina e volume total estimado em ml).
+  - Botão dedicado "Heparina" na barra de ações que abre a Folha de Heparina do Turno com visualização em tabela e impressão limpa para apoio à enfermagem.
+- **Integração Global no Cadastro de Pacientes (`PatientsPanel.jsx` & `ReceptionPanel.jsx`):**
+  - Adição dos campos `Heparina` e `Agulha` no formulário mestre de pacientes e na recepção/admissão, com visualização correspondente nas listagens e tabelas.
+- **Carga de Dados das Planilhas CSV do Salão 02:**
+  - Processamento e sincronização completa das planilhas `docs/1.CSV` (Salão 02 - 1º Turno SQS), `docs/2.CSV` (Salão 02 - 2º Turno SQS) e `docs/3.CSV` (Salão 02 - 1º Turno TQS).
+  - 100% de correspondência e enriquecimento das doses de heparina e acessos vasculares na base inicial da escala e no cadastro mestre.
+- **Padrão Rigoroso de Rótulos de 1 Palavra & Boy Scout Rule:**
+  - Todos os novos campos, cabeçalhos e botões implementados com rótulos concisos e diretos de termo único (`Acesso`, `Agulha`, `Heparina`, `Turno`, `Salão`, `Poltrona`, `Editar`, `Salvar`, `Cancelar`, `Imprimir`).
+
+---
+
 ## [v4.9.57] - 05 de Setembro, 2026
 ### Nex-Ai.MED — Modal Recorrente com Rodapé Fixo, Branding Oficial & Desconexão de Envio de E-mail
 - **Modal Recorrente Responsivo sem Necessidade de Zoom (`MedicalScheduleTab.jsx`):**

@@ -44,6 +44,8 @@ export default function PatientsPanel() {
   const [city, setCity] = useState('');
   const [state, setState] = useState('MG');
   const [treatmentType, setTreatmentType] = useState('HD');
+  const [heparina, setHeparina] = useState('');
+  const [needleSize, setNeedleSize] = useState('16');
 
   useEffect(() => {
     fetchInitialData();
@@ -111,6 +113,8 @@ export default function PatientsPanel() {
     setCity('');
     setState('MG');
     setTreatmentType('HD');
+    setHeparina('');
+    setNeedleSize('16');
     
     setShowModal(true);
   };
@@ -134,6 +138,8 @@ export default function PatientsPanel() {
     setCity(pat.city || '');
     setState(pat.state || 'MG');
     setTreatmentType(pat.treatmentType || 'HD');
+    setHeparina(pat.heparina || '');
+    setNeedleSize(pat.needleSize || '16');
     
     setShowModal(true);
   };
@@ -158,6 +164,8 @@ export default function PatientsPanel() {
       dialysisFrequency,
       dryWeight: parseFloat(dryWeight) || null,
       accessType,
+      needleSize: accessType === 'Fístula Arteriovenosa' ? needleSize : null,
+      heparina,
       shift,
       room,
       patientType,
@@ -477,18 +485,34 @@ export default function PatientsPanel() {
                       </span>
                     </td>
                     <td>
-                      <span
-                        className="badge"
-                        style={{
-                          backgroundColor: pat.accessType.includes('Fístula') ? 'var(--success-light)' : 'var(--danger-light)',
-                          color: pat.accessType.includes('Fístula') ? 'var(--success-color)' : 'var(--danger-color)',
-                          fontSize: '0.75rem',
-                          textTransform: 'none',
-                          letterSpacing: 'normal'
-                        }}
-                      >
-                        {pat.accessType}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                        <span
+                          className="badge"
+                          style={{
+                            backgroundColor: (pat.accessType || '').includes('Fístula') ? 'var(--success-light)' : 'var(--danger-light)',
+                            color: (pat.accessType || '').includes('Fístula') ? 'var(--success-color)' : 'var(--danger-color)',
+                            fontSize: '0.75rem',
+                            textTransform: 'none',
+                            letterSpacing: 'normal'
+                          }}
+                        >
+                          {pat.accessType} {pat.needleSize ? `(Ag.${pat.needleSize})` : ''}
+                        </span>
+                        {pat.heparina && (
+                          <span style={{
+                            fontSize: '0.7rem',
+                            fontWeight: '700',
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            backgroundColor: '#eff6ff',
+                            color: '#1d4ed8',
+                            border: '1px solid #bfdbfe',
+                            width: 'fit-content'
+                          }}>
+                            💉 {pat.heparina}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td>
                       <div style={{ fontWeight: '600' }}>{pat.shift}</div>
@@ -715,10 +739,10 @@ export default function PatientsPanel() {
                   </div>
                 </div>
 
-                {/* Access Type & Frequency */}
+                {/* Access, Agulha, Heparina & Frequency */}
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   <div className="form-group" style={{ flex: 1.2 }}>
-                    <label htmlFor="pat-form-access">Tipo de Acesso Vascular</label>
+                    <label htmlFor="pat-form-access">Acesso</label>
                     <select
                       id="pat-form-access"
                       className="form-control"
@@ -731,6 +755,37 @@ export default function PatientsPanel() {
                       ))}
                     </select>
                   </div>
+
+                  {accessType === 'Fístula Arteriovenosa' && (
+                    <div className="form-group" style={{ flex: 0.8 }}>
+                      <label htmlFor="pat-form-needle">Agulha</label>
+                      <select
+                        id="pat-form-needle"
+                        className="form-control"
+                        value={needleSize}
+                        onChange={(e) => setNeedleSize(e.target.value)}
+                        disabled={actionLoading}
+                      >
+                        <option value="15">Agulha 15</option>
+                        <option value="16">Agulha 16</option>
+                        <option value="17">Agulha 17</option>
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label htmlFor="pat-form-heparina">Heparina</label>
+                    <input
+                      id="pat-form-heparina"
+                      type="text"
+                      className="form-control"
+                      placeholder="Ex: 1,5 ml, 2,0 ml, NA"
+                      value={heparina}
+                      onChange={(e) => setHeparina(e.target.value)}
+                      disabled={actionLoading}
+                    />
+                  </div>
+
                   <div className="form-group" style={{ flex: 1 }}>
                     <label htmlFor="pat-form-freq">Escala</label>
                     <select
@@ -750,7 +805,7 @@ export default function PatientsPanel() {
                 {/* Row: Shift & Room (DYNAMIC) */}
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   <div className="form-group" style={{ flex: 1 }}>
-                    <label htmlFor="pat-form-shift">Turno de Diálise</label>
+                    <label htmlFor="pat-form-shift">Turno</label>
                     <select
                       id="pat-form-shift"
                       className="form-control"
@@ -764,7 +819,7 @@ export default function PatientsPanel() {
                     </select>
                   </div>
                   <div className="form-group" style={{ flex: 1 }}>
-                    <label htmlFor="pat-form-room">Salão Alocado</label>
+                    <label htmlFor="pat-form-room">Salão</label>
                     <select
                       id="pat-form-room"
                       className="form-control"

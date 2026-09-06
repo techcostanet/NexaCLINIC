@@ -8127,7 +8127,8 @@
               "accessRaw": "CDL",
               "accessType": "Cateter Duplo Lúmen",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "quarta": {
               "raw": "Alvimar Santos Muniz DN: 10/03/1962 CDL",
@@ -8136,7 +8137,8 @@
               "accessRaw": "CDL",
               "accessType": "Cateter Duplo Lúmen",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "sexta": {
               "raw": "Alvimar Santos Muniz DN: 10/03/1962 CDL",
@@ -8145,7 +8147,8 @@
               "accessRaw": "CDL",
               "accessType": "Cateter Duplo Lúmen",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "mainPatient": {
               "raw": "Alvimar Santos Muniz DN: 10/03/1962 CDL",
@@ -8154,7 +8157,8 @@
               "accessRaw": "CDL",
               "accessType": "Cateter Duplo Lúmen",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             }
           },
           "tqs": {
@@ -8162,37 +8166,41 @@
               "raw": "Sheila Tatiana de Sousa DN: 16/11/1978 Ag.16",
               "name": "Sheila Tatiana de Sousa",
               "dn": "16/11/1978",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quinta": {
               "raw": "Sheila Tatiana de Sousa DN: 16/11/1978 Ag.16",
               "name": "Sheila Tatiana de Sousa",
               "dn": "16/11/1978",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sabado": {
               "raw": "Sheila Tatiana de Sousa DN: 16/11/1978 Ag.16",
               "name": "Sheila Tatiana de Sousa",
               "dn": "16/11/1978",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Sheila Tatiana de Sousa DN: 16/11/1978 Ag.16",
               "name": "Sheila Tatiana de Sousa",
               "dn": "16/11/1978",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           }
         },
@@ -8208,37 +8216,41 @@
               "raw": "Ereclydes Martinho Mendes DN:05/11/1951 Ag.15",
               "name": "Ereclydes Martinho Mendes",
               "dn": "05/11/1951",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Ereclydes Martinho Mendes DN:05/11/1951 Ag.15",
               "name": "Ereclydes Martinho Mendes",
               "dn": "05/11/1951",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Ereclydes Martinho Mendes DN:05/11/1951 Ag.15",
               "name": "Ereclydes Martinho Mendes",
               "dn": "05/11/1951",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Ereclydes Martinho Mendes DN:05/11/1951 Ag.15",
               "name": "Ereclydes Martinho Mendes",
               "dn": "05/11/1951",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -8246,37 +8258,41 @@
               "raw": "Moisés Cordeiro da Silva DN: 28/07/1975 Ag.15",
               "name": "Moisés Cordeiro da Silva",
               "dn": "28/07/1975",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "NA"
             },
             "quinta": {
               "raw": "Moisés Cordeiro da Silva DN: 28/07/1975 Ag.15",
               "name": "Moisés Cordeiro da Silva",
               "dn": "28/07/1975",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "NA"
             },
             "sabado": {
               "raw": "Moisés Cordeiro da Silva DN: 28/07/1975 Ag.15",
               "name": "Moisés Cordeiro da Silva",
               "dn": "28/07/1975",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "NA"
             },
             "mainPatient": {
               "raw": "Moisés Cordeiro da Silva DN: 28/07/1975 Ag.15",
               "name": "Moisés Cordeiro da Silva",
               "dn": "28/07/1975",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "NA"
             }
           }
         },
@@ -8292,37 +8308,41 @@
               "raw": "Ronivon Martins de Oliveira DN:01/01/1970 Ag.15",
               "name": "Ronivon Martins de Oliveira",
               "dn": "01/01/1970",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Ronivon Martins de Oliveira DN:01/01/1970 Ag.15",
               "name": "Ronivon Martins de Oliveira",
               "dn": "01/01/1970",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Ronivon Martins de Oliveira DN:01/01/1970 Ag.15",
               "name": "Ronivon Martins de Oliveira",
               "dn": "01/01/1970",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Ronivon Martins de Oliveira DN:01/01/1970 Ag.15",
               "name": "Ronivon Martins de Oliveira",
               "dn": "01/01/1970",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -8330,37 +8350,41 @@
               "raw": "Arlindo Pires do Prado DN: 03/06/1952 Ag.16",
               "name": "Arlindo Pires do Prado",
               "dn": "03/06/1952",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quinta": {
               "raw": "Arlindo Pires do Prado DN: 03/06/1952 Ag.16",
               "name": "Arlindo Pires do Prado",
               "dn": "03/06/1952",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sabado": {
               "raw": "Arlindo Pires do Prado DN: 03/06/1952 Ag.16",
               "name": "Arlindo Pires do Prado",
               "dn": "03/06/1952",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Arlindo Pires do Prado DN: 03/06/1952 Ag.16",
               "name": "Arlindo Pires do Prado",
               "dn": "03/06/1952",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           }
         },
@@ -8376,37 +8400,41 @@
               "raw": "Elaine Batista Rocha DN:07/09/19 CDLLP",
               "name": "Elaine Batista Rocha",
               "dn": "07/09/19",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "quarta": {
               "raw": "Elaine Batista Rocha DN:07/09/19 CDLLP",
               "name": "Elaine Batista Rocha",
               "dn": "07/09/19",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "sexta": {
               "raw": "Elaine Batista Rocha DN:07/09/19 CDLLP",
               "name": "Elaine Batista Rocha",
               "dn": "07/09/19",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "mainPatient": {
               "raw": "Elaine Batista Rocha DN:07/09/19 CDLLP",
               "name": "Elaine Batista Rocha",
               "dn": "07/09/19",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             }
           },
           "tqs": {
@@ -8414,37 +8442,41 @@
               "raw": "Heleni Rosa de Jesus DN: 15/05/1981 Ag.16",
               "name": "Heleni Rosa de Jesus",
               "dn": "15/05/1981",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quinta": {
               "raw": "Heleni Rosa de Jesus DN: 15/05/1981 Ag.16",
               "name": "Heleni Rosa de Jesus",
               "dn": "15/05/1981",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sabado": {
               "raw": "Heleni Rosa de Jesus DN: 15/05/1981 Ag.16",
               "name": "Heleni Rosa de Jesus",
               "dn": "15/05/1981",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Heleni Rosa de Jesus DN: 15/05/1981 Ag.16",
               "name": "Heleni Rosa de Jesus",
               "dn": "15/05/1981",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           }
         },
@@ -8460,37 +8492,41 @@
               "raw": "Eulália Rodrigues dos Reis DN: 07/02/1998 Ag.16",
               "name": "Eulália Rodrigues dos Reis",
               "dn": "07/02/1998",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Eulália Rodrigues dos Reis DN: 07/02/1998 Ag.16",
               "name": "Eulália Rodrigues dos Reis",
               "dn": "07/02/1998",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Eulália Rodrigues dos Reis DN: 07/02/1998 Ag.16",
               "name": "Eulália Rodrigues dos Reis",
               "dn": "07/02/1998",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Eulália Rodrigues dos Reis DN: 07/02/1998 Ag.16",
               "name": "Eulália Rodrigues dos Reis",
               "dn": "07/02/1998",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -8498,37 +8534,41 @@
               "raw": "Antônio Abraão Esteves Ferreira DN:20/05/1946 Ag.15",
               "name": "Antônio Abraão Esteves Ferreira",
               "dn": "20/05/1946",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quinta": {
               "raw": "Antônio Abraão Esteves Ferreira DN:20/05/1946 Ag.15",
               "name": "Antônio Abraão Esteves Ferreira",
               "dn": "20/05/1946",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sabado": {
               "raw": "Antônio Abraão Esteves Ferreira DN:20/05/1946 Ag.15",
               "name": "Antônio Abraão Esteves Ferreira",
               "dn": "20/05/1946",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Antônio Abraão Esteves Ferreira DN:20/05/1946 Ag.15",
               "name": "Antônio Abraão Esteves Ferreira",
               "dn": "20/05/1946",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           }
         },
@@ -8544,37 +8584,41 @@
               "raw": "José Dias de Souza Neto DN:14/11/1963 Ag.15",
               "name": "José Dias de Souza Neto",
               "dn": "14/11/1963",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "José Dias de Souza Neto DN:14/11/1963 Ag.15",
               "name": "José Dias de Souza Neto",
               "dn": "14/11/1963",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "José Dias de Souza Neto DN:14/11/1963 Ag.15",
               "name": "José Dias de Souza Neto",
               "dn": "14/11/1963",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "José Dias de Souza Neto DN:14/11/1963 Ag.15",
               "name": "José Dias de Souza Neto",
               "dn": "14/11/1963",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -8582,37 +8626,41 @@
               "raw": "Edna Marques Marçal de Andrade DN: 11/04/1987 Permcath",
               "name": "Edna Marques Marçal de Andrade",
               "dn": "11/04/1987",
-              "accessRaw": "Permcath",
+              "accessRaw": "PERM",
               "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0ml"
             },
             "quinta": {
               "raw": "Edna Marques Marçal de Andrade DN: 11/04/1987 CDL",
               "name": "Edna Marques Marçal de Andrade",
               "dn": "11/04/1987",
-              "accessRaw": "CDL",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0ml"
             },
             "sabado": {
               "raw": "Edna Marques Marçal de Andrade DN: 11/04/1987 CDL",
               "name": "Edna Marques Marçal de Andrade",
               "dn": "11/04/1987",
-              "accessRaw": "CDL",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0ml"
             },
             "mainPatient": {
               "raw": "Edna Marques Marçal de Andrade DN: 11/04/1987 Permcath",
               "name": "Edna Marques Marçal de Andrade",
               "dn": "11/04/1987",
-              "accessRaw": "Permcath",
+              "accessRaw": "PERM",
               "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0ml"
             }
           }
         },
@@ -8628,37 +8676,41 @@
               "raw": "Willian Marins Peres DN: 02/02/1978 Ag.15",
               "name": "Willian Marins Peres",
               "dn": "02/02/1978",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quarta": {
               "raw": "Willian Marins Peres DN: 02/02/1978 Ag.15",
               "name": "Willian Marins Peres",
               "dn": "02/02/1978",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sexta": {
               "raw": "Willian Marins Peres DN: 02/02/1978 Ag.15",
               "name": "Willian Marins Peres",
               "dn": "02/02/1978",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Willian Marins Peres DN: 02/02/1978 Ag.15",
               "name": "Willian Marins Peres",
               "dn": "02/02/1978",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {
@@ -8666,37 +8718,41 @@
               "raw": "Custódio Vital da Silva DN:09/01/1957 Ag.16",
               "name": "Custódio Vital da Silva",
               "dn": "09/01/1957",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "0,5 ml"
             },
             "quinta": {
               "raw": "Custódio Vital da Silva DN:09/01/1957 Ag.16",
               "name": "Custódio Vital da Silva",
               "dn": "09/01/1957",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "0,5 ml"
             },
             "sabado": {
               "raw": "Custódio Vital da Silva DN:09/01/1957 Ag.16",
               "name": "Custódio Vital da Silva",
               "dn": "09/01/1957",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "0,5 ml"
             },
             "mainPatient": {
               "raw": "Custódio Vital da Silva DN:09/01/1957 Ag.16",
               "name": "Custódio Vital da Silva",
               "dn": "09/01/1957",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "0,5 ml"
             }
           }
         },
@@ -8712,37 +8768,41 @@
               "raw": "Cleusa Alves dos Santos DN: 02/02/1969 Ag.16",
               "name": "Cleusa Alves dos Santos",
               "dn": "02/02/1969",
-              "accessRaw": "Ag.16",
-              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,5 ml"
             },
             "quarta": {
               "raw": "Cleusa Alves dos Santos DN: 02/02/1969 Ag.16",
               "name": "Cleusa Alves dos Santos",
               "dn": "02/02/1969",
-              "accessRaw": "Ag.16",
-              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,5 ml"
             },
             "sexta": {
               "raw": "Cleusa Alves dos Santos DN: 02/02/1969 Ag.16",
               "name": "Cleusa Alves dos Santos",
               "dn": "02/02/1969",
-              "accessRaw": "Ag.16",
-              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,5 ml"
             },
             "mainPatient": {
               "raw": "Cleusa Alves dos Santos DN: 02/02/1969 Ag.16",
               "name": "Cleusa Alves dos Santos",
               "dn": "02/02/1969",
-              "accessRaw": "Ag.16",
-              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,5 ml"
             }
           },
           "tqs": {
@@ -8750,37 +8810,41 @@
               "raw": "José Alves de Oliveira DN: 23/03/1965 Ag.16",
               "name": "José Alves de Oliveira",
               "dn": "23/03/1965",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quinta": {
               "raw": "José Alves de Oliveira DN: 23/03/1965 Ag.16",
               "name": "José Alves de Oliveira",
               "dn": "23/03/1965",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sabado": {
               "raw": "José Alves de Oliveira DN: 23/03/1965 Ag.16",
               "name": "José Alves de Oliveira",
               "dn": "23/03/1965",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "José Alves de Oliveira DN: 23/03/1965 Ag.16",
               "name": "José Alves de Oliveira",
               "dn": "23/03/1965",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           }
         },
@@ -8796,37 +8860,41 @@
               "raw": "Helio Resende Capaz DN: 05/04/1960 CDLLP",
               "name": "Helio Resende Capaz",
               "dn": "05/04/1960",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Helio Resende Capaz DN: 05/04/1960 CDLLP",
               "name": "Helio Resende Capaz",
               "dn": "05/04/1960",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Helio Resende Capaz DN: 05/04/1960 CDLLP",
               "name": "Helio Resende Capaz",
               "dn": "05/04/1960",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Helio Resende Capaz DN: 05/04/1960 CDLLP",
               "name": "Helio Resende Capaz",
               "dn": "05/04/1960",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -8834,37 +8902,41 @@
               "raw": "Francisco de Assis Matias de Oliveira DN:02/04/1952 Ag.16",
               "name": "Francisco de Assis Matias de Oliveira",
               "dn": "02/04/1952",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quinta": {
               "raw": "Francisco de Assis Matias de Oliveira DN:02/04/1952 Ag.16",
               "name": "Francisco de Assis Matias de Oliveira",
               "dn": "02/04/1952",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sabado": {
               "raw": "Francisco de Assis Matias de Oliveira DN:02/04/1952 Ag.16",
               "name": "Francisco de Assis Matias de Oliveira",
               "dn": "02/04/1952",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Francisco de Assis Matias de Oliveira DN:02/04/1952 Ag.16",
               "name": "Francisco de Assis Matias de Oliveira",
               "dn": "02/04/1952",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           }
         },
@@ -8880,37 +8952,41 @@
               "raw": "Armando Alves de Moura DN: 28/10/1951 FAV AG 15",
               "name": "Armando Alves de Moura",
               "dn": "28/10/1951",
-              "accessRaw": "FAV AG 15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Armando Alves de Moura DN: 28/10/1951 FAV AG 15",
               "name": "Armando Alves de Moura",
               "dn": "28/10/1951",
-              "accessRaw": "FAV AG 15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Armando Alves de Moura DN: 28/10/1951 FAV AG 15",
               "name": "Armando Alves de Moura",
               "dn": "28/10/1951",
-              "accessRaw": "FAV AG 15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Armando Alves de Moura DN: 28/10/1951 FAV AG 15",
               "name": "Armando Alves de Moura",
               "dn": "28/10/1951",
-              "accessRaw": "FAV AG 15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -8918,37 +8994,41 @@
               "raw": "Tânia Maria de Jesus dos Santos DN:18/01/1962 Ag.16",
               "name": "Tânia Maria de Jesus dos Santos",
               "dn": "18/01/1962",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quinta": {
               "raw": "Tânia Maria de Jesus dos Santos DN:18/01/1962 Ag.16",
               "name": "Tânia Maria de Jesus dos Santos",
               "dn": "18/01/1962",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sabado": {
               "raw": "Tânia Maria de Jesus dos Santos DN:18/01/1962 Ag.16",
               "name": "Tânia Maria de Jesus dos Santos",
               "dn": "18/01/1962",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Tânia Maria de Jesus dos Santos DN:18/01/1962 Ag.16",
               "name": "Tânia Maria de Jesus dos Santos",
               "dn": "18/01/1962",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           }
         },
@@ -8964,37 +9044,41 @@
               "raw": "Lourdes Maria Evangelista Vasconcelos DN:25/08/1956 CDLLP",
               "name": "Lourdes Maria Evangelista Vasconcelos",
               "dn": "25/08/1956",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Lourdes Maria Evangelista Vasconcelos DN:25/08/1956 CDLLP",
               "name": "Lourdes Maria Evangelista Vasconcelos",
               "dn": "25/08/1956",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Lourdes Maria Evangelista Vasconcelos DN:25/08/1956 CDLLP",
               "name": "Lourdes Maria Evangelista Vasconcelos",
               "dn": "25/08/1956",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Lourdes Maria Evangelista Vasconcelos DN:25/08/1956 CDLLP",
               "name": "Lourdes Maria Evangelista Vasconcelos",
               "dn": "25/08/1956",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -9002,37 +9086,41 @@
               "raw": "Valter Emerick Saar DN: 20/06/1957 Ag.15",
               "name": "Valter Emerick Saar",
               "dn": "20/06/1957",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "quinta": {
               "raw": "Valter Emerick Saar DN: 20/06/1957 Ag.15",
               "name": "Valter Emerick Saar",
               "dn": "20/06/1957",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "sabado": {
               "raw": "Valter Emerick Saar DN: 20/06/1957 Ag.15",
               "name": "Valter Emerick Saar",
               "dn": "20/06/1957",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "mainPatient": {
               "raw": "Valter Emerick Saar DN: 20/06/1957 Ag.15",
               "name": "Valter Emerick Saar",
               "dn": "20/06/1957",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             }
           }
         },
@@ -9048,37 +9136,41 @@
               "raw": "Tarcísio Pires do Carmo DN: 13/02/1954 Ag.15",
               "name": "Tarcísio Pires do Carmo",
               "dn": "13/02/1954",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Tarcísio Pires do Carmo DN: 13/02/1954 Ag.15",
               "name": "Tarcísio Pires do Carmo",
               "dn": "13/02/1954",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Tarcísio Pires do Carmo DN: 13/02/1954 Ag.15",
               "name": "Tarcísio Pires do Carmo",
               "dn": "13/02/1954",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Tarcísio Pires do Carmo DN: 13/02/1954 Ag.15",
               "name": "Tarcísio Pires do Carmo",
               "dn": "13/02/1954",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -9086,37 +9178,41 @@
               "raw": "Alexandre Lopes Aragão DN: 23/02/1978 Ag.16",
               "name": "Alexandre Lopes Aragão",
               "dn": "23/02/1978",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quinta": {
               "raw": "Alexandre Lopes Aragão DN: 23/02/1978 Ag.16",
               "name": "Alexandre Lopes Aragão",
               "dn": "23/02/1978",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sabado": {
               "raw": "Alexandre Lopes Aragão DN: 23/02/1978 Ag.16",
               "name": "Alexandre Lopes Aragão",
               "dn": "23/02/1978",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Alexandre Lopes Aragão DN: 23/02/1978 Ag.16",
               "name": "Alexandre Lopes Aragão",
               "dn": "23/02/1978",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           }
         },
@@ -9132,37 +9228,41 @@
               "raw": "Edvaldo Barbosa de Souza DN: 25/02/1971 CDL/ Ag.16",
               "name": "Edvaldo Barbosa de Souza",
               "dn": "25/02/1971",
-              "accessRaw": "CDL/ Ag.16",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "FAV Ag.16",
+              "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5ml"
             },
             "quarta": {
               "raw": "Edvaldo Barbosa de Souza DN: 25/02/1971 CDL/ Ag.16",
               "name": "Edvaldo Barbosa de Souza",
               "dn": "25/02/1971",
-              "accessRaw": "CDL/ Ag.16",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "FAV Ag.16",
+              "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5ml"
             },
             "sexta": {
               "raw": "Edvaldo Barbosa de Souza DN: 25/02/1971 CDL/ Ag.16",
               "name": "Edvaldo Barbosa de Souza",
               "dn": "25/02/1971",
-              "accessRaw": "CDL/ Ag.16",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "FAV Ag.16",
+              "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5ml"
             },
             "mainPatient": {
               "raw": "Edvaldo Barbosa de Souza DN: 25/02/1971 CDL/ Ag.16",
               "name": "Edvaldo Barbosa de Souza",
               "dn": "25/02/1971",
-              "accessRaw": "CDL/ Ag.16",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "FAV Ag.16",
+              "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5ml"
             }
           },
           "tqs": {
@@ -9170,37 +9270,41 @@
               "raw": "Janethe Maria do Nascimento Santos DN: 17/02/1962 Ag. 16",
               "name": "Janethe Maria do Nascimento Santos",
               "dn": "17/02/1962",
-              "accessRaw": "Ag. 16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quinta": {
               "raw": "Janethe Maria do Nascimento Santos DN: 17/02/1962 Ag. 16",
               "name": "Janethe Maria do Nascimento Santos",
               "dn": "17/02/1962",
-              "accessRaw": "Ag. 16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sabado": {
               "raw": "Janethe Maria do Nascimento Santos DN: 17/02/1962 Ag. 16",
               "name": "Janethe Maria do Nascimento Santos",
               "dn": "17/02/1962",
-              "accessRaw": "Ag. 16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Janethe Maria do Nascimento Santos DN: 17/02/1962 Ag. 16",
               "name": "Janethe Maria do Nascimento Santos",
               "dn": "17/02/1962",
-              "accessRaw": "Ag. 16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           }
         },
@@ -9216,37 +9320,41 @@
               "raw": "Beatriz Silva DN: 14/03/1964 Ag.16",
               "name": "Beatriz Silva",
               "dn": "14/03/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "quarta": {
               "raw": "Beatriz Silva DN: 14/03/1964 Ag.16",
               "name": "Beatriz Silva",
               "dn": "14/03/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "sexta": {
               "raw": "Beatriz Silva DN: 14/03/1964 Ag.16",
               "name": "Beatriz Silva",
               "dn": "14/03/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "mainPatient": {
               "raw": "Beatriz Silva DN: 14/03/1964 Ag.16",
               "name": "Beatriz Silva",
               "dn": "14/03/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             }
           },
           "tqs": {
@@ -9254,37 +9362,41 @@
               "raw": "Rafael Geraldo Machado do Vale DN: 17/12/1985 Ag.15",
               "name": "Rafael Geraldo Machado do Vale",
               "dn": "17/12/1985",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quinta": {
               "raw": "Rafael Geraldo Machado do Vale DN: 17/12/1985 Ag.15",
               "name": "Rafael Geraldo Machado do Vale",
               "dn": "17/12/1985",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sabado": {
               "raw": "Rafael Geraldo Machado do Vale DN: 17/12/1985 Ag.15",
               "name": "Rafael Geraldo Machado do Vale",
               "dn": "17/12/1985",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Rafael Geraldo Machado do Vale DN: 17/12/1985 Ag.15",
               "name": "Rafael Geraldo Machado do Vale",
               "dn": "17/12/1985",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           }
         },
@@ -9300,37 +9412,41 @@
               "raw": "Huander de Faria Euzébio DN: 20/09/1976 Ag.16",
               "name": "Huander de Faria Euzébio",
               "dn": "20/09/1976",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "quarta": {
               "raw": "Huander de Faria Euzébio DN: 20/09/1976 Ag.16",
               "name": "Huander de Faria Euzébio",
               "dn": "20/09/1976",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "sexta": {
               "raw": "Huander de Faria Euzébio DN: 20/09/1976 Ag.16",
               "name": "Huander de Faria Euzébio",
               "dn": "20/09/1976",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "mainPatient": {
               "raw": "Huander de Faria Euzébio DN: 20/09/1976 Ag.16",
               "name": "Huander de Faria Euzébio",
               "dn": "20/09/1976",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             }
           },
           "tqs": {
@@ -9338,37 +9454,41 @@
               "raw": "Maria Rosa Soares DN:10/09/1973 Ag.16",
               "name": "Maria Rosa Soares",
               "dn": "10/09/1973",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quinta": {
               "raw": "Maria Rosa Soares DN:10/09/1973 Ag.16",
               "name": "Maria Rosa Soares",
               "dn": "10/09/1973",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sabado": {
               "raw": "Maria Rosa Soares DN:10/09/1973 Ag.16",
               "name": "Maria Rosa Soares",
               "dn": "10/09/1973",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Maria Rosa Soares DN:10/09/1973 Ag.16",
               "name": "Maria Rosa Soares",
               "dn": "10/09/1973",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           }
         },
@@ -9384,74 +9504,112 @@
               "raw": "Odete Alves Ferreira DN: 26/12/1958 Ag.16",
               "name": "Odete Alves Ferreira",
               "dn": "26/12/1958",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Odete Alves Ferreira DN: 26/12/1958 Ag.16",
               "name": "Odete Alves Ferreira",
               "dn": "26/12/1958",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Odete Alves Ferreira DN: 26/12/1958 Ag.16",
               "name": "Odete Alves Ferreira",
               "dn": "26/12/1958",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Odete Alves Ferreira DN: 26/12/1958 Ag.16",
               "name": "Odete Alves Ferreira",
               "dn": "26/12/1958",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
+            "segunda": {
+              "name": "Sebastiana Pereira Maciel",
+              "dn": "20/03/60",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Sebastiana Pereira Maciel DN:20/03/60 FAV Ag.16 Heparina:1,0 ml",
+              "isolation": null
+            },
             "terca": {
-              "raw": "Maria Aparecida Fernandes Resende DN: 05/10/1963 CDLLP",
-              "name": "Maria Aparecida Fernandes Resende",
-              "dn": "05/10/1963",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
-              "needleSize": null,
+              "name": "Sebastiana Pereira Maciel",
+              "dn": "20/03/60",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Sebastiana Pereira Maciel DN:20/03/60 FAV Ag.16 Heparina:1,0 ml",
+              "isolation": null
+            },
+            "quarta": {
+              "name": "Sebastiana Pereira Maciel",
+              "dn": "20/03/60",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Sebastiana Pereira Maciel DN:20/03/60 FAV Ag.16 Heparina:1,0 ml",
               "isolation": null
             },
             "quinta": {
-              "raw": "Maria Aparecida Fernandes Resende DN: 05/10/1963 CDLLP",
-              "name": "Maria Aparecida Fernandes Resende",
-              "dn": "05/10/1963",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
-              "needleSize": null,
+              "name": "Sebastiana Pereira Maciel",
+              "dn": "20/03/60",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Sebastiana Pereira Maciel DN:20/03/60 FAV Ag.16 Heparina:1,0 ml",
+              "isolation": null
+            },
+            "sexta": {
+              "name": "Sebastiana Pereira Maciel",
+              "dn": "20/03/60",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Sebastiana Pereira Maciel DN:20/03/60 FAV Ag.16 Heparina:1,0 ml",
               "isolation": null
             },
             "sabado": {
-              "raw": "Maria Aparecida Fernandes Resende DN: 05/10/1963 CDLLP",
-              "name": "Maria Aparecida Fernandes Resende",
-              "dn": "05/10/1963",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
-              "needleSize": null,
+              "name": "Sebastiana Pereira Maciel",
+              "dn": "20/03/60",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Sebastiana Pereira Maciel DN:20/03/60 FAV Ag.16 Heparina:1,0 ml",
               "isolation": null
             },
             "mainPatient": {
-              "raw": "Maria Aparecida Fernandes Resende DN: 05/10/1963 CDLLP",
-              "name": "Maria Aparecida Fernandes Resende",
-              "dn": "05/10/1963",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
-              "needleSize": null,
+              "name": "Sebastiana Pereira Maciel",
+              "dn": "20/03/60",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Sebastiana Pereira Maciel DN:20/03/60 FAV Ag.16 Heparina:1,0 ml",
               "isolation": null
             }
           }
@@ -9488,37 +9646,41 @@
               "raw": "Rodrigo Wagner Faria DN:14/08/1978 Ag.15",
               "name": "Rodrigo Wagner Faria",
               "dn": "14/08/1978",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Rodrigo Wagner Faria DN:14/08/1978 Ag.15",
               "name": "Rodrigo Wagner Faria",
               "dn": "14/08/1978",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Rodrigo Wagner Faria DN:14/08/1978 Ag.15",
               "name": "Rodrigo Wagner Faria",
               "dn": "14/08/1978",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Rodrigo Wagner Faria DN:14/08/1978 Ag.15",
               "name": "Rodrigo Wagner Faria",
               "dn": "14/08/1978",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -9526,37 +9688,41 @@
               "raw": "Dalva Roberta de Lima DN: 23/02/1957 FAV AG 17",
               "name": "Dalva Roberta de Lima",
               "dn": "23/02/1957",
-              "accessRaw": "FAV AG 17",
-              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": "17",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quinta": {
               "raw": "Dalva Roberta de Lima DN: 23/02/1957 FAV AG 17",
               "name": "Dalva Roberta de Lima",
               "dn": "23/02/1957",
-              "accessRaw": "FAV AG 17",
-              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": "17",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sabado": {
               "raw": "Dalva Roberta de Lima DN: 23/02/1957 FAV AG 17",
               "name": "Dalva Roberta de Lima",
               "dn": "23/02/1957",
-              "accessRaw": "FAV AG 17",
-              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": "17",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Dalva Roberta de Lima DN: 23/02/1957 FAV AG 17",
               "name": "Dalva Roberta de Lima",
               "dn": "23/02/1957",
-              "accessRaw": "FAV AG 17",
-              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": "17",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           }
         },
@@ -9592,37 +9758,41 @@
               "raw": "Maria Aparecida Inácio Passos DN:11/11/1971 Ag.16",
               "name": "Maria Aparecida Inácio Passos",
               "dn": "11/11/1971",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Nilzete Lopes de Ataides DN:13/08/1961 Ag.15",
               "name": "Nilzete Lopes de Ataides",
               "dn": "13/08/1961",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Nilzete Lopes de Ataides DN:13/08/1961 Ag.15",
               "name": "Nilzete Lopes de Ataides",
               "dn": "13/08/1961",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Maria Aparecida Inácio Passos DN:11/11/1971 Ag.16",
               "name": "Maria Aparecida Inácio Passos",
               "dn": "11/11/1971",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -9630,37 +9800,41 @@
               "raw": "Maria Aparecida Rodrigues DN:28/05/1964 Ag.16",
               "name": "Maria Aparecida Rodrigues",
               "dn": "28/05/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "quinta": {
               "raw": "Maria Aparecida Rodrigues DN:28/05/1964 Ag.16",
               "name": "Maria Aparecida Rodrigues",
               "dn": "28/05/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "sabado": {
               "raw": "Maria Aparecida Rodrigues DN:28/05/1964 Ag.16",
               "name": "Maria Aparecida Rodrigues",
               "dn": "28/05/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "mainPatient": {
               "raw": "Maria Aparecida Rodrigues DN:28/05/1964 Ag.16",
               "name": "Maria Aparecida Rodrigues",
               "dn": "28/05/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             }
           }
         },
@@ -9676,37 +9850,41 @@
               "raw": "Andres Felipe Paramo Rivillas DN: 19/06/1999 CDLLP Sol 3,5%",
               "name": "Andres Felipe Paramo Rivillas",
               "dn": "19/06/1999",
-              "accessRaw": "CDLLP Sol 3,5%",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "FAV Ag.16",
+              "accessType": "Fístula Arteriovenosa",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "quarta": {
               "raw": "Andres Felipe Paramo Rivillas DN: 19/06/1999 CDLLP Sol 3,5%",
               "name": "Andres Felipe Paramo Rivillas",
               "dn": "19/06/1999",
-              "accessRaw": "CDLLP Sol 3,5%",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "FAV Ag.16",
+              "accessType": "Fístula Arteriovenosa",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "sexta": {
               "raw": "Andres Felipe Paramo Rivillas DN: 19/06/1999 CDLLP Sol 3,5%",
               "name": "Andres Felipe Paramo Rivillas",
               "dn": "19/06/1999",
-              "accessRaw": "CDLLP Sol 3,5%",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "FAV Ag.16",
+              "accessType": "Fístula Arteriovenosa",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "mainPatient": {
               "raw": "Andres Felipe Paramo Rivillas DN: 19/06/1999 CDLLP Sol 3,5%",
               "name": "Andres Felipe Paramo Rivillas",
               "dn": "19/06/1999",
-              "accessRaw": "CDLLP Sol 3,5%",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "FAV Ag.16",
+              "accessType": "Fístula Arteriovenosa",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             }
           },
           "tqs": {
@@ -9714,37 +9892,41 @@
               "raw": "Rosemeire Ferreira Simões DN:15/03/1972 Ag.16",
               "name": "Rosemeire Ferreira Simões",
               "dn": "15/03/1972",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quinta": {
               "raw": "Rosemeire Ferreira Simões DN:15/03/1972 Ag.16",
               "name": "Rosemeire Ferreira Simões",
               "dn": "15/03/1972",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sabado": {
               "raw": "Rosemeire Ferreira Simões DN:15/03/1972 Ag.16",
               "name": "Rosemeire Ferreira Simões",
               "dn": "15/03/1972",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Rosemeire Ferreira Simões DN:15/03/1972 Ag.16",
               "name": "Rosemeire Ferreira Simões",
               "dn": "15/03/1972",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           }
         },
@@ -9757,39 +9939,73 @@
           "serialNumber": "24J35256P",
           "sqs": {
             "segunda": {
-              "raw": "Maria Aparecida Inácio Passos DN:11/11/1971 Ag.16",
-              "name": "Maria Aparecida Inácio Passos",
-              "dn": "11/11/1971",
-              "accessRaw": "Ag.16",
+              "name": "Nilzete Lopes de Ataides",
+              "dn": "10/05/74",
               "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
               "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Nilzete Lopes de Ataides DN:10/05/74 FAV Ag.16 Heparina:1,0 ml",
+              "isolation": null
+            },
+            "terca": {
+              "name": "Nilzete Lopes de Ataides",
+              "dn": "10/05/74",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Nilzete Lopes de Ataides DN:10/05/74 FAV Ag.16 Heparina:1,0 ml",
               "isolation": null
             },
             "quarta": {
-              "raw": "Maria Aparecida Inácio Passos DN:11/11/1971 Ag.16",
-              "name": "Maria Aparecida Inácio Passos",
-              "dn": "11/11/1971",
-              "accessRaw": "Ag.16",
+              "name": "Nilzete Lopes de Ataides",
+              "dn": "10/05/74",
               "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
               "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Nilzete Lopes de Ataides DN:10/05/74 FAV Ag.16 Heparina:1,0 ml",
+              "isolation": null
+            },
+            "quinta": {
+              "name": "Nilzete Lopes de Ataides",
+              "dn": "10/05/74",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Nilzete Lopes de Ataides DN:10/05/74 FAV Ag.16 Heparina:1,0 ml",
               "isolation": null
             },
             "sexta": {
-              "raw": "Maria Aparecida Inácio Passos DN:11/11/1971 Ag.16",
-              "name": "Maria Aparecida Inácio Passos",
-              "dn": "11/11/1971",
-              "accessRaw": "Ag.16",
+              "name": "Nilzete Lopes de Ataides",
+              "dn": "10/05/74",
               "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
               "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Nilzete Lopes de Ataides DN:10/05/74 FAV Ag.16 Heparina:1,0 ml",
+              "isolation": null
+            },
+            "sabado": {
+              "name": "Nilzete Lopes de Ataides",
+              "dn": "10/05/74",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Nilzete Lopes de Ataides DN:10/05/74 FAV Ag.16 Heparina:1,0 ml",
               "isolation": null
             },
             "mainPatient": {
-              "raw": "Maria Aparecida Inácio Passos DN:11/11/1971 Ag.16",
-              "name": "Maria Aparecida Inácio Passos",
-              "dn": "11/11/1971",
-              "accessRaw": "Ag.16",
+              "name": "Nilzete Lopes de Ataides",
+              "dn": "10/05/74",
               "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
               "needleSize": "16",
+              "heparina": "1,0 ml",
+              "raw": "Nilzete Lopes de Ataides DN:10/05/74 FAV Ag.16 Heparina:1,0 ml",
               "isolation": null
             }
           },
@@ -9798,37 +10014,41 @@
               "raw": "Cleone Ferreira de oliveira DN: 14/12/1969 CDL",
               "name": "Cleone Ferreira de oliveira",
               "dn": "14/12/1969",
-              "accessRaw": "CDL",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quinta": {
               "raw": "Cleone Ferreira de oliveira DN: 14/12/1969 CDL",
               "name": "Cleone Ferreira de oliveira",
               "dn": "14/12/1969",
-              "accessRaw": "CDL",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sabado": {
               "raw": "Cleone Ferreira de oliveira DN: 14/12/1969 CDL",
               "name": "Cleone Ferreira de oliveira",
               "dn": "14/12/1969",
-              "accessRaw": "CDL",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Cleone Ferreira de oliveira DN: 14/12/1969 CDL",
               "name": "Cleone Ferreira de oliveira",
               "dn": "14/12/1969",
-              "accessRaw": "CDL",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           }
         },
@@ -9844,37 +10064,41 @@
               "raw": "Nilde Gonçalves do Nascimento DN: 08/03/1961 Ag.16",
               "name": "Nilde Gonçalves do Nascimento",
               "dn": "08/03/1961",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "0,8 ml"
             },
             "quarta": {
               "raw": "Nilde Gonçalves do Nascimento DN: 08/03/1961 Ag.16",
               "name": "Nilde Gonçalves do Nascimento",
               "dn": "08/03/1961",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "0,8 ml"
             },
             "sexta": {
               "raw": "Nilde Gonçalves do Nascimento DN: 08/03/1961 Ag.16",
               "name": "Nilde Gonçalves do Nascimento",
               "dn": "08/03/1961",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "0,8 ml"
             },
             "mainPatient": {
               "raw": "Nilde Gonçalves do Nascimento DN: 08/03/1961 Ag.16",
               "name": "Nilde Gonçalves do Nascimento",
               "dn": "08/03/1961",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "0,8 ml"
             }
           },
           "tqs": {
@@ -9882,37 +10106,41 @@
               "raw": "Vanessa Lacerda da Rocha DN: 09/11/1991 Ag.16",
               "name": "Vanessa Lacerda da Rocha",
               "dn": "09/11/1991",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quinta": {
               "raw": "Vanessa Lacerda da Rocha DN: 09/11/1991 Ag.16",
               "name": "Vanessa Lacerda da Rocha",
               "dn": "09/11/1991",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sabado": {
               "raw": "Vanessa Lacerda da Rocha DN: 09/11/1991 Ag.16",
               "name": "Vanessa Lacerda da Rocha",
               "dn": "09/11/1991",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Vanessa Lacerda da Rocha DN: 09/11/1991 Ag.16",
               "name": "Vanessa Lacerda da Rocha",
               "dn": "09/11/1991",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           }
         },
@@ -9928,37 +10156,41 @@
               "raw": "Wanderson Aparecido da Silva DN:20/02/1973 Ag.16",
               "name": "Wanderson Aparecido da Silva",
               "dn": "20/02/1973",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Wanderson Aparecido da Silva DN:20/02/1973 Ag.16",
               "name": "Wanderson Aparecido da Silva",
               "dn": "20/02/1973",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Wanderson Aparecido da Silva DN:20/02/1973 Ag.16",
               "name": "Wanderson Aparecido da Silva",
               "dn": "20/02/1973",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Wanderson Aparecido da Silva DN:20/02/1973 Ag.16",
               "name": "Wanderson Aparecido da Silva",
               "dn": "20/02/1973",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -9966,37 +10198,41 @@
               "raw": "Paulo Alves de Oliveira DN: 30/07/1968 Ag.15",
               "name": "Paulo Alves de Oliveira",
               "dn": "30/07/1968",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quinta": {
               "raw": "Paulo Alves de Oliveira DN: 30/07/1968 Ag.15",
               "name": "Paulo Alves de Oliveira",
               "dn": "30/07/1968",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sabado": {
               "raw": "Paulo Alves de Oliveira DN: 30/07/1968 Ag.15",
               "name": "Paulo Alves de Oliveira",
               "dn": "30/07/1968",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Paulo Alves de Oliveira DN: 30/07/1968 Ag.15",
               "name": "Paulo Alves de Oliveira",
               "dn": "30/07/1968",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           }
         },
@@ -10012,37 +10248,41 @@
               "raw": "Willian Bazílio Lima DN: 22/10/1992 Ag.16",
               "name": "Willian Bazílio Lima",
               "dn": "22/10/1992",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Willian Bazílio Lima DN: 22/10/1992 Ag.16",
               "name": "Willian Bazílio Lima",
               "dn": "22/10/1992",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Willian Bazílio Lima DN: 22/10/1992 Ag.16",
               "name": "Willian Bazílio Lima",
               "dn": "22/10/1992",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Willian Bazílio Lima DN: 22/10/1992 Ag.16",
               "name": "Willian Bazílio Lima",
               "dn": "22/10/1992",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -10050,37 +10290,41 @@
               "raw": "Gilmar Neves Moreira DN:17/07/1968 Ag.15",
               "name": "Gilmar Neves Moreira",
               "dn": "17/07/1968",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "quinta": {
               "raw": "Gilmar Neves Moreira DN:17/07/1968 Ag.15",
               "name": "Gilmar Neves Moreira",
               "dn": "17/07/1968",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "sabado": {
               "raw": "Gilmar Neves Moreira DN:17/07/1968 Ag.15",
               "name": "Gilmar Neves Moreira",
               "dn": "17/07/1968",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "mainPatient": {
               "raw": "Gilmar Neves Moreira DN:17/07/1968 Ag.15",
               "name": "Gilmar Neves Moreira",
               "dn": "17/07/1968",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             }
           }
         },
@@ -10096,37 +10340,41 @@
               "raw": "Ângela Maria Barroso da Silva DN: 20/08/1975 FAV AG 16",
               "name": "Ângela Maria Barroso da Silva",
               "dn": "20/08/1975",
-              "accessRaw": "FAV AG 16",
-              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Ângela Maria Barroso da Silva DN: 20/08/1975 FAV AG 16",
               "name": "Ângela Maria Barroso da Silva",
               "dn": "20/08/1975",
-              "accessRaw": "FAV AG 16",
-              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Ângela Maria Barroso da Silva DN: 20/08/1975 FAV AG 16",
               "name": "Ângela Maria Barroso da Silva",
               "dn": "20/08/1975",
-              "accessRaw": "FAV AG 16",
-              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Ângela Maria Barroso da Silva DN: 20/08/1975 FAV AG 16",
               "name": "Ângela Maria Barroso da Silva",
               "dn": "20/08/1975",
-              "accessRaw": "FAV AG 16",
-              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -10134,37 +10382,41 @@
               "raw": "Valdir Rodrigues dos Santos DN: 20/10/1967 Ag.15",
               "name": "Valdir Rodrigues dos Santos",
               "dn": "20/10/1967",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quinta": {
               "raw": "Valdir Rodrigues dos Santos DN: 20/10/1967 Ag.15",
               "name": "Valdir Rodrigues dos Santos",
               "dn": "20/10/1967",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sabado": {
               "raw": "Valdir Rodrigues dos Santos DN: 20/10/1967 Ag.15",
               "name": "Valdir Rodrigues dos Santos",
               "dn": "20/10/1967",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Valdir Rodrigues dos Santos DN: 20/10/1967 Ag.15",
               "name": "Valdir Rodrigues dos Santos",
               "dn": "20/10/1967",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           }
         },
@@ -10180,37 +10432,41 @@
               "raw": "Paloma Dias Batista Gonçalves DN: 23/11/1991 Ag.15",
               "name": "Paloma Dias Batista Gonçalves",
               "dn": "23/11/1991",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "quarta": {
               "raw": "Paloma Dias Batista Gonçalves DN: 23/11/1991 Ag.15",
               "name": "Paloma Dias Batista Gonçalves",
               "dn": "23/11/1991",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "sexta": {
               "raw": "Paloma Dias Batista Gonçalves DN: 23/11/1991 Ag.15",
               "name": "Paloma Dias Batista Gonçalves",
               "dn": "23/11/1991",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "mainPatient": {
               "raw": "Paloma Dias Batista Gonçalves DN: 23/11/1991 Ag.15",
               "name": "Paloma Dias Batista Gonçalves",
               "dn": "23/11/1991",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             }
           },
           "tqs": {
@@ -10218,29 +10474,32 @@
               "raw": "Maria das Dores Assereuy DN:01/08/1956 CDL",
               "name": "Maria das Dores Assereuy",
               "dn": "01/08/1956",
-              "accessRaw": "CDL",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quinta": null,
             "sabado": {
               "raw": "Maria das Dores Assereuy DN:01/08/1956 CDL",
               "name": "Maria das Dores Assereuy",
               "dn": "01/08/1956",
-              "accessRaw": "CDL",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Maria das Dores Assereuy DN:01/08/1956 CDL",
               "name": "Maria das Dores Assereuy",
               "dn": "01/08/1956",
-              "accessRaw": "CDL",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           }
         },
@@ -10256,37 +10515,41 @@
               "raw": "Raquel Silva Gomes Vasconcelos DN:07/03/1984 Ag.16",
               "name": "Raquel Silva Gomes Vasconcelos",
               "dn": "07/03/1984",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quarta": {
               "raw": "Raquel Silva Gomes Vasconcelos DN:07/03/1984 Ag.16",
               "name": "Raquel Silva Gomes Vasconcelos",
               "dn": "07/03/1984",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sexta": {
               "raw": "Raquel Silva Gomes Vasconcelos DN:07/03/1984 Ag.16",
               "name": "Raquel Silva Gomes Vasconcelos",
               "dn": "07/03/1984",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Raquel Silva Gomes Vasconcelos DN:07/03/1984 Ag.16",
               "name": "Raquel Silva Gomes Vasconcelos",
               "dn": "07/03/1984",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {
@@ -10340,74 +10603,112 @@
               "raw": "Djair Raimundo dos Santos DN:05/08/1966 Ag.15",
               "name": "Djair Raimundo dos Santos",
               "dn": "05/08/1966",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0ml"
             },
             "quarta": {
               "raw": "Djair Raimundo dos Santos DN:05/08/1966 Ag.15",
               "name": "Djair Raimundo dos Santos",
               "dn": "05/08/1966",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0ml"
             },
             "sexta": {
               "raw": "Djair Raimundo dos Santos DN:05/08/1966 Ag.15",
               "name": "Djair Raimundo dos Santos",
               "dn": "05/08/1966",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0ml"
             },
             "mainPatient": {
               "raw": "Djair Raimundo dos Santos DN:05/08/1966 Ag.15",
               "name": "Djair Raimundo dos Santos",
               "dn": "05/08/1966",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0ml"
             }
           },
           "tqs": {
-            "terca": {
-              "raw": "Sônia de Fátima Soares Ramalho DN:10/04/1977 CDLLP",
-              "name": "Sônia de Fátima Soares Ramalho",
-              "dn": "10/04/1977",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+            "segunda": {
+              "name": "Marcio Dias",
+              "dn": "12/11/72",
+              "accessType": "Permcath",
+              "accessRaw": "PERM",
               "needleSize": null,
+              "heparina": "1,5 ml",
+              "raw": "Marcio Dias DN:12/11/72 PERM Heparina:1,5 ml",
+              "isolation": null
+            },
+            "terca": {
+              "name": "Marcio Dias",
+              "dn": "12/11/72",
+              "accessType": "Permcath",
+              "accessRaw": "PERM",
+              "needleSize": null,
+              "heparina": "1,5 ml",
+              "raw": "Marcio Dias DN:12/11/72 PERM Heparina:1,5 ml",
+              "isolation": null
+            },
+            "quarta": {
+              "name": "Marcio Dias",
+              "dn": "12/11/72",
+              "accessType": "Permcath",
+              "accessRaw": "PERM",
+              "needleSize": null,
+              "heparina": "1,5 ml",
+              "raw": "Marcio Dias DN:12/11/72 PERM Heparina:1,5 ml",
               "isolation": null
             },
             "quinta": {
-              "raw": "Sônia de Fátima Soares Ramalho DN:10/04/1977 CDLLP",
-              "name": "Sônia de Fátima Soares Ramalho",
-              "dn": "10/04/1977",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "name": "Marcio Dias",
+              "dn": "12/11/72",
+              "accessType": "Permcath",
+              "accessRaw": "PERM",
               "needleSize": null,
+              "heparina": "1,5 ml",
+              "raw": "Marcio Dias DN:12/11/72 PERM Heparina:1,5 ml",
+              "isolation": null
+            },
+            "sexta": {
+              "name": "Marcio Dias",
+              "dn": "12/11/72",
+              "accessType": "Permcath",
+              "accessRaw": "PERM",
+              "needleSize": null,
+              "heparina": "1,5 ml",
+              "raw": "Marcio Dias DN:12/11/72 PERM Heparina:1,5 ml",
               "isolation": null
             },
             "sabado": {
-              "raw": "Sônia de Fátima Soares Ramalho DN:10/04/1977 CDLLP",
-              "name": "Sônia de Fátima Soares Ramalho",
-              "dn": "10/04/1977",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "name": "Marcio Dias",
+              "dn": "12/11/72",
+              "accessType": "Permcath",
+              "accessRaw": "PERM",
               "needleSize": null,
+              "heparina": "1,5 ml",
+              "raw": "Marcio Dias DN:12/11/72 PERM Heparina:1,5 ml",
               "isolation": null
             },
             "mainPatient": {
-              "raw": "Sônia de Fátima Soares Ramalho DN:10/04/1977 CDLLP",
-              "name": "Sônia de Fátima Soares Ramalho",
-              "dn": "10/04/1977",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "name": "Marcio Dias",
+              "dn": "12/11/72",
+              "accessType": "Permcath",
+              "accessRaw": "PERM",
               "needleSize": null,
+              "heparina": "1,5 ml",
+              "raw": "Marcio Dias DN:12/11/72 PERM Heparina:1,5 ml",
               "isolation": null
             }
           }
@@ -10424,37 +10725,41 @@
               "raw": "Silmara Cristina Dias DN:05/02/1988 Ag.15",
               "name": "Silmara Cristina Dias",
               "dn": "05/02/1988",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "quarta": {
               "raw": "Silmara Cristina Dias DN:05/02/1988 Ag.15",
               "name": "Silmara Cristina Dias",
               "dn": "05/02/1988",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "sexta": {
               "raw": "Silmara Cristina Dias DN:05/02/1988 Ag.15",
               "name": "Silmara Cristina Dias",
               "dn": "05/02/1988",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "mainPatient": {
               "raw": "Silmara Cristina Dias DN:05/02/1988 Ag.15",
               "name": "Silmara Cristina Dias",
               "dn": "05/02/1988",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             }
           },
           "tqs": {
@@ -10462,37 +10767,41 @@
               "raw": "Amauri Emiliano Pereira DN:13/04/1969 Ag.16",
               "name": "Amauri Emiliano Pereira",
               "dn": "13/04/1969",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quinta": {
               "raw": "Amauri Emiliano Pereira DN:13/04/1969 Ag.16",
               "name": "Amauri Emiliano Pereira",
               "dn": "13/04/1969",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sabado": {
               "raw": "Amauri Emiliano Pereira DN:13/04/1969 Ag.16",
               "name": "Amauri Emiliano Pereira",
               "dn": "13/04/1969",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Amauri Emiliano Pereira DN:13/04/1969 Ag.16",
               "name": "Amauri Emiliano Pereira",
               "dn": "13/04/1969",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           }
         },
@@ -10514,37 +10823,41 @@
               "raw": "Jeferson Alfredo Goulart DN:06/08/1975 Ag.15",
               "name": "Jeferson Alfredo Goulart",
               "dn": "06/08/1975",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quinta": {
               "raw": "Jeferson Alfredo Goulart DN:06/08/1975 Ag.15",
               "name": "Jeferson Alfredo Goulart",
               "dn": "06/08/1975",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sabado": {
               "raw": "Jeferson Alfredo Goulart DN:06/08/1975 Ag.15",
               "name": "Jeferson Alfredo Goulart",
               "dn": "06/08/1975",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Jeferson Alfredo Goulart DN:06/08/1975 Ag.15",
               "name": "Jeferson Alfredo Goulart",
               "dn": "06/08/1975",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           }
         },
@@ -10560,37 +10873,41 @@
               "raw": "Eliete Rocha Dias DN:21/05/1964 Ag.16",
               "name": "Eliete Rocha Dias",
               "dn": "21/05/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "quarta": {
               "raw": "Eliete Rocha Dias DN:21/05/1964 Ag.16",
               "name": "Eliete Rocha Dias",
               "dn": "21/05/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "sexta": {
               "raw": "Eliete Rocha Dias DN:21/05/1964 Ag.16",
               "name": "Eliete Rocha Dias",
               "dn": "21/05/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "mainPatient": {
               "raw": "Eliete Rocha Dias DN:21/05/1964 Ag.16",
               "name": "Eliete Rocha Dias",
               "dn": "21/05/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             }
           },
           "tqs": {
@@ -10598,37 +10915,41 @@
               "raw": "José Carlos Pereira DN: 14/04/1972 Ag.16",
               "name": "José Carlos Pereira",
               "dn": "14/04/1972",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quinta": {
               "raw": "José Carlos Pereira DN: 14/04/1972 Ag.16",
               "name": "José Carlos Pereira",
               "dn": "14/04/1972",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sabado": {
               "raw": "José Carlos Pereira DN: 14/04/1972 Ag.16",
               "name": "José Carlos Pereira",
               "dn": "14/04/1972",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "José Carlos Pereira DN: 14/04/1972 Ag.16",
               "name": "José Carlos Pereira",
               "dn": "14/04/1972",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           }
         }
@@ -10651,37 +10972,41 @@
               "raw": "Waldevino Lima da Silva Filho DN: 26/09/1965 AG15",
               "name": "Waldevino Lima da Silva Filho",
               "dn": "26/09/1965",
-              "accessRaw": "AG15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Waldevino Lima da Silva Filho DN: 26/09/1965 AG15",
               "name": "Waldevino Lima da Silva Filho",
               "dn": "26/09/1965",
-              "accessRaw": "AG15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Waldevino Lima da Silva Filho DN: 26/09/1965 AG15",
               "name": "Waldevino Lima da Silva Filho",
               "dn": "26/09/1965",
-              "accessRaw": "AG15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Waldevino Lima da Silva Filho DN: 26/09/1965 AG15",
               "name": "Waldevino Lima da Silva Filho",
               "dn": "26/09/1965",
-              "accessRaw": "AG15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -10735,37 +11060,41 @@
               "raw": "Júlio César Martins DN:07/05/1960 CDLLP",
               "name": "Júlio César Martins",
               "dn": "07/05/1960",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "quarta": {
               "raw": "Júlio César Martins DN:07/05/1960 CDLLP",
               "name": "Júlio César Martins",
               "dn": "07/05/1960",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "sexta": {
               "raw": "Júlio César Martins DN:07/05/1960 CDLLP",
               "name": "Júlio César Martins",
               "dn": "07/05/1960",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             },
             "mainPatient": {
               "raw": "Júlio César Martins DN:07/05/1960 CDLLP",
               "name": "Júlio César Martins",
               "dn": "07/05/1960",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "2,0 ml"
             }
           },
           "tqs": {
@@ -10819,37 +11148,41 @@
               "raw": "Cleudenir Ferreira da Silva Pereira DN:27/11/1969 Ag.16",
               "name": "Cleudenir Ferreira da Silva Pereira",
               "dn": "27/11/1969",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quarta": {
               "raw": "Cleudenir Ferreira da Silva Pereira DN:27/11/1969 Ag.16",
               "name": "Cleudenir Ferreira da Silva Pereira",
               "dn": "27/11/1969",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sexta": {
               "raw": "Cleudenir Ferreira da Silva Pereira DN:27/11/1969 Ag.16",
               "name": "Cleudenir Ferreira da Silva Pereira",
               "dn": "27/11/1969",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Cleudenir Ferreira da Silva Pereira DN:27/11/1969 Ag.16",
               "name": "Cleudenir Ferreira da Silva Pereira",
               "dn": "27/11/1969",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {
@@ -10903,37 +11236,41 @@
               "raw": "Maria Aparecida da Silva Pinto DN: 20/06/1964 Ag.16",
               "name": "Maria Aparecida da Silva Pinto",
               "dn": "20/06/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quarta": {
               "raw": "Maria Aparecida da Silva Pinto DN: 20/06/1964 Ag.16",
               "name": "Maria Aparecida da Silva Pinto",
               "dn": "20/06/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sexta": {
               "raw": "Maria Aparecida da Silva Pinto DN: 20/06/1964 Ag.16",
               "name": "Maria Aparecida da Silva Pinto",
               "dn": "20/06/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Maria Aparecida da Silva Pinto DN: 20/06/1964 Ag.16",
               "name": "Maria Aparecida da Silva Pinto",
               "dn": "20/06/1964",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {
@@ -10987,37 +11324,41 @@
               "raw": "Valdir Xavier da Silva DN:14/02/1962 Ag.16",
               "name": "Valdir Xavier da Silva",
               "dn": "14/02/1962",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Valdir Xavier da Silva DN:14/02/1962 Ag.16",
               "name": "Valdir Xavier da Silva",
               "dn": "14/02/1962",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Valdir Xavier da Silva DN:14/02/1962 Ag.16",
               "name": "Valdir Xavier da Silva",
               "dn": "14/02/1962",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Valdir Xavier da Silva DN:14/02/1962 Ag.16",
               "name": "Valdir Xavier da Silva",
               "dn": "14/02/1962",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -11071,37 +11412,41 @@
               "raw": "Tania Maria Batista Novais DN: 13/07/1966 CDLLP",
               "name": "Tania Maria Batista Novais",
               "dn": "13/07/1966",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quarta": {
               "raw": "Tania Maria Batista Novais DN: 13/07/1966 CDLLP",
               "name": "Tania Maria Batista Novais",
               "dn": "13/07/1966",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sexta": {
               "raw": "Tania Maria Batista Novais DN: 13/07/1966 CDLLP",
               "name": "Tania Maria Batista Novais",
               "dn": "13/07/1966",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Tania Maria Batista Novais DN: 13/07/1966 CDLLP",
               "name": "Tania Maria Batista Novais",
               "dn": "13/07/1966",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {
@@ -11155,37 +11500,41 @@
               "raw": "Paulo Lúcio de Matos DN:23/06/1955 Ag.15",
               "name": "Paulo Lúcio de Matos",
               "dn": "23/06/1955",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Paulo Lúcio de Matos DN:23/06/1955 Ag.15",
               "name": "Paulo Lúcio de Matos",
               "dn": "23/06/1955",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Paulo Lúcio de Matos DN:23/06/1955 Ag.15",
               "name": "Paulo Lúcio de Matos",
               "dn": "23/06/1955",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Paulo Lúcio de Matos DN:23/06/1955 Ag.15",
               "name": "Paulo Lúcio de Matos",
               "dn": "23/06/1955",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -11236,39 +11585,73 @@
           "serialNumber": "24J35293P",
           "sqs": {
             "segunda": {
-              "raw": "Arlete Aparecida Albino da Silva DN:03/12/47 FAV Ag.16",
-              "name": "Arlete Aparecida Albino da Silva",
-              "dn": "03/12/47",
-              "accessRaw": "FAV Ag.16",
+              "name": "Maria Catarina Messias",
+              "dn": "15/08/65",
               "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
               "needleSize": "16",
+              "heparina": "1,5 ml",
+              "raw": "Maria Catarina Messias DN:15/08/65 FAV Ag.16 Heparina:1,5 ml",
+              "isolation": null
+            },
+            "terca": {
+              "name": "Maria Catarina Messias",
+              "dn": "15/08/65",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,5 ml",
+              "raw": "Maria Catarina Messias DN:15/08/65 FAV Ag.16 Heparina:1,5 ml",
               "isolation": null
             },
             "quarta": {
-              "raw": "Arlete Aparecida Albino da Silva DN:03/12/47 FAV Ag.16",
-              "name": "Arlete Aparecida Albino da Silva",
-              "dn": "03/12/47",
-              "accessRaw": "FAV Ag.16",
+              "name": "Maria Catarina Messias",
+              "dn": "15/08/65",
               "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
               "needleSize": "16",
+              "heparina": "1,5 ml",
+              "raw": "Maria Catarina Messias DN:15/08/65 FAV Ag.16 Heparina:1,5 ml",
+              "isolation": null
+            },
+            "quinta": {
+              "name": "Maria Catarina Messias",
+              "dn": "15/08/65",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,5 ml",
+              "raw": "Maria Catarina Messias DN:15/08/65 FAV Ag.16 Heparina:1,5 ml",
               "isolation": null
             },
             "sexta": {
-              "raw": "Arlete Aparecida Albino da Silva DN:03/12/47 FAV Ag.16",
-              "name": "Arlete Aparecida Albino da Silva",
-              "dn": "03/12/47",
-              "accessRaw": "FAV Ag.16",
+              "name": "Maria Catarina Messias",
+              "dn": "15/08/65",
               "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
               "needleSize": "16",
+              "heparina": "1,5 ml",
+              "raw": "Maria Catarina Messias DN:15/08/65 FAV Ag.16 Heparina:1,5 ml",
+              "isolation": null
+            },
+            "sabado": {
+              "name": "Maria Catarina Messias",
+              "dn": "15/08/65",
+              "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
+              "needleSize": "16",
+              "heparina": "1,5 ml",
+              "raw": "Maria Catarina Messias DN:15/08/65 FAV Ag.16 Heparina:1,5 ml",
               "isolation": null
             },
             "mainPatient": {
-              "raw": "Arlete Aparecida Albino da Silva DN:03/12/47 FAV Ag.16",
-              "name": "Arlete Aparecida Albino da Silva",
-              "dn": "03/12/47",
-              "accessRaw": "FAV Ag.16",
+              "name": "Maria Catarina Messias",
+              "dn": "15/08/65",
               "accessType": "Fístula Arteriovenosa",
+              "accessRaw": "FAV Ag.16",
               "needleSize": "16",
+              "heparina": "1,5 ml",
+              "raw": "Maria Catarina Messias DN:15/08/65 FAV Ag.16 Heparina:1,5 ml",
               "isolation": null
             }
           },
@@ -11323,37 +11706,41 @@
               "raw": "Adezir José da Silva DN:26/05/1965 CDLLP",
               "name": "Adezir José da Silva",
               "dn": "26/05/1965",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Adezir José da Silva DN:26/05/1965 CDLLP",
               "name": "Adezir José da Silva",
               "dn": "26/05/1965",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Adezir José da Silva DN:26/05/1965 CDLLP",
               "name": "Adezir José da Silva",
               "dn": "26/05/1965",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Adezir José da Silva DN:26/05/1965 CDLLP",
               "name": "Adezir José da Silva",
               "dn": "26/05/1965",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -11407,29 +11794,32 @@
               "raw": "Marcelino Martins de Oliveira DN: 10/05/1930 CDLLP",
               "name": "Marcelino Martins de Oliveira",
               "dn": "10/05/1930",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": null,
             "sexta": {
               "raw": "Marcelino Martins de Oliveira DN: 10/05/1930 CDLLP",
               "name": "Marcelino Martins de Oliveira",
               "dn": "10/05/1930",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Marcelino Martins de Oliveira DN: 10/05/1930 CDLLP",
               "name": "Marcelino Martins de Oliveira",
               "dn": "10/05/1930",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -11483,37 +11873,41 @@
               "raw": "Maria do Rosário Almeida DN:04/09/59 Ag.15",
               "name": "Maria do Rosário Almeida",
               "dn": "04/09/59",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Maria do Rosário Almeida DN:04/09/59 Ag.15",
               "name": "Maria do Rosário Almeida",
               "dn": "04/09/59",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Maria do Rosário Almeida DN:04/09/59 Ag.15",
               "name": "Maria do Rosário Almeida",
               "dn": "04/09/59",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Maria do Rosário Almeida DN:04/09/59 Ag.15",
               "name": "Maria do Rosário Almeida",
               "dn": "04/09/59",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -11567,37 +11961,41 @@
               "raw": "Leonardo Gerson da Paixão DN:01/03/1991 Ag. 16",
               "name": "Leonardo Gerson da Paixão",
               "dn": "01/03/1991",
-              "accessRaw": "Ag. 16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Leonardo Gerson da Paixão DN:01/03/1991 Ag. 16",
               "name": "Leonardo Gerson da Paixão",
               "dn": "01/03/1991",
-              "accessRaw": "Ag. 16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Leonardo Gerson da Paixão DN:01/03/1991 Ag. 16",
               "name": "Leonardo Gerson da Paixão",
               "dn": "01/03/1991",
-              "accessRaw": "Ag. 16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Leonardo Gerson da Paixão DN:01/03/1991 Ag. 16",
               "name": "Leonardo Gerson da Paixão",
               "dn": "01/03/1991",
-              "accessRaw": "Ag. 16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -11651,37 +12049,41 @@
               "raw": "Magno Geraldo Batista dos Santos DN: 11/12/1949 CDLLP Uso Único",
               "name": "Magno Geraldo Batista dos Santos",
               "dn": "11/12/1949",
-              "accessRaw": "CDLLP Uso Único",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": "Uso Único (HIV)"
+              "isolation": "Uso Único (HIV)",
+              "heparina": "1,5"
             },
             "quarta": {
               "raw": "Magno Geraldo Batista dos Santos DN: 11/12/1949 CDLLP Uso Único",
               "name": "Magno Geraldo Batista dos Santos",
               "dn": "11/12/1949",
-              "accessRaw": "CDLLP Uso Único",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": "Uso Único (HIV)"
+              "isolation": "Uso Único (HIV)",
+              "heparina": "1,5"
             },
             "sexta": {
               "raw": "Magno Geraldo Batista dos Santos DN: 11/12/1949 CDLLP Uso Único",
               "name": "Magno Geraldo Batista dos Santos",
               "dn": "11/12/1949",
-              "accessRaw": "CDLLP Uso Único",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": "Uso Único (HIV)"
+              "isolation": "Uso Único (HIV)",
+              "heparina": "1,5"
             },
             "mainPatient": {
               "raw": "Magno Geraldo Batista dos Santos DN: 11/12/1949 CDLLP Uso Único",
               "name": "Magno Geraldo Batista dos Santos",
               "dn": "11/12/1949",
-              "accessRaw": "CDLLP Uso Único",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": "Uso Único (HIV)"
+              "isolation": "Uso Único (HIV)",
+              "heparina": "1,5"
             }
           },
           "tqs": {
@@ -11735,37 +12137,41 @@
               "raw": "Ivone Maria Coutinho DN: 25/10/1974 Ag.16",
               "name": "Ivone Maria Coutinho",
               "dn": "25/10/1974",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quarta": {
               "raw": "Ivone Maria Coutinho DN: 25/10/1974 Ag.16",
               "name": "Ivone Maria Coutinho",
               "dn": "25/10/1974",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sexta": {
               "raw": "Ivone Maria Coutinho DN: 25/10/1974 Ag.16",
               "name": "Ivone Maria Coutinho",
               "dn": "25/10/1974",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Ivone Maria Coutinho DN: 25/10/1974 Ag.16",
               "name": "Ivone Maria Coutinho",
               "dn": "25/10/1974",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {
@@ -11819,37 +12225,41 @@
               "raw": "Amadeu Pereira Sander DN:11/07/1956 Ag.16",
               "name": "Amadeu Pereira Sander",
               "dn": "11/07/1956",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Amadeu Pereira Sander DN:11/07/1956 Ag.16",
               "name": "Amadeu Pereira Sander",
               "dn": "11/07/1956",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Amadeu Pereira Sander DN:11/07/1956 Ag.16",
               "name": "Amadeu Pereira Sander",
               "dn": "11/07/1956",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Amadeu Pereira Sander DN:11/07/1956 Ag.16",
               "name": "Amadeu Pereira Sander",
               "dn": "11/07/1956",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -11903,37 +12313,41 @@
               "raw": "Maria da Conceição Marques DN: 22/05/1948 Ag.16",
               "name": "Maria da Conceição Marques",
               "dn": "22/05/1948",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quarta": {
               "raw": "Maria da Conceição Marques DN: 22/05/1948 Ag.16",
               "name": "Maria da Conceição Marques",
               "dn": "22/05/1948",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sexta": {
               "raw": "Maria da Conceição Marques DN: 22/05/1948 Ag.16",
               "name": "Maria da Conceição Marques",
               "dn": "22/05/1948",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Maria da Conceição Marques DN: 22/05/1948 Ag.16",
               "name": "Maria da Conceição Marques",
               "dn": "22/05/1948",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {
@@ -11987,37 +12401,41 @@
               "raw": "Renato Cardoso Pires DN: 30/11/1976 Ag.15",
               "name": "Renato Cardoso Pires",
               "dn": "30/11/1976",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,8ml"
             },
             "quarta": {
               "raw": "Renato Cardoso Pires DN: 30/11/1976 Ag.15",
               "name": "Renato Cardoso Pires",
               "dn": "30/11/1976",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,8ml"
             },
             "sexta": {
               "raw": "Renato Cardoso Pires DN: 30/11/1976 Ag.15",
               "name": "Renato Cardoso Pires",
               "dn": "30/11/1976",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,8ml"
             },
             "mainPatient": {
               "raw": "Renato Cardoso Pires DN: 30/11/1976 Ag.15",
               "name": "Renato Cardoso Pires",
               "dn": "30/11/1976",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,8ml"
             }
           },
           "tqs": {
@@ -12074,7 +12492,8 @@
               "accessRaw": "CDL",
               "accessType": "Cateter Duplo Lúmen",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Thaylon Lemes dos Santos DN:17/01/1998 CDL",
@@ -12083,7 +12502,8 @@
               "accessRaw": "CDL",
               "accessType": "Cateter Duplo Lúmen",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Thaylon Lemes dos Santos DN:17/01/1998 CDL",
@@ -12092,7 +12512,8 @@
               "accessRaw": "CDL",
               "accessType": "Cateter Duplo Lúmen",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Thaylon Lemes dos Santos DN:17/01/1998 CDL",
@@ -12101,7 +12522,8 @@
               "accessRaw": "CDL",
               "accessType": "Cateter Duplo Lúmen",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -12227,37 +12649,41 @@
               "raw": "Márcia do Rosário Bicalho DN: 30/03/1967 Ag.16 Uso Único",
               "name": "Márcia do Rosário Bicalho",
               "dn": "30/03/1967",
-              "accessRaw": "Ag.16 Uso Único",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": "Uso Único (HIV)"
+              "isolation": "Uso Único (HIV)",
+              "heparina": "1,0 ml"
             },
             "quarta": {
               "raw": "Márcia do Rosário Bicalho DN: 30/03/1967 Ag.16 Uso Único",
               "name": "Márcia do Rosário Bicalho",
               "dn": "30/03/1967",
-              "accessRaw": "Ag.16 Uso Único",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": "Uso Único (HIV)"
+              "isolation": "Uso Único (HIV)",
+              "heparina": "1,0 ml"
             },
             "sexta": {
               "raw": "Márcia do Rosário Bicalho DN: 30/03/1967 Ag.16 Uso Único",
               "name": "Márcia do Rosário Bicalho",
               "dn": "30/03/1967",
-              "accessRaw": "Ag.16 Uso Único",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": "Uso Único (HIV)"
+              "isolation": "Uso Único (HIV)",
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Márcia do Rosário Bicalho DN: 30/03/1967 Ag.16 Uso Único",
               "name": "Márcia do Rosário Bicalho",
               "dn": "30/03/1967",
-              "accessRaw": "Ag.16 Uso Único",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": "Uso Único (HIV)"
+              "isolation": "Uso Único (HIV)",
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {
@@ -12311,37 +12737,41 @@
               "raw": "Edilson José de Andrade DN:25/04/1965 CDLLP",
               "name": "Edilson José de Andrade",
               "dn": "25/04/1965",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quarta": {
               "raw": "Edilson José de Andrade DN:25/04/1965 CDLLP",
               "name": "Edilson José de Andrade",
               "dn": "25/04/1965",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sexta": {
               "raw": "Edilson José de Andrade DN:25/04/1965 CDLLP",
               "name": "Edilson José de Andrade",
               "dn": "25/04/1965",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Edilson José de Andrade DN:25/04/1965 CDLLP",
               "name": "Edilson José de Andrade",
               "dn": "25/04/1965",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {
@@ -12395,29 +12825,32 @@
               "raw": "Vera Lúcia DN: 28/11/1957 CDLLP",
               "name": "Vera Lúcia",
               "dn": "28/11/1957",
-              "accessRaw": "CDLLP",
+              "accessRaw": "CDL",
               "accessType": "Cateter Duplo Lúmen",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quarta": null,
             "sexta": {
               "raw": "Vera Lúcia DN: 28/11/1957 CDLLP",
               "name": "Vera Lúcia",
               "dn": "28/11/1957",
-              "accessRaw": "CDLLP",
+              "accessRaw": "CDL",
               "accessType": "Cateter Duplo Lúmen",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Vera Lúcia DN: 28/11/1957 CDLLP",
               "name": "Vera Lúcia",
               "dn": "28/11/1957",
-              "accessRaw": "CDLLP",
+              "accessRaw": "CDL",
               "accessType": "Cateter Duplo Lúmen",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {
@@ -12471,37 +12904,41 @@
               "raw": "Priscila Daiane Caetano Dias DN: 14/09/1991 Ag.16",
               "name": "Priscila Daiane Caetano Dias",
               "dn": "14/09/1991",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Priscila Daiane Caetano Dias DN: 14/09/1991 Ag.16",
               "name": "Priscila Daiane Caetano Dias",
               "dn": "14/09/1991",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Priscila Daiane Caetano Dias DN: 14/09/1991 Ag.16",
               "name": "Priscila Daiane Caetano Dias",
               "dn": "14/09/1991",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Priscila Daiane Caetano Dias DN: 14/09/1991 Ag.16",
               "name": "Priscila Daiane Caetano Dias",
               "dn": "14/09/1991",
-              "accessRaw": "Ag.16",
+              "accessRaw": "FAV Ag.16",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "16",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -12555,37 +12992,41 @@
               "raw": "Edson da Silva Faria Lima DN:02/03/1983 CDLLP",
               "name": "Edson da Silva Faria Lima",
               "dn": "02/03/1983",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Edson da Silva Faria Lima DN:02/03/1983 CDLLP",
               "name": "Edson da Silva Faria Lima",
               "dn": "02/03/1983",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Edson da Silva Faria Lima DN:02/03/1983 CDLLP",
               "name": "Edson da Silva Faria Lima",
               "dn": "02/03/1983",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Edson da Silva Faria Lima DN:02/03/1983 CDLLP",
               "name": "Edson da Silva Faria Lima",
               "dn": "02/03/1983",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -12639,37 +13080,41 @@
               "raw": "Celso Márcio Carneiro DN:09/04/1957 Ag.15",
               "name": "Celso Márcio Carneiro",
               "dn": "09/04/1957",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Celso Márcio Carneiro DN:09/04/1957 Ag.15",
               "name": "Celso Márcio Carneiro",
               "dn": "09/04/1957",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Celso Márcio Carneiro DN:09/04/1957 Ag.15",
               "name": "Celso Márcio Carneiro",
               "dn": "09/04/1957",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Celso Márcio Carneiro DN:09/04/1957 Ag.15",
               "name": "Celso Márcio Carneiro",
               "dn": "09/04/1957",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -12723,37 +13168,41 @@
               "raw": "Margarida Bento da Silva DN:08/12/1938 CDLLP",
               "name": "Margarida Bento da Silva",
               "dn": "08/12/1938",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quarta": {
               "raw": "Margarida Bento da Silva DN:08/12/1938 CDLLP",
               "name": "Margarida Bento da Silva",
               "dn": "08/12/1938",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sexta": {
               "raw": "Margarida Bento da Silva DN:08/12/1938 CDLLP",
               "name": "Margarida Bento da Silva",
               "dn": "08/12/1938",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Margarida Bento da Silva DN:08/12/1938 CDLLP",
               "name": "Margarida Bento da Silva",
               "dn": "08/12/1938",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {
@@ -12807,37 +13256,41 @@
               "raw": "Andreisa Gonçalves Guieiro DN:14/08/1987 CDLLP",
               "name": "Andreisa Gonçalves Guieiro",
               "dn": "14/08/1987",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quarta": {
               "raw": "Andreisa Gonçalves Guieiro DN:14/08/1987 CDLLP",
               "name": "Andreisa Gonçalves Guieiro",
               "dn": "14/08/1987",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sexta": {
               "raw": "Andreisa Gonçalves Guieiro DN:14/08/1987 CDLLP",
               "name": "Andreisa Gonçalves Guieiro",
               "dn": "14/08/1987",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Andreisa Gonçalves Guieiro DN:14/08/1987 CDLLP",
               "name": "Andreisa Gonçalves Guieiro",
               "dn": "14/08/1987",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {
@@ -12891,37 +13344,41 @@
               "raw": "Valéria Moreira da Cruz DN:20/01/1975 Ag.15",
               "name": "Valéria Moreira da Cruz",
               "dn": "20/01/1975",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "quarta": {
               "raw": "Valéria Moreira da Cruz DN:20/01/1975 Ag.15",
               "name": "Valéria Moreira da Cruz",
               "dn": "20/01/1975",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "sexta": {
               "raw": "Valéria Moreira da Cruz DN:20/01/1975 Ag.15",
               "name": "Valéria Moreira da Cruz",
               "dn": "20/01/1975",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             },
             "mainPatient": {
               "raw": "Valéria Moreira da Cruz DN:20/01/1975 Ag.15",
               "name": "Valéria Moreira da Cruz",
               "dn": "20/01/1975",
-              "accessRaw": "Ag.15",
+              "accessRaw": "FAV Ag.15",
               "accessType": "Fístula Arteriovenosa",
               "needleSize": "15",
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,5 ml"
             }
           },
           "tqs": {
@@ -12975,37 +13432,41 @@
               "raw": "Afosina do Amor Divino DN:04/01/1949 CDLLP",
               "name": "Afosina do Amor Divino",
               "dn": "04/01/1949",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "quarta": {
               "raw": "Afosina do Amor Divino DN:04/01/1949 CDLLP",
               "name": "Afosina do Amor Divino",
               "dn": "04/01/1949",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "sexta": {
               "raw": "Afosina do Amor Divino DN:04/01/1949 CDLLP",
               "name": "Afosina do Amor Divino",
               "dn": "04/01/1949",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             },
             "mainPatient": {
               "raw": "Afosina do Amor Divino DN:04/01/1949 CDLLP",
               "name": "Afosina do Amor Divino",
               "dn": "04/01/1949",
-              "accessRaw": "CDLLP",
-              "accessType": "Cateter Duplo Lúmen",
+              "accessRaw": "PERM",
+              "accessType": "Permcath",
               "needleSize": null,
-              "isolation": null
+              "isolation": null,
+              "heparina": "1,0 ml"
             }
           },
           "tqs": {

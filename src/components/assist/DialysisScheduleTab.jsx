@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../../firebase';
 import { 
-  Calendar, Search, Filter, Printer, User, Activity, AlertTriangle, 
+  Calendar, Search, Printer, AlertTriangle, 
   CheckCircle2, RefreshCw, ArrowRightLeft, ShieldAlert, Cpu, 
-  MapPin, Clock, Plus, X, ChevronRight, Eye, Wrench, HeartPulse,
-  Sparkles, Layers, Info, UserMinus
+  MapPin, Clock, Plus, X, ChevronRight, Wrench,
+  UserMinus, Syringe, Pencil
 } from 'lucide-react';
 import { useUnit } from '../../contexts/UnitContext';
 
@@ -38,6 +38,13 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
   // Machine Maintenance Modal
   const [showMachineModal, setShowMachineModal] = useState(false);
   const [selectedMachine, setSelectedMachine] = useState(null);
+
+  // Edit Access & Heparin Modal
+  const [showEditPatientModal, setShowEditPatientModal] = useState(false);
+  const [selectedSlotForEdit, setSelectedSlotForEdit] = useState(null);
+
+  // Heparin Sheet Modal
+  const [showHeparinSheetModal, setShowHeparinSheetModal] = useState(false);
 
   // Auto-detect today's cadence
   useEffect(() => {
@@ -224,6 +231,81 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
     }
   };
 
+  // Abrir modal de edição rápida de Acesso e Heparina
+  const handleOpenEditPatient = (pt, patient) => {
+    if (!patient) return;
+    let defaultAccess = patient.accessType;
+    if (!defaultAccess) {
+      if (patient.accessRaw?.toUpperCase().includes('PERM')) defaultAccess = 'Permcath';
+      else if (patient.accessRaw?.toUpperCase().includes('CDL')) defaultAccess = 'Cateter Duplo Lúmen';
+      else defaultAccess = 'Fístula Arteriovenosa';
+    }
+    const defaultNeedle = patient.needleSize || (patient.accessRaw && patient.accessRaw.match(/AG\s*\.?\s*(\d+)/i)?.[1]) || '16';
+    setSelectedSlotForEdit({
+      pointId: pt.id || pt.ponto,
+      ponto: pt.ponto,
+      box: pt.box,
+      patient: patient,
+      accessType: defaultAccess,
+      needleSize: defaultNeedle,
+      heparina: patient.heparina || '',
+      isolation: !!(patient.isolation || patient.accessRaw?.toUpperCase().includes('HIV') || patient.accessRaw?.toUpperCase().includes('ÚNICO') || patient.accessRaw?.toUpperCase().includes('UNICO'))
+    });
+    setShowEditPatientModal(true);
+  };
+
+  // Salvar parâmetros de Acesso e Heparina do paciente
+  const handleSaveEditPatient = async () => {
+    if (!selectedSlotForEdit || !selectedSlotForEdit.patient) return;
+    setActionLoading(true);
+    try {
+      const { pointId, accessType, needleSize, heparina, isolation, patient } = selectedSlotForEdit;
+      
+      let accessRaw = accessType === 'Permcath' ? 'PERM' : accessType === 'Cateter Duplo Lúmen' ? 'CDL' : `FAV Ag.${needleSize || '16'}`;
+      if (isolation) accessRaw += ' USO ÚNICO';
+      if (heparina) accessRaw += ` Heparina:${heparina}`;
+
+      // 1. Atualizar na escala
+      if (dbService.updatePointPatientParameters) {
+        await dbService.updatePointPatientParameters(
+          selectedSalon,
+          selectedShift,
+          pointId,
+          cadence,
+          {
+            accessType,
+            needleSize: accessType === 'Fístula Arteriovenosa' ? needleSize : null,
+            heparina,
+            isolation: isolation ? 'Uso Único' : null,
+            accessRaw
+          }
+        );
+      }
+
+      // 2. Sincronizar com o cadastro mestre do paciente
+      const patNameNorm = (patient.name || '').trim().toUpperCase();
+      const matchingMaster = patients.find(p => (p.name || '').trim().toUpperCase() === patNameNorm);
+      if (matchingMaster && matchingMaster.id && dbService.updatePatient) {
+        await dbService.updatePatient(matchingMaster.id, {
+          accessType,
+          needleSize: accessType === 'Fístula Arteriovenosa' ? needleSize : null,
+          heparina,
+          isolation: isolation ? 'Uso Único' : null
+        });
+      }
+
+      setMessage({ text: `Dados de ${patient.name} atualizados com sucesso!`, type: 'success' });
+      setShowEditPatientModal(false);
+      setSelectedSlotForEdit(null);
+      await loadSchedule();
+    } catch (err) {
+      console.error('Erro ao atualizar dados do paciente:', err);
+      setMessage({ text: 'Erro ao salvar alterações do paciente', type: 'error' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -294,7 +376,7 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
             </div>
           </div>
 
-          {/* Quick Actions (Search & Print) */}
+          {/* Quick Actions (Search, Heparina & Print) */}
           <div style={tabStyles.actionBtnsGroup}>
             <button
               onClick={() => setShowSearchModal(true)}
@@ -303,6 +385,14 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
             >
               <Search size={15} color="#4f46e5" />
               <span>Localizar</span>
+            </button>
+            <button
+              onClick={() => setShowHeparinSheetModal(true)}
+              style={tabStyles.heparinSheetBtn}
+              title="Mapa de Heparina do turno para checagem da enfermagem"
+            >
+              <Syringe size={15} color="#2563eb" />
+              <span>Heparina</span>
             </button>
             <button
               onClick={handlePrint}
@@ -390,7 +480,7 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
         </div>
 
         <div style={tabStyles.statCard}>
-          <span style={tabStyles.statLabel}>Fístulas (FAV)</span>
+          <span style={tabStyles.statLabel}>Fístulas</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
             <span style={{ ...tabStyles.statNumber, color: '#047857' }}>{metrics.favCount || 0}</span>
             <span style={tabStyles.needlePill}>15: {metrics.needle15 || 0}</span>
@@ -417,6 +507,16 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
               {metrics.isolationCount || 0}
             </span>
             <span style={tabStyles.statSub}>pacientes</span>
+          </div>
+        </div>
+
+        <div style={tabStyles.statCard}>
+          <span style={tabStyles.statLabel}>Heparina</span>
+          <div style={tabStyles.statValueRow}>
+            <span style={{ ...tabStyles.statNumber, color: '#2563eb' }}>{metrics.heparinCount || 0}</span>
+            <span style={{ ...tabStyles.statSub, color: '#1d4ed8', fontWeight: '700' }}>
+              ({metrics.totalHeparinDoseMl || 0} mL)
+            </span>
           </div>
         </div>
       </div>
@@ -542,7 +642,11 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                             </p>
                           </div>
                         ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <div 
+                            onClick={() => handleOpenEditPatient(pt, patient)}
+                            style={tabStyles.patientClickableArea}
+                            title="Clique para editar Acesso e Heparina"
+                          >
                             {/* Patient Name */}
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
                               <div style={tabStyles.patientAvatar}>
@@ -563,8 +667,8 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                               </div>
                             </div>
 
-                            {/* Access & Isolation Tags */}
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                            {/* Access, Heparina & Isolation Tags */}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px', alignItems: 'center' }}>
                               {/* Vascular Access */}
                               {patient.accessType === 'Permcath' || (patient.accessRaw && patient.accessRaw.toUpperCase().includes('PERM')) ? (
                                 <span style={tabStyles.accessPermcath}>
@@ -577,6 +681,17 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                               ) : (
                                 <span style={tabStyles.accessFAV}>
                                   🟢 FAV {patient.needleSize ? `Ag.${patient.needleSize}` : (patient.accessRaw?.match(/AG\s*\.?\s*(\d+)/i)?.[0] || 'Ag.16')}
+                                </span>
+                              )}
+
+                              {/* Heparina Tag (Badge posicionada exatamente ao lado do acesso vascular) */}
+                              {patient.heparina ? (
+                                <span style={tabStyles.accessHeparina} title="Prescrição de Heparina">
+                                  💉 {patient.heparina}
+                                </span>
+                              ) : (
+                                <span style={tabStyles.accessHeparinaEmpty} title="Clique para prescrever Heparina">
+                                  + Heparina
                                 </span>
                               )}
 
@@ -618,6 +733,16 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                           </button>
                         ) : (
                           <>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditPatient(pt, patient)}
+                              style={tabStyles.editParamBtn}
+                              title="Editar acesso vascular e heparina"
+                            >
+                              <Pencil size={12} style={{ marginRight: '3px' }} />
+                              <span>Editar</span>
+                            </button>
+
                             <button
                               type="button"
                               onClick={() => {
@@ -1042,6 +1167,281 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                 style={tabStyles.cancelBtn}
               >
                 Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição de Acesso e Heparina */}
+      {showEditPatientModal && selectedSlotForEdit && (
+        <div style={tabStyles.modalBackdrop}>
+          <div style={tabStyles.modalCard}>
+            <div style={tabStyles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  backgroundColor: '#eff6ff',
+                  color: '#2563eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Pencil size={18} />
+                </div>
+                <div>
+                  <h3 style={tabStyles.modalTitle}>Editar Escala</h3>
+                  <span style={tabStyles.modalSubtitle}>
+                    {selectedSlotForEdit.box} • Ponto {selectedSlotForEdit.ponto} • {selectedSalon} ({selectedShift})
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEditPatientModal(false);
+                  setSelectedSlotForEdit(null);
+                }}
+                style={tabStyles.modalCloseBtn}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ ...tabStyles.modalBody, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Paciente Identificação */}
+              <div style={{
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '10px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                <div style={{ ...tabStyles.patientAvatar, width: '36px', height: '36px', fontSize: '1rem' }}>
+                  {selectedSlotForEdit.patient.name ? selectedSlotForEdit.patient.name.charAt(0).toUpperCase() : '?'}
+                </div>
+                <div>
+                  <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '0.92rem' }}>
+                    {selectedSlotForEdit.patient.name?.toUpperCase()}
+                  </div>
+                  {selectedSlotForEdit.patient.dn && (
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                      DN: {selectedSlotForEdit.patient.dn}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Acesso Vascular */}
+              <div>
+                <label style={tabStyles.formLabel}>Acesso</label>
+                <select
+                  value={selectedSlotForEdit.accessType}
+                  onChange={(e) => setSelectedSlotForEdit({ ...selectedSlotForEdit, accessType: e.target.value })}
+                  style={tabStyles.modalSelect}
+                >
+                  <option value="Fístula Arteriovenosa">Fístula (FAV)</option>
+                  <option value="Cateter Duplo Lúmen">Cateter (CDL)</option>
+                  <option value="Permcath">Permcath</option>
+                  <option value="Prótese">Prótese</option>
+                </select>
+              </div>
+
+              {/* Calibre da Agulha (se FAV) */}
+              {selectedSlotForEdit.accessType === 'Fístula Arteriovenosa' && (
+                <div>
+                  <label style={tabStyles.formLabel}>Agulha</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {['15', '16', '17'].map(size => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setSelectedSlotForEdit({ ...selectedSlotForEdit, needleSize: size })}
+                        style={{
+                          flex: 1,
+                          padding: '8px',
+                          borderRadius: '8px',
+                          border: '1px solid',
+                          borderColor: selectedSlotForEdit.needleSize === size ? '#059669' : '#cbd5e1',
+                          backgroundColor: selectedSlotForEdit.needleSize === size ? '#ecfdf5' : '#ffffff',
+                          color: selectedSlotForEdit.needleSize === size ? '#065f46' : '#475569',
+                          fontWeight: selectedSlotForEdit.needleSize === size ? '700' : '500',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Agulha {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Heparina */}
+              <div>
+                <label style={tabStyles.formLabel}>Heparina</label>
+                <input
+                  type="text"
+                  placeholder="Ex: 1,5 ml, 2,0 ml, NA..."
+                  value={selectedSlotForEdit.heparina}
+                  onChange={(e) => setSelectedSlotForEdit({ ...selectedSlotForEdit, heparina: e.target.value })}
+                  style={tabStyles.modalSearchInput}
+                />
+                {/* Sugestões rápidas de heparina */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+                  {['0,5 ml', '1,0 ml', '1,5 ml', '1,8 ml', '2,0 ml', '2,5 ml', 'NA'].map(sug => (
+                    <button
+                      key={sug}
+                      type="button"
+                      onClick={() => setSelectedSlotForEdit({ ...selectedSlotForEdit, heparina: sug })}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid #bfdbfe',
+                        backgroundColor: selectedSlotForEdit.heparina === sug ? '#2563eb' : '#eff6ff',
+                        color: selectedSlotForEdit.heparina === sug ? '#ffffff' : '#1d4ed8',
+                        fontSize: '0.72rem',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {sug}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Isolamento / Uso Único */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                paddingTop: '6px'
+              }}>
+                <input
+                  id="chk-isolation"
+                  type="checkbox"
+                  checked={selectedSlotForEdit.isolation}
+                  onChange={(e) => setSelectedSlotForEdit({ ...selectedSlotForEdit, isolation: e.target.checked })}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                />
+                <label htmlFor="chk-isolation" style={{ fontSize: '0.84rem', fontWeight: '600', color: '#475569', cursor: 'pointer' }}>
+                  Isolamento (Uso Único)
+                </label>
+              </div>
+            </div>
+
+            <div style={tabStyles.modalFooter}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEditPatientModal(false);
+                  setSelectedSlotForEdit(null);
+                }}
+                style={tabStyles.cancelBtn}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEditPatient}
+                disabled={actionLoading}
+                style={tabStyles.confirmBtn}
+              >
+                {actionLoading ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Mapa de Heparina para Enfermagem */}
+      {showHeparinSheetModal && (
+        <div style={tabStyles.modalBackdrop}>
+          <div style={{ ...tabStyles.modalCard, maxWidth: '780px', width: '92vw' }}>
+            <div style={tabStyles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  backgroundColor: '#eff6ff',
+                  color: '#2563eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Syringe size={18} />
+                </div>
+                <div>
+                  <h3 style={tabStyles.modalTitle}>Heparina</h3>
+                  <span style={tabStyles.modalSubtitle}>
+                    {selectedSalon} • {selectedShift} • {cadence === 'SQS' ? 'Seg/Qua/Sex' : 'Ter/Qui/Sáb'}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHeparinSheetModal(false)}
+                style={tabStyles.modalCloseBtn}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ ...tabStyles.modalBody, maxHeight: '65vh', overflowY: 'auto' }}>
+              <table style={tabStyles.sheetTable}>
+                <thead>
+                  <tr>
+                    <th style={tabStyles.sheetTh}>Box</th>
+                    <th style={tabStyles.sheetTh}>Ponto</th>
+                    <th style={tabStyles.sheetTh}>Paciente</th>
+                    <th style={tabStyles.sheetTh}>Acesso</th>
+                    <th style={tabStyles.sheetTh}>Heparina</th>
+                    <th style={tabStyles.sheetTh}>Checagem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(activeScheduleData?.points || []).map(pt => {
+                    const pat = cadence === 'SQS' ? pt.sqs?.mainPatient : pt.tqs?.mainPatient;
+                    if (!pat || !pat.name) return null;
+                    return (
+                      <tr key={pt.id || pt.ponto}>
+                        <td style={tabStyles.sheetTd}><strong>{pt.box}</strong></td>
+                        <td style={tabStyles.sheetTd}>P{pt.ponto}</td>
+                        <td style={{ ...tabStyles.sheetTd, fontWeight: '600' }}>{pat.name.toUpperCase()}</td>
+                        <td style={tabStyles.sheetTd}>{pat.accessType || pat.accessRaw || 'FAV'}</td>
+                        <td style={tabStyles.sheetTd}>
+                          <span style={tabStyles.accessHeparina}>
+                            {pat.heparina || 'N/D'}
+                          </span>
+                        </td>
+                        <td style={{ ...tabStyles.sheetTd, width: '120px', borderBottom: '1px dashed #cbd5e1' }}></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={tabStyles.modalFooter}>
+              <button
+                type="button"
+                onClick={() => setShowHeparinSheetModal(false)}
+                style={tabStyles.cancelBtn}
+              >
+                Fechar
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                style={tabStyles.confirmBtn}
+              >
+                <Printer size={15} style={{ marginRight: '4px' }} />
+                Imprimir
               </button>
             </div>
           </div>
@@ -1591,5 +1991,96 @@ const tabStyles = {
     fontWeight: '600',
     color: '#1e293b',
     marginTop: '2px'
+  },
+  accessHeparina: {
+    fontSize: '0.68rem',
+    fontWeight: '700',
+    padding: '2px 7px',
+    borderRadius: '6px',
+    backgroundColor: '#eff6ff',
+    color: '#1d4ed8',
+    border: '1px solid #bfdbfe',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px'
+  },
+  accessHeparinaEmpty: {
+    fontSize: '0.68rem',
+    fontWeight: '600',
+    padding: '2px 7px',
+    borderRadius: '6px',
+    backgroundColor: '#f8fafc',
+    color: '#94a3b8',
+    border: '1px dashed #cbd5e1',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
+    cursor: 'pointer'
+  },
+  patientClickableArea: {
+    cursor: 'pointer',
+    borderRadius: '8px',
+    padding: '4px',
+    transition: 'background-color 0.15s ease'
+  },
+  editParamBtn: {
+    border: 'none',
+    background: 'none',
+    color: '#2563eb',
+    fontSize: '0.72rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '2px 4px'
+  },
+  heparinSheetBtn: {
+    padding: '6px 12px',
+    borderRadius: '8px',
+    border: '1px solid #bfdbfe',
+    backgroundColor: '#eff6ff',
+    color: '#1d4ed8',
+    fontSize: '0.82rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  },
+  modalSelect: {
+    width: '100%',
+    padding: '9px 12px',
+    borderRadius: '8px',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.88rem',
+    backgroundColor: '#ffffff',
+    color: '#1e293b',
+    outline: 'none'
+  },
+  formLabel: {
+    display: 'block',
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: '4px'
+  },
+  sheetTable: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontSize: '0.85rem'
+  },
+  sheetTh: {
+    textAlign: 'left',
+    padding: '8px 10px',
+    borderBottom: '2px solid #e2e8f0',
+    color: '#475569',
+    fontWeight: '700',
+    fontSize: '0.78rem',
+    textTransform: 'uppercase'
+  },
+  sheetTd: {
+    padding: '8px 10px',
+    borderBottom: '1px solid #f1f5f9',
+    color: '#1e293b'
   }
 };

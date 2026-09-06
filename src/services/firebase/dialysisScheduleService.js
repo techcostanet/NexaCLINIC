@@ -3,6 +3,8 @@ import { USE_MOCK } from './mockDb';
 import initialDialysisSchedule from '../../data/initialDialysisSchedule.json';
 
 const STORAGE_KEY = 'nexa_dialysis_schedules';
+const SCHEDULE_VERSION = 'v2_heparina_2026';
+const VERSION_KEY = 'nexa_dialysis_schedules_ver';
 
 // Helpers para garantir nomes de pacientes estritamente em caixa alta
 const uppercasePatient = (p) => {
@@ -58,19 +60,26 @@ const normalizeAllSchedules = (all) => {
 // Helper to get local state
 const getLocalSchedules = () => {
   try {
+    const currentVer = localStorage.getItem(VERSION_KEY);
     const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
+    if (data && currentVer === SCHEDULE_VERSION) {
       return normalizeAllSchedules(JSON.parse(data));
     }
   } catch (e) {
     console.warn('Erro ao carregar escalas do localStorage:', e);
   }
-  return normalizeAllSchedules(JSON.parse(JSON.stringify(initialDialysisSchedule)));
+  const fresh = normalizeAllSchedules(JSON.parse(JSON.stringify(initialDialysisSchedule)));
+  saveLocalSchedules(fresh);
+  try {
+    localStorage.setItem(VERSION_KEY, SCHEDULE_VERSION);
+  } catch (e) {}
+  return fresh;
 };
 
 const saveLocalSchedules = (schedules) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(schedules));
+    localStorage.setItem(VERSION_KEY, SCHEDULE_VERSION);
   } catch (e) {
     console.warn('Erro ao salvar escalas no localStorage:', e);
   }
@@ -90,7 +99,28 @@ export const getDialysisSchedule = async (salao = 'Salão 01', turno = '1º Turn
     const snap = await getDoc(docRef);
 
     if (snap.exists()) {
-      return normalizeScheduleData(snap.data());
+      const snapData = snap.data();
+      // Enriquecer com heparina da base inicial caso o registro em Firestore seja anterior
+      const initRoom = initialDialysisSchedule[salao]?.[turno];
+      if (initRoom?.points) {
+        snapData.points = (snapData.points || []).map(p => {
+          const initP = initRoom.points.find(ip => ip.ponto === p.ponto);
+          if (initP) {
+            ['sqs', 'tqs'].forEach(cad => {
+              if (p[cad]?.mainPatient && initP[cad]?.mainPatient) {
+                if (!p[cad].mainPatient.heparina && initP[cad].mainPatient.heparina) {
+                  p[cad].mainPatient.heparina = initP[cad].mainPatient.heparina;
+                  ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'].forEach(d => {
+                    if (p[cad][d]) p[cad][d].heparina = initP[cad].mainPatient.heparina;
+                  });
+                }
+              }
+            });
+          }
+          return p;
+        });
+      }
+      return normalizeScheduleData(snapData);
     } else {
       // Seed from initial data
       const all = getLocalSchedules();
@@ -154,6 +184,43 @@ export const updatePointPatient = async (salao, turno, pointId, cadence, patient
           sabado: normalizedPatient,
           mainPatient: normalizedPatient
         };
+      }
+      saveLocalSchedules(all);
+    }
+  }
+
+  if (!USE_MOCK) {
+    try {
+      const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const docId = `${salao.replace(/\s+/g, '')}_${turno.replace(/\s+/g, '')}`;
+      await setDoc(doc(db, 'dialysis_schedules', docId), all[salao][turno]);
+    } catch (e) {
+      console.warn('Erro ao atualizar Firestore:', e);
+    }
+  }
+
+  return all[salao][turno];
+};
+
+export const updatePointPatientParameters = async (salao, turno, pointId, cadence, { accessType, needleSize, heparina, isolation, accessRaw }) => {
+  const all = getLocalSchedules();
+  if (all[salao] && all[salao][turno]) {
+    const pIdx = all[salao][turno].points.findIndex(p => p.id === pointId || p.ponto === pointId);
+    if (pIdx !== -1) {
+      const slotKey = cadence === 'SQS' ? 'sqs' : 'tqs';
+      const slot = all[salao][turno].points[pIdx][slotKey];
+      if (slot) {
+        const days = cadence === 'SQS' ? ['segunda', 'quarta', 'sexta', 'mainPatient'] : ['terca', 'quinta', 'sabado', 'mainPatient'];
+        days.forEach(d => {
+          if (slot[d]) {
+            if (accessType !== undefined) slot[d].accessType = accessType;
+            if (needleSize !== undefined) slot[d].needleSize = needleSize;
+            if (heparina !== undefined) slot[d].heparina = heparina;
+            if (isolation !== undefined) slot[d].isolation = isolation;
+            if (accessRaw !== undefined) slot[d].accessRaw = accessRaw;
+          }
+        });
       }
       saveLocalSchedules(all);
     }
@@ -299,6 +366,9 @@ export const calculateScheduleMetrics = (scheduleData, cadence = 'all') => {
   let cdlCount = 0;
   let permcathCount = 0;
   let isolationCount = 0;
+  let heparinCount = 0;
+  let noHeparinCount = 0;
+  let totalHeparinDoseMl = 0;
 
   const countPatient = (p) => {
     if (!p || !p.name) {
@@ -322,6 +392,19 @@ export const calculateScheduleMetrics = (scheduleData, cadence = 'all') => {
     if (p.isolation || (p.accessRaw && (p.accessRaw.toUpperCase().includes('HIV') || p.accessRaw.toUpperCase().includes('ÚNICO') || p.accessRaw.toUpperCase().includes('UNICO')))) {
       isolationCount++;
     }
+
+    if (p.heparina) {
+      const cleanHep = p.heparina.trim().toUpperCase();
+      if (cleanHep === 'NA' || cleanHep.includes('SEM') || cleanHep === '0' || cleanHep === '0ML' || cleanHep === '0,0 ML') {
+        noHeparinCount++;
+      } else {
+        heparinCount++;
+        const matchMl = p.heparina.replace(',', '.').match(/([\d.]+)/);
+        if (matchMl) {
+          totalHeparinDoseMl += parseFloat(matchMl[1]) || 0;
+        }
+      }
+    }
   };
 
   points.forEach(pt => {
@@ -344,6 +427,9 @@ export const calculateScheduleMetrics = (scheduleData, cadence = 'all') => {
     cdlCount,
     permcathCount,
     isolationCount,
+    heparinCount,
+    noHeparinCount,
+    totalHeparinDoseMl: Math.round(totalHeparinDoseMl * 10) / 10,
     occupancyRate: (occupiedSlots + vacantSlots) > 0 ? Math.round((occupiedSlots / (occupiedSlots + vacantSlots)) * 100) : 0
   };
 };

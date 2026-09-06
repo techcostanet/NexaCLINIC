@@ -18,7 +18,7 @@ const getDB = () => {
     let updated = false;
 
     // Migrate patients
-    if (!parsed.patients || parsed.patients.length < 650 || !parsed.patients.some(p => p.cns) || !parsed.patients.some(p => p.apacNumber)) {
+    if (!parsed.patients || parsed.patients.length < 650 || !parsed.patients.some(p => p.cns) || !parsed.patients.some(p => p.apacNumber) || !parsed.patients.some(p => p.heparina)) {
       parsed.patients = getDefaultPatients();
       updated = true;
     }

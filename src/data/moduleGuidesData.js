@@ -698,6 +698,14 @@ export const MODULE_GUIDES = {
         desc: 'Geração de espelhos formatados em A4 da escala diária/semanal e do mapa cirúrgico vascular para afixação nas pranchetas dos postos de enfermagem dos salões.'
       },
       {
+        title: 'Edição Rápida de Acesso Vascular & Prescrição de Heparina na Escala',
+        desc: 'Clique em qualquer card de paciente na escala para abrir o modal de edição de Acesso (FAV, CDL, Permcath), Agulha (15, 16, 17) e dose de Heparina (com sugestões rápidas), sincronizando em tempo real com o cadastro mestre do paciente em todos os módulos.'
+      },
+      {
+        title: 'Mapa e Folha de Checagem de Heparina para Enfermagem',
+        desc: 'Botão "Heparina" na barra da escala para visualização e impressão direta da lista completa de pacientes do turno com seus boxes, acessos e doses prescritas para conferência de bancada dos técnicos.'
+      },
+      {
         title: 'Central de Relatórios Assistenciais (15 Relatórios Especializados)',
         desc: 'Painel completo de inteligência assistencial acessível pelo botão Relatórios no topo do sistema, com 15 relatórios categorizados (5 para Escala de Diálise, 5 para Mural Clínico e 5 para Cirurgias Vasculares), filtros por período/unidade e exportação nativa em PDF e Excel.'
       },
@@ -707,6 +715,26 @@ export const MODULE_GUIDES = {
       }
     ],
     tutorial: [
+      {
+        title: 'Como Editar o Acesso Vascular e a Heparina do Paciente na Escala',
+        steps: [
+          'No mapa de leitos da Escala de Hemodiálise, clique sobre o card do paciente ou no botão "Editar".',
+          'Altere o tipo de Acesso (Fístula, Cateter CDL, Permcath ou Prótese).',
+          'Caso seja Fístula (FAV), selecione o calibre da Agulha (15, 16 ou 17).',
+          'Defina a dose de Heparina (ex: 1,5 ml, 2,0 ml, 1,0 ml, NA) digitando ou clicando em uma das sugestões rápidas.',
+          'Marque a opção de Isolamento (Uso Único) caso aplicável.',
+          'Clique em "Salvar". A escala e o cadastro geral do paciente serão atualizados imediatamente com a nova badge destacada.'
+        ]
+      },
+      {
+        title: 'Como Imprimir a Folha de Checagem de Heparina do Turno',
+        steps: [
+          'Selecione o Salão, Turno e Cadência desejados.',
+          'Clique no botão "Heparina" na barra superior de ações.',
+          'O sistema abrirá a tabela consolidada com Box, Ponto, Paciente, Acesso, Heparina e espaço para rubrica.',
+          'Clique em "Imprimir" para gerar o documento formatado para a bancada de enfermagem.'
+        ]
+      },
       {
         title: 'Como Utilizar a Central de Relatórios do Nex-Ai.ASSIST',
         steps: [
@@ -771,6 +799,14 @@ export const MODULE_GUIDES = {
     ],
     duvidas: [
       {
+        pergunta: 'As alterações de acesso e heparina feitas na escala afetam o cadastro do paciente?',
+        resposta: 'Sim. Ao salvar uma alteração de acesso vascular, agulha ou heparina diretamente no mapa de leitos da escala, o sistema atualiza automaticamente o cadastro mestre do paciente, refletindo nos módulos de Pacientes, Recepção e Prontuário.'
+      },
+      {
+        pergunta: 'Como saber o consumo total de heparina do turno?',
+        resposta: 'Basta observar o card de indicador "Heparina" no topo da escala, que exibe a quantidade de pacientes com heparinização prescrita e o volume total em mL necessário para o turno.'
+      },
+      {
         pergunta: 'Por que ao trocar para Taguatinga a escala de diálise aparece vazia/zerada?',
         resposta: 'Porque a filial Taguatinga / DF é uma nova unidade sem pacientes legados de Betim. Os novos pacientes e leitos de Taguatinga passarão a aparecer conforme forem admitidos no sistema.'
       },
@@ -787,12 +823,12 @@ export const MODULE_GUIDES = {
         resposta: 'Ao lado do número de série no cabeçalho de cada ponto, há uma badge indicando se o equipamento está "Operacional" ou em "Preventiva/Corretiva". Clicando no número de série, abre-se a ficha técnica completa da máquina.'
       },
       {
-        pergunta: 'O que indicam as cores das badges de acesso vascular?',
-        resposta: 'Verde (🟢) representa FAV (Fístula Arteriovenosa com calibre de agulha 15, 16 ou 17), Amarelo (🟡) representa CDL (Cateter Duplo Lúmen), Roxo (🟣) representa Permcath e Vermelho (🔴) indica protocolo de Uso Único / Isolamento (HIV/Hepatite).'
+        pergunta: 'O que indicam as cores das badges de acesso vascular e heparina?',
+        resposta: 'Verde (🟢) representa FAV (Fístula com agulha 15, 16 ou 17), Amarelo (🟡) representa CDL, Roxo (🟣) representa Permcath, Vermelho (🔴) indica Uso Único/Isolamento e Azul (💉) exibe a dose prescrita de Heparina.'
       },
       {
         pergunta: 'As alterações na escala e cirurgias são salvas em tempo real?',
-        resposta: 'Sim. Qualquer agendamento, remanejamento, alocação de vaga ou troca é sincronizado instantaneamente na base de dados para toda a equipe assistencial.'
+        resposta: 'Sim. Qualquer agendamento, remanejamento, alteração de parâmetros ou alocação é sincronizada instantaneamente na base de dados para toda a equipe assistencial.'
       }
     ]
   },
