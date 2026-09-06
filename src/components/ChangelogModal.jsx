@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.62',
+      date: '06/09/2026',
+      title: 'Nex-Ai CLINIC — Tratamentos, Tipo de Paciente, Gestão de Esquemas no Config & Exportação Excel',
+      description: 'Inclusão de modalidades de tratamento (CAPD, HD, APD, DPI, TTO Con., TX-Renal, Doador, Óbito, Inativos) e tipo de paciente (Crônico, Agudo, Trânsito) no cadastro e filtros da Recepção, nova aba Esquemas no módulo Config para gestão completa de frequências de diálise, memorização automática do modo de visão no navegador e botão de exportação rápida para Excel (.xlsx).',
+      changes: [
+        { type: 'Tratamentos (9 Opções)', text: 'Cadastro e filtro de pacientes por modalidade dialítica com 9 opções: CAPD, HD, APD, DPI, TTO Con., TX-Renal, Doador, Óbito e Inativos, com badges coloridos nas visões Compacta, Normal e Cards.' },
+        { type: 'Tipo de Paciente', text: 'Opções Crônico, Agudo e Trânsito disponíveis para seleção na admissão/edição e no seletor de filtros da recepção.' },
+        { type: 'Gestão de Esquemas no Config', text: 'Nova aba "Esquemas" no Nex-Ai.CONFIG com cadastro, edição, dias da semana interativos, cálculo de frequência semanal, ordenação e ativação/desativação sincronizados no Firestore.' },
+        { type: 'Exportação Rápida Excel (.xlsx)', text: 'Botão "Exportar" na barra superior que baixa instantaneamente a listagem de pacientes filtrados em formato Excel estruturado.' },
+        { type: 'Memorização de Preferência', text: 'Persistência automática do modo de visualização de pacientes (Compacto, Normal ou Cards) no armazenamento local do navegador (localStorage).' },
+        { type: 'Rótulos Concisos & Manuais', text: 'Conformidade rigorosa com padrão de rótulo único de 1 palavra e atualização integral dos manuais dos módulos Recepção e Config.' }
+      ]
+    },
+    {
       version: 'v4.9.61',
       date: '06/09/2026',
       title: 'Nex-Ai.RECEPTION — Design NexAiBrand, 3 Formas de Visualização (Compacto, Normal, Cards) & Filtro por Status',

@@ -506,10 +506,15 @@ export const getDialysisFrequencies = async () => {
       const { writeBatch, doc } = await import('firebase/firestore');
       const batch = writeBatch(db);
       const defaults = [
-        { id: 'freq_1', name: '3x por semana (Seg/Qua/Sex)' },
-        { id: 'freq_2', name: '3x por semana (Ter/Qui/Sáb)' },
-        { id: 'freq_3', name: '2x por semana' },
-        { id: 'freq_4', name: 'Diário' }
+        { id: 'freq_sqs', name: 'Segunda, quarta e sexta', days: ['Segunda', 'Quarta', 'Sexta'], weeklyCount: 3, order: 1, active: true },
+        { id: 'freq_tqs', name: 'Terça, quinta e sábado', days: ['Terça', 'Quinta', 'Sábado'], weeklyCount: 3, order: 2, active: true },
+        { id: 'freq_seg_sab', name: 'Segunda a sabado', days: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'], weeklyCount: 6, order: 3, active: true },
+        { id: 'freq_seg_qui', name: 'Segunda e quinta', days: ['Segunda', 'Quinta'], weeklyCount: 2, order: 4, active: true },
+        { id: 'freq_seg_sex', name: 'Segunda e sexta', days: ['Segunda', 'Sexta'], weeklyCount: 2, order: 5, active: true },
+        { id: 'freq_ter_qui', name: 'Terça e quinta', days: ['Terça', 'Quinta'], weeklyCount: 2, order: 6, active: true },
+        { id: 'freq_ter_sab', name: 'Terça e sábado', days: ['Terça', 'Sábado'], weeklyCount: 2, order: 7, active: true },
+        { id: 'freq_qua', name: 'Quarta', days: ['Quarta'], weeklyCount: 1, order: 8, active: true },
+        { id: 'freq_sab', name: 'Sábado', days: ['Sábado'], weeklyCount: 1, order: 9, active: true }
       ];
       defaults.forEach(d => {
         batch.set(doc(db, 'dialysis_frequencies', d.id), d);
@@ -517,7 +522,24 @@ export const getDialysisFrequencies = async () => {
       await batch.commit();
       return defaults;
     }
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return list.sort((a, b) => (a.order || 99) - (b.order || 99));
+  };
+
+export const saveDialysisFrequency = async (frequencyData) => {
+    if (USE_MOCK) {
+      return frequencyData;
+    }
+    const { getFirestore, collection, doc, setDoc, addDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (frequencyData.id) {
+      const docRef = doc(db, 'dialysis_frequencies', frequencyData.id);
+      await setDoc(docRef, frequencyData, { merge: true });
+      return frequencyData;
+    } else {
+      const docRef = await addDoc(collection(db, 'dialysis_frequencies'), frequencyData);
+      return { id: docRef.id, ...frequencyData };
+    }
   };
 
 export const createDialysisFrequency = async (frequencyData) => {

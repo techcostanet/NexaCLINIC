@@ -2808,6 +2808,27 @@ export const mockFirestore = {
     return { success: true };
   },
 
+  saveDialysisFrequency: async (frequencyData) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (!db.dialysisFrequencies) db.dialysisFrequencies = [];
+    if (frequencyData.id) {
+      const idx = db.dialysisFrequencies.findIndex(f => f.id === frequencyData.id);
+      if (idx > -1) {
+        db.dialysisFrequencies[idx] = { ...db.dialysisFrequencies[idx], ...frequencyData };
+        setDB(db);
+        return db.dialysisFrequencies[idx];
+      }
+    }
+    const newFreq = {
+      id: frequencyData.id || ('freq_' + Math.random().toString(36).substr(2, 6)),
+      ...frequencyData
+    };
+    db.dialysisFrequencies.push(newFreq);
+    setDB(db);
+    return newFreq;
+  },
+
   // Indicators list
   getIndicators: async () => {
     const db = getDB();

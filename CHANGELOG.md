@@ -1,3 +1,30 @@
+## [v4.9.62] - 06 de Setembro, 2026
+### Nex-Ai CLINIC — Tratamentos (9 Opções), Tipo de Paciente, Gestão Central de Esquemas no Config & Exportação Excel
+- **Opções de Tratamento no Cadastro e Filtros (`ReceptionPanel.jsx`):**
+  - Implementação completa das 9 modalidades de tratamento solicitadas: `CAPD`, `HD`, `APD`, `DPI`, `TTO Con.`, `TX-Renal`, `Doador`, `Óbito` e `Inativos`.
+  - Disponibilização dos seletores de Tratamento nas abas "Identificação" e "Logística" do cadastro/admissão do paciente.
+  - Filtro dedicado `Tratamento:` na barra superior com filtragem dinâmica instantânea e cruzamento com outros filtros.
+  - Badges coloridos de Tratamento exibidos na tabela compacta, tabela normal e cards de pacientes.
+- **Tipo de Paciente no Cadastro e Filtros (`ReceptionPanel.jsx`):**
+  - Opções `Crônico`, `Agudo` e `Trânsito` integradas nas abas do cadastro e no seletor de filtros `Tipo:` da recepção.
+  - Exibição discreta e legível da situação do paciente em todas as 3 formas de visualização.
+- **Gestão Centralizada de Esquemas de Dias de Sessão no Módulo Config (`ConfigPanel.jsx` & `clinicalService.js`):**
+  - Nova aba **`Esquemas`** no painel de administração e T.I. com catálogo completo de dias e frequências de hemodiálise (`Segunda, quarta e sexta`, `Terça, quinta e sábado`, `Segunda a sabado`, etc.).
+  - Modal ergonômico de cadastro e edição de esquemas com botões interativos para seleção rápida dos dias da semana (`Segunda`, `Terça`, `Quarta`, `Quinta`, `Sexta`, `Sábado`, `Domingo`).
+  - Cálculo automático de frequência semanal, ordenação numérica de prioridade e interruptor para ativar/desativar esquemas em 1 clique.
+  - Sincronização em tempo real na coleção `dialysis_frequencies` do Firestore com fallback local e alimentação direta dos seletores de agendamento na recepção.
+- **Exportação Rápida da Relação de Pacientes para Excel (.xlsx) (`ReceptionPanel.jsx`):**
+  - Botão verde `Exportar` na barra de ferramentas da recepção para download imediato em formato Excel (.xlsx).
+  - Respeito integral aos filtros ativos em tela com colunas formatadas para identificação, documentos, idade, convênio, tratamento, tipo, dias, alocação e status.
+- **Memorização de Preferência de Visão de Pacientes (`ReceptionPanel.jsx`):**
+  - Persistência imediata da visualização escolhida (`Compacto`, `Normal` ou `Cards`) no `localStorage` do navegador (`nexai_reception_view_mode`), mantendo a preferência entre recarregamentos e acessos subsequentes.
+- **Rótulos Rigorosos de 1 Palavra & Boy Scout Rule:**
+  - Varredura e conformidade integral com a diretriz de termos únicos sem barras ou conectivos redundantes em formulários, tabelas e filtros.
+- **Atualização Contínua dos Manuais (`src/data/moduleGuidesData.js`):**
+  - Atualização dos guias oficiais dos módulos `Recepção` e `Config` com seções completas de recursos, tutoriais passo a passo e perguntas frequentes.
+
+---
+
 ## [v4.9.61] - 06 de Setembro, 2026
 ### Nex-Ai.RECEPTION — Design NexAiBrand Oficial, 3 Formas de Visualização (Compacto, Normal e Cards) & Filtro por Status
 - **Design do Título com NexAiBrand Oficial (`ReceptionPanel.jsx`):**

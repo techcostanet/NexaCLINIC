@@ -2022,8 +2022,16 @@ export const MODULE_GUIDES = {
         desc: 'Cadastro único e centralizado de pacientes integrado em tempo real a todos os módulos do sistema (Prontuário Clínico, Enfermagem/Sessões, Alertas Assistenciais, Procedimentos Médicos, Agenda e Faturamento APAC).'
       },
       {
-        title: '3 Formas de Visualização (Compacto, Normal e Cards)',
-        desc: 'Seletor rápido de modo de exibição: Compacto (padrão otimizado de alta densidade hospitalar para ver mais registros na tela), Normal (tabular respirável com detalhes completos de recado) e Cards (grade visual de crachás com foto, dados de alocação e botões de ação).'
+        title: 'Classificação por Tratamento (9 Modalidades) e Tipo do Paciente',
+        desc: 'Classificação estruturada por modalidade de tratamento (CAPD, HD, APD, DPI, TTO Con., TX-Renal, Doador, Óbito e Inativos) e tipo de paciente (Crônico, Agudo e Trânsito) tanto no cadastro quanto em seletores de filtros dedicados.'
+      },
+      {
+        title: 'Exportação Direta em Planilha Excel (.xlsx)',
+        desc: 'Botão "Exportar" na barra de ferramentas da recepção para download imediato em formato Excel (.xlsx) com a relação filtrada de pacientes, contendo identificação, documentos, contatos, alocação, tratamento e situação clínica.'
+      },
+      {
+        title: '3 Formas de Visualização com Memorização Automática',
+        desc: 'Seletor de modo de exibição: Compacto (padrão de alta densidade), Normal (tabular detalhado com contatos de recado) e Cards (crachás visuais com foto e alocação), com memorização automática da preferência do usuário no navegador.'
       },
       {
         title: 'Filtro por Status & Pílulas com Contagem em Tempo Real',
@@ -2092,6 +2100,15 @@ export const MODULE_GUIDES = {
         ]
       },
       {
+        title: 'Como Filtrar e Exportar a Relação de Pacientes para Excel',
+        steps: [
+          'Utilize os seletores no topo da recepção: "Turno:", "Sala:", "Status:", "Tratamento:" (HD, CAPD, APD, etc.), "Tipo:" (Crônico, Agudo, Trânsito) ou "Dias:" (Seg/Qua/Sex, Ter/Qui/Sáb, etc.).',
+          'A tabela reflete imediatamente o cruzamento de todos os filtros aplicados.',
+          'Clique no botão verde "Exportar" com ícone de download ao lado do botão Admissão.',
+          'O sistema gerará instantaneamente uma planilha Excel (.xlsx) com a lista filtrada contendo nome, CPF, CNS, nascimento, idade, convênio, tratamento, tipo, dias, sala, poltrona e status.'
+        ]
+      },
+      {
         title: 'Como Auditar e Registrar a Ronda Médica Presencial',
         steps: [
           'Acesse a aba "Ronda" no módulo de Recepção.',
@@ -2103,6 +2120,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como funciona a exportação em Excel dos pacientes na recepção?',
+        resposta: 'O botão "Exportar" respeita rigorosamente os filtros ativos em tela (pesquisa por nome/CPF, turno, sala, status, tratamento e tipo). A planilha baixada traz colunas formatadas e autoajuste de largura para relatórios gerenciais e conferência imediata.'
+      },
+      {
+        pergunta: 'Minha escolha de visualização (Compacto, Normal ou Cards) fica salva?',
+        resposta: 'Sim. O sistema armazena automaticamente no navegador a última visualização selecionada por você. Ao acessar a recepção em novos acessos ou atualizar a página, sua visualização preferida é carregada imediatamente.'
+      },
       {
         pergunta: 'Qual a diferença entre os 3 modos de visualização de pacientes?',
         resposta: 'O modo Compacto (padrão) exibe mais de 20 pacientes por tela em formato condensado para agilizar o atendimento da recepção. O modo Normal traz espaçamento tradicional com nomes de contatos de recado e parentesco. O modo Cards exibe uma grade responsiva com crachás visuais dos pacientes, alocação de sala/poltrona e botões de ação.'
@@ -2136,6 +2161,10 @@ export const MODULE_GUIDES = {
         desc: 'Cadastro unificado de procedimentos cirúrgicos, intervencionistas e clínicos com parametrização de valores monetários (R$), código TUSS/SUS e interruptor de vigência ativo/inativo.'
       },
       {
+        title: 'Gestão Central de Esquemas de Dias de Sessão',
+        desc: 'Parametrização completa dos esquemas e dias de sessão de diálise oferecidos pela clínica (Segunda, quarta e sexta; Terça, quinta e sábado; etc.) com seleção interativa de dias da semana, frequência semanal calculada, ordenação de exibição e controle de ativação/desativação.'
+      },
+      {
         title: 'Visibilidade por Módulo (Cirurgias, Médico, Prontuário e APAC)',
         desc: 'Opções em caixas de seleção (checkboxes) para determinar com precisão em quais módulos do sistema cada procedimento deve ser exibido.'
       },
@@ -2158,6 +2187,17 @@ export const MODULE_GUIDES = {
     ],
     tutorial: [
       {
+        title: 'Como Cadastrar e Gerenciar Esquemas de Dias de Sessão',
+        steps: [
+          'Acesse o módulo de T.I. (Nex-Ai.CONFIG) e clique na aba "Esquemas".',
+          'Clique no botão "+ Novo" no canto superior direito.',
+          'Digite a denominação do esquema (ex: "Segunda, quarta e sexta", "Segunda e quinta") ou clique nos botões dos dias da semana para preencher automaticamente.',
+          'Defina a Frequência Semanal e a Ordem de Exibição nos seletores.',
+          'Mantenha marcada a opção "Esquema ativo" e clique em "Cadastrar Esquema".',
+          'Para pausar um esquema sem excluí-lo, clique diretamente na pílula "Ativo" para alternar para "Inativo". O esquema deixará de aparecer em novas admissões na recepção.'
+        ]
+      },
+      {
         title: 'Como Cadastrar um Novo Procedimento e Definir sua Visibilidade',
         steps: [
           'Acesse o módulo de T.I. (Nex-Ai.CONFIG) e clique na aba "Procedimentos".',
@@ -2177,6 +2217,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como os esquemas cadastrados no Config refletem na Recepção?',
+        resposta: 'Todos os esquemas cadastrados com status "Ativo" na aba "Esquemas" do Config alimentam automaticamente os seletores de frequência de diálise no cadastro/admissão de pacientes e no filtro da recepção, garantindo padronização institucional.'
+      },
       {
         pergunta: 'Os médicos conseguem ver os valores dos procedimentos ao lançar na sua aba?',
         resposta: 'Não. Os valores monetários foram totalmente retirados da visualização no seletor de procedimentos. O sistema armazena e computa os valores internamente para a apuração da produção médica sem expor os números na tela de seleção.'

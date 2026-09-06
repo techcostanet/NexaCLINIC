@@ -3,12 +3,12 @@ import { dbService } from '../firebase';
 import { 
   Settings, Users, Shield, Globe, Database, Key, Check, Plus, X, 
   Trash2, ShieldAlert, CheckCircle2, Copy, Download, Upload, Palette,
-  ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock, Mail, Activity
+  ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock, Mail, Activity, Calendar
 } from 'lucide-react';
 import EmailSettingsTab from './config/EmailSettingsTab';
 
 export default function ConfigPanel() {
-  const [activeTab, setActiveTab] = useState('branding'); // 'branding' | 'profiles' | 'users' | 'locations' | 'categories' | 'email' | 'integrations' | 'logs'
+  const [activeTab, setActiveTab] = useState('branding'); // 'branding' | 'profiles' | 'users' | 'locations' | 'categories' | 'email' | 'integrations' | 'logs' | 'schedules'
   
   // Data States
   const [tenantSettings, setTenantSettings] = useState({ name: '', cnpj: '', logo: '', themeColor: '#ec4899' });
@@ -18,6 +18,20 @@ export default function ConfigPanel() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [categoriesList, setCategoriesList] = useState([]);
   const [stockLocations, setStockLocations] = useState([]);
+
+  // Esquemas de Dias de Sessão (Módulo T.I Centralizado)
+  const [dialysisSchedulesList, setDialysisSchedulesList] = useState([]);
+  const [scheduleSearch, setScheduleSearch] = useState('');
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState(null);
+  const [scheduleForm, setScheduleForm] = useState({
+    name: '',
+    days: [],
+    weeklyCount: 3,
+    order: 1,
+    active: true,
+    description: ''
+  });
 
   // Catálogo Central de Procedimentos (Módulo T.I)
   const [proceduresList, setProceduresList] = useState([]);
@@ -121,7 +135,7 @@ export default function ConfigPanel() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [settings, profileList, users, empList, logs, catList, locList, emailConf, emailLogs, procList] = await Promise.all([
+      const [settings, profileList, users, empList, logs, catList, locList, emailConf, emailLogs, procList, schedList] = await Promise.all([
         dbService.getTenantSettings(),
         dbService.getUserProfiles(),
         dbService.getUsers(),
@@ -131,7 +145,8 @@ export default function ConfigPanel() {
         dbService.getStockLocations ? dbService.getStockLocations() : [],
         dbService.getEmailSettings ? dbService.getEmailSettings() : null,
         dbService.getEmailLogs ? dbService.getEmailLogs() : [],
-        dbService.getProcedures ? dbService.getProcedures() : []
+        dbService.getProcedures ? dbService.getProcedures() : [],
+        dbService.getDialysisFrequencies ? dbService.getDialysisFrequencies() : []
       ]);
       setTenantSettings(settings);
       setProfiles(profileList);
@@ -144,6 +159,7 @@ export default function ConfigPanel() {
       setCategoriesList(catList);
       setStockLocations(locList);
       setProceduresList(procList || []);
+      setDialysisSchedulesList(schedList || []);
       if (emailConf) setEmailSettings(emailConf);
       if (emailLogs) setEmailLogsList(emailLogs);
 
@@ -403,6 +419,117 @@ export default function ConfigPanel() {
       fetchData();
     } catch (err) {
       showAlert('Erro ao excluir categoria.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ----------------------------------------------------
+  // Esquemas de Dias de Sessão (Módulo T.I)
+  // ----------------------------------------------------
+  const handleOpenScheduleAdd = () => {
+    setEditingSchedule(null);
+    setScheduleForm({
+      name: '',
+      days: ['Segunda', 'Quarta', 'Sexta'],
+      weeklyCount: 3,
+      order: dialysisSchedulesList.length + 1,
+      active: true,
+      description: ''
+    });
+    setShowScheduleModal(true);
+  };
+
+  const handleOpenScheduleEdit = (sched) => {
+    setEditingSchedule(sched);
+    setScheduleForm({
+      name: sched.name || '',
+      days: Array.isArray(sched.days) ? sched.days : [],
+      weeklyCount: sched.weeklyCount || 3,
+      order: sched.order !== undefined ? sched.order : 1,
+      active: sched.active !== false,
+      description: sched.description || ''
+    });
+    setShowScheduleModal(true);
+  };
+
+  const handleToggleDaySelection = (day) => {
+    const currentDays = scheduleForm.days || [];
+    const exists = currentDays.includes(day);
+    const newDays = exists ? currentDays.filter(d => d !== day) : [...currentDays, day];
+    
+    // Sort days in natural week order
+    const dayOrder = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    newDays.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+
+    // Auto-generate a friendly name if name is empty or matched previous auto format
+    let newName = scheduleForm.name;
+    if (!newName || newName === currentDays.join(', ')) {
+      newName = newDays.join(', ');
+    }
+
+    setScheduleForm({
+      ...scheduleForm,
+      days: newDays,
+      weeklyCount: newDays.length,
+      name: newName
+    });
+  };
+
+  const handleSaveSchedule = async (e) => {
+    e.preventDefault();
+    if (!scheduleForm.name.trim()) return showAlert('Informe a denominação do esquema.', 'warning');
+    if (!scheduleForm.days || scheduleForm.days.length === 0) return showAlert('Selecione pelo menos um dia da semana.', 'warning');
+
+    setActionLoading(true);
+    try {
+      const payload = {
+        ...scheduleForm,
+        name: scheduleForm.name.trim(),
+        order: Number(scheduleForm.order) || 1,
+        weeklyCount: Number(scheduleForm.weeklyCount) || scheduleForm.days.length,
+        ...(editingSchedule ? { id: editingSchedule.id } : {})
+      };
+      await dbService.saveDialysisFrequency(payload);
+      showAlert(editingSchedule ? 'Esquema atualizado!' : 'Esquema cadastrado com sucesso!', 'success');
+      logAudit('Cadastro/Edição de Esquema', `Esquema "${payload.name}" salvo com ${payload.days.length} dias.`);
+      setShowScheduleModal(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao salvar esquema.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleScheduleActive = async (sched) => {
+    setActionLoading(true);
+    try {
+      const updated = { ...sched, active: !sched.active };
+      await dbService.saveDialysisFrequency(updated);
+      showAlert(`Esquema ${updated.active ? 'ativado' : 'desativado'} com sucesso.`, 'success');
+      logAudit('Alteração de Status de Esquema', `Esquema "${sched.name}" marcado como ${updated.active ? 'ativo' : 'inativo'}.`);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao alterar status do esquema.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteSchedule = async (id, name) => {
+    if (!window.confirm(`Tem certeza que deseja excluir o esquema "${name}"? Esta ação removerá a opção para novos agendamentos.`)) return;
+    setActionLoading(true);
+    try {
+      await dbService.deleteDialysisFrequency(id);
+      showAlert('Esquema excluído com sucesso.', 'success');
+      logAudit('Exclusão de Esquema', `Esquema "${name}" (ID ${id}) excluído do sistema.`);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao excluir esquema.', 'danger');
     } finally {
       setActionLoading(false);
     }
@@ -697,6 +824,9 @@ export default function ConfigPanel() {
         </button>
         <button onClick={() => setActiveTab('procedures')} style={{ ...styles.tabBtn, ...(activeTab === 'procedures' ? styles.tabBtnActive : {}) }}>
           <Activity size={16} /> Procedimentos ({proceduresList.length})
+        </button>
+        <button onClick={() => setActiveTab('schedules')} style={{ ...styles.tabBtn, ...(activeTab === 'schedules' ? styles.tabBtnActive : {}) }}>
+          <Calendar size={16} /> Esquemas ({dialysisSchedulesList.length})
         </button>
         <button onClick={() => setActiveTab('email')} style={{ ...styles.tabBtn, ...(activeTab === 'email' ? styles.tabBtnActive : {}) }}>
           <Mail size={16} /> E-mail
@@ -1411,6 +1541,151 @@ export default function ConfigPanel() {
             </div>
           )}
 
+          {/* TAB: Dialysis Session Schedules Management (Módulo T.I Centralizado) */}
+          {activeTab === 'schedules' && (
+            <div style={styles.tableCard}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>📅 Esquemas de Sessão</h3>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    Gerencie os dias e frequências de sessões de hemodiálise ofertados na clínica.
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    placeholder="Pesquisar..."
+                    value={scheduleSearch}
+                    onChange={(e) => setScheduleSearch(e.target.value)}
+                    style={{
+                      padding: '0.45rem 0.75rem',
+                      borderRadius: '6px',
+                      border: '1px solid var(--border-color)',
+                      fontSize: '0.85rem',
+                      width: '200px'
+                    }}
+                  />
+                  <button 
+                    onClick={handleOpenScheduleAdd} 
+                    className="btn btn-primary" 
+                    style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <Plus size={16} /> Novo
+                  </button>
+                </div>
+              </div>
+
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={{ width: '60px' }}>Ordem</th>
+                    <th>Esquema</th>
+                    <th>Dias</th>
+                    <th style={{ textAlign: 'center' }}>Frequência</th>
+                    <th style={{ textAlign: 'center' }}>Situação</th>
+                    <th style={{ textAlign: 'right' }}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dialysisSchedulesList
+                    .filter(s => !scheduleSearch || (s.name || '').toLowerCase().includes(scheduleSearch.toLowerCase()))
+                    .length === 0 ? (
+                    <tr>
+                      <td colSpan="6" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+                        Nenhum esquema cadastrado. Clique em "Novo" para adicionar.
+                      </td>
+                    </tr>
+                  ) : (
+                    dialysisSchedulesList
+                      .filter(s => !scheduleSearch || (s.name || '').toLowerCase().includes(scheduleSearch.toLowerCase()))
+                      .map(sched => (
+                        <tr key={sched.id}>
+                          <td style={{ fontWeight: '700', color: 'var(--text-secondary)' }}>
+                            #{sched.order || '-'}
+                          </td>
+                          <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
+                            {sched.name}
+                            {sched.description && (
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                                {sched.description}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                              {(sched.days || []).map((d, i) => (
+                                <span key={i} style={{
+                                  padding: '0.15rem 0.5rem',
+                                  borderRadius: '4px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '600',
+                                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                  color: '#2563eb'
+                                }}>
+                                  {d}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span style={{
+                              padding: '0.2rem 0.6rem',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              fontWeight: '700',
+                              backgroundColor: '#f1f5f9',
+                              color: '#475569'
+                            }}>
+                              {sched.weeklyCount || (sched.days ? sched.days.length : 0)}x / sem
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button
+                              onClick={() => handleToggleScheduleActive(sched)}
+                              style={{
+                                cursor: 'pointer',
+                                border: 'none',
+                                padding: '0.2rem 0.6rem',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: '700',
+                                backgroundColor: sched.active !== false ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                                color: sched.active !== false ? '#15803d' : '#b91c1c',
+                                transition: 'all 0.2s'
+                              }}
+                              title="Alternar ativação"
+                            >
+                              {sched.active !== false ? 'Ativo' : 'Inativo'}
+                            </button>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end' }}>
+                              <button 
+                                onClick={() => handleOpenScheduleEdit(sched)} 
+                                className="btn btn-secondary" 
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                title="Editar Esquema"
+                              >
+                                <Edit size={13} /> Editar
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteSchedule(sched.id, sched.name)} 
+                                className="btn btn-secondary" 
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none' }}
+                                title="Excluir Esquema"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {/* TAB 4: Integrations & Backup */}
           {activeTab === 'integrations' && (
             <div style={styles.panelGrid}>
@@ -1927,6 +2202,139 @@ export default function ConfigPanel() {
                   style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', color: '#ffffff', padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}
                 >
                   {actionLoading ? 'Salvando...' : 'Salvar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Esquema de Dias de Sessão (Módulo T.I) */}
+      {showScheduleModal && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalCard, maxWidth: '560px' }}>
+            <div style={styles.modalHeader}>
+              <div>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{editingSchedule ? 'Editar Esquema' : 'Cadastrar Esquema'}</h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Configure a denominação e os dias da semana para o esquema de sessão.</span>
+              </div>
+              <button onClick={() => setShowScheduleModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleSaveSchedule} style={styles.modalForm}>
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Esquema *</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  required 
+                  placeholder="Ex: Segunda, quarta e sexta" 
+                  value={scheduleForm.name} 
+                  onChange={e => setScheduleForm({ ...scheduleForm, name: e.target.value })} 
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.45rem', display: 'block', color: 'var(--text-primary)' }}>Dias da Semana *</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                  {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map(day => {
+                    const isSelected = (scheduleForm.days || []).includes(day);
+                    return (
+                      <button
+                        type="button"
+                        key={day}
+                        onClick={() => handleToggleDaySelection(day)}
+                        style={{
+                          padding: '0.5rem 0.4rem',
+                          borderRadius: '6px',
+                          border: isSelected ? '1.5px solid #2563eb' : '1px solid var(--border-color)',
+                          backgroundColor: isSelected ? 'rgba(37, 99, 235, 0.08)' : '#ffffff',
+                          color: isSelected ? '#1d4ed8' : 'var(--text-primary)',
+                          fontWeight: isSelected ? '700' : '500',
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px',
+                          transition: 'all 0.15s'
+                        }}
+                      >
+                        {isSelected && <Check size={13} />} {day}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem', marginBottom: '1rem' }}>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Frequência Semanal</label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    max="7"
+                    className="form-control" 
+                    value={scheduleForm.weeklyCount} 
+                    onChange={e => setScheduleForm({ ...scheduleForm, weeklyCount: parseInt(e.target.value) || 1 })} 
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Ordem de Exibição</label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    className="form-control" 
+                    value={scheduleForm.order} 
+                    onChange={e => setScheduleForm({ ...scheduleForm, order: parseInt(e.target.value) || 1 })} 
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Descrição</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="Ex: Padrão para pacientes crônicos tri-semanais" 
+                  value={scheduleForm.description} 
+                  onChange={e => setScheduleForm({ ...scheduleForm, description: e.target.value })} 
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input 
+                  type="checkbox" 
+                  id="scheduleActiveCheck"
+                  checked={scheduleForm.active} 
+                  onChange={e => setScheduleForm({ ...scheduleForm, active: e.target.checked })} 
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                />
+                <label htmlFor="scheduleActiveCheck" style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer', margin: 0 }}>
+                  Esquema ativo para novas admissões e agendamentos
+                </label>
+              </div>
+
+              <div style={styles.modalFooter}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowScheduleModal(false)} 
+                  className="btn btn-secondary"
+                  disabled={actionLoading}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  style={{ backgroundColor: tenantSettings.themeColor || '#ec4899' }}
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? 'Salvando...' : (editingSchedule ? 'Salvar Alterações' : 'Cadastrar Esquema')}
                 </button>
               </div>
             </form>

@@ -9,8 +9,16 @@ import {
   MapPin, Clock, AlertTriangle, ShieldCheck,
   UserCheck, RefreshCw, Phone, MessageSquare, Heart,
   Activity, ShieldAlert, Sparkles, Tv, ChevronLeft, ChevronRight,
-  List, LayoutList, LayoutGrid
+  List, LayoutList, LayoutGrid, Download
 } from 'lucide-react';
+
+export const PATIENT_TREATMENT_OPTIONS = [
+  'CAPD', 'HD', 'APD', 'DPI', 'TTO Con.', 'TX-Renal', 'Doador', 'Óbito', 'Inativos'
+];
+
+export const PATIENT_TYPE_OPTIONS = [
+  'Crônico', 'Agudo', 'Trânsito'
+];
 
 export default function ReceptionPanel() {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
@@ -33,7 +41,12 @@ export default function ReceptionPanel() {
   const [filterShift, setFilterShift] = useState('');
   const [filterRoom, setFilterRoom] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
-  const [patientViewMode, setPatientViewMode] = useState('compact'); // 'compact' | 'normal' | 'cards'
+  const [filterTreatment, setFilterTreatment] = useState('');
+  const [filterPatientType, setFilterPatientType] = useState('');
+  const [filterSchedule, setFilterSchedule] = useState('');
+  const [patientViewMode, setPatientViewMode] = useState(() => {
+    return localStorage.getItem('nexai_reception_view_mode') || 'compact';
+  }); // 'compact' | 'normal' | 'cards'
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const searchWrapperRef = useRef(null);
 
@@ -511,8 +524,66 @@ export default function ReceptionPanel() {
       const matchesRoom = filterRoom ? p.room === filterRoom : true;
       const patStatus = p.treatmentStatus || 'Ativo';
       const matchesStatus = filterStatus ? patStatus === filterStatus : true;
-      return matchesSearch && matchesShift && matchesRoom && matchesStatus;
+      const matchesTreatment = filterTreatment ? (p.treatmentType || 'HD') === filterTreatment : true;
+      const matchesPatientType = filterPatientType ? (p.patientType || 'Crônico') === filterPatientType : true;
+      const matchesSchedule = filterSchedule ? ((p.dialysisFrequency || '').includes(filterSchedule) || p.dialysisFrequency === filterSchedule) : true;
+
+      return matchesSearch && matchesShift && matchesRoom && matchesStatus && matchesTreatment && matchesPatientType && matchesSchedule;
     });
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const XLSX = await import('xlsx');
+      const listToExport = getFilteredPatients();
+      if (listToExport.length === 0) {
+        return showAlert('Nenhum paciente para exportar com os filtros atuais.', 'warning');
+      }
+
+      const rows = listToExport.map((p, idx) => ({
+        '#': idx + 1,
+        'Nome': p.name || '',
+        'Nome Social': p.socialName || '',
+        'CPF': p.cpf || '',
+        'CNS': p.cns || '',
+        'Nascimento': p.birthDate ? new Date(p.birthDate).toLocaleDateString('pt-BR') : '',
+        'Idade': calculateAge(p.birthDate) || '',
+        'Gênero': p.gender || '',
+        'Telefone': p.phone || '',
+        'Convênio': p.insurance || 'SUS',
+        'Tratamento': p.treatmentType || 'HD',
+        'Tipo': p.patientType || 'Crônico',
+        'Dias': p.dialysisFrequency || '',
+        'Turno': p.shift || '',
+        'Sala': p.room || '',
+        'Poltrona': p.chairNumber || '',
+        'Acesso': p.accessType || '',
+        'Status': p.treatmentStatus || 'Ativo'
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Pacientes');
+
+      // Auto width columns
+      const maxColLengths = {};
+      rows.forEach(row => {
+        Object.keys(row).forEach(key => {
+          const val = String(row[key] || '');
+          maxColLengths[key] = Math.max(maxColLengths[key] || key.length, val.length);
+        });
+      });
+      worksheet['!cols'] = Object.keys(maxColLengths).map(key => ({
+        wch: Math.min(Math.max((maxColLengths[key] || 10) + 3, 10), 40)
+      }));
+
+      const dateStr = new Date().toISOString().substring(0, 10);
+      XLSX.writeFile(workbook, `NexAi_Pacientes_Recepcao_${dateStr}.xlsx`);
+      showAlert(`Planilha exportada com sucesso! (${listToExport.length} pacientes)`, 'success');
+    } catch (err) {
+      console.error('Erro ao exportar pacientes para Excel:', err);
+      showAlert('Erro ao gerar exportação Excel.', 'danger');
+    }
   };
 
   const getPatientsForToday = () => {
@@ -861,13 +932,43 @@ export default function ReceptionPanel() {
               </select>
             </div>
 
+            {/* Select Tratamento */}
+            <div style={styles.filterCol}>
+              <label style={styles.filterLabel}>Tratamento:</label>
+              <select value={filterTreatment} onChange={e => setFilterTreatment(e.target.value)} style={styles.filterSelect}>
+                <option value="">Todos</option>
+                {PATIENT_TREATMENT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+
+            {/* Select Tipo */}
+            <div style={styles.filterCol}>
+              <label style={styles.filterLabel}>Tipo:</label>
+              <select value={filterPatientType} onChange={e => setFilterPatientType(e.target.value)} style={styles.filterSelect}>
+                <option value="">Todos</option>
+                {PATIENT_TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+
+            {/* Select Dias */}
+            <div style={styles.filterCol}>
+              <label style={styles.filterLabel}>Dias:</label>
+              <select value={filterSchedule} onChange={e => setFilterSchedule(e.target.value)} style={styles.filterSelect}>
+                <option value="">Todos</option>
+                {dialysisFrequencies.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+              </select>
+            </div>
+
             {/* Seletor de Visão (Compacto / Normal / Cards) */}
             <div style={styles.filterCol}>
               <label style={styles.filterLabel}>Visão:</label>
               <div style={styles.viewToggleGroup}>
                 <button
                   type="button"
-                  onClick={() => setPatientViewMode('compact')}
+                  onClick={() => {
+                    setPatientViewMode('compact');
+                    localStorage.setItem('nexai_reception_view_mode', 'compact');
+                  }}
                   style={{
                     ...styles.viewToggleBtn,
                     ...(patientViewMode === 'compact' ? styles.viewToggleBtnActive : {})
@@ -879,7 +980,10 @@ export default function ReceptionPanel() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPatientViewMode('normal')}
+                  onClick={() => {
+                    setPatientViewMode('normal');
+                    localStorage.setItem('nexai_reception_view_mode', 'normal');
+                  }}
                   style={{
                     ...styles.viewToggleBtn,
                     ...(patientViewMode === 'normal' ? styles.viewToggleBtnActive : {})
@@ -891,7 +995,10 @@ export default function ReceptionPanel() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPatientViewMode('cards')}
+                  onClick={() => {
+                    setPatientViewMode('cards');
+                    localStorage.setItem('nexai_reception_view_mode', 'cards');
+                  }}
                   style={{
                     ...styles.viewToggleBtn,
                     ...(patientViewMode === 'cards' ? styles.viewToggleBtnActive : {})
@@ -902,6 +1009,27 @@ export default function ReceptionPanel() {
                   <span>Cards</span>
                 </button>
               </div>
+            </div>
+
+            {/* Botão Exportar Excel */}
+            <div style={styles.filterCol}>
+              <label style={{ ...styles.filterLabel, visibility: 'hidden' }}>Exportar:</label>
+              <button 
+                type="button" 
+                onClick={handleExportExcel} 
+                style={{
+                  ...styles.addBtn,
+                  backgroundColor: '#059669',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.5rem 0.85rem'
+                }}
+                title="Exportar lista filtrada para planilha Excel (.xlsx)"
+              >
+                <Download size={15} /> Exportar
+              </button>
             </div>
 
             {/* Botão Admissão */}
@@ -970,7 +1098,7 @@ export default function ReceptionPanel() {
                   <div style={{ fontWeight: '700', color: '#475569', fontSize: '0.95rem', marginTop: '0.5rem' }}>
                     Nenhum paciente cadastrado para os filtros atuais.
                   </div>
-                  {(searchTerm || filterShift || filterRoom || filterStatus) && (
+                  {(searchTerm || filterShift || filterRoom || filterStatus || filterTreatment || filterPatientType || filterSchedule) && (
                     <button
                       type="button"
                       onClick={() => {
@@ -978,6 +1106,9 @@ export default function ReceptionPanel() {
                         setFilterShift('');
                         setFilterRoom('');
                         setFilterStatus('');
+                        setFilterTreatment('');
+                        setFilterPatientType('');
+                        setFilterSchedule('');
                       }}
                       style={styles.clearFiltersBtn}
                     >
@@ -995,7 +1126,8 @@ export default function ReceptionPanel() {
                         <th style={styles.compactTh}>Documento</th>
                         <th style={styles.compactTh}>Nascimento</th>
                         <th style={styles.compactTh}>Convênio</th>
-                        <th style={styles.compactTh}>Frequência</th>
+                        <th style={styles.compactTh}>Tratamento</th>
+                        <th style={styles.compactTh}>Dias</th>
                         <th style={styles.compactTh}>Acesso</th>
                         <th style={styles.compactTh}>Status</th>
                         <th style={{ ...styles.compactTh, textAlign: 'center' }}>Ações</th>
@@ -1036,6 +1168,25 @@ export default function ReceptionPanel() {
                             </td>
                             <td style={styles.compactTd}>
                               <span style={styles.compactInsuranceBadge}>{pat.insurance || 'SUS'}</span>
+                            </td>
+                            <td style={styles.compactTd}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <span style={{
+                                  fontSize: '0.72rem',
+                                  fontWeight: '700',
+                                  padding: '0.1rem 0.4rem',
+                                  borderRadius: '4px',
+                                  backgroundColor: '#e0f2fe',
+                                  color: '#0369a1',
+                                  display: 'inline-block',
+                                  width: 'fit-content'
+                                }}>
+                                  {pat.treatmentType || 'HD'}
+                                </span>
+                                <small style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                                  {pat.patientType || 'Crônico'}
+                                </small>
+                              </div>
                             </td>
                             <td style={styles.compactTd}>
                               <span style={{ fontSize: '0.8rem', color: '#475569' }}>
@@ -1098,7 +1249,8 @@ export default function ReceptionPanel() {
                         <th>Documento</th>
                         <th>Nascimento</th>
                         <th>Convênio</th>
-                        <th>Frequência</th>
+                        <th>Tratamento</th>
+                        <th>Dias</th>
                         <th>Acesso</th>
                         <th>Status</th>
                         <th style={{ textAlign: 'center' }}>Ações</th>
@@ -1149,6 +1301,25 @@ export default function ReceptionPanel() {
                                     APAC: {apacInfo.text}
                                   </span>
                                 )}
+                              </div>
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                <span style={{
+                                  fontSize: '0.75rem',
+                                  fontWeight: '700',
+                                  padding: '0.15rem 0.5rem',
+                                  borderRadius: '4px',
+                                  backgroundColor: '#e0f2fe',
+                                  color: '#0369a1',
+                                  display: 'inline-block',
+                                  width: 'fit-content'
+                                }}>
+                                  {pat.treatmentType || 'HD'}
+                                </span>
+                                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                                  {pat.patientType || 'Crônico'}
+                                </span>
                               </div>
                             </td>
                             <td>{pat.dialysisFrequency || 'Seg/Qua/Sex'}</td>
@@ -1256,6 +1427,26 @@ export default function ReceptionPanel() {
                         {/* Detalhes Clínicos */}
                         <div style={styles.cardTagsRow}>
                           <span style={styles.cardTag}>{pat.insurance || 'SUS'}</span>
+                          <span style={{
+                            fontSize: '0.72rem',
+                            fontWeight: '700',
+                            padding: '0.15rem 0.5rem',
+                            borderRadius: '4px',
+                            backgroundColor: '#e0f2fe',
+                            color: '#0369a1'
+                          }}>
+                            {pat.treatmentType || 'HD'}
+                          </span>
+                          <span style={{
+                            fontSize: '0.72rem',
+                            fontWeight: '700',
+                            padding: '0.15rem 0.5rem',
+                            borderRadius: '4px',
+                            backgroundColor: '#fef3c7',
+                            color: '#b45309'
+                          }}>
+                            {pat.patientType || 'Crônico'}
+                          </span>
                           <span style={styles.cardTagFrequency}>{pat.dialysisFrequency || 'Seg/Qua/Sex'}</span>
                           <span style={styles.cardTagAccess}>{pat.accessType || 'FAV'}</span>
                         </div>
@@ -1899,28 +2090,44 @@ export default function ReceptionPanel() {
                         />
                       </div>
                       <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                        <label>Nome da Mãe *</label>
+                        <label>Mãe *</label>
                         <input 
                           type="text" className="form-control" placeholder="Nome Completo da Mãe (Obrigatório SUS)"
                           value={patientForm.motherName} onChange={e => setPatientForm({ ...patientForm, motherName: e.target.value })}
                         />
                       </div>
                       <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                        <label>Nome do Pai / Responsável Legal</label>
+                        <label>Pai</label>
                         <input 
-                          type="text" className="form-control" placeholder="Nome do pai ou responsável legal"
+                          type="text" className="form-control" placeholder="Nome do pai ou responsável"
                           value={patientForm.fatherName} onChange={e => setPatientForm({ ...patientForm, fatherName: e.target.value })}
                         />
                       </div>
                       <div className="form-group">
-                        <label>Tipo do Paciente</label>
+                        <label>Tipo *</label>
                         <select 
                           className="form-control" value={patientForm.patientType} 
                           onChange={e => setPatientForm({ ...patientForm, patientType: e.target.value })}
                         >
-                          <option value="Crônico">Crônico</option>
-                          <option value="Agudo">Agudo</option>
-                          <option value="Trânsito">Trânsito</option>
+                          {PATIENT_TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Tratamento *</label>
+                        <select 
+                          className="form-control" value={patientForm.treatmentType} 
+                          onChange={e => setPatientForm({ ...patientForm, treatmentType: e.target.value })}
+                        >
+                          {PATIENT_TREATMENT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Dias *</label>
+                        <select 
+                          className="form-control" value={patientForm.dialysisFrequency}
+                          onChange={e => setPatientForm({ ...patientForm, dialysisFrequency: e.target.value })}
+                        >
+                          {dialysisFrequencies.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
                         </select>
                       </div>
                       <div className="form-group">
@@ -2159,18 +2366,25 @@ export default function ReceptionPanel() {
                   <div style={styles.formSectionGroup}>
                     <div style={styles.formGrid}>
                       <div className="form-group">
-                        <label>Modalidade de Tratamento</label>
+                        <label>Tratamento *</label>
                         <select 
                           className="form-control" value={patientForm.treatmentType}
                           onChange={e => setPatientForm({ ...patientForm, treatmentType: e.target.value })}
                         >
-                          <option value="HD">Hemodiálise (HD)</option>
-                          <option value="DP">Diálise Peritoneal (DP)</option>
-                          <option value="Conservador">Tratamento Conservador</option>
+                          {PATIENT_TREATMENT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
                       </div>
                       <div className="form-group">
-                        <label>Frequência Prescrita *</label>
+                        <label>Tipo *</label>
+                        <select 
+                          className="form-control" value={patientForm.patientType} 
+                          onChange={e => setPatientForm({ ...patientForm, patientType: e.target.value })}
+                        >
+                          {PATIENT_TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Dias *</label>
                         <select 
                           className="form-control" value={patientForm.dialysisFrequency}
                           onChange={e => setPatientForm({ ...patientForm, dialysisFrequency: e.target.value })}
@@ -2188,7 +2402,7 @@ export default function ReceptionPanel() {
                         </select>
                       </div>
                       <div className="form-group">
-                        <label>Sala / Salão *</label>
+                        <label>Sala *</label>
                         <select 
                           className="form-control" value={patientForm.room}
                           onChange={e => setPatientForm({ ...patientForm, room: e.target.value })}
