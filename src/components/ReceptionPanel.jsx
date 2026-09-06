@@ -1,18 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { dbService } from '../firebase';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
 import { 
   Plus, Search, Edit2, Trash2, User, Calendar, 
   Check, X, FileText, CheckCircle2, AlertCircle, 
-  MapPin, Clock, Armchair, AlertTriangle, ShieldCheck,
+  MapPin, Clock, AlertTriangle, ShieldCheck,
   UserCheck, RefreshCw, Phone, MessageSquare, Heart,
-  Activity, ShieldAlert, Sparkles, Tv
+  Activity, ShieldAlert, Sparkles, Tv, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 export default function ReceptionPanel() {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
-  const [activeTab, setActiveTab] = useState('checkin'); // 'checkin' | 'patients' | 'grid' | 'ronda'
+  const [activeTab, setActiveTab] = useState('patients'); // 'patients' | 'ronda'
   const [patients, setPatients] = useState([]);
   const [checkins, setCheckins] = useState([]);
   const [shifts, setShifts] = useState([]);
@@ -20,18 +20,41 @@ export default function ReceptionPanel() {
   const [accessTypes, setAccessTypes] = useState([]);
   const [dialysisFrequencies, setDialysisFrequencies] = useState([]);
   const [medicalSchedules, setMedicalSchedules] = useState([]);
+  const [medicalDoctors, setMedicalDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   const [cepLoading, setCepLoading] = useState(false);
 
-  // Filters State
+  // Filters State (Pacientes)
   const [searchTerm, setSearchTerm] = useState('');
   const [filterShift, setFilterShift] = useState('');
   const [filterRoom, setFilterRoom] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
+  const searchWrapperRef = useRef(null);
 
-  // Modal State
+  // Ronda State
+  const [rondaDate, setRondaDate] = useState(() => new Date().toISOString().substring(0, 10));
+  const [filterRondaSector, setFilterRondaSector] = useState('');
+  const [filterRondaShift, setFilterRondaShift] = useState('');
+  const [showRondaModal, setShowRondaModal] = useState(false);
+  const [editingRonda, setEditingRonda] = useState(null);
+  const [rondaForm, setRondaForm] = useState({
+    id: '',
+    date: '',
+    sector: 'Salão 1',
+    shift: '1º Turno',
+    doctorId: '',
+    doctorName: '',
+    doctorCrm: '',
+    status: 'Presente',
+    checkinTime: '',
+    substituteName: '',
+    notes: ''
+  });
+
+  // Modal State (Pacientes)
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [patientModalTab, setPatientModalTab] = useState('identificacao'); 
   // 'identificacao' | 'contatos' | 'convenio' | 'logistica' | 'nefrologia' | 'transplante'
@@ -124,41 +147,49 @@ export default function ReceptionPanel() {
 
   const [patientForm, setPatientForm] = useState(defaultPatientForm);
 
-  // Checkin Modal State
-  const [showCheckinModal, setShowCheckinModal] = useState(false);
-  const [selectedPatientForCheckin, setSelectedPatientForCheckin] = useState(null);
-  const [checkinForm, setCheckinForm] = useState({
-    preWeight: '',
-    systolicBP: '120',
-    diastolicBP: '80',
-    temperature: '36.5',
-    notes: ''
-  });
-
   useEffect(() => {
     fetchInitialData();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target)) {
+        setIsSearchDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsSearchDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [pList, cList, sList, rList, aList, dList, mList] = await Promise.all([
+      const [pList, sList, rList, aList, dList, mList, docList] = await Promise.all([
         dbService.getPatients(),
-        dbService.getCheckins(),
         dbService.getShifts(),
         dbService.getRooms(),
         dbService.getAccessTypes(),
         dbService.getDialysisFrequencies(),
-        dbService.getMedicalSchedules ? dbService.getMedicalSchedules() : []
+        dbService.getMedicalSchedules ? dbService.getMedicalSchedules() : [],
+        dbService.getMedicalDoctors ? dbService.getMedicalDoctors() : []
       ]);
 
       setPatients(pList || []);
-      setCheckins(cList || []);
       setShifts(sList || []);
       setRooms(rList || []);
       setAccessTypes(aList || []);
       setDialysisFrequencies(dList || []);
       setMedicalSchedules(mList || []);
+      setMedicalDoctors(docList || []);
 
       if (sList.length > 0) setPatientForm(f => ({ ...f, shift: sList[0].name }));
       if (rList.length > 0) setPatientForm(f => ({ ...f, room: rList[0].name }));
@@ -181,6 +212,95 @@ export default function ReceptionPanel() {
     } catch (err) {
       console.error(err);
       showAlert('Erro ao registrar presença médica.', 'danger');
+    }
+  };
+
+  const handleOpenAddRonda = () => {
+    const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    setEditingRonda(null);
+    setRondaForm({
+      id: '',
+      date: rondaDate,
+      sector: filterRondaSector || 'Salão 1',
+      shift: filterRondaShift || '1º Turno',
+      doctorId: medicalDoctors[0]?.id || medicalDoctors[0]?.uid || '',
+      doctorName: medicalDoctors[0]?.name || '',
+      doctorCrm: medicalDoctors[0]?.crm || '',
+      status: 'Presente',
+      checkinTime: now,
+      substituteName: '',
+      notes: ''
+    });
+    setShowRondaModal(true);
+  };
+
+  const handleOpenEditRonda = (item) => {
+    setEditingRonda(item);
+    setRondaForm({
+      id: item.id || '',
+      date: item.date || rondaDate,
+      sector: item.sector || 'Salão 1',
+      shift: item.shift || '1º Turno',
+      doctorId: item.doctorId || '',
+      doctorName: item.doctorName || '',
+      doctorCrm: item.doctorCrm || '',
+      status: item.checkinStatus || 'Presente',
+      checkinTime: item.checkinTime || '',
+      substituteName: item.substituteName || (item.notes?.includes('Substituído por') ? item.notes.replace('Substituído por', '').trim() : ''),
+      notes: item.notes || ''
+    });
+    setShowRondaModal(true);
+  };
+
+  const handleSaveRonda = async (e) => {
+    e.preventDefault();
+    if (!rondaForm.sector || !rondaForm.shift) {
+      return showAlert('Setor e Turno são obrigatórios.', 'warning');
+    }
+
+    const doc = medicalDoctors.find(d => (d.id || d.uid) === rondaForm.doctorId) || 
+                (rondaForm.doctorName ? { name: rondaForm.doctorName, crm: rondaForm.doctorCrm } : null);
+
+    const docName = doc ? doc.name : (rondaForm.doctorName || 'Médico Não Informado');
+    const docCrm = doc ? (doc.crm || '') : (rondaForm.doctorCrm || '');
+    const month = (rondaForm.date || rondaDate).substring(0, 7);
+
+    const notesFinal = rondaForm.status === 'Substituído' && rondaForm.substituteName
+      ? `Substituído por ${rondaForm.substituteName}. ${rondaForm.notes}`.trim()
+      : rondaForm.notes;
+
+    const payload = {
+      id: editingRonda ? editingRonda.id : undefined,
+      month,
+      date: rondaForm.date || rondaDate,
+      sector: rondaForm.sector,
+      shift: rondaForm.shift,
+      doctorId: rondaForm.doctorId || (doc ? (doc.id || doc.uid) : ''),
+      doctorName: docName,
+      doctorCrm: docCrm,
+      status: 'Confirmado',
+      checkinStatus: rondaForm.status,
+      checkinTime: rondaForm.checkinTime || (rondaForm.status === 'Presente' || rondaForm.status === 'Atraso' ? new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null),
+      checkedBy: 'Recepção Central',
+      notes: notesFinal,
+      unitId: activeUnitId === 'all' ? 'betim' : activeUnitId
+    };
+
+    try {
+      setActionLoading(true);
+      if (dbService.saveMedicalSchedule) {
+        await dbService.saveMedicalSchedule(payload);
+      }
+      showAlert(editingRonda ? 'Ronda médica atualizada!' : 'Ronda médica registrada com sucesso!', 'success');
+      setShowRondaModal(false);
+      setEditingRonda(null);
+      const updated = await dbService.getMedicalSchedules();
+      setMedicalSchedules(updated || []);
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao salvar dados da ronda médica.', 'danger');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -337,61 +457,7 @@ export default function ReceptionPanel() {
     }
   };
 
-  // ----------------------------------------------------
-  // Check-in Methods
-  // ----------------------------------------------------
-  const handleOpenCheckinModal = (patient) => {
-    setSelectedPatientForCheckin(patient);
-    setCheckinForm({
-      preWeight: patient.dryWeight ? patient.dryWeight.toString() : '',
-      systolicBP: '120',
-      diastolicBP: '80',
-      temperature: '36.5',
-      notes: ''
-    });
-    setShowCheckinModal(true);
-  };
 
-  const handleSaveCheckin = async (e) => {
-    e.preventDefault();
-    if (!selectedPatientForCheckin) return;
-
-    setActionLoading(true);
-    try {
-      const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
-      const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
-      const todayDate = new Date().toISOString().substring(0, 10);
-      const preWeightNum = parseFloat(checkinForm.preWeight) || 0;
-      const dryWeightNum = parseFloat(selectedPatientForCheckin.dryWeight) || 0;
-      const weightGain = (preWeightNum > 0 && dryWeightNum > 0) ? (preWeightNum - dryWeightNum).toFixed(2) : '0.00';
-
-      await dbService.saveCheckin({
-        patientId: selectedPatientForCheckin.id,
-        patientName: selectedPatientForCheckin.name,
-        date: todayDate,
-        preWeight: preWeightNum,
-        dryWeight: dryWeightNum,
-        weightGain: parseFloat(weightGain),
-        bp: `${checkinForm.systolicBP}/${checkinForm.diastolicBP}`,
-        temperature: parseFloat(checkinForm.temperature) || 36.5,
-        shift: selectedPatientForCheckin.shift || '1º Turno',
-        room: selectedPatientForCheckin.room || 'Salão 1',
-        chairNumber: selectedPatientForCheckin.chairNumber || '1',
-        accessType: selectedPatientForCheckin.accessType || 'Fístula Arteriovenosa',
-        unitId: targetUnitId,
-        unit: targetUnit,
-        notes: checkinForm.notes || ''
-      });
-
-      showAlert(`Check-in de ${selectedPatientForCheckin.name} registrado com sucesso!`, 'success');
-      setShowCheckinModal(false);
-      fetchInitialData();
-    } catch (err) {
-      showAlert('Erro ao realizar check-in.', 'danger');
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   // ----------------------------------------------------
   // Helper calculations & filters
@@ -529,89 +595,30 @@ export default function ReceptionPanel() {
   };
 
   const filteredPatients = getFilteredPatients();
-  const todayPatients = getPatientsForToday();
 
-  // Chair distribution grid generator
-  const maxChairs = 12;
-  const renderRoomGrid = (roomName) => {
-    return (
-      <div key={roomName} style={styles.roomSection}>
-        <div style={styles.roomHeader}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <MapPin size={18} color="var(--primary-color)" />
-            <h3 style={styles.roomTitle}>{roomName}</h3>
-          </div>
-          <span style={styles.roomBadge}>Capacidade: {maxChairs} Poltronas</span>
-        </div>
-        
-        <div style={styles.gridContainer}>
-          {shifts.map(sh => {
-            const roomShiftPatients = currentPatients.filter(
-              p => p.room === roomName && p.shift === sh.name && p.treatmentStatus === 'Ativo'
-            );
+  // Ronda Filters & Stats
+  const filteredRondaSchedules = useMemo(() => {
+    return currentMedicalSchedules.filter(s => {
+      const matchesDate = s.date === rondaDate;
+      const matchesSector = filterRondaSector ? s.sector === filterRondaSector : true;
+      const matchesShift = filterRondaShift ? s.shift === filterRondaShift : true;
+      return matchesDate && matchesSector && matchesShift;
+    });
+  }, [currentMedicalSchedules, rondaDate, filterRondaSector, filterRondaShift]);
 
-            return (
-              <div key={sh.name} style={styles.shiftCol}>
-                <div style={styles.shiftColHeader}>
-                  <Clock size={14} color="#64748b" />
-                  <h4 style={styles.shiftColTitle}>{sh.name}</h4>
-                  <span style={styles.shiftOccupancyBadge}>
-                    {roomShiftPatients.length}/{maxChairs}
-                  </span>
-                </div>
-                
-                <div style={styles.seatsGrid}>
-                  {Array.from({ length: maxChairs }).map((_, idx) => {
-                    const chairNum = (idx + 1).toString();
-                    const pat = roomShiftPatients.find(p => p.chairNumber === chairNum);
-                    const checkin = pat ? getCheckinForPatientToday(pat.id) : null;
+  const rondaStats = useMemo(() => {
+    const daySchedules = currentMedicalSchedules.filter(s => s.date === rondaDate);
+    const total = daySchedules.length;
+    const presentes = daySchedules.filter(s => s.checkinStatus === 'Presente').length;
+    const atrasos = daySchedules.filter(s => s.checkinStatus === 'Atraso').length;
+    const substituidos = daySchedules.filter(s => s.checkinStatus === 'Substituído').length;
+    const ausentes = daySchedules.filter(s => s.checkinStatus === 'Ausente').length;
+    const pendentes = daySchedules.filter(s => !s.checkinStatus || s.checkinStatus === 'Pendente').length;
+    return { total, presentes, atrasos, substituidos, ausentes, pendentes };
+  }, [currentMedicalSchedules, rondaDate]);
 
-                    return (
-                      <div 
-                        key={chairNum} 
-                        style={{
-                          ...styles.seatCard,
-                          ...(pat ? styles.seatOccupied : styles.seatEmpty),
-                          ...(checkin ? styles.seatCheckedIn : {})
-                        }}
-                        title={pat ? `${pat.name} - Poltrona ${chairNum}` : `Poltrona ${chairNum} Livre`}
-                      >
-                        <div style={styles.seatHeader}>
-                          <Armchair size={15} color={pat ? (checkin ? '#059669' : '#0284c7') : '#94a3b8'} />
-                          <span style={styles.seatNum}>#{chairNum}</span>
-                        </div>
-                        {pat ? (
-                          <div style={styles.seatBody}>
-                            <div style={styles.seatPatName}>
-                              {pat.name.split(' ')[0]} {pat.name.split(' ').slice(-1)[0]}
-                            </div>
-                            <span style={styles.seatAccessBadge}>
-                              {pat.accessType ? pat.accessType.substring(0, 10) : 'FAV'}
-                            </span>
-                            {checkin ? (
-                              <span style={styles.seatStatusActive}>Presente</span>
-                            ) : (
-                              <span style={styles.seatStatusPending}>Pendente</span>
-                            )}
-                          </div>
-                        ) : (
-                          <div style={styles.seatFreeLabel}>Livre</div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  // KPIs
-  const checkedInTodayCount = todayPatients.filter(p => getCheckinForPatientToday(p.id)).length;
-  const pendingTodayCount = todayPatients.length - checkedInTodayCount;
+  // KPIs Superiores
+  const activePatientsCount = currentPatients.filter(p => p.treatmentStatus === 'Ativo').length;
   const apacWarningCount = currentPatients.filter(p => getApacStatus(p.apacExpiry).isWarning).length;
 
   return (
@@ -621,7 +628,7 @@ export default function ReceptionPanel() {
         <div>
           <h1 style={styles.title}>Nex-Ai.RECEPTION</h1>
           <p style={styles.subtitle}>
-            Admissão completa de pacientes, regulação APAC, controle de presença diário e alocação de poltronas.
+            Admissão completa de pacientes, regulação APAC, cadastro clínico e auditoria presencial de ronda médica.
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -655,12 +662,12 @@ export default function ReceptionPanel() {
       <div style={styles.kpiRow}>
         <div style={styles.kpiCard}>
           <div style={styles.kpiIconWrap}>
-            <Calendar size={20} color="var(--primary-color)" />
+            <User size={20} color="var(--primary-color)" />
           </div>
           <div>
-            <span style={styles.kpiLabel}>Agendados</span>
-            <div style={styles.kpiValue}>{todayPatients.length}</div>
-            <span style={styles.kpiSub}>Escala {todayScheduleFilter}</span>
+            <span style={styles.kpiLabel}>Pacientes</span>
+            <div style={styles.kpiValue}>{currentPatients.length}</div>
+            <span style={styles.kpiSub}>Cadastrados na unidade</span>
           </div>
         </div>
 
@@ -669,20 +676,9 @@ export default function ReceptionPanel() {
             <CheckCircle2 size={20} color="#10b981" />
           </div>
           <div>
-            <span style={styles.kpiLabel}>Presentes</span>
-            <div style={{ ...styles.kpiValue, color: '#10b981' }}>{checkedInTodayCount}</div>
-            <span style={styles.kpiSub}>Check-in realizado</span>
-          </div>
-        </div>
-
-        <div style={{ ...styles.kpiCard, borderLeft: '4px solid #f59e0b' }}>
-          <div style={{ ...styles.kpiIconWrap, backgroundColor: '#fef3c7' }}>
-            <Clock size={20} color="#d97706" />
-          </div>
-          <div>
-            <span style={styles.kpiLabel}>Pendentes</span>
-            <div style={{ ...styles.kpiValue, color: '#d97706' }}>{pendingTodayCount}</div>
-            <span style={styles.kpiSub}>Aguardando entrada</span>
+            <span style={styles.kpiLabel}>Ativos</span>
+            <div style={{ ...styles.kpiValue, color: '#10b981' }}>{activePatientsCount}</div>
+            <span style={styles.kpiSub}>Em diálise regular</span>
           </div>
         </div>
 
@@ -696,16 +692,23 @@ export default function ReceptionPanel() {
             <span style={styles.kpiSub}>A vencer ou vencidas</span>
           </div>
         </div>
+
+        <div style={{ ...styles.kpiCard, borderLeft: '4px solid #3b82f6' }}>
+          <div style={{ ...styles.kpiIconWrap, backgroundColor: '#eff6ff' }}>
+            <UserCheck size={20} color="#2563eb" />
+          </div>
+          <div>
+            <span style={styles.kpiLabel}>Ronda</span>
+            <div style={{ ...styles.kpiValue, color: '#2563eb' }}>
+              {rondaStats.presentes}/{rondaStats.total}
+            </div>
+            <span style={styles.kpiSub}>Médicos auditados hoje</span>
+          </div>
+        </div>
       </div>
 
       {/* Tabs Bar */}
       <div style={styles.tabsWrapper}>
-        <button 
-          onClick={() => setActiveTab('checkin')} 
-          style={{ ...styles.tabBtn, ...(activeTab === 'checkin' ? styles.tabBtnActive : {}) }}
-        >
-          <CheckCircle2 size={16} /> Presença ({checkedInTodayCount}/{todayPatients.length})
-        </button>
         <button 
           onClick={() => setActiveTab('patients')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'patients' ? styles.tabBtnActive : {}) }}
@@ -713,16 +716,10 @@ export default function ReceptionPanel() {
           <User size={16} /> Pacientes ({currentPatients.length})
         </button>
         <button 
-          onClick={() => setActiveTab('grid')} 
-          style={{ ...styles.tabBtn, ...(activeTab === 'grid' ? styles.tabBtnActive : {}) }}
-        >
-          <Armchair size={16} /> Poltronas
-        </button>
-        <button 
           onClick={() => setActiveTab('ronda')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'ronda' ? styles.tabBtnActive : {}) }}
         >
-          <UserCheck size={16} /> Ronda
+          <UserCheck size={16} /> Ronda ({rondaStats.total})
         </button>
       </div>
 
@@ -736,78 +733,86 @@ export default function ReceptionPanel() {
         </div>
       )}
 
-      {/* Filters Bar */}
-      {activeTab !== 'grid' && (
+      {/* Filters Bar (Pacientes) */}
+      {activeTab === 'patients' && (
         <div style={styles.filtersBar}>
-          <div style={{ ...styles.searchWrapper, position: 'relative' }}>
-            <Search size={18} style={styles.searchIcon} />
-            <input 
-              type="text" 
-              placeholder="Pesquisar por paciente, CPF, CNS ou poltrona..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              style={styles.searchInput}
-            />
-            {searchTerm && (
-              <button 
-                type="button"
-                onClick={() => setSearchTerm('')} 
-                style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
-              >
-                <X size={14} />
-              </button>
-            )}
-            {searchTerm.trim().length >= 1 && searchAutocompleteResults.length > 0 && (
+          <div ref={searchWrapperRef} style={{ ...styles.searchWrapper, position: 'relative' }}>
+            <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569', marginBottom: '4px', display: 'block' }}>
+              Paciente:
+            </label>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Search size={18} style={styles.searchIcon} />
+              <input 
+                type="text" 
+                placeholder="Pesquisar por paciente, CPF, CNS ou poltrona..."
+                value={searchTerm}
+                onFocus={() => setIsSearchDropdownOpen(true)}
+                onChange={e => {
+                  setSearchTerm(e.target.value);
+                  setIsSearchDropdownOpen(true);
+                }}
+                style={{ ...styles.searchInput, textTransform: 'uppercase' }}
+              />
+              {searchTerm && (
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setIsSearchDropdownOpen(false);
+                  }} 
+                  style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {isSearchDropdownOpen && searchTerm.trim().length >= 1 && searchAutocompleteResults.length > 0 && (
               <div style={styles.patientDropdown}>
                 {searchAutocompleteResults.map(p => (
                   <div 
                     key={p.id} 
                     onClick={() => {
                       setSearchTerm(p.name);
+                      setIsSearchDropdownOpen(false);
                     }}
                     style={styles.patientDropdownItem}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.95rem' }}>{p.name}</span>
-                      <span style={{ fontSize: '0.7rem', fontWeight: '700', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: p.treatmentStatus === 'Ativo' ? '#ecfdf5' : '#fef2f2', color: p.treatmentStatus === 'Ativo' ? '#065f46' : '#991b1b' }}>
-                        {p.treatmentStatus || 'Ativo'}
-                      </span>
+                    <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '0.92rem', textTransform: 'uppercase' }}>
+                      {p.name}
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                      CPF: {p.cpf || 'N/A'} • {p.room || 'Sem salão'} ({p.shift || 'Turno N/A'}) • Poltrona #{p.chairNumber || '--'}
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>
+                      CPF: {p.cpf || 'N/A'} • {p.room || 'Sem salão'} ({p.shift || 'Turno N/A'})
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
+
           <div style={styles.selectsWrapper}>
             <select value={filterShift} onChange={e => setFilterShift(e.target.value)} style={styles.filterSelect}>
               <option value="">Turnos</option>
-              {shifts.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+              {shifts.map(s => <option key={s.id || s.name} value={s.name}>{s.name}</option>)}
             </select>
             <select value={filterRoom} onChange={e => setFilterRoom(e.target.value)} style={styles.filterSelect}>
               <option value="">Salas</option>
-              {rooms.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
+              {rooms.map(r => <option key={r.id || r.name} value={r.name}>{r.name}</option>)}
             </select>
-            {activeTab === 'patients' && (
-              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={styles.filterSelect}>
-                <option value="">Status</option>
-                <option value="Ativo">Ativo</option>
-                <option value="Suspenso">Suspenso</option>
-                <option value="Em Trânsito">Em Trânsito</option>
-                <option value="Transplantado">Transplantado</option>
-                <option value="Óbito">Óbito</option>
-              </select>
-            )}
-          </div>
-          {activeTab === 'patients' && (
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={styles.filterSelect}>
+              <option value="">Status</option>
+              <option value="Ativo">Ativo</option>
+              <option value="Suspenso">Suspenso</option>
+              <option value="Em Trânsito">Em Trânsito</option>
+              <option value="Transplantado">Transplantado</option>
+              <option value="Óbito">Óbito</option>
+            </select>
             <button onClick={handleOpenAddModal} style={styles.addBtn}>
               <Plus size={16} /> Admissão
             </button>
-          )}
+          </div>
         </div>
       )}
 
@@ -815,138 +820,7 @@ export default function ReceptionPanel() {
         <div style={styles.loadingBox}>Carregando recepção...</div>
       ) : (
         <>
-          {/* TAB 1: Daily Check-in */}
-          {activeTab === 'checkin' && (
-            <div style={styles.tabContent}>
-              <div style={styles.tableWrapper}>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Paciente</th>
-                      <th>Documento</th>
-                      <th>Turno</th>
-                      <th>Sala</th>
-                      <th>Poltrona</th>
-                      <th>Acesso</th>
-                      <th>APAC</th>
-                      <th>Presença</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {todayPatients.length === 0 ? (
-                      <tr>
-                        <td colSpan="9" style={styles.noDataCell}>Nenhum paciente agendado ou encontrado para os filtros atuais.</td>
-                      </tr>
-                    ) : (
-                      todayPatients.map(pat => {
-                        const checkin = getCheckinForPatientToday(pat.id);
-                        const apacInfo = getApacStatus(pat.apacExpiry);
-
-                        return (
-                          <tr key={pat.id} style={checkin ? styles.rowCheckedIn : {}}>
-                            <td>
-                              <div style={styles.patientCell}>
-                                {pat.photo ? (
-                                  <img src={pat.photo} alt={pat.name} style={styles.tablePhoto} />
-                                ) : (
-                                  <div style={styles.tablePhotoPlaceholder}>
-                                    {pat.name.charAt(0)}
-                                  </div>
-                                )}
-                                <div style={styles.patientNameBlock}>
-                                  <span style={styles.patName}>{pat.name}</span>
-                                  <span style={styles.motherName}>Mãe: {pat.motherName || 'Não informada'}</span>
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              <div style={styles.docCell}>
-                                <span>{pat.cpf || '-'}</span>
-                                {pat.cns && <small style={styles.cnsMuted}>CNS: {pat.cns}</small>}
-                              </div>
-                            </td>
-                            <td><span style={styles.badgeShift}>{pat.shift}</span></td>
-                            <td><span style={styles.badgeRoom}>{pat.room}</span></td>
-                            <td style={{ fontWeight: '700', textAlign: 'center' }}>#{pat.chairNumber || '-'}</td>
-                            <td>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                                <span style={styles.accessBadge}>
-                                  {pat.accessType || 'FAV'} {pat.needleSize ? `(Ag.${pat.needleSize})` : ''}
-                                </span>
-                                {pat.heparina && (
-                                  <span style={{
-                                    fontSize: '0.68rem',
-                                    fontWeight: '700',
-                                    padding: '1px 5px',
-                                    borderRadius: '4px',
-                                    backgroundColor: '#eff6ff',
-                                    color: '#1d4ed8',
-                                    border: '1px solid #bfdbfe',
-                                    width: 'fit-content'
-                                  }}>
-                                    💉 {pat.heparina}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td>
-                              <span style={{ ...styles.apacBadge, color: apacInfo.color, backgroundColor: apacInfo.bg }}>
-                                {apacInfo.text}
-                              </span>
-                            </td>
-                            <td>
-                              {checkin ? (
-                                <div style={styles.checkinDoneBox}>
-                                  <span style={styles.checkinDoneBadge}>✓ Presente</span>
-                                  <span style={styles.checkinDetails}>
-                                    PA: {checkin.bp} | Peso: {checkin.preWeight}kg
-                                  </span>
-                                  {checkin.weightGain > 0 && (
-                                    <span style={{ 
-                                      fontSize: '0.7rem', 
-                                      fontWeight: '700', 
-                                      color: checkin.weightGain >= 4 ? '#dc2626' : '#d97706' 
-                                    }}>
-                                      Ganho: +{checkin.weightGain}kg
-                                    </span>
-                                  )}
-                                </div>
-                              ) : (
-                                <button onClick={() => handleOpenCheckinModal(pat)} style={styles.checkinBtn}>
-                                  Registrar
-                                </button>
-                              )}
-                            </td>
-                            <td>
-                              <div style={styles.actionButtons}>
-                                <button 
-                                  onClick={() => openWhatsApp(pat.phone, pat.name)} 
-                                  style={styles.actionWhatsBtn} 
-                                  title="Enviar mensagem no WhatsApp"
-                                >
-                                  <MessageSquare size={14} />
-                                </button>
-                                <button 
-                                  onClick={() => handleOpenEditModal(pat)} 
-                                  style={styles.actionEditBtn} 
-                                  title="Editar cadastro"
-                                >
-                                  <Edit2 size={14} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: Patients List */}
+          {/* TAB 1: Patients List */}
           {activeTab === 'patients' && (
             <div style={styles.tableWrapper}>
               <table style={styles.table}>
@@ -1061,178 +935,409 @@ export default function ReceptionPanel() {
             </div>
           )}
 
-          {/* TAB 3: Chairs Grid */}
-          {activeTab === 'grid' && (
-            <div style={styles.gridTabsContent}>
-              {rooms.map(room => renderRoomGrid(room.name))}
-            </div>
-          )}
-
-          {/* TAB 4: Medical Shift Round (Ronda Médica) */}
+          {/* TAB 2: Ronda Médica Presencial */}
           {activeTab === 'ronda' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* Barra de Filtros e Controles da Ronda */}
+              <div style={{ 
+                backgroundColor: '#fff', 
+                border: '1px solid #e2e8f0', 
+                borderRadius: '12px', 
+                padding: '1rem 1.25rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '1rem'
+              }}>
+                {/* Seletor de Data */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#475569', textTransform: 'uppercase' }}>
+                    Data:
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: '#f8fafc', padding: '0.2rem 0.4rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const d = new Date(rondaDate + 'T12:00:00');
+                        d.setDate(d.getDate() - 1);
+                        setRondaDate(d.toISOString().substring(0, 10));
+                      }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', padding: '4px' }}
+                      title="Dia anterior"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+
+                    <input 
+                      type="date"
+                      value={rondaDate}
+                      onChange={e => setRondaDate(e.target.value)}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        fontSize: '0.88rem',
+                        fontWeight: '700',
+                        color: '#0f172a',
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const d = new Date(rondaDate + 'T12:00:00');
+                        d.setDate(d.getDate() + 1);
+                        setRondaDate(d.toISOString().substring(0, 10));
+                      }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex', alignItems: 'center', padding: '4px' }}
+                      title="Próximo dia"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setRondaDate(new Date().toISOString().substring(0, 10))}
+                    style={{
+                      padding: '0.35rem 0.75rem',
+                      fontSize: '0.78rem',
+                      fontWeight: '700',
+                      backgroundColor: rondaDate === new Date().toISOString().substring(0, 10) ? '#e0e7ff' : '#f1f5f9',
+                      color: rondaDate === new Date().toISOString().substring(0, 10) ? '#4338ca' : '#475569',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Hoje
+                  </button>
+                </div>
+
+                {/* Filtros de Setor, Turno e Botão Nova Ronda */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                  <select 
+                    value={filterRondaSector} 
+                    onChange={e => setFilterRondaSector(e.target.value)}
+                    style={{
+                      padding: '0.45rem 0.75rem',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.82rem',
+                      backgroundColor: '#fff',
+                      color: '#334155',
+                      fontWeight: '600'
+                    }}
+                  >
+                    <option value="">Setores</option>
+                    <option value="Salão 1">Salão 1</option>
+                    <option value="Salão 2">Salão 2</option>
+                    <option value="Salão 3">Salão 3</option>
+                    <option value="DP">DP</option>
+                  </select>
+
+                  <select 
+                    value={filterRondaShift} 
+                    onChange={e => setFilterRondaShift(e.target.value)}
+                    style={{
+                      padding: '0.45rem 0.75rem',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.82rem',
+                      backgroundColor: '#fff',
+                      color: '#334155',
+                      fontWeight: '600'
+                    }}
+                  >
+                    <option value="">Turnos</option>
+                    <option value="1º Turno">1º Turno</option>
+                    <option value="2º Turno">2º Turno</option>
+                    <option value="3º Turno">3º Turno</option>
+                  </select>
+
+                  <button 
+                    type="button" 
+                    onClick={handleOpenAddRonda}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '0.45rem 0.9rem',
+                      backgroundColor: 'var(--primary-color)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '0.82rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    <Plus size={16} /> Registrar Ronda
+                  </button>
+                </div>
+              </div>
+
+              {/* Indicadores KPI da Ronda em Linha Única */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                gap: '0.75rem'
+              }}>
+                <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.85rem 1rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>Escalados</span>
+                  <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#0f172a', marginTop: '2px' }}>
+                    {rondaStats.total}
+                  </div>
+                </div>
+
+                <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '0.85rem 1rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#166534' }}>Presentes</span>
+                  <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#16a34a', marginTop: '2px' }}>
+                    {rondaStats.presentes}
+                  </div>
+                </div>
+
+                <div style={{ backgroundColor: '#fefce8', border: '1px solid #fef08a', borderRadius: '10px', padding: '0.85rem 1rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#854d0e' }}>Atrasos</span>
+                  <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#ca8a04', marginTop: '2px' }}>
+                    {rondaStats.atrasos}
+                  </div>
+                </div>
+
+                <div style={{ backgroundColor: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: '10px', padding: '0.85rem 1rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#6b21a8' }}>Substituídos</span>
+                  <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#9333ea', marginTop: '2px' }}>
+                    {rondaStats.substituidos}
+                  </div>
+                </div>
+
+                <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '0.85rem 1rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#991b1b' }}>Ausentes</span>
+                  <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#dc2626', marginTop: '2px' }}>
+                    {rondaStats.ausentes}
+                  </div>
+                </div>
+
+                <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.85rem 1rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>Pendentes</span>
+                  <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#64748b', marginTop: '2px' }}>
+                    {rondaStats.pendentes}
+                  </div>
+                </div>
+              </div>
+
+              {/* Lista de Cards da Ronda */}
               <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.25rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#0f172a' }}>
-                      Ronda Médica Presencial
+                    <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: '#0f172a' }}>
+                      Auditoria de Presença Médica
                     </h3>
-                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>
-                      Auditoria de presença dos médicos nefrologistas em cada salão e turno hoje ({new Date().toLocaleDateString('pt-BR')}).
+                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: '#64748b' }}>
+                      Plantões escalados para {new Date(rondaDate + 'T12:00:00').toLocaleDateString('pt-BR')}.
                     </p>
                   </div>
-                  <span style={{ fontSize: '0.8rem', fontWeight: '800', backgroundColor: '#eff6ff', color: '#1e40af', padding: '0.3rem 0.75rem', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
-                    Auditoria
+                  <span style={{ fontSize: '0.75rem', fontWeight: '800', backgroundColor: '#eff6ff', color: '#1d4ed8', padding: '0.25rem 0.65rem', borderRadius: '6px' }}>
+                    {filteredRondaSchedules.length} plantão(ões)
                   </span>
                 </div>
 
-                {medicalSchedules.filter(s => s.date === new Date().toISOString().substring(0, 10)).length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8' }}>
-                    Nenhum plantão médico programado para a data de hoje.
+                {filteredRondaSchedules.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#64748b' }}>
+                    <AlertCircle size={36} color="#94a3b8" style={{ marginBottom: '0.75rem' }} />
+                    <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1rem', fontWeight: '800', color: '#334155' }}>
+                      Nenhum plantão localizado para esta data
+                    </h4>
+                    <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.82rem', color: '#94a3b8' }}>
+                      Não há escala médica cadastrada para {new Date(rondaDate + 'T12:00:00').toLocaleDateString('pt-BR')} com os filtros selecionados.
+                    </p>
+                    <button 
+                      type="button" 
+                      onClick={handleOpenAddRonda}
+                      style={{
+                        padding: '0.5rem 1.2rem',
+                        backgroundColor: 'var(--primary-color)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '0.82rem',
+                        fontWeight: '700',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Plus size={15} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                      Registrar Presença Médica Agora
+                    </button>
                   </div>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem' }}>
-                    {medicalSchedules
-                      .filter(s => s.date === new Date().toISOString().substring(0, 10))
-                      .map(sch => {
-                        const isPresent = sch.checkinStatus === 'Presente';
-                        const isLate = sch.checkinStatus === 'Atraso';
-                        const isAbsent = sch.checkinStatus === 'Ausente';
-                        const isReplaced = sch.checkinStatus === 'Substituído';
+                    {filteredRondaSchedules.map(sch => {
+                      const isPresent = sch.checkinStatus === 'Presente';
+                      const isLate = sch.checkinStatus === 'Atraso';
+                      const isAbsent = sch.checkinStatus === 'Ausente';
+                      const isReplaced = sch.checkinStatus === 'Substituído';
 
-                        return (
-                          <div 
-                            key={sch.id}
-                            style={{
-                              backgroundColor: '#f8fafc',
-                              border: '1px solid #e2e8f0',
-                              borderRadius: '10px',
-                              padding: '1rem',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '0.75rem'
-                            }}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <div>
-                                <span style={{ fontSize: '0.7rem', fontWeight: '800', backgroundColor: '#e2e8f0', color: '#334155', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
-                                  {sch.sector} • {sch.shift}
-                                </span>
-                                <h4 style={{ margin: '0.35rem 0 0 0', fontSize: '0.95rem', fontWeight: '800', color: '#0f172a' }}>
-                                  {sch.doctorName}
-                                </h4>
-                                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                  CRM: {sch.doctorCrm || '-'}
-                                </span>
-                              </div>
-
-                              <div>
-                                {isPresent ? (
-                                  <span style={{ fontSize: '0.7rem', fontWeight: '800', backgroundColor: '#dcfce7', color: '#166534', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                                    ✓ Presente ({sch.checkinTime})
-                                  </span>
-                                ) : isLate ? (
-                                  <span style={{ fontSize: '0.7rem', fontWeight: '800', backgroundColor: '#fef9c3', color: '#854d0e', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                                    ⚠ Atraso ({sch.checkinTime})
-                                  </span>
-                                ) : isAbsent ? (
-                                  <span style={{ fontSize: '0.7rem', fontWeight: '800', backgroundColor: '#fee2e2', color: '#991b1b', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                                    ✕ Ausente
-                                  </span>
-                                ) : isReplaced ? (
-                                  <span style={{ fontSize: '0.7rem', fontWeight: '800', backgroundColor: '#ede9fe', color: '#6d28d9', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                                    🔄 Substituído
-                                  </span>
-                                ) : (
-                                  <span style={{ fontSize: '0.7rem', fontWeight: '700', backgroundColor: '#f1f5f9', color: '#94a3b8', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                                    Pendente
-                                  </span>
-                                )}
-                              </div>
+                      return (
+                        <div 
+                          key={sch.id}
+                          style={{
+                            backgroundColor: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '10px',
+                            padding: '1.1rem',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.85rem',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                              <span style={{ 
+                                fontSize: '0.72rem', 
+                                fontWeight: '800', 
+                                backgroundColor: '#e2e8f0', 
+                                color: '#1e293b', 
+                                padding: '0.2rem 0.55rem', 
+                                borderRadius: '5px' 
+                              }}>
+                                {sch.sector} • {sch.shift}
+                              </span>
+                              <h4 style={{ margin: '0.45rem 0 0 0', fontSize: '1rem', fontWeight: '800', color: '#0f172a' }}>
+                                {sch.doctorName}
+                              </h4>
+                              <span style={{ fontSize: '0.76rem', color: '#64748b' }}>
+                                CRM: {sch.doctorCrm || 'Não informado'}
+                              </span>
                             </div>
 
-                            {/* Ronda Buttons */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.35rem' }}>
-                              <button
-                                type="button"
-                                onClick={() => handleMedicalCheckin(sch.id, 'Presente')}
-                                style={{
-                                  padding: '0.4rem 0.2rem',
-                                  fontSize: '0.7rem',
-                                  fontWeight: '700',
-                                  backgroundColor: isPresent ? '#166534' : '#dcfce7',
-                                  color: isPresent ? '#fff' : '#166534',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  cursor: 'pointer'
-                                }}
-                              >
-                                ✓ Presente
-                              </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                              {isPresent ? (
+                                <span style={{ fontSize: '0.72rem', fontWeight: '800', backgroundColor: '#dcfce7', color: '#166534', padding: '0.25rem 0.55rem', borderRadius: '5px' }}>
+                                  ✓ Presente {sch.checkinTime ? `(${sch.checkinTime})` : ''}
+                                </span>
+                              ) : isLate ? (
+                                <span style={{ fontSize: '0.72rem', fontWeight: '800', backgroundColor: '#fef9c3', color: '#854d0e', padding: '0.25rem 0.55rem', borderRadius: '5px' }}>
+                                  ⚠ Atraso {sch.checkinTime ? `(${sch.checkinTime})` : ''}
+                                </span>
+                              ) : isAbsent ? (
+                                <span style={{ fontSize: '0.72rem', fontWeight: '800', backgroundColor: '#fee2e2', color: '#991b1b', padding: '0.25rem 0.55rem', borderRadius: '5px' }}>
+                                  ✕ Ausente
+                                </span>
+                              ) : isReplaced ? (
+                                <span style={{ fontSize: '0.72rem', fontWeight: '800', backgroundColor: '#ede9fe', color: '#6d28d9', padding: '0.25rem 0.55rem', borderRadius: '5px' }}>
+                                  🔄 Substituído
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: '0.72rem', fontWeight: '700', backgroundColor: '#f1f5f9', color: '#64748b', padding: '0.25rem 0.55rem', borderRadius: '5px' }}>
+                                  Pendente
+                                </span>
+                              )}
 
                               <button
                                 type="button"
-                                onClick={() => handleMedicalCheckin(sch.id, 'Atraso')}
+                                onClick={() => handleOpenEditRonda(sch)}
                                 style={{
-                                  padding: '0.4rem 0.2rem',
-                                  fontSize: '0.7rem',
-                                  fontWeight: '700',
-                                  backgroundColor: isLate ? '#854d0e' : '#fef9c3',
-                                  color: isLate ? '#fff' : '#854d0e',
+                                  background: 'none',
                                   border: 'none',
-                                  borderRadius: '6px',
-                                  cursor: 'pointer'
+                                  cursor: 'pointer',
+                                  color: '#64748b',
+                                  padding: '4px',
+                                  borderRadius: '4px'
                                 }}
+                                title="Editar dados da ronda"
                               >
-                                ⚠ Atraso
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const sub = prompt('Nome do médico substituto:');
-                                  if (sub) handleMedicalCheckin(sch.id, 'Substituído', `Substituído por ${sub}`);
-                                }}
-                                style={{
-                                  padding: '0.4rem 0.2rem',
-                                  fontSize: '0.7rem',
-                                  fontWeight: '700',
-                                  backgroundColor: isReplaced ? '#6d28d9' : '#ede9fe',
-                                  color: isReplaced ? '#fff' : '#6d28d9',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  cursor: 'pointer'
-                                }}
-                              >
-                                🔄 Troca
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleMedicalCheckin(sch.id, 'Ausente', 'Não compareceu')}
-                                style={{
-                                  padding: '0.4rem 0.2rem',
-                                  fontSize: '0.7rem',
-                                  fontWeight: '700',
-                                  backgroundColor: isAbsent ? '#991b1b' : '#fee2e2',
-                                  color: isAbsent ? '#fff' : '#991b1b',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  cursor: 'pointer'
-                                }}
-                              >
-                                ✕ Falta
+                                <Edit2 size={14} />
                               </button>
                             </div>
-
-                            {sch.notes && (
-                              <div style={{ fontSize: '0.7rem', color: '#475569', backgroundColor: '#fff', padding: '0.35rem 0.5rem', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                                📝 {sch.notes}
-                              </div>
-                            )}
                           </div>
-                        );
-                      })}
+
+                          {/* Notas ou Informação de Substituto */}
+                          {sch.notes && (
+                            <div style={{ fontSize: '0.74rem', color: '#334155', backgroundColor: '#fff', padding: '0.45rem 0.65rem', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                              📝 {sch.notes}
+                            </div>
+                          )}
+
+                          {/* Ações Rápidas de Presença */}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.4rem', marginTop: 'auto' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleMedicalCheckin(sch.id, 'Presente')}
+                              style={{
+                                padding: '0.42rem 0.2rem',
+                                fontSize: '0.72rem',
+                                fontWeight: '700',
+                                backgroundColor: isPresent ? '#166534' : '#dcfce7',
+                                color: isPresent ? '#fff' : '#166534',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              ✓ Presente
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleMedicalCheckin(sch.id, 'Atraso')}
+                              style={{
+                                padding: '0.42rem 0.2rem',
+                                fontSize: '0.72rem',
+                                fontWeight: '700',
+                                backgroundColor: isLate ? '#854d0e' : '#fef9c3',
+                                color: isLate ? '#fff' : '#854d0e',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              ⚠ Atraso
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const sub = prompt('Nome do médico substituto:');
+                                if (sub) handleMedicalCheckin(sch.id, 'Substituído', `Substituído por ${sub}`);
+                              }}
+                              style={{
+                                padding: '0.42rem 0.2rem',
+                                fontSize: '0.72rem',
+                                fontWeight: '700',
+                                backgroundColor: isReplaced ? '#6d28d9' : '#ede9fe',
+                                color: isReplaced ? '#fff' : '#6d28d9',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              🔄 Troca
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleMedicalCheckin(sch.id, 'Ausente', 'Não compareceu')}
+                              style={{
+                                padding: '0.42rem 0.2rem',
+                                fontSize: '0.72rem',
+                                fontWeight: '700',
+                                backgroundColor: isAbsent ? '#991b1b' : '#fee2e2',
+                                color: isAbsent ? '#fff' : '#991b1b',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              ✕ Falta
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -2063,87 +2168,202 @@ export default function ReceptionPanel() {
         </div>
       )}
 
-      {/* Check-in Intake Modal */}
-      {showCheckinModal && (
+      {/* Modal de Ronda Médica */}
+      {showRondaModal && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalCardSmall}>
             <div style={styles.modalHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <CheckCircle2 size={20} color="#059669" />
-                <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800' }}>Confirmar Presença</h2>
+                <UserCheck size={20} color="var(--primary-color)" />
+                <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800' }}>
+                  {editingRonda ? 'Editar Ronda Médica' : 'Registrar Presença Médica'}
+                </h2>
               </div>
-              <button onClick={() => setShowCheckinModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
-            </div>
-            
-            <div style={styles.checkinAlertInfo}>
-              <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '0.95rem' }}>
-                {selectedPatientForCheckin?.name}
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.2rem' }}>
-                {selectedPatientForCheckin?.room} • {selectedPatientForCheckin?.shift} (Poltrona #{selectedPatientForCheckin?.chairNumber})
-              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowRondaModal(false)} 
+                style={styles.modalCloseBtn}
+              >
+                <X size={20} />
+              </button>
             </div>
 
-            <form onSubmit={handleSaveCheckin} style={styles.modalForm}>
-              <div className="form-group">
-                <label>Peso de Entrada (kg) *</label>
-                <input 
-                  type="number" step="0.01" className="form-control" required
-                  value={checkinForm.preWeight} onChange={e => setCheckinForm({ ...checkinForm, preWeight: e.target.value })}
-                  style={{ fontSize: '1.1rem', fontWeight: '700' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
-                  <span>Peso Seco: <strong>{selectedPatientForCheckin?.dryWeight || '--'} kg</strong></span>
-                  {checkinForm.preWeight && selectedPatientForCheckin?.dryWeight && (
-                    <span style={{ 
-                      fontWeight: '700', 
-                      color: (parseFloat(checkinForm.preWeight) - parseFloat(selectedPatientForCheckin.dryWeight)) >= 4 ? '#dc2626' : '#059669' 
-                    }}>
-                      Ganho: +{(parseFloat(checkinForm.preWeight) - parseFloat(selectedPatientForCheckin.dryWeight)).toFixed(2)} kg
-                    </span>
-                  )}
+            <form onSubmit={handleSaveRonda} style={styles.modalForm}>
+              <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                {/* Linha 1: Data, Setor e Turno */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.6rem' }}>
+                  <div className="form-group">
+                    <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569' }}>Data *</label>
+                    <input 
+                      type="date" 
+                      className="form-control" 
+                      required
+                      value={rondaForm.date || rondaDate} 
+                      onChange={e => setRondaForm({ ...rondaForm, date: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569' }}>Setor *</label>
+                    <select 
+                      className="form-control" 
+                      required
+                      value={rondaForm.sector} 
+                      onChange={e => setRondaForm({ ...rondaForm, sector: e.target.value })}
+                    >
+                      <option value="Salão 1">Salão 1</option>
+                      <option value="Salão 2">Salão 2</option>
+                      <option value="Salão 3">Salão 3</option>
+                      <option value="DP">DP</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569' }}>Turno *</label>
+                    <select 
+                      className="form-control" 
+                      required
+                      value={rondaForm.shift} 
+                      onChange={e => setRondaForm({ ...rondaForm, shift: e.target.value })}
+                    >
+                      <option value="1º Turno">1º Turno</option>
+                      <option value="2º Turno">2º Turno</option>
+                      <option value="3º Turno">3º Turno</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                {/* Linha 2: Médico */}
                 <div className="form-group">
-                  <label>PA Sistólica *</label>
-                  <input 
-                    type="number" className="form-control" placeholder="120" required
-                    value={checkinForm.systolicBP} onChange={e => setCheckinForm({ ...checkinForm, systolicBP: e.target.value })}
+                  <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569' }}>Médico Escalado *</label>
+                  <select 
+                    className="form-control"
+                    value={rondaForm.doctorId}
+                    onChange={e => {
+                      const docId = e.target.value;
+                      const selected = medicalDoctors.find(d => (d.id || d.uid) === docId);
+                      if (selected) {
+                        setRondaForm({
+                          ...rondaForm,
+                          doctorId: docId,
+                          doctorName: selected.name,
+                          doctorCrm: selected.crm || ''
+                        });
+                      } else {
+                        setRondaForm({
+                          ...rondaForm,
+                          doctorId: docId,
+                          doctorName: '',
+                          doctorCrm: ''
+                        });
+                      }
+                    }}
+                  >
+                    <option value="">Selecione o médico...</option>
+                    {medicalDoctors.map(doc => (
+                      <option key={doc.id || doc.uid} value={doc.id || doc.uid}>
+                        {doc.name} {doc.crm ? `(CRM: ${doc.crm})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Caso precise de digitação manual de médico */}
+                {(!rondaForm.doctorId || medicalDoctors.length === 0) && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.6rem' }}>
+                    <div className="form-group">
+                      <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569' }}>Nome do Médico</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="Nome completo do médico"
+                        value={rondaForm.doctorName} 
+                        onChange={e => setRondaForm({ ...rondaForm, doctorName: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569' }}>CRM</label>
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="Ex: 54321-MG"
+                        value={rondaForm.doctorCrm} 
+                        onChange={e => setRondaForm({ ...rondaForm, doctorCrm: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Linha 3: Status da Presença e Horário */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569' }}>Status da Presença *</label>
+                    <select 
+                      className="form-control" 
+                      required
+                      value={rondaForm.status} 
+                      onChange={e => setRondaForm({ ...rondaForm, status: e.target.value })}
+                    >
+                      <option value="Presente">✓ Presente</option>
+                      <option value="Atraso">⚠ Atraso</option>
+                      <option value="Substituído">🔄 Substituído</option>
+                      <option value="Ausente">✕ Ausente</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569' }}>Horário da Ronda</label>
+                    <input 
+                      type="time" 
+                      className="form-control"
+                      value={rondaForm.checkinTime} 
+                      onChange={e => setRondaForm({ ...rondaForm, checkinTime: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* Linha Condicional: Substituto */}
+                {rondaForm.status === 'Substituído' && (
+                  <div className="form-group">
+                    <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#6d28d9' }}>Médico Substituto *</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="Nome do médico que está cobrindo o plantão"
+                      required
+                      value={rondaForm.substituteName} 
+                      onChange={e => setRondaForm({ ...rondaForm, substituteName: e.target.value })}
+                    />
+                  </div>
+                )}
+
+                {/* Linha 4: Observações */}
+                <div className="form-group">
+                  <label style={{ fontSize: '0.78rem', fontWeight: '700', color: '#475569' }}>Observações</label>
+                  <textarea 
+                    rows="2" 
+                    className="form-control" 
+                    placeholder="Registros adicionais da recepção sobre o plantão ou motivos de atraso/troca..."
+                    value={rondaForm.notes} 
+                    onChange={e => setRondaForm({ ...rondaForm, notes: e.target.value })}
                   />
                 </div>
-                <div className="form-group">
-                  <label>PA Diastólica *</label>
-                  <input 
-                    type="number" className="form-control" placeholder="80" required
-                    value={checkinForm.diastolicBP} onChange={e => setCheckinForm({ ...checkinForm, diastolicBP: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Temperatura Corporal (°C) *</label>
-                <input 
-                  type="number" step="0.1" className="form-control" placeholder="36.5" required
-                  value={checkinForm.temperature} onChange={e => setCheckinForm({ ...checkinForm, temperature: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Observação de Chegada</label>
-                <input 
-                  type="text" className="form-control" placeholder="Ex: Queixa de dor no braço, edema moderado..."
-                  value={checkinForm.notes} onChange={e => setCheckinForm({ ...checkinForm, notes: e.target.value })}
-                />
               </div>
 
               <div style={styles.modalFooter}>
-                <button type="button" onClick={() => setShowCheckinModal(false)} className="btn btn-secondary">
+                <button 
+                  type="button" 
+                  onClick={() => setShowRondaModal(false)} 
+                  className="btn btn-secondary"
+                >
                   Cancelar
                 </button>
-                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: '#059669' }}>
-                  {actionLoading ? 'Registrando...' : 'Confirmar Presença'}
+                <button 
+                  type="submit" 
+                  disabled={actionLoading} 
+                  className="btn btn-primary"
+                >
+                  {actionLoading ? 'Salvando...' : (editingRonda ? 'Atualizar Ronda' : 'Salvar Presença')}
                 </button>
               </div>
             </form>
@@ -2820,5 +3040,25 @@ const styles = {
     padding: '0.75rem 1rem',
     borderRadius: '8px',
     border: '1px solid #e2e8f0',
-  }
+  },
+  patientDropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#ffffff',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    marginTop: '4px',
+    maxHeight: '260px',
+    overflowY: 'auto',
+    zIndex: 100,
+    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+  },
+  patientDropdownItem: {
+    padding: '0.65rem 0.85rem',
+    borderBottom: '1px solid #f1f5f9',
+    cursor: 'pointer',
+    transition: 'background-color 0.12s ease',
+  },
 };

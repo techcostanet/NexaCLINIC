@@ -833,23 +833,6 @@ export const MODULE_GUIDES = {
     ]
   },
 
-  // Placeholders para módulos com manual em finalização
-  reception: {
-    id: 'reception',
-    name: 'Recepção & Cadastro',
-    subtitle: 'Nex-Ai.RECEPTION — Admissão & Acolhimento',
-    color: '#0ea5e9',
-    recursos: [
-      { title: 'Admissão de Pacientes', desc: 'Cadastro de dados pessoais, convênios, contatos de emergência e documentos digitalizados.' },
-      { title: 'Controle de Presença Diária', desc: 'Check-in dos pacientes de hemodiálise por turno e salão.' }
-    ],
-    tutorial: [
-      { title: 'Operação da Recepção', steps: ['Consulte a documentação completa no treinamento presencial ou contate o administrador.'] }
-    ],
-    duvidas: [
-      { pergunta: 'Manual em finalização', resposta: 'As instruções detalhadas deste módulo serão liberadas nas próximas atualizações.' }
-    ]
-  },
 
   clinical: {
     id: 'clinical',
@@ -2043,12 +2026,16 @@ export const MODULE_GUIDES = {
         desc: 'Cadastro estruturado com Identificação (CPF/CNS e desambiguação de homônimos), Contatos com Busca de CEP, Convênio/APAC, Logística de Salão, Nefrologia (Histórico da 1ª diálise, Etiologia DRC, Alergias e Comorbidades) e Regulação de Transplante Renal (RBT).'
       },
       {
-        title: 'Autocompletar Instantâneo de CEP (ViaCEP)',
-        desc: 'Preenchimento automático e imediato de Logradouro, Bairro, Cidade e Estado ao digitar o CEP e clicar em Buscar.'
+        title: 'Autocomplete Inteligente de Busca de Pacientes',
+        desc: 'Campo de pesquisa em tempo real com dropdown flutuante idêntico ao módulo Assist, exibindo nome em negrito maiúsculo, CPF, salão e turno, com fechamento automático ao selecionar ou clicar fora.'
       },
       {
-        title: 'Check-in de Presença & Ganho de Peso Interdialítico',
-        desc: 'Confirmação rápida de chegada com registro de PA, temperatura e cálculo automático do ganho de peso (Peso Pré - Peso Seco) com alerta visual para ganhos críticos (> 4.0 kg).'
+        title: 'Ronda Médica Presencial & Auditoria de Plantões',
+        desc: 'Auditoria presencial de nefrologistas com seletor de data, atalhos de navegação e botão "Hoje", filtros de setor e turno, 6 KPIs em linha (Escalados, Presentes, Atrasos, Substituídos, Ausentes, Pendentes), ações rápidas em 1 clique e modal de registro sincronizado com o Nex-Ai.MED.'
+      },
+      {
+        title: 'Autocompletar Instantâneo de CEP (ViaCEP)',
+        desc: 'Preenchimento automático e imediato de Logradouro, Bairro, Cidade e Estado ao digitar o CEP e clicar em Buscar.'
       },
       {
         title: 'Comunicação Direta via WhatsApp em 1 Clique',
@@ -2057,14 +2044,6 @@ export const MODULE_GUIDES = {
       {
         title: 'Monitoramento Preditivo de Validade de APACs',
         desc: 'Sinalização automática com badges coloridos para APACs regulares (verde), a vencer em menos de 30 dias (âmbar) ou vencidas (vermelho).'
-      },
-      {
-        title: 'Mapa Interativo de Poltronas & Salas',
-        desc: 'Visualização da distribuição de poltronas em tempo real por salão e turno com identificação de presença dos pacientes em diálise.'
-      },
-      {
-        title: 'Ronda Médica Presencial Integrada',
-        desc: 'Auditoria de presença dos nefrologistas plantonistas por turno e setor com registro de presença, atraso, trocas ou faltas.'
       }
     ],
     tutorial: [
@@ -2083,32 +2062,40 @@ export const MODULE_GUIDES = {
         ]
       },
       {
-        title: 'Como Realizar o Check-in Diário de Presença',
+        title: 'Como Buscar Pacientes com o Autocomplete Rápido',
         steps: [
-          'Na aba "Presença", localize o paciente agendado para o turno atual.',
-          'Clique no botão verde "Registrar".',
-          'Informe o Peso de Entrada (kg), a Pressão Arterial (Sistólica/Diastólica) e a Temperatura (°C).',
-          'O sistema calculará automaticamente o ganho de peso interdialítico.',
-          'Clique em "Confirmar Presença". O status mudará para "Presente" e os dados ficarão disponíveis para a enfermagem.'
+          'No campo "Paciente:" no topo da listagem, comece a digitar o nome, CPF ou CNS.',
+          'Um dropdown flutuante exibirá instantaneamente os pacientes correspondentes com sala e turno.',
+          'Ao clicar no paciente desejado, o campo é preenchido, o dropdown fecha suavemente e a tabela filtra o cadastro selecionado.'
+        ]
+      },
+      {
+        title: 'Como Auditar e Registrar a Ronda Médica Presencial',
+        steps: [
+          'Acesse a aba "Ronda" no módulo de Recepção.',
+          'Utilize as setas (< e >) ou o botão "Hoje" para selecionar a data desejada.',
+          'Filtre por Setor (Salão 1, Salão 2, etc.) ou Turno conforme necessário.',
+          'Conforme os médicos comparecerem, utilize as ações rápidas do card: "✓ Presente", "⚠ Atraso", "🔄 Troca" ou "✕ Falta".',
+          'Caso não haja escala agendada para a data ou deseje cadastrar um novo plantão na hora, clique em "+ Registrar Ronda", selecione o nefrologista, o setor, o turno e o horário de entrada.'
         ]
       },
       {
         title: 'Como Monitorar APACs e Falar com Familiares',
         steps: [
           'Consulte o card de KPI "APACs" no topo do painel para verificar pendências.',
-          'Na tabela de pacientes ou presença, clique no ícone do WhatsApp para disparar uma mensagem direta ao paciente ou familiar de recado.'
-        ]
-      },
-      {
-        title: 'Como Auditar a Ronda Médica',
-        steps: [
-          'Acesse a aba "Ronda".',
-          'Confira a lista de médicos escalados para o dia.',
-          'Conforme o nefrologista chegar ao salão, clique em "✓ Presente". Em caso de atraso ou substituição, clique no respectivo botão para auditar.'
+          'Na tabela de pacientes, clique no ícone do WhatsApp para disparar uma mensagem direta ao paciente ou familiar de recado.'
         ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Onde foram parar as abas de Presença e Poltronas da Recepção?',
+        resposta: 'O controle operacional diário de sessões, ganho de peso, sinais vitais e distribuição física de poltronas foi centralizado na aba "Escala" do módulo Assistencial (Nex-Ai.ASSIST), evitando duplicidade e otimizando a rotina do posto de enfermagem.'
+      },
+      {
+        pergunta: 'Como a Ronda Médica se comunica com a escala dos médicos?',
+        resposta: 'Toda auditoria ou registro de presença médica lançado na Recepção é sincronizado em tempo real com a coleção de escalas médicas do Firestore, refletindo de imediato no painel de escalas do módulo Nex-Ai.MED.'
+      },
       {
         pergunta: 'Como as alterações feitas no cadastro de pacientes se refletem nos outros módulos?',
         resposta: 'O sistema utiliza uma Base Central Unificada (Master Patient Record). Ao salvar qualquer alteração (endereço, telefone, peso seco, alergias ou APAC), os novos dados são propagados instantaneamente para o Prontuário Clínico, Enfermagem, Faturamento APAC, Feed Assistencial e Agenda de Consultas.'
@@ -2118,16 +2105,8 @@ export const MODULE_GUIDES = {
         resposta: 'Para garantir que o paciente admitido pela recepção já entre no sistema com dados cruciais para a segurança clínica (alergias em destaque, tipo sanguíneo, acesso vascular e histórico de diálise) e faturamento APAC (CNS, CID-10 e número da APAC).'
       },
       {
-        pergunta: 'O que acontece quando o ganho de peso interdialítico for excessivo?',
-        resposta: 'Ao registrar um peso de entrada que supere em mais de 4.0 kg o peso seco prescrito, o sistema emite um destaque visual em vermelho na linha do paciente para alertar a equipe de enfermagem sobre hipervolemia.'
-      },
-      {
         pergunta: 'Como funciona a busca de CEP?',
         resposta: 'Basta digitar os 8 números do CEP na aba de contatos e clicar em "Buscar". O sistema consulta a API oficial do ViaCEP e preenche imediatamente o logradouro, bairro, cidade e estado.'
-      },
-      {
-        pergunta: 'Onde o médico visualiza as alergias cadastradas pela recepção?',
-        resposta: 'As alergias informadas na admissão aparecem automaticamente com badge de alerta de segurança no topo do Cockpit Clínico do Prontuário Médico (Nex-Ai CLINIC).'
       }
     ]
   },

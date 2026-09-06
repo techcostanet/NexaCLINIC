@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.60',
+      date: '06/09/2026',
+      title: 'Nex-Ai.RECEPTION — Busca no Padrão Assist, Nova Ronda Médica Completa & Unificação na Escala',
+      description: 'Padronização da busca de pacientes com dropdown flutuante idêntico ao Assist, nova central completa de auditoria presencial de ronda médica com seletor de data e ações rápidas, e unificação das antigas abas Presença e Poltronas na Escala do módulo Assist.',
+      changes: [
+        { type: 'Busca de Paciente (Estilo Assist)', text: 'Campo com rótulo "Paciente:", digitação em maiúsculas, dropdown flutuante com nome, CPF, salão e turno, com fechamento suave ao clicar no paciente ou fora do campo.' },
+        { type: 'Nova Central de Ronda Médica', text: 'Auditoria presencial de nefrologistas com seletor de data (navegação e "Hoje"), filtros por setor/turno, 6 KPIs em linha e ações rápidas de 1 clique (✓ Presente, ⚠ Atraso, 🔄 Troca, ✕ Falta).' },
+        { type: 'Modal de Registro de Ronda', text: 'Modal para cadastro ou edição de presenças médicas sincronizado em tempo real com a coleção medical_schedules e o módulo Nex-Ai.MED.' },
+        { type: 'Unificação Presença & Poltronas', text: 'Remoção das abas legadas Presença e Poltronas da Recepção, centralizando o controle operacional na aba Escala do Nex-Ai.ASSIST.' },
+        { type: 'Manual do Módulo Atualizado', text: 'Atualização das seções de recursos, tutoriais e dúvidas na base de conhecimento oficial do módulo de Recepção.' }
+      ]
+    },
+    {
       version: 'v4.9.59',
       date: '06/09/2026',
       title: 'Nex-Ai.ASSIST — Espaçamento Padrão no Modal de Escala, 7 KPIs em Linha Única & 4 Novos Relatórios',

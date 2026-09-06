@@ -1,3 +1,26 @@
+## [v4.9.60] - 06 de Setembro, 2026
+### Nex-Ai.RECEPTION — Busca de Pacientes com Autocomplete no Padrão Assist, Nova Ronda Médica Completa & Unificação de Presença/Poltronas na Escala
+- **Autocomplete Inteligente na Busca de Pacientes (`ReceptionPanel.jsx`):**
+  - Padronização do campo de busca de pacientes exatamente no estilo do módulo Assist, com label superior `Paciente:` e digitação em caixa alta automática.
+  - Dropdown flutuante instantâneo com sombra suave e bordas arredondadas exibindo nome do paciente em negrito maiúsculo (`font-weight: 800`) e linha secundária com `CPF • Salão (Turno)`.
+  - Fechamento imediato e suave do dropdown ao selecionar o paciente, ao clicar fora da área de busca (`searchWrapperRef` + listener `mousedown`) ou ao pressionar a tecla `Escape`.
+- **Nova Central de Ronda Médica Presencial (`ReceptionPanel.jsx`):**
+  - Auditoria completa de presença presencial dos médicos nefrologistas escalados na unidade com suporte a qualquer data selecionada.
+  - Seletor de data intuitivo com botões de navegação rápida (dia anterior `<` e próximo dia `>`) e botão de atalho direto para "Hoje".
+  - Filtros dinâmicos por Setor (`Salão 1`, `Salão 2`, `Salão 3`, `DP`) e por Turno (`1º Turno`, `2º Turno`, `3º Turno`).
+  - Painel analítico com 6 KPIs em linha única: `Escalados`, `Presentes` (verde), `Atrasos` (amarelo), `Substituídos` (roxo), `Ausentes` (vermelho) e `Pendentes` (cinza).
+  - Ações rápidas de 1 clique nos cards de plantão: `✓ Presente`, `⚠ Atraso`, `🔄 Troca`, `✕ Falta` e botão `Editar`.
+  - Modal ergonômico de Registro e Edição de Ronda Médica integrado e sincronizado em tempo real com a coleção `medical_schedules` do Firestore (linkado diretamente ao `Nex-Ai.MED`).
+  - Empty state inteligente quando não houver plantões agendados para a data, permitindo o registro da presença médica presencial na hora.
+- **Unificação Operacional das Abas Presença e Poltronas:**
+  - Remoção definitiva das abas legadas "Presença" (check-in de hemodiálise) e "Poltronas" (mapa de salas) do módulo Recepção, eliminando duplicidade de fluxo e concentrando o controle físico e clínico de poltronas na aba "Escala" do módulo `Nex-Ai.ASSIST`.
+- **Rótulos Rigorosos de 1 Palavra & Boy Scout Rule:**
+  - Todos os novos botões, filtros e campos concebidos com termos objetivos e diretos de 1 palavra (`Paciente`, `Data`, `Setores`, `Turnos`, `Ronda`, `Status`, `Hoje`).
+- **Atualização da Base de Conhecimento (`src/data/moduleGuidesData.js`):**
+  - Atualização completa do manual do módulo de Recepção refletindo as novas rotinas de busca, a auditoria presencial de médicos e a centralização de poltronas na Escala.
+
+---
+
 ## [v4.9.59] - 06 de Setembro, 2026
 ### Nex-Ai.ASSIST — Espaçamento Padrão no Modal de Escala, 7 KPIs em Linha Única & 4 Novos Relatórios de Escala e Heparina
 - **Espaçamento e Harmonia no Modal de Edição da Escala (`DialysisScheduleTab.jsx`):**
