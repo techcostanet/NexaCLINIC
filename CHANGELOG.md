@@ -1,4 +1,4 @@
-## [v4.9.65] - 08 de Setembro, 2026
+## [v4.9.66] - 08 de Setembro, 2026
 ### Nex-Ai CLINIC — Padrão Ouro de Topo (ModuleHeader), Desduplicação de Marca & Alinhamento Visual
 - **Componente Oficial Padronizado (`ModuleHeader.jsx`):**
   - Criação de `src/components/common/ModuleHeader.jsx` centralizando título com ponto de destaque colorido (`.RECEPTION`, `.ASSIST`, `.MED`), ícones em degradê específicos (46x46px com cantos arredondados de 12px), subtítulo descritivo e área flexível para ações de contexto de tela.

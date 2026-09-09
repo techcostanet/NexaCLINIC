@@ -6,7 +6,7 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v4.9.65',
+      version: 'v4.9.66',
       date: '08/09/2026',
       title: 'Nex-Ai CLINIC — Padrão Ouro de Topo (ModuleHeader), Desduplicação de Marca & Alinhamento Visual',
       description: 'Padronização oficial da arquitetura de topo de módulos: criação do componente reutilizável ModuleHeader com ponto de destaque e ícone temático, limpeza do branding global na barra superior, desduplicação do seletor de Unidade e eliminação do espaçamento em branco excedente nos módulos Assist e Med.',
