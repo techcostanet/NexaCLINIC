@@ -1,3 +1,16 @@
+## [v4.9.68] - 09 de Setembro, 2026
+### Nex-Ai CLINIC — Correção Crítica de Referência de Unidade (`useUnit`) & Sanitização de Dependências Globais
+- **Correção Crítica de `useUnit` (`MedicalPanel.jsx` & `AssistPanel.jsx`):**
+  - Restauração da importação de `useUnit` a partir de `../contexts/UnitContext` em ambos os módulos após a adoção do cabeçalho oficial `ModuleHeader`.
+  - Resolução definitiva do erro em tempo de execução `ReferenceError: useUnit is not defined` capturado pelo `ErrorBoundary`.
+- **Sanitização de Variáveis e Prevenção Ativa de Quebras:**
+  - **`useStockLogic.jsx`**: Adicionada a desestruturação de `activeUnit` no hook do estoque, prevenindo falha no salvamento e vinculação de fornecedores.
+  - **`ClinicalPanel.jsx`**: Correção da chamada de registro e acompanhamento de sessão da diálise vinculando diretamente ao manipulador `handleOpenSessionLog`.
+  - **`FinancePanel.jsx`**: Restauração da importação de `import_2026.json` para processamento íntegro no modal de conciliação e dados de Betim.
+  - **`authService.js`**: Adicionado `deleteDoc` nas exportações dinâmicas do Firestore para a rotina de desduplicação de usuários.
+
+---
+
 ## [v4.9.66] - 08 de Setembro, 2026
 ### Nex-Ai CLINIC — Padrão Ouro de Topo (ModuleHeader), Desduplicação de Marca & Alinhamento Visual
 - **Componente Oficial Padronizado (`ModuleHeader.jsx`):**

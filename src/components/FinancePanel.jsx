@@ -45,6 +45,7 @@ import { dbService } from '../firebase';
 import { parseBoletoPdf, parseBoletoImage, cleanDigitableLine } from '../utils/boletoParser';
 import FinanceReportsModal from './FinanceReportsModal';
 import CnabExportModal from './CnabExportModal';
+import import2026Data from '../data/import_2026.json';
 import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
 

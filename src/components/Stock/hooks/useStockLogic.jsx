@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 export function useStockLogic(currentUser) {
-  const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
+  const { activeUnitId, activeUnit, filterByActiveUnit, matchItemUnit } = useUnit();
 
   const safeArray = (val) => {
     if (Array.isArray(val)) return val;

@@ -16,6 +16,7 @@ import MedicalDoctorsTab from './medical/MedicalDoctorsTab';
 import MedicalSettingsTab from './medical/MedicalSettingsTab';
 import MedicalStatementModal from './medical/MedicalStatementModal';
 import ModuleHeader from './common/ModuleHeader';
+import { useUnit } from '../contexts/UnitContext';
 
 export default function MedicalPanel({ currentUser, onBack }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();

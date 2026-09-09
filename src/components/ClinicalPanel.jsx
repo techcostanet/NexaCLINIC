@@ -891,7 +891,7 @@ export default function ClinicalPanel() {
                               </td>
                               <td>
                                 <button 
-                                  onClick={() => handleStartSessionMonitoring(pat)} 
+                                  onClick={() => handleOpenSessionLog(pat)} 
                                   className="btn btn-sm"
                                   style={{ backgroundColor: '#8b5cf6', color: '#fff' }}
                                 >

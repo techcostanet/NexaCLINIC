@@ -334,7 +334,7 @@ export const getUsers = async () => {
       return mockList;
     }
     try {
-      const { getFirestore, collection, getDocs, doc, setDoc } = await import('firebase/firestore');
+      const { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } = await import('firebase/firestore');
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'users'));
       let rawUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));

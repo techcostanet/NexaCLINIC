@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.68',
+      date: '09/09/2026',
+      title: 'Nex-Ai CLINIC — Correção Crítica de Referência de Unidade (useUnit) & Sanitização Global',
+      description: 'Restauração da importação do hook useUnit nos módulos Assist (.ASSIST) e Médica (.MED) solucionando o erro em tempo de execução capturado pelo ErrorBoundary, com desestruturação de activeUnit no estoque e correção de referências de acompanhamento clínico e dados.',
+      changes: [
+        { type: 'Correção useUnit no Assist e Med', text: 'Restauração da importação de useUnit a partir de UnitContext em MedicalPanel.jsx e AssistPanel.jsx após padronização com ModuleHeader.' },
+        { type: 'Desestruturação activeUnit no Estoque', text: 'Inclusão de activeUnit na desestruturação de useUnit em useStockLogic.jsx, garantindo integridade no salvamento de fornecedores.' },
+        { type: 'Acompanhamento Clínico de Sessão', text: 'Correção do manipulador handleOpenSessionLog em ClinicalPanel.jsx para abertura sem erros do registro de diálise.' },
+        { type: 'Importação Financeira Betim', text: 'Restauração da importação de import_2026.json no FinancePanel.jsx para conciliação bancária.' },
+        { type: 'Sanitização de Usuários no AuthService', text: 'Adição de deleteDoc na importação dinâmica de Firestore para suporte à rotina de limpeza de cadastros duplicados.' }
+      ]
+    },
+    {
       version: 'v4.9.66',
       date: '08/09/2026',
       title: 'Nex-Ai CLINIC — Padrão Ouro de Topo (ModuleHeader), Desduplicação de Marca & Alinhamento Visual',

@@ -9,6 +9,7 @@ import DialysisScheduleTab from './assist/DialysisScheduleTab';
 import AssistSurgeriesTab from './assist/AssistSurgeriesTab';
 import AssistReportsModal from './assist/AssistReportsModal';
 import ModuleHeader from './common/ModuleHeader';
+import { useUnit } from '../contexts/UnitContext';
 
 const isSamePosts = (a, b) => {
   if (!a || !b || a.length !== b.length) return false;
