@@ -55,36 +55,6 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
     setMobileMenuOpen(false);
   };
 
-  const portalName = currentModule === 'assist'
-    ? 'Nex-Ai.ASSIST'
-    : currentModule === 'reception' 
-    ? 'Nex-Ai.RECEPTION' 
-    : currentModule === 'clinical'
-    ? 'Nex-Ai.CLINIC'
-    : currentModule === 'stock'
-    ? 'Nex-Ai.STOCK'
-    : currentModule === 'maintenance'
-    ? 'Nex-Ai.SERVICE'
-    : currentModule === 'hr'
-    ? 'Nex-Ai.HR'
-    : currentModule === 'finance'
-    ? 'Nex-Ai.FINANCE'
-    : currentModule === 'apac'
-    ? 'Nex-Ai.APAC'
-    : currentModule === 'purchasing'
-    ? 'Nex-Ai.PROCURE'
-    : currentModule === 'calendar'
-    ? 'Nex-Ai.CAL'
-    : currentModule === 'config'
-    ? 'Nex-Ai.CONFIG'
-    : currentModule === 'requisitions'
-    ? 'Nex-Ai.CARE'
-    : currentModule === 'sesmt'
-    ? 'Nex-Ai.SAFE'
-    : currentModule === 'medical'
-    ? 'Nex-Ai.MED'
-    : 'Nex-Ai.INDEX';
-
   return (
     <nav style={styles.nav}>
       <div style={styles.navContainer}>
@@ -94,21 +64,6 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
             <img src={tenantSettings.logo} alt="Logo" style={styles.brandLogoImg} />
           ) : null}
           <NexAiBrand size="md" showIcon={!tenantSettings.logo} suffix="" />
-          {portalName && (
-            <span style={{ 
-              fontSize: '0.75rem', 
-              fontWeight: '700', 
-              color: '#4f46e5',
-              backgroundColor: '#eef2ff',
-              padding: '0.2rem 0.5rem',
-              borderRadius: '6px',
-              border: '1px solid #c7d2fe',
-              marginLeft: '0.4rem',
-              letterSpacing: '0.02em'
-            }}>
-              {portalName}
-            </span>
-          )}
         </div>
 
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

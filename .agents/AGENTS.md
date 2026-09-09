@@ -34,6 +34,12 @@ Toda vez que um deploy for realizado, a seguinte sequência de ações deve ser 
      - ❌ *"Realizado / Pago"* ➡️ ✅ **`Realizado`**
    - **Regra de Limpeza Ativa (Boy Scout Rule):** Toda vez que qualquer arquivo ou componente for aberto ou alterado, é obrigatório varrer e remover quaisquer rótulos duplos ou redundantes encontrados.
 
+2. **Padrão Oficial de Cabeçalho dos Módulos (Module Header):**
+   - **Navbar Superior (Global):** Exibe exclusivamente a marca mãe limpa `Nex-Ai` (`<NexAiBrand size="md" suffix="" />`), os atalhos globais (`Relatórios`, `Manual`, `Trocar Portal`) e centraliza como ponto único o seletor de Unidade (`<UnitSelector />`). É terminantemente proibido exibir badge com nome de módulo ao lado do logo.
+   - **Cabeçalho Local do Módulo:** Utilizar obrigatoriamente o componente padronizado [`src/components/common/ModuleHeader.jsx`](file:///c:/Nexa/NexAi-CLINIC/src/components/common/ModuleHeader.jsx). O título deve usar a identificação com ponto de destaque (ex: `.RECEPTION`, `.MED`, `.ASSIST`, `.STOCK`), ícone em gradiente específico de 46x46px com cantos arredondados (12px), e subtítulo conciso.
+   - **Proibição de Duplicações:** É estritamente proibido duplicar o `<UnitSelector />` dentro dos cabeçalhos dos módulos.
+   - **Alinhamento e Container Raiz:** O container raiz do módulo (`styles.container`) deve possuir apenas `display: 'flex', flexDirection: 'column', gap: '1.25rem'`. Nunca adicionar `padding` ou `margin` excedentes pois a tag `<main className="main-content">` já provê o espaçamento unificado. Detalhes completos em [`.agents/rules/standard-header-ui.md`](file:///c:/Nexa/NexAi-CLINIC/.agents/rules/standard-header-ui.md).
+
 ## Regras de Documentação e Manuais dos Módulos (Obrigatório)
 
 1. **Atualização Contínua dos Manuais (`src/data/moduleGuidesData.js`):**

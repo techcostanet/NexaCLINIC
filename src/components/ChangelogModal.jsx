@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.65',
+      date: '08/09/2026',
+      title: 'Nex-Ai CLINIC — Padrão Ouro de Topo (ModuleHeader), Desduplicação de Marca & Alinhamento Visual',
+      description: 'Padronização oficial da arquitetura de topo de módulos: criação do componente reutilizável ModuleHeader com ponto de destaque e ícone temático, limpeza do branding global na barra superior, desduplicação do seletor de Unidade e eliminação do espaçamento em branco excedente nos módulos Assist e Med.',
+      changes: [
+        { type: 'Componente Oficial ModuleHeader', text: 'Criação do componente centralizado ModuleHeader.jsx com tipografia moderna, ponto colorido (.RECEPTION, .ASSIST, .MED), gradientes temáticos e área de ações contextuais de tela.' },
+        { type: 'Branding Global Limpo na Navbar', text: 'Remoção de badges redundantes ao lado do logotipo Nex-Ai, conferindo visual limpo e padrão visual enterprise.' },
+        { type: 'Desduplicação da Unidade', text: 'Centralização do seletor de Unidade exclusivamente na Navbar superior direita, eliminando duplicações visuais nos cabeçalhos dos módulos.' },
+        { type: 'Correção de Espaçamento no Assist e Med', text: 'Normalização dos containers de página eliminando o padding duplo interno que causava vão em branco indesejado no topo.' },
+        { type: 'Diretrizes Documentadas', text: 'Criação da regra oficial .agents/rules/standard-header-ui.md e atualização das diretrizes do projeto em .agents/AGENTS.md.' }
+      ]
+    },
+    {
       version: 'v4.9.62',
       date: '06/09/2026',
       title: 'Nex-Ai CLINIC — Tratamentos, Tipo de Paciente, Gestão de Esquemas no Config & Exportação Excel',

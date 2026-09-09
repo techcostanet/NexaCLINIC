@@ -15,9 +15,7 @@ import MedicalProductionTab from './medical/MedicalProductionTab';
 import MedicalDoctorsTab from './medical/MedicalDoctorsTab';
 import MedicalSettingsTab from './medical/MedicalSettingsTab';
 import MedicalStatementModal from './medical/MedicalStatementModal';
-import { useUnit } from '../contexts/UnitContext';
-import UnitSelector from './common/UnitSelector';
-import NexAiBrand from './common/NexAiBrand';
+import ModuleHeader from './common/ModuleHeader';
 
 export default function MedicalPanel({ currentUser, onBack }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
@@ -370,25 +368,14 @@ export default function MedicalPanel({ currentUser, onBack }) {
         </div>
       )}
 
-      {/* Header / Hero Section (Design Padrão Nexa) */}
-      <div style={styles.heroSection}>
-        <div style={styles.heroLeft}>
-          <div style={styles.heroIconBadge}>
-            <Stethoscope size={28} color="#fff" />
-          </div>
-          <div>
-            <h1 style={styles.heroTitle}>
-              <NexAiBrand size="lg" suffix=".MED" showIcon={false} />
-            </h1>
-            <p style={styles.heroSubtitle}>
-              Escala de plantões nos salões, produção ambulatorial, bolsa de trocas e repasse financeiro.
-            </p>
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <UnitSelector compact showLabel={false} />
-        </div>
-      </div>
+      {/* Header Oficial Padronizado */}
+      <ModuleHeader
+        icon={Stethoscope}
+        title=".MED"
+        subtitle="Escala de plantões nos salões, produção ambulatorial, bolsa de trocas e repasse financeiro."
+        gradient="linear-gradient(135deg, #0284c7, #2563eb)"
+        dotColor="#0284c7"
+      />
 
       {/* Navigation Tabs Bar */}
       <div style={styles.tabsBar}>
@@ -523,10 +510,7 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem',
-    padding: '1.5rem',
-    maxWidth: '1600px',
-    margin: '0 auto',
+    gap: '1.25rem',
   },
   toast: {
     position: 'fixed',

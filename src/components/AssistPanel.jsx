@@ -8,9 +8,7 @@ import {
 import DialysisScheduleTab from './assist/DialysisScheduleTab';
 import AssistSurgeriesTab from './assist/AssistSurgeriesTab';
 import AssistReportsModal from './assist/AssistReportsModal';
-import { useUnit } from '../contexts/UnitContext';
-import UnitSelector from './common/UnitSelector';
-import NexAiBrand from './common/NexAiBrand';
+import ModuleHeader from './common/ModuleHeader';
 
 const isSamePosts = (a, b) => {
   if (!a || !b || a.length !== b.length) return false;
@@ -473,108 +471,103 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
         </div>
       )}
 
-      {/* Hero Header Padronizado com NexaSTOCK e NexaHR */}
-      <div style={styles.heroSection}>
-        <div style={styles.heroLeft}>
-          <div style={styles.heroIconBadge}>
-            <Megaphone size={28} color="#fff" />
-          </div>
-          <div>
-            <h1 style={styles.heroTitle}>
-              <NexAiBrand size="lg" suffix=".ASSIST" showIcon={false} />
-            </h1>
-            <p style={styles.heroSubtitle}>
-              Gestão assistencial de enfermagem, mapa de leitos por salões e mural clínico.
-            </p>
-          </div>
-        </div>
+      {/* Header Oficial Padronizado */}
+      <ModuleHeader
+        icon={Megaphone}
+        title=".ASSIST"
+        subtitle="Gestão assistencial de enfermagem, mapa de leitos por salões e mural clínico."
+        gradient="linear-gradient(135deg, #ec4899, #a855f7)"
+        dotColor="#a855f7"
+        actions={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              backgroundColor: '#f1f5f9',
+              padding: '4px',
+              borderRadius: '12px',
+              gap: '4px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <button
+                type="button"
+                onClick={() => setActiveAssistTab('escala')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 18px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: activeAssistTab === 'escala' ? '700' : '600',
+                  fontSize: '0.88rem',
+                  backgroundColor: activeAssistTab === 'escala' ? '#4f46e5' : 'transparent',
+                  color: activeAssistTab === 'escala' ? '#ffffff' : '#64748b',
+                  boxShadow: activeAssistTab === 'escala' ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Calendar size={16} />
+                <span>Escala</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveAssistTab('mural')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 18px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: activeAssistTab === 'mural' ? '700' : '600',
+                  fontSize: '0.88rem',
+                  backgroundColor: activeAssistTab === 'mural' ? '#ec4899' : 'transparent',
+                  color: activeAssistTab === 'mural' ? '#ffffff' : '#64748b',
+                  boxShadow: activeAssistTab === 'mural' ? '0 2px 8px rgba(236, 72, 153, 0.25)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <MessageSquare size={16} />
+                <span>Mural</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveAssistTab('cirurgias')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 18px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: activeAssistTab === 'cirurgias' ? '700' : '600',
+                  fontSize: '0.88rem',
+                  backgroundColor: activeAssistTab === 'cirurgias' ? '#0284c7' : 'transparent',
+                  color: activeAssistTab === 'cirurgias' ? '#ffffff' : '#64748b',
+                  boxShadow: activeAssistTab === 'cirurgias' ? '0 2px 8px rgba(2, 132, 199, 0.25)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Activity size={16} />
+                <span>Cirurgias</span>
+              </button>
+            </div>
 
-        <div style={styles.heroActions}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            backgroundColor: '#f1f5f9',
-            padding: '4px',
-            borderRadius: '12px',
-            gap: '4px',
-            border: '1px solid #e2e8f0'
-          }}>
-            <button
-              onClick={() => setActiveAssistTab('escala')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 18px',
-                borderRadius: '8px',
-                border: 'none',
-                cursor: 'pointer',
-                fontWeight: activeAssistTab === 'escala' ? '700' : '600',
-                fontSize: '0.88rem',
-                backgroundColor: activeAssistTab === 'escala' ? '#4f46e5' : 'transparent',
-                color: activeAssistTab === 'escala' ? '#ffffff' : '#64748b',
-                boxShadow: activeAssistTab === 'escala' ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none',
-                transition: 'all 0.2s ease'
-              }}
+            <button 
+              type="button"
+              onClick={() => handleOpenCreateModal()}
+              style={styles.primaryBtn}
             >
-              <Calendar size={16} />
-              <span>Escala</span>
-            </button>
-            <button
-              onClick={() => setActiveAssistTab('mural')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 18px',
-                borderRadius: '8px',
-                border: 'none',
-                cursor: 'pointer',
-                fontWeight: activeAssistTab === 'mural' ? '700' : '600',
-                fontSize: '0.88rem',
-                backgroundColor: activeAssistTab === 'mural' ? '#ec4899' : 'transparent',
-                color: activeAssistTab === 'mural' ? '#ffffff' : '#64748b',
-                boxShadow: activeAssistTab === 'mural' ? '0 2px 8px rgba(236, 72, 153, 0.25)' : 'none',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <MessageSquare size={16} />
-              <span>Mural</span>
-            </button>
-            <button
-              onClick={() => setActiveAssistTab('cirurgias')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 18px',
-                borderRadius: '8px',
-                border: 'none',
-                cursor: 'pointer',
-                fontWeight: activeAssistTab === 'cirurgias' ? '700' : '600',
-                fontSize: '0.88rem',
-                backgroundColor: activeAssistTab === 'cirurgias' ? '#0284c7' : 'transparent',
-                color: activeAssistTab === 'cirurgias' ? '#ffffff' : '#64748b',
-                boxShadow: activeAssistTab === 'cirurgias' ? '0 2px 8px rgba(2, 132, 199, 0.25)' : 'none',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <Activity size={16} />
-              <span>Cirurgias</span>
+              <Plus size={18} />
+              <span>Comunicado</span>
             </button>
           </div>
-
-          <UnitSelector compact showLabel={false} />
-
-          <button 
-            onClick={() => handleOpenCreateModal()}
-            style={styles.primaryBtn}
-          >
-            <Plus size={18} />
-            <span>Comunicado</span>
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {activeAssistTab === 'escala' ? (
         <DialysisScheduleTab
@@ -1186,9 +1179,9 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
 
 const styles = {
   container: {
-    padding: '1.5rem',
-    maxWidth: '1280px',
-    margin: '0 auto'
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem'
   },
   alertToast: {
     position: 'fixed',

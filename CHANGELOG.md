@@ -1,3 +1,18 @@
+## [v4.9.65] - 08 de Setembro, 2026
+### Nex-Ai CLINIC — Padrão Ouro de Topo (ModuleHeader), Desduplicação de Marca & Alinhamento Visual
+- **Componente Oficial Padronizado (`ModuleHeader.jsx`):**
+  - Criação de `src/components/common/ModuleHeader.jsx` centralizando título com ponto de destaque colorido (`.RECEPTION`, `.ASSIST`, `.MED`), ícones em degradê específicos (46x46px com cantos arredondados de 12px), subtítulo descritivo e área flexível para ações de contexto de tela.
+- **Branding Global Limpo na Navbar Superior (`Navbar.jsx`):**
+  - Eliminação de badges com nomes de módulos ao lado do logo `Nex-Ai`, acabando com a tripla repetição da marca no mesmo campo de visão.
+- **Desduplicação do Seletor de Unidade (`UnitSelector.jsx`):**
+  - Remoção da chamada secundária de `UnitSelector` de dentro das telas dos módulos, tornando a barra superior o único ponto de controle de unidade da clínica.
+- **Alinhamento Vertical e Correção de Espaço em Branco (`AssistPanel.jsx` & `MedicalPanel.jsx`):**
+  - Normalização dos containers internos para `display: 'flex', flexDirection: 'column', gap: '1.25rem'`, removendo `padding: 1.5rem` duplo que gerava vão em branco indesejado no topo.
+- **Regra e Governança Registradas (`.agents/rules/standard-header-ui.md` & `.agents/AGENTS.md`):**
+  - Documentação formal do padrão de cabeçalho e inclusão nas diretrizes obrigatórias do projeto para todos os futuros módulos.
+
+---
+
 ## [v4.9.62] - 06 de Setembro, 2026
 ### Nex-Ai CLINIC — Tratamentos (9 Opções), Tipo de Paciente, Gestão Central de Esquemas no Config & Exportação Excel
 - **Opções de Tratamento no Cadastro e Filtros (`ReceptionPanel.jsx`):**

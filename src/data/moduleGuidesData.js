@@ -2129,6 +2129,10 @@ export const MODULE_GUIDES = {
         resposta: 'Sim. O sistema armazena automaticamente no navegador a última visualização selecionada por você. Ao acessar a recepção em novos acessos ou atualizar a página, sua visualização preferida é carregada imediatamente.'
       },
       {
+        pergunta: 'Por que o cabeçalho exibe apenas .RECEPTION e o seletor de Unidade fica no topo?',
+        resposta: 'O sistema adotou o Padrão Ouro de interface: a marca Nex-Ai e o seletor de Unidade ficam centralizados na barra superior global para evitar repetições, enquanto o cabeçalho do módulo foca no nome direto (.RECEPTION), subtítulo explicativo e atalhos rápidos de tela (como o botão TV).'
+      },
+      {
         pergunta: 'Qual a diferença entre os 3 modos de visualização de pacientes?',
         resposta: 'O modo Compacto (padrão) exibe mais de 20 pacientes por tela em formato condensado para agilizar o atendimento da recepção. O modo Normal traz espaçamento tradicional com nomes de contatos de recado e parentesco. O modo Cards exibe uma grade responsiva com crachás visuais dos pacientes, alocação de sala/poltrona e botões de ação.'
       },

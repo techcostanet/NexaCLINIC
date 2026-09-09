@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { dbService } from '../firebase';
 import { useUnit } from '../contexts/UnitContext';
-import UnitSelector from './common/UnitSelector';
-import NexAiBrand from './common/NexAiBrand';
+import ModuleHeader from './common/ModuleHeader';
 import { 
   Plus, Search, Edit2, Trash2, User, Calendar, 
   Check, X, FileText, CheckCircle2, AlertCircle, 
@@ -707,33 +706,14 @@ export default function ReceptionPanel() {
 
   return (
     <div style={styles.container}>
-      {/* Header com Design Oficial NexAiBrand Padronizado */}
-      <div style={styles.cardHeader}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #0d9488, #0f766e)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(13, 148, 136, 0.25)',
-            flexShrink: 0
-          }}>
-            <UserCheck size={26} color="#fff" />
-          </div>
-          <div>
-            <h1 style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
-              <NexAiBrand size="lg" suffix=".RECEPTION" showIcon={false} />
-            </h1>
-            <p style={styles.subtitle}>
-              Admissão completa de pacientes, cadastro clínico e auditoria presencial de ronda médica.
-            </p>
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <UnitSelector compact showLabel={false} />
+      {/* Header Oficial Padronizado */}
+      <ModuleHeader
+        icon={UserCheck}
+        title=".RECEPTION"
+        subtitle="Admissão completa de pacientes, cadastro clínico e auditoria presencial de ronda médica."
+        gradient="linear-gradient(135deg, #0d9488, #0f766e)"
+        dotColor="#0d9488"
+        actions={
           <button
             type="button"
             onClick={() => window.open('/tv', '_blank')}
@@ -756,8 +736,8 @@ export default function ReceptionPanel() {
             <Tv size={15} />
             <span>TV</span>
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* KPI Cards Row (3 Indicadores Consolidados) */}
       <div style={{ ...styles.kpiRow, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
