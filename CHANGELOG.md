@@ -1,3 +1,29 @@
+## [v4.9.71] - 10 de Setembro, 2026
+### Nex-Ai CLINIC — Central de Relatórios de Manutenção (.SERVICE), Exportação Excel, Fast-Close de OS & Otimização Visual
+- **Central de Relatórios Especializados de Manutenção & T.I. (`MaintenanceReportsModal.jsx` & `App.jsx`):**
+  - Criação de central de relatórios com 12 opções dedicadas à engenharia clínica e infraestrutura de T.I.: Censo Geral de Ativos, Máquinas de Diálise & Osmose, Inventário de T.I. & Periféricos, Ativos Inoperantes & Críticos, Plano de Preventivas, Calibração & Metrologia, Histórico de Intervenções, Extrato Geral de OS, Custos por Setor/Ativo, Peças & Insumos Utilizados, Chamados de T.I. & SLA, e Produtividade Técnica.
+  - Exportação nativa em PDF com cabeçalho hospitalar e planilha Excel (.xlsx) estruturada.
+  - Integração direta com o botão "Relatórios" da Navbar global através de `isReportsOpen`.
+- **Padronização Oficial do Cabeçalho (.SERVICE) (`MaintenancePanel.jsx`):**
+  - Adoção do componente oficial `ModuleHeader` com a tag `.SERVICE`, gradiente ciano (`#0891b2` / `#0e7490`), ícone `Wrench` e ações rápidas `+ Nova OS` e `+ Equipamento`.
+  - Remoção de duplicidades visuais como seletor secundário de unidade e normalização do container para `gap: 1.25rem`.
+- **Exportação Rápida para Excel (.xlsx) na Barra de Ferramentas (`MaintenancePanel.jsx`):**
+  - Botão verde dedicado na barra de ferramentas para exportação instantânea com download em 1 clique das ordens de serviço ou equipamentos listados com todos os dados e status.
+- **Fast-Close de Ordens de Serviço (`MaintenancePanel.jsx`):**
+  - Ação rápida direta (ícone `CheckCircle2`) nas linhas da tabela e nos cards de OS permitindo conclusão imediata da ordem com inserção opcional de laudo técnico resumido.
+- **Impressão de Etiquetas QR Code em Lote (`MaintenancePanel.jsx`):**
+  - Ferramenta para emissão e impressão de etiquetas adesivas padronizadas em folha A4 com QR Code, tombamento, modelo e setor para identificação física imediata dos ativos da clínica.
+- **Alerta Preventivo de Hemodiálise & Osmose Reversa (`MaintenancePanel.jsx`):**
+  - Banner em destaque no topo do módulo avisando em tempo real sobre máquinas de diálise ou sistema de tratamento de água com status inoperante ou em manutenção crítica.
+- **Filtros Rápidos por Pílulas com Contadores Dinâmicos (`MaintenancePanel.jsx`):**
+  - Barra de pílulas interativas com contadores em tempo real para alternar status entre Todos, Abertos, Em Andamento, Aguardando Peça e Concluídos.
+- **Limpeza de Botões Locais de Relatórios (`ReceptionPanel.jsx` & `StockPanel.jsx`):**
+  - Remoção dos botões "Relatórios" redundantes localizados na linha de título dos módulos de Recepção e Estoque, mantendo a chamada limpa e unificada no botão padrão da Navbar superior.
+- **Atualização de Manuais dos Módulos (`moduleGuidesData.js`):**
+  - Inclusão detalhada de todos os novos recursos técnicos, atalhos rápidos e guias operacionais no manual do módulo de Manutenção.
+
+---
+
 ## [v4.9.69] - 10 de Setembro, 2026
 ### Nex-Ai CLINIC — Centrais de Relatórios (.MED & .RECEPTION), Padronização .STOCK & Otimização Visual
 - **Limpeza Visual de Abas e Subtítulos de Relatórios:**

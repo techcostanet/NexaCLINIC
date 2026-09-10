@@ -2,18 +2,24 @@ import React, { useState, useEffect, useMemo } from 'react';
 import QRCode from 'qrcode';
 import { dbService } from '../firebase';
 import { useUnit } from '../contexts/UnitContext';
-import UnitSelector from './common/UnitSelector';
+import ModuleHeader from './common/ModuleHeader';
 import ITServiceOrdersTab from './maintenance/ITServiceOrdersTab';
+import MaintenanceReportsModal from './maintenance/MaintenanceReportsModal';
+import * as XLSX from 'xlsx';
 import { 
   Wrench, Plus, Search, Filter, X, FileText, CheckCircle2, 
   AlertTriangle, Clock, Trash2, Edit, AlertCircle, HardDrive, 
   ShieldAlert, Calendar, BarChart3, QrCode, Cpu, Laptop, Layers, 
   ChevronRight, RefreshCw, Check, AlertOctagon, Activity, DollarSign, AlignJustify, List, LayoutGrid,
-  User, CheckSquare, Eye, Printer, ShieldCheck, Copy, ExternalLink, Download
+  User, CheckSquare, Eye, Printer, ShieldCheck, Copy, ExternalLink, Download, FileSpreadsheet
 } from 'lucide-react';
 
-export default function MaintenancePanel({ currentUser }) {
+export default function MaintenancePanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
+  const [localReportsOpen, setLocalReportsOpen] = useState(false);
+  const isReportsModalOpen = isReportsOpen !== undefined ? isReportsOpen : localReportsOpen;
+  const handleSetReportsOpen = setIsReportsOpen || setLocalReportsOpen;
+  const [itOrders, setItOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'it_orders' | 'equipments' | 'calendar' | 'kpi'
   const [ordersViewMode, setOrdersViewMode] = useState('compact'); // 'compact' | 'normal' | 'card'
   const [equipmentsViewMode, setEquipmentsViewMode] = useState('compact');
@@ -73,6 +79,12 @@ export default function MaintenancePanel({ currentUser }) {
   const [selectedEqQr, setSelectedEqQr] = useState(null);
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Quick Close Modal
+  const [showQuickCloseModal, setShowQuickCloseModal] = useState(false);
+  const [quickCloseOrder, setQuickCloseOrder] = useState(null);
+  const [quickSolution, setQuickSolution] = useState('');
+  const [quickClosing, setQuickClosing] = useState(false);
 
   // Form States - Service Order
   const [orderForm, setOrderForm] = useState({
@@ -161,11 +173,14 @@ export default function MaintenancePanel({ currentUser }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [eqList, osList, itemsList] = await Promise.all([
+      const [eqList, osList, itemsList, itList] = await Promise.all([
         dbService.getEquipments ? dbService.getEquipments() : [],
         dbService.getServiceOrders ? dbService.getServiceOrders() : [],
-        dbService.getInventoryItems ? dbService.getInventoryItems() : []
+        dbService.getInventoryItems ? dbService.getInventoryItems() : [],
+        dbService.getITServiceOrders ? dbService.getITServiceOrders() : []
       ]);
+
+      setItOrders(itList || []);
 
       setEquipments((eqList || []).filter(e => {
         const cat = String(e.category || '').toLowerCase();
@@ -283,6 +298,207 @@ export default function MaintenancePanel({ currentUser }) {
       return matchesSearch && matchesCategory && matchesStatus;
     });
   }, [currentEquipments, searchTerm, categoryFilter, statusFilter]);
+
+  // Critical Dialysis/Water Equipments Down
+  const criticalInopEquipments = useMemo(() => {
+    return currentEquipments.filter(e => {
+      const isDown = e.status === 'Inoperante' || e.status === 'Em Manutenção';
+      if (!isDown) return false;
+      const str = `${e.name || ''} ${e.category || ''} ${e.subcategory || ''} ${e.sector || ''}`.toLowerCase();
+      return str.includes('diálise') || str.includes('hemodiálise') || str.includes('osmose') || str.includes('cta') || str.includes('bomba');
+    });
+  }, [currentEquipments]);
+
+  // Status Counts for Interactive Filter Pills
+  const orderStatusCounts = useMemo(() => {
+    const counts = { all: userOrders.length, Aberta: 0, 'Em Diagnóstico': 0, 'Aguardando Peça': 0, 'Em Execução': 0, Concluída: 0 };
+    userOrders.forEach(o => {
+      if (counts[o.status] !== undefined) counts[o.status]++;
+    });
+    return counts;
+  }, [userOrders]);
+
+  const equipStatusCounts = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const counts = { 
+      all: currentEquipments.length, 
+      'Em Operação': 0, 
+      'Em Manutenção': 0, 
+      Inoperante: 0,
+      overdue: currentEquipments.filter(e => e.nextPreventiveDate && e.nextPreventiveDate < today).length
+    };
+    currentEquipments.forEach(e => {
+      if (counts[e.status] !== undefined) counts[e.status]++;
+    });
+    return counts;
+  }, [currentEquipments]);
+
+  // Quick Close Order Handlers
+  const handleOpenQuickClose = (order) => {
+    setQuickCloseOrder(order);
+    setQuickSolution(order.diagnostic || '');
+    setShowQuickCloseModal(true);
+  };
+
+  const handleConfirmQuickClose = async (e) => {
+    e.preventDefault();
+    if (!quickCloseOrder) return;
+    setQuickClosing(true);
+    try {
+      const selectedEq = currentEquipments.find(eq => eq.id === quickCloseOrder.equipmentId) || equipments.find(eq => eq.id === quickCloseOrder.equipmentId);
+      const payload = {
+        ...quickCloseOrder,
+        status: 'Concluída',
+        diagnostic: quickSolution.trim() || 'Serviço finalizado e ativo testado com sucesso.',
+        completionDate: new Date().toISOString(),
+        lastUpdatedBy: currentUser?.name || 'Técnico'
+      };
+
+      await dbService.saveServiceOrder(payload, `Chamado concluído diretamente por ${currentUser?.name || 'Técnico'}. Solução: ${payload.diagnostic}`);
+
+      if (selectedEq && selectedEq.status !== 'Em Operação') {
+        await dbService.saveEquipment({ ...selectedEq, status: 'Em Operação' });
+      }
+
+      showAlert(`✅ OS ${quickCloseOrder.code} concluída com sucesso! Equipamento liberado.`, 'success');
+      setShowQuickCloseModal(false);
+      setQuickCloseOrder(null);
+      setQuickSolution('');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao concluir OS.', 'danger');
+    } finally {
+      setQuickClosing(false);
+    }
+  };
+
+  // Export Filtered Data to Excel
+  const handleExportDataExcel = () => {
+    if (activeTab === 'orders') {
+      if (filteredOrders.length === 0) {
+        showAlert('Nenhuma OS para exportar com os filtros atuais.', 'danger');
+        return;
+      }
+      const data = filteredOrders.map(o => ({
+        'Código': o.code,
+        'Data Abertura': o.openDate ? new Date(o.openDate).toLocaleDateString('pt-BR') : '',
+        'Equipamento': o.equipmentName,
+        'Categoria': o.equipmentCategory,
+        'Tipo': o.type,
+        'Prioridade': o.priority,
+        'Solicitante': o.requesterName,
+        'Setor': o.sector || o.requesterSector,
+        'Técnico': o.assignedTechnician || 'Não atribuído',
+        'Status': o.status,
+        'Custo Total': Number(o.totalCost) || 0
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Ordens de Serviço');
+      XLSX.writeFile(wb, `Ordens_Servico_${new Date().toISOString().substring(0, 10)}.xlsx`);
+      showAlert('Planilha de Ordens de Serviço baixada com sucesso!', 'success');
+    } else if (activeTab === 'equipments') {
+      if (filteredEquipments.length === 0) {
+        showAlert('Nenhum equipamento para exportar com os filtros atuais.', 'danger');
+        return;
+      }
+      const data = filteredEquipments.map(e => ({
+        'Patrimônio': e.code,
+        'Nome': e.name,
+        'Categoria': e.category,
+        'Marca': e.brand,
+        'Modelo': e.model,
+        'Série': e.serialNumber,
+        'Setor': e.sector,
+        'Periodicidade (Dias)': e.preventiveIntervalDays || 90,
+        'Próxima Preventiva': e.nextPreventiveDate ? new Date(e.nextPreventiveDate + 'T00:00:00').toLocaleDateString('pt-BR') : '',
+        'Exige Calibração': e.requiresCalibration ? 'Sim' : 'Não',
+        'Validade Calibração': e.calibrationValidUntil ? new Date(e.calibrationValidUntil + 'T00:00:00').toLocaleDateString('pt-BR') : '',
+        'Status': e.status
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Equipamentos');
+      XLSX.writeFile(wb, `Inventario_Equipamentos_${new Date().toISOString().substring(0, 10)}.xlsx`);
+      showAlert('Planilha de Equipamentos baixada com sucesso!', 'success');
+    }
+  };
+
+  // Batch QR Code Tag Print
+  const handlePrintBatchQr = async () => {
+    if (filteredEquipments.length === 0) {
+      showAlert('Nenhum equipamento disponível para gerar etiquetas.', 'danger');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank', 'width=950,height=800');
+    if (!printWindow) {
+      showAlert('Permita pop-ups no seu navegador para imprimir as etiquetas.', 'danger');
+      return;
+    }
+
+    try {
+      const cardsHtml = await Promise.all(filteredEquipments.map(async (eq) => {
+        const targetUrl = `${window.location.origin}/?chamado_equipamento=${encodeURIComponent(eq.id)}`;
+        const qrData = await QRCode.toDataURL(targetUrl, { width: 140, margin: 1, color: { dark: '#0f172a', light: '#ffffff' } });
+        return `
+          <div style="border: 2px dashed #0891b2; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; page-break-inside: avoid; background: #ffffff;">
+            <div style="font-size: 10px; font-weight: 800; color: #0891b2; text-transform: uppercase;">Nex-Ai CLINIC • SERVICE</div>
+            <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 2px;">${eq.code}</div>
+            <div style="font-size: 11px; font-weight: 700; color: #1e293b; max-height: 28px; overflow: hidden;">${eq.name}</div>
+            <img src="${qrData}" style="width: 100px; height: 100px; margin: 4px 0;" alt="QR Code" />
+            <div style="font-size: 9px; color: #475569; font-weight: 600;">Setor: ${eq.sector || 'Geral'} • Série: ${eq.serialNumber || 'N/A'}</div>
+            <div style="font-size: 8px; color: #64748b; margin-top: 2px;">Aponte a câmera para abrir chamado</div>
+          </div>
+        `;
+      }));
+
+      const fullHtml = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8">
+          <title>Etiquetas QR Code em Lote - Nex-Ai.SERVICE</title>
+          <style>
+            @page { size: A4; margin: 10mm; }
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 10px; background: #f8fafc; }
+            .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #0891b2; padding-bottom: 8px; }
+            .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+            @media print {
+              .no-print { display: none !important; }
+              body { background: #ffffff; padding: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="no-print header-bar">
+            <div>
+              <strong style="color: #0891b2; font-size: 16px;">Nex-Ai.SERVICE — Etiquetas QR Code em Lote</strong>
+              <div style="font-size: 11px; color: #64748b;">${filteredEquipments.length} etiqueta(s) gerada(s)</div>
+            </div>
+            <button onclick="window.print()" style="background: #0891b2; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">🖨️ Imprimir Folha de Etiquetas</button>
+          </div>
+          <div class="grid">
+            ${cardsHtml.join('')}
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() { window.print(); }, 400);
+            };
+          </script>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.open();
+      printWindow.document.write(fullHtml);
+      printWindow.document.close();
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao gerar etiquetas em lote.', 'danger');
+    }
+  };
 
   // Handle Equipment Save
   const handleSaveEquipment = async (e) => {
@@ -718,32 +934,108 @@ export default function MaintenancePanel({ currentUser }) {
 
   return (
     <div style={styles.container}>
-      {/* Top Banner Header */}
-      <div style={styles.header}>
-        <div style={styles.headerTitleBox}>
-          <div style={styles.headerIcon}>
-            <Wrench size={24} color="#fff" />
-          </div>
-          <div>
-            <h1 style={styles.title}>NexaSERVICE - Manutenção</h1>
-            <p style={styles.subtitle}>
-              Gestão integrada de Ativos Hospitalares, Engenharia Clínica e Equipamentos Prediais
-            </p>
-          </div>
-        </div>
-
-        <div style={styles.headerActions}>
-          <UnitSelector compact showLabel={false} />
-          <button onClick={() => handleOpenNewOrder()} style={styles.btnPrimary}>
-            <Plus size={16} /> Nova OS
-          </button>
-          {isTechOrAdmin && (
-            <button onClick={handleOpenNewEquipment} style={styles.btnSecondary}>
-              <HardDrive size={16} /> Novo Equipamento
+      {/* Header Oficial Padronizado */}
+      <ModuleHeader
+        icon={Wrench}
+        title=".SERVICE"
+        subtitle="Gestão de ativos biomédicos, ordens de serviço, chamados de T.I. e calibração preventiva."
+        gradient="linear-gradient(135deg, #0891b2, #0e7490)"
+        dotColor="#0891b2"
+        actions={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <button 
+              type="button"
+              onClick={() => handleOpenNewOrder()} 
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.55rem 1rem',
+                borderRadius: '8px',
+                backgroundColor: '#0891b2',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: '0.84rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(8, 145, 178, 0.25)',
+                transition: 'all 0.2s'
+              }}
+              title="Abrir Nova Ordem de Serviço"
+            >
+              <Plus size={16} />
+              <span>Nova OS</span>
             </button>
-          )}
+            {isTechOrAdmin && (
+              <button 
+                type="button"
+                onClick={handleOpenNewEquipment} 
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.55rem 1rem',
+                  borderRadius: '8px',
+                  backgroundColor: '#ffffff',
+                  color: '#334155',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.84rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                title="Cadastrar Novo Equipamento"
+              >
+                <HardDrive size={16} />
+                <span>Equipamento</span>
+              </button>
+            )}
+          </div>
+        }
+      />
+
+      {/* Alerta de Máquinas Críticas Inoperantes */}
+      {criticalInopEquipments.length > 0 && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backgroundColor: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: '10px',
+          padding: '0.75rem 1.25rem',
+          color: '#991b1b',
+          fontSize: '0.85rem',
+          fontWeight: '600',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          gap: '1rem',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <ShieldAlert size={20} color="#dc2626" />
+            <span>
+              <strong>Atenção Assistencial:</strong> Há {criticalInopEquipments.length} máquina(s) crítica(s) de Hemodiálise ou Tratamento de Água (Osmose) inoperante(s) ou em reparo técnico.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setActiveTab('equipments'); setStatusFilter('Inoperante'); }}
+            style={{
+              backgroundColor: '#dc2626',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '0.35rem 0.75rem',
+              fontSize: '0.78rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            Ver Máquinas
+          </button>
         </div>
-      </div>
+      )}
 
       {/* Alert Message Toast */}
       {message.text && (
@@ -826,14 +1118,14 @@ export default function MaintenancePanel({ currentUser }) {
           style={{ ...styles.tabButton, ...(activeTab === 'orders' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('orders')}
         >
-          <FileText size={16} /> {isTechOrAdmin ? `OS Clínica (${currentServiceOrders.length})` : `Meus Chamados Clínicos (${userOrders.length})`}
+          <FileText size={16} /> Ordens
         </button>
 
         <button 
           style={{ ...styles.tabButton, ...(activeTab === 'it_orders' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('it_orders')}
         >
-          <Laptop size={16} /> {isTechOrAdmin ? 'Chamados T.I.' : 'Meus Chamados T.I.'}
+          <Laptop size={16} /> T.I.
         </button>
 
         {isTechOrAdmin && (
@@ -842,7 +1134,7 @@ export default function MaintenancePanel({ currentUser }) {
               style={{ ...styles.tabButton, ...(activeTab === 'equipments' ? styles.tabActive : {}) }}
               onClick={() => setActiveTab('equipments')}
             >
-              <HardDrive size={16} /> Equipamentos ({currentEquipments.length})
+              <HardDrive size={16} /> Equipamentos
             </button>
             <button 
               style={{ ...styles.tabButton, ...(activeTab === 'calendar' ? styles.tabActive : {}) }}
@@ -922,7 +1214,153 @@ export default function MaintenancePanel({ currentUser }) {
                 </>
               )}
             </select>
+
+            <button
+              type="button"
+              onClick={handleExportDataExcel}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                backgroundColor: '#ecfdf5',
+                color: '#047857',
+                border: '1px solid #a7f3d0',
+                borderRadius: '8px',
+                padding: '0.45rem 0.85rem',
+                fontSize: '0.82rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              title="Exportar dados filtrados para planilha Excel (.xlsx)"
+            >
+              <FileSpreadsheet size={15} />
+              <span>Exportar</span>
+            </button>
+
+            {activeTab === 'equipments' && isTechOrAdmin && (
+              <button
+                type="button"
+                onClick={handlePrintBatchQr}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  backgroundColor: '#f0f9ff',
+                  color: '#0369a1',
+                  border: '1px solid #bae6fd',
+                  borderRadius: '8px',
+                  padding: '0.45rem 0.85rem',
+                  fontSize: '0.82rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                title="Imprimir etiquetas com QR Code em lote para os equipamentos filtrados"
+              >
+                <QrCode size={15} />
+                <span>Imprimir QR</span>
+              </button>
+            )}
           </div>
+        </div>
+      )}
+
+      {/* Interactive Status Filter Pills Bar */}
+      {(activeTab === 'orders' || activeTab === 'equipments') && (
+        <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', marginBottom: '0.5rem', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#64748b', marginRight: '0.25rem' }}>
+            Filtro:
+          </span>
+          {activeTab === 'orders' ? (
+            [
+              { id: 'all', label: 'Todas', count: orderStatusCounts.all },
+              { id: 'Aberta', label: 'Abertas', count: orderStatusCounts.Aberta },
+              { id: 'Em Diagnóstico', label: 'Diagnóstico', count: orderStatusCounts['Em Diagnóstico'] },
+              { id: 'Aguardando Peça', label: 'Aguardando Peça', count: orderStatusCounts['Aguardando Peça'] },
+              { id: 'Em Execução', label: 'Em Execução', count: orderStatusCounts['Em Execução'] },
+              { id: 'Concluída', label: 'Concluídas', count: orderStatusCounts.Concluída }
+            ].map(pill => {
+              const isSelected = statusFilter === pill.id;
+              return (
+                <button
+                  key={pill.id}
+                  type="button"
+                  onClick={() => setStatusFilter(pill.id)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '20px',
+                    border: '1px solid',
+                    borderColor: isSelected ? '#0891b2' : '#e2e8f0',
+                    backgroundColor: isSelected ? '#0891b2' : '#ffffff',
+                    color: isSelected ? '#ffffff' : '#475569',
+                    fontSize: '0.775rem',
+                    fontWeight: isSelected ? '700' : '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  <span>{pill.label}</span>
+                  <span style={{
+                    backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.25)' : '#f1f5f9',
+                    color: isSelected ? '#ffffff' : '#64748b',
+                    borderRadius: '10px',
+                    padding: '0.05rem 0.4rem',
+                    fontSize: '0.7rem',
+                    fontWeight: '700'
+                  }}>
+                    {pill.count}
+                  </span>
+                </button>
+              );
+            })
+          ) : (
+            [
+              { id: 'all', label: 'Todos', count: equipStatusCounts.all },
+              { id: 'Em Operação', label: 'Em Operação', count: equipStatusCounts['Em Operação'] },
+              { id: 'Em Manutenção', label: 'Em Manutenção', count: equipStatusCounts['Em Manutenção'] },
+              { id: 'Inoperante', label: 'Inoperantes', count: equipStatusCounts.Inoperante }
+            ].map(pill => {
+              const isSelected = statusFilter === pill.id;
+              return (
+                <button
+                  key={pill.id}
+                  type="button"
+                  onClick={() => setStatusFilter(pill.id)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '20px',
+                    border: '1px solid',
+                    borderColor: isSelected ? '#0891b2' : '#e2e8f0',
+                    backgroundColor: isSelected ? '#0891b2' : '#ffffff',
+                    color: isSelected ? '#ffffff' : '#475569',
+                    fontSize: '0.775rem',
+                    fontWeight: isSelected ? '700' : '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  <span>{pill.label}</span>
+                  <span style={{
+                    backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.25)' : '#f1f5f9',
+                    color: isSelected ? '#ffffff' : '#64748b',
+                    borderRadius: '10px',
+                    padding: '0.05rem 0.4rem',
+                    fontSize: '0.7rem',
+                    fontWeight: '700'
+                  }}>
+                    {pill.count}
+                  </span>
+                </button>
+              );
+            })
+          )}
         </div>
       )}
 
@@ -975,9 +1413,21 @@ export default function MaintenancePanel({ currentUser }) {
                         <div>Sol: {order.requesterName}</div>
                         <div style={{ color: '#0891b2', fontWeight: '500' }}>{order.assignedTechnician || 'Aguardando atribuição'}</div>
                       </div>
-                      <button onClick={() => handleOpenEditOrder(order)} style={styles.btnCardAction} title="Editar OS / Atendimento">
-                        <Edit size={14} color="#0284c7" /> Atender OS
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.35rem' }}>
+                        {order.status !== 'Concluída' && order.status !== 'Encerrada' && (
+                          <button 
+                            type="button"
+                            onClick={() => handleOpenQuickClose(order)} 
+                            style={{ ...styles.btnCardAction, backgroundColor: '#f0fdf4', color: '#16a34a', borderColor: '#bbf7d0' }} 
+                            title="Concluir OS Imediatamente"
+                          >
+                            <CheckCircle2 size={14} color="#16a34a" /> Concluir
+                          </button>
+                        )}
+                        <button onClick={() => handleOpenEditOrder(order)} style={styles.btnCardAction} title="Editar OS">
+                          <Edit size={14} color="#0284c7" /> Atender
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -1038,13 +1488,26 @@ export default function MaintenancePanel({ currentUser }) {
                           </span>
                         </td>
                         <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
-                          <button 
-                            onClick={() => handleOpenEditOrder(order)} 
-                            style={{ ...styles.actionBtn, padding: isCompact ? '0.15rem 0.3rem' : '0.3rem 0.5rem' }}
-                            title="Editar OS / Laudo Técnico"
-                          >
-                            <Edit size={14} color="#0284c7" />
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+                            {order.status !== 'Concluída' && order.status !== 'Encerrada' && (
+                              <button 
+                                type="button"
+                                onClick={() => handleOpenQuickClose(order)} 
+                                style={{ ...styles.actionBtn, padding: isCompact ? '0.15rem 0.3rem' : '0.3rem 0.5rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}
+                                title="Concluir OS Imediatamente"
+                              >
+                                <CheckCircle2 size={14} color="#16a34a" />
+                              </button>
+                            )}
+                            <button 
+                              type="button"
+                              onClick={() => handleOpenEditOrder(order)} 
+                              style={{ ...styles.actionBtn, padding: isCompact ? '0.15rem 0.3rem' : '0.3rem 0.5rem' }}
+                              title="Editar OS / Laudo Técnico"
+                            >
+                              <Edit size={14} color="#0284c7" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -2003,16 +2466,92 @@ export default function MaintenancePanel({ currentUser }) {
           </div>
         </div>
       )}
+
+      {/* Quick Close Order Modal */}
+      {showQuickCloseModal && quickCloseOrder && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalContent, maxWidth: '480px' }}>
+            <div style={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <CheckCircle2 size={20} color="#16a34a" />
+                <h3 style={styles.modalTitle}>Concluir OS {quickCloseOrder.code}</h3>
+              </div>
+              <button onClick={() => setShowQuickCloseModal(false)} style={styles.closeBtn}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmQuickClose}>
+              <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#1e293b' }}>
+                  {quickCloseOrder.equipmentName}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.2rem' }}>
+                  Setor: {quickCloseOrder.sector || quickCloseOrder.requesterSector} • Tipo: {quickCloseOrder.type}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#475569', marginTop: '0.4rem' }}>
+                  <strong>Problema:</strong> {quickCloseOrder.description}
+                </div>
+              </div>
+
+              <div style={styles.formField}>
+                <label style={styles.label}>Laudo / Solução Aplicada</label>
+                <textarea
+                  rows={3}
+                  required
+                  autoFocus
+                  placeholder="Descreva a ação corretiva realizada, testes efetuados e liberação do equipamento..."
+                  value={quickSolution}
+                  onChange={(e) => setQuickSolution(e.target.value)}
+                  style={styles.textarea}
+                />
+              </div>
+
+              <div style={styles.modalFooter}>
+                <button
+                  type="button"
+                  onClick={() => setShowQuickCloseModal(false)}
+                  style={styles.btnSecondary}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={quickClosing}
+                  style={{
+                    ...styles.btnPrimary,
+                    backgroundColor: '#16a34a',
+                    boxShadow: '0 2px 6px rgba(22, 163, 74, 0.25)'
+                  }}
+                >
+                  <CheckCircle2 size={16} />
+                  <span>{quickClosing ? 'Finalizando...' : 'Concluir Chamado'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Central de Relatórios Especializados de Manutenção & T.I. */}
+      <MaintenanceReportsModal
+        isOpen={isReportsModalOpen}
+        onClose={() => handleSetReportsOpen(false)}
+        equipments={currentEquipments}
+        serviceOrders={currentServiceOrders}
+        itOrders={itOrders}
+        stockItems={currentStockItems}
+        currentUser={currentUser}
+      />
     </div>
   );
 }
 
 const styles = {
   container: {
-    padding: '1.5rem',
-    maxWidth: '1300px',
-    margin: '0 auto',
-    fontFamily: 'Inter, system-ui, sans-serif'
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem'
   },
   header: {
     display: 'flex',

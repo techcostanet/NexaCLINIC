@@ -260,53 +260,29 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
         gradient="linear-gradient(135deg, #f59e0b, #d97706)"
         dotColor="#f59e0b"
         actions={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <button
-              type="button"
-              onClick={() => setIsReportsOpen && setIsReportsOpen(true)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                padding: '0.55rem 0.95rem',
-                borderRadius: '8px',
-                backgroundColor: '#ecfdf5',
-                color: '#047857',
-                border: '1px solid #a7f3d0',
-                fontSize: '0.84rem',
-                fontWeight: '700',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              title="Abrir Central de Relatórios de Estoque & Farmácia"
-            >
-              <FileText size={16} />
-              <span>Relatórios</span>
-            </button>
-            <button 
-              type="button"
-              onClick={handleOpenAddModal}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.55rem 1rem',
-                borderRadius: '8px',
-                backgroundColor: '#f59e0b',
-                color: '#ffffff',
-                border: 'none',
-                fontSize: '0.84rem',
-                fontWeight: '700',
-                cursor: 'pointer',
-                boxShadow: '0 2px 6px rgba(245, 158, 11, 0.25)',
-                transition: 'all 0.2s'
-              }}
-              title="Cadastrar Novo Insumo"
-            >
-              <Plus size={17} />
-              <span>Insumo</span>
-            </button>
-          </div>
+          <button 
+            type="button"
+            onClick={handleOpenAddModal}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              padding: '0.55rem 1rem',
+              borderRadius: '8px',
+              backgroundColor: '#f59e0b',
+              color: '#ffffff',
+              border: 'none',
+              fontSize: '0.84rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(245, 158, 11, 0.25)',
+              transition: 'all 0.2s'
+            }}
+            title="Cadastrar Novo Insumo"
+          >
+            <Plus size={17} />
+            <span>Insumo</span>
+          </button>
         }
       />
 

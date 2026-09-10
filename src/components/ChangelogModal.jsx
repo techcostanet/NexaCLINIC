@@ -6,6 +6,22 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.71',
+      date: '10/09/2026',
+      title: 'Nex-Ai CLINIC — Central de Relatórios de Manutenção (.SERVICE), Exportação Excel, Fast-Close de OS & Otimização Visual',
+      description: 'Implementação da nova Central de Relatórios de Manutenção & T.I. com 12 relatórios técnicos e indicadores (MTBF/MTTR), padronização oficial do cabeçalho com ModuleHeader (.SERVICE), exportação de ordens e equipamentos em Excel (.xlsx), conclusão rápida de OS (Fast-Close), impressão de etiquetas QR Code em lote e remoção de botões locais de relatórios nos módulos Recepção e Estoque.',
+      changes: [
+        { type: 'Central de Relatórios Manutenção (.SERVICE)', text: 'Criação do componente MaintenanceReportsModal com 12 relatórios especializados cobrindo Censo de Ativos, Hemodiálise & Osmose, T.I., Preventivas, Calibração, Histórico de Intervenções, Custos e SLA com exportação em PDF e Excel.' },
+        { type: 'Padronização de Cabeçalho (.SERVICE)', text: 'Adoção do componente oficial ModuleHeader no MaintenancePanel com identificação .SERVICE, gradiente ciano (#0891b2 / #0e7490), botão direto + Nova OS e + Equipamento.' },
+        { type: 'Exportação Direta para Excel (.xlsx)', text: 'Adicionado botão Exportar na barra de ferramentas do módulo de manutenção permitindo download instantâneo de todas as ordens de serviço e ativos em formato de planilha.' },
+        { type: 'Conclusão Rápida de OS (Fast-Close)', text: 'Novo botão de ação direta (ícone verde de check) nas tabelas e cards permitindo finalizar ordens de serviço em 1 clique com registro enxuto de laudo técnico.' },
+        { type: 'Impressão de QR Code em Lote', text: 'Funcionalidade para geração e impressão em lote de etiquetas adesivas padronizadas com QR Code para todos os equipamentos do setor.' },
+        { type: 'Alerta Preventivo de Hemodiálise & Osmose', text: 'Banner em tempo real no topo do módulo alertando a equipe técnica sobre máquinas de diálise ou sistema de tratamento de água inoperantes.' },
+        { type: 'Limpeza de Botões Locais de Relatórios', text: 'Remoção dos botões de relatórios redundantes na linha do título dos módulos Recepção (.RECEPTION) e Estoque (.STOCK), preservando o botão global da Navbar.' },
+        { type: 'Manuais Atualizados', text: 'Documentação completa dos 12 novos relatórios, filtros rápidos por pílulas e ações operacionais no arquivo moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v4.9.69',
       date: '10/09/2026',
       title: 'Nex-Ai CLINIC — Centrais de Relatórios (.MED & .RECEPTION), Padronização .STOCK & Limpeza Visual',

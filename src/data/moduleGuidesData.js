@@ -888,6 +888,22 @@ export const MODULE_GUIDES = {
       {
         title: 'Impressão de Etiquetas & Prontuário Técnico em PDF',
         desc: 'Emissão de etiquetas patrimoniais prontas para impressão física e espelho técnico formatado em A4 com laudos e campos de assinatura.'
+      },
+      {
+        title: 'Central de Relatórios Especializados & Exportação Excel/PDF',
+        desc: '12 relatórios com censo de ativos, cronograma de preventivas, calibrações, extratos de OS, custos de peças e chamados de T.I. com exportação em PDF e planilhas Excel.'
+      },
+      {
+        title: 'Conclusão Rápida de Chamados (Fast-Close)',
+        desc: 'Ação ágil em 1 clique diretamente na tabela de ordens de serviço para encerramento de chamados com registro instantâneo do laudo e liberação imediata do ativo.'
+      },
+      {
+        title: 'Impressão em Lote de Etiquetas com QR Code',
+        desc: 'Geração automatizada de folha A4 com grade de etiquetas com QR Code para todos os equipamentos do setor, otimizando a rotulagem física em massa.'
+      },
+      {
+        title: 'Alerta Operacional de Ativos Vitais (Hemodiálise e Osmose)',
+        desc: 'Banner de vigilância no topo do módulo avisando em tempo real sobre paradas em máquinas de hemodiálise ou sistema de tratamento de água com impacto na capacidade assistencial.'
       }
     ],
     tutorial: [

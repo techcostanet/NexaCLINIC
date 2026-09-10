@@ -721,30 +721,6 @@ export default function ReceptionPanel({ currentUser, isReportsOpen, setIsReport
         subtitle="Admissão completa de pacientes, cadastro clínico e auditoria presencial de ronda médica."
         gradient="linear-gradient(135deg, #0d9488, #0f766e)"
         dotColor="#0d9488"
-        actions={
-          <button
-            type="button"
-            onClick={() => handleSetReportsOpen(true)}
-            title="Abrir Central de Relatórios da Recepção"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              padding: '0.45rem 0.85rem',
-              borderRadius: '8px',
-              backgroundColor: '#ecfdf5',
-              color: '#047857',
-              border: '1px solid #a7f3d0',
-              fontSize: '0.825rem',
-              fontWeight: '700',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-          >
-            <FileText size={15} />
-            <span>Relatórios</span>
-          </button>
-        }
       />
 
       {/* KPI Cards Row (3 Indicadores Consolidados) */}
