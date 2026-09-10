@@ -10,7 +10,7 @@ import {
 
 import { useStockLogic } from './Stock/hooks/useStockLogic';
 import StockReportsModal from './StockReportsModal';
-import UnitSelector from './common/UnitSelector';
+import ModuleHeader from './common/ModuleHeader';
 
 export const formatCurrencyBR = (val) => {
   const num = parseFloat(val) || 0;
@@ -252,32 +252,63 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
 
   return (
     <div style={styles.container}>
-      {/* Header / Hero Section (Design Padrão Nexa) */}
-      <div style={styles.heroSection}>
-        <div style={styles.heroLeft}>
-          <div style={styles.heroIconBadge}>
-            <Boxes size={28} color="#fff" />
+      {/* Header Oficial Padronizado */}
+      <ModuleHeader
+        icon={Boxes}
+        title=".STOCK"
+        subtitle="Gestão de insumos e farmácia hospitalar, lotes FEFO, dispensação e rastreabilidade."
+        gradient="linear-gradient(135deg, #f59e0b, #d97706)"
+        dotColor="#f59e0b"
+        actions={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <button
+              type="button"
+              onClick={() => setIsReportsOpen && setIsReportsOpen(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.55rem 0.95rem',
+                borderRadius: '8px',
+                backgroundColor: '#ecfdf5',
+                color: '#047857',
+                border: '1px solid #a7f3d0',
+                fontSize: '0.84rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              title="Abrir Central de Relatórios de Estoque & Farmácia"
+            >
+              <FileText size={16} />
+              <span>Relatórios</span>
+            </button>
+            <button 
+              type="button"
+              onClick={handleOpenAddModal}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.55rem 1rem',
+                borderRadius: '8px',
+                backgroundColor: '#f59e0b',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: '0.84rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(245, 158, 11, 0.25)',
+                transition: 'all 0.2s'
+              }}
+              title="Cadastrar Novo Insumo"
+            >
+              <Plus size={17} />
+              <span>Insumo</span>
+            </button>
           </div>
-          <div>
-            <h1 style={styles.heroTitle}>NexaSTOCK — Estoque & Farmácia Hospitalar</h1>
-            <p style={styles.heroSubtitle}>
-              Gestão de suprimentos, lotes FEFO, dispensação clínica, transferências entre setores e controle de rastreabilidade.
-            </p>
-          </div>
-        </div>
-
-        <div style={styles.heroActions}>
-          <UnitSelector compact showLabel={false} />
-          <button 
-            onClick={handleOpenAddModal}
-            style={styles.primaryHeroBtn}
-            title="Cadastrar Novo Insumo"
-          >
-            <Plus size={18} />
-            <span>Cadastrar Insumo</span>
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Main Tabs */}
       <div style={styles.tabsWrapper}>
@@ -285,31 +316,31 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
           onClick={() => setActiveTab('inventory')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'inventory' ? styles.tabBtnActive : {}) }}
         >
-          <Boxes size={16} /> Catálogo ({(items || []).length})
+          <Boxes size={16} /> Catálogo
         </button>
         <button 
           onClick={() => setActiveTab('kits')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'kits' ? styles.tabBtnActive : {}) }}
         >
-          <Package size={16} /> Kits ({(productKits || []).length})
+          <Package size={16} /> Kits
         </button>
         <button 
           onClick={() => setActiveTab('physical_inventory')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'physical_inventory' ? styles.tabBtnActive : {}) }}
         >
-          <ClipboardList size={16} /> Inventários ({(inventories || []).length})
+          <ClipboardList size={16} /> Inventários
         </button>
         <button 
           onClick={() => setActiveTab('transfers')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'transfers' ? styles.tabBtnActive : {}) }}
         >
-          <Repeat size={16} /> Transferências ({(transfers || []).length})
+          <Repeat size={16} /> Transferências
         </button>
         <button 
           onClick={() => setActiveTab('invoices')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'invoices' ? styles.tabBtnActive : {}) }}
         >
-          <FileText size={16} /> Entradas ({(invoices || []).length})
+          <FileText size={16} /> Entradas
         </button>
         <button 
           onClick={() => setActiveTab('transactions')} 
@@ -321,19 +352,19 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
           onClick={() => setActiveTab('expiry')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'expiry' ? styles.tabBtnActive : {}) }}
         >
-          <Calendar size={16} /> Validade ({(productBatches || []).length > 0 ? (productBatches || []).length : (expiryList || []).length})
+          <Calendar size={16} /> Validade
         </button>
         <button 
           onClick={() => setActiveTab('loans')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'loans' ? styles.tabBtnActive : {}) }}
         >
-          <RefreshCw size={16} /> Empréstimos ({(loans || []).length})
+          <RefreshCw size={16} /> Empréstimos
         </button>
         <button 
           onClick={() => setActiveTab('requisitions')} 
           style={{ ...styles.tabBtn, ...(activeTab === 'requisitions' ? styles.tabBtnActive : {}) }}
         >
-          <Send size={16} /> Requisições ({(requisitions || []).filter(r => r && (r.status === 'Pendente' || r.status === 'Parcial')).length > 0 ? `${(requisitions || []).filter(r => r && (r.status === 'Pendente' || r.status === 'Parcial')).length} Pendente(s)` : (requisitions || []).length})
+          <Send size={16} /> Requisições
         </button>
         <button 
           onClick={() => { setActiveTab('traceability'); if (traceabilitySearchTerm) handleSearchTraceability(); }} 

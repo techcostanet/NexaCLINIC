@@ -2,12 +2,13 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { dbService } from '../firebase';
 import { useUnit } from '../contexts/UnitContext';
 import ModuleHeader from './common/ModuleHeader';
+import ReceptionReportsModal from './reception/ReceptionReportsModal';
 import { 
   Plus, Search, Edit2, Trash2, User, Calendar, 
   Check, X, FileText, CheckCircle2, AlertCircle, 
   MapPin, Clock, AlertTriangle, ShieldCheck,
   UserCheck, RefreshCw, Phone, MessageSquare, Heart,
-  Activity, ShieldAlert, Sparkles, Tv, ChevronLeft, ChevronRight,
+  Activity, ShieldAlert, Sparkles, ChevronLeft, ChevronRight,
   List, LayoutList, LayoutGrid, Download
 } from 'lucide-react';
 
@@ -19,8 +20,15 @@ export const PATIENT_TYPE_OPTIONS = [
   'Crônico', 'Agudo', 'Trânsito'
 ];
 
-export default function ReceptionPanel() {
+export default function ReceptionPanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
+  const [localReportsOpen, setLocalReportsOpen] = useState(false);
+  const reportsActive = isReportsOpen !== undefined ? isReportsOpen : localReportsOpen;
+  const handleSetReportsOpen = (val) => {
+    if (setIsReportsOpen) setIsReportsOpen(val);
+    else setLocalReportsOpen(val);
+  };
+
   const [activeTab, setActiveTab] = useState('patients'); // 'patients' | 'ronda'
   const [patients, setPatients] = useState([]);
   const [checkins, setCheckins] = useState([]);
@@ -716,25 +724,25 @@ export default function ReceptionPanel() {
         actions={
           <button
             type="button"
-            onClick={() => window.open('/tv', '_blank')}
-            title="Abrir Painel de TV da Sala de Espera"
+            onClick={() => handleSetReportsOpen(true)}
+            title="Abrir Central de Relatórios da Recepção"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.35rem',
-              padding: '0.45rem 0.8rem',
+              padding: '0.45rem 0.85rem',
               borderRadius: '8px',
-              backgroundColor: '#f0f9ff',
-              color: '#0284c7',
-              border: '1px solid #bae6fd',
+              backgroundColor: '#ecfdf5',
+              color: '#047857',
+              border: '1px solid #a7f3d0',
               fontSize: '0.825rem',
               fontWeight: '700',
               cursor: 'pointer',
               transition: 'all 0.2s'
             }}
           >
-            <Tv size={15} />
-            <span>TV</span>
+            <FileText size={15} />
+            <span>Relatórios</span>
           </button>
         }
       />
@@ -2938,6 +2946,17 @@ export default function ReceptionPanel() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Central de Relatórios da Recepção (12 Relatórios Especializados) */}
+      {reportsActive && (
+        <ReceptionReportsModal
+          isOpen={reportsActive}
+          onClose={() => handleSetReportsOpen(false)}
+          patients={currentPatients}
+          schedules={currentMedicalSchedules}
+          currentUser={currentUser}
+        />
       )}
     </div>
   );

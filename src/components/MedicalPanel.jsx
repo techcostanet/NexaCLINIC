@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Calendar, UserCheck, RefreshCw, Activity, DollarSign, 
-  Settings, Users, ShieldAlert, Sparkles, AlertCircle, Stethoscope
+  Settings, Users, ShieldAlert, Sparkles, AlertCircle, Stethoscope, FileText
 } from 'lucide-react';
 import { dbService } from '../firebase';
 import { FALLBACK_DOCTORS } from '../services/firebase/medicalService';
@@ -15,11 +15,18 @@ import MedicalProductionTab from './medical/MedicalProductionTab';
 import MedicalDoctorsTab from './medical/MedicalDoctorsTab';
 import MedicalSettingsTab from './medical/MedicalSettingsTab';
 import MedicalStatementModal from './medical/MedicalStatementModal';
+import MedicalReportsModal from './medical/MedicalReportsModal';
 import ModuleHeader from './common/ModuleHeader';
 import { useUnit } from '../contexts/UnitContext';
 
-export default function MedicalPanel({ currentUser, onBack }) {
+export default function MedicalPanel({ currentUser, onBack, isReportsOpen, setIsReportsOpen }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
+  const [localReportsOpen, setLocalReportsOpen] = useState(false);
+  const reportsActive = isReportsOpen !== undefined ? isReportsOpen : localReportsOpen;
+  const handleSetReportsOpen = (val) => {
+    if (setIsReportsOpen) setIsReportsOpen(val);
+    else setLocalReportsOpen(val);
+  };
 
   // Role check: Clinical Director / Admin vs Regular Doctor
   const isClinicalDirector = Boolean(
@@ -376,6 +383,30 @@ export default function MedicalPanel({ currentUser, onBack }) {
         subtitle="Escala de plantões nos salões, produção ambulatorial, bolsa de trocas e repasse financeiro."
         gradient="linear-gradient(135deg, #0284c7, #2563eb)"
         dotColor="#0284c7"
+        actions={
+          <button
+            type="button"
+            onClick={() => handleSetReportsOpen(true)}
+            title="Abrir Central de Relatórios Médicos"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.45rem 0.85rem',
+              borderRadius: '8px',
+              backgroundColor: '#ecfdf5',
+              color: '#047857',
+              border: '1px solid #a7f3d0',
+              fontSize: '0.825rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            <FileText size={15} />
+            <span>Relatórios</span>
+          </button>
+        }
       />
 
       {/* Navigation Tabs Bar */}
@@ -501,6 +532,22 @@ export default function MedicalPanel({ currentUser, onBack }) {
           schedules={schedules}
           settings={settings}
           onClose={() => setStatementData(null)}
+        />
+      )}
+
+      {/* Central de Relatórios Médicos (12 Relatórios Especializados) */}
+      {reportsActive && (
+        <MedicalReportsModal
+          isOpen={reportsActive}
+          onClose={() => handleSetReportsOpen(false)}
+          doctors={currentDoctors}
+          schedules={currentSchedules}
+          swaps={currentSwaps}
+          procedures={currentProcedures}
+          productions={currentProductions}
+          settings={settings}
+          selectedMonth={selectedMonth}
+          currentUser={currentUser}
         />
       )}
     </div>

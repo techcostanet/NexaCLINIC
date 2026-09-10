@@ -187,7 +187,7 @@ export default function App() {
       case 'assist':
         return <ErrorBoundary><AssistPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'reception':
-        return <ErrorBoundary><ReceptionPanel currentUser={user} /></ErrorBoundary>;
+        return <ErrorBoundary><ReceptionPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'clinical':
         return <ErrorBoundary><ClinicalPanel currentUser={user} /></ErrorBoundary>;
       case 'stock':
@@ -212,7 +212,7 @@ export default function App() {
       case 'sesmt':
         return <ErrorBoundary><SesmtDashboard currentUser={user} /></ErrorBoundary>;
       case 'medical':
-        return <ErrorBoundary><MedicalPanel currentUser={user} onBack={() => setCurrentModule('selector')} /></ErrorBoundary>;
+        return <ErrorBoundary><MedicalPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} onBack={() => setCurrentModule('selector')} /></ErrorBoundary>;
       default:
         return renderQualityPage();
     }

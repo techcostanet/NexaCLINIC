@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.69',
+      date: '10/09/2026',
+      title: 'Nex-Ai CLINIC — Centrais de Relatórios (.MED & .RECEPTION), Padronização .STOCK & Limpeza Visual',
+      description: 'Implementação de centrais especializadas de relatórios para os módulos Médica (.MED) e Recepção (.RECEPTION), padronização oficial do cabeçalho de Estoque (.STOCK) com ModuleHeader, remoção do botão de TV redundante na recepção e limpeza das contagens nas abas de relatórios.',
+      changes: [
+        { type: 'Limpeza de Abas e Contagens', text: 'Remoção de contagens estáticas e números entre parênteses nas abas de relatórios assistenciais e de estoque, preservando a numeração ordinal em cada relatório individual.' },
+        { type: 'Central de Relatórios Médica (.MED)', text: 'Criação do componente MedicalReportsModal com 12 relatórios clínicos, escalas de plantão, extratos de honorários e produção médica com exportação em PDF e Excel.' },
+        { type: 'Central de Relatórios da Recepção (.RECEPTION)', text: 'Criação do componente ReceptionReportsModal com 12 relatórios cobrindo pacientes, nefrologia, logística de transporte e ronda médica com filtros dinâmicos.' },
+        { type: 'Padronização do Cabeçalho .STOCK', text: 'Adoção do componente oficial ModuleHeader no Estoque com gradiente âmbar (#f59e0b / #d97706), botão Insumo, atalho Relatórios e abas operacionais limpas.' },
+        { type: 'Remoção do Botão TV na Recepção', text: 'Retirada do atalho TV no cabeçalho do módulo .reception, centralizando a exibição de painel de chamada na Agenda.' },
+        { type: 'Manuais Atualizados', text: 'Atualização de moduleGuidesData.js nos módulos Assistência, Médica e Recepção com os novos recursos e instruções operacionais.' }
+      ]
+    },
+    {
       version: 'v4.9.68',
       date: '09/09/2026',
       title: 'Nex-Ai CLINIC — Correção Crítica de Referência de Unidade (useUnit) & Sanitização Global',

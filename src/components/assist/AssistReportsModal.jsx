@@ -1189,7 +1189,7 @@ export default function AssistReportsModal({
             <div>
               <h2 style={styles.headerTitle}>Central de Relatórios Assistenciais</h2>
               <p style={styles.headerSubtitle}>
-                15 relatórios especializados de Escala de Hemodiálise, Mural Clínico e Cirurgias Vasculares.
+                Relatórios especializados de Escala de Hemodiálise, Mural Clínico e Cirurgias Vasculares.
               </p>
             </div>
           </div>
@@ -1210,7 +1210,7 @@ export default function AssistReportsModal({
                 color: activeSection === 'ALL' ? '#ffffff' : '#64748b'
               }}
             >
-              Todos (15)
+              Todos
             </button>
             <button
               type="button"
@@ -1222,7 +1222,7 @@ export default function AssistReportsModal({
               }}
             >
               <Calendar size={14} />
-              <span>Escala (5)</span>
+              <span>Escala</span>
             </button>
             <button
               type="button"
@@ -1234,7 +1234,7 @@ export default function AssistReportsModal({
               }}
             >
               <FileText size={14} />
-              <span>Mural (5)</span>
+              <span>Mural</span>
             </button>
             <button
               type="button"
@@ -1246,7 +1246,7 @@ export default function AssistReportsModal({
               }}
             >
               <Activity size={14} />
-              <span>Cirurgias (5)</span>
+              <span>Cirurgias</span>
             </button>
           </div>
         </div>

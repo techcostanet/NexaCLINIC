@@ -758,7 +758,7 @@ export default function StockReportsModal({
           {/* Sidebar */}
           <div style={styles.sidebar}>
             <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-              15 Relatórios Clínicos & Físicos
+              Relatórios Clínicos & Físicos
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', overflowY: 'auto', maxHeight: 'calc(100vh - 200px)', paddingRight: '0.5rem' }}>
               {REPORTS.map(r => {

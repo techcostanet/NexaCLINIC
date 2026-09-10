@@ -1,3 +1,25 @@
+## [v4.9.69] - 10 de Setembro, 2026
+### Nex-Ai CLINIC — Centrais de Relatórios (.MED & .RECEPTION), Padronização .STOCK & Otimização Visual
+- **Limpeza Visual de Abas e Subtítulos de Relatórios:**
+  - Remoção de contagens estáticas nos subtítulos e números entre parênteses nas abas de navegação de relatórios (`AssistReportsModal.jsx` e `StockReportsModal.jsx`).
+  - Preservação da numeração ordinal individual em cada cartão de relatório para identificação direta.
+- **Nova Central de Relatórios Médica (.MED) (`MedicalReportsModal.jsx` & `MedicalPanel.jsx`):**
+  - Criação de central completa de relatórios com 12 opções especializadas: Escala Mensal Geral, Plantões & Lacunas, Carga Horária, Extratos Individuais, Assiduidade, Bolsa de Trocas, Procedimentos Cirúrgicos, Cateteres Vasculares, Produção Consolidada, Repasse de Honorários, Corpo Clínico e Tabela Vigente.
+  - Filtros contextuais por mês, profissional e situação clínica, indicadores em tempo real (KPIs) e suporte a exportação em PDF e Excel (.xlsx).
+- **Nova Central de Relatórios da Recepção (.RECEPTION) (`ReceptionReportsModal.jsx` & `ReceptionPanel.jsx`):**
+  - Criação de central de relatórios com 12 opções especializadas cobrindo Pacientes, Nefrologia, Logística de Transporte e Ronda Médica.
+  - Filtros contextuais por sala, turno, status do paciente e busca textual direta com exportação nativa em PDF e Excel (.xlsx).
+  - Integração com o atalho "Relatórios" do cabeçalho local e da Navbar global.
+- **Padronização Oficial do Cabeçalho de Estoque (.STOCK) (`StockPanel.jsx`):**
+  - Migração para o componente oficial `ModuleHeader` com identificação `.STOCK`, ícone em gradiente âmbar (`#f59e0b` / `#d97706`), botão direto `Insumo` e atalho `Relatórios`.
+  - Remoção de seletor secundário duplicado de Unidade e limpeza dos rótulos de abas para termo único conciso.
+- **Remoção do Botão TV na Recepção (`ReceptionPanel.jsx`):**
+  - Retirada do botão de TV redundante no módulo de recepção, concentrando a operação do painel de chamada na Agenda.
+- **Atualização de Manuais dos Módulos (`moduleGuidesData.js`):**
+  - Documentação completa das novas funcionalidades nos manuais dos módulos Assistência, Médica e Recepção.
+
+---
+
 ## [v4.9.68] - 09 de Setembro, 2026
 ### Nex-Ai CLINIC — Correção Crítica de Referência de Unidade (`useUnit`) & Sanitização de Dependências Globais
 - **Correção Crítica de `useUnit` (`MedicalPanel.jsx` & `AssistPanel.jsx`):**

@@ -706,8 +706,8 @@ export const MODULE_GUIDES = {
         desc: 'Botão "Heparina" na barra da escala para visualização e impressão direta da lista completa de pacientes do turno com seus boxes, acessos e doses prescritas para conferência de bancada dos técnicos.'
       },
       {
-        title: 'Central de Relatórios Assistenciais (15 Relatórios Especializados)',
-        desc: 'Painel completo de inteligência assistencial acessível pelo botão Relatórios no topo do sistema, com 15 relatórios categorizados (5 para Escala de Diálise, 5 para Mural Clínico e 5 para Cirurgias Vasculares), filtros por período/unidade e exportação nativa em PDF e Excel.'
+        title: 'Central de Relatórios Assistenciais',
+        desc: 'Painel completo de inteligência assistencial acessível pelo botão Relatórios no topo do sistema, com relatórios especializados categorizados para Escala de Diálise, Mural Clínico e Cirurgias Vasculares, filtros por período/unidade e exportação nativa em PDF e Excel.'
       },
       {
         title: 'Isolamento de Filiais (Betim / MG vs Taguatinga / DF)',
@@ -739,7 +739,7 @@ export const MODULE_GUIDES = {
         title: 'Como Utilizar a Central de Relatórios do Nex-Ai.ASSIST',
         steps: [
           'Clique no botão "Relatórios" na barra superior do sistema (ou no topo do módulo Nex-Ai.ASSIST).',
-          'Alterne entre as abas temáticas "Todos (15)", "Escala (5)", "Mural (5)" ou "Cirurgias (5)".',
+          'Alterne entre as abas temáticas "Todos", "Escala", "Mural" ou "Cirurgias".',
           'Selecione o relatório desejado na lista lateral para carregar os dados e os cards de indicadores (KPIs).',
           'Ajuste os filtros de Data Inicial, Data Final e Unidade.',
           'Clique em "PDF" para baixar o documento com cabeçalho oficial da clínica ou "Excel" para exportar a planilha.'
@@ -1382,6 +1382,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Detecção Ativa de Conflitos de Salão',
         desc: 'Alerta visual em tempo real na matriz e cabeçalho indicando quando um mesmo nefrologista foi escalado simultaneamente em salões distintos na mesma data e turno.'
+      },
+      {
+        title: 'Central de Relatórios Médicos',
+        desc: 'Painel completo de inteligência médica com relatórios especializados cobrindo Escala Mensal, Lacunas de Plantão, Carga Horária, Extratos Individuais, Bolsa de Trocas, Procedimentos, Censo de Cateteres, Produção e Fechamento de Honorários, com exportação em PDF e Excel.'
       }
     ],
     tutorial: [
@@ -1459,6 +1463,16 @@ export const MODULE_GUIDES = {
           'Confere o espelho de cada médico (soma de plantões auditados + consultas concluídas na agenda + procedimentos).',
           'Clica no botão "Homologar". O sistema cria instantaneamente a duplicata a pagar no Contas a Pagar do Nex-Ai.FINANCE.',
           'Clique em "Extrato" para gerar e imprimir o holerite detalhado do médico em PDF.'
+        ]
+      },
+      {
+        title: 'Como Utilizar a Central de Relatórios do Nex-Ai.MED',
+        steps: [
+          'Clique no botão "Relatórios" na barra superior global ou no cabeçalho do módulo Nex-Ai.MED.',
+          'Alterne entre as abas temáticas limpas: "Todos", "Escala", "Plantões", "Trocas", "Procedimentos", "Produção" ou "Profissionais".',
+          'Selecione o relatório desejado na lista lateral para analisar a prévia dos dados e os cards de indicadores rápidos (KPIs).',
+          'Filtre pelo Mês de competência, Médico ou Status desejado.',
+          'Clique em "PDF" para baixar o documento institucional com cabeçalho oficial ou "Excel" para gerar a planilha analítica.'
         ]
       }
     ],
@@ -2056,6 +2070,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Comunicação Direta via WhatsApp em 1 Clique',
         desc: 'Atalhos integrados em cada linha de paciente, card e contato de emergência para abertura instantânea do WhatsApp com mensagem de suporte pré-formatada.'
+      },
+      {
+        title: 'Central de Relatórios da Recepção',
+        desc: 'Painel completo de inteligência do front-office com relatórios especializados categorizados para Censo Geral de Cadastros, Pacientes Ativos em Diálise, Mapa de Poltronas, Demografia, Acessos Vasculares, Modalidades de Terapia Renal, Fila de Transplante, Transporte Sanitário, Municípios de Origem, Convênios/SUS e Auditoria de Ronda Médica, com exportação em PDF e Excel.'
       }
     ],
     tutorial: [
@@ -2109,6 +2127,16 @@ export const MODULE_GUIDES = {
         ]
       },
       {
+        title: 'Como Utilizar a Central de Relatórios da Recepção',
+        steps: [
+          'Clique no botão "Relatórios" na barra superior do sistema ou no cabeçalho do módulo Nex-Ai.RECEPTION.',
+          'Alterne entre as abas temáticas limpas: "Todos", "Pacientes", "Nefrologia", "Logística" ou "Ronda".',
+          'Selecione o relatório desejado na barra lateral para carregar a prévia e os indicadores em tempo real.',
+          'Ajuste os filtros de Turno, Sala, Status ou Período conforme o tipo de relatório.',
+          'Clique em "PDF" para baixar o documento institucional com cabeçalho oficial ou "Excel" para exportar a planilha.'
+        ]
+      },
+      {
         title: 'Como Auditar e Registrar a Ronda Médica Presencial',
         steps: [
           'Acesse a aba "Ronda" no módulo de Recepção.',
@@ -2130,7 +2158,7 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'Por que o cabeçalho exibe apenas .RECEPTION e o seletor de Unidade fica no topo?',
-        resposta: 'O sistema adotou o Padrão Ouro de interface: a marca Nex-Ai e o seletor de Unidade ficam centralizados na barra superior global para evitar repetições, enquanto o cabeçalho do módulo foca no nome direto (.RECEPTION), subtítulo explicativo e atalhos rápidos de tela (como o botão TV).'
+        resposta: 'O sistema adotou o Padrão Ouro de interface: a marca Nex-Ai e o seletor de Unidade ficam centralizados na barra superior global para evitar repetições, enquanto o cabeçalho do módulo foca no nome direto (.RECEPTION), subtítulo explicativo e atalhos rápidos de tela (como o botão Relatórios).'
       },
       {
         pergunta: 'Qual a diferença entre os 3 modos de visualização de pacientes?',
