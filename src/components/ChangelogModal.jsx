@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.75',
+      date: '11/09/2026',
+      title: 'Nex-Ai CLINIC — 3 Modos de Visualização (.SERVICE), Exclusão de Equipamentos & Auto Ordenação por Colunas',
+      description: 'Expansão de recursos no módulo de Manutenção e Engenharia Clínica (.SERVICE): adição de 3 modos de visualização (Compacta, Normal e Cards) com persistência local nas abas de Ordens e Equipamentos, recurso seguro para exclusão de equipamentos com diálogo protetivo e auto ordenação com setas interativas (crescente/decrescente) ao clicar no cabeçalho de qualquer coluna em todas as tabelas do módulo.',
+      changes: [
+        { type: '3 Modos de Visualização', text: 'Adicionado seletor de visualização (Compacta, Normal e Cards) nas abas Ordens e Equipamentos com memorização automática no localStorage, além de visão condensada de alta densidade.' },
+        { type: 'Exclusão Segura de Equipamentos', text: 'Implementada funcionalidade para exclusão permanente de qualquer ativo ou máquina do parque tecnológico, disponível via botão de lixeira na tabela/card e no modal de edição, com confirmação protetiva e exclusão atômica no banco de dados.' },
+        { type: 'Auto Ordenação por Colunas', text: 'Implementada ordenação dinâmica interativa em todas as abas tabulares do módulo (Ordens, Equipamentos, Calendário Preventivo e Chamados T.I.), com setas indicativas de direção (ascendente/descendente) em cada cabeçalho de coluna.' },
+        { type: 'Conformidade Rigorosa de UI/UX (1 Palavra)', text: 'Sanitização ativa de termos e rótulos duplos no módulo de Manutenção (Laudo, Imprimir, Gerar PDF, Editar OS, SLA, Atender), respeitando as diretrizes institucionais do sistema.' },
+        { type: 'Manuais Atualizados', text: 'Atualização completa da documentação do módulo de Manutenção em moduleGuidesData.js com instruções para alternância de visualizações, exclusão e ordenação de colunas.' }
+      ]
+    },
+    {
       version: 'v4.9.74',
       date: '11/09/2026',
       title: 'Nex-Ai CLINIC — Impressão de QR Code de Equipamentos em Folha Única (.SERVICE) & Prevenção de Quebras de Página',

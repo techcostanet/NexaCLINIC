@@ -927,11 +927,43 @@ export const MODULE_GUIDES = {
         desc: 'Geração automatizada de folha A4 com grade de etiquetas com QR Code para todos os equipamentos do setor, otimizando a rotulagem física em massa.'
       },
       {
-        title: 'Alerta Operacional de Ativos Vitais (Hemodiálise e Osmose)',
-        desc: 'Banner de vigilância no topo do módulo avisando em tempo real sobre paradas em máquinas de hemodiálise ou sistema de tratamento de água com impacto na capacidade assistencial.'
+        title: '3 Formas de Visualização (Compacta, Normal e Cards)',
+        desc: 'Alternância ágil entre modo Compacto (alta densidade para máxima produtividade), Normal (detalhado com badges e espaçamento padrão) e Cards (grade responsiva de crachás técnicos) nas abas Ordens e Equipamentos.'
+      },
+      {
+        title: 'Exclusão Segura de Equipamentos',
+        desc: 'Opção de exclusão permanente para qualquer equipamento do parque tecnológico com diálogo de confirmação protetiva, disponível tanto na listagem quanto no formulário de edição.'
+      },
+      {
+        title: 'Ordenação Automática em Todas as Colunas',
+        desc: 'Classificação instantânea crescente e decrescente com um único clique no cabeçalho de qualquer coluna em todas as tabelas do módulo (Ordens, Equipamentos, Calendário e T.I.).'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Alternar entre as 3 Formas de Visualização',
+        steps: [
+          'No topo das abas "Ordens" ou "Equipamentos", localize o seletor de visualização na barra de ferramentas.',
+          'Clique em "Compacta" para exibir tabelas de alta densidade com mais de 25 linhas por tela.',
+          'Clique em "Normal" para visualização com espaçamento padrão e badges legíveis.',
+          'Clique em "Cards" para alternar para a grade responsiva de cartões visuais com atalhos diretos.'
+        ]
+      },
+      {
+        title: 'Como Excluir um Equipamento do Sistema',
+        steps: [
+          'Na aba "Equipamentos", localize a máquina ou dispositivo que deseja remover.',
+          'Clique no botão de lixeira (Excluir) na linha da tabela ou no rodapé do card, ou abra a edição do equipamento e clique no botão vermelho "Excluir".',
+          'Confirme a exclusão no diálogo de segurança. O ativo será removido imediatamente do cadastro.'
+        ]
+      },
+      {
+        title: 'Como Ordenar Registros Clicando nas Colunas',
+        steps: [
+          'Em qualquer tabela do módulo (Ordens, Equipamentos, Calendário ou Chamados T.I.), clique diretamente sobre o título da coluna desejada (ex: Código, Nome, Setor, Status, Data).',
+          'O sistema exibirá a seta indicativa e ordenará os registros em ordem ascendente. Clique novamente na coluna para inverter para decrescente.'
+        ]
+      },
       {
         title: 'Como Imprimir a Etiqueta com QR Code para o Equipamento',
         steps: [
@@ -983,6 +1015,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Qualquer equipamento pode ser excluído do sistema?',
+        resposta: 'Sim. Usuários autorizados (engenheiros clínicos, técnicos e administradores) podem excluir qualquer equipamento obsoleto, alienado ou cadastrado indevidamente, tanto pela listagem (botão lixeira) quanto dentro do modal de edição.'
+      },
+      {
+        pergunta: 'A ordenação por colunas afeta também a visualização em Cards?',
+        resposta: 'Sim. A ordenação selecionada ao clicar nas colunas é mantida e reflete perfeitamente caso você alterne para o modo de exibição em Cards ou Compacta.'
+      },
       {
         pergunta: 'É necessário fazer login para abrir um chamado pelo QR Code?',
         resposta: 'Não. O portal de chamado por QR Code foi projetado com acesso público e responsivo para permitir que médicos, enfermeiros e técnicos de enfermagem relatem falhas instantaneamente pelo celular sem barreiras de autenticação.'

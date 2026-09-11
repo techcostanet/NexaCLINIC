@@ -1,7 +1,7 @@
 {
   "name": "sistema-indicadores",
   "private": true,
-  "version": "4.9.74",
+  "version": "4.9.75",
   "type": "module",
   "scripts": {
     "dev": "vite",

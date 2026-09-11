@@ -11,7 +11,8 @@ import {
   AlertTriangle, Clock, Trash2, Edit, AlertCircle, HardDrive, 
   ShieldAlert, Calendar, BarChart3, QrCode, Cpu, Laptop, Layers, 
   ChevronRight, RefreshCw, Check, AlertOctagon, Activity, DollarSign, AlignJustify, List, LayoutGrid,
-  User, CheckSquare, Eye, Printer, ShieldCheck, Copy, ExternalLink, Download, FileSpreadsheet
+  User, CheckSquare, Eye, Printer, ShieldCheck, Copy, ExternalLink, Download, FileSpreadsheet,
+  ArrowUpDown, ArrowUp, ArrowDown
 } from 'lucide-react';
 
 export default function MaintenancePanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
@@ -24,6 +25,11 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
   const [ordersViewMode, setOrdersViewMode] = useState('compact'); // 'compact' | 'normal' | 'card'
   const [equipmentsViewMode, setEquipmentsViewMode] = useState('compact');
   const [calendarViewMode, setCalendarViewMode] = useState('compact');
+
+  // Sorting state for tabs with tables
+  const [ordersSort, setOrdersSort] = useState({ field: 'code', dir: 'desc' });
+  const [equipmentsSort, setEquipmentsSort] = useState({ field: 'code', dir: 'asc' });
+  const [calendarSort, setCalendarSort] = useState({ field: 'nextPreventiveDate', dir: 'asc' });
   const [equipments, setEquipments] = useState([]);
   const [serviceOrders, setServiceOrders] = useState([]);
   const [stockItems, setStockItems] = useState([]);
@@ -298,6 +304,137 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
       return matchesSearch && matchesCategory && matchesStatus;
     });
   }, [currentEquipments, searchTerm, categoryFilter, statusFilter]);
+
+  // Sorted Service Orders
+  const sortedOrders = useMemo(() => {
+    if (!ordersSort.field) return filteredOrders;
+    const { field, dir } = ordersSort;
+    return [...filteredOrders].sort((a, b) => {
+      let valA = a[field] ?? '';
+      let valB = b[field] ?? '';
+      if (field === 'equipment') {
+        valA = a.equipmentName || a.equipmentCode || '';
+        valB = b.equipmentName || b.equipmentCode || '';
+      } else if (field === 'category') {
+        valA = a.equipmentCategory || a.category || '';
+        valB = b.equipmentCategory || b.category || '';
+      } else if (field === 'requester') {
+        valA = a.requesterName || '';
+        valB = b.requesterName || '';
+      } else if (field === 'technician') {
+        valA = a.assignedTechnician || '';
+        valB = b.assignedTechnician || '';
+      }
+
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        const cmp = valA.localeCompare(valB, 'pt-BR', { numeric: true, sensitivity: 'base' });
+        return dir === 'asc' ? cmp : -cmp;
+      }
+      if (valA < valB) return dir === 'asc' ? -1 : 1;
+      if (valA > valB) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredOrders, ordersSort]);
+
+  // Sorted Equipments
+  const sortedEquipments = useMemo(() => {
+    if (!equipmentsSort.field) return filteredEquipments;
+    const { field, dir } = equipmentsSort;
+    return [...filteredEquipments].sort((a, b) => {
+      let valA = a[field] ?? '';
+      let valB = b[field] ?? '';
+      if (field === 'model') {
+        valA = `${a.brand || ''} ${a.model || ''}`.trim();
+        valB = `${b.brand || ''} ${b.model || ''}`.trim();
+      }
+
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        const cmp = valA.localeCompare(valB, 'pt-BR', { numeric: true, sensitivity: 'base' });
+        return dir === 'asc' ? cmp : -cmp;
+      }
+      if (valA < valB) return dir === 'asc' ? -1 : 1;
+      if (valA > valB) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredEquipments, equipmentsSort]);
+
+  // Sorted Calendar Equipments
+  const sortedCalendarEquipments = useMemo(() => {
+    const list = [...equipments];
+    if (!calendarSort.field) return list;
+    const { field, dir } = calendarSort;
+    return list.sort((a, b) => {
+      let valA = a[field] ?? '';
+      let valB = b[field] ?? '';
+      if (field === 'interval') {
+        valA = Number(a.preventiveIntervalDays || 90);
+        valB = Number(b.preventiveIntervalDays || 90);
+      }
+
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        const cmp = valA.localeCompare(valB, 'pt-BR', { numeric: true, sensitivity: 'base' });
+        return dir === 'asc' ? cmp : -cmp;
+      }
+      if (valA < valB) return dir === 'asc' ? -1 : 1;
+      if (valA > valB) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [equipments, calendarSort]);
+
+  const handleOrdersSort = (field) => {
+    setOrdersSort(prev => ({
+      field,
+      dir: prev.field === field && prev.dir === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const handleEquipmentsSort = (field) => {
+    setEquipmentsSort(prev => ({
+      field,
+      dir: prev.field === field && prev.dir === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const handleCalendarSort = (field) => {
+    setCalendarSort(prev => ({
+      field,
+      dir: prev.field === field && prev.dir === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const renderSortHeader = (label, field, currentSort, onSort, isCompact) => {
+    const isSorted = currentSort.field === field;
+    return (
+      <th
+        onClick={() => onSort(field)}
+        style={{
+          ...styles.th,
+          cursor: 'pointer',
+          userSelect: 'none',
+          padding: isCompact ? '0.35rem 0.5rem' : '0.65rem 0.85rem',
+          fontSize: isCompact ? '0.75rem' : '0.85rem',
+          backgroundColor: isSorted ? '#f0fdfa' : undefined,
+          color: isSorted ? '#0891b2' : '#475569',
+          borderBottom: isSorted ? '2px solid #0891b2' : undefined,
+          transition: 'all 0.15s'
+        }}
+        title={`Ordenar por ${label}`}
+      >
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', justifyContent: 'flex-start' }}>
+          <span>{label}</span>
+          {isSorted ? (
+            currentSort.dir === 'asc' ? (
+              <ArrowUp size={13} color="#0891b2" strokeWidth={2.5} />
+            ) : (
+              <ArrowDown size={13} color="#0891b2" strokeWidth={2.5} />
+            )
+          ) : (
+            <ArrowUpDown size={12} color="#94a3b8" style={{ opacity: 0.5 }} />
+          )}
+        </div>
+      </th>
+    );
+  };
 
   // Critical Dialysis/Water Equipments Down
   const criticalInopEquipments = useMemo(() => {
@@ -693,6 +830,27 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
     setShowEquipmentModal(true);
   };
 
+  const handleDeleteEquipment = async (eq) => {
+    if (!eq) return;
+    const confirmMsg = `Deseja realmente excluir o equipamento "${eq.name}" (${eq.code || 'S/N'})?\n\nEsta ação removerá o equipamento permanentemente do sistema.`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      setLoading(true);
+      const res = await dbService.deleteEquipment(eq.id);
+      if (res && res.success === false) {
+        throw new Error(res.error || 'Falha ao excluir equipamento');
+      }
+      setEquipments(prev => prev.filter(e => e.id !== eq.id));
+      showAlert(`Equipamento "${eq.name}" excluído com sucesso.`, 'success');
+    } catch (err) {
+      console.error('Erro ao excluir equipamento:', err);
+      showAlert('Erro ao excluir equipamento: ' + (err.message || 'Tente novamente.'), 'danger');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOpenHistory = (eq) => {
     setSelectedEqHistory(eq);
     setShowHistoryModal(true);
@@ -744,7 +902,7 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
       </head>
       <body>
         <div class="no-print" style="margin-bottom: 15px; text-align: right;">
-          <button onclick="window.print()" style="background: #0891b2; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">🖨️ Imprimir / Salvar em PDF</button>
+          <button onclick="window.print()" style="background: #0891b2; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">🖨️ Imprimir</button>
         </div>
 
         <div class="header">
@@ -784,11 +942,11 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
           <table>
             <thead>
               <tr>
-                <th style="width: 15%;">Código / Data</th>
-                <th style="width: 15%;">Tipo / SLA</th>
-                <th style="width: 25%;">Solicitante & Técnico</th>
-                <th style="width: 35%;">Sintoma & Laudo Técnico</th>
-                <th style="width: 10%;">Custo Total</th>
+                <th style="width: 15%;">Código</th>
+                <th style="width: 15%;">Tipo</th>
+                <th style="width: 25%;">Equipe</th>
+                <th style="width: 35%;">Laudo</th>
+                <th style="width: 10%;">Custo</th>
               </tr>
             </thead>
             <tbody>
@@ -1406,6 +1564,84 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
                 <span>Imprimir QR</span>
               </button>
             )}
+
+            {/* 3 Modos de Visualização: Compacta | Normal | Cards */}
+            <div style={{
+              display: 'inline-flex',
+              backgroundColor: '#f8fafc',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              padding: '2px',
+              gap: '2px',
+              marginLeft: 'auto'
+            }}>
+              <button
+                type="button"
+                onClick={() => activeTab === 'orders' ? setOrdersViewMode('compact') : setEquipmentsViewMode('compact')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: (activeTab === 'orders' ? ordersViewMode : equipmentsViewMode) === 'compact' ? '#0891b2' : 'transparent',
+                  color: (activeTab === 'orders' ? ordersViewMode : equipmentsViewMode) === 'compact' ? '#ffffff' : '#475569',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+                title="Visualização Compacta"
+              >
+                <AlignJustify size={14} />
+                <span>Compacta</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => activeTab === 'orders' ? setOrdersViewMode('normal') : setEquipmentsViewMode('normal')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: (activeTab === 'orders' ? ordersViewMode : equipmentsViewMode) === 'normal' ? '#0891b2' : 'transparent',
+                  color: (activeTab === 'orders' ? ordersViewMode : equipmentsViewMode) === 'normal' ? '#ffffff' : '#475569',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+                title="Visualização Normal"
+              >
+                <List size={14} />
+                <span>Normal</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => activeTab === 'orders' ? setOrdersViewMode('card') : setEquipmentsViewMode('card')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: (activeTab === 'orders' ? ordersViewMode : equipmentsViewMode) === 'card' ? '#0891b2' : 'transparent',
+                  color: (activeTab === 'orders' ? ordersViewMode : equipmentsViewMode) === 'card' ? '#ffffff' : '#475569',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+                title="Visualização em Cards"
+              >
+                <LayoutGrid size={14} />
+                <span>Cards</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1533,7 +1769,7 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
             </div>
           ) : ordersViewMode === 'card' ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
-              {filteredOrders.map(order => {
+              {sortedOrders.map(order => {
                 const statusBadge = getStatusBadgeStyle(order.status);
                 return (
                   <div key={order.id} style={{ background: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '1rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
@@ -1582,18 +1818,18 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Código</th>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Equipamento</th>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Categoria</th>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Tipo</th>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Solicitante</th>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Técnico</th>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Status</th>
-                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Ações</th>
+                    {renderSortHeader('Código', 'code', ordersSort, handleOrdersSort, ordersViewMode === 'compact')}
+                    {renderSortHeader('Equipamento', 'equipment', ordersSort, handleOrdersSort, ordersViewMode === 'compact')}
+                    {renderSortHeader('Categoria', 'category', ordersSort, handleOrdersSort, ordersViewMode === 'compact')}
+                    {renderSortHeader('Tipo', 'type', ordersSort, handleOrdersSort, ordersViewMode === 'compact')}
+                    {renderSortHeader('Solicitante', 'requester', ordersSort, handleOrdersSort, ordersViewMode === 'compact')}
+                    {renderSortHeader('Técnico', 'technician', ordersSort, handleOrdersSort, ordersViewMode === 'compact')}
+                    {renderSortHeader('Status', 'status', ordersSort, handleOrdersSort, ordersViewMode === 'compact')}
+                    <th style={{ ...styles.th, padding: ordersViewMode === 'compact' ? '0.35rem 0.5rem' : '0.65rem 0.85rem', fontSize: ordersViewMode === 'compact' ? '0.75rem' : '0.85rem', textAlign: 'center' }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOrders.map(order => {
+                  {sortedOrders.map(order => {
                     const statusBadge = getStatusBadgeStyle(order.status);
                     const isCompact = ordersViewMode === 'compact';
                     return (
@@ -1612,22 +1848,18 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
                           <span style={styles.categoryBadge}>{order.equipmentCategory}</span>
                         </td>
                         <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#475569' }}>{order.type}</span>
-                            {getPriorityBadge(order.priority)}
-                          </div>
+                          <span style={{ fontSize: isCompact ? '0.78rem' : '0.82rem', fontWeight: '500' }}>{order.type}</span>
                         </td>
                         <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
                           <span>{order.requesterName}</span>
-                          <span style={{ fontSize: '0.72rem', color: '#64748b', marginLeft: '0.3rem' }}>({order.requesterSector})</span>
                         </td>
                         <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
-                          <span style={{ fontWeight: '500', color: '#0891b2' }}>
-                            {order.assignedTechnician || 'Aguardando atribuição'}
+                          <span style={{ color: order.assignedTechnician ? '#0891b2' : '#94a3b8', fontWeight: order.assignedTechnician ? '600' : '400' }}>
+                            {order.assignedTechnician || 'Aguardando'}
                           </span>
                         </td>
                         <td style={{ ...styles.td, padding: isCompact ? '0.25rem 0.5rem' : '0.6rem 0.75rem', fontSize: isCompact ? '0.78rem' : '0.85rem' }}>
-                          <span style={{ ...styles.badge, backgroundColor: statusBadge.bg, color: statusBadge.text, border: `1px solid ${statusBadge.border}`, padding: isCompact ? '0.15rem 0.4rem' : '0.25rem 0.5rem', fontSize: isCompact ? '0.7rem' : '0.75rem' }}>
+                          <span style={{ ...styles.badge, backgroundColor: statusBadge.bg, color: statusBadge.text, padding: isCompact ? '0.15rem 0.4rem' : '0.25rem 0.5rem', fontSize: isCompact ? '0.7rem' : '0.75rem' }}>
                             {order.status}
                           </span>
                         </td>
@@ -1647,7 +1879,7 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
                               type="button"
                               onClick={() => handleOpenEditOrder(order)} 
                               style={{ ...styles.actionBtn, padding: isCompact ? '0.15rem 0.3rem' : '0.3rem 0.5rem' }}
-                              title="Editar OS / Laudo Técnico"
+                              title="Editar OS"
                             >
                               <Edit size={14} color="#0284c7" />
                             </button>
@@ -1678,7 +1910,7 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
             </div>
           ) : equipmentsViewMode === 'card' ? (
             <div style={styles.eqGrid}>
-              {filteredEquipments.map(eq => {
+              {sortedEquipments.map(eq => {
                 const statusBadge = getStatusBadgeStyle(eq.status);
                 const relatedOsCount = serviceOrders.filter(o => o.equipmentId === eq.id).length;
 
@@ -1736,6 +1968,14 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
                         <button onClick={() => handleOpenEditEquipment(eq)} style={styles.actionBtn} title="Editar Cadastro">
                           <Edit size={15} color="#0284c7" />
                         </button>
+                        <button 
+                          type="button"
+                          onClick={() => handleDeleteEquipment(eq)} 
+                          style={{ ...styles.actionBtn, color: '#ef4444' }} 
+                          title="Excluir Equipamento"
+                        >
+                          <Trash2 size={15} color="#ef4444" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1747,19 +1987,19 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Patrimônio</th>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Equipamento</th>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Categoria</th>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Modelo</th>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Série</th>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Setor</th>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Preventiva</th>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Status</th>
-                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.6rem 0.75rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem' }}>Ações</th>
+                    {renderSortHeader('Patrimônio', 'code', equipmentsSort, handleEquipmentsSort, equipmentsViewMode === 'compact')}
+                    {renderSortHeader('Equipamento', 'name', equipmentsSort, handleEquipmentsSort, equipmentsViewMode === 'compact')}
+                    {renderSortHeader('Categoria', 'category', equipmentsSort, handleEquipmentsSort, equipmentsViewMode === 'compact')}
+                    {renderSortHeader('Modelo', 'model', equipmentsSort, handleEquipmentsSort, equipmentsViewMode === 'compact')}
+                    {renderSortHeader('Série', 'serialNumber', equipmentsSort, handleEquipmentsSort, equipmentsViewMode === 'compact')}
+                    {renderSortHeader('Setor', 'sector', equipmentsSort, handleEquipmentsSort, equipmentsViewMode === 'compact')}
+                    {renderSortHeader('Preventiva', 'nextPreventiveDate', equipmentsSort, handleEquipmentsSort, equipmentsViewMode === 'compact')}
+                    {renderSortHeader('Status', 'status', equipmentsSort, handleEquipmentsSort, equipmentsViewMode === 'compact')}
+                    <th style={{ ...styles.th, padding: equipmentsViewMode === 'compact' ? '0.35rem 0.5rem' : '0.65rem 0.85rem', fontSize: equipmentsViewMode === 'compact' ? '0.75rem' : '0.85rem', textAlign: 'center' }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredEquipments.map(eq => {
+                  {sortedEquipments.map(eq => {
                     const statusBadge = getStatusBadgeStyle(eq.status);
                     const relatedOsCount = serviceOrders.filter(o => o.equipmentId === eq.id).length;
                     const isCompact = equipmentsViewMode === 'compact';
@@ -1809,6 +2049,14 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
                             <button onClick={() => handleOpenEditEquipment(eq)} style={{ ...styles.actionBtn, padding: '0.2rem 0.4rem' }} title="Editar">
                               <Edit size={13} color="#0284c7" />
                             </button>
+                            <button 
+                              type="button"
+                              onClick={() => handleDeleteEquipment(eq)} 
+                              style={{ ...styles.actionBtn, padding: '0.2rem 0.4rem', color: '#ef4444' }} 
+                              title="Excluir Equipamento"
+                            >
+                              <Trash2 size={13} color="#ef4444" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -1824,16 +2072,93 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
       {/* TAB CONTENT 3: CALENDAR & PREVENTIVES */}
       {activeTab === 'calendar' && (
         <div style={styles.cardContainer}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <Calendar size={20} color="#0891b2" />
-            <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>
-              Cronograma Preventivo
-            </h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Calendar size={20} color="#0891b2" />
+              <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>
+                Cronograma
+              </h2>
+            </div>
+            <div style={{
+              display: 'inline-flex',
+              backgroundColor: '#f8fafc',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              padding: '2px',
+              gap: '2px'
+            }}>
+              <button
+                type="button"
+                onClick={() => setCalendarViewMode('compact')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: calendarViewMode === 'compact' ? '#0891b2' : 'transparent',
+                  color: calendarViewMode === 'compact' ? '#ffffff' : '#475569',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+                title="Tabela Compacta"
+              >
+                <AlignJustify size={14} />
+                <span>Compacta</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCalendarViewMode('normal')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: calendarViewMode === 'normal' ? '#0891b2' : 'transparent',
+                  color: calendarViewMode === 'normal' ? '#ffffff' : '#475569',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+                title="Lista Normal"
+              >
+                <List size={14} />
+                <span>Normal</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCalendarViewMode('card')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: calendarViewMode === 'card' ? '#0891b2' : 'transparent',
+                  color: calendarViewMode === 'card' ? '#ffffff' : '#475569',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+                title="Grade de Cards"
+              >
+                <LayoutGrid size={14} />
+                <span>Cards</span>
+              </button>
+            </div>
           </div>
 
           {calendarViewMode === 'card' ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-              {equipments.map(eq => {
+              {sortedCalendarEquipments.map(eq => {
                 const isOverdue = eq.nextPreventiveDate && eq.nextPreventiveDate < new Date().toISOString().split('T')[0];
                 return (
                   <div key={eq.id} style={{ background: '#ffffff', borderRadius: '8px', border: isOverdue ? '1px solid #fca5a5' : '1px solid #cbd5e1', padding: '1rem', borderLeft: isOverdue ? '5px solid #ef4444' : '5px solid #10b981', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -1865,7 +2190,7 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
             </div>
           ) : calendarViewMode === 'normal' ? (
             <div style={styles.preventiveList}>
-              {equipments.map(eq => {
+              {sortedCalendarEquipments.map(eq => {
                 const isOverdue = eq.nextPreventiveDate && eq.nextPreventiveDate < new Date().toISOString().split('T')[0];
                 return (
                   <div key={eq.id} style={{ ...styles.preventiveItem, borderLeft: isOverdue ? '4px solid #ef4444' : '4px solid #10b981' }}>
@@ -1895,17 +2220,17 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Código</th>
-                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Equipamento</th>
-                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Setor</th>
-                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Intervalo</th>
-                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Preventiva</th>
-                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Status</th>
-                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>Ações</th>
+                    {renderSortHeader('Código', 'code', calendarSort, handleCalendarSort, true)}
+                    {renderSortHeader('Equipamento', 'name', calendarSort, handleCalendarSort, true)}
+                    {renderSortHeader('Setor', 'sector', calendarSort, handleCalendarSort, true)}
+                    {renderSortHeader('Intervalo', 'interval', calendarSort, handleCalendarSort, true)}
+                    {renderSortHeader('Preventiva', 'nextPreventiveDate', calendarSort, handleCalendarSort, true)}
+                    {renderSortHeader('Status', 'status', calendarSort, handleCalendarSort, true)}
+                    <th style={{ ...styles.th, padding: '0.35rem 0.5rem', fontSize: '0.75rem', textAlign: 'center' }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {equipments.map(eq => {
+                  {sortedCalendarEquipments.map(eq => {
                     const isOverdue = eq.nextPreventiveDate && eq.nextPreventiveDate < new Date().toISOString().split('T')[0];
                     return (
                       <tr key={eq.id} style={styles.tr}>
@@ -2439,6 +2764,34 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
               </div>
 
               <div style={styles.modalFooter}>
+                {editingEquipment && (
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      const eqToDelete = editingEquipment;
+                      setShowEquipmentModal(false);
+                      handleDeleteEquipment(eqToDelete);
+                    }} 
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      backgroundColor: '#fee2e2',
+                      color: '#b91c1c',
+                      border: '1px solid #fca5a5',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '8px',
+                      fontWeight: '700',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      marginRight: 'auto'
+                    }}
+                    title="Excluir Equipamento"
+                  >
+                    <Trash2 size={15} />
+                    <span>Excluir</span>
+                  </button>
+                )}
                 <button type="button" onClick={() => setShowEquipmentModal(false)} style={styles.btnSecondary}>
                   Cancelar
                 </button>
@@ -2461,7 +2814,7 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
                 <h3 style={styles.modalTitle}>Histórico Rastreável de Manutenção: {selectedEqHistory.name}</h3>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <button onClick={() => handleGenerateEquipmentPdf(selectedEqHistory)} style={styles.btnPrimary} title="Gerar PDF / Imprimir Prontuário Técnico">
+                <button onClick={() => handleGenerateEquipmentPdf(selectedEqHistory)} style={styles.btnPrimary} title="Gerar PDF">
                   <Printer size={15} /> Gerar PDF
                 </button>
                 <button onClick={() => setShowHistoryModal(false)} style={styles.closeBtn}>
@@ -2639,7 +2992,7 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
               </div>
 
               <div style={styles.formField}>
-                <label style={styles.label}>Laudo / Solução Aplicada</label>
+                <label style={styles.label}>Laudo</label>
                 <textarea
                   rows={3}
                   required

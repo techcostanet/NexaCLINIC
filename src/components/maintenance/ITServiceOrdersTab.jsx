@@ -6,7 +6,8 @@ import {
   ShieldAlert, Calendar, BarChart3, QrCode, Cpu, Layers, 
   ChevronRight, RefreshCw, Check, AlertOctagon, Activity, DollarSign, 
   List, LayoutGrid, User, Eye, Printer, ShieldCheck, HelpCircle,
-  MessageSquare, Send, ArrowRight, Gauge, CheckSquare, Zap, Tag
+  MessageSquare, Send, ArrowRight, Gauge, CheckSquare, Zap, Tag,
+  ArrowUpDown, ArrowUp, ArrowDown
 } from 'lucide-react';
 
 const IT_CATEGORIES = [
@@ -59,6 +60,7 @@ export default function ITServiceOrdersTab({
 }) {
   const [viewMode, setViewMode] = useState('compact'); // 'compact' | 'cards' | 'sla'
   const [orders, setOrders] = useState([]);
+  const [itSort, setItSort] = useState({ field: 'code', dir: 'desc' });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ text: '', type: '' });
 
@@ -264,6 +266,101 @@ export default function ITServiceOrdersTab({
       return matchesSearch && matchesCat && matchesSector && matchesStatus && matchesPriority && matchesSla;
     });
   }, [scopedOrders, searchTerm, categoryFilter, sectorFilter, statusFilter, priorityFilter, slaFilter]);
+
+  // Handle IT Sorting
+  const handleItSort = (field) => {
+    setItSort(prev => {
+      if (prev.field === field) {
+        return { field, dir: prev.dir === 'asc' ? 'desc' : 'asc' };
+      }
+      return { field, dir: 'asc' };
+    });
+  };
+
+  // Memoized Sorted Orders
+  const sortedOrders = useMemo(() => {
+    if (!itSort.field) return filteredOrders;
+    return [...filteredOrders].sort((a, b) => {
+      let valA = '';
+      let valB = '';
+
+      switch (itSort.field) {
+        case 'code':
+          valA = a.code || '';
+          valB = b.code || '';
+          break;
+        case 'title':
+          valA = a.title || '';
+          valB = b.title || '';
+          break;
+        case 'category':
+          valA = a.category || '';
+          valB = b.category || '';
+          break;
+        case 'sector':
+          valA = a.sector || '';
+          valB = b.sector || '';
+          break;
+        case 'priority': {
+          const priorityWeights = { 'Crítico': 4, 'Alta': 3, 'Média': 2, 'Baixa': 1 };
+          const pA = priorityWeights[a.priority] || 0;
+          const pB = priorityWeights[b.priority] || 0;
+          return itSort.dir === 'asc' ? pA - pB : pB - pA;
+        }
+        case 'sla': {
+          const slaA = getSlaStatus(a).hours ?? 9999;
+          const slaB = getSlaStatus(b).hours ?? 9999;
+          return itSort.dir === 'asc' ? slaA - slaB : slaB - slaA;
+        }
+        case 'status':
+          valA = a.status || '';
+          valB = b.status || '';
+          break;
+        case 'requester':
+          valA = a.requesterName || '';
+          valB = b.requesterName || '';
+          break;
+        case 'technician':
+          valA = a.assignedTechnician || '';
+          valB = b.assignedTechnician || '';
+          break;
+        default:
+          valA = a[itSort.field] || '';
+          valB = b[itSort.field] || '';
+      }
+
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        const comp = valA.localeCompare(valB, 'pt-BR', { numeric: true, sensitivity: 'base' });
+        return itSort.dir === 'asc' ? comp : -comp;
+      }
+      return 0;
+    });
+  }, [filteredOrders, itSort]);
+
+  // Render Table Header with Sort Arrow
+  const renderSortHeader = (label, field) => {
+    const isActive = itSort.field === field;
+    return (
+      <th 
+        style={{ ...styles.th, cursor: 'pointer', userSelect: 'none' }}
+        onClick={() => handleItSort(field)}
+        title={`Ordenar por ${label}`}
+      >
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <span>{label}</span>
+          {isActive ? (
+            itSort.dir === 'asc' ? (
+              <ArrowUp size={13} style={{ color: '#4f46e5' }} />
+            ) : (
+              <ArrowDown size={13} style={{ color: '#4f46e5' }} />
+            )
+          ) : (
+            <ArrowUpDown size={12} style={{ opacity: 0.35 }} />
+          )}
+        </div>
+      </th>
+    );
+  };
 
   // SLA Dashboard Metrics
   const slaMetrics = useMemo(() => {
@@ -662,7 +759,7 @@ export default function ITServiceOrdersTab({
             style={{ ...styles.viewBtn, ...(viewMode === 'sla' ? styles.viewBtnActive : {}) }}
             onClick={() => setViewMode('sla')}
           >
-            <Gauge size={15} /> Painel SLA
+            <Gauge size={15} /> SLA
           </button>
         </div>
 
@@ -756,15 +853,15 @@ export default function ITServiceOrdersTab({
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.th}>Código</th>
-                <th style={styles.th}>Assunto</th>
-                <th style={styles.th}>Categoria</th>
-                <th style={styles.th}>Setor</th>
-                <th style={styles.th}>Prioridade</th>
-                <th style={styles.th}>SLA</th>
-                <th style={styles.th}>Status</th>
-                <th style={styles.th}>Solicitante</th>
-                <th style={styles.th}>Técnico</th>
+                {renderSortHeader('Código', 'code')}
+                {renderSortHeader('Assunto', 'title')}
+                {renderSortHeader('Categoria', 'category')}
+                {renderSortHeader('Setor', 'sector')}
+                {renderSortHeader('Prioridade', 'priority')}
+                {renderSortHeader('SLA', 'sla')}
+                {renderSortHeader('Status', 'status')}
+                {renderSortHeader('Solicitante', 'requester')}
+                {renderSortHeader('Técnico', 'technician')}
                 <th style={{ ...styles.th, textAlign: 'center' }}>Ações</th>
               </tr>
             </thead>
@@ -776,14 +873,14 @@ export default function ITServiceOrdersTab({
                     Carregando chamados de T.I...
                   </td>
                 </tr>
-              ) : filteredOrders.length === 0 ? (
+              ) : sortedOrders.length === 0 ? (
                 <tr>
                   <td colSpan="10" style={styles.emptyTd}>
                     Nenhum chamado de T.I. encontrado com os filtros aplicados.
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map(order => {
+                sortedOrders.map(order => {
                   const sla = getSlaStatus(order);
                   const pStyle = getPriorityBadgeStyle(order.priority);
                   const sStyle = getStatusBadgeStyle(order.status);
@@ -831,7 +928,7 @@ export default function ITServiceOrdersTab({
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                           <button 
                             onClick={() => handleOpenManage(order)}
-                            title={isTechOrAdmin ? "Atender / Gerenciar" : "Ver Detalhes"}
+                            title={isTechOrAdmin ? "Atender" : "Detalhes"}
                             style={styles.actionBtnPrimary}
                           >
                             <Eye size={14} /> {isTechOrAdmin ? 'Atender' : 'Ver'}
@@ -857,10 +954,10 @@ export default function ITServiceOrdersTab({
       {/* VIEW 2: CARDS GRID */}
       {viewMode === 'cards' && (
         <div style={styles.cardsGrid}>
-          {filteredOrders.length === 0 ? (
+          {sortedOrders.length === 0 ? (
             <div style={styles.emptyBox}>Nenhum chamado encontrado.</div>
           ) : (
-            filteredOrders.map(order => {
+            sortedOrders.map(order => {
               const sla = getSlaStatus(order);
               const pStyle = getPriorityBadgeStyle(order.priority);
               const sStyle = getStatusBadgeStyle(order.status);

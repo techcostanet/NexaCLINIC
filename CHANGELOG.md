@@ -1,3 +1,27 @@
+## [v4.9.75] - 11 de Setembro, 2026
+### Nex-Ai CLINIC — 3 Modos de Visualização (.SERVICE), Exclusão de Equipamentos & Auto Ordenação por Colunas
+- **3 Modos de Visualização com Persistência (`MaintenancePanel.jsx`):**
+  - Implementação de seletor visual com 3 modos de exibição nas abas "Ordens" e "Equipamentos": `Compacta` (alta densidade com linhas finas e máxima produtividade), `Normal` (visualização padrão com espaçamento regular) e `Cards` (grade responsiva de crachás técnicos com ações rápidas).
+  - Memorização automática da preferência do usuário no `localStorage` (`nexa_maint_view_mode_orders` e `nexa_maint_view_mode_equipments`).
+- **Exclusão Segura e Permanente de Qualquer Equipamento (`MaintenancePanel.jsx` & `maintenanceService.js`):**
+  - Adicionado botão de ação de exclusão (ícone de lixeira com cor de alerta) diretamente na coluna de ações da tabela e no rodapé dos cards de equipamentos.
+  - Adicionado botão "Excluir" no rodapé do modal de edição do equipamento.
+  - Diálogo de confirmação de segurança detalhado exibindo nome e patrimônio da máquina antes da exclusão definitiva no Firestore e fallback local.
+- **Auto Ordenação Interativa por Colunas em Todas as Tabelas (`MaintenancePanel.jsx` & `ITServiceOrdersTab.jsx`):**
+  - Adicionada funcionalidade de ordenação automática ao clicar no cabeçalho de qualquer coluna em todas as abas tabulares do módulo:
+    - Aba Ordens: Código, Título, Equipamento, Tipo, Setor, Prioridade, Status, Abertura, Técnico.
+    - Aba Equipamentos: Patrimônio, Equipamento, Marca/Modelo, Série, Setor, Periodicidade, Status.
+    - Aba Calendário: Equipamento, Setor, Periodicidade, Última Manutenção, Próxima Revisão, Status.
+    - Aba Chamados T.I.: Código, Assunto, Categoria, Setor, Prioridade, SLA, Status, Solicitante, Técnico.
+  - Indicador visual dinâmico com setas de ordenação (`ArrowUp` para ascendente, `ArrowDown` para descendente e `ArrowUpDown` neutro).
+  - Preservação da ordenação selecionada ao alternar entre visualização tabular e visualização em cards.
+- **Conformidade de UI/UX e Boy Scout Rule (`MaintenancePanel.jsx` & `ITServiceOrdersTab.jsx`):**
+  - Remoção de rótulos duplos e redundantes: `Laudo / Solução Aplicada` -> `Laudo`, `🖨️ Imprimir / Salvar em PDF` -> `🖨️ Imprimir`, `Atender / Gerenciar` -> `Atender`, `Painel SLA` -> `SLA`, títulos de botões e cabeçalhos técnicos sanitizados.
+- **Atualização dos Manuais dos Módulos (`moduleGuidesData.js`):**
+  - Documentação completa em `Recursos`, `Tutorial` e `Dúvidas` no módulo de Manutenção cobrindo os 3 modos de visualização, exclusão de equipamentos e ordenação por colunas.
+
+---
+
 ## [v4.9.74] - 11 de Setembro, 2026
 ### Nex-Ai CLINIC — Impressão de QR Code de Equipamentos em Folha Única (.SERVICE) & Prevenção de Quebras de Página
 - **Impressão em Folha Única da Etiqueta Patrimonial (`MaintenancePanel.jsx`):**
