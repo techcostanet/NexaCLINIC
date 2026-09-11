@@ -283,6 +283,14 @@ export const MODULE_GUIDES = {
         desc: 'Suporte completo a notas de produtos (com abastecimento físico de estoque, controle de lotes e validades) e notas de serviços prestados/tomados (sem incremento físico de estoque, com registro fiscal e geração automática no Contas a Pagar do Financeiro).'
       },
       {
+        title: 'Bloqueio Ativo e Prevenção Anti-Duplicidade de Notas e Boletos',
+        desc: 'Validação preventiva em tempo real contra notas fiscais em duplicidade (por Chave de Acesso de 44 dígitos ou combinação de Número da NF + Fornecedor/CNPJ) e boletos duplicados (por linha digitável em Contas a Pagar e parcelas), bloqueando tanto importações de arquivos (XML/PDF) quanto digitação manual.'
+      },
+      {
+        title: 'Status Visual de Boleto e Gestão Dinâmica de Itens',
+        desc: 'Coluna de status de boleto na listagem de notas arquivadas (Boleto anexado ou Pendente) e adição/remoção dinâmica de insumos no catálogo durante lançamentos manuais de produtos.'
+      },
+      {
         title: 'Leitor Inteligente de Arquivos (XML & PDF DANFE / NFS-e)',
         desc: 'Importação com auto-reconhecimento de formato: XML SEFAZ para NF-e, XML ABRASF/nacional para NFS-e e PDFs oficiais (DANFE ou espelhos de prefeitura), com extração de número, código, prestador, valores, parcelas e descrição dos serviços.'
       },
@@ -456,9 +464,26 @@ export const MODULE_GUIDES = {
           'Se houver diferença de centavos, clique em "Equilibrar" para ajustar o total na última parcela.',
           'Informe ou confira a linha digitável de cada parcela antes de confirmar a entrada.'
         ]
+      },
+      {
+        title: 'Como Funciona o Alerta e Bloqueio de Notas ou Boletos Duplicados',
+        steps: [
+          'Ao carregar um arquivo XML ou PDF, ou ao preencher os dados manualmente na Etapa 1, o sistema pesquisa no histórico e no Contas a Pagar.',
+          'Se a Chave de Acesso ou o Número da Nota + Fornecedor já existirem, um banner de alerta vermelho é exibido imediatamente com os dados da nota já cadastrada e o botão de avanço é bloqueado.',
+          'Você pode clicar em "Visualizar" no banner de alerta para auditar o documento original já registrado.',
+          'Na Etapa 3 (Financeiro), ao informar ou ler a linha digitável do boleto ou das parcelas, o sistema confere se ela já foi lançada no Contas a Pagar ou em outra duplicata, impedindo o avanço até a correção.'
+        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'O sistema permite dar entrada duas vezes na mesma nota fiscal ou mesmo boleto?',
+        resposta: 'Não. O sistema possui blindagem ativa contra duplicidade. Notas fiscais com a mesma Chave de Acesso ou mesmo Número + Fornecedor são detectadas e bloqueadas. O mesmo ocorre com boletos bancários cuja linha digitável já foi cadastrada no Contas a Pagar da clínica ou da rede.'
+      },
+      {
+        pergunta: 'É possível adicionar insumos manualmente em notas de produtos?',
+        resposta: 'Sim. Na etapa de itens (Etapa 4), você pode utilizar o botão "+ Item" para adicionar novos insumos na nota, especificar quantidades e valores unitários, mapear para produtos do catálogo ou auto-cadastrar como novo item, além de remover itens indesejados.'
+      },
       {
         pergunta: 'O que fazer se a nota fiscal tiver pagamento parcelado?',
         resposta: 'O sistema detecta automaticamente as parcelas no XML ou PDF. Você pode conferir os vencimentos e valores na tabela, usar os botões de divisão rápida (ex: 3x), adicionar parcelas com o botão "+ Parcela" ou clicar em "Equilibrar" para acertar os centavos.'

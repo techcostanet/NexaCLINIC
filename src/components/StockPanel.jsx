@@ -211,6 +211,15 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
     handleMappingItemChange,
     handleMappingFieldChange,
     handleFinishXmlWizard,
+    accountsPayable,
+    duplicateInvoiceWarning,
+    setDuplicateInvoiceWarning,
+    duplicateBoletoWarning,
+    setDuplicateBoletoWarning,
+    checkDuplicateInvoice,
+    checkDuplicateBoleto,
+    handleAddItemMapping,
+    handleRemoveItemMapping,
     entryMode,
     setEntryMode,
     handleStartManualServiceEntry,
@@ -1245,6 +1254,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                       {renderSortHeader('Emissão', 'issueDate', invoiceSort, setInvoiceSort)}
                       {renderSortHeader('Entrada', 'entryDate', invoiceSort, setInvoiceSort)}
                       {renderSortHeader('Valor', 'totalValue', invoiceSort, setInvoiceSort)}
+                      <th style={styles.th}>Boleto</th>
                       <th style={styles.th}>Detalhes</th>
                       <th style={styles.th}>Status</th>
                       <th style={styles.th}>Ações</th>
@@ -1253,7 +1263,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                   <tbody>
                     {filteredInvoices.length === 0 ? (
                       <tr>
-                        <td colSpan="10" style={styles.noDataCell}>Nenhuma nota fiscal encontrada no filtro selecionado.</td>
+                        <td colSpan="11" style={styles.noDataCell}>Nenhuma nota fiscal encontrada no filtro selecionado.</td>
                       </tr>
                     ) : (
                       sortData(filteredInvoices, invoiceSort).map((inv, idx) => {
@@ -1345,6 +1355,40 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                   <Edit2 size={12} color="#0284c7" style={{ opacity: 0.85 }} />
                                 </div>
                               )}
+                            </td>
+                            <td>
+                              {(() => {
+                                const hasBoleto = Boolean(inv?.hasBoleto || inv?.boletoUrl || (inv?.installments && inv.installments.some(inst => inst.boletoUrl || inst.digitableLine)));
+                                return hasBoleto ? (
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    padding: '0.2rem 0.55rem',
+                                    borderRadius: '12px',
+                                    fontSize: '0.72rem',
+                                    fontWeight: '700',
+                                    backgroundColor: '#ecfdf5',
+                                    color: '#166534',
+                                    border: '1px solid #a7f3d0'
+                                  }} title="Boleto bancário vinculado">
+                                    <FileText size={12} /> Boleto
+                                  </span>
+                                ) : (
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    padding: '0.2rem 0.5rem',
+                                    borderRadius: '12px',
+                                    fontSize: '0.72rem',
+                                    backgroundColor: '#f1f5f9',
+                                    color: '#94a3b8'
+                                  }} title="Sem boleto anexado">
+                                    Pendente
+                                  </span>
+                                );
+                              })()}
                             </td>
                             <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', maxWidth: '240px' }}>
                               {isService ? (
@@ -2943,6 +2987,153 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                     </div>
                   </div>
 
+                  {/* Banner de Alerta de Duplicidade de Nota Fiscal */}
+                  {duplicateInvoiceWarning?.isDuplicate && (
+                    <div style={{
+                      backgroundColor: '#fef2f2',
+                      border: '2px solid #ef4444',
+                      borderRadius: '8px',
+                      padding: '1rem 1.25rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.75rem',
+                      boxShadow: '0 4px 12px rgba(239, 68, 68, 0.12)'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                        <div style={{
+                          backgroundColor: '#fee2e2',
+                          color: '#dc2626',
+                          borderRadius: '50%',
+                          width: '36px',
+                          height: '36px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          <AlertTriangle size={20} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            <h4 style={{ margin: 0, color: '#991b1b', fontSize: '0.98rem', fontWeight: '800' }}>
+                              Nota Fiscal Duplicada Detectada
+                            </h4>
+                            <span style={{
+                              backgroundColor: '#dc2626',
+                              color: '#fff',
+                              fontSize: '0.68rem',
+                              fontWeight: '800',
+                              padding: '0.15rem 0.5rem',
+                              borderRadius: '10px',
+                              textTransform: 'uppercase'
+                            }}>
+                              Entrada Bloqueada
+                            </span>
+                            {duplicateInvoiceWarning.crossUnit && (
+                              <span style={{
+                                backgroundColor: '#fed7aa',
+                                color: '#9a3412',
+                                fontSize: '0.68rem',
+                                fontWeight: '700',
+                                padding: '0.15rem 0.5rem',
+                                borderRadius: '10px'
+                              }}>
+                                Outra Unidade ({duplicateInvoiceWarning.invoice?.unit || duplicateInvoiceWarning.invoice?.unitId})
+                              </span>
+                            )}
+                          </div>
+                          <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.84rem', color: '#7f1d1d', lineHeight: '1.4' }}>
+                            {duplicateInvoiceWarning.reason}. O sistema bloqueou esta entrada para evitar estoque duplicado e repetição no Contas a Pagar.
+                          </p>
+
+                          {/* Metadados da Nota Existente */}
+                          <div style={{
+                            marginTop: '0.6rem',
+                            backgroundColor: '#fff',
+                            border: '1px solid #fecaca',
+                            borderRadius: '6px',
+                            padding: '0.65rem 0.85rem',
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                            gap: '0.5rem',
+                            fontSize: '0.78rem'
+                          }}>
+                            <div>
+                              <span style={{ color: '#991b1b', display: 'block', fontWeight: '600' }}>Nota</span>
+                              <strong>Nº {duplicateInvoiceWarning.invoice?.number || 'S/N'}</strong>
+                            </div>
+                            <div>
+                              <span style={{ color: '#991b1b', display: 'block', fontWeight: '600' }}>Fornecedor</span>
+                              <strong>{duplicateInvoiceWarning.invoice?.supplierName || duplicateInvoiceWarning.invoice?.supplier || 'N/I'}</strong>
+                            </div>
+                            <div>
+                              <span style={{ color: '#991b1b', display: 'block', fontWeight: '600' }}>Data</span>
+                              <strong>{duplicateInvoiceWarning.invoice?.entryDate ? duplicateInvoiceWarning.invoice.entryDate.split('-').reverse().join('/') : (duplicateInvoiceWarning.invoice?.issueDate ? duplicateInvoiceWarning.invoice.issueDate.split('-').reverse().join('/') : 'N/I')}</strong>
+                            </div>
+                            <div>
+                              <span style={{ color: '#991b1b', display: 'block', fontWeight: '600' }}>Valor</span>
+                              <strong style={{ color: '#b91c1c' }}>R$ {parseFloat(duplicateInvoiceWarning.invoice?.totalValue || duplicateInvoiceWarning.invoice?.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                            </div>
+                            <div>
+                              <span style={{ color: '#991b1b', display: 'block', fontWeight: '600' }}>Unidade</span>
+                              <strong>{duplicateInvoiceWarning.invoice?.unit || duplicateInvoiceWarning.invoice?.unitId || 'Betim'}</strong>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+                            {duplicateInvoiceWarning.invoice && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedInvoiceDetail(duplicateInvoiceWarning.invoice);
+                                  setShowInvoiceDetailModal(true);
+                                }}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.35rem',
+                                  backgroundColor: '#dc2626',
+                                  color: '#fff',
+                                  border: 'none',
+                                  padding: '0.4rem 0.8rem',
+                                  borderRadius: '6px',
+                                  fontSize: '0.78rem',
+                                  fontWeight: '700',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                <Eye size={14} /> Visualizar
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDuplicateInvoiceWarning(null);
+                                setXmlData(null);
+                                setXmlError('');
+                              }}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                backgroundColor: '#fff',
+                                color: '#991b1b',
+                                border: '1px solid #fca5a5',
+                                padding: '0.4rem 0.8rem',
+                                borderRadius: '6px',
+                                fontSize: '0.78rem',
+                                fontWeight: '700',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <RefreshCw size={14} /> Limpar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Upload Mode Area */}
                   {entryMode === 'upload' && (
                     <div style={styles.xmlUploadArea}>
@@ -2985,17 +3176,45 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                             className="form-control" 
                             placeholder="Ex: 1042" 
                             value={xmlData?.number || ''}
-                            onChange={e => setXmlData(prev => ({ ...prev, number: e.target.value }))}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setXmlData(prev => ({ ...prev, number: val }));
+                              const dup = checkDuplicateInvoice({
+                                number: val,
+                                accessKey: xmlData?.accessKey,
+                                supplierCnpj: supplierMapping?.cnpj || xmlData?.supplierCnpj,
+                                supplierName: supplierMapping?.name || xmlData?.supplierName
+                              });
+                              if (dup.isDuplicate) {
+                                setDuplicateInvoiceWarning(dup);
+                              } else if (duplicateInvoiceWarning?.matchedBy === 'numberAndSupplier') {
+                                setDuplicateInvoiceWarning(null);
+                              }
+                            }}
                           />
                         </div>
                         <div className="form-group">
-                          <label>Código</label>
+                          <label>Chave</label>
                           <input 
                             type="text" 
                             className="form-control" 
-                            placeholder="Código Verificação / Chave" 
+                            placeholder="Chave de acesso ou código" 
                             value={xmlData?.accessKey || ''}
-                            onChange={e => setXmlData(prev => ({ ...prev, accessKey: e.target.value }))}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setXmlData(prev => ({ ...prev, accessKey: val }));
+                              const dup = checkDuplicateInvoice({
+                                number: xmlData?.number,
+                                accessKey: val,
+                                supplierCnpj: supplierMapping?.cnpj || xmlData?.supplierCnpj,
+                                supplierName: supplierMapping?.name || xmlData?.supplierName
+                              });
+                              if (dup.isDuplicate) {
+                                setDuplicateInvoiceWarning(dup);
+                              } else if (duplicateInvoiceWarning?.matchedBy === 'accessKey') {
+                                setDuplicateInvoiceWarning(null);
+                              }
+                            }}
                           />
                         </div>
                         <div className="form-group">
@@ -3035,12 +3254,23 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                           <input 
                             type="text" 
                             className="form-control" 
-                            placeholder="Razão Social / Nome Fantasia"
+                            placeholder="Razão social do fornecedor"
                             value={supplierMapping.name || ''}
                             onChange={e => {
                               const val = e.target.value;
                               setSupplierMapping(sm => ({ ...sm, name: val }));
                               setXmlData(prev => ({ ...prev, supplierName: val }));
+                              const dup = checkDuplicateInvoice({
+                                number: xmlData?.number,
+                                accessKey: xmlData?.accessKey,
+                                supplierCnpj: supplierMapping?.cnpj || xmlData?.supplierCnpj,
+                                supplierName: val
+                              });
+                              if (dup.isDuplicate) {
+                                setDuplicateInvoiceWarning(dup);
+                              } else if (duplicateInvoiceWarning?.matchedBy === 'numberAndSupplier') {
+                                setDuplicateInvoiceWarning(null);
+                              }
                             }}
                           />
                         </div>
@@ -3055,6 +3285,17 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                               const val = e.target.value;
                               setSupplierMapping(sm => ({ ...sm, cnpj: val }));
                               setXmlData(prev => ({ ...prev, supplierCnpj: val }));
+                              const dup = checkDuplicateInvoice({
+                                number: xmlData?.number,
+                                accessKey: xmlData?.accessKey,
+                                supplierCnpj: val,
+                                supplierName: supplierMapping?.name || xmlData?.supplierName
+                              });
+                              if (dup.isDuplicate) {
+                                setDuplicateInvoiceWarning(dup);
+                              } else if (duplicateInvoiceWarning?.matchedBy === 'numberAndSupplier') {
+                                setDuplicateInvoiceWarning(null);
+                              }
                             }}
                           />
                         </div>
@@ -3076,12 +3317,30 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                         <button 
                           type="button" 
+                          disabled={Boolean(duplicateInvoiceWarning?.isDuplicate)}
                           onClick={() => {
                             if (!xmlData?.number || !xmlData?.totalValue || !supplierMapping?.name) {
                               setXmlError('Preencha os campos obrigatórios: Nota, Fornecedor e Valor.');
                               return;
                             }
+
+                            // Validação rigorosa de duplicidade antes de avançar
+                            const dup = checkDuplicateInvoice({
+                              number: xmlData?.number,
+                              accessKey: xmlData?.accessKey,
+                              supplierCnpj: supplierMapping?.cnpj || xmlData?.supplierCnpj,
+                              supplierName: supplierMapping?.name || xmlData?.supplierName
+                            });
+
+                            if (dup.isDuplicate) {
+                              setDuplicateInvoiceWarning(dup);
+                              setXmlError(`Entrada bloqueada: ${dup.reason}`);
+                              return;
+                            }
+
+                            setDuplicateInvoiceWarning(null);
                             setXmlError('');
+
                             // Procura se fornecedor existe pelo CNPJ ou nome
                             const exist = suppliers.find(s => 
                               (supplierMapping.cnpj && cleanCnpj(s.cnpj) === cleanCnpj(supplierMapping.cnpj)) ||
@@ -3101,9 +3360,13 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                             setXmlWizardStep(2);
                           }}
                           className="btn btn-primary" 
-                          style={{ backgroundColor: '#f59e0b', fontWeight: '700' }}
+                          style={{
+                            backgroundColor: duplicateInvoiceWarning?.isDuplicate ? '#94a3b8' : '#f59e0b',
+                            fontWeight: '700',
+                            cursor: duplicateInvoiceWarning?.isDuplicate ? 'not-allowed' : 'pointer'
+                          }}
                         >
-                          Avançar para Fornecedor
+                          Fornecedor
                         </button>
                       </div>
 
@@ -3165,7 +3428,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
                     <button type="button" onClick={() => setXmlWizardStep(1)} className="btn btn-secondary">Voltar</button>
                     <button type="button" onClick={handleConfirmSupplierMapping} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
-                      Avançar para Financeiro
+                      Financeiro
                     </button>
                   </div>
                 </div>
@@ -3268,7 +3531,12 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                 </td>
                               </tr>
                             ) : (
-                              installmentsList.map((inst, idx) => (
+                              installmentsList.map((inst, idx) => {
+                                const rowBoletoDup = (inst.digitableLine && inst.digitableLine.replace(/\D/g, '').length >= 30 && checkDuplicateBoleto)
+                                  ? checkDuplicateBoleto(inst.digitableLine, idx, installmentsList)
+                                  : null;
+
+                                return (
                                 <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                   <td style={{ padding: '0.4rem 0.75rem' }}>
                                     <input 
@@ -3303,11 +3571,22 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                     <input 
                                       type="text" 
                                       className="form-control"
-                                      style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', fontFamily: 'monospace' }}
+                                      style={{ 
+                                        padding: '0.3rem 0.5rem', 
+                                        fontSize: '0.8rem', 
+                                        fontFamily: 'monospace',
+                                        borderColor: rowBoletoDup?.isDuplicate ? '#dc2626' : undefined,
+                                        backgroundColor: rowBoletoDup?.isDuplicate ? '#fff1f2' : undefined
+                                      }}
                                       value={inst.digitableLine || ''}
                                       onChange={e => handleUpdateInstallment(idx, 'digitableLine', e.target.value)}
                                       placeholder="Linha digitável"
                                     />
+                                    {rowBoletoDup?.isDuplicate && (
+                                      <span style={{ display: 'block', color: '#dc2626', fontSize: '0.7rem', marginTop: '0.2rem', fontWeight: '600' }}>
+                                        ⚠️ {rowBoletoDup.message}
+                                      </span>
+                                    )}
                                   </td>
                                   <td style={{ padding: '0.4rem 0.75rem', textAlign: 'center' }}>
                                     {installmentsList.length > 1 && (
@@ -3322,7 +3601,8 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                     )}
                                   </td>
                                 </tr>
-                              ))
+                                );
+                              })
                             )}
                           </tbody>
                         </table>
@@ -3446,7 +3726,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                               }}
                             >
                               <UploadCloud size={16} />
-                              {boletoLoading ? 'Processando Boleto...' : 'Anexar Boleto'}
+                              {boletoLoading ? 'Processando...' : 'Anexar'}
                             </label>
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Formatos: PDF, PNG, JPG</span>
                           </div>
@@ -3483,7 +3763,13 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                               <input
                                 type="text"
                                 className="form-control"
-                                style={{ fontFamily: 'monospace', fontSize: '0.85rem', letterSpacing: '0.03rem' }}
+                                style={{ 
+                                  fontFamily: 'monospace', 
+                                  fontSize: '0.85rem', 
+                                  letterSpacing: '0.03rem',
+                                  borderColor: duplicateBoletoWarning?.isDuplicate ? '#dc2626' : undefined,
+                                  backgroundColor: duplicateBoletoWarning?.isDuplicate ? '#fff1f2' : undefined
+                                }}
                                 value={boletoData.digitableLine}
                                 onChange={e => handleBoletoChange('digitableLine', e.target.value)}
                                 placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
@@ -3517,6 +3803,32 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                         </div>
                       )}
 
+                      {duplicateBoletoWarning?.isDuplicate && (
+                        <div style={{
+                          backgroundColor: '#fff1f2',
+                          border: '1px solid #fecdd3',
+                          borderRadius: '8px',
+                          padding: '0.75rem',
+                          marginTop: '0.75rem',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '0.5rem',
+                          color: '#9f1239',
+                          fontSize: '0.8rem'
+                        }}>
+                          <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px', color: '#e11d48' }} />
+                          <div style={{ flex: 1 }}>
+                            <strong style={{ display: 'block', fontSize: '0.85rem' }}>Atenção: Boleto Duplicado</strong>
+                            <div>{duplicateBoletoWarning.message}</div>
+                            {duplicateBoletoWarning.matchedDoc && (
+                              <div style={{ marginTop: '0.35rem', fontSize: '0.75rem', color: '#881337', backgroundColor: '#ffe4e6', padding: '0.35rem 0.5rem', borderRadius: '4px' }}>
+                                <strong>Registro:</strong> {duplicateBoletoWarning.matchedDoc.description || 'Contas a Pagar'} | Vencimento: {duplicateBoletoWarning.matchedDoc.dueDate ? duplicateBoletoWarning.matchedDoc.dueDate.split('-').reverse().join('/') : '-'} | Valor: R$ {parseFloat(duplicateBoletoWarning.matchedDoc.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} {duplicateBoletoWarning.crossUnit ? ' | (Outra Unidade)' : ''}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {boletoError && (
                         <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                           <AlertCircle size={14} /> {boletoError}
@@ -3524,22 +3836,43 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                       )}
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-                      <button type="button" onClick={() => setXmlWizardStep(2)} className="btn btn-secondary">Voltar</button>
-                      <button 
-                        type="button" 
-                        onClick={() => {
-                          if ((!xmlData?.totalValue || parseFloat(xmlData.totalValue) <= 0) && sumInstallments > 0) {
-                            setXmlData(prev => ({ ...prev, totalValue: sumInstallments }));
-                          }
-                          setXmlWizardStep(xmlData?.invoiceType === 'service' ? 5 : 4);
-                        }} 
-                        className="btn btn-primary" 
-                        style={{ backgroundColor: xmlData?.invoiceType === 'service' ? '#8b5cf6' : '#f59e0b', fontWeight: '700' }}
-                      >
-                        {xmlData?.invoiceType === 'service' ? 'Finalizar' : 'Avançar'}
-                      </button>
-                    </div>
+                    {(() => {
+                      const hasAnyBoletoDuplicate = Boolean(duplicateBoletoWarning?.isDuplicate) || installmentsList.some((inst, idx) => {
+                        if (!inst.digitableLine || inst.digitableLine.replace(/\D/g, '').length < 30) return false;
+                        return checkDuplicateBoleto ? checkDuplicateBoleto(inst.digitableLine, idx, installmentsList)?.isDuplicate : false;
+                      });
+
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                          {hasAnyBoletoDuplicate && (
+                            <div style={{ color: '#dc2626', fontSize: '0.78rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem', justifyContent: 'flex-end' }}>
+                              <AlertCircle size={15} /> Boleto duplicado detectado. Corrija para avançar.
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <button type="button" onClick={() => setXmlWizardStep(2)} className="btn btn-secondary">Voltar</button>
+                            <button 
+                              type="button" 
+                              disabled={hasAnyBoletoDuplicate}
+                              onClick={() => {
+                                if ((!xmlData?.totalValue || parseFloat(xmlData.totalValue) <= 0) && sumInstallments > 0) {
+                                  setXmlData(prev => ({ ...prev, totalValue: sumInstallments }));
+                                }
+                                setXmlWizardStep(xmlData?.invoiceType === 'service' ? 5 : 4);
+                              }} 
+                              className="btn btn-primary" 
+                              style={{ 
+                                backgroundColor: hasAnyBoletoDuplicate ? '#94a3b8' : (xmlData?.invoiceType === 'service' ? '#8b5cf6' : '#f59e0b'), 
+                                fontWeight: '700',
+                                cursor: hasAnyBoletoDuplicate ? 'not-allowed' : 'pointer'
+                              }}
+                            >
+                              {xmlData?.invoiceType === 'service' ? 'Finalizar' : 'Itens'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })()}
@@ -3606,76 +3939,156 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
                         <button type="button" onClick={() => setXmlWizardStep(3)} className="btn btn-secondary">Voltar</button>
-                        <button type="button" onClick={() => setXmlWizardStep(5)} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
-                          Revisar e Finalizar
+                        <button type="button" onClick={() => setXmlWizardStep(5)} className="btn btn-primary" style={{ backgroundColor: '#f59e0b', fontWeight: '700' }}>
+                          Revisar
                         </button>
                       </div>
                     </div>
                   ) : (
                     /* CASO 4B: NOTA DE PRODUTOS / INSUMOS */
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <div style={styles.warningBanner}>
-                        <AlertTriangle size={16} />
-                        <span>Mapeie cada item da nota para um produto do catálogo. Selecione "[Criar como novo]" para incluí-lo automaticamente.</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div style={styles.warningBanner}>
+                          <AlertTriangle size={16} />
+                          <span>Mapeie cada item da nota para o estoque. Selecione "[Criar novo]" para auto-cadastrar.</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleAddItemMapping}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                            padding: '0.4rem 0.85rem',
+                            borderRadius: '6px',
+                            border: '1px solid #0284c7',
+                            backgroundColor: '#f0f9ff',
+                            color: '#0284c7',
+                            fontSize: '0.8rem',
+                            fontWeight: '700',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <Plus size={15} /> Item
+                        </button>
                       </div>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {itemMappings.map((m, idx) => (
-                          <div key={m.xmlCode + '-' + idx} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-sm)', padding: '1rem', backgroundColor: '#fafafa' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '1rem', marginBottom: '0.75rem' }}>
-                              <div>
-                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Descrição na Nota (Cód: {m.xmlCode})</span>
-                                <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{m.xmlName}</span>
-                                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                                  Quant: <strong>{m.quantity}</strong> | Preço: <strong>R$ {m.price?.toFixed(2)}</strong>
+                      {itemMappings.length === 0 ? (
+                        <div style={{ border: '1px dashed var(--border-color)', borderRadius: '8px', padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                          <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem' }}>Nenhum insumo incluído na nota fiscal.</p>
+                          <button
+                            type="button"
+                            onClick={handleAddItemMapping}
+                            className="btn btn-primary"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                          >
+                            <Plus size={16} /> Item
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          {itemMappings.map((m, idx) => (
+                            <div key={m.xmlCode + '-' + idx} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-sm)', padding: '1rem', backgroundColor: '#fafafa' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
+                                <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+                                  Item #{idx + 1} ({m.xmlCode})
                                 </span>
-                              </div>
-                              <div className="form-group">
-                                <label>Produto *</label>
-                                <select 
-                                  className="form-control"
-                                  value={m.mappedItemId}
-                                  onChange={e => handleMappingItemChange(m.xmlCode, e.target.value)}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveItemMapping(m.xmlCode)}
+                                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem' }}
+                                  title="Remover insumo"
                                 >
-                                  <option value="CREATE_NEW">[Criar como novo item no estoque]</option>
-                                  {items.map(i => <option key={i.id} value={i.id}>{i.name} (Saldo: {i.currentStock})</option>)}
-                                </select>
+                                  <Trash2 size={14} /> Remover
+                                </button>
                               </div>
-                            </div>
 
-                            {(() => {
-                              const isBatchTracked = m.mappedItemId === 'CREATE_NEW' || items.find(i => i.id === m.mappedItemId)?.hasBatchControl;
-                              return (
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                                  <div className="form-group">
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                      Lote {isBatchTracked && <span style={{ color: '#0369a1', fontSize: '0.7rem', fontWeight: '700' }}>(Rastreável)</span>}
-                                    </label>
-                                    <input 
-                                      type="text" className="form-control" placeholder="Número do lote" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', borderColor: isBatchTracked && !m.batch ? '#f59e0b' : undefined }}
-                                      value={m.batch} onChange={e => handleMappingFieldChange(m.xmlCode, 'batch', e.target.value)}
-                                    />
-                                  </div>
-                                  <div className="form-group">
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                      Validade {isBatchTracked && <span style={{ color: '#0369a1', fontSize: '0.7rem', fontWeight: '700' }}>(Rastreável)</span>}
-                                    </label>
-                                    <input 
-                                      type="date" className="form-control" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', borderColor: isBatchTracked && !m.expiryDate ? '#f59e0b' : undefined }}
-                                      value={m.expiryDate} onChange={e => handleMappingFieldChange(m.xmlCode, 'expiryDate', e.target.value)}
-                                    />
-                                  </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                                <div className="form-group">
+                                  <label>Descrição</label>
+                                  <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    placeholder="Nome do insumo"
+                                    value={m.xmlName} 
+                                    onChange={e => handleMappingFieldChange(m.xmlCode, 'xmlName', e.target.value)}
+                                  />
                                 </div>
-                              );
-                            })()}
-                          </div>
-                        ))}
-                      </div>
+                                <div className="form-group">
+                                  <label>Produto *</label>
+                                  <select 
+                                    className="form-control"
+                                    value={m.mappedItemId}
+                                    onChange={e => handleMappingItemChange(m.xmlCode, e.target.value)}
+                                  >
+                                    <option value="CREATE_NEW">[Criar novo item no catálogo]</option>
+                                    {items.map(i => <option key={i.id} value={i.id}>{i.name} (Saldo: {i.currentStock})</option>)}
+                                  </select>
+                                </div>
+                                <div className="form-group">
+                                  <label>Quantidade</label>
+                                  <input 
+                                    type="number" 
+                                    step="1" 
+                                    min="0.001" 
+                                    className="form-control"
+                                    value={m.quantity} 
+                                    onChange={e => handleMappingFieldChange(m.xmlCode, 'quantity', parseFloat(e.target.value) || 0)}
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <label>Preço</label>
+                                  <input 
+                                    type="number" 
+                                    step="0.01" 
+                                    min="0" 
+                                    className="form-control"
+                                    value={m.price} 
+                                    onChange={e => handleMappingFieldChange(m.xmlCode, 'price', parseFloat(e.target.value) || 0)}
+                                  />
+                                </div>
+                              </div>
+
+                              {(() => {
+                                const isBatchTracked = m.mappedItemId === 'CREATE_NEW' || items.find(i => i.id === m.mappedItemId)?.hasBatchControl;
+                                return (
+                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                    <div className="form-group">
+                                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        Lote {isBatchTracked && <span style={{ color: '#0369a1', fontSize: '0.7rem', fontWeight: '700' }}>(Rastreável)</span>}
+                                      </label>
+                                      <input 
+                                        type="text" className="form-control" placeholder="Número do lote" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', borderColor: isBatchTracked && !m.batch ? '#f59e0b' : undefined }}
+                                        value={m.batch} onChange={e => handleMappingFieldChange(m.xmlCode, 'batch', e.target.value)}
+                                      />
+                                    </div>
+                                    <div className="form-group">
+                                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        Validade {isBatchTracked && <span style={{ color: '#0369a1', fontSize: '0.7rem', fontWeight: '700' }}>(Rastreável)</span>}
+                                      </label>
+                                      <input 
+                                        type="date" className="form-control" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', borderColor: isBatchTracked && !m.expiryDate ? '#f59e0b' : undefined }}
+                                        value={m.expiryDate} onChange={e => handleMappingFieldChange(m.xmlCode, 'expiryDate', e.target.value)}
+                                      />
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
                         <button type="button" onClick={() => setXmlWizardStep(3)} className="btn btn-secondary">Voltar</button>
-                        <button type="button" onClick={() => setXmlWizardStep(5)} className="btn btn-primary" style={{ backgroundColor: '#f59e0b' }}>
-                          Revisar e Finalizar
+                        <button 
+                          type="button" 
+                          onClick={() => setXmlWizardStep(5)} 
+                          disabled={itemMappings.length === 0} 
+                          className="btn btn-primary" 
+                          style={{ backgroundColor: itemMappings.length === 0 ? '#94a3b8' : '#f59e0b', fontWeight: '700', cursor: itemMappings.length === 0 ? 'not-allowed' : 'pointer' }}
+                        >
+                          Revisar
                         </button>
                       </div>
                     </div>
@@ -3686,7 +4099,29 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
               {/* STEP 5: Review and Finish */}
               {xmlWizardStep === 5 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <h3>Revisão de Entrada da Nota Fiscal</h3>
+                  <h3>Revisão</h3>
+
+                  {(duplicateInvoiceWarning?.isDuplicate || duplicateBoletoWarning?.isDuplicate) && (
+                    <div style={{
+                      backgroundColor: '#fff1f2',
+                      border: '1px solid #fecdd3',
+                      borderRadius: '8px',
+                      padding: '0.85rem',
+                      color: '#9f1239',
+                      fontSize: '0.85rem',
+                      display: 'flex',
+                      gap: '0.5rem',
+                      alignItems: 'center'
+                    }}>
+                      <AlertCircle size={20} color="#e11d48" style={{ flexShrink: 0 }} />
+                      <div>
+                        <strong>Bloqueio de Duplicidade:</strong>
+                        <div style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                          {duplicateInvoiceWarning?.message || duplicateBoletoWarning?.message}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   <div style={styles.infoSummaryBox}>
                     <p>
@@ -3769,11 +4204,15 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                     <button 
                       type="button" 
                       onClick={handleFinishXmlWizard} 
-                      disabled={actionLoading} 
+                      disabled={actionLoading || duplicateInvoiceWarning?.isDuplicate || duplicateBoletoWarning?.isDuplicate} 
                       className="btn btn-primary" 
-                      style={{ backgroundColor: 'var(--success-color)', fontWeight: '700' }}
+                      style={{ 
+                        backgroundColor: (duplicateInvoiceWarning?.isDuplicate || duplicateBoletoWarning?.isDuplicate) ? '#94a3b8' : 'var(--success-color)', 
+                        fontWeight: '700',
+                        cursor: (duplicateInvoiceWarning?.isDuplicate || duplicateBoletoWarning?.isDuplicate) ? 'not-allowed' : 'pointer'
+                      }}
                     >
-                      {actionLoading ? 'Processando Entrada...' : (xmlData?.invoiceType === 'service' ? 'Confirmar Entrada de Serviço' : 'Confirmar e Processar Entrada')}
+                      {actionLoading ? 'Processando...' : 'Confirmar'}
                     </button>
                   </div>
                 </div>

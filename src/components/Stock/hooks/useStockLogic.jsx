@@ -191,6 +191,9 @@ export function useStockLogic(currentUser) {
     email: ''
   });
   const [itemMappings, setItemMappings] = useState([]);
+  const [accountsPayable, setAccountsPayable] = useState([]);
+  const [duplicateInvoiceWarning, setDuplicateInvoiceWarning] = useState(null);
+  const [duplicateBoletoWarning, setDuplicateBoletoWarning] = useState(null);
 
   // Boleto Bancário no Assistente de Entrada
   const [boletoData, setBoletoData] = useState({
@@ -202,6 +205,230 @@ export function useStockLogic(currentUser) {
   });
   const [boletoLoading, setBoletoLoading] = useState(false);
   const [boletoError, setBoletoError] = useState('');
+
+  // Formatters e Normalizadores
+  const formatCnpj = (v) => {
+    if (!v) return '';
+    const clean = v.replace(/\D/g, '');
+    if (clean.length !== 14) return v;
+    return `${clean.substring(0, 2)}.${clean.substring(2, 5)}.${clean.substring(5, 8)}/${clean.substring(8, 12)}-${clean.substring(12, 14)}`;
+  };
+
+  const cleanCnpj = (v) => (v ? String(v).replace(/\D/g, '') : '');
+  const cleanKey = (k) => String(k || '').replace(/[^a-zA-Z0-9]/g, '');
+  const normalizeInvoiceNumber = (n) => String(n || '').trim().replace(/^0+/, '');
+
+  // Verificação de Duplicidade de Notas Fiscais
+  const checkDuplicateInvoice = (data, invoiceList = invoices, payList = accountsPayable) => {
+    if (!data) return { isDuplicate: false };
+    const num = normalizeInvoiceNumber(data.number);
+    const key = cleanKey(data.accessKey);
+    const cnpj = cleanCnpj(data.supplierCnpj || supplierMapping?.cnpj);
+    const name = (data.supplierName || supplierMapping?.name || '').trim().toLowerCase();
+    const currentUnit = getSelectedUnit();
+
+    if (!num && !key) return { isDuplicate: false };
+
+    // 1. Verificação por Chave de Acesso (NF-e 44 dígitos ou código verificador NFS-e)
+    if (key && key.length >= 10) {
+      const matchInv = (invoiceList || []).find(inv => {
+        const invKey = cleanKey(inv.accessKey);
+        return invKey && invKey.length >= 10 && invKey === key;
+      });
+      if (matchInv) {
+        const crossUnit = matchInv.unitId && matchInv.unitId !== currentUnit;
+        return {
+          isDuplicate: true,
+          invoice: matchInv,
+          reason: `Chave de Acesso já cadastrada no sistema (${key.slice(0, 8)}...${key.slice(-4)})`,
+          crossUnit,
+          matchedBy: 'accessKey'
+        };
+      }
+
+      const matchPay = (payList || []).find(p => {
+        const pKey = cleanKey(p.accessKey);
+        return pKey && pKey.length >= 10 && pKey === key;
+      });
+      if (matchPay) {
+        return {
+          isDuplicate: true,
+          invoice: {
+            number: matchPay.invoiceNumber || data.number,
+            supplierName: matchPay.supplier,
+            supplierCnpj: matchPay.cnpj,
+            totalValue: matchPay.amount,
+            entryDate: matchPay.dueDate || (matchPay.createdAt ? matchPay.createdAt.substring(0, 10) : ''),
+            unit: matchPay.unit,
+            unitId: matchPay.unitId,
+            status: matchPay.status || 'Pendente'
+          },
+          reason: `Chave de Acesso já registrada no Contas a Pagar`,
+          crossUnit: matchPay.unitId && matchPay.unitId !== currentUnit,
+          matchedBy: 'accessKey'
+        };
+      }
+    }
+
+    // 2. Verificação por Número da Nota + Fornecedor
+    if (num) {
+      const matchInv = (invoiceList || []).find(inv => {
+        const invNum = normalizeInvoiceNumber(inv.number);
+        if (!invNum || invNum !== num) return false;
+
+        const invCnpj = cleanCnpj(inv.supplierCnpj);
+        if (cnpj && invCnpj && cnpj === invCnpj) return true;
+
+        const invName = (inv.supplierName || '').trim().toLowerCase();
+        if (name && invName && (name === invName || name.includes(invName) || invName.includes(name))) return true;
+
+        return false;
+      });
+
+      if (matchInv) {
+        const crossUnit = matchInv.unitId && matchInv.unitId !== currentUnit;
+        return {
+          isDuplicate: true,
+          invoice: matchInv,
+          reason: `Nota Fiscal Nº ${data.number} já cadastrada para o fornecedor "${matchInv.supplierName || name}"`,
+          crossUnit,
+          matchedBy: 'numberAndSupplier'
+        };
+      }
+
+      const matchPay = (payList || []).find(p => {
+        const pNum = normalizeInvoiceNumber(p.invoiceNumber);
+        if (!pNum || pNum !== num) return false;
+
+        const pCnpj = cleanCnpj(p.cnpj);
+        if (cnpj && pCnpj && cnpj === pCnpj) return true;
+
+        const pName = (p.supplier || '').trim().toLowerCase();
+        if (name && pName && (name === pName || name.includes(pName) || pName.includes(name))) return true;
+
+        return false;
+      });
+
+      if (matchPay) {
+        return {
+          isDuplicate: true,
+          invoice: {
+            number: matchPay.invoiceNumber || data.number,
+            supplierName: matchPay.supplier,
+            supplierCnpj: matchPay.cnpj,
+            totalValue: matchPay.amount,
+            entryDate: matchPay.dueDate || (matchPay.createdAt ? matchPay.createdAt.substring(0, 10) : ''),
+            unit: matchPay.unit,
+            unitId: matchPay.unitId,
+            status: matchPay.status || 'Pendente'
+          },
+          reason: `Nota Fiscal Nº ${data.number} já consta no Contas a Pagar para o fornecedor "${matchPay.supplier || name}"`,
+          crossUnit: matchPay.unitId && matchPay.unitId !== currentUnit,
+          matchedBy: 'numberAndSupplier'
+        };
+      }
+    }
+
+    return { isDuplicate: false };
+  };
+
+  // Verificação de Duplicidade de Boletos Bancários
+  const checkDuplicateBoleto = (digitableLine, currentInstallmentIndex = null, installmentsList = (xmlData?.installments || [])) => {
+    const clean = cleanDigitableLine(digitableLine);
+    if (!clean || clean.length < 30) return { isDuplicate: false };
+
+    // 1. Checa contra títulos existentes no Contas a Pagar
+    const matchedPayable = (accountsPayable || []).find(p => {
+      const pClean = cleanDigitableLine(p.digitableLine);
+      return pClean && pClean.length >= 30 && pClean === clean;
+    });
+
+    if (matchedPayable) {
+      return {
+        isDuplicate: true,
+        payable: matchedPayable,
+        reason: `Linha digitável já cadastrada no Contas a Pagar (Título: ${matchedPayable.description || matchedPayable.invoiceNumber || 'S/N'}, Fornecedor: ${matchedPayable.supplier}, Vencimento: ${matchedPayable.dueDate ? matchedPayable.dueDate.split('-').reverse().join('/') : 'N/I'}, Valor: R$ ${parseFloat(matchedPayable.amount || 0).toFixed(2)})`
+      };
+    }
+
+    // 2. Checa contra parcelas de notas arquivadas
+    for (const inv of (invoices || [])) {
+      for (const inst of (inv.installments || [])) {
+        const instClean = cleanDigitableLine(inst.digitableLine);
+        if (instClean && instClean.length >= 30 && instClean === clean) {
+          return {
+            isDuplicate: true,
+            payable: {
+              supplier: inv.supplierName,
+              invoiceNumber: inv.number,
+              dueDate: inst.dueDate,
+              amount: inst.amount,
+              description: `Nota Nº ${inv.number} (Parcela ${inst.installmentNumber || '1/1'})`
+            },
+            reason: `Linha digitável já utilizada na Nota Fiscal Nº ${inv.number} (${inv.supplierName})`
+          };
+        }
+      }
+    }
+
+    // 3. Checa duplicação entre parcelas da própria nota atual
+    if (installmentsList && installmentsList.length > 1) {
+      const duplicateIndex = installmentsList.findIndex((inst, idx) => {
+        if (currentInstallmentIndex !== null && idx === currentInstallmentIndex) return false;
+        const otherClean = cleanDigitableLine(inst.digitableLine);
+        return otherClean && otherClean.length >= 30 && otherClean === clean;
+      });
+
+      if (duplicateIndex !== -1) {
+        return {
+          isDuplicate: true,
+          reason: `Esta linha digitável já foi atribuída à Parcela ${installmentsList[duplicateIndex].installmentNumber || (duplicateIndex + 1)} da mesma nota.`
+        };
+      }
+    }
+
+    return { isDuplicate: false };
+  };
+
+  // Garante dados atualizados para validação pré-wizard e pré-commit
+  const ensureInvoicesAndPayables = async () => {
+    try {
+      const [invList, payList] = await Promise.all([
+        dbService.getPurchaseInvoices ? dbService.getPurchaseInvoices().catch(() => []) : [],
+        dbService.getAccountsPayable ? dbService.getAccountsPayable().catch(() => []) : []
+      ]);
+      const safeInv = safeArray(invList);
+      const safePay = safeArray(payList);
+      setInvoices(safeInv);
+      setAccountsPayable(safePay);
+      return { invList: safeInv, payList: safePay };
+    } catch (e) {
+      console.warn('Erro ao atualizar notas e contas a pagar:', e);
+      return { invList: invoices, payList: accountsPayable };
+    }
+  };
+
+  // Sugestão 1: Adição/Remoção Dinâmica de Itens na Nota de Produtos (NF-e Manual)
+  const handleAddItemMapping = () => {
+    const newItemCode = `PROD-${(itemMappings.length + 1).toString().padStart(2, '0')}`;
+    const defaultItem = items[0];
+    setItemMappings(prev => [
+      ...prev,
+      {
+        xmlCode: newItemCode,
+        xmlName: defaultItem ? defaultItem.name : 'Novo Insumo Clínico',
+        quantity: 1,
+        price: defaultItem ? (parseFloat(defaultItem.price) || 0) : 0,
+        batch: '',
+        expiryDate: '',
+        mappedItemId: defaultItem ? defaultItem.id : 'CREATE_NEW'
+      }
+    ]);
+  };
+
+  const handleRemoveItemMapping = (indexOrCode) => {
+    setItemMappings(prev => prev.filter((m, idx) => idx !== indexOrCode && m.xmlCode !== indexOrCode));
+  };
 
   useEffect(() => {
     fetchInitialData();
@@ -229,7 +456,7 @@ export function useStockLogic(currentUser) {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [itemList, supList, secList, catList, locList, batchList, kitList, reqList, tSettings] = await Promise.all([
+      const [itemList, supList, secList, catList, locList, batchList, kitList, reqList, tSettings, invList, payList] = await Promise.all([
         dbService.getInventoryItems ? dbService.getInventoryItems().catch(() => []) : [],
         dbService.getSuppliers ? dbService.getSuppliers().catch(() => []) : [],
         dbService.getStockSectors ? dbService.getStockSectors().catch(() => []) : [],
@@ -238,7 +465,9 @@ export function useStockLogic(currentUser) {
         dbService.getProductBatches ? dbService.getProductBatches().catch(() => []) : [],
         dbService.getProductKits ? dbService.getProductKits().catch(() => []) : [],
         dbService.getMaterialRequisitions ? dbService.getMaterialRequisitions().catch(() => []) : [],
-        dbService.getTenantSettings ? dbService.getTenantSettings().catch(() => ({ requisitionTTLHours: 1 })) : { requisitionTTLHours: 1 }
+        dbService.getTenantSettings ? dbService.getTenantSettings().catch(() => ({ requisitionTTLHours: 1 })) : { requisitionTTLHours: 1 },
+        dbService.getPurchaseInvoices ? dbService.getPurchaseInvoices().catch(() => []) : [],
+        dbService.getAccountsPayable ? dbService.getAccountsPayable().catch(() => []) : []
       ]);
       
       setItems(safeArray(itemList));
@@ -248,6 +477,8 @@ export function useStockLogic(currentUser) {
       setProductBatches(safeArray(batchList));
       setProductKits(safeArray(kitList));
       setRequisitions(safeArray(reqList));
+      setInvoices(safeArray(invList));
+      setAccountsPayable(safeArray(payList));
       if (tSettings) setTenantSettings(tSettings);
       setCategoriesList((catList && safeArray(catList).length > 0) ? safeArray(catList) : [
         { id: 'c1', name: 'Insumo Clínico / MatMed' },
@@ -1344,9 +1575,15 @@ export function useStockLogic(currentUser) {
   // Início de Entrada Manual de Nota (Serviço ou Produto)
   // ----------------------------------------------------
   const handleStartManualServiceEntry = (type = 'service') => {
+    ensureInvoicesAndPayables();
+    setDuplicateInvoiceWarning(null);
+    setDuplicateBoletoWarning(null);
     const today = new Date().toISOString().substring(0, 10);
     const defaultDueDate = new Date();
     defaultDueDate.setDate(defaultDueDate.getDate() + 30);
+
+    const isProduct = type === 'product';
+    const defaultItem = items[0];
 
     setXmlData({
       number: '',
@@ -1357,7 +1594,16 @@ export function useStockLogic(currentUser) {
       supplierCnpj: '',
       serviceDescription: '',
       serviceCategory: 'Serviços Terceirizados',
-      items: [{
+      items: isProduct ? [{
+        xmlCode: 'PROD-01',
+        xmlName: defaultItem ? defaultItem.name : 'Novo Insumo Clínico',
+        quantity: 1,
+        price: defaultItem ? (parseFloat(defaultItem.price) || 0) : 0,
+        total: defaultItem ? (parseFloat(defaultItem.price) || 0) : 0,
+        batch: '',
+        expiryDate: '',
+        isService: false
+      }] : [{
         xmlCode: 'SERV-01',
         xmlName: 'Serviço Prestado',
         quantity: 1,
@@ -1381,12 +1627,20 @@ export function useStockLogic(currentUser) {
       id: '',
       name: '',
       cnpj: '',
-      contact: 'Prestador de Serviço',
+      contact: isProduct ? 'Fornecedor de Insumos' : 'Prestador de Serviço',
       phone: '',
       email: ''
     });
 
-    setItemMappings([{
+    setItemMappings(isProduct ? [{
+      xmlCode: 'PROD-01',
+      xmlName: defaultItem ? defaultItem.name : 'Novo Insumo Clínico',
+      quantity: 1,
+      price: defaultItem ? (parseFloat(defaultItem.price) || 0) : 0,
+      batch: '',
+      expiryDate: '',
+      mappedItemId: defaultItem ? defaultItem.id : 'CREATE_NEW'
+    }] : [{
       xmlCode: 'SERV-01',
       xmlName: 'Serviço Prestado',
       quantity: 1,
@@ -1403,6 +1657,9 @@ export function useStockLogic(currentUser) {
   };
 
   const handleStartImportWizard = () => {
+    ensureInvoicesAndPayables();
+    setDuplicateInvoiceWarning(null);
+    setDuplicateBoletoWarning(null);
     setXmlData(null);
     setEntryMode('upload');
     setXmlWizardStep(1);
@@ -1498,6 +1755,22 @@ export function useStockLogic(currentUser) {
           setItemMappings(mappings);
         }
 
+        // Checagem preventiva de duplicidade da nota fiscal
+        const dupCheck = checkDuplicateInvoice({
+          number: parsed.number,
+          accessKey: parsed.accessKey,
+          supplierCnpj: parsed.supplierCnpj,
+          supplierName: parsed.supplierName
+        });
+
+        if (dupCheck.isDuplicate) {
+          setDuplicateInvoiceWarning(dupCheck);
+          showAlert(`Atenção: Nota já cadastrada no sistema (${dupCheck.reason})!`, 'danger');
+          setXmlWizardStep(1);
+          return;
+        }
+
+        setDuplicateInvoiceWarning(null);
         setXmlWizardStep(2);
       } catch (err) {
         console.error(err);
@@ -1670,6 +1943,22 @@ export function useStockLogic(currentUser) {
             mappedItemId: 'SERVICE_NO_STOCK'
           }]);
 
+          // Checagem preventiva de duplicidade da NFS-e
+          const dupCheck = checkDuplicateInvoice({
+            number: numNfse,
+            accessKey: codVerif,
+            supplierCnpj: prestadorCnpj,
+            supplierName: prestadorNome
+          });
+
+          if (dupCheck.isDuplicate) {
+            setDuplicateInvoiceWarning(dupCheck);
+            showAlert(`Atenção: NFS-e já cadastrada no sistema (${dupCheck.reason})!`, 'danger');
+            setXmlWizardStep(1);
+            return;
+          }
+
+          setDuplicateInvoiceWarning(null);
           setXmlWizardStep(2);
           return;
         }
@@ -1802,6 +2091,22 @@ export function useStockLogic(currentUser) {
           };
         });
 
+        // Checagem preventiva de duplicidade da NF-e
+        const dupCheck = checkDuplicateInvoice({
+          number: nNF,
+          accessKey: chNFe,
+          supplierCnpj: emitCnpj,
+          supplierName: emitName
+        });
+
+        if (dupCheck.isDuplicate) {
+          setDuplicateInvoiceWarning(dupCheck);
+          showAlert(`Atenção: NF-e já cadastrada no sistema (${dupCheck.reason})!`, 'danger');
+          setXmlWizardStep(1);
+          return;
+        }
+
+        setDuplicateInvoiceWarning(null);
         setItemMappings(mappings);
         setXmlWizardStep(2);
       } catch (err) {
@@ -1964,8 +2269,17 @@ export function useStockLogic(currentUser) {
       });
 
       if (parsed.digitableLine) {
+        const dupCheck = checkDuplicateBoleto(parsed.digitableLine);
+        if (dupCheck.isDuplicate) {
+          setDuplicateBoletoWarning(dupCheck);
+          setBoletoError(`⚠️ Boleto Duplicado! ${dupCheck.reason}`);
+          showAlert(`Atenção: Este boleto já está cadastrado no sistema!`, 'danger');
+          return;
+        }
+        setDuplicateBoletoWarning(null);
         showAlert('Boleto lido com sucesso! Linha digitável identificada.', 'success');
       } else {
+        setDuplicateBoletoWarning(null);
         showAlert('Boleto anexado. Não identificamos o código automaticamente, mas você pode digitá-lo.', 'info');
       }
     } catch (err) {
@@ -1985,13 +2299,25 @@ export function useStockLogic(currentUser) {
       amount: ''
     });
     setBoletoError('');
+    setDuplicateBoletoWarning(null);
   };
 
   const handleBoletoChange = (field, value) => {
+    const finalVal = field === 'digitableLine' ? cleanDigitableLine(value) : value;
     setBoletoData(prev => ({
       ...prev,
-      [field]: field === 'digitableLine' ? cleanDigitableLine(value) : value
+      [field]: finalVal
     }));
+    if (field === 'digitableLine') {
+      const dupCheck = checkDuplicateBoleto(finalVal);
+      if (dupCheck.isDuplicate) {
+        setDuplicateBoletoWarning(dupCheck);
+        setBoletoError(`⚠️ Boleto Duplicado! ${dupCheck.reason}`);
+      } else {
+        setDuplicateBoletoWarning(null);
+        setBoletoError('');
+      }
+    }
   };
 
   const getSelectedUnit = () => {
@@ -2008,6 +2334,50 @@ export function useStockLogic(currentUser) {
     const currentUnitId = getSelectedUnit();
     const currentUnitName = currentUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
     try {
+      // 1. Atualização preventiva dos registros do banco para integridade total
+      const { invList: freshInvoices, payList: freshPayables } = await ensureInvoicesAndPayables();
+
+      // 2. Trava atômica de duplicidade de nota fiscal
+      const dupInv = checkDuplicateInvoice({
+        number: xmlData?.number,
+        accessKey: xmlData?.accessKey,
+        supplierCnpj: supplierMapping?.cnpj || xmlData?.supplierCnpj,
+        supplierName: supplierMapping?.name || xmlData?.supplierName
+      }, freshInvoices, freshPayables);
+
+      if (dupInv.isDuplicate) {
+        setDuplicateInvoiceWarning(dupInv);
+        showAlert(`Operação Bloqueada: ${dupInv.reason}!`, 'danger');
+        setActionLoading(false);
+        return;
+      }
+
+      // 3. Trava atômica de duplicidade de boleto no anexo principal
+      if (boletoData?.digitableLine) {
+        const dupBoleto = checkDuplicateBoleto(boletoData.digitableLine, null, xmlData?.installments || []);
+        if (dupBoleto.isDuplicate) {
+          setDuplicateBoletoWarning(dupBoleto);
+          setBoletoError(`⚠️ Boleto Duplicado! ${dupBoleto.reason}`);
+          showAlert(`Operação Bloqueada: ${dupBoleto.reason}!`, 'danger');
+          setActionLoading(false);
+          return;
+        }
+      }
+
+      // 4. Trava atômica de duplicidade de boleto em cada parcela configurada
+      const currentInsts = xmlData?.installments || [];
+      for (let i = 0; i < currentInsts.length; i++) {
+        const inst = currentInsts[i];
+        if (inst.digitableLine) {
+          const dupInst = checkDuplicateBoleto(inst.digitableLine, i, currentInsts);
+          if (dupInst.isDuplicate) {
+            showAlert(`Operação Bloqueada na Parcela ${inst.installmentNumber || (i + 1)}: ${dupInst.reason}!`, 'danger');
+            setActionLoading(false);
+            return;
+          }
+        }
+      }
+
       const isService = xmlData?.invoiceType === 'service' || (!itemMappings || itemMappings.length === 0);
       const sumInst = (xmlData?.installments || []).reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
       const finalInvoiceTotal = (parseFloat(xmlData?.totalValue) > 0) ? parseFloat(xmlData.totalValue) : (sumInst > 0 ? sumInst : 0);
@@ -2328,15 +2698,6 @@ export function useStockLogic(currentUser) {
     }
   };
 
-  // Helper CNPJ formatters
-  const formatCnpj = (v) => {
-    if (!v) return '';
-    const clean = v.replace(/\D/g, '');
-    if (clean.length !== 14) return v;
-    return `${clean.substring(0, 2)}.${clean.substring(2, 5)}.${clean.substring(5, 8)}/${clean.substring(8, 12)}-${clean.substring(12, 14)}`;
-  };
-
-  const cleanCnpj = (v) => v ? v.replace(/\D/g, '') : '';
 
   // ----------------------------------------------------
   // Expiry Calculations & Filtering
@@ -2581,6 +2942,16 @@ export function useStockLogic(currentUser) {
     handleMappingItemChange,
     handleMappingFieldChange,
     handleFinishXmlWizard,
+    accountsPayable,
+    setAccountsPayable,
+    duplicateInvoiceWarning,
+    setDuplicateInvoiceWarning,
+    duplicateBoletoWarning,
+    setDuplicateBoletoWarning,
+    checkDuplicateInvoice,
+    checkDuplicateBoleto,
+    handleAddItemMapping,
+    handleRemoveItemMapping,
     boletoData,
     setBoletoData,
     boletoLoading,

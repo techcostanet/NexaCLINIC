@@ -1,3 +1,28 @@
+## [v4.9.73] - 11 de Setembro, 2026
+### Nex-Ai CLINIC — Prevenção Ativa Anti-Duplicidade de Notas e Boletos no Estoque (.STOCK) & Gestão Dinâmica de Itens
+- **Bloqueio Ativo e Prevenção Anti-Duplicidade de Notas Fiscais (`useStockLogic.jsx` & `StockPanel.jsx`):**
+  - Implementação de algoritmo preventivo que impede a entrada repetida da mesma nota fiscal, tanto via importação de arquivos (XML NF-e, XML NFS-e, PDF DANFE/NFS-e) quanto via lançamento manual.
+  - Validação por Chave de Acesso (44 dígitos) e por combinação de Número da Nota Fiscal com Fornecedor (CNPJ limpo ou Razão Social normalizada).
+  - Exibição de banner de alerta com todos os dados da nota já existente no sistema (número, emitente, data de entrada, valor e se pertence a outra unidade da rede) e botão "Visualizar" para auditoria imediata.
+  - Bloqueio rígido do botão de avanço do assistente enquanto houver duplicidade detectada.
+- **Prevenção e Bloqueio de Boletos Bancários Duplicados (`useStockLogic.jsx` & `StockPanel.jsx`):**
+  - Validação da linha digitável (47 ou 48 dígitos) em tempo real contra todas as contas a pagar já registradas na unidade ou rede e contra faturas de notas já processadas.
+  - Validação cruzada entre as parcelas da própria nota fiscal, impedindo a inserção repetida do mesmo código de boleto em múltiplas duplicatas.
+  - Destaque visual com alerta descritivo e bloqueio de avanço para a etapa seguinte até que a divergência seja corrigida.
+- **Dupla Verificação Atômica no Banco de Dados (`useStockLogic.jsx`):**
+  - Consulta atômica no Firestore imediatamente antes da gravação de qualquer nota ou duplicata no `handleFinishXmlWizard`, garantindo proteção definitiva contra concorrência entre múltiplos usuários.
+- **Gestão Dinâmica de Itens na Entrada Manual de Produtos (`useStockLogic.jsx` & `StockPanel.jsx`):**
+  - Novo botão `+ Item` na Etapa 4 para notas de produtos, permitindo inclusão dinâmica de múltiplos insumos na nota com definição de descrição, catálogo, quantidade, preço unitário, lote e validade.
+  - Ação de exclusão individual de itens com o botão de lixeira.
+- **Badge Visual de Boleto no Histórico de Notas (`StockPanel.jsx`):**
+  - Nova coluna "Boleto" na tabela da aba de Entradas indicando visualmente documentos com boleto vinculado (badge verde `Boleto`) ou sem anexo (badge cinza `Pendente`).
+- **Conformidade Rigorosa de UI/UX (Padrão de 1 Palavra):**
+  - Sanitização de rótulos e botões no fluxo de entrada do estoque, garantindo botões diretos de termo único (`Nota`, `Fornecedor`, `Financeiro`, `Itens`, `Revisar`, `Confirmar`, `Copiar`, `Visualizar`).
+- **Atualização dos Manuais dos Módulos (`moduleGuidesData.js`):**
+  - Documentação completa em `Recursos`, `Tutorial` e `Dúvidas` cobrindo o funcionamento do bloqueio anti-duplicidade e a gestão dinâmica de insumos.
+
+---
+
 ## [v4.9.71] - 10 de Setembro, 2026
 ### Nex-Ai CLINIC — Central de Relatórios de Manutenção (.SERVICE), Exportação Excel, Fast-Close de OS & Otimização Visual
 - **Central de Relatórios Especializados de Manutenção & T.I. (`MaintenanceReportsModal.jsx` & `App.jsx`):**

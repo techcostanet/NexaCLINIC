@@ -6,6 +6,21 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.73',
+      date: '11/09/2026',
+      title: 'Nex-Ai CLINIC — Prevenção Ativa Anti-Duplicidade de Notas e Boletos no Estoque (.STOCK) & Gestão Dinâmica de Itens',
+      description: 'Implementação de sistema robusto de validação preventiva contra duplicidade de notas fiscais (por Chave de Acesso ou Número da NF + Fornecedor/CNPJ) e boletos bancários (por linha digitável em Contas a Pagar e parcelas), tanto em importações por arquivo (XML/PDF) quanto em lançamentos manuais. Adição de gerenciamento dinâmico de itens na entrada manual de produtos e novo indicador visual de status de boleto no histórico.',
+      changes: [
+        { type: 'Bloqueio Anti-Duplicidade de Notas', text: 'Validação preventiva automática que impede e alerta sobre entrada repetida da mesma nota fiscal por Chave de Acesso (44 dígitos) ou Número da NF + Fornecedor/CNPJ, exibindo banner de alerta com dados do registro original e botão de visualização direta.' },
+        { type: 'Prevenção Anti-Duplicidade de Boletos', text: 'Detecção em tempo real de boletos bancários duplicados através da conferência da linha digitável contra os lançamentos de Contas a Pagar e duplicatas da mesma nota, impedindo o avanço até a regularização.' },
+        { type: 'Dupla Validação Atômica no Commit', text: 'Verificação redundante no banco de dados imediatamente antes da gravação final no Firestore, garantindo blindagem mesmo em casos de concorrência ou múltiplos usuários.' },
+        { type: 'Adição Dinâmica de Itens na Entrada Manual', text: 'Novo recurso na Etapa 4 da entrada manual de produtos permitindo adicionar (+ Item), editar descrição/quantidade/preço e remover insumos diretamente na grade.' },
+        { type: 'Badge Visual de Boleto no Histórico', text: 'Nova coluna Boleto na tabela de notas arquivadas com sinalização verde (Boleto anexado) ou cinza (Pendente), facilitando a auditoria contábil.' },
+        { type: 'Padronização Rigorosa de Rótulos (1 Palavra)', text: 'Sanitização ativa de botões e etiquetas no fluxo de entrada do estoque, garantindo termos concisos (Nota, Fornecedor, Financeiro, Itens, Revisar, Confirmar).' },
+        { type: 'Manuais Atualizados', text: 'Atualização completa do manual do módulo de Estoque em moduleGuidesData.js com os fluxos de proteção contra duplicidade e gestão de insumos.' }
+      ]
+    },
+    {
       version: 'v4.9.71',
       date: '10/09/2026',
       title: 'Nex-Ai CLINIC — Central de Relatórios de Manutenção (.SERVICE), Exportação Excel, Fast-Close de OS & Otimização Visual',
