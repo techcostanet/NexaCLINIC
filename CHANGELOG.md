@@ -1,3 +1,20 @@
+## [v4.9.74] - 11 de Setembro, 2026
+### Nex-Ai CLINIC — Impressão de QR Code de Equipamentos em Folha Única (.SERVICE) & Prevenção de Quebras de Página
+- **Impressão em Folha Única da Etiqueta Patrimonial (`MaintenancePanel.jsx`):**
+  - Ajuste completo das diretivas de impressão CSS (`@page { size: auto; margin: 6mm; }`, `page-break-after: avoid !important;`, `break-after: avoid !important;`) para prevenir divisão em 2 folhas de papel.
+  - Correção de overflow na janela de impressão isolando `html, body { overflow: hidden !important; height: auto !important; }`, eliminando páginas em branco ou linhas órfãs geradas pelo motor Chromium.
+- **Redimensionamento Proporcional & Otimização do Card (`MaintenancePanel.jsx`):**
+  - Redução da largura do cartão patrimonial para 300px e do QR Code para 125x125px com borda arredondada e espaçamentos internos enxutos.
+  - Altura total vertical reduzida para ~60mm, garantindo compatibilidade perfeita tanto em impressoras jato de tinta / laser convencionais (folha A4) quanto em impressoras térmicas de etiquetas (Zebra / Argox / Elgin).
+- **Barra de Ações e Feedback na Janela de Impressão (`MaintenancePanel.jsx`):**
+  - Adição de barra de utilidades no topo da janela com classe `.no-print`, provendo botões diretos "Imprimir", "Fechar" e sinalizador visual de confirmação "Folha Única".
+- **Impressão em Lote Calibrada para Folha A4 (`MaintenancePanel.jsx`):**
+  - Compactação da grade de etiquetas em lote (QR Code de 82px, padding 6px 8px e gap 6px), permitindo impressão de múltiplos ativos por folha sem corte na margem inferior.
+- **Atualização dos Manuais dos Módulos (`moduleGuidesData.js`):**
+  - Documentação em Manutenção (`maintenance`) sobre a calibração de impressão e suporte a folha única e impressoras térmicas.
+
+---
+
 ## [v4.9.73] - 11 de Setembro, 2026
 ### Nex-Ai CLINIC — Prevenção Ativa Anti-Duplicidade de Notas e Boletos no Estoque (.STOCK) & Gestão Dinâmica de Itens
 - **Bloqueio Ativo e Prevenção Anti-Duplicidade de Notas Fiscais (`useStockLogic.jsx` & `StockPanel.jsx`):**

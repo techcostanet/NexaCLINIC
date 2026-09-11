@@ -883,8 +883,8 @@ export const MODULE_GUIDES = {
     color: '#0891b2',
     recursos: [
       {
-        title: 'Etiqueta Patrimonial & QR Code Inteligente',
-        desc: 'Geração de QR Code em alta definição (220px) para cada equipamento clínico ou de infraestrutura, permitindo abertura instantânea de chamados via smartphone por qualquer colaborador.'
+        title: 'Etiqueta Patrimonial & QR Code em Folha Única',
+        desc: 'Geração de QR Code em alta definição e etiqueta patrimonial compacta calibrada com CSS anti-overflow para caber estritamente em 1 folha física de papel ou impressora térmica, sem quebras para a segunda página.'
       },
       {
         title: 'Portal Público de Chamados por Escaneamento',
@@ -1002,6 +1002,10 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Como gerar o prontuário técnico completo de uma máquina em PDF?',
         resposta: 'Na aba "Equipamentos", clique no botão "Histórico" da máquina e, em seguida, clique em "Gerar PDF" no topo do modal para imprimir o prontuário rastreável com todas as manutenções já executadas.'
+      },
+      {
+        pergunta: 'A impressão das etiquetas e do QR Code cabe em uma única folha?',
+        resposta: 'Sim. O sistema foi calibrado com regras CSS rígidas (@page e page-break-after: avoid) e dimensões compactas (card de 300px e QR Code de 125px), garantindo que tanto a etiqueta individual quanto a grade de etiquetas em lote sejam impressas estritamente em uma única folha física, sem quebras para a segunda página.'
       }
     ]
   },

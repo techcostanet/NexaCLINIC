@@ -441,15 +441,15 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
     try {
       const cardsHtml = await Promise.all(filteredEquipments.map(async (eq) => {
         const targetUrl = `${window.location.origin}/?chamado_equipamento=${encodeURIComponent(eq.id)}`;
-        const qrData = await QRCode.toDataURL(targetUrl, { width: 140, margin: 1, color: { dark: '#0f172a', light: '#ffffff' } });
+        const qrData = await QRCode.toDataURL(targetUrl, { width: 120, margin: 1, color: { dark: '#0f172a', light: '#ffffff' } });
         return `
-          <div style="border: 2px dashed #0891b2; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; page-break-inside: avoid; background: #ffffff;">
-            <div style="font-size: 10px; font-weight: 800; color: #0891b2; text-transform: uppercase;">Nex-Ai CLINIC • SERVICE</div>
-            <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 2px;">${eq.code}</div>
-            <div style="font-size: 11px; font-weight: 700; color: #1e293b; max-height: 28px; overflow: hidden;">${eq.name}</div>
-            <img src="${qrData}" style="width: 100px; height: 100px; margin: 4px 0;" alt="QR Code" />
-            <div style="font-size: 9px; color: #475569; font-weight: 600;">Setor: ${eq.sector || 'Geral'} • Série: ${eq.serialNumber || 'N/A'}</div>
-            <div style="font-size: 8px; color: #64748b; margin-top: 2px;">Aponte a câmera para abrir chamado</div>
+          <div class="batch-card" style="border: 1.5px dashed #0891b2; border-radius: 6px; padding: 6px 8px; display: flex; flex-direction: column; align-items: center; text-align: center; page-break-inside: avoid; break-inside: avoid; background: #ffffff; box-sizing: border-box;">
+            <div style="font-size: 8px; font-weight: 800; color: #0891b2; text-transform: uppercase; letter-spacing: 0.3px;">Nex-Ai CLINIC • SERVICE</div>
+            <div style="font-size: 13px; font-weight: 900; color: #0f172a; margin: 1px 0;">${eq.code}</div>
+            <div style="font-size: 9.5px; font-weight: 700; color: #1e293b; max-height: 20px; overflow: hidden; line-height: 1.15; white-space: nowrap; text-overflow: ellipsis; width: 100%;">${eq.name}</div>
+            <img src="${qrData}" style="width: 82px; height: 82px; margin: 2px auto; display: block;" alt="QR Code" />
+            <div style="font-size: 8px; color: #475569; font-weight: 600;">Setor: ${eq.sector || 'Geral'} • Série: ${eq.serialNumber || 'N/A'}</div>
+            <div style="font-size: 7.5px; color: #64748b; margin-top: 1px;">Aponte a câmera para abrir chamado</div>
           </div>
         `;
       }));
@@ -461,30 +461,36 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
           <meta charset="UTF-8">
           <title>Etiquetas QR Code em Lote - Nex-Ai.SERVICE</title>
           <style>
-            @page { size: A4; margin: 10mm; }
-            body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 10px; background: #f8fafc; }
-            .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #0891b2; padding-bottom: 8px; }
-            .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+            @page { size: A4 portrait; margin: 8mm; }
+            *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 10px; background: #f8fafc; color: #0f172a; }
+            .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #ffffff; padding: 8px 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+            .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
             @media print {
               .no-print { display: none !important; }
-              body { background: #ffffff; padding: 0; }
+              html, body { background: #ffffff !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+              .grid { gap: 6px !important; margin: 0 !important; }
+              .batch-card { page-break-inside: avoid !important; break-inside: avoid !important; }
             }
           </style>
         </head>
         <body>
           <div class="no-print header-bar">
             <div>
-              <strong style="color: #0891b2; font-size: 16px;">Nex-Ai.SERVICE — Etiquetas QR Code em Lote</strong>
-              <div style="font-size: 11px; color: #64748b;">${filteredEquipments.length} etiqueta(s) gerada(s)</div>
+              <strong style="color: #0891b2; font-size: 14px;">Nex-Ai.SERVICE — Etiquetas QR Code</strong>
+              <div style="font-size: 11px; color: #64748b;">${filteredEquipments.length} etiqueta(s) • Folha única A4</div>
             </div>
-            <button onclick="window.print()" style="background: #0891b2; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">🖨️ Imprimir Folha de Etiquetas</button>
+            <div>
+              <button onclick="window.print()" style="background: #0891b2; color: #ffffff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; margin-right: 6px;">🖨️ Imprimir</button>
+              <button onclick="window.close()" style="background: #e2e8f0; color: #334155; border: none; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer;">Fechar</button>
+            </div>
           </div>
           <div class="grid">
             ${cardsHtml.join('')}
           </div>
           <script>
             window.onload = function() {
-              setTimeout(function() { window.print(); }, 400);
+              setTimeout(function() { window.print(); }, 300);
             };
           </script>
         </body>
@@ -863,7 +869,7 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
 
   const handlePrintAssetTag = (eq, qrUrl) => {
     if (!eq) return;
-    const printWindow = window.open('', '_blank', 'width=520,height=600');
+    const printWindow = window.open('', '_blank', 'width=560,height=640');
     if (!printWindow) {
       showAlert('Por favor, permita pop-ups para imprimir a etiqueta patrimonial.', 'danger');
       return;
@@ -875,28 +881,166 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
         <meta charset="UTF-8">
         <title>Etiqueta Patrimonial - ${eq.code}</title>
         <style>
-          @page { size: 80mm 100mm; margin: 4mm; }
-          body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 10px; color: #0f172a; text-align: center; }
-          .tag-card { border: 2px solid #0f172a; border-radius: 8px; padding: 10px; }
-          .header { font-size: 13px; font-weight: 800; color: #0891b2; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #0891b2; padding-bottom: 4px; margin-bottom: 8px; }
-          .code { font-size: 20px; font-weight: 900; color: #0f172a; margin: 4px 0; }
-          .name { font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px; }
-          .sector { font-size: 10px; color: #64748b; margin-bottom: 8px; }
-          .qr-img { width: 170px; height: 170px; margin: 0 auto; display: block; }
-          .instruction { font-size: 9px; font-weight: 700; color: #0891b2; text-transform: uppercase; margin-top: 8px; letter-spacing: 0.3px; }
-          .sub { font-size: 8px; color: #64748b; margin-top: 2px; }
-          @media print { .no-print { display: none; } }
+          @page {
+            size: auto;
+            margin: 8mm;
+          }
+          *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f1f5f9;
+            color: #0f172a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 16px 10px;
+          }
+          .no-print {
+            width: 100%;
+            max-width: 320px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            background: #ffffff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+          }
+          .tag-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+          }
+          .tag-card {
+            width: 100%;
+            max-width: 300px;
+            background: #ffffff;
+            border: 2px solid #0891b2;
+            border-radius: 10px;
+            padding: 10px 14px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            page-break-inside: avoid;
+            break-inside: avoid;
+            page-break-after: avoid;
+            break-after: avoid;
+          }
+          .header {
+            font-size: 10.5px;
+            font-weight: 800;
+            color: #0891b2;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1.5px solid #0891b2;
+            padding-bottom: 3px;
+            margin-bottom: 5px;
+          }
+          .code {
+            font-size: 18px;
+            font-weight: 900;
+            color: #0f172a;
+            letter-spacing: 0.4px;
+            margin-bottom: 2px;
+          }
+          .name {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.25;
+            margin-bottom: 3px;
+            max-height: 28px;
+            overflow: hidden;
+          }
+          .meta {
+            font-size: 9px;
+            color: #475569;
+            font-weight: 600;
+            margin-bottom: 4px;
+          }
+          .qr-img {
+            width: 125px;
+            height: 125px;
+            margin: 2px auto;
+            display: block;
+          }
+          .instruction {
+            font-size: 8.5px;
+            font-weight: 800;
+            color: #0891b2;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 5px;
+          }
+          .sub {
+            font-size: 7.5px;
+            color: #64748b;
+            margin-top: 2px;
+          }
+          @media print {
+            @page {
+              size: auto;
+              margin: 6mm;
+            }
+            html, body {
+              background: #ffffff !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              height: auto !important;
+              min-height: auto !important;
+              overflow: hidden !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            .no-print {
+              display: none !important;
+            }
+            body {
+              display: block !important;
+            }
+            .tag-wrapper {
+              display: flex !important;
+              justify-content: center !important;
+              align-items: flex-start !important;
+              padding-top: 8mm !important;
+            }
+            .tag-card {
+              margin: 0 auto !important;
+              border: 2px solid #0891b2 !important;
+              box-shadow: none !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+              page-break-after: avoid !important;
+              break-after: avoid !important;
+            }
+          }
         </style>
       </head>
       <body>
-        <div class="tag-card">
-          <div class="header">Nex-Ai CLINIC • Engenharia Clínica</div>
-          <div class="code">${eq.code}</div>
-          <div class="name">${eq.name}</div>
-          <div class="sector">Setor: ${eq.sector || 'Geral'} • Série: ${eq.serialNumber || 'N/A'}</div>
-          <img src="${qrUrl}" class="qr-img" alt="QR Code" />
-          <div class="instruction">Aponte a Câmera para Abrir Chamado</div>
-          <div class="sub">Sistema Integrado de Manutenção Hospitalar</div>
+        <div class="no-print">
+          <span style="font-size: 11px; font-weight: 700; color: #0891b2;">Folha Única</span>
+          <div>
+            <button onclick="window.print()" style="background: #0891b2; color: #ffffff; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; margin-right: 6px;">🖨️ Imprimir</button>
+            <button onclick="window.close()" style="background: #e2e8f0; color: #334155; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer;">Fechar</button>
+          </div>
+        </div>
+        <div class="tag-wrapper">
+          <div class="tag-card">
+            <div class="header">Nex-Ai CLINIC • Engenharia Clínica</div>
+            <div class="code">${eq.code}</div>
+            <div class="name">${eq.name}</div>
+            <div class="meta">Setor: ${eq.sector || 'Geral'} • Série: ${eq.serialNumber || 'N/A'}</div>
+            <img src="${qrUrl}" class="qr-img" alt="QR Code" />
+            <div class="instruction">Aponte a Câmera para Abrir Chamado</div>
+            <div class="sub">Sistema Integrado de Manutenção Hospitalar</div>
+          </div>
         </div>
         <script>
           window.onload = function() {

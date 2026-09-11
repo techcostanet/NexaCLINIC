@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.74',
+      date: '11/09/2026',
+      title: 'Nex-Ai CLINIC — Impressão de QR Code de Equipamentos em Folha Única (.SERVICE) & Prevenção de Quebras de Página',
+      description: 'Ajuste e calibração milimétrica do motor de impressão de QR Code e etiquetas patrimoniais de equipamentos no módulo de Manutenção (.SERVICE). Eliminação definitiva do corte de layout e da geração de segunda folha de impressão através de regras CSS rígidas anti-overflow (@page auto, break-after: avoid), redimensionamento proporcional do cartão e barra de controle com sinalizador de folha única.',
+      changes: [
+        { type: 'Impressão em Folha Única', text: 'Calibração das regras CSS de impressão (@page, page-break-after: avoid, overflow: hidden) garantindo que a etiqueta patrimonial com QR Code seja impressa estritamente em uma única página A4 ou etiqueta térmica, eliminando a 2ª folha em branco ou cortada.' },
+        { type: 'Layout Compacto & Proporcional', text: 'Ajuste da largura máxima do card patrimonial para 300px e do QR Code para 125x125px com tipografia nítida, preservando escaneabilidade instantânea com menor altura vertical (~60mm).' },
+        { type: 'Barra de Ações na Impressão', text: 'Nova barra superior na janela de impressão com botões Imprimir e Fechar, além de badge informativo "Folha Única" orientando o operador.' },
+        { type: 'Impressão em Lote Calibrada', text: 'Compactação das etiquetas em grade na impressão em lote (QR 82px, gap 6px), permitindo acomodar todos os equipamentos sem extrapolar a margem da folha A4.' },
+        { type: 'Manuais Atualizados', text: 'Atualização do manual de Manutenção em moduleGuidesData.js documentando a impressão calibrada e as orientações para folha única.' }
+      ]
+    },
+    {
       version: 'v4.9.73',
       date: '11/09/2026',
       title: 'Nex-Ai CLINIC — Prevenção Ativa Anti-Duplicidade de Notas e Boletos no Estoque (.STOCK) & Gestão Dinâmica de Itens',
