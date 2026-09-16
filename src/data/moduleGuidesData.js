@@ -2351,6 +2351,106 @@ export const MODULE_GUIDES = {
         resposta: 'Ao clicar no botão de situação e marcá-lo como "Inativo", o procedimento deixa de aparecer nas opções de lançamento de novos agendamentos e atendimentos, mas permanece registrado no histórico anterior para integridade contábil.'
       }
     ]
+  },
+  sesmt: {
+    id: 'sesmt',
+    name: 'Módulo SESMT',
+    subtitle: 'Nex-Ai.SESMT — Segurança e Saúde no Trabalho',
+    color: '#0891b2',
+    recursos: [
+      {
+        title: 'Inspeção Diária de EPI',
+        desc: 'Checklist com avaliação de uso adequado, higienização, descarte de resíduos e conservação de EPIs por setor e turno com status Conforme (C), Não Conforme (NC) e Não Avaliado (NA).'
+      },
+      {
+        title: 'Inspeção Semanal de Extintores',
+        desc: 'Conferência técnica completa de extintores com checagem de acesso, sinalização, pino de segurança, lacre, pressurização, mangueira, bico e estado físico geral.'
+      },
+      {
+        title: 'Inspeção Semanal de Hidrantes',
+        desc: 'Auditoria de caixas de hidrante, mangueiras, esguichos, chaves storz, registros e sinalização com identificação rápida de irregularidades.'
+      },
+      {
+        title: 'Layout Híbrido para Celular e Computador',
+        desc: 'Interface inteligente que adapta automaticamente a visualização em cartões de toque amplos no celular/tablet ou em tabelas densas no computador, com alternador rápido de modo.'
+      },
+      {
+        title: 'Atalhos de Agilidade em Campo',
+        desc: 'Botões "Tudo Conforme" individuais por equipamento e botão mestre global para marcar 100% de conformidade com apenas 1 toque na tela do smartphone.'
+      },
+      {
+        title: 'Assinatura Digital Touch',
+        desc: 'Coleta de assinatura por toque ou caneta digital diretamente na tela do dispositivo portátil, mantendo também o campo de digitação do nome do responsável.'
+      },
+      {
+        title: 'Gestão de Equipamentos',
+        desc: 'Cadastro e controle de extintores e hidrantes com alertas de validade de carga, recarga e teste hidrostático de 5 anos.'
+      },
+      {
+        title: 'Histórico Centralizado & Auditoria',
+        desc: 'Consulta completa de inspeções com filtros por tipo, período, setor e turno, visualização de detalhes e histórico de assinaturas colhidas.'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Realizar uma Inspeção de Campo pelo Celular ou Tablet',
+        steps: [
+          'Acesse o módulo SESMT no seu smartphone ou tablet através do navegador do aparelho.',
+          'Selecione a aba desejada: "Extintores", "Hidrantes" ou "EPI".',
+          'O sistema entrará automaticamente no modo "Cartões", apresentando cada equipamento com botões de toque grandes e fáceis de acionar com o dedo ou caneta.',
+          'Preencha a data e o setor ou utilize o botão "Tudo Conforme" para preencher rapidamente todos os itens regulares.',
+          'Em itens irregulares, toque no botão "NC" e descreva a pendência no campo de observação.',
+          'Colete a assinatura na caixa de assinatura digital tocando e desenhando com o dedo na tela, ou digite o nome do responsável.',
+          'Toque em "Salvar Inspeção" para registrar os dados no sistema em tempo real.'
+        ]
+      },
+      {
+        title: 'Como Utilizar o Atalho "Tudo Conforme"',
+        steps: [
+          'Ao inspecionar múltiplos extintores ou hidrantes em perfeito estado, clique no botão superior "Tudo Conforme".',
+          'Todos os critérios técnicos (acesso, lacre, mangueira, manômetro, etc.) de todos os equipamentos da lista serão marcados como "C" simultaneamente.',
+          'Caso deseje pontuar um extintor específico, utilize o botão "Tudo Conforme" individual no cartão daquele equipamento.',
+          'Se houver alguma irregularidade pontual, basta tocar em "NC" no item específico para alterar apenas o critério pendente.'
+        ]
+      },
+      {
+        title: 'Como Cadastrar ou Editar Extintores e Hidrantes',
+        steps: [
+          'Acesse a aba "Equipamentos" no topo do módulo SESMT.',
+          'Clique no botão "+ Novo Equipamento".',
+          'Preencha o código identificador, selecione se é Extintor ou Hidrante, informe o setor e a capacidade.',
+          'Informe as datas de recarga e teste hidrostático (a cada 5 anos).',
+          'Clique em "Salvar" para disponibilizar o equipamento imediatamente nas inspeções semanais.'
+        ]
+      },
+      {
+        title: 'Como Consultar e Auditar o Histórico de Inspeções',
+        steps: [
+          'Acesse a aba "Histórico" no menu do SESMT.',
+          'Utilize os filtros rápidos no topo para selecionar o tipo de inspeção ("EPI", "Extintores", "Hidrantes" ou "Todos").',
+          'Filtre por período (datas) ou utilize o campo de busca por setor ou responsável.',
+          'Clique em "Ver Detalhes" para abrir o espelho da inspeção com todos os itens avaliados e a assinatura digital colhida em campo.'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'As inspeções feitas pelo celular funcionam da mesma forma que no computador?',
+        resposta: 'Sim. A base de dados é 100% unificada. O formulário apenas se adapta ergonomicamente: no celular ele exibe cartões com botões amplos para uso com os dedos, enquanto no computador você pode visualizar no formato de tabela clássica ou cartões.'
+      },
+      {
+        pergunta: 'É obrigatório assinar na tela ou posso apenas digitar o nome do inspetor?',
+        resposta: 'O preenchimento do nome digitado continua disponível e ativo. A assinatura digital na tela é uma comodidade extra para auditorias e perícias de campo, podendo ser preenchida opcionalmente ou conforme o protocolo da instituição.'
+      },
+      {
+        pergunta: 'Como funciona a alternância entre Modo Cartões e Modo Tabela?',
+        resposta: 'No topo de cada formulário e na aba de histórico existe um seletor visual com os botões "Cartões" e "Tabela". Em telas menores (celulares e tablets), o sistema já abre automaticamente no modo Cartões para facilitar a operação portátil.'
+      },
+      {
+        pergunta: 'Como saber se um extintor está próximo do vencimento da carga ou do teste hidrostático?',
+        resposta: 'Na aba Equipamentos e no painel do SESMT, o sistema monitora as validades e exibe alertas visuais coloridos para equipamentos vencidos ou com vencimento nos próximos 30 dias.'
+      }
+    ]
   }
 };
 

@@ -1,3 +1,25 @@
+## [v4.9.78] - 16 de Setembro, 2026
+### Nex-Ai CLINIC — Módulo SESMT Portátil para Celular e Tablet, Assinatura Digital Touch & Atalhos em Campo (.SESMT)
+- **Modo Híbrido Cartões & Tabela em Todo o Módulo SESMT:**
+  - Detecção inteligente da resolução do dispositivo (< 1024px) abrindo automaticamente no modo Cartões para celular e tablet com alvos de toque amplos (44px) nos botões de conferência.
+  - Preservação total do layout de alta densidade em formato de tabela clássica para uso em computador/desktop.
+  - Alternador visual instantâneo (`Cartões` vs. `Tabela`) presente nos formulários de extintores, hidrantes, EPIs, na gestão de equipamentos e no histórico.
+- **Coleta de Assinatura Digital Touch em Campo (`SignaturePad.jsx`):**
+  - Implementação de tela de assinatura interativa com suporte a toque (touchscreen) e caneta stylus via `PointerEvents` com isolamento `touch-action: none` prevenindo rolagem acidental.
+  - Opções de limpar/refazer e recolher/expandir o painel, exportando a assinatura em Base64 PNG.
+  - Preservação integral dos campos de digitação de texto para os nomes do responsável, enfermeiro e inspetor.
+  - Exibição da assinatura digital capturada no modal de espelho da inspeção no histórico.
+- **Atalhos Operacionais Ágeis em Campo:**
+  - Botão mestre "Tudo Conforme" no topo e botões individuais por equipamento para marcar simultaneamente todos os critérios técnicos como Conforme (`C`) com 1 toque.
+  - Pílulas táteis de 2 estados (`C` / `NC`) para extintores e hidrantes e 3 estados (`C` / `NC` / `NA`) para EPIs, substituindo menus suspensos complexos.
+- **Padronização Oficial de Cabeçalho (.SESMT) e UI/UX (Padrão de 1 Palavra):**
+  - Integração do componente oficial `ModuleHeader` com a insígnia `.SESMT`, gradiente ciano e ícone de escudo temático.
+  - Higienização ativa de rótulos e termos duplos conforme a *Boy Scout Rule* e diretrizes de `.agents/AGENTS.md`.
+- **Manuais e Base de Conhecimento (`moduleGuidesData.js`):**
+  - Criação do manual completo do SESMT contendo `Recursos`, `Tutorial` passo a passo para operação móvel e digital, e `Dúvidas` frequentes.
+
+---
+
 ## [v4.9.75] - 11 de Setembro, 2026
 ### Nex-Ai CLINIC — 3 Modos de Visualização (.SERVICE), Exclusão de Equipamentos & Auto Ordenação por Colunas
 - **3 Modos de Visualização com Persistência (`MaintenancePanel.jsx`):**

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../../firebase';
-import { Save, Flame, RefreshCw } from 'lucide-react';
+import { Save, Flame, RefreshCw, CheckCircle2, AlertTriangle, LayoutGrid, Table, CheckCheck } from 'lucide-react';
+import SignaturePad from './SignaturePad';
 
 const CRITERIA = [
   { id: 'acesso', label: 'Acesso' },
@@ -18,12 +19,24 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
     date: new Date().toISOString().split('T')[0],
     inspectorName: '',
     tecnicoSeguranca: '',
+    signature: '',
     items: []
   });
 
   const [loading, setLoading] = useState(false);
   const [loadingEquip, setLoadingEquip] = useState(true);
   const [message, setMessage] = useState('');
+  // Visualização: 'cards' para mobile / tablet ou 'table' para desktop
+  const [viewMode, setViewMode] = useState('cards');
+
+  // Ajusta modo padrão baseado na largura da tela inicial
+  useEffect(() => {
+    if (window.innerWidth >= 1024) {
+      setViewMode('table');
+    } else {
+      setViewMode('cards');
+    }
+  }, []);
 
   const loadExtinguishers = async () => {
     setLoadingEquip(true);
@@ -41,7 +54,7 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
       })) : Array.from({ length: 21 }).map((_, i) => ({
         extinguisherNum: i + 1,
         code: `EXT-${String(i + 1).padStart(2, '0')}`,
-        sector: 'Setor Geral',
+        sector: 'Geral',
         type: 'PQS',
         evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
       }));
@@ -74,6 +87,26 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
     });
   };
 
+  // Marcar todos os critérios de um extintor específico como Conforme
+  const handleSetExtinguisherAllConform = (index) => {
+    setFormData(prev => {
+      const newItems = [...prev.items];
+      newItems[index].evaluations = CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {});
+      return { ...prev, items: newItems };
+    });
+  };
+
+  // Marcar todos os extintores como 100% Conforme
+  const handleSetAllConformGlobal = () => {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.map(item => ({
+        ...item,
+        evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
+      }))
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -83,6 +116,7 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
         date: formData.date,
         inspectorName: formData.inspectorName,
         tecnicoSeguranca: formData.tecnicoSeguranca || '',
+        signature: formData.signature || '',
         items: formData.items,
         createdAt: new Date().toISOString()
       });
@@ -97,23 +131,58 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
     }
   };
 
+  // Estatística rápida de inconformidades preenchidas
+  let totalNC = 0;
+  formData.items.forEach(item => {
+    Object.values(item.evaluations || {}).forEach(v => {
+      if (v === 'NC') totalNC++;
+    });
+  });
+
   return (
     <div style={styles.card}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+      {/* Cabeçalho do Formulário */}
+      <div style={styles.header}>
         <div>
-          <h2 style={styles.cardTitle}>Inspeção Semanal de Extintores de Incêndio</h2>
-          <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Flame size={20} color="#dc2626" />
+            <h2 style={styles.cardTitle}>Inspeção de Extintores</h2>
+          </div>
+          <p style={styles.cardSubtitle}>
             Checklist técnico dos {formData.items.length} extintores ativos cadastrados na clínica.
           </p>
         </div>
-        <button 
-          type="button" 
-          onClick={loadExtinguishers} 
-          style={styles.refreshBtn}
-          title="Recarregar lista de extintores cadastrados"
-        >
-          <RefreshCw size={14} className={loadingEquip ? 'animate-spin' : ''} /> Atualizar Equipamentos
-        </button>
+
+        <div style={styles.headerActions}>
+          {/* Alternador de Modo de Visualização */}
+          <div style={styles.viewToggleGroup}>
+            <button
+              type="button"
+              onClick={() => setViewMode('cards')}
+              style={{ ...styles.viewToggleBtn, ...(viewMode === 'cards' ? styles.viewToggleBtnActive : {}) }}
+              title="Modo Cartões (ideal para celular e tablet)"
+            >
+              <LayoutGrid size={15} /> Cartões
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              style={{ ...styles.viewToggleBtn, ...(viewMode === 'table' ? styles.viewToggleBtnActive : {}) }}
+              title="Modo Tabela (ideal para computador)"
+            >
+              <Table size={15} /> Tabela
+            </button>
+          </div>
+
+          <button 
+            type="button" 
+            onClick={loadExtinguishers} 
+            style={styles.refreshBtn}
+            title="Recarregar lista de extintores cadastrados"
+          >
+            <RefreshCw size={14} className={loadingEquip ? 'animate-spin' : ''} /> Atualizar
+          </button>
+        </div>
       </div>
       
       {message && (
@@ -123,9 +192,10 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
       )}
 
       <form onSubmit={handleSubmit} style={styles.form}>
-        <div style={styles.grid2}>
+        {/* Barra superior de Dados e Ação Rápida */}
+        <div style={styles.topControlGrid}>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Data</label>
+            <label style={styles.label}>Data da Inspeção</label>
             <input 
               type="date" 
               name="date"
@@ -135,86 +205,195 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
               required 
             />
           </div>
+
+          <div style={styles.quickActionBox}>
+            <button 
+              type="button" 
+              onClick={handleSetAllConformGlobal}
+              style={styles.quickConformBtn}
+            >
+              <CheckCheck size={16} /> Marcar Todos como Conforme
+            </button>
+            <span style={styles.quickStatText}>
+              {totalNC === 0 ? '✓ 100% Conforme' : `⚠ ${totalNC} não-conformidade(s)`}
+            </span>
+          </div>
         </div>
 
-        <div style={styles.tableContainer}>
-          <table style={styles.table}>
-            <thead style={styles.tableHead}>
-              <tr>
-                <th style={{ ...styles.th, width: '80px' }}>Código</th>
-                <th style={{ ...styles.th, textAlign: 'left', minWidth: '150px' }}>Setor</th>
-                <th style={{ ...styles.th, minWidth: '110px' }}>Tipo</th>
-                {CRITERIA.map(c => (
-                  <th key={c.id} style={{...styles.th, textAlign: 'center'}}>{c.label}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {formData.items.map((item, index) => (
-                <tr key={item.code || item.extinguisherNum} style={styles.tr}>
-                  <td style={{...styles.td, fontWeight: '700', textAlign: 'center', color: '#0f172a'}}>
-                    {item.code || `#${item.extinguisherNum}`}
-                  </td>
-                  <td style={styles.td}>
-                    <span style={{ fontWeight: '600', color: '#334155' }}>{item.sector}</span>
-                  </td>
-                  <td style={{ ...styles.td, textAlign: 'center' }}>
-                    <span style={styles.typeBadge}>{item.type}</span>
-                  </td>
-                  {CRITERIA.map(c => {
-                    const isC = item.evaluations[c.id] === 'C';
-                    return (
-                      <td key={c.id} style={{...styles.td, textAlign: 'center'}}>
-                        <select
-                          value={item.evaluations[c.id]}
-                          onChange={(e) => handleEvaluationChange(index, c.id, e.target.value)}
-                          style={{
-                            ...styles.selectSmall,
-                            backgroundColor: isC ? '#f0fdf4' : '#fef2f2',
-                            color: isC ? '#15803d' : '#b91c1c',
-                            borderColor: isC ? '#bbf7d0' : '#fecaca',
-                            fontWeight: 'bold',
-                            textAlign: 'center',
-                            padding: '0.2rem'
-                          }}
-                        >
-                          <option value="C">C</option>
-                          <option value="NC">NC</option>
-                        </select>
-                      </td>
-                    );
-                  })}
+        {/* 1. Modo Cartões Touch (Otimizado para Celular e Tablet) */}
+        {viewMode === 'cards' && (
+          <div style={styles.cardsGrid}>
+            {formData.items.map((item, index) => {
+              const hasNC = Object.values(item.evaluations || {}).some(v => v === 'NC');
+              return (
+                <div 
+                  key={item.code || item.extinguisherNum} 
+                  style={{
+                    ...styles.equipmentCard,
+                    borderColor: hasNC ? '#fca5a5' : '#e2e8f0',
+                    backgroundColor: hasNC ? '#fffaf0' : '#ffffff'
+                  }}
+                >
+                  <div style={styles.equipmentCardHeader}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                      <span style={styles.cardCodeBadge}>{item.code || `#${item.extinguisherNum}`}</span>
+                      <span style={styles.cardSector}>{item.sector}</span>
+                      <span style={styles.cardTypeBadge}>{item.type}</span>
+                    </div>
+
+                    <button 
+                      type="button" 
+                      onClick={() => handleSetExtinguisherAllConform(index)}
+                      style={styles.cardQuickAllBtn}
+                      title="Marcar todos os itens deste extintor como Conforme"
+                    >
+                      <CheckCircle2 size={14} color="#16a34a" /> Tudo Conforme
+                    </button>
+                  </div>
+
+                  {/* Grid de Critérios Touch */}
+                  <div style={styles.criteriaTouchGrid}>
+                    {CRITERIA.map(c => {
+                      const isC = item.evaluations[c.id] === 'C';
+                      const isNC = item.evaluations[c.id] === 'NC';
+                      return (
+                        <div key={c.id} style={styles.criterionRow}>
+                          <span style={styles.criterionLabel}>{c.label}</span>
+                          <div style={styles.touchPillGroup}>
+                            <button
+                              type="button"
+                              onClick={() => handleEvaluationChange(index, c.id, 'C')}
+                              style={{
+                                ...styles.touchPill,
+                                ...(isC ? styles.touchPillCActive : styles.touchPillInactive)
+                              }}
+                            >
+                              C
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleEvaluationChange(index, c.id, 'NC')}
+                              style={{
+                                ...styles.touchPill,
+                                ...(isNC ? styles.touchPillNCActive : styles.touchPillInactive)
+                              }}
+                            >
+                              NC
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* 2. Modo Tabela Clássica (100% preservada para Desktop) */}
+        {viewMode === 'table' && (
+          <div style={styles.tableContainer}>
+            <table style={styles.table}>
+              <thead style={styles.tableHead}>
+                <tr>
+                  <th style={{ ...styles.th, width: '80px' }}>Código</th>
+                  <th style={{ ...styles.th, textAlign: 'left', minWidth: '150px' }}>Setor</th>
+                  <th style={{ ...styles.th, minWidth: '110px' }}>Tipo</th>
+                  {CRITERIA.map(c => (
+                    <th key={c.id} style={{...styles.th, textAlign: 'center'}}>{c.label}</th>
+                  ))}
+                  <th style={{ ...styles.th, width: '90px' }}>Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {formData.items.map((item, index) => (
+                  <tr key={item.code || item.extinguisherNum} style={styles.tr}>
+                    <td style={{...styles.td, fontWeight: '700', textAlign: 'center', color: '#0f172a'}}>
+                      {item.code || `#${item.extinguisherNum}`}
+                    </td>
+                    <td style={styles.td}>
+                      <span style={{ fontWeight: '600', color: '#334155' }}>{item.sector}</span>
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'center' }}>
+                      <span style={styles.typeBadge}>{item.type}</span>
+                    </td>
+                    {CRITERIA.map(c => {
+                      const isC = item.evaluations[c.id] === 'C';
+                      return (
+                        <td key={c.id} style={{...styles.td, textAlign: 'center'}}>
+                          <select
+                            value={item.evaluations[c.id]}
+                            onChange={(e) => handleEvaluationChange(index, c.id, e.target.value)}
+                            style={{
+                              ...styles.selectSmall,
+                              backgroundColor: isC ? '#f0fdf4' : '#fef2f2',
+                              color: isC ? '#15803d' : '#b91c1c',
+                              borderColor: isC ? '#bbf7d0' : '#fecaca',
+                              fontWeight: 'bold',
+                              textAlign: 'center',
+                              padding: '0.2rem'
+                            }}
+                          >
+                            <option value="C">C</option>
+                            <option value="NC">NC</option>
+                          </select>
+                        </td>
+                      );
+                    })}
+                    <td style={{ ...styles.td, textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleSetExtinguisherAllConform(index)}
+                        style={styles.tableQuickBtn}
+                        title="Marcar Conforme"
+                      >
+                        <CheckCircle2 size={13} color="#16a34a" /> OK
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-        <div style={styles.grid2}>
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Inspetor</label>
-            <input 
-              type="text" 
-              name="inspectorName"
-              value={formData.inspectorName}
-              onChange={handleChange}
-              style={styles.input}
-              placeholder="Nome"
-              required 
-            />
+        {/* Identificação e Assinatura Touch */}
+        <div style={styles.signaturesSection}>
+          <div style={styles.grid2}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Inspetor Responsável</label>
+              <input 
+                type="text" 
+                name="inspectorName"
+                value={formData.inspectorName}
+                onChange={handleChange}
+                style={styles.input}
+                placeholder="Nome do inspetor"
+                required 
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Técnico de Segurança</label>
+              <input 
+                type="text" 
+                name="tecnicoSeguranca"
+                value={formData.tecnicoSeguranca || ''}
+                onChange={handleChange}
+                style={styles.input}
+                placeholder="Nome do técnico"
+                required 
+              />
+            </div>
           </div>
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Técnico</label>
-            <input 
-              type="text" 
-              name="tecnicoSeguranca"
-              value={formData.tecnicoSeguranca || ''}
-              onChange={handleChange}
-              style={styles.input}
-              placeholder="Nome"
-              required 
-            />
-          </div>
+
+          {/* Assinatura Touch na Tela */}
+          <SignaturePad 
+            value={formData.signature}
+            onChange={(sig) => setFormData(prev => ({ ...prev, signature: sig }))}
+            label="Assinatura Digital Touch"
+            placeholder="Assine com o dedo ou caneta touch no celular ou tablet"
+          />
         </div>
 
         <div style={styles.actions}>
@@ -223,7 +402,7 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
             disabled={loading}
             style={loading ? {...styles.btnPrimary, opacity: 0.7} : styles.btnPrimary}
           >
-            <Save size={20} />
+            <Save size={18} />
             <span>{loading ? 'Salvando...' : 'Salvar Inspeção'}</span>
           </button>
         </div>
@@ -235,17 +414,60 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
 const styles = {
   card: {
     backgroundColor: '#ffffff',
-    padding: '1.5rem',
+    padding: '1.25rem',
     borderRadius: '12px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
     border: '1px solid #e2e8f0',
   },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1.25rem',
+    flexWrap: 'wrap',
+    gap: '0.75rem'
+  },
   cardTitle: {
-    fontSize: '1.25rem',
-    fontWeight: '700',
+    fontSize: '1.2rem',
+    fontWeight: '800',
     color: '#0f172a',
+    margin: 0
+  },
+  cardSubtitle: {
     margin: 0,
-    marginBottom: '0.25rem'
+    fontSize: '0.82rem',
+    color: '#64748b'
+  },
+  headerActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    flexWrap: 'wrap'
+  },
+  viewToggleGroup: {
+    display: 'flex',
+    backgroundColor: '#f1f5f9',
+    padding: '0.2rem',
+    borderRadius: '8px'
+  },
+  viewToggleBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.35rem 0.7rem',
+    borderRadius: '6px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: '#64748b',
+    fontSize: '0.78rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.15s'
+  },
+  viewToggleBtnActive: {
+    backgroundColor: '#ffffff',
+    color: '#0891b2',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.08)'
   },
   refreshBtn: {
     display: 'inline-flex',
@@ -261,73 +483,205 @@ const styles = {
     cursor: 'pointer'
   },
   alert: {
-    padding: '1rem',
+    padding: '0.85rem 1rem',
     borderRadius: '8px',
-    marginBottom: '1.5rem',
-    fontWeight: '500',
+    marginBottom: '1.25rem',
+    fontWeight: '600',
+    fontSize: '0.85rem'
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem',
+    gap: '1.25rem',
+  },
+  topControlGrid: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    flexWrap: 'wrap',
+    gap: '1rem',
+    backgroundColor: '#f8fafc',
+    padding: '0.85rem 1rem',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0'
+  },
+  quickActionBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    flexWrap: 'wrap'
+  },
+  quickConformBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.5rem 0.9rem',
+    backgroundColor: '#10b981',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    cursor: 'pointer',
+    boxShadow: '0 1px 2px rgba(16, 185, 129, 0.2)'
+  },
+  quickStatText: {
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    color: '#334155'
+  },
+  cardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    gap: '1rem'
+  },
+  equipmentCard: {
+    border: '1px solid #e2e8f0',
+    borderRadius: '10px',
+    padding: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.85rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+    transition: 'all 0.15s'
+  },
+  equipmentCardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
+    paddingBottom: '0.65rem',
+    borderBottom: '1px solid #f1f5f9'
+  },
+  cardCodeBadge: {
+    backgroundColor: '#0f172a',
+    color: '#ffffff',
+    padding: '0.25rem 0.55rem',
+    borderRadius: '6px',
+    fontWeight: '800',
+    fontSize: '0.82rem'
+  },
+  cardSector: {
+    fontWeight: '700',
+    color: '#1e293b',
+    fontSize: '0.88rem'
+  },
+  cardTypeBadge: {
+    backgroundColor: '#e0f2fe',
+    color: '#0369a1',
+    padding: '0.15rem 0.45rem',
+    borderRadius: '4px',
+    fontSize: '0.72rem',
+    fontWeight: '700'
+  },
+  cardQuickAllBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    padding: '0.25rem 0.55rem',
+    backgroundColor: '#f0fdf4',
+    border: '1px solid #bbf7d0',
+    borderRadius: '5px',
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    color: '#15803d',
+    cursor: 'pointer'
+  },
+  criteriaTouchGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+    gap: '0.65rem'
+  },
+  criterionRow: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.3rem',
+    backgroundColor: '#f8fafc',
+    padding: '0.45rem 0.6rem',
+    borderRadius: '6px',
+    border: '1px solid #f1f5f9'
+  },
+  criterionLabel: {
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    color: '#475569'
+  },
+  touchPillGroup: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '0.35rem'
+  },
+  touchPill: {
+    height: '38px',
+    borderRadius: '6px',
+    border: '1px solid transparent',
+    fontSize: '0.82rem',
+    fontWeight: '800',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.12s'
+  },
+  touchPillCActive: {
+    backgroundColor: '#16a34a',
+    color: '#ffffff',
+    borderColor: '#15803d',
+    boxShadow: '0 2px 4px rgba(22, 163, 74, 0.25)'
+  },
+  touchPillNCActive: {
+    backgroundColor: '#dc2626',
+    color: '#ffffff',
+    borderColor: '#b91c1c',
+    boxShadow: '0 2px 4px rgba(220, 38, 38, 0.25)'
+  },
+  touchPillInactive: {
+    backgroundColor: '#ffffff',
+    color: '#64748b',
+    borderColor: '#cbd5e1'
   },
   grid2: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
     gap: '1rem',
   },
   formGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem',
+    gap: '0.4rem',
   },
   label: {
-    fontSize: '0.85rem',
-    fontWeight: '600',
+    fontSize: '0.82rem',
+    fontWeight: '700',
     color: '#475569',
   },
   input: {
-    padding: '0.6rem',
+    padding: '0.65rem 0.75rem',
     borderRadius: '8px',
     border: '1px solid #cbd5e1',
     fontSize: '0.9rem',
     width: '100%',
     boxSizing: 'border-box'
   },
-  inputSmall: {
-    padding: '0.3rem',
-    borderRadius: '4px',
-    border: '1px solid #cbd5e1',
-    fontSize: '0.75rem',
-    width: '100%',
-    boxSizing: 'border-box'
-  },
-  selectSmall: {
-    padding: '0.3rem',
-    borderRadius: '4px',
-    border: '1px solid #cbd5e1',
-    fontSize: '0.75rem',
-    width: '100%',
-    boxSizing: 'border-box',
-    cursor: 'pointer'
-  },
-  typeBadge: {
-    backgroundColor: '#f1f5f9',
-    color: '#0f172a',
-    padding: '0.15rem 0.4rem',
-    borderRadius: '4px',
-    fontSize: '0.72rem',
-    fontWeight: '700'
+  signaturesSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    marginTop: '0.5rem',
+    paddingTop: '1rem',
+    borderTop: '1px solid #f1f5f9'
   },
   tableContainer: {
     border: '1px solid #e2e8f0',
     borderRadius: '8px',
     overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch'
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    minWidth: '800px'
+    minWidth: '850px'
   },
   tableHead: {
     backgroundColor: '#154c79',
@@ -352,22 +706,53 @@ const styles = {
     color: '#334155',
     borderRight: '1px solid #f1f5f9',
   },
+  selectSmall: {
+    padding: '0.35rem',
+    borderRadius: '4px',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.78rem',
+    width: '100%',
+    boxSizing: 'border-box',
+    cursor: 'pointer'
+  },
+  typeBadge: {
+    backgroundColor: '#f1f5f9',
+    color: '#0f172a',
+    padding: '0.15rem 0.4rem',
+    borderRadius: '4px',
+    fontSize: '0.72rem',
+    fontWeight: '700'
+  },
+  tableQuickBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.2rem',
+    padding: '0.2rem 0.4rem',
+    backgroundColor: '#f0fdf4',
+    border: '1px solid #bbf7d0',
+    borderRadius: '4px',
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    color: '#15803d',
+    cursor: 'pointer'
+  },
   actions: {
     display: 'flex',
     justifyContent: 'flex-end',
-    marginTop: '1rem',
+    marginTop: '0.5rem',
   },
   btnPrimary: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
-    backgroundColor: '#0f766e',
+    backgroundColor: '#0891b2',
     color: '#ffffff',
-    padding: '0.6rem 1.25rem',
+    padding: '0.7rem 1.5rem',
     borderRadius: '8px',
     border: 'none',
-    fontWeight: '600',
-    fontSize: '0.9rem',
+    fontWeight: '700',
+    fontSize: '0.92rem',
     cursor: 'pointer',
+    boxShadow: '0 2px 4px rgba(8, 145, 178, 0.2)'
   }
 };

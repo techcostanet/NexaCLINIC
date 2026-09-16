@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.78',
+      date: '16/09/2026',
+      title: 'Nex-Ai CLINIC — Módulo SESMT Portátil para Celular e Tablet, Assinatura Digital Touch & Atalhos em Campo (.SESMT)',
+      description: 'Transformação completa do módulo de Segurança do Trabalho (.SESMT) para suporte nativo em smartphones e tablets sem alterar a densidade do computador: visualização híbrida adaptativa com cartões táteis, canvas de assinatura digital touch/caneta para campo (preservando campos digitados), atalhos "Tudo Conforme" individuais e globais, e conformidade rigorosa com o padrão de 1 palavra e cabeçalho oficial.',
+      changes: [
+        { type: 'Modo Híbrido Cartões & Tabela', text: 'Detecção inteligente de tamanho de tela com abertura em cartões de toque otimizados (44px) no celular/tablet e tabela clássica no computador, contando com alternador de visualização rápido em todas as telas.' },
+        { type: 'Assinatura Digital Touch em Campo', text: 'Inclusão de componente canvas com suporte a toque e caneta digital (PointerEvents) para colher assinaturas diretamente na tela do dispositivo portátil durante inspeções, mantendo também os campos de digitação textual.' },
+        { type: 'Atalhos Ágeis "Tudo Conforme"', text: 'Botões rápidos individuais e globais para marcar extintores, hidrantes e checklists como regulares em lote, além de pílulas táteis de 2 e 3 estados substituindo menus suspensos em dispositivos móveis.' },
+        { type: 'Histórico & Visualização de Assinaturas', text: 'Exibição da assinatura digital colhida no modal de detalhes da inspeção no histórico, permitindo auditorias e conferências em tempo real.' },
+        { type: 'Cabeçalho Oficial & UI/UX (1 Palavra)', text: 'Adoção do componente oficial ModuleHeader (.SESMT) com ícone de escudo temático, gradiente ciano e higienização de rótulos e cabeçalhos conforme as regras do projeto.' },
+        { type: 'Manual do SESMT em moduleGuidesData.js', text: 'Documentação oficial completa com recursos, tutoriais de campo e FAQ do módulo SESMT acessível diretamente no botão de manual.' }
+      ]
+    },
+    {
       version: 'v4.9.75',
       date: '11/09/2026',
       title: 'Nex-Ai CLINIC — 3 Modos de Visualização (.SERVICE), Exclusão de Equipamentos & Auto Ordenação por Colunas',

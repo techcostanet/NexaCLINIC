@@ -24,6 +24,7 @@ import WeeklyFireExtinguisherForm from './WeeklyFireExtinguisherForm';
 import WeeklyFireHydrantForm from './WeeklyFireHydrantForm';
 import SesmtHistory from './SesmtHistory';
 import SesmtEquipmentManager from './SesmtEquipmentManager';
+import ModuleHeader from '../common/ModuleHeader';
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444'];
 
@@ -208,17 +209,13 @@ export default function SesmtDashboard({ currentUser }) {
 
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
-        <div style={styles.headerTitleBox}>
-          <div style={styles.headerIcon}>
-            <Shield size={24} color="#fff" />
-          </div>
-          <div>
-            <h1 style={styles.title}>SESMT - Segurança do Trabalho</h1>
-            <p style={styles.subtitle}>Gestão de Equipamentos, Auditorias, Prevenção de Incêndios e Indicadores</p>
-          </div>
-        </div>
-      </div>
+      <ModuleHeader
+        title=".SESMT"
+        subtitle="Segurança do Trabalho, Inspeções Portáteis e Indicadores"
+        icon={Shield}
+        gradient="linear-gradient(135deg, #0891b2, #0e7490)"
+        dotColor="#0891b2"
+      />
 
       {/* Navegação por Abas */}
       <div style={styles.tabContainer}>
@@ -232,31 +229,31 @@ export default function SesmtDashboard({ currentUser }) {
           style={{ ...styles.tabButton, ...(activeTab === 'equipamentos' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('equipamentos')}
         >
-          <Shield size={16} /> Cadastro de Equipamentos ({equipmentData.length})
+          <Shield size={16} /> Equipamentos ({equipmentData.length})
         </button>
         <button 
           style={{ ...styles.tabButton, ...(activeTab === 'epi' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('epi')}
         >
-          <CheckCircle2 size={16} /> Formulário EPI
+          <CheckCircle2 size={16} /> EPI
         </button>
         <button 
           style={{ ...styles.tabButton, ...(activeTab === 'extintores' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('extintores')}
         >
-          <Flame size={16} /> Inspeção Extintores
+          <Flame size={16} /> Extintores
         </button>
         <button 
           style={{ ...styles.tabButton, ...(activeTab === 'hidrantes' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('hidrantes')}
         >
-          <Droplet size={16} /> Inspeção Hidrantes
+          <Droplet size={16} /> Hidrantes
         </button>
         <button 
           style={{ ...styles.tabButton, ...(activeTab === 'historico' ? styles.tabActive : {}) }}
           onClick={() => setActiveTab('historico')}
         >
-          <ClipboardList size={16} /> Histórico de Registros
+          <ClipboardList size={16} /> Histórico
         </button>
       </div>
 
@@ -417,7 +414,7 @@ export default function SesmtDashboard({ currentUser }) {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
             <div style={styles.kpiCard}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#0f172a', margin: 0 }}>Inconformidades de EPI por Setor</h3>
@@ -516,66 +513,39 @@ function SECTOROR_LIST(options) {
 
 const styles = {
   container: {
-    padding: '1.5rem',
-    maxWidth: '1300px',
-    margin: '0 auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem',
     fontFamily: 'Inter, system-ui, sans-serif'
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1.5rem',
-    flexWrap: 'wrap',
-    gap: '1rem'
-  },
-  headerTitleBox: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem'
-  },
-  headerIcon: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '12px',
-    backgroundColor: '#0891b2',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 4px 10px rgba(8, 145, 178, 0.25)'
-  },
-  title: {
-    fontSize: '1.5rem',
-    fontWeight: '800',
-    color: '#0f172a',
-    margin: 0
-  },
-  subtitle: {
-    fontSize: '0.85rem',
-    color: '#64748b',
-    margin: 0
   },
   tabContainer: {
     display: 'flex',
-    gap: '0.5rem',
+    gap: '0.4rem',
     borderBottom: '2px solid #e2e8f0',
-    marginBottom: '1.5rem',
-    flexWrap: 'wrap'
+    overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+    paddingBottom: '2px',
+    whiteSpace: 'nowrap',
+    flexWrap: 'nowrap'
   },
   tabButton: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.4rem',
-    padding: '0.6rem 1rem',
+    gap: '0.45rem',
+    padding: '0.65rem 1rem',
     border: 'none',
     background: 'none',
-    fontSize: '0.9rem',
+    fontSize: '0.88rem',
     fontWeight: '600',
     color: '#64748b',
     cursor: 'pointer',
     borderBottom: '2px solid transparent',
     marginBottom: '-2px',
-    transition: 'all 0.2s'
+    transition: 'all 0.2s',
+    whiteSpace: 'nowrap',
+    flexShrink: 0
   },
   tabActive: {
     color: '#0891b2',

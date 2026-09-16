@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { dbService } from '../../firebase';
 import { 
   ClipboardList, 
@@ -15,7 +15,9 @@ import {
   Clock,
   User,
   Check,
-  AlertCircle
+  AlertCircle,
+  LayoutGrid,
+  Table
 } from 'lucide-react';
 
 export default function SesmtHistory({ epiData = [], extinguisherData = [], hydrantData = [], onRefresh }) {
@@ -26,6 +28,15 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
   const [selectedShift, setSelectedShift] = useState('ALL');
   const [selectedItem, setSelectedItem] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [viewMode, setViewMode] = useState('cards');
+
+  useEffect(() => {
+    if (window.innerWidth >= 1024) {
+      setViewMode('table');
+    } else {
+      setViewMode('cards');
+    }
+  }, []);
 
   // Normalizar registros para listagem unificada
   const normalizedRecords = [
@@ -125,12 +136,33 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
     <div style={styles.card}>
       <div style={styles.cardHeader}>
         <div>
-          <h2 style={styles.cardTitle}>Histórico de Registros e Auditorias SESMT</h2>
+          <h2 style={styles.cardTitle}>Histórico de Registros e Auditorias</h2>
           <p style={styles.cardSubtitle}>Consulte, visualize detalhes e gerencie todas as inspeções salvas no sistema</p>
         </div>
-        <div style={styles.recordCounter}>
-          <ClipboardList size={18} color="#0891b2" />
-          <span>{filteredRecords.length} registro(s)</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div style={styles.viewToggleGroup}>
+            <button
+              type="button"
+              onClick={() => setViewMode('cards')}
+              style={{ ...styles.viewToggleBtn, ...(viewMode === 'cards' ? styles.viewToggleBtnActive : {}) }}
+              title="Modo Cartões (ideal para celular e tablet)"
+            >
+              <LayoutGrid size={15} /> Cartões
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              style={{ ...styles.viewToggleBtn, ...(viewMode === 'table' ? styles.viewToggleBtnActive : {}) }}
+              title="Modo Tabela (ideal para computador)"
+            >
+              <Table size={15} /> Tabela
+            </button>
+          </div>
+
+          <div style={styles.recordCounter}>
+            <ClipboardList size={18} color="#0891b2" />
+            <span>{filteredRecords.length} registro(s)</span>
+          </div>
         </div>
       </div>
 
@@ -221,94 +253,182 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
         </div>
       </div>
 
-      {/* Tabela de Registros */}
-      <div style={styles.tableContainer}>
-        <table style={styles.table}>
-          <thead style={styles.tableHead}>
-            <tr>
-              <th style={styles.th}>Data / Horário</th>
-              <th style={styles.th}>Tipo</th>
-              <th style={styles.th}>Setor / Local</th>
-              <th style={styles.th}>Turno</th>
-              <th style={styles.th}>Responsável</th>
-              <th style={styles.th}>Resumo / Status</th>
-              <th style={{ ...styles.th, textAlign: 'center' }}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRecords.length === 0 ? (
-              <tr>
-                <td colSpan={7} style={styles.emptyTd}>
-                  <AlertCircle size={32} color="#94a3b8" style={{ marginBottom: '0.5rem' }} />
-                  <p style={{ margin: 0, fontWeight: '600', color: '#64748b' }}>Nenhum registro encontrado</p>
-                  <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Tente alterar os filtros ou preencha um formulário para começar.</span>
-                </td>
-              </tr>
-            ) : (
-              filteredRecords.map((record) => {
-                const badgeStyle = getTypeBadgeStyle(record.recordType);
+      {/* 1. Modo Cartões (Otimizado para Celular e Tablet) */}
+      {viewMode === 'cards' && (
+        <div style={styles.historyCardsGrid}>
+          {filteredRecords.length === 0 ? (
+            <div style={styles.emptyCardBox}>
+              <AlertCircle size={32} color="#94a3b8" style={{ marginBottom: '0.5rem' }} />
+              <p style={{ margin: 0, fontWeight: '600', color: '#64748b' }}>Nenhum registro encontrado</p>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Tente alterar os filtros ou preencha um formulário para começar.</span>
+            </div>
+          ) : (
+            filteredRecords.map((record) => {
+              const badgeStyle = getTypeBadgeStyle(record.recordType);
 
-                // Calcular resumo para cada tipo
-                let summaryElement = null;
-                if (record.recordType === 'EPI') {
-                  const evals = Object.values(record.evaluations || {});
-                  const ncCount = evals.filter(e => e.status === 'NC').length;
-                  summaryElement = ncCount === 0 ? (
-                    <span style={styles.conformBadge}><Check size={12} /> 100% Conforme</span>
-                  ) : (
-                    <span style={styles.ncBadge}><AlertTriangle size={12} /> {ncCount} Não Conforme(s)</span>
-                  );
-                } else if (record.recordType === 'EXTINGUISHER') {
-                  const total = (record.items || []).length;
-                  summaryElement = <span style={styles.neutralBadge}>{total} Extintores Inspecionados</span>;
-                } else if (record.recordType === 'HYDRANT') {
-                  const total = (record.items || []).length;
-                  summaryElement = <span style={styles.neutralBadge}>{total} Hidrantes Inspecionados</span>;
-                }
-
-                return (
-                  <tr key={record.id} style={styles.tr}>
-                    <td style={{ ...styles.td, fontWeight: '600' }}>
-                      {record.displayDate ? record.displayDate.split('-').reverse().join('/') : '-'}
-                      {record.displayTime && record.displayTime !== '-' && (
-                        <span style={styles.timeTag}> {record.displayTime}</span>
-                      )}
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{ ...styles.badge, ...badgeStyle }}>
-                        {record.typeLabel}
-                      </span>
-                    </td>
-                    <td style={{ ...styles.td, fontWeight: '500' }}>{record.displaySector}</td>
-                    <td style={styles.td}>{record.displayShift}</td>
-                    <td style={styles.td}>{record.responsible}</td>
-                    <td style={styles.td}>{summaryElement}</td>
-                    <td style={{ ...styles.td, textAlign: 'center' }}>
-                      <div style={styles.actionsBox}>
-                        <button 
-                          style={styles.viewBtn} 
-                          onClick={() => setSelectedItem(record)}
-                          title="Visualizar Inspeção Completa"
-                        >
-                          <Eye size={16} /> Ver Detalhes
-                        </button>
-                        <button 
-                          style={styles.deleteBtn}
-                          disabled={deletingId === record.id}
-                          onClick={() => handleDelete(record)}
-                          title="Excluir Registro"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+              let summaryElement = null;
+              if (record.recordType === 'EPI') {
+                const evals = Object.values(record.evaluations || {});
+                const ncCount = evals.filter(e => e.status === 'NC').length;
+                summaryElement = ncCount === 0 ? (
+                  <span style={styles.conformBadge}><Check size={12} /> 100% Conforme</span>
+                ) : (
+                  <span style={styles.ncBadge}><AlertTriangle size={12} /> {ncCount} Não Conforme(s)</span>
                 );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+              } else if (record.recordType === 'EXTINGUISHER') {
+                const total = (record.items || []).length;
+                summaryElement = <span style={styles.neutralBadge}>{total} Extintores Inspecionados</span>;
+              } else if (record.recordType === 'HYDRANT') {
+                const total = (record.items || []).length;
+                summaryElement = <span style={styles.neutralBadge}>{total} Hidrantes Inspecionados</span>;
+              }
+
+              return (
+                <div key={record.id} style={styles.historyCard}>
+                  <div style={styles.historyCardTop}>
+                    <span style={{ ...styles.badge, ...badgeStyle }}>
+                      {record.typeLabel}
+                    </span>
+                    <span style={{ fontSize: '0.82rem', fontWeight: '700', color: '#0f172a' }}>
+                      {record.displayDate ? record.displayDate.split('-').reverse().join('/') : '-'}
+                      {record.displayTime && record.displayTime !== '-' && ` às ${record.displayTime}`}
+                    </span>
+                  </div>
+
+                  <div style={styles.historyCardInfo}>
+                    <div style={styles.infoRow}>
+                      <span style={styles.infoKey}>Setor:</span>
+                      <span style={styles.infoVal}>{record.displaySector}</span>
+                    </div>
+                    {record.displayShift && record.displayShift !== '-' && (
+                      <div style={styles.infoRow}>
+                        <span style={styles.infoKey}>Turno:</span>
+                        <span style={styles.infoVal}>{record.displayShift}</span>
+                      </div>
+                    )}
+                    <div style={styles.infoRow}>
+                      <span style={styles.infoKey}>Responsável:</span>
+                      <span style={styles.infoVal}>{record.responsible}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                      <span style={styles.infoKey}>Status:</span>
+                      <div>{summaryElement}</div>
+                    </div>
+                  </div>
+
+                  <div style={styles.historyCardActions}>
+                    <button 
+                      style={styles.viewCardBtn} 
+                      onClick={() => setSelectedItem(record)}
+                      title="Visualizar Inspeção Completa"
+                    >
+                      <Eye size={15} /> Ver Detalhes
+                    </button>
+                    <button 
+                      style={styles.deleteBtn}
+                      disabled={deletingId === record.id}
+                      onClick={() => handleDelete(record)}
+                      title="Excluir Registro"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* 2. Modo Tabela Clássica (Desktop) */}
+      {viewMode === 'table' && (
+        <div style={styles.tableContainer}>
+          <table style={styles.table}>
+            <thead style={styles.tableHead}>
+              <tr>
+                <th style={styles.th}>Data</th>
+                <th style={styles.th}>Tipo</th>
+                <th style={styles.th}>Setor</th>
+                <th style={styles.th}>Turno</th>
+                <th style={styles.th}>Responsável</th>
+                <th style={styles.th}>Status</th>
+                <th style={{ ...styles.th, textAlign: 'center' }}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRecords.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={styles.emptyTd}>
+                    <AlertCircle size={32} color="#94a3b8" style={{ marginBottom: '0.5rem' }} />
+                    <p style={{ margin: 0, fontWeight: '600', color: '#64748b' }}>Nenhum registro encontrado</p>
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Tente alterar os filtros ou preencha um formulário para começar.</span>
+                  </td>
+                </tr>
+              ) : (
+                filteredRecords.map((record) => {
+                  const badgeStyle = getTypeBadgeStyle(record.recordType);
+
+                  let summaryElement = null;
+                  if (record.recordType === 'EPI') {
+                    const evals = Object.values(record.evaluations || {});
+                    const ncCount = evals.filter(e => e.status === 'NC').length;
+                    summaryElement = ncCount === 0 ? (
+                      <span style={styles.conformBadge}><Check size={12} /> 100% Conforme</span>
+                    ) : (
+                      <span style={styles.ncBadge}><AlertTriangle size={12} /> {ncCount} Não Conforme(s)</span>
+                    );
+                  } else if (record.recordType === 'EXTINGUISHER') {
+                    const total = (record.items || []).length;
+                    summaryElement = <span style={styles.neutralBadge}>{total} Extintores Inspecionados</span>;
+                  } else if (record.recordType === 'HYDRANT') {
+                    const total = (record.items || []).length;
+                    summaryElement = <span style={styles.neutralBadge}>{total} Hidrantes Inspecionados</span>;
+                  }
+
+                  return (
+                    <tr key={record.id} style={styles.tr}>
+                      <td style={{ ...styles.td, fontWeight: '600' }}>
+                        {record.displayDate ? record.displayDate.split('-').reverse().join('/') : '-'}
+                        {record.displayTime && record.displayTime !== '-' && (
+                          <span style={styles.timeTag}> {record.displayTime}</span>
+                        )}
+                      </td>
+                      <td style={styles.td}>
+                        <span style={{ ...styles.badge, ...badgeStyle }}>
+                          {record.typeLabel}
+                        </span>
+                      </td>
+                      <td style={{ ...styles.td, fontWeight: '500' }}>{record.displaySector}</td>
+                      <td style={styles.td}>{record.displayShift}</td>
+                      <td style={styles.td}>{record.responsible}</td>
+                      <td style={styles.td}>{summaryElement}</td>
+                      <td style={{ ...styles.td, textAlign: 'center' }}>
+                        <div style={styles.actionsBox}>
+                          <button 
+                            style={styles.viewBtn} 
+                            onClick={() => setSelectedItem(record)}
+                            title="Visualizar Inspeção Completa"
+                          >
+                            <Eye size={16} /> Ver Detalhes
+                          </button>
+                          <button 
+                            style={styles.deleteBtn}
+                            disabled={deletingId === record.id}
+                            onClick={() => handleDelete(record)}
+                            title="Excluir Registro"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Modal de Detalhes da Inspeção */}
       {selectedItem && (
@@ -490,6 +610,21 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* Assinatura Digital */}
+              {selectedItem.signature && (
+                <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ ...styles.sectionTitle, marginBottom: '0.5rem' }}>Assinatura Digital</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.35rem' }}>
+                    <img 
+                      src={selectedItem.signature} 
+                      alt="Assinatura Digital" 
+                      style={{ maxHeight: '90px', border: '1px dashed #cbd5e1', borderRadius: '6px', backgroundColor: '#ffffff', padding: '4px' }} 
+                    />
+                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Assinatura colhida digitalmente via dispositivo portátil</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -902,5 +1037,107 @@ const styles = {
     fontWeight: '600',
     fontSize: '0.85rem',
     cursor: 'pointer'
+  },
+  viewToggleGroup: {
+    display: 'inline-flex',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    backgroundColor: '#f8fafc',
+    padding: '2px',
+    gap: '2px'
+  },
+  viewToggleBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.35rem 0.65rem',
+    borderRadius: '6px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: '#64748b',
+    fontSize: '0.78rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.15s'
+  },
+  viewToggleBtnActive: {
+    backgroundColor: '#ffffff',
+    color: '#0891b2',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.06)'
+  },
+  historyCardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gap: '1rem'
+  },
+  emptyCardBox: {
+    gridColumn: '1 / -1',
+    padding: '3rem 1rem',
+    textAlign: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: '10px',
+    border: '1px dashed #cbd5e1'
+  },
+  historyCard: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '10px',
+    padding: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+  },
+  historyCardTop: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+    paddingBottom: '0.5rem',
+    borderBottom: '1px solid #f1f5f9'
+  },
+  historyCardInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.4rem',
+    fontSize: '0.82rem'
+  },
+  infoRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '0.5rem'
+  },
+  infoKey: {
+    color: '#64748b',
+    fontWeight: '500'
+  },
+  infoVal: {
+    color: '#0f172a',
+    fontWeight: '600',
+    textAlign: 'right'
+  },
+  historyCardActions: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+    paddingTop: '0.5rem',
+    borderTop: '1px solid #f1f5f9'
+  },
+  viewCardBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.45rem 0.85rem',
+    backgroundColor: '#0891b2',
+    color: '#ffffff',
+    borderRadius: '6px',
+    border: 'none',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    flex: 1,
+    justifyContent: 'center'
   }
 };
