@@ -260,13 +260,16 @@ export default function EmployeeTrainingPortal({ trainingId, onExitPortal }) {
       {/* Topo do Portal */}
       <header style={styles.header}>
         <div style={styles.headerInner}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <div style={styles.brandIcon}>
-              <BookOpen size={20} color="#ffffff" />
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <img 
+              src="/logo.png" 
+              alt="Logo Nexa" 
+              style={{ height: '36px', maxWidth: '120px', objectFit: 'contain' }}
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
             <div>
               <span style={styles.brandTitle}>NexaCLINIC</span>
-              <span style={styles.brandSub}>Portal de Capacitação do Colaborador</span>
+              <span style={styles.brandSub}>Capacitação Continuada em Nefrologia</span>
             </div>
           </div>
           <div style={styles.stepBadge}>

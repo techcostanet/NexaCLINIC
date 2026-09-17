@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.79',
+      date: '17/09/2026',
+      title: 'Nex-Ai CLINIC — 15 Treinamentos Especializados em Nefrologia, Logomarca Institucional & Sincronização 1-Clique',
+      description: 'Expansão profunda do módulo de Educação Continuada com 15 treinamentos clínicos completos e exclusivos para clínicas de Nefrologia e Hemodiálise abrangendo todos os setores (Enfermagem, Médico, Tratamento de Água, Engenharia Clínica, Farmácia, Higienização, Nutrição, Psicologia, Recepção, Faturamento/APAC, Qualidade/NSP e T.I./LGPD). Cada treinamento conta com ementa técnica detalhada, 5 questões pré-teste e 5 questões pós-teste com explicações clínicas, integração da logomarca oficial nos portais, certificados PDF e dossiês, além de botão de sincronização em 1 clique no Firestore.',
+      changes: [
+        { type: '15 Treinamentos Especializados', text: 'Criação de matriz com 15 cursos clínicos em nefrologia com conformidade estrita com a RDC 11/2014, RDC 222/2018 e NR-32.' },
+        { type: '5 Questões Pré e 5 Pós-teste', text: 'Cada um dos 15 módulos possui rigorosamente 5 perguntas diagnósticas pré-teste e 5 perguntas avaliativas pós-teste com justificativas clínicas para aferição científica da eficácia.' },
+        { type: 'Cobertura Integral de Setores', text: 'Treinamentos dedicados para Enfermagem (FAV, CVC, Intercorrências, Reuso), Manutenção (Água, Proporcionadoras), Médico (Kt/V, DMO-DRC), Farmácia, Higienização (Hepatite B), Nutrição Renal, Apoio Psicossocial, Recepção, Faturamento APAC, Qualidade/NSP e T.I./LGPD.' },
+        { type: 'Branding e Logomarca Oficial', text: 'Integração visual da logomarca da clínica no topo do Portal Mobile do Colaborador, no Certificado Digital (em tela e no PDF vetorial) e no Dossiê da Vigilância Sanitária.' },
+        { type: 'Sincronização 1-Clique no Firestore', text: 'Novo botão Sincronizar na barra de ferramentas do RH e auto-seed inteligente que carrega e atualiza todos os 15 treinamentos no banco de dados automaticamente.' }
+      ]
+    },
+    {
       version: 'v4.9.78',
       date: '17/09/2026',
       title: 'Nex-Ai CLINIC — Correção de Inicialização da Tela Principal (Hotfix ReferenceError)',

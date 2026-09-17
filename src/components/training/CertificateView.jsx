@@ -65,18 +65,41 @@ export default function CertificateView({ submission, training, onClose }) {
       doc.circle(11, pageHeight - 11, 2, 'F');
       doc.circle(pageWidth - 11, pageHeight - 11, 2, 'F');
 
+      // Inserir Logomarca no PDF se disponível
+      try {
+        const logoImg = new Image();
+        logoImg.crossOrigin = 'Anonymous';
+        logoImg.src = '/logo.png';
+        await new Promise((resolve) => {
+          logoImg.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = logoImg.naturalWidth || 180;
+              canvas.height = logoImg.naturalHeight || 50;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(logoImg, 0, 0);
+              const dataUrl = canvas.toDataURL('image/png');
+              doc.addImage(dataUrl, 'PNG', (pageWidth - 32) / 2, 14, 32, 10);
+            } catch (_) {}
+            resolve(true);
+          };
+          logoImg.onerror = () => resolve(false);
+          setTimeout(() => resolve(false), 800);
+        });
+      } catch (_) {}
+
       // Topo Institucional
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(14);
+      doc.setFontSize(13);
       doc.setTextColor(30, 41, 59); // Slate 800
-      doc.text('NEXA CLÍNICA DE NEFROLOGIA & ASSISTÊNCIA INTEGRADA', pageWidth / 2, 26, { align: 'center' });
+      doc.text('NEXA CLÍNICA DE NEFROLOGIA & ASSISTÊNCIA INTEGRADA', pageWidth / 2, 28, { align: 'center' });
 
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
+      doc.setFontSize(8.5);
       doc.setTextColor(100, 116, 139);
-      doc.text('PROGRAMA DE CAPACITAÇÃO CONTINUADA & CONFORMIDADE SANITÁRIA (ANVISA / NR-32)', pageWidth / 2, 32, { align: 'center' });
+      doc.text('PROGRAMA DE EDUCAÇÃO CONTINUADA & CONFORMIDADE SANITÁRIA (ANVISA RDC 11/2014 & NR-32)', pageWidth / 2, 33.5, { align: 'center' });
 
-      // Faixa Título "CERTIFICADO DE CONCLUSÃO"
+      // Faixa Título "CERTIFICADO DE CAPACITAÇÃO"
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(26);
       doc.setTextColor(79, 70, 229);
@@ -227,11 +250,14 @@ export default function CertificateView({ submission, training, onClose }) {
           <div style={styles.certInnerBorder}>
             {/* Cabeçalho */}
             <div style={styles.certHeader}>
-              <div style={styles.sealBadge}>
-                <ShieldCheck size={28} color="#4f46e5" />
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="Logo Nexa" 
+                style={{ height: '52px', maxWidth: '170px', objectFit: 'contain', marginBottom: '0.4rem' }}
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
               <h2 style={styles.clinicName}>NEXA CLÍNICA DE NEFROLOGIA</h2>
-              <p style={styles.clinicSub}>PROGRAMA DE EDUCAÇÃO CONTINUADA & QUALIDADE EM SAÚDE</p>
+              <p style={styles.clinicSub}>PROGRAMA DE EDUCAÇÃO CONTINUADA & CONFORMIDADE SANITÁRIA</p>
             </div>
 
             {/* Título */}

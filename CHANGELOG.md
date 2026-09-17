@@ -1,3 +1,31 @@
+## [v4.9.79] - 17 de Setembro, 2026
+### Nex-Ai CLINIC — 15 Treinamentos Especializados em Nefrologia, Logomarca Institucional & Sincronização 1-Clique
+- **15 Treinamentos Especializados para Clínica de Nefrologia (`nephrologyTrainingsData.js`):**
+  - Criação de matriz curricular com 15 treinamentos completos cobrindo todos os setores clínicos e operacionais:
+    1. *Enfermagem:* Manejo, Punção e Preservação da Fístula Arteriovenosa (FAV).
+    2. *Enfermagem:* Prevenção de Infecções em Cateteres de Hemodiálise (CVC e Permcath) e técnica Scrub the Hub.
+    3. *Enfermagem:* Prevenção e Manejo de Emergências e Intercorrências Intradialíticas (Hipotensão, Câimbras, Coagulação e SDD).
+    4. *Enfermagem / Reuso:* Processamento, Reuso e Teste Residual em Dialisadores (ANVISA RDC 11/2014).
+    5. *Manutenção:* Monitoramento do Sistema de Tratamento de Água para Hemodiálise (Osmose Reversa, Cloro < 0,1 mg/L, Dureza e Endotoxinas).
+    6. *Manutenção:* Manutenção Preventiva e Desinfecção de Máquinas Proporcionadoras de Diálise.
+    7. *Médico:* Prescrição Dialítica Individualizada, Adequação (Kt/V >= 1,2, URR), Anemia e DMO-DRC.
+    8. *Farmácia:* Farmácia Clínica: Concentrado Ácido e Básico (diluição em 24h) e Cadeia de Frio (+2°C a +8°C).
+    9. *Higienização:* Limpeza das Salas de Diálise e Protocolos Estritos de Isolamento da Sala de Hepatite B (HBsAg+).
+    10. *Nutrição:* Terapia Nutricional Renal: Manejo de Potássio, Fósforo Inorgânico e Balanço Hídrico (GPID).
+    11. *Psicologia & Serviço Social:* Suporte Psicossocial, Adesão Terapêutica, Direitos Sociais (Passe Livre, BPC) e Transplante.
+    12. *Recepção:* Acolhimento na Recepção, Pesagem Pré-Diálise e Articulação com Transporte Sanitário Municipal.
+    13. *Faturamento:* Faturamento de APAC de Hemodiálise, Auditoria de Prontuários e Conformidade SUS.
+    14. *Qualidade / NSP:* Metas Internacionais de Segurança do Paciente Aplicadas à Nefrologia e Alta Segura Pós-Diálise.
+    15. *T.I. / LGPD:* Segurança da Informação, LGPD e Sigilo do Prontuário Eletrônico em Nefrologia.
+- **5 Questões de Pré-Teste e 5 de Pós-Teste por Treinamento:**
+  - Cada um dos 15 módulos contém rigorosamente 5 perguntas diagnósticas iniciais e 5 perguntas pós-teste com justificativas clínicas detalhadas.
+- **Logomarca Oficial Integrada aos Portais e Certificados:**
+  - Aplicação da logomarca oficial da clínica (`/logo.png`) no topo do Portal do Colaborador, no Certificado Digital (em tela e no PDF exportado via `jsPDF`), no Cartaz de Divulgação mural e no Dossiê da Vigilância Sanitária.
+- **Sincronização 1-Clique no Firestore & Auto-Seed (`hrService.ts` & `TrainingsTab.jsx`):**
+  - Implementação de botão "Sincronizar" na barra do RH e rotina de auto-seed que popula automaticamente os 15 treinamentos no banco de dados Firestore `hr_trainings`.
+
+---
+
 ## [v4.9.78] - 17 de Setembro, 2026
 ### Nex-Ai CLINIC — Correção de Inicialização da Tela Principal (Hotfix ReferenceError)
 - **Correção de Inicialização de Rota (`App.jsx`):**

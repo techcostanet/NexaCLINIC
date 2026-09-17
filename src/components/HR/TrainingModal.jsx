@@ -6,85 +6,8 @@ import {
 import { STANDARD_SECTORS } from '../../data/hrConstants';
 import { DEFAULT_TRAININGS } from '../../services/firebase/hrService';
 
-const PRESET_TEMPLATES = [
-  ...DEFAULT_TRAININGS,
-  {
-    id: 'trn-humanizacao',
-    title: 'Atendimento Humanizado & Acolhimento na Saúde',
-    description: 'Princípios da Política Nacional de Humanização (PNH), escuta qualificada, empatia e desescalonamento de conflitos.',
-    sector: 'Recepcao',
-    workloadHours: 2,
-    validityMonths: 12,
-    minPassingScore: 70,
-    minDurationMinutes: 3,
-    status: 'Ativo',
-    contentType: 'text',
-    instructorName: 'Coordenação de Atendimento & Ouvidoria',
-    instructorRole: 'Gestão de Experiência do Paciente',
-    textContent: `### 1. Diretrizes do Acolhimento Humanizado
-O acolhimento não é apenas uma postura voluntária, mas uma tecnologia de cuidado essencial para garantir a dignidade de pacientes crônicos e seus familiares em ambiente de nefrologia e hemodiálise.
+const PRESET_TEMPLATES = DEFAULT_TRAININGS;
 
-### 2. Postura e Comunicação Não-Violenta (CNV)
-- Praticar a escuta empática sem julgamentos precoces.
-- Reconhecer a sobrecarga emocional do paciente renal em terapia dialítica contínua.
-- Informar de forma clara sobre atrasos ou fluxos assistenciais, evitando jargões técnicos.`,
-    preTestQuestions: [
-      {
-        id: 'hum-pre-1',
-        question: 'O acolhimento na recepção clínica é definido como:',
-        options: ['Uma triagem rápida de documentos apenas', 'Uma postura ética de escuta qualificada e responsabilização pelo paciente', 'Um favor prestado pelo colaborador', 'Uma rotina administrativa sem impacto clínico'],
-        correctIndex: 1
-      }
-    ],
-    postTestQuestions: [
-      {
-        id: 'hum-post-1',
-        question: 'Quando um acompanhante ou paciente demonstra ansiedade ou irritação na espera, qual a conduta indicada?',
-        options: ['Ignorar e pedir para aguardar em silêncio', 'Escutar com empatia, explicar a situação com clareza e acolher suas dúvidas com respeito', 'Chamar imediatamente a segurança sem dialogar', 'Dizer que a clínica não tem culpa'],
-        correctIndex: 1,
-        explanation: 'A escuta ativa e a transparência são as melhores ferramentas para mediar conflitos na saúde.'
-      }
-    ]
-  },
-  {
-    id: 'trn-lgpd',
-    title: 'LGPD & Sigilo de Prontuários e Dados Clínicos',
-    description: 'Segurança da informação em saúde, proteção de dados sensíveis e conformidade com a Lei 13.709/2018.',
-    sector: 'Geral',
-    workloadHours: 2,
-    validityMonths: 12,
-    minPassingScore: 70,
-    minDurationMinutes: 3,
-    status: 'Ativo',
-    contentType: 'text',
-    instructorName: 'DPO & Comitê de Governança Digital',
-    instructorRole: 'Encarregado de Proteção de Dados',
-    textContent: `### 1. Dados Pessoais Sensíveis na Saúde
-Dados de saúde, prontuários, laudos e histórico de exames são classificados pela LGPD como Dados Sensíveis, exigindo máxima proteção contra vazamentos, fotos indevidas e acessos não autorizados.
-
-### 2. Boas Práticas Indispensáveis
-- Nunca compartilhar senhas de acesso a sistemas hospitalares.
-- É estritamente proibido fotografar telas de computador, receituários ou prontuários físicos.
-- Bloquear a tela do computador sempre que se ausentar da estação de trabalho.`,
-    preTestQuestions: [
-      {
-        id: 'lgpd-pre-1',
-        question: 'Dados sobre a saúde e diagnóstico de um paciente são considerados:',
-        options: ['Dados públicos de livre consulta', 'Dados pessoais comuns', 'Dados pessoais sensíveis com proteção jurídica rigorosa', 'Dados comerciais'],
-        correctIndex: 2
-      }
-    ],
-    postTestQuestions: [
-      {
-        id: 'lgpd-post-1',
-        question: 'É permitido fotografar o prontuário ou tela com dados de um paciente para enviar via WhatsApp pessoal?',
-        options: ['Sim, para qualquer colega', 'Não, é vedado o compartilhamento de prontuários em redes sociais não homologadas pela clínica', 'Sim, se apagar depois', 'Apenas com autorização verbal'],
-        correctIndex: 1,
-        explanation: 'O vazamento de dados de saúde fere a LGPD e o sigilo profissional garantido pelo Código de Ética.'
-      }
-    ]
-  }
-];
 
 export default function TrainingModal({ training, onSave, onClose }) {
   const isEditing = !!training?.id;

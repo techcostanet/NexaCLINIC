@@ -9,7 +9,8 @@ import {
   createTraining, 
   updateTraining, 
   deleteTraining, 
-  getTrainingSubmissions 
+  getTrainingSubmissions,
+  syncNephrologyTrainings
 } from '../../services/firebase/hrService';
 import TrainingModal from './TrainingModal';
 import TrainingQrModal from './TrainingQrModal';
@@ -80,6 +81,22 @@ export default function TrainingsTab({ currentUser }) {
         await loadData();
       } catch (e) {
         console.error('Erro ao excluir:', e);
+      }
+    }
+  };
+
+  const handleSyncTemplates = async () => {
+    if (window.confirm('Deseja sincronizar os 15 treinamentos oficiais de nefrologia no banco de dados?')) {
+      setLoading(true);
+      try {
+        const res = await syncNephrologyTrainings();
+        alert(`Sincronização concluída com sucesso! ${res.count} treinamentos oficiais atualizados.`);
+        await loadData();
+      } catch (e) {
+        console.error('Erro ao sincronizar:', e);
+        alert('Erro ao sincronizar modelos de treinamento.');
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -213,6 +230,14 @@ export default function TrainingsTab({ currentUser }) {
         </div>
 
         <div style={styles.actionButtons}>
+          <button 
+            onClick={handleSyncTemplates}
+            style={styles.dossierBtn}
+            title="Sincronizar os 15 treinamentos oficiais de nefrologia no banco"
+          >
+            <RefreshCw size={15} />
+            <span>Sincronizar</span>
+          </button>
           <button 
             onClick={() => setShowDossierModal(true)}
             style={styles.dossierBtn}

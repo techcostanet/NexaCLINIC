@@ -42,29 +42,52 @@ export default function TrainingDossierModal({
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     setGenerating(true);
     try {
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pageWidth = 210;
 
+      // Inserir Logomarca no PDF se disponível
+      try {
+        const logoImg = new Image();
+        logoImg.crossOrigin = 'Anonymous';
+        logoImg.src = '/logo.png';
+        await new Promise((resolve) => {
+          logoImg.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = logoImg.naturalWidth || 180;
+              canvas.height = logoImg.naturalHeight || 50;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(logoImg, 0, 0);
+              const dataUrl = canvas.toDataURL('image/png');
+              doc.addImage(dataUrl, 'PNG', 14, 10, 26, 8.5);
+            } catch (_) {}
+            resolve(true);
+          };
+          logoImg.onerror = () => resolve(false);
+          setTimeout(() => resolve(false), 800);
+        });
+      } catch (_) {}
+
       // Topo Institucional
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(14);
+      doc.setFontSize(13);
       doc.setTextColor(15, 23, 42);
       doc.text(tenantSettings.name || 'NEXA CLÍNICA DE NEFROLOGIA', pageWidth / 2, 16, { align: 'center' });
 
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.5);
+      doc.setFontSize(8);
       doc.setTextColor(100, 116, 139);
-      doc.text(`CNPJ: ${tenantSettings.cnpj || '00.000.000/0001-00'} | SISTEMA INTEGRADO DE GESTÃO DA QUALIDADE`, pageWidth / 2, 21, { align: 'center' });
+      doc.text(`CNPJ: ${tenantSettings.cnpj || '00.000.000/0001-00'} • SISTEMA INTEGRADO DE GESTÃO DA QUALIDADE`, pageWidth / 2, 21, { align: 'center' });
 
       // Faixa de Título
       doc.setFillColor(79, 70, 229); // Indigo 600
       doc.rect(14, 26, pageWidth - 28, 11, 'F');
 
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10.5);
+      doc.setFontSize(10);
       doc.setTextColor(255, 255, 255);
       doc.text('DOSSIÊ DE COMPROVAÇÃO DE CAPACITAÇÃO CONTINUADA (VIGILÂNCIA SANITÁRIA)', pageWidth / 2, 33, { align: 'center' });
 
@@ -147,23 +170,23 @@ export default function TrainingDossierModal({
       doc.setDrawColor(148, 163, 184);
       doc.setLineWidth(0.4);
 
-      // Linha 1: RT / Qualidade
+      // Linha 1: Responsável Técnico
       doc.line(20, finalY, 90, finalY);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(30, 41, 59);
-      doc.text('Responsável Técnico / Qualidade', 55, finalY + 4, { align: 'center' });
+      doc.text('Responsável Técnico', 55, finalY + 4, { align: 'center' });
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
       doc.setTextColor(100, 116, 139);
       doc.text('Nexa Clínica — Registro Profissional', 55, finalY + 8, { align: 'center' });
 
-      // Linha 2: Fiscal da Vigilância Sanitária
+      // Linha 2: Auditor Sanitário
       doc.line(120, finalY, 190, finalY);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(30, 41, 59);
-      doc.text('Fiscal / Auditor Sanitário', 155, finalY + 4, { align: 'center' });
+      doc.text('Auditor Sanitário', 155, finalY + 4, { align: 'center' });
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
       doc.setTextColor(100, 116, 139);

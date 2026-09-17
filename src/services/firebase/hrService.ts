@@ -359,186 +359,36 @@ export interface TrainingSubmission {
   createdAt?: string;
 }
 
-export const DEFAULT_TRAININGS: Training[] = [
-  {
-    id: 'trn-nr32',
-    title: 'NR-32 & Biossegurança Hospitalar',
-    description: 'Capacitação obrigatória sobre prevenção de acidentes com perfurocortantes, uso correto de EPIs e proteção biológica.',
-    sector: 'Geral',
-    workloadHours: 4,
-    validityMonths: 12,
-    minPassingScore: 70,
-    minDurationMinutes: 5,
-    status: 'Ativo',
-    contentType: 'text',
-    instructorName: 'Enfª Ana Carolina Cerqueira Gonzaga',
-    instructorRole: 'Supervisora de Enfermagem / CCIH',
-    textContent: `### 1. Objetivo e Campo de Aplicação
-A Norma Regulamentadora NR-32 tem por finalidade estabelecer as diretrizes básicas para a implementação de medidas de proteção à segurança e à saúde dos trabalhadores dos serviços de saúde.
+import { NEPHROLOGY_TRAININGS } from '../../data/nephrologyTrainingsData';
 
-### 2. Riscos Biológicos e Perfurocortantes
-- É terminantemente proibido o reencape manual de agulhas e dispositivos perfurocortantes após o uso.
-- O descarte de perfurocortantes deve ser feito imediatamente após o uso em caixas rígidas de descarte (Descarpack) identificadas, respeitando o limite máximo de preenchimento (linha pontilhada de segurança).
-- Todo colaborador com risco biológico deve manter o esquema vacinal completo e atualizado (Hepatite B, Tétano/Difteria e Tríplice Viral).
+export const DEFAULT_TRAININGS: Training[] = NEPHROLOGY_TRAININGS;
 
-### 3. Equipamentos de Proteção Individual (EPI)
-- Uso obrigatório de luvas, máscara cirúrgica/PFF2, avental impermeável e óculos de proteção conforme o procedimento.
-- Os EPIs devem ser retirados antes de sair da área de assistência e nunca utilizados em refeitórios ou áreas administrativas.
-- É vedado o uso de adornos (anéis, pulseiras, relógios, cordões, brincos compridos) nos postos de trabalho assistenciais e setores críticos.`,
-    preTestQuestions: [
-      {
-        id: 'pre-1',
-        question: 'Segundo a NR-32, é permitido reencapar agulhas após a punção?',
-        options: ['Sim, utilizando ambas as mãos com cuidado', 'Sim, se a agulha for estéril', 'Não, é expressamente proibido o reencape manual de agulhas', 'Apenas com autorização da supervisão'],
-        correctIndex: 2
-      },
-      {
-        id: 'pre-2',
-        question: 'Qual o limite correto de preenchimento da caixa coletora de perfurocortantes (Descarpack)?',
-        options: ['Até a borda superior transbordar', 'Até a linha pontilhada de segurança indicada pelo fabricante', 'Metade da capacidade apenas', 'Não há limite estipulado'],
-        correctIndex: 1
-      },
-      {
-        id: 'pre-3',
-        question: 'O uso de adornos (anéis, pulseiras, alianças) é permitido na assistência?',
-        options: ['Sim, sem restrições', 'Apenas alianças de casamento', 'Não, a NR-32 veda o uso de adornos no ambiente assistencial', 'Permitido mediante higienização prévia'],
-        correctIndex: 2
-      }
-    ],
-    postTestQuestions: [
-      {
-        id: 'post-1',
-        question: 'Em relação ao descarte de agulhas e bisturis usados, qual a conduta obrigatória?',
-        options: ['Reencapar com cuidado e descartar no lixo comum', 'Descartar imediatamente sem reencapar no recipiente rígido de perfurocortantes', 'Quebrar a ponta da agulha antes de jogar fora', 'Guardar na bandeja para descarte ao final do plantão'],
-        correctIndex: 1,
-        explanation: 'O reencape e a quebra manual de agulhas são as principais causas de acidentes biológicos graves.'
-      },
-      {
-        id: 'post-2',
-        question: 'Por que a NR-32 veda o uso de adornos (anéis, relógios, pulseiras) durante a assistência?',
-        options: ['Por motivos estéticos da clínica', 'Porque acumulam microrganismos e dificultam a higienização eficaz das mãos', 'Apenas para evitar perdas de joias', 'Para facilitar o registro de ponto'],
-        correctIndex: 1,
-        explanation: 'Adornos atuam como reservatórios de patógenos e impedem a correta fricção antisséptica da pele.'
-      },
-      {
-        id: 'post-3',
-        question: 'Qual das vacinas a seguir é exigência regulamentar indispensável pela NR-32 para trabalhadores de saúde?',
-        options: ['Febre Amarela apenas', 'Vacina contra Hepatite B com confirmação por Anti-HBs', 'Vacina contra Varíola', 'Vacina contra Caxumba'],
-        correctIndex: 1,
-        explanation: 'A imunização contra Hepatite B é mandatória com acompanhamento do título de anticorpos protetores.'
-      }
-    ]
-  },
-  {
-    id: 'trn-pgrss',
-    title: 'PGRSS & Gerenciamento de Resíduos de Serviços de Saúde',
-    description: 'Classificação, segregação na fonte, acondicionamento e descarte correto de resíduos dos Grupos A, B, D e E (ANVISA RDC 222/2018).',
-    sector: 'Geral',
-    workloadHours: 2,
-    validityMonths: 12,
-    minPassingScore: 70,
-    minDurationMinutes: 4,
-    status: 'Ativo',
-    contentType: 'text',
-    instructorName: 'Dra. Maria Fernanda Costa',
-    instructorRole: 'Responsável Técnica / Gerência da Qualidade',
-    textContent: `### 1. Importância da Segregação na Fonte
-A separação dos resíduos no exato momento e local de sua geração é a etapa mais crítica do PGRSS. A segregação incorreta contamina resíduos comuns e eleva os custos e riscos sanitários.
-
-### 2. Classificação dos Grupos (RDC 222/2018)
-- **Grupo A (Biológico / Infectante):** Sacos plásticos brancos leitosos com símbolo internacional de risco biológico (ex: gazes com sangue, dialisadores, linhas de sangue, luvas contaminadas).
-- **Grupo B (Químico):** Frascos rígidos identificados (ex: medicamentos vencidos, desinfetantes, reagentes químicos).
-- **Grupo D (Comum / Reciclável):** Sacos pretos ou azuis para lixo comum (ex: papéis de escritório, restos de alimentos de refeitório, copos descartáveis sem contato biológico).
-- **Grupo E (Perfurocortantes):** Recipientes rígidos estanques e resistentes à punctura (Descarpack).`,
-    preTestQuestions: [
-      {
-        id: 'pgrss-pre-1',
-        question: 'Em qual cor de saco plástico devem ser descartados resíduos biológicos com sangue (Grupo A)?',
-        options: ['Saco preto', 'Saco branco leitoso identificado com símbolo de risco biológico', 'Saco transparente comum', 'Saco azul'],
-        correctIndex: 1
-      },
-      {
-        id: 'pgrss-pre-2',
-        question: 'Um papel de escritório ou copo de água descartável deve ser descartado em qual grupo de resíduo?',
-        options: ['Grupo A (Infectante)', 'Grupo B (Químico)', 'Grupo D (Resíduo Comum / Reciclável)', 'Grupo E (Perfurocortante)'],
-        correctIndex: 2
-      }
-    ],
-    postTestQuestions: [
-      {
-        id: 'pgrss-post-1',
-        question: 'O que caracteriza a segregação de resíduos de saúde e onde ela deve ser feita?',
-        options: ['Na central de expurgo no fim do dia', 'No momento e no próprio local onde o resíduo é gerado', 'Pela equipe da coleta externa terceirizada', 'No caminhão de transporte'],
-        correctIndex: 1,
-        explanation: 'A segregação imediata na fonte evita acidentes e impede a contaminação cruzada.'
-      },
-      {
-        id: 'pgrss-post-2',
-        question: 'Linhas arteriais e venosas de hemodiálise com presença de sangue residual pertencem a qual grupo?',
-        options: ['Grupo D (Comum)', 'Grupo A (Infectante/Biológico)', 'Grupo B (Químico)', 'Não são resíduos de saúde'],
-        correctIndex: 1,
-        explanation: 'Materiais com sangue e secreções humanas são classificados no Grupo A (Infectante).'
-      }
-    ]
-  },
-  {
-    id: 'trn-maos',
-    title: 'Higienização das Mãos & Precauções Padrão',
-    description: 'Técnica correta dos 5 momentos da OMS, uso de álcool em gel 70% e lavagem com água e sabonete.',
-    sector: 'Geral',
-    workloadHours: 2,
-    validityMonths: 12,
-    minPassingScore: 70,
-    minDurationMinutes: 3,
-    status: 'Ativo',
-    contentType: 'text',
-    instructorName: 'Enfª Ana Carolina Cerqueira Gonzaga',
-    instructorRole: 'Supervisora de Enfermagem / CCIH',
-    textContent: `### Os 5 Momentos da OMS para a Higienização das Mãos
-1. Antes do contato com o paciente.
-2. Antes da realização de procedimento asséptico / limpo.
-3. Após risco de exposição a fluidos corporais.
-4. Após o contato com o paciente.
-5. Após o contato com as áreas próximas ou superfícies do paciente.
-
-### Fricção com Álcool 70% vs. Água e Sabonete
-- Se as mãos **não apresentarem sujidade visível**, a fricção alcoólica por 20 a 30 segundos é a técnica de escolha prioritária por ser mais rápida e eficaz.
-- Se as mãos estiverem **visivelmente sujas ou após contato com fluidos**, a lavagem com água e sabonete líquido por 40 a 60 segundos é obrigatória.`,
-    preTestQuestions: [
-      {
-        id: 'm-pre-1',
-        question: 'Quantos são os momentos recomendados pela OMS para higienização das mãos na assistência à saúde?',
-        options: ['2 momentos', '3 momentos', '5 momentos', '7 momentos'],
-        correctIndex: 2
-      }
-    ],
-    postTestQuestions: [
-      {
-        id: 'm-post-1',
-        question: 'Quando as mãos NÃO apresentam sujidade visível, qual a alternativa recomendada pela OMS?',
-        options: ['Fricção antisséptica com solução alcoólica a 70% (20 a 30 segundos)', 'Apenas enxaguar com água fria sem sabão', 'Secar com toalha de pano comum', 'Não há necessidade de higienizar'],
-        correctIndex: 0,
-        explanation: 'O álcool a 70% é o padrão ouro na ausência de sujidade visível.'
-      },
-      {
-        id: 'm-post-2',
-        question: 'O uso de luvas de procedimento dispensa a higienização das mãos?',
-        options: ['Sim, porque a luva protege totalmente', 'Não. As mãos devem ser higienizadas antes de calçar e logo após retirar as luvas', 'Apenas se a luva for estéril cirúrgica', 'Sim, se a luva for descartada'],
-        correctIndex: 1,
-        explanation: 'Luvas possuem microporosidades e podem sofrer contaminação na retirada, logo não substituem a higienização.'
-      }
-    ]
+export const syncNephrologyTrainings = async (): Promise<{ count: number }> => {
+  const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  let count = 0;
+  for (const t of NEPHROLOGY_TRAININGS) {
+    const { id, ...data } = t;
+    await setDoc(doc(db, 'hr_trainings', id!), {
+      ...data,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    count++;
   }
-];
+  try {
+    localStorage.setItem('nexa_trainings_cache', JSON.stringify(NEPHROLOGY_TRAININGS));
+  } catch (_) {}
+  return { count };
+};
 
 export const getTrainings = async (): Promise<Training[]> => {
   try {
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+    const { getFirestore, collection, getDocs, setDoc, doc } = await import('firebase/firestore');
     const db = getFirestore(app);
     const snap = await getDocs(collection(db, 'hr_trainings'));
+    
     if (snap.empty) {
-      // Seed initial clinical trainings into Firestore
-      const { setDoc, doc } = await import('firebase/firestore');
+      // Seed todos os 15 treinamentos clínicos no Firestore
       for (const t of DEFAULT_TRAININGS) {
         const { id, ...data } = t;
         await setDoc(doc(db, 'hr_trainings', id!), {
@@ -548,6 +398,22 @@ export const getTrainings = async (): Promise<Training[]> => {
       }
       return DEFAULT_TRAININGS;
     }
+
+    // Auto-seed: se algum dos 15 treinamentos oficiais ainda não estiver no Firestore, adiciona
+    const existingIds = new Set(snap.docs.map(d => d.id));
+    const missingDefaults = DEFAULT_TRAININGS.filter(t => t.id && !existingIds.has(t.id));
+    if (missingDefaults.length > 0) {
+      for (const t of missingDefaults) {
+        const { id, ...data } = t;
+        await setDoc(doc(db, 'hr_trainings', id!), {
+          ...data,
+          createdAt: new Date().toISOString()
+        });
+      }
+      const refreshedSnap = await getDocs(collection(db, 'hr_trainings'));
+      return refreshedSnap.docs.map(d => ({ id: d.id, ...d.data() } as Training));
+    }
+
     return snap.docs.map(d => ({ id: d.id, ...d.data() } as Training));
   } catch (err) {
     console.warn('Fallback para DEFAULT_TRAININGS:', err);

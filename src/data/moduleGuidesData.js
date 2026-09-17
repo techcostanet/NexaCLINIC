@@ -200,6 +200,18 @@ export const MODULE_GUIDES = {
       {
         title: 'Dossiê Vigilância Sanitária (PDF em 1 Clique)',
         desc: 'Relatório oficial consolidado para fiscalizações municipais e auditorias, reunindo ementa do curso, lista de presenças, notas pré e pós-teste, ganho de eficácia e assinaturas de responsabilidade técnica.'
+      },
+      {
+        title: '15 Treinamentos Especializados em Nefrologia',
+        desc: 'Matriz completa com 15 capacitações clínicas cobrindo todos os setores (Enfermagem FAV/CVC/Emergências/Reuso, Tratamento de Água RDC 11/2014, Engenharia Clínica, Médico Kt/V, Farmácia, Higienização Hepatite B, Nutrição, Psicologia, Recepção, Faturamento APAC, Segurança do Paciente e T.I./LGPD).'
+      },
+      {
+        title: 'Logomarca Institucional nos Portais & Certificados',
+        desc: 'Aplicação da identidade visual da clínica no topo do Portal do Colaborador, nos certificados digitais em tela, no documento PDF vetorial e no Dossiê da Vigilância Sanitária.'
+      },
+      {
+        title: 'Sincronização 1-Clique de Modelos no Firestore',
+        desc: 'Botão Sincronizar na barra superior e auto-seed inteligente que carrega e atualiza todos os 15 treinamentos no banco de dados automaticamente.'
       }
     ],
     tutorial: [
@@ -219,6 +231,16 @@ export const MODULE_GUIDES = {
           'Acesse o "Painel de Controle" do Nex-Ai.HR.',
           'Consulte o card "Alertas de Exames Periódicos (ASO)" para conferir o resumo de exames vencidos, em 7d, 14d e 30d.',
           'Clique no botão "Lançar" diretamente na lista de alertas para realizar a renovação imediata do colaborador prestes a vencer.'
+        ]
+      },
+      {
+        title: 'Como Sincronizar e Utilizar os 15 Treinamentos de Nefrologia',
+        steps: [
+          'No módulo de RH, acesse a aba "Treinamentos".',
+          'Clique no botão "Sincronizar" na barra superior para carregar ou atualizar todos os 15 treinamentos oficiais no banco de dados da clínica.',
+          'Localize o curso do setor desejado no Catálogo (ex: FAV para Enfermagem, Tratamento de Água para Manutenção ou Acolhimento para Recepção).',
+          'Clique em "Divulgar" para imprimir o cartaz com a logomarca e QR Code para o mural do setor ou copiar o link direto de envio pelo WhatsApp.',
+          'Acompanhe as conclusões e notas na aba "Participações" e gere o Dossiê para a Vigilância Sanitária quando necessário.'
         ]
       },
       {
@@ -289,6 +311,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Os 15 treinamentos de nefrologia já vêm com questões pré e pós-teste prontas?',
+        resposta: 'Sim. Cada um dos 15 treinamentos possui rigorosamente 5 perguntas de pré-teste (diagnóstico) e 5 perguntas de pós-teste (avaliação de fixação) com justificativas clínicas detalhadas e cálculo automático do ganho de eficácia (+%).'
+      },
+      {
+        pergunta: 'Como a logomarca da clínica é inserida nos certificados e documentos?',
+        resposta: 'A logomarca oficial da clínica é renderizada automaticamente no cabeçalho do Portal Mobile, no topo do Certificado Digital (em tela e no PDF exportado via jsPDF), no Cartaz de Divulgação para o mural e no Dossiê consolidado para a Vigilância Sanitária.'
+      },
       {
         pergunta: 'Como é calculada a eficácia do treinamento exigida pela Vigilância Sanitária?',
         resposta: 'O sistema calcula matematicamente a diferença entre a nota obtida no Pós-teste e a nota obtida no Pré-teste diagnóstico (Eficácia = Pós-teste - Pré-teste). Esse indicador comprova para o auditor da VISA que o colaborador efetivamente absorveu novos conhecimentos.'

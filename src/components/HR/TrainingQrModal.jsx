@@ -50,7 +50,13 @@ export default function TrainingQrModal({ training, onClose }) {
         <div ref={printRef} style={styles.placard} className="printable-placard">
           <div style={styles.placardInner}>
             <div style={styles.clinicHeader}>
-              <span style={styles.clinicTag}>PROGRAMA DE CAPACITAÇÃO CONTINUADA</span>
+              <img 
+                src="/logo.png" 
+                alt="Logo Nexa" 
+                style={{ height: '46px', maxWidth: '160px', objectFit: 'contain', marginBottom: '0.5rem' }}
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <span style={styles.clinicTag}>PROGRAMA DE EDUCAÇÃO CONTINUADA & CONFORMIDADE SANITÁRIA</span>
               <h2 style={styles.clinicTitle}>NEXA CLÍNICA DE NEFROLOGIA</h2>
             </div>
 
