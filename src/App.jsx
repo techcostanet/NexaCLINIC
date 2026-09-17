@@ -40,6 +40,9 @@ export default function App() {
 
   // Verificação de Acesso Público de Fornecedor via Token, QR Code de Manutenção ou Painel TV
   const urlParams = new URLSearchParams(window.location.search);
+  const pathname = (window.location.pathname || '').toLowerCase();
+  const hash = (window.location.hash || '').toLowerCase();
+
   const quoteToken = urlParams.get('token') || urlParams.get('cotacao');
   const qrMachineId = urlParams.get('chamado_equipamento') || urlParams.get('eq') || urlParams.get('chamado');
   const trainingId = urlParams.get('treinamento') || urlParams.get('training') || 
@@ -48,8 +51,6 @@ export default function App() {
     (pathname.startsWith('/certificado/') ? pathname.split('/')[2] : null);
 
   // Detecção flexível e universal do Painel da TV (suporta /tv, /tv/betim, hash #tv ou query ?painel_tv=1)
-  const pathname = (window.location.pathname || '').toLowerCase();
-  const hash = (window.location.hash || '').toLowerCase();
   const isTvPath = pathname === '/tv' || pathname.startsWith('/tv/') || pathname.includes('painel_tv') || pathname.includes('painel-tv') || pathname.includes('chamada_tv');
   const isTvHash = hash.includes('tv') || hash.includes('painel');
   const isTvQuery = urlParams.has('painel_tv') || urlParams.has('tv') || urlParams.get('painel') === 'tv' || urlParams.has('chamada_tv');

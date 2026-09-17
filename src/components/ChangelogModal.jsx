@@ -6,6 +6,15 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.78',
+      date: '17/09/2026',
+      title: 'Nex-Ai CLINIC — Correção de Inicialização da Tela Principal (Hotfix ReferenceError)',
+      description: 'Correção de erro crítico na ordem de inicialização de variáveis de roteamento público no arquivo raiz App.jsx (Temporal Dead Zone), restaurando o carregamento imediato da tela principal e módulos do sistema.',
+      changes: [
+        { type: 'Hotfix de Roteamento', text: 'Reordenada a declaração das constantes de rota (pathname e hash) antes da extração de parâmetros de treinamento e certificado, eliminando ReferenceError e restabelecendo o fluxo normal da aplicação.' }
+      ]
+    },
+    {
       version: 'v4.9.77',
       date: '17/09/2026',
       title: 'Nex-Ai CLINIC — Gestão de Treinamentos (.HR), Avaliação de Eficácia (Pré/Pós-teste), Certificados com QR Code & Dossiê VISA',

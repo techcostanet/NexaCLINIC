@@ -1,3 +1,10 @@
+## [v4.9.78] - 17 de Setembro, 2026
+### Nex-Ai CLINIC — Correção de Inicialização da Tela Principal (Hotfix ReferenceError)
+- **Correção de Inicialização de Rota (`App.jsx`):**
+  - Reordenação da declaração das constantes `pathname` e `hash` antes de sua utilização na extração de rotas diretas de treinamento e certificado digital, corrigindo o erro de Temporal Dead Zone (`ReferenceError: Cannot access 'pathname' before initialization`) e restaurando a exibição imediata da tela inicial.
+
+---
+
 ## [v4.9.77] - 17 de Setembro, 2026
 ### Nex-Ai CLINIC — Gestão de Treinamentos (.HR), Avaliação de Eficácia (Pré/Pós-teste), Certificados com QR Code & Dossiê VISA
 - **Aba Treinamentos no Módulo NexaHR (`HRPanel.jsx` & `TrainingsTab.jsx`):**
