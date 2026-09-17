@@ -6,6 +6,23 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.77',
+      date: '17/09/2026',
+      title: 'Nex-Ai CLINIC — Gestão de Treinamentos (.HR), Avaliação de Eficácia (Pré/Pós-teste), Certificados com QR Code & Dossiê VISA',
+      description: 'Implementação do sistema integrado de Gestão de Treinamentos e Educação Continuada no módulo de Recursos Humanos (.HR): portal público do colaborador responsivo para smartphones com validação por CPF, questionários pré e pós-treinamento para comprovação científica de eficácia (RDC 63/2011 e NR-32), emissão instantânea de certificado digital com QR Code de autenticidade, gerador de Dossiê para a Vigilância Sanitária em PDF e matriz de reciclagem periódica.',
+      changes: [
+        { type: 'Aba Treinamentos no NexaHR', text: 'Nova aba dedicada no módulo de RH com catálogo de cursos, auditoria de participações, matriz de reciclagem e KPIs de eficácia (+%), aprovação e vencimentos.' },
+        { type: 'Portal do Colaborador (Mobile)', text: 'Portal web público leve e responsivo acessível via link e QR Code, com identificação imediata por CPF na base do RH, sem necessidade de login corporativo.' },
+        { type: 'Avaliação de Eficácia (Pré e Pós-teste)', text: 'Mecanismo com questionário diagnóstico prévio e avaliação de fixação pós-conteúdo, calculando automaticamente o ganho de eficácia (+%) do treinamento.' },
+        { type: 'Tempo Mínimo de Estudo Obrigatório', text: 'Cronômetro regressivo com trava inteligente no conteúdo que exige a permanência mínima do colaborador antes de liberar o pós-teste.' },
+        { type: 'Certificação Digital com QR Code', text: 'Geração de certificado em alta resolução para download em PDF e impressão direta, contendo QR Code exclusivo para validação pública de autenticidade no sistema.' },
+        { type: 'Validador Público de Autenticidade', text: 'Página oficial de validação de certificados aberta ao escanear o QR Code, confirmando os dados do titular e a autenticidade do registro sanitário.' },
+        { type: 'Dossiê Vigilância Sanitária (PDF)', text: 'Emissão em 1 clique de relatório consolidado para fiscalizações municipais (ANVISA / VISA), reunindo ementa, lista de presença com CPFs, notas e ganho de eficácia com campo para visto do fiscal.' },
+        { type: 'Modelos Prontos Hospitalares', text: 'Catálogo de templates com conteúdo completo e questões prontas de NR-32, PGRSS, Higienização das Mãos, Atendimento Humanizado e LGPD.' },
+        { type: 'Manuais Atualizados', text: 'Atualização da documentação do módulo de RH em moduleGuidesData.js com instruções para criação de cursos, realização pelo colaborador e emissão do Dossiê VISA.' }
+      ]
+    },
+    {
       version: 'v4.9.75',
       date: '11/09/2026',
       title: 'Nex-Ai CLINIC — 3 Modos de Visualização (.SERVICE), Exclusão de Equipamentos & Auto Ordenação por Colunas',

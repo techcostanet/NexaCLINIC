@@ -6,7 +6,8 @@ import {
   CheckCircle2, AlertTriangle, Eye, Award, Check, UserCheck, HelpCircle,
   Gift, Bus, ArrowUp, ArrowDown, ArrowUpDown, Move, Settings, Save, 
   RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Trophy, Printer, Clock,
-  AlignJustify, Table, LayoutGrid, Phone, Mail, ExternalLink, Stethoscope, Activity, FileCheck
+  AlignJustify, Table, LayoutGrid, Phone, Mail, ExternalLink, Stethoscope, Activity, FileCheck,
+  GraduationCap
 } from 'lucide-react';
 
 const DEFAULT_DASHBOARD_LAYOUT = [
@@ -28,6 +29,7 @@ const DEFAULT_DASHBOARD_LAYOUT = [
 import { useHRLogic } from './HR/hooks/useHRLogic';
 import AwardReportModal from './HR/AwardReportModal';
 import HRReportsModal from './HRReportsModal';
+import TrainingsTab from './HR/TrainingsTab';
 import { STANDARD_ROLES, STANDARD_SECTORS, normalizeSingleWord, normalizeSectorName } from '../data/hrConstants';
 import UnitSelector from './common/UnitSelector';
 
@@ -289,11 +291,14 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
             </span>
           )}
         </button>
+        <button onClick={() => setActiveTab('trainings')} style={{ ...styles.tabBtn, ...(activeTab === 'trainings' ? styles.tabBtnActive : {}) }}>
+          <GraduationCap size={16} /> Treinamentos
+        </button>
         <button onClick={() => setActiveTab('transport')} style={{ ...styles.tabBtn, ...(activeTab === 'transport' ? styles.tabBtnActive : {}) }}>
           <Bus size={16} /> Vale-Transporte
         </button>
         <button onClick={() => setActiveTab('audit')} style={{ ...styles.tabBtn, ...(activeTab === 'audit' ? styles.tabBtnActive : {}) }}>
-          Auditoria & Logs
+          Auditoria
         </button>
       </div>
 
@@ -1906,6 +1911,11 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
               </div>
             );
           })()}
+
+          {/* TAB: Treinamentos */}
+          {activeTab === 'trainings' && (
+            <TrainingsTab currentUser={currentUser} />
+          )}
 
           {/* TAB 4: Audit Logs */}
           {activeTab === 'audit' && (

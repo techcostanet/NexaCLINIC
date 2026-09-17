@@ -149,6 +149,8 @@ service cloud.firestore {
     match /transport_vouchers/{id} { allow read, write: if isAuthenticated(); }
     match /hr_warnings/{id} { allow read, write: if isAuthenticated(); }
     match /occupational_exams/{id} { allow read, write: if isAuthenticated(); }
+    match /hr_trainings/{id} { allow read: if true; allow write: if isAuthenticated(); }
+    match /hr_training_submissions/{id} { allow read, write: if true; }
 
     // SESMT & Segurança do Trabalho Collections
     match /sesmt_epi_inspections/{id} { allow read, write: if isAuthenticated(); }

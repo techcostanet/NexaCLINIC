@@ -1,3 +1,33 @@
+## [v4.9.77] - 17 de Setembro, 2026
+### Nex-Ai CLINIC — Gestão de Treinamentos (.HR), Avaliação de Eficácia (Pré/Pós-teste), Certificados com QR Code & Dossiê VISA
+- **Aba Treinamentos no Módulo NexaHR (`HRPanel.jsx` & `TrainingsTab.jsx`):**
+  - Implementação da nova aba dedicada "Treinamentos" para controle de capacitação continuada e conformidade sanitária (ANVISA RDC 63/2011 e NR-32).
+  - Painel com KPIs estratégicos em tempo real: Total de Treinamentos, Conclusões Totais, Taxa de Aprovação Média, Ganho Médio de Eficácia (+%) e Alertas de Reciclagem Periódica.
+  - Sub-aba "Catálogo": Visualização em grade dos programas ativos com botões de divulgação (QR Code), edição e exclusão.
+  - Sub-aba "Participações": Auditoria completa de colaboradores com data, notas pré e pós-teste, ganho de eficácia (+%) e acesso ao certificado emitido.
+  - Sub-aba "Reciclagem": Matriz de vencimentos de treinamentos periódicos com alertas visuais (Em dia, A vencer em 30d, Vencido) e link rápido de reciclagem.
+- **Portal Público do Colaborador Mobile-First (`EmployeeTrainingPortal.jsx`):**
+  - Página leve e responsiva projetada para celulares e tablets da clínica, acessível via link e QR Code sem necessidade de login prévio.
+  - Etapa 1 (Identificação): Consulta instantânea por CPF no banco de dados do RH, preenchendo automaticamente nome, cargo e setor.
+  - Etapa 2 (Pré-teste): Questionário diagnóstico inicial de sondagem para medir o conhecimento prévio.
+  - Etapa 3 (Conteúdo com Trava de Tempo): Estudo do material didático (vídeo ou texto estruturado) com temporizador ativo que exige a permanência mínima do colaborador antes de liberar o pós-teste.
+  - Etapa 4 (Pós-teste): Avaliação de fixação com cálculo imediato da nota e feedback explicativo de respostas.
+  - Etapa 5 (Resultado): Emissão imediata do certificado digital em caso de aprovação ou orientação para revisão do conteúdo e nova tentativa.
+- **Certificação Digital & Validação de Autenticidade (`CertificateView.jsx` & `CertificateVerifyPortal.jsx`):**
+  - Emissão de Certificado Digital de Capacitação com design institucional, dados do colaborador (nome, CPF, setor), carga horária, nota, ganho de eficácia e código de registro único.
+  - Exportação em PDF de alta qualidade via `jsPDF` e suporte a impressão direta em impressoras convencionais e térmicas.
+  - QR Code no certificado apontando para o validador público do NexaCLINIC (`?certificado=ID`), atestando a autenticidade perante fiscais e auditores.
+- **Dossiê Vigilância Sanitária em 1 Clique (`TrainingDossierModal.jsx`):**
+  - Gerador oficial de Dossiê Sanitário em PDF para auditorias municipais (VISA), reunindo ementa do curso, lista de presenças e aprovações com CPFs, notas diagnóstica e de fixação, ganho médio de eficácia e campos formais para assinatura do RT e visto do fiscal.
+- **Modelos Prontos Hospitalares (`TrainingModal.jsx` & `hrService.ts`):**
+  - Templates pré-configurados prontos para uso com conteúdo validado e questionários de NR-32 & Biossegurança, PGRSS & Descarte de Resíduos, Higienização das Mãos & Precauções Padrão, Atendimento Humanizado e LGPD em Saúde.
+- **Roteamento Público no Sistema (`App.jsx`):**
+  - Suporte a rotas diretas `?treinamento=ID` e `?certificado=ID` (e paths equivalentes) carregando os respectivos portais sem exigir autenticação administrativa.
+- **Atualização do Manual e Regras de UI (`moduleGuidesData.js`):**
+  - Atualização completa do guia do módulo de RH com Recursos, Tutorial passo a passo e FAQ com dúvidas sobre eficácia e validação de certificados.
+
+---
+
 ## [v4.9.75] - 11 de Setembro, 2026
 ### Nex-Ai CLINIC — 3 Modos de Visualização (.SERVICE), Exclusão de Equipamentos & Auto Ordenação por Colunas
 - **3 Modos de Visualização com Persistência (`MaintenancePanel.jsx`):**

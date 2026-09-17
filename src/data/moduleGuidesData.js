@@ -184,6 +184,22 @@ export const MODULE_GUIDES = {
       {
         title: 'Saúde Ocupacional & Imunização',
         desc: 'Acompanhamento de doses vacinais (Hepatite B, dT, Gripe), validades de reforço e alertas preventivos.'
+      },
+      {
+        title: 'Gestão de Treinamentos & Capacitação',
+        desc: 'Criação e gestão de programas de capacitação continuada com questionários pré e pós-treinamento para mensuração científica de eficácia (RDC 63/2011 da ANVISA e NR-32).'
+      },
+      {
+        title: 'Portal do Colaborador (Mobile & QR Code)',
+        desc: 'Acesso público e responsivo onde o funcionário digita seu CPF no celular, responde ao pré-teste, estuda o conteúdo com tempo mínimo, realiza o pós-teste e recebe seu certificado.'
+      },
+      {
+        title: 'Certificação Digital & Validador de Autenticidade',
+        desc: 'Geração de certificados digitais em alta resolução para download e impressão, equipados com QR Code rastreável para validação de autenticidade pública no NexaCLINIC.'
+      },
+      {
+        title: 'Dossiê Vigilância Sanitária (PDF em 1 Clique)',
+        desc: 'Relatório oficial consolidado para fiscalizações municipais e auditorias, reunindo ementa do curso, lista de presenças, notas pré e pós-teste, ganho de eficácia e assinaturas de responsabilidade técnica.'
       }
     ],
     tutorial: [
@@ -203,6 +219,38 @@ export const MODULE_GUIDES = {
           'Acesse o "Painel de Controle" do Nex-Ai.HR.',
           'Consulte o card "Alertas de Exames Periódicos (ASO)" para conferir o resumo de exames vencidos, em 7d, 14d e 30d.',
           'Clique no botão "Lançar" diretamente na lista de alertas para realizar a renovação imediata do colaborador prestes a vencer.'
+        ]
+      },
+      {
+        title: 'Como Cadastrar e Divulgar um Treinamento',
+        steps: [
+          'No módulo de RH, acesse a aba "Treinamentos".',
+          'Clique no botão "+ Treinamento" ou escolha um dos "Modelos Prontos" (NR-32, PGRSS, Higienização das Mãos, Atendimento Humanizado, LGPD).',
+          'Ajuste o Título, Carga Horária, Validade de Reciclagem (ex: 12 meses), Nota Mínima e Tempo Mínimo de Leitura.',
+          'Configure o Conteúdo (vídeo ou texto explicativo), as questões do Pré-teste e as questões do Pós-teste com o gabarito.',
+          'Clique em "Salvar Treinamento".',
+          'No card do treinamento, clique em "Divulgar" para copiar o link direto ou imprimir o cartaz com QR Code para fixação no mural do setor.'
+        ]
+      },
+      {
+        title: 'Como o Colaborador Realiza a Capacitação',
+        steps: [
+          'O colaborador aponta a câmera do celular para o QR Code ou clica no link recebido via WhatsApp/e-mail.',
+          'Informa seu CPF para identificação automática na base do RH (ou preenche nome e setor se for novo).',
+          'Responde às perguntas do Pré-teste diagnóstico.',
+          'Assiste ao vídeo ou lê atentamente as diretrizes do conteúdo, aguardando o tempo mínimo de permanência.',
+          'Responde às questões do Pós-teste de fixação.',
+          'Atingindo a nota mínima (ex: 70%), o sistema calcula o ganho de eficácia (+%) e libera o Certificado Digital imediatamente para visualização e download em PDF.'
+        ]
+      },
+      {
+        title: 'Como Emitir o Dossiê para a Vigilância Sanitária',
+        steps: [
+          'Acesse a aba "Treinamentos" no módulo de RH.',
+          'Clique no botão "Dossiê VISA" na barra superior.',
+          'Filtre pelo treinamento desejado ou selecione "Todos os Treinamentos".',
+          'Confira a prévia dos colaboradores capacitados, médias pré/pós e índice de eficácia.',
+          'Clique em "Emitir Dossiê PDF (VISA)". O documento formal será gerado pronto para impressão e apresentação à fiscalização.'
         ]
       },
       {
@@ -241,6 +289,18 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como é calculada a eficácia do treinamento exigida pela Vigilância Sanitária?',
+        resposta: 'O sistema calcula matematicamente a diferença entre a nota obtida no Pós-teste e a nota obtida no Pré-teste diagnóstico (Eficácia = Pós-teste - Pré-teste). Esse indicador comprova para o auditor da VISA que o colaborador efetivamente absorveu novos conhecimentos.'
+      },
+      {
+        pergunta: 'Como funciona a validação pública de autenticidade do certificado?',
+        resposta: 'Cada certificado gerado possui um código alfanumérico único e um QR Code. Qualquer pessoa ou fiscal sanitário que escanear o código é redirecionado para a página oficial do NexaCLINIC, que valida se o certificado é autêntico, a data de emissão, o CPF do titular e a clínica emissora.'
+      },
+      {
+        pergunta: 'O colaborador precisa ter login e senha no sistema para fazer o treinamento?',
+        resposta: 'Não. O portal foi desenvolvido para acesso simplificado via link externo e QR Code no celular, exigindo apenas o CPF do funcionário para vincular seu histórico e emitir o certificado.'
+      },
       {
         pergunta: 'Os exames periódicos aplicam-se a profissionais PJ além de CLT?',
         resposta: 'Sim. O sistema monitora o ciclo ocupacional tanto de colaboradores CLT quanto de prestadores e profissionais PJ, garantindo total conformidade operacional na clínica.'
