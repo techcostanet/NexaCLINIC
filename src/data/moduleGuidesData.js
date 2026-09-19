@@ -455,6 +455,22 @@ export const MODULE_GUIDES = {
       {
         title: 'Painel de Busca Reversa (Recall)',
         desc: 'Rastreabilidade completa de ponta a ponta: fornecedor, nota fiscal de compra e todos os pacientes que receberam o lote.'
+      },
+      {
+        title: '3 Modos de Visualização em Entradas',
+        desc: 'Alternância ágil entre modo Compacta (tabela condensada com edição rápida de valores), Normal (visão completa com chaves fiscais e emitentes) e Cards (grade responsiva com faturas, fornecedores e badges).'
+      },
+      {
+        title: 'Categorias Clínicas Dinâmicas',
+        desc: 'Catálogo integrado a 20 categorias especializadas de nefrologia e materiais médicos (MatMed, Dialisador, Concentrado, Linhas, Acesso, Curativo, etc.), gerenciadas no módulo Configurações.'
+      },
+      {
+        title: 'Gestão de Almoxarifados e Setores de Guarda',
+        desc: 'Vínculo obrigatório de insumos ao almoxarifado de estoque padrão (Almoxarifado Central, Farmácia da Diálise, Posto de Enfermagem), garantindo rastreabilidade territorial.'
+      },
+      {
+        title: '6 Kits Padronizados de Enfermagem em Hemodiálise',
+        desc: 'Kits assistenciais completos prontos para uso: Conexão FAV, Desconexão FAV, Curativo Permcath, Implante/Troca CDL, Recirculação/Priming e Intercorrência/Coagulação com composição e custos calculados.'
       }
     ],
     tutorial: [
@@ -563,9 +579,37 @@ export const MODULE_GUIDES = {
           'Você pode clicar em "Visualizar" no banner de alerta para auditar o documento original já registrado.',
           'Na Etapa 3 (Financeiro), ao informar ou ler a linha digitável do boleto ou das parcelas, o sistema confere se ela já foi lançada no Contas a Pagar ou em outra duplicata, impedindo o avanço até a correção.'
         ]
+      },
+      {
+        title: 'Como Alternar os Modos de Visualização em Entradas',
+        steps: [
+          'Acesse a aba "Entradas" no módulo de Estoque.',
+          'No canto superior direito da barra de filtros, localize os botões "Compacta", "Normal" e "Cards".',
+          'Clique em "Compacta" para uma tabela densa com edição rápida inline do valor da nota fiscal.',
+          'Clique em "Normal" para a tabela detalhada com número de itens, fornecedor, chave de acesso e parcelas.',
+          'Clique em "Cards" para navegar em formato de cartões visuais com status, fornecedor e valor em destaque.'
+        ]
+      },
+      {
+        title: 'Como Utilizar os Kits Clínicos de Hemodiálise',
+        steps: [
+          'Acesse a aba "Kits" no módulo de Estoque.',
+          'Visualize os 6 kits clínicos padronizados de enfermagem (KIT-HEMO-01 a KIT-HEMO-06).',
+          'Clique no botão de visualização ou edição para auditar os insumos componentes e as quantidades de cada pacote.',
+          'O custo total é calculado automaticamente a partir do preço de custo cadastrado para cada produto do kit.',
+          'Utilize os kits ao criar ou aprovar requisições para os postos de enfermagem e salões de diálise.'
+        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Onde configuro novas categorias ou novos almoxarifados para o estoque?',
+        resposta: 'No módulo Nex-Ai.CONFIG, acesse as abas "Almoxarifados" e "Categorias". Qualquer inclusão, alteração ou remoção feita lá é sincronizada imediatamente nos formulários do Estoque.'
+      },
+      {
+        pergunta: 'Os 6 kits de enfermagem já vêm com os insumos reais do estoque?',
+        resposta: 'Sim. Os 6 kits foram estruturados com base nos insumos hospitalares e nefrológicos reais cadastrados no sistema (agulhas fístula, linhas arteriais/venosas, dialisadores, heparina, curativos estéreis e soluções).'
+      },
       {
         pergunta: 'O sistema permite dar entrada duas vezes na mesma nota fiscal ou mesmo boleto?',
         resposta: 'Não. O sistema possui blindagem ativa contra duplicidade. Notas fiscais com a mesma Chave de Acesso ou mesmo Número + Fornecedor são detectadas e bloqueadas. O mesmo ocorre com boletos bancários cuja linha digitável já foi cadastrada no Contas a Pagar da clínica ou da rede.'
@@ -1161,9 +1205,29 @@ export const MODULE_GUIDES = {
     color: '#8b5cf6',
     recursos: [
       { title: 'Gestão de Usuários & RBAC', desc: 'Controle de permissões, papéis de acesso e customização de tema.' },
+      { title: 'Gestão Centralizada de Almoxarifados', desc: 'Cadastro, edição e controle de almoxarifados, farmácias satélites e locais físicos de guarda de insumos com indicação de responsáveis.' },
+      { title: 'Categorias Globais de Produtos', desc: 'Gerenciamento completo das categorias de insumos e despesas utilizadas nos módulos de Estoque, Financeiro e RH.' },
       { title: 'Tempo de Vida das Requisições (TTL)', desc: 'Parametrização do tempo limite (1h padrão, 2h, 4h, 8h/turno, 12h, 24h) para atendimento de materiais antes da liberação automática de saldo reservado.' }
     ],
     tutorial: [
+      {
+        title: 'Como Cadastrar ou Editar um Almoxarifado',
+        steps: [
+          'Acesse o módulo Nex-Ai.CONFIG e clique na aba "Almoxarifados".',
+          'Para cadastrar, clique no botão "+ Novo Almoxarifado".',
+          'Informe o Nome (ex: Almoxarifado Central, Farmácia da Diálise), o Responsável, Status e Descrição.',
+          'Clique em "Cadastrar". O novo local estará disponível imediatamente para seleção no catálogo de produtos e transferências.'
+        ]
+      },
+      {
+        title: 'Como Cadastrar ou Editar uma Categoria de Produtos',
+        steps: [
+          'Acesse o módulo Nex-Ai.CONFIG e clique na aba "Categorias".',
+          'Clique no botão "+ Nova Categoria".',
+          'Digite o Nome da categoria (ex: Dialisadores, Concentrados, Curativo), selecione o Módulo (Estoque, Financeiro, RH) e a Descrição.',
+          'Clique em "Cadastrar". Os novos insumos do Estoque poderão ser classificados sob essa categoria.'
+        ]
+      },
       {
         title: 'Como Configurar o TTL de Requisições',
         steps: [
@@ -1175,6 +1239,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Ao criar um novo almoxarifado ou categoria, ele já aparece no módulo de Estoque?',
+        resposta: 'Sim! A sincronização é instantânea. O novo almoxarifado já poderá ser selecionado no cadastro de produtos e transferências, e as novas categorias aparecerão no filtro e no modal de edição de produto.'
+      },
       { pergunta: 'O que acontece ao alterar o TTL?', resposta: 'O novo limite temporal passa a valer para a verificação contínua de requisições pendentes, recalculando o prazo para que requisições não atendidas expirem.' }
     ]
   },

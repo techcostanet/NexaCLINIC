@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.82',
+      date: '19/09/2026',
+      title: 'Nex-Ai CLINIC — Módulo .STOCK & .CONFIG: Categorias Dinâmicas, Almoxarifados, Kits de Hemodiálise & 3 Modos de Entradas',
+      description: 'Evolução estrutural do módulo de Estoque (.STOCK) e configurações centrais (.CONFIG): integração de categorias dinâmicas com CRUD completo no .CONFIG e pré-carga de 20 categorias nefrológicas, correção da seleção de almoxarifados com gestão total de locais no .CONFIG, 6 kits clínicos padronizados de enfermagem em hemodiálise baseados no catálogo real, e implementação dos 3 modos padrão de visualização na aba Entradas (Compacta, Normal e Cards).',
+      changes: [
+        { type: 'Categorias Dinâmicas com CRUD no .CONFIG', text: 'O catálogo de produtos agora carrega categorias dinâmicas gerenciadas no .CONFIG, com pré-cadastro de 20 categorias hospitalares e nefrológicas (MatMed, Medicamento, Controlado, Dialisador, Linhas, Acesso, Curativo, etc.).' },
+        { type: 'Almoxarifados Padrão Corrigidos', text: 'Correção do vínculo de almoxarifado no cadastro e edição de produtos, mapeando os locais físicos oficiais com CRUD completo na aba Almoxarifados do módulo .CONFIG.' },
+        { type: '6 Kits Clínicos de Hemodiálise para Enfermagem', text: 'Criação de 6 kits assistenciais reais para a enfermagem (Conexão FAV, Desconexão FAV, Curativo Permcath, Implante/Troca CDL, Recirculação/Priming e Intercorrência/Coagulação) com precificação e insumos automatizados.' },
+        { type: '3 Modos de Visualização em Entradas', text: 'Implementado controle segmentado na aba Entradas permitindo alternar entre modo Compacta (alta densidade com edição rápida de valor), Normal (visão completa com chaves fiscais) e Cards (grade responsiva de faturas com badges e ações).' },
+        { type: 'Conformidade de UI/UX & Boy Scout Rule', text: 'Higienização rigorosa de rótulos compostos por termos únicos e objetivos (Almoxarifado, Categoria, Preço, Saldo, Status, Ações) em todo o módulo de Estoque e Configurações.' },
+        { type: 'Manuais Atualizados', text: 'Atualização das seções de recursos, tutoriais e dúvidas nos manuais operacionais de Estoque e Configurações em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v4.9.81',
       date: '19/09/2026',
       title: 'Nex-Ai CLINIC — Módulo .MED: Tela de Homologação Médica, Apuração Real de Consultas & Limpeza de UI',

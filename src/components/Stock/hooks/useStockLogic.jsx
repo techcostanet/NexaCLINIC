@@ -481,34 +481,37 @@ export function useStockLogic(currentUser) {
       setAccountsPayable(safeArray(payList));
       if (tSettings) setTenantSettings(tSettings);
       setCategoriesList((catList && safeArray(catList).length > 0) ? safeArray(catList) : [
-        { id: 'c1', name: 'Insumo Clínico / MatMed' },
-        { id: 'c2', name: 'Medicamento' },
-        { id: 'c3', name: 'Medicamento Controlado' },
-        { id: 'c4', name: 'OPME' },
-        { id: 'c5', name: 'Fios Cirúrgicos' },
-        { id: 'c6', name: 'Material de Limpeza' },
-        { id: 'c7', name: 'Bens Permanentes / Patrimônio' },
-        { id: 'c8', name: 'Material de Escritório' },
-        { id: 'c9', name: 'EPI' },
-        { id: 'c10', name: 'Osmose / Tratamento de Água' },
-        { id: 'c11', name: 'Serviços Terceirizados' },
-        { id: 'c12', name: 'Nutrição & Alimentação (SND)' },
-        { id: 'c13', name: 'Manutenção & Conservação' },
-        { id: 'c14', name: 'Obra & Infraestrutura' },
-        { id: 'c15', name: 'Tecnologia da Informação (T.I)' },
-        { id: 'c16', name: 'Descartáveis' },
-        { id: 'c17', name: 'Diálise Peritoneal' }
+        { id: 'cat-matmed', name: 'MatMed' },
+        { id: 'cat-medicamento', name: 'Medicamento' },
+        { id: 'cat-controlado', name: 'Controlado' },
+        { id: 'cat-concentrado', name: 'Concentrado' },
+        { id: 'cat-capilar', name: 'Dialisador' },
+        { id: 'cat-linhas', name: 'Linhas' },
+        { id: 'cat-fistula', name: 'Acesso' },
+        { id: 'cat-curativo', name: 'Curativo' },
+        { id: 'cat-opme', name: 'OPME' },
+        { id: 'cat-fios', name: 'Sutura' },
+        { id: 'cat-descartaveis', name: 'Descartáveis' },
+        { id: 'cat-epi', name: 'EPI' },
+        { id: 'cat-limpeza', name: 'Higiene' },
+        { id: 'cat-osmose', name: 'Osmose' },
+        { id: 'cat-peritoneal', name: 'Peritoneal' },
+        { id: 'cat-nutricao', name: 'Nutrição' },
+        { id: 'cat-ti', name: 'Tecnologia' },
+        { id: 'cat-manutencao', name: 'Manutenção' },
+        { id: 'cat-escritorio', name: 'Escritório' },
+        { id: 'cat-patrimonio', name: 'Patrimônio' }
       ]);
 
       if (itemList && itemList.length > 0) {
         setTxForm(f => ({ 
           ...f, 
           itemId: itemList[0].id,
-          sectorId: secList?.[0]?.id || ''
+          sectorId: locList?.[0]?.id || secList?.[0]?.id || ''
         }));
         setItemForm(f => ({
           ...f,
-          defaultSectorId: secList?.[0]?.id || ''
+          defaultSectorId: locList?.[0]?.id || secList?.[0]?.id || ''
         }));
       }
 
@@ -661,14 +664,14 @@ export function useStockLogic(currentUser) {
     setEditingItem(null);
     setItemForm({
       name: '',
-      category: 'Insumo Clínico / MatMed',
+      category: categoriesList[0]?.name || 'MatMed',
       currentStock: '0',
       minStock: '10',
       unit: 'unidades',
       price: '0.00',
       hasBatchControl: false,
       isControlled: false,
-      defaultSectorId: sectors[0]?.id || ''
+      defaultSectorId: stockLocations[0]?.id || sectors[0]?.id || ''
     });
     setShowItemModal(true);
   };
@@ -676,15 +679,15 @@ export function useStockLogic(currentUser) {
   const handleOpenEditModal = (item) => {
     setEditingItem(item);
     setItemForm({
-      name: item.name,
-      category: item.category,
-      currentStock: item.currentStock.toString(),
-      minStock: item.minStock.toString(),
+      name: item.name || '',
+      category: item.category || (categoriesList[0]?.name || 'MatMed'),
+      currentStock: (item.currentStock ?? 0).toString(),
+      minStock: (item.minStock ?? 0).toString(),
       unit: item.unit || 'unidades',
       price: item.price ? item.price.toString() : '0.00',
       hasBatchControl: !!item.hasBatchControl,
       isControlled: !!item.isControlled,
-      defaultSectorId: item.defaultSectorId || (sectors[0]?.id || '')
+      defaultSectorId: item.defaultSectorId || item.defaultLocationId || (stockLocations[0]?.id || sectors[0]?.id || '')
     });
     setShowItemModal(true);
   };

@@ -1,3 +1,31 @@
+## [v4.9.82] - 19 de Setembro, 2026
+### Nex-Ai CLINIC — Módulo .STOCK & .CONFIG: Categorias Dinâmicas, Almoxarifados, Kits de Hemodiálise & 3 Modos de Entradas
+- **Categorias Dinâmicas de Produtos com CRUD no .CONFIG (`ConfigPanel.jsx` & `StockPanel.jsx`):**
+  - O seletor de categorias do produto agora carrega dinamicamente a coleção `stock_categories` mantida no Firestore.
+  - Seeding inicial inteligente com 20 categorias padronizadas de nefrologia e farmácia hospitalar (MatMed, Medicamento, Controlado, Concentrado, Dialisador, Linhas, Acesso, Curativo, etc.).
+  - CRUD completo na aba "Categorias" do módulo .CONFIG para inclusão, alteração e exclusão com sincronização em tempo real.
+- **Correção da Seleção de Almoxarifado / Setor Padrão:**
+  - Corrigido o mapeamento no cadastro e edição de insumos para consumir os locais físicos reais da coleção `stock_locations`.
+  - CRUD completo de depósitos, farmácias satélites e postos de consumo na aba "Almoxarifados" do módulo .CONFIG.
+- **6 Kits Clínicos de Enfermagem em Hemodiálise (`initialProducts.json` & `stockService.js`):**
+  - Estruturados 6 kits assistenciais completos para a enfermagem com produtos reais do catálogo e custos calculados:
+    1. *KIT-HEMO-01:* Conexão de Fístula Arteriovenosa (FAV).
+    2. *KIT-HEMO-02:* Desconexão e Hemostasia de Fístula (FAV).
+    3. *KIT-HEMO-03:* Curativo Estéril de Cateter Permcath.
+    4. *KIT-HEMO-04:* Implante / Manutenção de Cateter Duplo Lúmen (CDL).
+    5. *KIT-HEMO-05:* Recirculação e Priming de Circuito Extracorpóreo.
+    6. *KIT-HEMO-06:* Manejo de Intercorrência e Coagulação Intradialítica.
+- **3 Modos Oficiais de Visualização na Aba Entradas:**
+  - *Compacta:* Tabela de alta densidade operacional (36px) com edição inline de valores em 1 clique.
+  - *Normal:* Tabela detalhada completa com chave de acesso de 44 dígitos, itens, emitente e parcelas.
+  - *Cards:* Grade visual responsiva de faturas com badges de documento, status de boleto e ações rápidas.
+- **Padrão de Rótulos Diretos & Boy Scout Rule:**
+  - Higienização ativa de termos compostos e duplos em formulários, tabelas e modais, adotando termos únicos e diretos.
+- **Manuais Atualizados (`moduleGuidesData.js`):**
+  - Documentação completa das novas rotinas operacionais nas seções de recursos, tutoriais e perguntas frequentes.
+
+---
+
 ## [v4.9.81] - 19 de Setembro, 2026
 ### Nex-Ai CLINIC — Módulo .MED: Tela de Homologação Médica, Apuração Real de Consultas & Limpeza de UI
 - **Nova Tela Modal de Homologação da Gestão Médica (`MedicalHomologationModal.jsx`):**
