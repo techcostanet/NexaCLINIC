@@ -224,7 +224,7 @@ export default function App() {
       case 'reception':
         return <ErrorBoundary><ReceptionPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'clinical':
-        return <ErrorBoundary><ClinicalPanel currentUser={user} /></ErrorBoundary>;
+        return <ErrorBoundary><ClinicalPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'stock':
         return <ErrorBoundary><StockPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'maintenance':

@@ -948,24 +948,6 @@ export const MODULE_GUIDES = {
     ]
   },
 
-
-  clinical: {
-    id: 'clinical',
-    name: 'Módulo Clínico & Prescrição',
-    subtitle: 'Nex-Ai.CLINIC — Prontuário Eletrônico & Evoluções',
-    color: '#8b5cf6',
-    recursos: [
-      { title: 'Prontuário Médico & Diálise', desc: 'Prescrição de hemodiálise, parâmetros de fluxo, heparina e dialisador.' },
-      { title: 'Evoluções Multidisciplinares', desc: 'Registros de Enfermagem, Nutrição, Psicologia e Serviço Social.' }
-    ],
-    tutorial: [
-      { title: 'Operação Clínica', steps: ['Consulte a documentação clínica disponível no protocolo institucional.'] }
-    ],
-    duvidas: [
-      { pergunta: 'Manual em finalização', resposta: 'As instruções detalhadas deste módulo serão liberadas nas próximas atualizações.' }
-    ]
-  },
-
   maintenance: {
     id: 'maintenance',
     name: 'Manutenção & Engenharia Clínica',
@@ -1409,6 +1391,18 @@ export const MODULE_GUIDES = {
     color: '#8b5cf6',
     recursos: [
       {
+        title: 'Cabeçalho Oficial Padronizado (.CLINIC)',
+        desc: 'Identificação visual oficial com gradiente roxo/violeta, ícone HeartPulse, indicador dotColor e atalhos rápidos para o Copiloto IA e Central de Relatórios sem redundância de unidade.'
+      },
+      {
+        title: 'Faixa de Indicadores de Gestão (KPI Cards)',
+        desc: '5 métricas essenciais em tempo real: Pacientes Cadastrados, Prescrições Vigentes, Sessões de Hoje, Evoluções no Prontuário e Farmacoterapia Ativa com navegação rápida em 1 clique.'
+      },
+      {
+        title: 'Central de Relatórios Clínicos Especializados (12 Relatórios)',
+        desc: 'Relatórios analíticos cobrindo Censo de Pacientes, Acessos Vasculares, Prescrições, Monitoramento Horário, Alerta de Taxa de UF (>13 mL/kg/h), Metas SBN, Anemia, Metabolismo Ósseo (DMO), Validade APAC, Farmacoterapia, Evoluções e Mural de Ocorrências com exportação em Excel (.xlsx) e PDF.'
+      },
+      {
         title: 'Cockpit 360 do Paciente Renal',
         desc: 'Visão unificada com identificação do paciente, tipo e sítio do acesso vascular, peso seco alvo, alertas de segurança (alergias em destaque e sorologias) e atalhos rápidos.'
       },
@@ -1443,6 +1437,15 @@ export const MODULE_GUIDES = {
     ],
     tutorial: [
       {
+        title: 'Como Acessar e Exportar a Central de Relatórios Clínicos',
+        steps: [
+          'Clique no botão "Relatórios" no cabeçalho oficial do módulo (.CLINIC) ou na barra de navegação global superior.',
+          'Navegue entre as seções temáticas (Censo, Diálise, Exames, APAC, Equipe) ou visualize a lista completa.',
+          'Utilize os filtros rápidos de Salão, Turno ou o campo de busca por paciente e máquina.',
+          'Clique em "Excel" para baixar a planilha estruturada (.xlsx) ou em "PDF" para gerar o documento formatado com cabeçalho da clínica.'
+        ]
+      },
+      {
         title: 'Como Prescrever Medicamentos Intradialíticos',
         steps: [
           'Selecione o paciente na lista lateral e clique na aba "Medicamentos".',
@@ -1471,13 +1474,17 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Utilizar o Copiloto Clínico IA',
         steps: [
-          'No cabeçalho do cockpit do paciente, clique no botão "Copiloto" (com ícone de brilho).',
+          'No cabeçalho do cockpit do paciente ou no topo do módulo, clique no botão "Copiloto".',
           'A IA analisará os últimos exames, medicamentos, prescrição e intercorrências dos últimos 30 dias.',
           'Revise as recomendações nefrológicas e clique em "Inserir como Evolução" para salvar diretamente no prontuário.'
         ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como exportar os relatórios em planilha Excel ou documento PDF?',
+        resposta: 'Basta abrir a Central de Relatórios pelo botão do cabeçalho (.CLINIC), escolher qualquer um dos 12 relatórios disponíveis e clicar em "Excel" (.xlsx) ou "PDF". O download iniciará instantaneamente com todas as colunas estruturadas.'
+      },
       {
         pergunta: 'Como funciona o cálculo de adequação dialítica (Kt/V)?',
         resposta: 'O sistema utiliza a fórmula de Daugirdas de 2ª geração single-pool (-ln(R - 0.008*t) + (4 - 3.5*R) * (UF/W)), considerando as dosagens de ureia pré e pós, tempo e ultrafiltração. Resultados ≥ 1.20 são classificados como adequados.'
@@ -1635,15 +1642,18 @@ export const MODULE_GUIDES = {
         title: 'Como Homologar a Produção Médica e Enviar ao Financeiro',
         steps: [
           'A Coordenação Médica acessa a aba "Produção" do Nex-Ai.MED.',
-          'Confere o espelho de cada médico (soma de plantões auditados + consultas concluídas na agenda + procedimentos).',
-          'Clica no botão "Homologar". O sistema cria instantaneamente a duplicata a pagar no Contas a Pagar do Nex-Ai.FINANCE.',
-          'Clique em "Extrato" para gerar e imprimir o holerite detalhado do médico em PDF.'
+          'Confere o espelho apurado de cada nefrologista (plantões auditados pela ronda + atendimentos concluídos na agenda + procedimentos realizados).',
+          'Clica no botão "Homologar" na linha do médico para abrir o modal oficial de conferência da Gestão Médica.',
+          'Revisa a discriminação itemizada dos plantões, consultas ambulatoriais e procedimentos, podendo adicionar ajustes/bônus/descontos e definir a data de vencimento.',
+          'Clica em "Confirmar e Homologar". O sistema consolida a produção e lança automaticamente o título no Contas a Pagar do Nex-Ai.FINANCE com a chave PIX do médico.',
+          'Para médicos já homologados, o botão "Detalhes" permite auditar a homologação com número do título financeiro e estornar/desfazer o lançamento se necessário.',
+          'Clique em "Extrato" para visualizar ou imprimir o demonstrativo detalhado do médico em PDF.'
         ]
       },
       {
         title: 'Como Utilizar a Central de Relatórios do Nex-Ai.MED',
         steps: [
-          'Clique no botão "Relatórios" na barra superior global ou no cabeçalho do módulo Nex-Ai.MED.',
+          'Clique no botão "Relatórios" na barra superior global.',
           'Alterne entre as abas temáticas limpas: "Todos", "Escala", "Plantões", "Trocas", "Procedimentos", "Produção" ou "Profissionais".',
           'Selecione o relatório desejado na lista lateral para analisar a prévia dos dados e os cards de indicadores rápidos (KPIs).',
           'Filtre pelo Mês de competência, Médico ou Status desejado.',

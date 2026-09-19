@@ -1,3 +1,25 @@
+## [v4.9.81] - 19 de Setembro, 2026
+### Nex-Ai CLINIC — Módulo .MED: Tela de Homologação Médica, Apuração Real de Consultas & Limpeza de UI
+- **Nova Tela Modal de Homologação da Gestão Médica (`MedicalHomologationModal.jsx`):**
+  - Implementada tela modal interativa acionada ao clicar em "Homologar" na aba Produção, permitindo que a coordenação valide a produção antes do envio ao financeiro.
+  - Discriminação itemizada de plantões presenciais auditados (com datas, salões e turnos), consultas ambulatoriais concluídas e procedimentos nefrológicos.
+  - Campo de ajuste de honorários (+ / -) com justificativa e seletor da data de vencimento a ser cadastrada no Contas a Pagar.
+  - Lançamento automático no Contas a Pagar do NexaFINANCE na categoria "Honorários Médicos" com chave PIX e dados bancários do nefrologista.
+- **Recurso de Desfazer Homologação / Estorno Financeiro:**
+  - Botão "Detalhes" em itens homologados permitindo auditar o ID do título a pagar gerado e estornar a homologação com exclusão segura do título no Contas a Pagar.
+- **Correção da Apuração de Consultas Ambulatoriais (`MedicalProductionTab.jsx`):**
+  - Removido o valor fixo fictício de 8 consultas, passando a contabilizar estritamente os atendimentos finalizados na Agenda médica (ou 0 caso não haja).
+- **Limpeza do Cabeçalho do Módulo .MED (`MedicalPanel.jsx`):**
+  - Removido o botão verde redundante "Relatórios" do ModuleHeader, unificando o acesso na barra superior global do sistema.
+- **Busca e Filtros Rápidos de Produção (`MedicalProductionTab.jsx`):**
+  - Filtros por status (Todos, Pendentes, Homologados) com contadores em tempo real e pesquisa instantânea por médico/CRM.
+- **Conformidade de UI/UX & Boy Scout Rule:**
+  - Substituição de termos com barras por rótulos concisos e diretos em relatórios, fichas médicas e telas de trocas.
+- **Manuais Atualizados (`moduleGuidesData.js`):**
+  - Atualização completa do tutorial do módulo .MED detalhando o fluxo interativo de homologação e repasse financeiro.
+
+---
+
 ## [v4.9.79] - 17 de Setembro, 2026
 ### Nex-Ai CLINIC — 15 Treinamentos Especializados em Nefrologia, Logomarca Institucional & Sincronização 1-Clique
 - **15 Treinamentos Especializados para Clínica de Nefrologia (`nephrologyTrainingsData.js`):**
@@ -60,6 +82,39 @@
   - Suporte a rotas diretas `?treinamento=ID` e `?certificado=ID` (e paths equivalentes) carregando os respectivos portais sem exigir autenticação administrativa.
 - **Atualização do Manual e Regras de UI (`moduleGuidesData.js`):**
   - Atualização completa do guia do módulo de RH com Recursos, Tutorial passo a passo e FAQ com dúvidas sobre eficácia e validação de certificados.
+
+---
+
+## [v4.9.77] - 16 de Setembro, 2026
+### Nex-Ai CLINIC — Padronização Oficial de Design (.CLINIC), Central de Relatórios Especializados & 5 KPI Cards
+- **Padrão Oficial de Cabeçalho dos Módulos (`ModuleHeader.jsx` & `ClinicalPanel.jsx`):**
+  - Implementação do cabeçalho unificado com identificador `.CLINIC`, gradiente roxo/violeta (`#8b5cf6` / `#7c3aed`), ícone `HeartPulse`, dotColor `#8b5cf6` e botões rápidos contextuais (`Copiloto` e `Relatórios`).
+  - Remoção terminante do `<UnitSelector />` do interior do módulo clínico, mantendo a responsabilidade única e centralizada na Navbar superior global.
+- **Faixa de Indicadores de Gestão (5 KPI Cards):**
+  - Adição de 5 cards consolidados com métricas em tempo real: `Pacientes` (base cadastrada), `Prescrições` (protocolos vigentes), `Sessões` (realizadas/previstas hoje), `Evoluções` (notas do prontuário) e `Farmácia` (medicamentos ativos) com navegação rápida para as abas ao clicar.
+- **Nova Central de Relatórios Clínicos & Nefrológicos (`ClinicalReportsModal.jsx`):**
+  - Criação da central analítica do módulo com 12 relatórios especializados:
+    1. Censo Geral de Pacientes Renais
+    2. Mapa de Acessos Vasculares (FAV, Próteses, CDL, Permcath)
+    3. Prescrições Dialíticas Vigentes (QB, QD, capilares, heparina)
+    4. Monitoramento Horário de Sessões (pressão, perda, intercorrências)
+    5. Auditoria de Taxa de Ultrafiltração (> 13 mL/kg/h com alerta hemodinâmico)
+    6. Painel Laboratorial Consolidado & Semáforo SBN
+    7. Controle de Anemia & Cinética de Ferro (Hb, Ferritina, SAT)
+    8. Metabolismo Ósseo e Mineral (Cálcio, Fósforo, Ca x P, PTH)
+    9. Regulação & Validade de Laudos APAC (alerta preventivo de 30 dias)
+    10. Farmacoterapia & Dispensação Clínica (fármacos intradialíticos)
+    11. Auditoria de Evoluções no Prontuário (médica, enfermagem, nutrição, psicologia, social)
+    12. Alertas Assistenciais & Ocorrências no Mural
+  - Filtros dinâmicos por Salão (Salão 1, 2, 3, Isolamento), Turno (1º, 2º, 3º) e busca em tempo real por paciente/máquina.
+  - Exportação instantânea em Planilha Excel (`.xlsx`) e Documento Formatado em PDF (`.pdf`) com cabeçalho institucional e impressão nativa.
+- **Roteamento Global de Relatórios (`App.jsx`):**
+  - Conexão do atalho global `[Relatórios]` da Navbar superior diretamente ao `ClinicalPanel` repassando `isReportsOpen` e `setIsReportsOpen`.
+- **Higienização Ativa de Rótulos (Boy Scout Rule):**
+  - Remoção de barras e termos redundantes nos formulários clínicos (`Máquina *`, `Peso Inicial`, `Peso Final`, `Perda`, `Conduta`, `Capilar *`, `Duração *`, `Fluxo (QB) *`, `Dialisato (QD) *`, `Heparina *`, `Peso Seco *`, `Evolução *`, `Evento`).
+- **Atualização Contínua dos Manuais (`moduleGuidesData.js`):**
+  - Limpeza de chave duplicada legada e documentação completa das novas funcionalidades do `.CLINIC` nas seções `Recursos`, `Tutorial` e `Dúvidas`.
+>>>>>>> 3b12ac4 (feat(medical): homologacao interativa, correcao de consultas e limpeza de ui v4.9.78)
 
 ---
 

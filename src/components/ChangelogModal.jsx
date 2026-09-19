@@ -6,6 +6,22 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.81',
+      date: '19/09/2026',
+      title: 'Nex-Ai CLINIC — Módulo .MED: Tela de Homologação Médica, Apuração Real de Consultas & Limpeza de UI',
+      description: 'Aprimoramento completo do fluxo de Gestão Médica (.MED): nova tela modal de conferência e homologação da produção médica com integração ao Contas a Pagar (NexaFINANCE) e opção de estorno, eliminação do valor fictício de 8 consultas na aba Produção, remoção do botão duplicado de relatórios no cabeçalho, novos filtros por status e pesquisa rápida, higienização rigorosa de rótulos e atualização dos manuais do sistema.',
+      changes: [
+        { type: 'Nova Tela de Homologação Médica', text: 'Implementado modal interativo oficial da Gestão Médica ao clicar em "Homologar", apresentando discriminação completa de plantões presenciais auditados, consultas ambulatoriais concluídas na Agenda e procedimentos nefrológicos, com seletor de vencimento e campo de ajuste financeiro.' },
+        { type: 'Integração Automática com Contas a Pagar', text: 'Ao confirmar a homologação, um título a pagar é gerado instantaneamente no NexaFINANCE na categoria "Honorários Médicos" com a chave PIX do médico e vencimento programado.' },
+        { type: 'Recurso de Desfazer Homologação', text: 'Adicionada opção segura para a Gestão Médica auditar a homologação com número do título financeiro gerado e desfazer o lançamento caso seja necessário ajustar algum item antes do pagamento.' },
+        { type: 'Apuração Real de Consultas', text: 'Eliminado o valor fixo fictício de 8 consultas na aba de Produção, passando a contabilizar estritamente os atendimentos finalizados na Agenda médica (ou 0 se não houver consultas no mês).' },
+        { type: 'Cabeçalho Padronizado (.MED)', text: 'Remoção do botão verde redundante "Relatórios" do ModuleHeader, consolidando o acesso centralizado na Navbar global e eliminando duplicidades na interface.' },
+        { type: 'Busca e Filtros de Produção', text: 'Adicionada barra de filtros rápidos por status (Todos, Pendentes, Homologados) com contadores em tempo real e pesquisa por nome ou CRM do nefrologista.' },
+        { type: 'Boy Scout Rule & Rótulos Concisos', text: 'Higienização ativa de rótulos com barras em relatórios, cadastros e formulários do módulo médico (Sítio, PIX, Contrato CLT, Item, Setor, Vago, Cartão SUS, Motivo).' },
+        { type: 'Manuais Atualizados', text: 'Atualização do guia e tutoriais do módulo médico em moduleGuidesData.js com o passo a passo completo da nova rotina de homologação e repasse financeiro.' }
+      ]
+    },
+    {
       version: 'v4.9.79',
       date: '17/09/2026',
       title: 'Nex-Ai CLINIC — 15 Treinamentos Especializados em Nefrologia, Logomarca Institucional & Sincronização 1-Clique',
@@ -42,6 +58,21 @@ export default function ChangelogModal({ isOpen, onClose }) {
         { type: 'Dossiê Vigilância Sanitária (PDF)', text: 'Emissão em 1 clique de relatório consolidado para fiscalizações municipais (ANVISA / VISA), reunindo ementa, lista de presença com CPFs, notas e ganho de eficácia com campo para visto do fiscal.' },
         { type: 'Modelos Prontos Hospitalares', text: 'Catálogo de templates com conteúdo completo e questões prontas de NR-32, PGRSS, Higienização das Mãos, Atendimento Humanizado e LGPD.' },
         { type: 'Manuais Atualizados', text: 'Atualização da documentação do módulo de RH em moduleGuidesData.js com instruções para criação de cursos, realização pelo colaborador e emissão do Dossiê VISA.' }
+      ]
+    },
+    {
+      version: 'v4.9.76',
+      date: '16/09/2026',
+      title: 'Nex-Ai CLINIC — Padronização Oficial de Design (.CLINIC), Central de Relatórios Especializados & 5 KPI Cards',
+      description: 'Aplicação integral do design system oficial no módulo Nex-Ai.CLINIC: adoção do componente padronizado ModuleHeader com identificação .CLINIC e atalhos rápidos, faixa moderna com 5 KPI Cards interativos (Pacientes, Prescrições, Sessões Hoje, Evoluções e Farmácia), criação da Central de Relatórios Clínicos Especializados (ClinicalReportsModal) com 12 relatórios analíticos, filtros dinâmicos e exportação em Excel (.xlsx) e PDF, remoção da duplicação do seletor de unidade e higienização rigorosa de rótulos.',
+      changes: [
+        { type: 'Cabeçalho Oficial (.CLINIC)', text: 'Implementação do componente oficial ModuleHeader no ClinicalPanel com ícone HeartPulse, gradiente roxo (#8b5cf6 / #7c3aed), ponto de destaque colorido e botões contextuais Copiloto e Relatórios.' },
+        { type: 'Eliminação de Redundância de Unidade', text: 'Remoção do UnitSelector duplicado no interior do módulo clínico, mantendo a responsabilidade única e centralizada na Navbar superior global.' },
+        { type: 'Faixa de Indicadores (5 KPI Cards)', text: 'Adicionada linha moderna de indicadores com Pacientes Ativos, Prescrições Vigentes, Sessões do Dia (realizadas/previstas), Evoluções Multiprofissionais e Farmacoterapia com navegação rápida em 1 clique.' },
+        { type: 'Nova Central de Relatórios Clínicos', text: 'Criação do componente ClinicalReportsModal com 12 relatórios nefrológicos analíticos (Censo Geral, Acessos Vasculares, Prescrições, Acompanhamento Horário, Taxa de UF >13 mL/kg/h, Metas SBN, Anemia, Metabolismo Ósseo DMO, Validade APAC, Farmacoterapia, Evoluções e Mural de Ocorrências) com exportação em Excel (.xlsx) e PDF.' },
+        { type: 'Roteamento Global de Relatórios', text: 'Conexão do botão [Relatórios] da Navbar superior ao painel clínico através do repasse de isReportsOpen e setIsReportsOpen no App.jsx.' },
+        { type: 'Higienização de Rótulos (1 Palavra)', text: 'Remoção de termos duplos e barras nos formulários clínicos (Máquina, Peso Inicial, Peso Final, Perda, Conduta, Capilar, Duração, Fluxo QB, Dialisato QD, Heparina, Peso Seco, Evolução, Evento).' },
+        { type: 'Manuais Atualizados', text: 'Limpeza de chave duplicada e atualização detalhada da documentação oficial do módulo clínico em moduleGuidesData.js com Recursos, Tutorial e FAQ de Dúvidas.' }
       ]
     },
     {

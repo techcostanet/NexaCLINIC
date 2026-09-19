@@ -481,10 +481,57 @@ export const homologateMedicalProduction = async (productionData) => {
   if (USE_MOCK) return mockFirestore.homologateMedicalProduction(productionData);
   const { getFirestore, collection, addDoc } = await import('firebase/firestore');
   const db = getFirestore(app);
+
+  // 1. Inserir no Contas a Pagar (NexaFINANCE)
+  let payableId = null;
+  try {
+    const payableRef = await addDoc(collection(db, 'accounts_payable'), {
+      supplierName: productionData.doctorName,
+      cnpj: productionData.doctorCrm || 'CRM ' + productionData.doctorName,
+      category: 'Honorários Médicos',
+      costCenter: 'Corpo Clínico & Nefrologia',
+      description: `Repasse Honorários ${productionData.month} - ${productionData.shiftsCount} Plantões, ${productionData.consultationsCount} Consultas, ${productionData.proceduresCount} Procedimentos${productionData.adjustmentReason ? ` (${productionData.adjustmentReason})` : ''}`,
+      amount: parseFloat(productionData.netTotal || productionData.grossTotal),
+      dueDate: productionData.dueDate || `${productionData.month}-30`,
+      status: 'pending',
+      paymentMethod: 'PIX',
+      pixKey: productionData.pixKey || '',
+      createdAt: new Date().toISOString()
+    });
+    payableId = payableRef.id;
+  } catch (e) {
+    console.warn('Erro ao criar título no Contas a Pagar:', e);
+  }
+
+  // 2. Registrar produção médica homologada
   const docRef = await addDoc(collection(db, 'medical_productions'), {
     ...productionData,
     status: 'Homologado',
+    payableId: payableId,
     homologatedAt: new Date().toISOString()
   });
-  return { id: docRef.id, ...productionData, status: 'Homologado' };
+
+  return { id: docRef.id, ...productionData, status: 'Homologado', payableId };
 };
+
+export const cancelMedicalProductionHomologation = async (productionId, payableId) => {
+  if (USE_MOCK) return mockFirestore.cancelMedicalProductionHomologation(productionId, payableId);
+  const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  if (payableId) {
+    try {
+      await deleteDoc(doc(db, 'accounts_payable', payableId));
+    } catch (e) {
+      console.warn('Erro ao remover título do Contas a Pagar:', e);
+    }
+  }
+  if (productionId) {
+    try {
+      await deleteDoc(doc(db, 'medical_productions', productionId));
+    } catch (e) {
+      console.warn('Erro ao remover produção médica:', e);
+    }
+  }
+  return { success: true };
+};
+

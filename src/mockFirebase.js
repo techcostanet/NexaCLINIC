@@ -3975,9 +3975,9 @@ export const mockFirestore = {
       cnpj: productionData.doctorCrm || 'CRM ' + productionData.doctorName,
       category: 'Honorários Médicos',
       costCenter: 'Corpo Clínico & Nefrologia',
-      description: `Repasse Honorários ${productionData.month} - ${productionData.shiftsCount} Plantões, ${productionData.consultationsCount} Consultas, ${productionData.proceduresCount} Procedimentos`,
+      description: `Repasse Honorários ${productionData.month} - ${productionData.shiftsCount} Plantões, ${productionData.consultationsCount} Consultas, ${productionData.proceduresCount} Procedimentos${productionData.adjustmentReason ? ` (${productionData.adjustmentReason})` : ''}`,
       amount: parseFloat(productionData.netTotal || productionData.grossTotal),
-      dueDate: `${productionData.month}-30`,
+      dueDate: productionData.dueDate || `${productionData.month}-30`,
       status: 'pending',
       paymentMethod: 'PIX',
       pixKey: productionData.pixKey || 'Chave cadastrada no NexaMED',
@@ -4002,6 +4002,19 @@ export const mockFirestore = {
 
     setDB(db);
     return { production: prodRecord, payable: payableTitle };
+  },
+
+  cancelMedicalProductionHomologation: async (productionId, payableId) => {
+    await new Promise(resolve => setTimeout(resolve, 350));
+    const db = getDB();
+    if (db.medical_productions) {
+      db.medical_productions = db.medical_productions.filter(p => p.id !== productionId);
+    }
+    if (db.accounts_payable && payableId) {
+      db.accounts_payable = db.accounts_payable.filter(p => p.id !== payableId);
+    }
+    setDB(db);
+    return { success: true };
   },
 
   // Stock/Inventory Items

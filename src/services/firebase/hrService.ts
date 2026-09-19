@@ -361,7 +361,7 @@ export interface TrainingSubmission {
 
 import { NEPHROLOGY_TRAININGS } from '../../data/nephrologyTrainingsData';
 
-export const DEFAULT_TRAININGS: Training[] = NEPHROLOGY_TRAININGS;
+export const DEFAULT_TRAININGS: Training[] = NEPHROLOGY_TRAININGS as unknown as Training[];
 
 export const syncNephrologyTrainings = async (): Promise<{ count: number }> => {
   const { getFirestore, doc, setDoc } = await import('firebase/firestore');
