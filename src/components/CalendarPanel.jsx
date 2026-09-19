@@ -15,7 +15,7 @@ import TvTipsManagerModal from './tv/TvTipsManagerModal';
 import QRCode from 'qrcode';
 import { formatDoctorDisplayName, sortDoctorsByName } from '../utils/doctorFormatters';
 import { useUnit } from '../contexts/UnitContext';
-import UnitSelector from './common/UnitSelector';
+import ModuleHeader from './common/ModuleHeader';
 
 export default function CalendarPanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
@@ -1378,61 +1378,72 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
 
   return (
     <div style={styles.container}>
-      {/* Top Header */}
-      <div style={styles.header}>
-        <div style={styles.headerTitleBox}>
-          <div style={styles.headerIcon}>
-            <CalendarIcon size={24} color="#ffffff" />
+      {/* Header Oficial Padronizado */}
+      <ModuleHeader
+        icon={CalendarIcon}
+        title=".CALENDAR"
+        subtitle="Grade multissala com feriados nacionais, bloqueios de ausência, WhatsApp e cotas anuais por médico."
+        gradient="linear-gradient(135deg, #06b6d4, #0891b2)"
+        dotColor="#0891b2"
+        actions={
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button 
+              type="button"
+              onClick={() => setShowDoctorScheduleModal(true)} 
+              className="btn btn-secondary" 
+              style={styles.configBtn} 
+              title="Configurar cotas anuais e grade de cada médico"
+            >
+              <Sliders size={15} />
+              <span>Grade</span>
+            </button>
+            <button 
+              type="button"
+              onClick={() => setShowScheduleBlockModal(true)} 
+              className="btn btn-secondary" 
+              style={styles.blockBtn} 
+              title="Bloquear dias ou períodos para ausências ou congressos"
+            >
+              <Lock size={15} />
+              <span>Bloquear</span>
+            </button>
+            <button 
+              type="button"
+              onClick={() => setShowTvModal(true)} 
+              className="btn btn-secondary" 
+              style={{
+                ...styles.configBtn,
+                backgroundColor: '#f0f9ff',
+                borderColor: '#bae6fd',
+                color: '#0284c7'
+              }} 
+              title="Abrir ou copiar o link do Painel da TV"
+            >
+              <Tv size={15} />
+              <span>Painel</span>
+            </button>
+            <button 
+              type="button"
+              onClick={fetchData} 
+              className="btn btn-secondary" 
+              style={styles.refreshBtn} 
+              title="Atualizar"
+            >
+              <RefreshCw size={15} className={loading ? 'spin' : ''} />
+              <span>Atualizar</span>
+            </button>
+            <button 
+              type="button"
+              onClick={() => handleOpenAddModal()} 
+              className="btn btn-primary" 
+              style={styles.newAptBtn}
+            >
+              <Plus size={16} />
+              <span>Agendar</span>
+            </button>
           </div>
-          <div>
-            <h1 style={styles.title}>Agenda</h1>
-            <p style={styles.subtitle}>Painel multissala com feriados nacionais, bloqueios, WhatsApp e cotas anuais por médico.</p>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <UnitSelector compact showLabel={false} />
-          <button 
-            onClick={() => setShowDoctorScheduleModal(true)} 
-            className="btn btn-secondary" 
-            style={styles.configBtn} 
-            title="Configurar cotas anuais e grade de cada médico"
-          >
-            <Sliders size={15} />
-            <span>Grade</span>
-          </button>
-          <button 
-            onClick={() => setShowScheduleBlockModal(true)} 
-            className="btn btn-secondary" 
-            style={styles.blockBtn} 
-            title="Bloquear dias ou períodos para ausências ou congressos"
-          >
-            <Lock size={15} />
-            <span>Bloquear</span>
-          </button>
-          <button 
-            onClick={() => setShowTvModal(true)} 
-            className="btn btn-secondary" 
-            style={{
-              ...styles.configBtn,
-              backgroundColor: '#f0f9ff',
-              borderColor: '#bae6fd',
-              color: '#0284c7'
-            }} 
-            title="Abrir ou copiar o link do Painel da TV"
-          >
-            <Tv size={15} />
-            <span>Painel</span>
-          </button>
-          <button onClick={fetchData} className="btn btn-secondary" style={styles.refreshBtn} title="Atualizar">
-            <RefreshCw size={15} className={loading ? 'spin' : ''} />
-            <span>Atualizar</span>
-          </button>
-          <button onClick={() => handleOpenAddModal()} className="btn btn-primary" style={styles.newAptBtn}>
-            <Plus size={18} /> Agendar
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Alert Notification */}
       {message.text && (
@@ -2255,10 +2266,9 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
 
 const styles = {
   container: {
-    padding: '1.5rem',
-    maxWidth: '1350px',
-    margin: '0 auto',
-    fontFamily: 'Inter, system-ui, sans-serif'
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem'
   },
   header: {
     display: 'flex',

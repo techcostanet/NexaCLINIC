@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.84',
+      date: '19/09/2026',
+      title: 'Nex-Ai CLINIC — Padronização Oficial de Cabeçalhos (.HR e .CALENDAR) & Desduplicação de Unidades',
+      description: 'Aplicação integral do design system oficial de cabeçalhos nos módulos de Recursos Humanos (HRPanel.jsx) e Agenda (CalendarPanel.jsx): adoção do componente padronizado ModuleHeader com identificações .HR e .CALENDAR, gradientes temáticos, centralização única do seletor de Unidade na Navbar global e unificação dos containers sem margens duplicadas.',
+      changes: [
+        { type: 'Cabeçalho Oficial .HR', text: 'Substituição do heroSection antigo pelo ModuleHeader oficial com identificação .HR, gradiente índigo (#6366f1 / #4f46e5), botão de ação direta "+ Colaborador" e remoção do UnitSelector duplicado.' },
+        { type: 'Cabeçalho Oficial .CALENDAR', text: 'Implementação do ModuleHeader na Agenda (.CALENDAR) com gradiente ciano (#06b6d4 / #0891b2), ações contextuais consolidadas (Grade, Bloquear, Painel TV, Atualizar, Agendar) e remoção do seletor redundante de filial.' },
+        { type: 'Alinhamento Arquitetural de Layout', text: 'Ajuste do container raiz de ambos os módulos com display flex, flexDirection column e gap 1.25rem, eliminando padding de 1.5rem que causava recuo duplo na Agenda.' }
+      ]
+    },
+    {
       version: 'v4.9.83',
       date: '19/09/2026',
       title: 'Nex-Ai CLINIC — Módulo RH: Correção no Modal de Treinamentos (React Error #31) & Padronização de Rótulos',

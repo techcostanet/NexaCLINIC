@@ -31,7 +31,7 @@ import AwardReportModal from './HR/AwardReportModal';
 import HRReportsModal from './HRReportsModal';
 import TrainingsTab from './HR/TrainingsTab';
 import { STANDARD_ROLES, STANDARD_SECTORS, normalizeSingleWord, normalizeSectorName } from '../data/hrConstants';
-import UnitSelector from './common/UnitSelector';
+import ModuleHeader from './common/ModuleHeader';
 
 export const formatDateBR = (dateVal) => {
   if (!dateVal) return '-';
@@ -241,31 +241,24 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
 
   return (
     <div style={styles.container}>
-      {/* Header / Hero Section (Assist style) */}
-      <div style={styles.heroSection}>
-        <div style={styles.heroLeft}>
-          <div style={styles.heroIconBadge}>
-            <Users size={28} color="#fff" />
-          </div>
-          <div>
-            <h1 style={styles.heroTitle}>NexaHR</h1>
-            <p style={styles.heroSubtitle}>
-              Gestão estratégica de pessoas, controle de vale-transporte, advertências disciplinares, aniversariantes e conformidade trabalhista.
-            </p>
-          </div>
-        </div>
-
-        <div style={styles.heroActions}>
-          <UnitSelector compact showLabel={false} />
+      {/* Header Oficial Padronizado */}
+      <ModuleHeader
+        icon={Users}
+        title=".HR"
+        subtitle="Gestão estratégica de pessoas, controle de vale-transporte, exames ocupacionais, treinamentos e conformidade trabalhista."
+        gradient="linear-gradient(135deg, #6366f1, #4f46e5)"
+        dotColor="#6366f1"
+        actions={
           <button 
+            type="button"
             onClick={handleOpenEmpAdd}
             style={styles.primaryHeroBtn}
           >
-            <UserPlus size={18} />
-            <span>Novo Funcionário</span>
+            <UserPlus size={16} />
+            <span>Colaborador</span>
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Primary Tabs */}
       <div style={styles.tabsWrapper}>
@@ -3070,7 +3063,7 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem',
+    gap: '1.25rem',
   },
   heroSection: {
     display: 'flex',
