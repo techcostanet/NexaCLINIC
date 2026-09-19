@@ -457,7 +457,7 @@ export default function TrainingsTab({ currentUser }) {
           <div style={styles.reciclagemBanner}>
             <Clock size={20} color="#d97706" />
             <div>
-              <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#92400e' }}>Controle de Reciclagem Anual & Validades</h4>
+              <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#92400e' }}>Controle de Reciclagem</h4>
               <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.8rem', color: '#b45309' }}>
                 Conforme exigência sanitária, capacitações obrigatórias (como NR-32 e PGRSS) devem ser recicladas a cada 12 meses.
               </p>
@@ -471,7 +471,7 @@ export default function TrainingsTab({ currentUser }) {
                   <th style={styles.th}>Colaborador</th>
                   <th style={styles.th}>Treinamento</th>
                   <th style={styles.th}>Setor</th>
-                  <th style={styles.th}>Última Realização</th>
+                  <th style={styles.th}>Realização</th>
                   <th style={styles.th}>Vencimento</th>
                   <th style={styles.th}>Situação</th>
                   <th style={{ ...styles.th, textAlign: 'center' }}>Ação</th>
@@ -518,7 +518,7 @@ export default function TrainingsTab({ currentUser }) {
                           style={styles.reciclarLinkBtn}
                         >
                           <RefreshCw size={12} />
-                          <span>Link Reciclagem</span>
+                          <span>Reciclar</span>
                         </button>
                       </td>
                     </tr>

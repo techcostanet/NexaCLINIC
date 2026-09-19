@@ -224,14 +224,22 @@ export default function TrainingModal({ training, onSave, onClose }) {
                 <div style={{ flex: 1 }}>
                   <label style={styles.label}>Setor</label>
                   <select 
-                    value={formData.sector} 
+                    value={formData.sector || 'Geral'} 
                     onChange={e => setFormData({ ...formData, sector: e.target.value })}
                     style={styles.select}
                   >
-                    <option value="Geral">Geral (Todos)</option>
-                    {STANDARD_SECTORS.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
+                    <option value="Geral">Geral</option>
+                    {STANDARD_SECTORS.map(s => {
+                      const name = typeof s === 'string' ? s : s.name;
+                      return (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      );
+                    })}
+                    {formData.sector && formData.sector !== 'Geral' && !STANDARD_SECTORS.some(s => (typeof s === 'string' ? s : s.name) === formData.sector) && (
+                      <option value={formData.sector}>{formData.sector}</option>
+                    )}
                   </select>
                 </div>
               </div>
@@ -249,7 +257,7 @@ export default function TrainingModal({ training, onSave, onClose }) {
 
               <div style={styles.grid4}>
                 <div>
-                  <label style={styles.label}>Carga Horária (h)</label>
+                  <label style={styles.label}>Carga (h)</label>
                   <input 
                     type="number" 
                     min={1} 
@@ -260,7 +268,7 @@ export default function TrainingModal({ training, onSave, onClose }) {
                   />
                 </div>
                 <div>
-                  <label style={styles.label}>Reciclagem (Meses)</label>
+                  <label style={styles.label}>Validade (Meses)</label>
                   <input 
                     type="number" 
                     min={0} 
@@ -272,7 +280,7 @@ export default function TrainingModal({ training, onSave, onClose }) {
                   />
                 </div>
                 <div>
-                  <label style={styles.label}>Nota Mínima (%)</label>
+                  <label style={styles.label}>Corte (%)</label>
                   <input 
                     type="number" 
                     min={50} 
@@ -283,7 +291,7 @@ export default function TrainingModal({ training, onSave, onClose }) {
                   />
                 </div>
                 <div>
-                  <label style={styles.label}>Tempo Mínimo (min)</label>
+                  <label style={styles.label}>Duração (min)</label>
                   <input 
                     type="number" 
                     min={0} 
@@ -297,7 +305,7 @@ export default function TrainingModal({ training, onSave, onClose }) {
 
               <div style={styles.formRow}>
                 <div style={{ flex: 1 }}>
-                  <label style={styles.label}>Instrutor / RT</label>
+                  <label style={styles.label}>Instrutor</label>
                   <input 
                     type="text" 
                     value={formData.instructorName || ''} 
@@ -307,7 +315,7 @@ export default function TrainingModal({ training, onSave, onClose }) {
                   />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={styles.label}>Cargo / Órgão</label>
+                  <label style={styles.label}>Cargo</label>
                   <input 
                     type="text" 
                     value={formData.instructorRole || ''} 
@@ -336,7 +344,7 @@ export default function TrainingModal({ training, onSave, onClose }) {
           {activeTab === 'conteudo' && (
             <div style={styles.tabPane}>
               <div style={{ marginBottom: '1rem' }}>
-                <label style={styles.label}>Tipo de Conteúdo Principal</label>
+                <label style={styles.label}>Tipo</label>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <label style={styles.radioLabel}>
                     <input 
@@ -346,7 +354,7 @@ export default function TrainingModal({ training, onSave, onClose }) {
                       checked={formData.contentType === 'text'} 
                       onChange={() => setFormData({ ...formData, contentType: 'text' })}
                     />
-                    <span>Texto Didático / Diretrizes</span>
+                    <span>Texto Didático</span>
                   </label>
                   <label style={styles.radioLabel}>
                     <input 
@@ -356,13 +364,13 @@ export default function TrainingModal({ training, onSave, onClose }) {
                       checked={formData.contentType === 'video'} 
                       onChange={() => setFormData({ ...formData, contentType: 'video' })}
                     />
-                    <span>Vídeo Incorporado (YouTube/Drive)</span>
+                    <span>Vídeo</span>
                   </label>
                 </div>
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <label style={styles.label}>Link do Vídeo (Opcional)</label>
+                <label style={styles.label}>Link</label>
                 <input 
                   type="url" 
                   value={formData.videoUrl || ''} 
@@ -373,7 +381,7 @@ export default function TrainingModal({ training, onSave, onClose }) {
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
-                <label style={styles.label}>Texto e Tópicos de Ensino</label>
+                <label style={styles.label}>Conteúdo</label>
                 <textarea 
                   value={formData.textContent || ''} 
                   onChange={e => setFormData({ ...formData, textContent: e.target.value })}
@@ -525,7 +533,7 @@ export default function TrainingModal({ training, onSave, onClose }) {
                     </div>
 
                     <div style={{ marginTop: '0.75rem' }}>
-                      <label style={styles.subLabel}>Justificativa / Gabarito Comentado</label>
+                      <label style={styles.subLabel}>Justificativa</label>
                       <input 
                         type="text" 
                         value={q.explanation || ''} 

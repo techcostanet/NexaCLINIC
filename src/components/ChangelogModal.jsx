@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.83',
+      date: '19/09/2026',
+      title: 'Nex-Ai CLINIC — Módulo RH: Correção no Modal de Treinamentos (React Error #31) & Padronização de Rótulos',
+      description: 'Correção de segurança e estabilidade no módulo de Recursos Humanos, solucionando o erro React #31 ao editar ou criar treinamentos através do mapeamento correto dos setores e tratamento de integridade retrocompatível, além da higienização ativa de rótulos conforme o padrão de 1 termo único.',
+      changes: [
+        { type: 'Correção de Edição de Treinamentos', text: 'Corrigido o seletor de setor no TrainingModal.jsx, eliminando o erro React #31 provocado pela passagem de objeto no elemento option e garantindo a abertura imediata do formulário de edição e cadastro.' },
+        { type: 'Retrocompatibilidade de Setores', text: 'Adicionado suporte defensivo para exibição e preservação de setores personalizados gravados previamente no banco de dados.' },
+        { type: 'Conformidade de UI/UX & Boy Scout Rule', text: 'Padronização de rótulos diretos em TrainingModal.jsx (Instrutor, Cargo, Carga, Validade, Corte, Duração, Tipo, Vídeo, Conteúdo, Justificativa) e TrainingsTab.jsx (Realização, Reciclar, Controle de Reciclagem).' }
+      ]
+    },
+    {
       version: 'v4.9.82',
       date: '19/09/2026',
       title: 'Nex-Ai CLINIC — Módulo .STOCK & .CONFIG: Categorias Dinâmicas, Almoxarifados, Kits de Hemodiálise & 3 Modos de Entradas',

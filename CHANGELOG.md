@@ -1,3 +1,13 @@
+## [v4.9.83] - 19 de Setembro, 2026
+### Nex-Ai CLINIC — Módulo RH: Correção no Modal de Edição de Treinamentos (React Error #31) & Padronização de Rótulos
+- **Correção Crítica no Modal de Treinamentos (`TrainingModal.jsx`):**
+  - Corrigida a renderização do seletor de setores que provocava o erro `Minified React error #31` ao abrir qualquer treinamento para edição ou cadastro, extraindo com segurança `s.name` em vez de renderizar o objeto de configuração diretamente.
+  - Implementado tratamento defensivo e retrocompatível para manter setores personalizados ou preexistentes já gravados no banco.
+- **Conformidade com Diretrizes de UI/UX & Boy Scout Rule:**
+  - Padronização de rótulos diretos e concisos de 1 termo único no `TrainingModal.jsx` (Instrutor, Cargo, Carga, Validade, Corte, Duração, Tipo, Vídeo, Conteúdo, Justificativa) e no `TrainingsTab.jsx` (Realização, Reciclar, Controle de Reciclagem).
+
+---
+
 ## [v4.9.82] - 19 de Setembro, 2026
 ### Nex-Ai CLINIC — Módulo .STOCK & .CONFIG: Categorias Dinâmicas, Almoxarifados, Kits de Hemodiálise & 3 Modos de Entradas
 - **Categorias Dinâmicas de Produtos com CRUD no .CONFIG (`ConfigPanel.jsx` & `StockPanel.jsx`):**
