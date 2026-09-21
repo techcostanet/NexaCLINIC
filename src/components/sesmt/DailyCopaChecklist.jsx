@@ -77,6 +77,10 @@ export default function DailyCopaChecklist({ onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.nutricionista?.trim() && !formData.tecnicoSeguranca?.trim()) {
+      setMessage('Erro: informe ao menos um responsável (Nutricionista ou Técnico).');
+      return;
+    }
     setLoading(true);
     setMessage('');
     try {
@@ -85,11 +89,24 @@ export default function DailyCopaChecklist({ onSuccess }) {
         createdAt: new Date().toISOString()
       });
       setMessage('Checklist da Copa salvo com sucesso!');
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toTimeString().substring(0, 5),
+        shift: SHIFTS[0],
+        sector: 'Copa',
+        nutricionista: '',
+        tecnicoSeguranca: '',
+        signature: '',
+        evaluations: ITEMS.reduce((acc, item) => ({
+          ...acc,
+          [item.id]: { status: 'C', observation: '' }
+        }), {})
+      });
       if (onSuccess) onSuccess();
-      setTimeout(() => setMessage(''), 3000);
+      setTimeout(() => setMessage(''), 3500);
     } catch (error) {
-      console.error(error);
-      setMessage('Erro ao salvar checklist.');
+      console.error('Erro ao salvar checklist Copa:', error);
+      setMessage(`Erro ao salvar checklist: ${error?.message || 'Verifique sua conexão ou permissões.'}`);
     } finally {
       setLoading(false);
     }
@@ -250,7 +267,7 @@ export default function DailyCopaChecklist({ onSuccess }) {
                         ...(isC ? styles.touchPillCActive : styles.touchPillInactive)
                       }}
                     >
-                      <CheckCircle2 size={15} /> Conforme (C)
+                      <CheckCircle2 size={15} /> Conforme
                     </button>
                     <button
                       type="button"
@@ -260,7 +277,7 @@ export default function DailyCopaChecklist({ onSuccess }) {
                         ...(isNC ? styles.touchPillNCActive : styles.touchPillInactive)
                       }}
                     >
-                      <AlertTriangle size={15} /> Não Conforme (NC)
+                      <AlertTriangle size={15} /> Não Conforme
                     </button>
                     <button
                       type="button"
@@ -270,7 +287,7 @@ export default function DailyCopaChecklist({ onSuccess }) {
                         ...(isNA ? styles.touchPillNAActive : styles.touchPillInactive)
                       }}
                     >
-                      Não Avaliado (NA)
+                      Não Avaliado
                     </button>
                   </div>
 
@@ -368,8 +385,7 @@ export default function DailyCopaChecklist({ onSuccess }) {
                 value={formData.nutricionista}
                 onChange={handleChange}
                 style={styles.input}
-                placeholder="Nome do(a) nutricionista"
-                required 
+                placeholder="Nome do nutricionista"
               />
             </div>
             <div style={styles.formGroup}>
@@ -381,7 +397,6 @@ export default function DailyCopaChecklist({ onSuccess }) {
                 onChange={handleChange}
                 style={styles.input}
                 placeholder="Nome do técnico"
-                required 
               />
             </div>
           </div>

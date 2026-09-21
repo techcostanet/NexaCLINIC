@@ -20,13 +20,17 @@ export const saveEpiInspection = async (item) => {
     try {
         const { getFirestore, collection, addDoc, doc, updateDoc } = await import('firebase/firestore');
         const db = getFirestore(app);
-        if (item.id) {
-            const docRef = doc(db, 'sesmt_epi_inspections', item.id);
-            await updateDoc(docRef, item);
-            return item;
+        const dataToSave = { ...item };
+        if (dataToSave.id) {
+            const id = dataToSave.id;
+            delete dataToSave.id;
+            const docRef = doc(db, 'sesmt_epi_inspections', id);
+            await updateDoc(docRef, dataToSave);
+            return { id, ...dataToSave };
         } else {
-            const docRef = await addDoc(collection(db, 'sesmt_epi_inspections'), item);
-            return { id: docRef.id, ...item };
+            delete dataToSave.id;
+            const docRef = await addDoc(collection(db, 'sesmt_epi_inspections'), dataToSave);
+            return { id: docRef.id, ...dataToSave };
         }
     } catch (e) {
         console.error('Erro Firestore saveEpiInspection =', e);
@@ -53,13 +57,17 @@ export const saveCopaInspection = async (item) => {
     try {
         const { getFirestore, collection, addDoc, doc, updateDoc } = await import('firebase/firestore');
         const db = getFirestore(app);
-        if (item.id) {
-            const docRef = doc(db, 'sesmt_copa_inspections', item.id);
-            await updateDoc(docRef, item);
-            return item;
+        const dataToSave = { ...item };
+        if (dataToSave.id) {
+            const id = dataToSave.id;
+            delete dataToSave.id;
+            const docRef = doc(db, 'sesmt_copa_inspections', id);
+            await updateDoc(docRef, dataToSave);
+            return { id, ...dataToSave };
         } else {
-            const docRef = await addDoc(collection(db, 'sesmt_copa_inspections'), item);
-            return { id: docRef.id, ...item };
+            delete dataToSave.id;
+            const docRef = await addDoc(collection(db, 'sesmt_copa_inspections'), dataToSave);
+            return { id: docRef.id, ...dataToSave };
         }
     } catch (e) {
         console.error('Erro Firestore saveCopaInspection =', e);

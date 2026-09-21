@@ -1,3 +1,17 @@
+## [v4.9.88] - 21 de Setembro, 2026
+### Nex-Ai CLINIC — Correção de Permissão e Persistência do Checklist da Copa no SESMT (.SESMT)
+- **Correção de Permissão no Firebase Firestore (`firestore.rules`):**
+  - Incluída a regra de segurança `match /sesmt_copa_inspections/{id} { allow read, write: if isAuthenticated(); }`, permitindo leitura e gravação dos checklists diários da Copa e eliminando a recusa de permissão (`PERMISSION_DENIED`).
+- **Aprimoramento de Persistência e Sanitização (`sesmtService.js`):**
+  - Ajustada a sanitização do objeto em `saveCopaInspection` e `saveEpiInspection`, removendo atributos `id` indefinidos antes de invocar `addDoc` e `updateDoc` no Firestore.
+- **Validação e Usabilidade no Formulário da Copa (`DailyCopaChecklist.jsx`):**
+  - Flexibilizada a exigência dos campos de responsáveis para permitir o envio desde que ao menos um dos profissionais (`Nutricionista` ou `Técnico`) esteja informado, evitando bloqueios de submissão em rondas isoladas do técnico.
+  - Reset automático dos campos de formulário e assinatura touch após o salvamento com sucesso.
+  - Exibição de mensagens de erro claras e informativas caso ocorra instabilidade de rede ou de sessão.
+  - Rótulos concisos de 1 palavra nos botões touch (`Conforme`, `Não Conforme`, `Não Avaliado`).
+
+---
+
 ## [v4.9.86] - 21 de Setembro, 2026
 ### Nex-Ai CLINIC — Correção de Variável no Dashboard SESMT (Hotfix ReferenceError filteredEpiData) (.SESMT)
 - **Correção Crítica no Dashboard do SESMT (`SesmtDashboard.jsx`):**
