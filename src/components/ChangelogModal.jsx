@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.86',
+      date: '21/09/2026',
+      title: 'Nex-Ai CLINIC — Correção de Variável no Dashboard SESMT (Hotfix ReferenceError filteredEpiData) (.SESMT)',
+      description: 'Correção de execução no painel de indicadores do SESMT: substituição da variável descontinuada filteredEpiData por filteredChecklistData na contagem de inspeções e gráfico de inconformidades, além de padronização de rótulos.',
+      changes: [
+        { type: 'Hotfix ReferenceError', text: 'Resolução do erro filteredEpiData is not defined ao carregar o dashboard do SESMT, conectando a métrica unificada de formulários de EPIs e Copa.' },
+        { type: 'Padrão de 1 Palavra', text: 'Higienização dos cartões superiores de indicadores adotando rótulos diretos e objetivos (Conformidade, Inspeções).' }
+      ]
+    },
+    {
       version: 'v4.9.85',
       date: '21/09/2026',
       title: 'Nex-Ai CLINIC — Checklists Oficiais SESMT: EPIs (11 Itens Clínicos), Nova Aba Copa (7 Itens) & Ficha de Auditoria Oficial A4 (.SESMT)',

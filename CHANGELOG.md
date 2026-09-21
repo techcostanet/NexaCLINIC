@@ -1,3 +1,11 @@
+## [v4.9.86] - 21 de Setembro, 2026
+### Nex-Ai CLINIC — Correção de Variável no Dashboard SESMT (Hotfix ReferenceError filteredEpiData) (.SESMT)
+- **Correção Crítica no Dashboard do SESMT (`SesmtDashboard.jsx`):**
+  - Substituída a referência descontinuada `filteredEpiData` por `filteredChecklistData` no cálculo de formulários realizados e na visualização de inconformidades por setor, eliminando o erro de execução `ReferenceError: filteredEpiData is not defined`.
+  - Conformidade estrita com o padrão de rótulo único (1 palavra): padronização dos cards superiores para `Conformidade` e `Inspeções`.
+
+---
+
 ## [v4.9.85] - 21 de Setembro, 2026
 ### Nex-Ai CLINIC — Checklists Oficiais SESMT: EPIs (11 Itens Clínicos), Nova Aba Copa (7 Itens) & Ficha de Auditoria Oficial A4 (.SESMT)
 - **Checklist Oficial de EPIs Clínicos Baseado na Planilha Saude.xlsx (`DailyEPIChecklist.jsx`):**

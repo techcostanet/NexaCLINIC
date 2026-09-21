@@ -399,7 +399,7 @@ export default function SesmtDashboard({ currentUser }) {
           <div style={styles.kpiGrid}>
             <div style={{...styles.kpiCard, borderLeft: '4px solid #10b981'}}>
               <div style={styles.kpiHeader}>
-                <span style={styles.kpiLabel}>Taxa de Conformidade EPI</span>
+                <span style={styles.kpiLabel}>Conformidade</span>
                 <ShieldCheck size={18} color="#10b981" />
               </div>
               <div style={styles.kpiValue}>{complianceRate}%</div>
@@ -408,10 +408,10 @@ export default function SesmtDashboard({ currentUser }) {
             
             <div style={{...styles.kpiCard, borderLeft: '4px solid #3b82f6'}}>
               <div style={styles.kpiHeader}>
-                <span style={styles.kpiLabel}>Inspeções Realizadas (EPI)</span>
+                <span style={styles.kpiLabel}>Inspeções</span>
                 <Activity size={18} color="#3b82f6" />
               </div>
-              <div style={styles.kpiValue}>{filteredEpiData.length}</div>
+              <div style={styles.kpiValue}>{filteredChecklistData.length}</div>
               <span style={styles.kpiSub}>Formulários no período</span>
             </div>
 
@@ -437,10 +437,10 @@ export default function SesmtDashboard({ currentUser }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
             <div style={styles.kpiCard}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#0f172a', margin: 0 }}>Inconformidades de EPI por Setor</h3>
-                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '500' }}>({filteredEpiData.length} inspeções)</span>
+                <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#0f172a', margin: 0 }}>Inconformidades por Setor</h3>
+                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '500' }}>({filteredChecklistData.length} inspeções)</span>
               </div>
-              {filteredEpiData.length === 0 ? (
+              {filteredChecklistData.length === 0 ? (
                 <div style={styles.emptyChartBox}>
                   <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.85rem' }}>Nenhum checklist registrado no período selecionado.</p>
                 </div>
