@@ -5,21 +5,20 @@ import {
   ShieldCheck, 
   Activity, 
   AlertTriangle, 
-  FileText, 
   CheckCircle2, 
   Shield, 
   Calendar, 
-  Filter, 
   ClipboardList, 
   RotateCcw,
   Clock,
   Building2,
   Flame,
   Droplet,
-  Settings
+  Coffee
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import DailyEPIChecklist from './DailyEPIChecklist';
+import DailyCopaChecklist from './DailyCopaChecklist';
 import WeeklyFireExtinguisherForm from './WeeklyFireExtinguisherForm';
 import WeeklyFireHydrantForm from './WeeklyFireHydrantForm';
 import SesmtHistory from './SesmtHistory';
@@ -30,14 +29,15 @@ const COLORS = ['#10b981', '#f59e0b', '#ef4444'];
 
 const SECTOR_OPTIONS = [
   'TODOS',
-  'Salão-1', 
-  'Salão-2', 
-  'Salão-3', 
+  'Salão Hemodiálise 1', 
+  'Salão Hemodiálise 2', 
+  'Salão Hemodiálise 3', 
   'Diálise Peritoneal', 
   'Hemodiálise Externa', 
   'Bloco Cirúrgico', 
   'Reuso', 
-  'Sala Amarela'
+  'Sala Amarela',
+  'Copa'
 ];
 
 const SHIFT_OPTIONS = [
@@ -50,6 +50,7 @@ const SHIFT_OPTIONS = [
 export default function SesmtDashboard({ currentUser }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [epiData, setEpiData] = useState([]);
+  const [copaData, setCopaData] = useState([]);
   const [extinguisherData, setExtinguisherData] = useState([]);
   const [hydrantData, setHydrantData] = useState([]);
   const [equipmentData, setEquipmentData] = useState([]);
@@ -65,17 +66,19 @@ export default function SesmtDashboard({ currentUser }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [epis, extinguishers, hydrants, equipment] = await Promise.all([
+      const [epis, extinguishers, hydrants, equipment, copas] = await Promise.all([
         dbService.getEpiInspections(),
         dbService.getFireExtinguisherInspections(),
         dbService.getFireHydrantInspections(),
-        dbService.getEquipment()
+        dbService.getEquipment(),
+        dbService.getCopaInspections()
       ]);
       
       setEpiData(epis || []);
       setExtinguisherData(extinguishers || []);
       setHydrantData(hydrants || []);
       setEquipmentData(equipment || []);
+      setCopaData(copas || []);
     } catch (err) {
       console.error('Failed to fetch SESMT data', err);
     } finally {
@@ -133,25 +136,36 @@ export default function SesmtDashboard({ currentUser }) {
     return true;
   };
 
-  // Dados filtrados conforme período e seletores
-  const filteredEpiData = epiData.filter(item => {
+  // Dados combinados de checklist (EPI e Copa) conforme período e seletores
+  const allChecklists = [
+    ...epiData.map(item => ({ ...item, isCopa: false })),
+    ...copaData.map(item => ({ ...item, isCopa: true, sector: 'Copa' }))
+  ];
+
+  const filteredChecklistData = allChecklists.filter(item => {
     if (!isDateInPeriod(item.date)) return false;
-    if (selectedSector !== 'TODOS' && item.sector !== selectedSector) return false;
+    if (selectedSector !== 'TODOS') {
+      const sec = item.sector || '';
+      const matchExact = sec === selectedSector;
+      const matchAlias = sec.replace('Hemodiálise ', '') === selectedSector.replace('Hemodiálise ', '');
+      if (!matchExact && !matchAlias) return false;
+    }
     if (selectedShift !== 'TODOS' && item.shift !== selectedShift) return false;
     return true;
   });
 
-  // 1. Taxa de Conformidade EPI
+  // 1. Taxa de Conformidade EPI / Copa
   let totalEvaluations = 0;
   let conformEvaluations = 0;
   let sectorNC = {};
   
-  filteredEpiData.forEach(inspection => {
+  filteredChecklistData.forEach(inspection => {
     Object.values(inspection.evaluations || {}).forEach(evalData => {
       if (evalData.status !== 'NA') totalEvaluations++;
       if (evalData.status === 'C') conformEvaluations++;
       if (evalData.status === 'NC') {
-        sectorNC[inspection.sector] = (sectorNC[inspection.sector] || 0) + 1;
+        const sec = inspection.sector || 'Geral';
+        sectorNC[sec] = (sectorNC[sec] || 0) + 1;
       }
     });
   });
@@ -164,10 +178,10 @@ export default function SesmtDashboard({ currentUser }) {
   })).sort((a, b) => b['Não Conforme'] - a['Não Conforme']);
 
   const displaySectorData = sectorData.length > 0 ? sectorData : (
-    filteredEpiData.length > 0 ? [] : [
+    filteredChecklistData.length > 0 ? [] : [
       { name: 'Bloco Cirúrgico', 'Não Conforme': 0 },
-      { name: 'Salão-1', 'Não Conforme': 0 },
-      { name: 'Reuso', 'Não Conforme': 0 }
+      { name: 'Salão Hemodiálise 1', 'Não Conforme': 0 },
+      { name: 'Copa', 'Não Conforme': 0 }
     ]
   );
 
@@ -236,6 +250,12 @@ export default function SesmtDashboard({ currentUser }) {
           onClick={() => setActiveTab('epi')}
         >
           <CheckCircle2 size={16} /> EPI
+        </button>
+        <button 
+          style={{ ...styles.tabButton, ...(activeTab === 'copa' ? styles.tabActive : {}) }}
+          onClick={() => setActiveTab('copa')}
+        >
+          <Coffee size={16} /> Copa
         </button>
         <button 
           style={{ ...styles.tabButton, ...(activeTab === 'extintores' ? styles.tabActive : {}) }}
@@ -491,11 +511,13 @@ export default function SesmtDashboard({ currentUser }) {
 
       {/* Abas de Formulários e Histórico */}
       {activeTab === 'epi' && <DailyEPIChecklist onSuccess={fetchData} />}
+      {activeTab === 'copa' && <DailyCopaChecklist onSuccess={fetchData} />}
       {activeTab === 'extintores' && <WeeklyFireExtinguisherForm onSuccess={fetchData} />}
       {activeTab === 'hidrantes' && <WeeklyFireHydrantForm onSuccess={fetchData} />}
       {activeTab === 'historico' && (
         <SesmtHistory 
           epiData={epiData} 
+          copaData={copaData}
           extinguisherData={extinguisherData} 
           hydrantData={hydrantData} 
           onRefresh={fetchData} 

@@ -1,18 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../../firebase';
-import { Save, CheckCircle2, AlertTriangle, LayoutGrid, Table, ShieldCheck, CheckCheck } from 'lucide-react';
+import { Save, CheckCircle2, AlertTriangle, LayoutGrid, Table, Coffee, CheckCheck } from 'lucide-react';
 import SignaturePad from './SignaturePad';
-
-const SECTORS = [
-  'Salão Hemodiálise 1', 
-  'Salão Hemodiálise 2', 
-  'Salão Hemodiálise 3', 
-  'Diálise Peritoneal', 
-  'Hemodiálise Externa', 
-  'Bloco Cirúrgico', 
-  'Reuso', 
-  'Sala Amarela'
-];
 
 const SHIFTS = [
   '1º Turno (Manhã)',
@@ -25,22 +14,18 @@ const ITEMS = [
   { id: 'higienizacao', label: 'Higienização das mãos' },
   { id: 'descarte', label: 'Descarte de resíduos' },
   { id: 'conservacao', label: 'Conservação e armazenamento de EPI' },
-  { id: 'limpeza_ralos', label: 'Condições e limpeza dos ralos' },
   { id: 'ausencia_adornos', label: 'Ausência de adornos durante as atividades' },
-  { id: 'uso_cilios', label: 'Uso adequado de cílios, sem comprometer as condições de higiene e segurança' },
   { id: 'bancadas_superficies', label: 'Bancadas e superfícies limpas e organizadas' },
-  { id: 'produtos_quimicos', label: 'Produtos químicos identificados e armazenados corretamente' },
-  { id: 'fds_quimicos', label: 'FDS disponíveis para os produtos químicos aplicáveis' },
   { id: 'condicoes_unhas', label: 'Condições e comprimento das unhas, conforme os requisitos de higiene' }
 ];
 
-export default function DailyEPIChecklist({ onSuccess }) {
+export default function DailyCopaChecklist({ onSuccess }) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     time: new Date().toTimeString().substring(0, 5),
     shift: SHIFTS[0],
-    sector: SECTORS[0],
-    enfermeiro: '',
+    sector: 'Copa',
+    nutricionista: '',
     tecnicoSeguranca: '',
     signature: '',
     evaluations: ITEMS.reduce((acc, item) => ({
@@ -95,11 +80,11 @@ export default function DailyEPIChecklist({ onSuccess }) {
     setLoading(true);
     setMessage('');
     try {
-      await dbService.saveEpiInspection({
+      await dbService.saveCopaInspection({
         ...formData,
         createdAt: new Date().toISOString()
       });
-      setMessage('Checklist de EPI salvo com sucesso!');
+      setMessage('Checklist da Copa salvo com sucesso!');
       if (onSuccess) onSuccess();
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -121,11 +106,11 @@ export default function DailyEPIChecklist({ onSuccess }) {
       <div style={styles.header}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <ShieldCheck size={20} color="#0891b2" />
-            <h2 style={styles.cardTitle}>Checklist Diário de EPI</h2>
+            <Coffee size={20} color="#0891b2" />
+            <h2 style={styles.cardTitle}>Checklist Diário - Copa</h2>
           </div>
           <p style={styles.cardSubtitle}>
-            Verificação diária de conformidade e segurança em setores clínicos.
+            Verificação diária de conformidade, segurança e boas práticas na Copa.
           </p>
         </div>
 
@@ -152,7 +137,12 @@ export default function DailyEPIChecklist({ onSuccess }) {
       </div>
       
       {message && (
-        <div style={{ ...styles.alert, backgroundColor: message.includes('Erro') ? '#fef2f2' : '#f0fdf4', color: message.includes('Erro') ? '#991b1b' : '#166534', border: `1px solid ${message.includes('Erro') ? '#f87171' : '#4ade80'}` }}>
+        <div style={{ 
+          ...styles.alert, 
+          backgroundColor: message.includes('Erro') ? '#fef2f2' : '#f0fdf4', 
+          color: message.includes('Erro') ? '#991b1b' : '#166534', 
+          border: `1px solid ${message.includes('Erro') ? '#f87171' : '#4ade80'}` 
+        }}>
           {message}
         </div>
       )}
@@ -197,16 +187,13 @@ export default function DailyEPIChecklist({ onSuccess }) {
           </div>
           <div style={styles.formGroup}>
             <label style={styles.label}>Setor</label>
-            <select 
+            <input 
+              type="text" 
               name="sector"
               value={formData.sector}
-              onChange={handleChange}
-              style={styles.input}
-            >
-              {SECTORS.map(sector => (
-                <option key={sector} value={sector}>{sector}</option>
-              ))}
-            </select>
+              readOnly
+              style={{ ...styles.input, backgroundColor: '#f1f5f9', cursor: 'not-allowed', fontWeight: '600' }}
+            />
           </div>
         </div>
 
@@ -374,14 +361,14 @@ export default function DailyEPIChecklist({ onSuccess }) {
         <div style={styles.signaturesSection}>
           <div style={styles.grid2}>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Enfermeiro</label>
+              <label style={styles.label}>Nutricionista</label>
               <input 
                 type="text" 
-                name="enfermeiro"
-                value={formData.enfermeiro}
+                name="nutricionista"
+                value={formData.nutricionista}
                 onChange={handleChange}
                 style={styles.input}
-                placeholder="Nome do enfermeiro"
+                placeholder="Nome do(a) nutricionista"
                 required 
               />
             </div>
@@ -399,7 +386,7 @@ export default function DailyEPIChecklist({ onSuccess }) {
             </div>
           </div>
 
-          {/* Assinatura Digital Touch */}
+          {/* Assinatura Touch */}
           <SignaturePad 
             value={formData.signature}
             onChange={(sig) => setFormData(prev => ({ ...prev, signature: sig }))}
@@ -459,22 +446,23 @@ const styles = {
   viewToggleGroup: {
     display: 'flex',
     backgroundColor: '#f1f5f9',
-    padding: '0.2rem',
-    borderRadius: '8px'
+    padding: '3px',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0'
   },
   viewToggleBtn: {
-    display: 'inline-flex',
+    display: 'flex',
     alignItems: 'center',
     gap: '0.35rem',
-    padding: '0.35rem 0.7rem',
-    borderRadius: '6px',
-    border: 'none',
-    backgroundColor: 'transparent',
-    color: '#64748b',
-    fontSize: '0.78rem',
+    padding: '0.4rem 0.75rem',
+    fontSize: '0.8rem',
     fontWeight: '600',
+    color: '#64748b',
+    backgroundColor: 'transparent',
+    border: 'none',
+    borderRadius: '6px',
     cursor: 'pointer',
-    transition: 'all 0.15s'
+    transition: 'all 0.15s ease'
   },
   viewToggleBtnActive: {
     backgroundColor: '#ffffff',
@@ -482,223 +470,227 @@ const styles = {
     boxShadow: '0 1px 2px rgba(0,0,0,0.08)'
   },
   alert: {
-    padding: '0.85rem 1rem',
+    padding: '0.75rem 1rem',
     borderRadius: '8px',
     marginBottom: '1.25rem',
-    fontWeight: '600',
-    fontSize: '0.85rem'
+    fontSize: '0.88rem',
+    fontWeight: '500'
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem',
+    gap: '1.25rem'
   },
   grid4: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-    gap: '0.75rem',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '1rem'
   },
   grid2: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    gap: '1rem',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: '1rem'
   },
   formGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.4rem',
+    gap: '0.35rem'
   },
   label: {
     fontSize: '0.82rem',
-    fontWeight: '700',
-    color: '#475569',
+    fontWeight: '600',
+    color: '#334155'
   },
   input: {
-    padding: '0.65rem 0.75rem',
-    borderRadius: '8px',
-    border: '1px solid #cbd5e1',
-    fontSize: '0.9rem',
-    width: '100%',
-    boxSizing: 'border-box'
-  },
-  inputObservation: {
     padding: '0.55rem 0.75rem',
     borderRadius: '6px',
     border: '1px solid #cbd5e1',
-    fontSize: '0.85rem',
+    fontSize: '0.88rem',
+    outline: 'none',
     width: '100%',
-    boxSizing: 'border-box',
-    backgroundColor: '#ffffff'
+    boxSizing: 'border-box'
   },
   quickBar: {
     display: 'flex',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '0.75rem',
+    justifyContent: 'space-between',
+    padding: '0.6rem 0.85rem',
     backgroundColor: '#f8fafc',
-    padding: '0.75rem 1rem',
     borderRadius: '8px',
-    border: '1px solid #e2e8f0'
+    border: '1px solid #e2e8f0',
+    flexWrap: 'wrap',
+    gap: '0.5rem'
   },
   quickConformBtn: {
-    display: 'inline-flex',
+    display: 'flex',
     alignItems: 'center',
     gap: '0.4rem',
     padding: '0.45rem 0.85rem',
-    backgroundColor: '#10b981',
-    color: '#ffffff',
-    border: 'none',
+    backgroundColor: '#ecfdf5',
+    color: '#047857',
+    border: '1px solid #a7f3d0',
     borderRadius: '6px',
-    fontSize: '0.8rem',
-    fontWeight: '700',
-    cursor: 'pointer'
+    fontSize: '0.82rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
   },
   quickStatText: {
-    fontSize: '0.8rem',
-    fontWeight: '700',
-    color: '#334155'
+    fontSize: '0.82rem',
+    fontWeight: '600',
+    color: '#475569'
   },
   cardsGrid: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.85rem'
+    gap: '0.75rem'
   },
   itemCard: {
-    border: '1px solid #e2e8f0',
+    padding: '0.9rem',
     borderRadius: '10px',
-    padding: '1rem',
+    border: '1px solid #e2e8f0',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+    gap: '0.65rem',
+    transition: 'all 0.15s ease'
   },
   itemCardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    flexWrap: 'wrap',
     gap: '0.5rem'
   },
   itemLabel: {
-    fontSize: '0.95rem',
-    fontWeight: '700',
-    color: '#0f172a'
+    fontSize: '0.92rem',
+    fontWeight: '600',
+    color: '#1e293b'
   },
   statusBadge: {
     fontSize: '0.75rem',
     fontWeight: '700',
-    padding: '0.2rem 0.6rem',
-    borderRadius: '999px'
+    padding: '0.2rem 0.55rem',
+    borderRadius: '20px',
+    whiteSpace: 'nowrap'
   },
   touchButtonsRow: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-    gap: '0.5rem'
+    display: 'flex',
+    gap: '0.4rem',
+    flexWrap: 'wrap'
   },
   touchPill: {
-    height: '42px',
-    borderRadius: '8px',
-    border: '1px solid transparent',
-    fontSize: '0.82rem',
-    fontWeight: '700',
-    cursor: 'pointer',
+    flex: '1',
+    minWidth: '110px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.35rem',
-    transition: 'all 0.12s'
-  },
-  touchPillCActive: {
-    backgroundColor: '#16a34a',
-    color: '#ffffff',
-    borderColor: '#15803d',
-    boxShadow: '0 2px 4px rgba(22, 163, 74, 0.25)'
-  },
-  touchPillNCActive: {
-    backgroundColor: '#dc2626',
-    color: '#ffffff',
-    borderColor: '#b91c1c',
-    boxShadow: '0 2px 4px rgba(220, 38, 38, 0.25)'
-  },
-  touchPillNAActive: {
-    backgroundColor: '#475569',
-    color: '#ffffff',
-    borderColor: '#334155',
-    boxShadow: '0 2px 4px rgba(71, 85, 105, 0.25)'
+    padding: '0.55rem 0.5rem',
+    borderRadius: '8px',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    border: '1px solid transparent',
+    transition: 'all 0.15s ease'
   },
   touchPillInactive: {
     backgroundColor: '#f8fafc',
     color: '#64748b',
-    borderColor: '#cbd5e1'
+    borderColor: '#e2e8f0'
   },
-  signaturesSection: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginTop: '0.5rem',
-    paddingTop: '1rem',
-    borderTop: '1px solid #f1f5f9'
+  touchPillCActive: {
+    backgroundColor: '#10b981',
+    color: '#ffffff',
+    borderColor: '#059669',
+    boxShadow: '0 2px 4px rgba(16, 185, 129, 0.25)'
+  },
+  touchPillNCActive: {
+    backgroundColor: '#ef4444',
+    color: '#ffffff',
+    borderColor: '#dc2626',
+    boxShadow: '0 2px 4px rgba(239, 68, 68, 0.25)'
+  },
+  touchPillNAActive: {
+    backgroundColor: '#64748b',
+    color: '#ffffff',
+    borderColor: '#475569'
+  },
+  inputObservation: {
+    width: '100%',
+    padding: '0.45rem 0.65rem',
+    borderRadius: '6px',
+    border: '1px solid #e2e8f0',
+    fontSize: '0.82rem',
+    outline: 'none',
+    backgroundColor: '#fafafa',
+    boxSizing: 'border-box'
   },
   tableContainer: {
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
     overflowX: 'auto',
-    WebkitOverflowScrolling: 'touch'
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px'
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    minWidth: '600px'
+    fontSize: '0.85rem'
   },
   tableHead: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f8fafc'
   },
   th: {
-    padding: '0.75rem 1rem',
+    padding: '0.75rem',
     textAlign: 'left',
-    fontSize: '0.75rem',
-    fontWeight: '700',
-    color: '#64748b',
-    textTransform: 'uppercase',
-    borderBottom: '1px solid #e2e8f0',
+    color: '#475569',
+    fontWeight: '600',
+    borderBottom: '1px solid #e2e8f0'
   },
   tr: {
-    borderBottom: '1px solid #f1f5f9',
+    borderBottom: '1px solid #e2e8f0'
   },
   td: {
-    padding: '0.75rem 1rem',
-    fontSize: '0.85rem',
-    color: '#334155',
+    padding: '0.65rem 0.75rem',
+    verticalAlign: 'middle',
+    color: '#334155'
   },
   radioGroup: {
     display: 'flex',
     justifyContent: 'center',
-    gap: '1rem',
+    gap: '0.85rem'
   },
   radioLabel: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
     cursor: 'pointer',
+    fontSize: '0.82rem'
+  },
+  signaturesSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    padding: '1rem',
+    backgroundColor: '#f8fafc',
+    borderRadius: '10px',
+    border: '1px solid #e2e8f0',
+    marginTop: '0.5rem'
   },
   actions: {
     display: 'flex',
     justifyContent: 'flex-end',
-    marginTop: '0.5rem',
+    marginTop: '0.5rem'
   },
   btnPrimary: {
-    display: 'inline-flex',
+    display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '0.4rem',
     backgroundColor: '#0891b2',
     color: '#ffffff',
-    padding: '0.7rem 1.5rem',
-    borderRadius: '8px',
+    padding: '0.65rem 1.25rem',
+    borderRadius: '6px',
     border: 'none',
-    fontWeight: '700',
-    fontSize: '0.92rem',
+    fontWeight: '600',
     cursor: 'pointer',
-    boxShadow: '0 2px 4px rgba(8, 145, 178, 0.2)'
+    fontSize: '0.9rem',
+    transition: 'background-color 0.15s ease'
   }
 };

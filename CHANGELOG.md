@@ -1,3 +1,27 @@
+## [v4.9.79] - 21 de Setembro, 2026
+### Nex-Ai CLINIC — Checklists Oficiais SESMT: EPIs (11 Itens Clínicos), Nova Aba Copa (7 Itens) & Ficha de Auditoria Oficial A4 (.SESMT)
+- **Checklist Oficial de EPIs Clínicos Baseado na Planilha Saude.xlsx (`DailyEPIChecklist.jsx`):**
+  - Expansão completa para os 11 itens técnicos oficiais: Uso de EPI, Higienização das mãos, Descarte de resíduos, Conservação de EPI, Limpeza dos ralos, Ausência de adornos, Uso adequado de cílios, Bancadas/superfícies limpas, Produtos químicos identificados, FDS de químicos disponíveis e Condições/comprimento das unhas.
+  - Atualização dos setores oficiais de hemodiálise e apoio: Salão Hemodiálise 1, Salão Hemodiálise 2, Salão Hemodiálise 3, Diálise Peritoneal, Hemodiálise Externa, Bloco Cirúrgico, Reuso e Sala Amarela.
+  - Identificação dos profissionais responsáveis da inspeção: Enfermeiro e Técnico de Segurança do Trabalho, com assinatura digital.
+- **Nova Aba e Checklist Especializado da Copa (`DailyCopaChecklist.jsx` & `sesmtService.js`):**
+  - Implementação da aba temática Copa baseada na planilha oficial `Copa.xlsx`, abrangendo 7 critérios técnicos de higiene e segurança alimentar (EPIs, higienização, descarte, conservação, adornos, bancadas e unhas).
+  - Identificação específica dos responsáveis: Nutricionista e Técnico de Segurança, integrando assinatura digital interativa via touch/caneta.
+  - Layout responsivo híbrido com alternância instantânea entre Modo Cartões (otimizado para dispositivos móveis) e Modo Tabela (para computador), além do atalho de preenchimento rápido "Conformes".
+  - Métodos dedicados no Firebase Firestore (`sesmt_copa_inspections`) para persistência atômica, consulta e exclusão.
+- **Unificação de Indicadores no Painel SESMT (`SesmtDashboard.jsx`):**
+  - Adição da aba Copa na barra de navegação superior com ícone temático (`Coffee`).
+  - Cálculo integrado da Taxa de Conformidade Geral e do ranking de não-conformidades ponderando tanto os setores clínicos quanto a Copa.
+- **Histórico & Impressão de Ficha Oficial de Auditoria A4 (`SesmtHistory.jsx`):**
+  - Aba de filtro rápido "Copa" no histórico com suporte a auditoria, consulta detalhada e exclusão de vistorias.
+  - Recurso de Impressão Oficial da Ficha de Inspeção: reproduz com fidelidade milimétrica o layout físico de prancheta A4 das planilhas oficiais (`Saude.xlsx` e `Copa.xlsx`), contendo cabeçalho institucional, tabela de assinalamento com X em Conforme/Não Conforme/Não Se Aplica, observações de campo e bloco duplo de assinaturas com a imagem da assinatura digitalizada.
+- **Atualização do Manual do Sistema (`moduleGuidesData.js`):**
+  - Documentação completa em Recursos, Tutorial de Inspeção e FAQ de Auditoria no manual do SESMT contemplando as rotinas clínicas e da copa.
+- **Conformidade Rigorosa de UI/UX (Padrão de 1 Palavra):**
+  - Aplicação estrita de rótulos diretos e concisos (Data, Horário, Turno, Setor, Enfermeiro, Nutricionista, Técnico, Assinatura, Salvar, Conformes, Imprimir) sem barras ou conectivos redundantes.
+
+---
+
 ## [v4.9.78] - 16 de Setembro, 2026
 ### Nex-Ai CLINIC — Módulo SESMT Portátil para Celular e Tablet, Assinatura Digital Touch & Atalhos em Campo (.SESMT)
 - **Modo Híbrido Cartões & Tabela em Todo o Módulo SESMT:**

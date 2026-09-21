@@ -34,6 +34,39 @@ export const saveEpiInspection = async (item) => {
     }
 };
 
+export const getCopaInspections = async () => {
+    if (USE_MOCK && mockFirestore.getCopaInspections) return mockFirestore.getCopaInspections();
+    try {
+      const { getFirestore, collection, getDocs, orderBy, query } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const q = query(collection(db, 'sesmt_copa_inspections'), orderBy('date', 'desc'));
+      const snap = await getDocs(q);
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.error('Erro Firestore getCopaInspections =', e);
+      return [];
+    }
+};
+
+export const saveCopaInspection = async (item) => {
+    if (USE_MOCK && mockFirestore.saveCopaInspection) return mockFirestore.saveCopaInspection(item);
+    try {
+        const { getFirestore, collection, addDoc, doc, updateDoc } = await import('firebase/firestore');
+        const db = getFirestore(app);
+        if (item.id) {
+            const docRef = doc(db, 'sesmt_copa_inspections', item.id);
+            await updateDoc(docRef, item);
+            return item;
+        } else {
+            const docRef = await addDoc(collection(db, 'sesmt_copa_inspections'), item);
+            return { id: docRef.id, ...item };
+        }
+    } catch (e) {
+        console.error('Erro Firestore saveCopaInspection =', e);
+        throw e;
+    }
+};
+
 export const getFireExtinguisherInspections = async () => {
     if (USE_MOCK && mockFirestore.getFireExtinguisherInspections) return mockFirestore.getFireExtinguisherInspections();
     try {
@@ -109,6 +142,19 @@ export const deleteEpiInspection = async (id) => {
         return true;
     } catch (e) {
         console.error('Erro Firestore deleteEpiInspection =', e);
+        throw e;
+    }
+};
+
+export const deleteCopaInspection = async (id) => {
+    if (USE_MOCK && mockFirestore.deleteCopaInspection) return mockFirestore.deleteCopaInspection(id);
+    try {
+        const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+        const db = getFirestore(app);
+        await deleteDoc(doc(db, 'sesmt_copa_inspections', id));
+        return true;
+    } catch (e) {
+        console.error('Erro Firestore deleteCopaInspection =', e);
         throw e;
     }
 };

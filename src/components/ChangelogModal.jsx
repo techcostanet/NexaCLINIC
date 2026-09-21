@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.79',
+      date: '21/09/2026',
+      title: 'Nex-Ai CLINIC — Checklists Oficiais SESMT: EPIs (11 Itens Clínicos), Nova Aba Copa (7 Itens) & Ficha de Auditoria Oficial A4 (.SESMT)',
+      description: 'Implementação dos formulários de vistoria baseados nas planilhas oficiais Saude.xlsx e Copa.xlsx: expansão dos EPIs para 11 itens clínicos com setores de hemodiálise, nova aba dedicada para a Copa com 7 itens de segurança alimentar, coleta de assinatura digital touch/caneta para Nutricionista, Enfermeiro e Técnico, unificação dos KPIs no painel e geração de ficha de auditoria oficial para impressão idêntica à prancheta física A4.',
+      changes: [
+        { type: 'Checklist EPIs Clínicos (11 Itens)', text: 'Atualização do formulário de EPIs com os 11 itens técnicos da planilha Saude.xlsx (uso de EPI, higienização, descarte, conservação, ralos, adornos, cílios, bancadas, químicos, FDS e unhas), além dos 8 setores de hemodiálise e apoio.' },
+        { type: 'Nova Aba & Checklist da Copa', text: 'Criação da aba temática Copa com 7 itens de conformidade alimentar da planilha Copa.xlsx, campos para Nutricionista e Técnico, assinatura digital e persistência no Firestore.' },
+        { type: 'Modos Híbridos Responsivos', text: 'Visualização adaptativa para a Copa com alternância entre Modo Cartões (otimizado para toque no celular/tablet) e Modo Tabela (para desktop), além do botão rápido "Conformes".' },
+        { type: 'Indicadores Unificados no Painel', text: 'Cálculo integrado da Taxa de Conformidade Geral e ranking de não-conformidades ponderando tanto os setores clínicos quanto a Copa.' },
+        { type: 'Ficha de Auditoria Oficial A4', text: 'Geração e impressão de espelho fiel da prancheta física oficial com assinalamento de conformidade (X em C/NC/NA), anotações de campo e blocos de assinatura com a imagem digitalizada.' },
+        { type: 'Manual Atualizado & Padrão de 1 Palavra', text: 'Documentação do SESMT em moduleGuidesData.js atualizada com as novas rotinas e higienização estrita de rótulos diretos sem conectivos ou barras redundantes.' }
+      ]
+    },
+    {
       version: 'v4.9.78',
       date: '16/09/2026',
       title: 'Nex-Ai CLINIC — Módulo SESMT Portátil para Celular e Tablet, Assinatura Digital Touch & Atalhos em Campo (.SESMT)',

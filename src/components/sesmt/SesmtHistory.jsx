@@ -3,24 +3,18 @@ import { dbService } from '../../firebase';
 import { 
   ClipboardList, 
   Search, 
-  Calendar, 
   Eye, 
   Trash2, 
   X, 
-  CheckCircle2, 
   AlertTriangle, 
-  Shield, 
-  Filter, 
-  FileText,
-  Clock,
-  User,
-  Check,
+  Check, 
   AlertCircle,
   LayoutGrid,
-  Table
+  Table,
+  Printer
 } from 'lucide-react';
 
-export default function SesmtHistory({ epiData = [], extinguisherData = [], hydrantData = [], onRefresh }) {
+export default function SesmtHistory({ epiData = [], copaData = [], extinguisherData = [], hydrantData = [], onRefresh }) {
   const [selectedType, setSelectedType] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -50,6 +44,16 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
       displayShift: item.shift || '-',
       responsible: item.enfermeiro || item.tecnicoSeguranca || '-'
     })),
+    ...copaData.map(item => ({
+      ...item,
+      recordType: 'COPA',
+      typeLabel: 'Checklist Copa',
+      displayDate: item.date || '',
+      displayTime: item.time || '',
+      displaySector: 'Copa',
+      displayShift: item.shift || '-',
+      responsible: item.nutricionista || item.tecnicoSeguranca || '-'
+    })),
     ...extinguisherData.map(item => ({
       ...item,
       recordType: 'EXTINGUISHER',
@@ -78,7 +82,7 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
     if (selectedType !== 'ALL' && item.recordType !== selectedType) return false;
 
     // Filtro por turno
-    if (selectedShift !== 'ALL' && item.recordType === 'EPI' && item.displayShift !== selectedShift) return false;
+    if (selectedShift !== 'ALL' && (item.recordType === 'EPI' || item.recordType === 'COPA') && item.displayShift !== selectedShift) return false;
 
     // Filtro por data
     if (startDate && item.displayDate < startDate) return false;
@@ -105,6 +109,8 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
     try {
       if (record.recordType === 'EPI') {
         await dbService.deleteEpiInspection(record.id);
+      } else if (record.recordType === 'COPA') {
+        await dbService.deleteCopaInspection(record.id);
       } else if (record.recordType === 'EXTINGUISHER') {
         await dbService.deleteFireExtinguisherInspection(record.id);
       } else if (record.recordType === 'HYDRANT') {
@@ -123,6 +129,8 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
     switch (type) {
       case 'EPI':
         return { backgroundColor: '#ecfeff', color: '#0891b2', borderColor: '#a5f3fc' };
+      case 'COPA':
+        return { backgroundColor: '#fef3c7', color: '#b45309', borderColor: '#fde68a' };
       case 'EXTINGUISHER':
         return { backgroundColor: '#fffbeb', color: '#b45309', borderColor: '#fde68a' };
       case 'HYDRANT':
@@ -130,6 +138,153 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
       default:
         return { backgroundColor: '#f1f5f9', color: '#475569', borderColor: '#cbd5e1' };
     }
+  };
+
+  const handlePrintOfficialSheet = (record) => {
+    if (!record) return;
+    const printWindow = window.open('', '_blank', 'width=900,height=800');
+    if (!printWindow) {
+      alert('Por favor, permita popups para imprimir o formulário oficial.');
+      return;
+    }
+
+    const isCopa = record.recordType === 'COPA';
+    const isEpi = record.recordType === 'EPI';
+
+    const epiLabels = {
+      uso_epi: 'Uso adequado do EPI',
+      higienizacao: 'Higienização das mãos',
+      descarte: 'Descarte de resíduos',
+      conservacao: 'Conservação e armazenamento de EPI',
+      limpeza_ralos: 'Condições e limpeza dos ralos',
+      ausencia_adornos: 'Ausência de adornos durante as atividades',
+      uso_cilios: 'Uso adequado de cílios, sem comprometer as condições de higiene e segurança',
+      bancadas_superficies: 'Bancadas e superfícies limpas e organizadas',
+      produtos_quimicos: 'Produtos químicos identificados e armazenados corretamente',
+      fds_quimicos: 'FDS disponíveis para os produtos químicos aplicáveis',
+      condicoes_unhas: 'Condições e comprimento das unhas, conforme os requisitos de higiene'
+    };
+
+    const copaLabels = {
+      uso_epi: 'Uso adequado do EPI',
+      higienizacao: 'Higienização das mãos',
+      descarte: 'Descarte de resíduos',
+      conservacao: 'Conservação e armazenamento de EPI',
+      ausencia_adornos: 'Ausência de adornos durante as atividades',
+      bancadas_superficies: 'Bancadas e superfícies limpas e organizadas',
+      condicoes_unhas: 'Condições e comprimento das unhas, conforme os requisitos de higiene'
+    };
+
+    const activeLabels = isCopa ? copaLabels : epiLabels;
+    const formattedDate = record.displayDate ? record.displayDate.split('-').reverse().join('/') : '-';
+
+    let tableRows = '';
+    if (isEpi || isCopa) {
+      Object.keys(activeLabels).forEach(key => {
+        const item = (record.evaluations && record.evaluations[key]) || { status: 'NA', observation: '' };
+        const isC = item.status === 'C' ? 'X' : '';
+        const isNC = item.status === 'NC' ? 'X' : '';
+        const isNA = item.status === 'NA' ? 'X' : '';
+        tableRows += `
+          <tr>
+            <td style="padding: 6px 10px; border: 1px solid #000; font-size: 11px;">${activeLabels[key]}</td>
+            <td style="padding: 6px 4px; border: 1px solid #000; text-align: center; font-weight: bold; width: 35px; font-size: 12px;">${isC}</td>
+            <td style="padding: 6px 4px; border: 1px solid #000; text-align: center; font-weight: bold; width: 35px; font-size: 12px;">${isNC}</td>
+            <td style="padding: 6px 4px; border: 1px solid #000; text-align: center; font-weight: bold; width: 35px; font-size: 12px;">${isNA}</td>
+            <td style="padding: 6px 10px; border: 1px solid #000; font-size: 11px;">${item.observation || ''}</td>
+          </tr>
+        `;
+      });
+    }
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${isCopa ? 'Checklist Copa' : 'Checklist EPI'} - ${formattedDate}</title>
+        <style>
+          @page { size: A4 portrait; margin: 12mm 15mm; }
+          body { font-family: Arial, Helvetica, sans-serif; color: #000; margin: 0; padding: 10px; }
+          .header-box { text-align: center; border: 2px solid #000; padding: 10px; margin-bottom: 12px; }
+          .header-title { font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0; }
+          .meta-box { border: 1px solid #000; padding: 8px 12px; margin-bottom: 12px; font-size: 11px; line-height: 1.6; }
+          .meta-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+          th { background-color: #f2f2f2; border: 1px solid #000; padding: 6px 8px; font-size: 11px; text-align: left; }
+          .resp-box { border: 1px solid #000; padding: 10px; margin-top: 10px; }
+          .resp-title { font-size: 11px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
+          .resp-grid { display: flex; gap: 20px; justify-content: space-between; }
+          .resp-col { flex: 1; border: 1px dashed #999; padding: 8px; min-height: 70px; display: flex; flex-direction: column; justify-content: space-between; }
+          .resp-label { font-size: 10px; color: #333; }
+          .resp-val { font-size: 11px; font-weight: bold; margin-top: 2px; }
+          .sig-img { max-height: 50px; object-fit: contain; margin-top: 4px; }
+        </style>
+      </head>
+      <body>
+        <div class="header-box">
+          <div class="header-title">CHECKLIST DE VERIFICAÇÃO DIÁRIA DE EPI E SEGURANÇA</div>
+          <div style="font-size: 11px; margin-top: 4px; color: #333;">NEX-AI CLINIC • MÓDULO SESMT</div>
+        </div>
+
+        <div class="meta-box">
+          <div class="meta-row">
+            <div><strong>DATA:</strong> ${formattedDate}</div>
+            <div><strong>Horário:</strong> ${record.displayTime || '-'}</div>
+            <div><strong>Turno:</strong> ${record.displayShift || '-'}</div>
+          </div>
+          <div style="margin-top: 4px;">
+            <strong>SETOR:</strong> ${record.displaySector || (isCopa ? 'Copa' : '-')}
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>DESCRIÇÃO</th>
+              <th style="text-align: center; width: 35px;">C</th>
+              <th style="text-align: center; width: 35px;">NC</th>
+              <th style="text-align: center; width: 35px;">NA</th>
+              <th>OBSERVAÇÕES</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+
+        <div class="resp-box">
+          <div class="resp-title">RESPONSÁVEIS</div>
+          <div class="resp-grid">
+            <div class="resp-col">
+              <div>
+                <div class="resp-label">${isCopa ? 'Nutricionista Responsável:' : 'Enfermeiro(a) Responsável:'}</div>
+                <div class="resp-val">${(isCopa ? record.nutricionista : record.enfermeiro) || '-'}</div>
+              </div>
+            </div>
+            <div class="resp-col">
+              <div>
+                <div class="resp-label">Técnica de Segurança do Trabalho:</div>
+                <div class="resp-val">${record.tecnicoSeguranca || '-'}</div>
+              </div>
+              ${record.signature ? `<img src="${record.signature}" class="sig-img" alt="Assinatura Digital" />` : ''}
+            </div>
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 300);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
   };
 
   return (
@@ -180,6 +335,12 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
             onClick={() => setSelectedType('EPI')}
           >
             EPI ({epiData.length})
+          </button>
+          <button 
+            style={{ ...styles.typeTab, ...(selectedType === 'COPA' ? styles.typeTabActive : {}) }}
+            onClick={() => setSelectedType('COPA')}
+          >
+            Copa ({copaData.length})
           </button>
           <button 
             style={{ ...styles.typeTab, ...(selectedType === 'EXTINGUISHER' ? styles.typeTabActive : {}) }}
@@ -267,7 +428,7 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
               const badgeStyle = getTypeBadgeStyle(record.recordType);
 
               let summaryElement = null;
-              if (record.recordType === 'EPI') {
+              if (record.recordType === 'EPI' || record.recordType === 'COPA') {
                 const evals = Object.values(record.evaluations || {});
                 const ncCount = evals.filter(e => e.status === 'NC').length;
                 summaryElement = ncCount === 0 ? (
@@ -320,10 +481,19 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                     <button 
                       style={styles.viewCardBtn} 
                       onClick={() => setSelectedItem(record)}
-                      title="Visualizar Inspeção Completa"
+                      title="Visualizar Detalhes"
                     >
-                      <Eye size={15} /> Ver Detalhes
+                      <Eye size={15} /> Detalhes
                     </button>
+                    {(record.recordType === 'EPI' || record.recordType === 'COPA') && (
+                      <button 
+                        style={styles.printBtn} 
+                        onClick={() => handlePrintOfficialSheet(record)}
+                        title="Imprimir Ficha Oficial"
+                      >
+                        <Printer size={15} /> Imprimir
+                      </button>
+                    )}
                     <button 
                       style={styles.deleteBtn}
                       disabled={deletingId === record.id}
@@ -369,7 +539,7 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                   const badgeStyle = getTypeBadgeStyle(record.recordType);
 
                   let summaryElement = null;
-                  if (record.recordType === 'EPI') {
+                  if (record.recordType === 'EPI' || record.recordType === 'COPA') {
                     const evals = Object.values(record.evaluations || {});
                     const ncCount = evals.filter(e => e.status === 'NC').length;
                     summaryElement = ncCount === 0 ? (
@@ -407,10 +577,19 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                           <button 
                             style={styles.viewBtn} 
                             onClick={() => setSelectedItem(record)}
-                            title="Visualizar Inspeção Completa"
+                            title="Visualizar Detalhes"
                           >
-                            <Eye size={16} /> Ver Detalhes
+                            <Eye size={15} /> Detalhes
                           </button>
+                          {(record.recordType === 'EPI' || record.recordType === 'COPA') && (
+                            <button 
+                              style={styles.printBtn} 
+                              onClick={() => handlePrintOfficialSheet(record)}
+                              title="Imprimir Ficha Oficial"
+                            >
+                              <Printer size={15} /> Imprimir
+                            </button>
+                          )}
                           <button 
                             style={styles.deleteBtn}
                             disabled={deletingId === record.id}
@@ -471,18 +650,42 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                       <span style={styles.metaVal}>{selectedItem.displaySector || '-'}</span>
                     </div>
                     <div style={styles.metaItem}>
-                      <span style={styles.metaLabel}>Enfermeiro(a) Responsável</span>
+                      <span style={styles.metaLabel}>Enfermeiro</span>
                       <span style={styles.metaVal}>{selectedItem.enfermeiro || '-'}</span>
                     </div>
                     <div style={styles.metaItem}>
-                      <span style={styles.metaLabel}>Técnico de Segurança</span>
+                      <span style={styles.metaLabel}>Técnico</span>
+                      <span style={styles.metaVal}>{selectedItem.tecnicoSeguranca || '-'}</span>
+                    </div>
+                  </>
+                )}
+                {selectedItem.recordType === 'COPA' && (
+                  <>
+                    <div style={styles.metaItem}>
+                      <span style={styles.metaLabel}>Horário</span>
+                      <span style={styles.metaVal}>{selectedItem.displayTime || '-'}</span>
+                    </div>
+                    <div style={styles.metaItem}>
+                      <span style={styles.metaLabel}>Turno</span>
+                      <span style={styles.metaVal}>{selectedItem.displayShift || '-'}</span>
+                    </div>
+                    <div style={styles.metaItem}>
+                      <span style={styles.metaLabel}>Setor</span>
+                      <span style={styles.metaVal}>Copa</span>
+                    </div>
+                    <div style={styles.metaItem}>
+                      <span style={styles.metaLabel}>Nutricionista</span>
+                      <span style={styles.metaVal}>{selectedItem.nutricionista || '-'}</span>
+                    </div>
+                    <div style={styles.metaItem}>
+                      <span style={styles.metaLabel}>Técnico</span>
                       <span style={styles.metaVal}>{selectedItem.tecnicoSeguranca || '-'}</span>
                     </div>
                   </>
                 )}
                 {(selectedItem.recordType === 'EXTINGUISHER' || selectedItem.recordType === 'HYDRANT') && (
                   <div style={styles.metaItem}>
-                    <span style={styles.metaLabel}>Nome do Inspetor</span>
+                    <span style={styles.metaLabel}>Inspetor</span>
                     <span style={styles.metaVal}>{selectedItem.inspectorName || '-'}</span>
                   </div>
                 )}
@@ -506,7 +709,14 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                           uso_epi: 'Uso adequado do EPI',
                           higienizacao: 'Higienização das mãos',
                           descarte: 'Descarte de resíduos',
-                          conservacao: 'Conservação e armazenamento de EPI'
+                          conservacao: 'Conservação e armazenamento de EPI',
+                          limpeza_ralos: 'Condições e limpeza dos ralos',
+                          ausencia_adornos: 'Ausência de adornos durante as atividades',
+                          uso_cilios: 'Uso adequado de cílios, sem comprometer as condições de higiene e segurança',
+                          bancadas_superficies: 'Bancadas e superfícies limpas e organizadas',
+                          produtos_quimicos: 'Produtos químicos identificados e armazenados corretamente',
+                          fds_quimicos: 'FDS disponíveis para os produtos químicos aplicáveis',
+                          condicoes_unhas: 'Condições e comprimento das unhas, conforme os requisitos de higiene'
                         };
                         const statusColors = {
                           C: { bg: '#f0fdf4', color: '#166534', label: 'Conforme (C)' },
@@ -517,6 +727,52 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
                         return (
                           <tr key={key} style={styles.innerTr}>
                             <td style={styles.innerTd}><strong>{labels[key] || key}</strong></td>
+                            <td style={{ ...styles.innerTd, textAlign: 'center' }}>
+                              <span style={{ ...styles.statusBadge, backgroundColor: s.bg, color: s.color }}>
+                                {s.label}
+                              </span>
+                            </td>
+                            <td style={styles.innerTd}>{item.observation || <span style={{ color: '#94a3b8' }}>-</span>}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Conteúdo da Copa */}
+              {selectedItem.recordType === 'COPA' && (
+                <div style={{ marginTop: '1.5rem' }}>
+                  <h4 style={styles.sectionTitle}>Avaliações dos Itens de Segurança da Copa</h4>
+                  <table style={styles.innerTable}>
+                    <thead>
+                      <tr>
+                        <th style={styles.innerTh}>Item de Verificação</th>
+                        <th style={{ ...styles.innerTh, textAlign: 'center', width: '150px' }}>Status</th>
+                        <th style={styles.innerTh}>Observações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(selectedItem.evaluations || {}).map(([key, item]) => {
+                        const copaLabels = {
+                          uso_epi: 'Uso adequado do EPI',
+                          higienizacao: 'Higienização das mãos',
+                          descarte: 'Descarte de resíduos',
+                          conservacao: 'Conservação e armazenamento de EPI',
+                          ausencia_adornos: 'Ausência de adornos durante as atividades',
+                          bancadas_superficies: 'Bancadas e superfícies limpas e organizadas',
+                          condicoes_unhas: 'Condições e comprimento das unhas, conforme os requisitos de higiene'
+                        };
+                        const statusColors = {
+                          C: { bg: '#f0fdf4', color: '#166534', label: 'Conforme (C)' },
+                          NC: { bg: '#fef2f2', color: '#991b1b', label: 'Não Conforme (NC)' },
+                          NA: { bg: '#f1f5f9', color: '#475569', label: 'Não Avaliado (NA)' }
+                        };
+                        const s = statusColors[item.status] || statusColors.NA;
+                        return (
+                          <tr key={key} style={styles.innerTr}>
+                            <td style={styles.innerTd}><strong>{copaLabels[key] || key}</strong></td>
                             <td style={{ ...styles.innerTd, textAlign: 'center' }}>
                               <span style={{ ...styles.statusBadge, backgroundColor: s.bg, color: s.color }}>
                                 {s.label}
@@ -629,7 +885,16 @@ export default function SesmtHistory({ epiData = [], extinguisherData = [], hydr
               )}
             </div>
 
-            <div style={styles.modalFooter}>
+            <div style={{ ...styles.modalFooter, gap: '0.75rem', alignItems: 'center' }}>
+              {(selectedItem.recordType === 'EPI' || selectedItem.recordType === 'COPA') && (
+                <button 
+                  style={styles.btnPrintPrimary} 
+                  onClick={() => handlePrintOfficialSheet(selectedItem)}
+                  title="Imprimir Ficha Oficial"
+                >
+                  <Printer size={16} /> Imprimir Ficha
+                </button>
+              )}
               <button style={styles.btnSecondary} onClick={() => setSelectedItem(null)}>
                 Fechar
               </button>
@@ -1037,6 +1302,34 @@ const styles = {
     fontWeight: '600',
     fontSize: '0.85rem',
     cursor: 'pointer'
+  },
+  btnPrintPrimary: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.5rem 1.25rem',
+    borderRadius: '6px',
+    border: 'none',
+    backgroundColor: '#0891b2',
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: '0.85rem',
+    cursor: 'pointer',
+    transition: 'opacity 0.15s'
+  },
+  printBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    padding: '0.35rem 0.65rem',
+    backgroundColor: '#ecfeff',
+    color: '#0891b2',
+    border: '1px solid #a5f3fc',
+    borderRadius: '6px',
+    fontSize: '0.78rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'opacity 0.15s'
   },
   viewToggleGroup: {
     display: 'inline-flex',

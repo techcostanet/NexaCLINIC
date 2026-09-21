@@ -2359,8 +2359,12 @@ export const MODULE_GUIDES = {
     color: '#0891b2',
     recursos: [
       {
-        title: 'Inspeção Diária de EPI',
-        desc: 'Checklist com avaliação de uso adequado, higienização, descarte de resíduos e conservação de EPIs por setor e turno com status Conforme (C), Não Conforme (NC) e Não Avaliado (NA).'
+        title: 'Inspeção Diária de EPI e Segurança (11 Itens)',
+        desc: 'Checklist completo nos setores clínicos baseado na norma oficial com verificação de uso adequado de EPI, higienização das mãos, descarte de resíduos, conservação de EPI, limpeza dos ralos, adornos, cílios, bancadas, identificação química, fichas FDS e unhas.'
+      },
+      {
+        title: 'Checklist Diário da Copa (7 Itens)',
+        desc: 'Inspeção dedicada ao setor da Copa e nutrição com checagem de EPI, higienização, descarte, guarda de EPIs, ausência de adornos, limpeza de bancadas e requisitos de higiene das unhas.'
       },
       {
         title: 'Inspeção Semanal de Extintores',
@@ -2376,41 +2380,62 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Atalhos de Agilidade em Campo',
-        desc: 'Botões "Tudo Conforme" individuais por equipamento e botão mestre global para marcar 100% de conformidade com apenas 1 toque na tela do smartphone.'
+        desc: 'Botões "Conformes" individuais por equipamento e botão mestre global para marcar 100% de conformidade com apenas 1 toque na tela do smartphone.'
       },
       {
         title: 'Assinatura Digital Touch',
         desc: 'Coleta de assinatura por toque ou caneta digital diretamente na tela do dispositivo portátil, mantendo também o campo de digitação do nome do responsável.'
       },
       {
+        title: 'Impressão e Exportação de Fichas Oficiais',
+        desc: 'Geração direta e impressão formatada idêntica ao modelo físico de prancheta das planilhas oficiais, pronta para auditorias da Vigilância Sanitária e fiscalização.'
+      },
+      {
         title: 'Gestão de Equipamentos',
         desc: 'Cadastro e controle de extintores e hidrantes com alertas de validade de carga, recarga e teste hidrostático de 5 anos.'
       },
       {
-        title: 'Histórico Centralizado & Auditoria',
-        desc: 'Consulta completa de inspeções com filtros por tipo, período, setor e turno, visualização de detalhes e histórico de assinaturas colhidas.'
+        title: 'Histórico Centralizado e Auditoria',
+        desc: 'Consulta completa de inspeções com filtros por tipo (EPI, Copa, Extintores, Hidrantes), período, setor e turno, visualização de detalhes e histórico de assinaturas colhidas.'
       }
     ],
     tutorial: [
       {
-        title: 'Como Realizar uma Inspeção de Campo pelo Celular ou Tablet',
+        title: 'Como Realizar o Checklist Diário de EPI (Setores Clínicos)',
         steps: [
-          'Acesse o módulo SESMT no seu smartphone ou tablet através do navegador do aparelho.',
-          'Selecione a aba desejada: "Extintores", "Hidrantes" ou "EPI".',
-          'O sistema entrará automaticamente no modo "Cartões", apresentando cada equipamento com botões de toque grandes e fáceis de acionar com o dedo ou caneta.',
-          'Preencha a data e o setor ou utilize o botão "Tudo Conforme" para preencher rapidamente todos os itens regulares.',
-          'Em itens irregulares, toque no botão "NC" e descreva a pendência no campo de observação.',
-          'Colete a assinatura na caixa de assinatura digital tocando e desenhando com o dedo na tela, ou digite o nome do responsável.',
-          'Toque em "Salvar Inspeção" para registrar os dados no sistema em tempo real.'
+          'Acesse a aba "EPI" no módulo SESMT.',
+          'Selecione a data, horário, turno e o setor clínico desejado (ex: Salão Hemodiálise 1, Bloco Cirúrgico, Reuso, etc.).',
+          'Avalie os 11 itens oficiais com Conforme (C), Não Conforme (NC) ou Não Avaliado (NA). Utilize o botão rápido "Conformes" se todos estiverem regulares.',
+          'Informe o nome do Enfermeiro e do Técnico de Segurança, colha a assinatura touch na tela e clique em "Salvar".'
         ]
       },
       {
-        title: 'Como Utilizar o Atalho "Tudo Conforme"',
+        title: 'Como Realizar o Checklist Diário da Copa',
         steps: [
-          'Ao inspecionar múltiplos extintores ou hidrantes em perfeito estado, clique no botão superior "Tudo Conforme".',
-          'Todos os critérios técnicos (acesso, lacre, mangueira, manômetro, etc.) de todos os equipamentos da lista serão marcados como "C" simultaneamente.',
-          'Caso deseje pontuar um extintor específico, utilize o botão "Tudo Conforme" individual no cartão daquele equipamento.',
-          'Se houver alguma irregularidade pontual, basta tocar em "NC" no item específico para alterar apenas o critério pendente.'
+          'Acesse a aba "Copa" no módulo SESMT.',
+          'Confira a data, horário e turno de atendimento.',
+          'Avalie os 7 itens específicos de boas práticas e segurança na Copa (EPI, mãos, resíduos, conservação, adornos, bancadas e unhas).',
+          'Informe o Nutricionista e o Técnico de Segurança, colete a assinatura na tela e clique em "Salvar".'
+        ]
+      },
+      {
+        title: 'Como Imprimir a Ficha Física Oficial para Auditorias',
+        steps: [
+          'Acesse a aba "Histórico" no menu superior do SESMT.',
+          'Localize a inspeção realizada (EPI ou Copa) na tabela ou nos cartões.',
+          'Clique no botão "Imprimir" direto no registro ou abra "Detalhes" e clique em "Imprimir Ficha".',
+          'O sistema gerará a folha padronizada oficial da prancheta contendo cabeçalho institucional, todos os itens pontuados e as assinaturas colhidas.'
+        ]
+      },
+      {
+        title: 'Como Realizar uma Inspeção de Campo pelo Celular ou Tablet',
+        steps: [
+          'Acesse o módulo SESMT no seu smartphone ou tablet através do navegador do aparelho.',
+          'Selecione a aba desejada: "Extintores", "Hidrantes", "EPI" ou "Copa".',
+          'O sistema entrará automaticamente no modo "Cartões", apresentando cada critério com botões de toque grandes e fáceis de acionar com o dedo ou caneta.',
+          'Em itens irregulares, toque no botão "NC" e descreva a pendência no campo de observação.',
+          'Colete a assinatura na caixa de assinatura digital tocando e desenhando com o dedo na tela.',
+          'Toque em "Salvar" para registrar os dados no sistema em tempo real.'
         ]
       },
       {
@@ -2422,33 +2447,24 @@ export const MODULE_GUIDES = {
           'Informe as datas de recarga e teste hidrostático (a cada 5 anos).',
           'Clique em "Salvar" para disponibilizar o equipamento imediatamente nas inspeções semanais.'
         ]
-      },
-      {
-        title: 'Como Consultar e Auditar o Histórico de Inspeções',
-        steps: [
-          'Acesse a aba "Histórico" no menu do SESMT.',
-          'Utilize os filtros rápidos no topo para selecionar o tipo de inspeção ("EPI", "Extintores", "Hidrantes" ou "Todos").',
-          'Filtre por período (datas) ou utilize o campo de busca por setor ou responsável.',
-          'Clique em "Ver Detalhes" para abrir o espelho da inspeção com todos os itens avaliados e a assinatura digital colhida em campo.'
-        ]
       }
     ],
     duvidas: [
       {
-        pergunta: 'As inspeções feitas pelo celular funcionam da mesma forma que no computador?',
-        resposta: 'Sim. A base de dados é 100% unificada. O formulário apenas se adapta ergonomicamente: no celular ele exibe cartões com botões amplos para uso com os dedos, enquanto no computador você pode visualizar no formato de tabela clássica ou cartões.'
+        pergunta: 'Os checklists da Copa e de EPI atendem aos requisitos das auditorias sanitárias?',
+        resposta: 'Sim. Os formulários foram desenhados com base estrita nas planilhas e matrizes de fiscalização (Saude.xlsx e Copa.xlsx), registrando data, hora, turno, setor, responsáveis e assinatura digital comprovada.'
       },
       {
-        pergunta: 'É obrigatório assinar na tela ou posso apenas digitar o nome do inspetor?',
-        resposta: 'O preenchimento do nome digitado continua disponível e ativo. A assinatura digital na tela é uma comodidade extra para auditorias e perícias de campo, podendo ser preenchida opcionalmente ou conforme o protocolo da instituição.'
+        pergunta: 'Posso imprimir um checklist salvo a qualquer momento?',
+        resposta: 'Sim. Na aba Histórico você pode clicar em "Imprimir" para gerar o formulário em formato folha A4 com todas as marcações e assinatura, ideal para arquivamento físico ou apresentação a fiscais.'
+      },
+      {
+        pergunta: 'As inspeções da Copa afetam os indicadores do painel do SESMT?',
+        resposta: 'Sim. As inspeções da Copa são integradas ao cálculo de taxa global de conformidade e à lista de não-conformidades por setor, permitindo também filtragem individual pelo setor Copa.'
       },
       {
         pergunta: 'Como funciona a alternância entre Modo Cartões e Modo Tabela?',
         resposta: 'No topo de cada formulário e na aba de histórico existe um seletor visual com os botões "Cartões" e "Tabela". Em telas menores (celulares e tablets), o sistema já abre automaticamente no modo Cartões para facilitar a operação portátil.'
-      },
-      {
-        pergunta: 'Como saber se um extintor está próximo do vencimento da carga ou do teste hidrostático?',
-        resposta: 'Na aba Equipamentos e no painel do SESMT, o sistema monitora as validades e exibe alertas visuais coloridos para equipamentos vencidos ou com vencimento nos próximos 30 dias.'
       }
     ]
   }
