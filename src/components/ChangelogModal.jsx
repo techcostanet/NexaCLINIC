@@ -137,7 +137,6 @@ export default function ChangelogModal({ isOpen, onClose }) {
         { type: 'Roteamento Global de Relatórios', text: 'Conexão do botão [Relatórios] da Navbar superior ao painel clínico através do repasse de isReportsOpen e setIsReportsOpen no App.jsx.' },
         { type: 'Higienização de Rótulos (1 Palavra)', text: 'Remoção de termos duplos e barras nos formulários clínicos (Máquina, Peso Inicial, Peso Final, Perda, Conduta, Capilar, Duração, Fluxo QB, Dialisato QD, Heparina, Peso Seco, Evolução, Evento).' },
         { type: 'Manuais Atualizados', text: 'Limpeza de chave duplicada e atualização detalhada da documentação oficial do módulo clínico em moduleGuidesData.js com Recursos, Tutorial e FAQ de Dúvidas.' }
->>>>>>> origin/main
       ]
     },
     {
