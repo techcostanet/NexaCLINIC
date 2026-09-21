@@ -334,7 +334,7 @@ export default function MedicalDoctorsTab({
                     <input 
                       type="text" 
                       className="form-control" 
-                      placeholder="Número Cartão SUS / CNS"
+                      placeholder="Número do Cartão SUS"
                       value={doctorForm.susCard} 
                       onChange={e => setDoctorForm({ ...doctorForm, susCard: e.target.value })}
                       style={styles.input}

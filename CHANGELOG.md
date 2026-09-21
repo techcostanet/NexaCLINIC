@@ -1,4 +1,4 @@
-## [v4.9.79] - 21 de Setembro, 2026
+## [v4.9.85] - 21 de Setembro, 2026
 ### Nex-Ai CLINIC — Checklists Oficiais SESMT: EPIs (11 Itens Clínicos), Nova Aba Copa (7 Itens) & Ficha de Auditoria Oficial A4 (.SESMT)
 - **Checklist Oficial de EPIs Clínicos Baseado na Planilha Saude.xlsx (`DailyEPIChecklist.jsx`):**
   - Expansão completa para os 11 itens técnicos oficiais: Uso de EPI, Higienização das mãos, Descarte de resíduos, Conservação de EPI, Limpeza dos ralos, Ausência de adornos, Uso adequado de cílios, Bancadas/superfícies limpas, Produtos químicos identificados, FDS de químicos disponíveis e Condições/comprimento das unhas.
@@ -22,25 +22,173 @@
 
 ---
 
-## [v4.9.78] - 16 de Setembro, 2026
-### Nex-Ai CLINIC — Módulo SESMT Portátil para Celular e Tablet, Assinatura Digital Touch & Atalhos em Campo (.SESMT)
-- **Modo Híbrido Cartões & Tabela em Todo o Módulo SESMT:**
-  - Detecção inteligente da resolução do dispositivo (< 1024px) abrindo automaticamente no modo Cartões para celular e tablet com alvos de toque amplos (44px) nos botões de conferência.
-  - Preservação total do layout de alta densidade em formato de tabela clássica para uso em computador/desktop.
-  - Alternador visual instantâneo (`Cartões` vs. `Tabela`) presente nos formulários de extintores, hidrantes, EPIs, na gestão de equipamentos e no histórico.
-- **Coleta de Assinatura Digital Touch em Campo (`SignaturePad.jsx`):**
-  - Implementação de tela de assinatura interativa com suporte a toque (touchscreen) e caneta stylus via `PointerEvents` com isolamento `touch-action: none` prevenindo rolagem acidental.
-  - Opções de limpar/refazer e recolher/expandir o painel, exportando a assinatura em Base64 PNG.
-  - Preservação integral dos campos de digitação de texto para os nomes do responsável, enfermeiro e inspetor.
-  - Exibição da assinatura digital capturada no modal de espelho da inspeção no histórico.
-- **Atalhos Operacionais Ágeis em Campo:**
-  - Botão mestre "Tudo Conforme" no topo e botões individuais por equipamento para marcar simultaneamente todos os critérios técnicos como Conforme (`C`) com 1 toque.
-  - Pílulas táteis de 2 estados (`C` / `NC`) para extintores e hidrantes e 3 estados (`C` / `NC` / `NA`) para EPIs, substituindo menus suspensos complexos.
-- **Padronização Oficial de Cabeçalho (.SESMT) e UI/UX (Padrão de 1 Palavra):**
-  - Integração do componente oficial `ModuleHeader` com a insígnia `.SESMT`, gradiente ciano e ícone de escudo temático.
-  - Higienização ativa de rótulos e termos duplos conforme a *Boy Scout Rule* e diretrizes de `.agents/AGENTS.md`.
-- **Manuais e Base de Conhecimento (`moduleGuidesData.js`):**
-  - Criação do manual completo do SESMT contendo `Recursos`, `Tutorial` passo a passo para operação móvel e digital, e `Dúvidas` frequentes.
+## [v4.9.84] - 19 de Setembro, 2026
+### Nex-Ai CLINIC — Padronização Oficial de Cabeçalhos (.HR e .CALENDAR) & Desduplicação de Unidades
+- **Cabeçalho Oficial .HR (`HRPanel.jsx`):**
+  - Implementação do componente padronizado `ModuleHeader` no módulo de Recursos Humanos com identificação `.HR`, gradiente índigo (`linear-gradient(135deg, #6366f1, #4f46e5)`), ponto de destaque colorido e botão contextual de ação rápida `+ Colaborador`.
+  - Remoção da duplicação do `<UnitSelector />`, mantendo a centralização exclusiva na barra de navegação global (Navbar).
+- **Cabeçalho Oficial .CALENDAR (`CalendarPanel.jsx`):**
+  - Adoção do `ModuleHeader` no módulo de Agenda com identificação `.CALENDAR`, ícone temático de calendário em caixa de 46x46px e gradiente ciano (`linear-gradient(135deg, #06b6d4, #0891b2)`).
+  - Consolidação das ações contextuais de tela (Grade Médica, Bloquear Ausência, Painel TV, Atualizar e Agendar) e remoção do `<UnitSelector />` redundante.
+- **Conformidade com Diretrizes de Layout (`standard-header-ui.md`):**
+  - Alinhamento rigoroso de `styles.container` com `display: flex`, `flexDirection: column` e `gap: 1.25rem`, eliminando `padding: 1.5rem` e `margin: 0 auto` manuais no painel da Agenda.
+
+---
+
+## [v4.9.83] - 19 de Setembro, 2026
+### Nex-Ai CLINIC — Módulo RH: Correção no Modal de Edição de Treinamentos (React Error #31) & Padronização de Rótulos
+- **Correção Crítica no Modal de Treinamentos (`TrainingModal.jsx`):**
+  - Corrigida a renderização do seletor de setores que provocava o erro `Minified React error #31` ao abrir qualquer treinamento para edição ou cadastro, extraindo com segurança `s.name` em vez de renderizar o objeto de configuração diretamente.
+  - Implementado tratamento defensivo e retrocompatível para manter setores personalizados ou preexistentes já gravados no banco.
+- **Conformidade com Diretrizes de UI/UX & Boy Scout Rule:**
+  - Padronização de rótulos diretos e concisos de 1 termo único no `TrainingModal.jsx` (Instrutor, Cargo, Carga, Validade, Corte, Duração, Tipo, Vídeo, Conteúdo, Justificativa) e no `TrainingsTab.jsx` (Realização, Reciclar, Controle de Reciclagem).
+
+---
+
+## [v4.9.82] - 19 de Setembro, 2026
+### Nex-Ai CLINIC — Módulo .STOCK & .CONFIG: Categorias Dinâmicas, Almoxarifados, Kits de Hemodiálise & 3 Modos de Entradas
+- **Categorias Dinâmicas de Produtos com CRUD no .CONFIG (`ConfigPanel.jsx` & `StockPanel.jsx`):**
+  - O seletor de categorias do produto agora carrega dinamicamente a coleção `stock_categories` mantida no Firestore.
+  - Seeding inicial inteligente com 20 categorias padronizadas de nefrologia e farmácia hospitalar (MatMed, Medicamento, Controlado, Concentrado, Dialisador, Linhas, Acesso, Curativo, etc.).
+  - CRUD completo na aba "Categorias" do módulo .CONFIG para inclusão, alteração e exclusão com sincronização em tempo real.
+- **Correção da Seleção de Almoxarifado / Setor Padrão:**
+  - Corrigido o mapeamento no cadastro e edição de insumos para consumir os locais físicos reais da coleção `stock_locations`.
+  - CRUD completo de depósitos, farmácias satélites e postos de consumo na aba "Almoxarifados" do módulo .CONFIG.
+- **6 Kits Clínicos de Enfermagem em Hemodiálise (`initialProducts.json` & `stockService.js`):**
+  - Estruturados 6 kits assistenciais completos para a enfermagem com produtos reais do catálogo e custos calculados:
+    1. *KIT-HEMO-01:* Conexão de Fístula Arteriovenosa (FAV).
+    2. *KIT-HEMO-02:* Desconexão e Hemostasia de Fístula (FAV).
+    3. *KIT-HEMO-03:* Curativo Estéril de Cateter Permcath.
+    4. *KIT-HEMO-04:* Implante / Manutenção de Cateter Duplo Lúmen (CDL).
+    5. *KIT-HEMO-05:* Recirculação e Priming de Circuito Extracorpóreo.
+    6. *KIT-HEMO-06:* Manejo de Intercorrência e Coagulação Intradialítica.
+- **3 Modos Oficiais de Visualização na Aba Entradas:**
+  - *Compacta:* Tabela de alta densidade operacional (36px) com edição inline de valores em 1 clique.
+  - *Normal:* Tabela detalhada completa com chave de acesso de 44 dígitos, itens, emitente e parcelas.
+  - *Cards:* Grade visual responsiva de faturas com badges de documento, status de boleto e ações rápidas.
+- **Padrão de Rótulos Diretos & Boy Scout Rule:**
+  - Higienização ativa de termos compostos e duplos em formulários, tabelas e modais, adotando termos únicos e diretos.
+- **Manuais Atualizados (`moduleGuidesData.js`):**
+  - Documentação completa das novas rotinas operacionais nas seções de recursos, tutoriais e perguntas frequentes.
+
+---
+
+## [v4.9.81] - 19 de Setembro, 2026
+### Nex-Ai CLINIC — Módulo .MED: Tela de Homologação Médica, Apuração Real de Consultas & Limpeza de UI
+- **Nova Tela Modal de Homologação da Gestão Médica (`MedicalHomologationModal.jsx`):**
+  - Implementada tela modal interativa acionada ao clicar em "Homologar" na aba Produção, permitindo que a coordenação valide a produção antes do envio ao financeiro.
+  - Discriminação itemizada de plantões presenciais auditados (com datas, salões e turnos), consultas ambulatoriais concluídas e procedimentos nefrológicos.
+  - Campo de ajuste de honorários (+ / -) com justificativa e seletor da data de vencimento a ser cadastrada no Contas a Pagar.
+  - Lançamento automático no Contas a Pagar do NexaFINANCE na categoria "Honorários Médicos" com chave PIX e dados bancários do nefrologista.
+- **Recurso de Desfazer Homologação / Estorno Financeiro:**
+  - Botão "Detalhes" em itens homologados permitindo auditar o ID do título a pagar gerado e estornar a homologação com exclusão segura do título no Contas a Pagar.
+- **Correção da Apuração de Consultas Ambulatoriais (`MedicalProductionTab.jsx`):**
+  - Removido o valor fixo fictício de 8 consultas, passando a contabilizar estritamente os atendimentos finalizados na Agenda médica (ou 0 caso não haja).
+- **Limpeza do Cabeçalho do Módulo .MED (`MedicalPanel.jsx`):**
+  - Removido o botão verde redundante "Relatórios" do ModuleHeader, unificando o acesso na barra superior global do sistema.
+- **Busca e Filtros Rápidos de Produção (`MedicalProductionTab.jsx`):**
+  - Filtros por status (Todos, Pendentes, Homologados) com contadores em tempo real e pesquisa instantânea por médico/CRM.
+- **Conformidade de UI/UX & Boy Scout Rule:**
+  - Substituição de termos com barras por rótulos concisos e diretos em relatórios, fichas médicas e telas de trocas.
+- **Manuais Atualizados (`moduleGuidesData.js`):**
+  - Atualização completa do tutorial do módulo .MED detalhando o fluxo interativo de homologação e repasse financeiro.
+
+---
+
+## [v4.9.79] - 17 de Setembro, 2026
+### Nex-Ai CLINIC — 15 Treinamentos Especializados em Nefrologia, Logomarca Institucional & Sincronização 1-Clique
+- **15 Treinamentos Especializados para Clínica de Nefrologia (`nephrologyTrainingsData.js`):**
+  - Criação de matriz curricular com 15 treinamentos completos cobrindo todos os setores clínicos e operacionais:
+    1. *Enfermagem:* Manejo, Punção e Preservação da Fístula Arteriovenosa (FAV).
+    2. *Enfermagem:* Prevenção de Infecções em Cateteres de Hemodiálise (CVC e Permcath) e técnica Scrub the Hub.
+    3. *Enfermagem:* Prevenção e Manejo de Emergências e Intercorrências Intradialíticas (Hipotensão, Câimbras, Coagulação e SDD).
+    4. *Enfermagem / Reuso:* Processamento, Reuso e Teste Residual em Dialisadores (ANVISA RDC 11/2014).
+    5. *Manutenção:* Monitoramento do Sistema de Tratamento de Água para Hemodiálise (Osmose Reversa, Cloro < 0,1 mg/L, Dureza e Endotoxinas).
+    6. *Manutenção:* Manutenção Preventiva e Desinfecção de Máquinas Proporcionadoras de Diálise.
+    7. *Médico:* Prescrição Dialítica Individualizada, Adequação (Kt/V >= 1,2, URR), Anemia e DMO-DRC.
+    8. *Farmácia:* Farmácia Clínica: Concentrado Ácido e Básico (diluição em 24h) e Cadeia de Frio (+2°C a +8°C).
+    9. *Higienização:* Limpeza das Salas de Diálise e Protocolos Estritos de Isolamento da Sala de Hepatite B (HBsAg+).
+    10. *Nutrição:* Terapia Nutricional Renal: Manejo de Potássio, Fósforo Inorgânico e Balanço Hídrico (GPID).
+    11. *Psicologia & Serviço Social:* Suporte Psicossocial, Adesão Terapêutica, Direitos Sociais (Passe Livre, BPC) e Transplante.
+    12. *Recepção:* Acolhimento na Recepção, Pesagem Pré-Diálise e Articulação com Transporte Sanitário Municipal.
+    13. *Faturamento:* Faturamento de APAC de Hemodiálise, Auditoria de Prontuários e Conformidade SUS.
+    14. *Qualidade / NSP:* Metas Internacionais de Segurança do Paciente Aplicadas à Nefrologia e Alta Segura Pós-Diálise.
+    15. *T.I. / LGPD:* Segurança da Informação, LGPD e Sigilo do Prontuário Eletrônico em Nefrologia.
+- **5 Questões de Pré-Teste e 5 de Pós-Teste por Treinamento:**
+  - Cada um dos 15 módulos contém rigorosamente 5 perguntas diagnósticas iniciais e 5 perguntas pós-teste com justificativas clínicas detalhadas.
+- **Logomarca Oficial Integrada aos Portais e Certificados:**
+  - Aplicação da logomarca oficial da clínica (`/logo.png`) no topo do Portal do Colaborador, no Certificado Digital (em tela e no PDF exportado via `jsPDF`), no Cartaz de Divulgação mural e no Dossiê da Vigilância Sanitária.
+- **Sincronização 1-Clique no Firestore & Auto-Seed (`hrService.ts` & `TrainingsTab.jsx`):**
+  - Implementação de botão "Sincronizar" na barra do RH e rotina de auto-seed que popula automaticamente os 15 treinamentos no banco de dados Firestore `hr_trainings`.
+
+---
+
+## [v4.9.78] - 17 de Setembro, 2026
+### Nex-Ai CLINIC — Correção de Inicialização da Tela Principal (Hotfix ReferenceError)
+- **Correção de Inicialização de Rota (`App.jsx`):**
+  - Reordenação da declaração das constantes `pathname` e `hash` antes de sua utilização na extração de rotas diretas de treinamento e certificado digital, corrigindo o erro de Temporal Dead Zone (`ReferenceError: Cannot access 'pathname' before initialization`) e restaurando a exibição imediata da tela inicial.
+
+---
+
+## [v4.9.77] - 17 de Setembro, 2026
+### Nex-Ai CLINIC — Gestão de Treinamentos (.HR), Avaliação de Eficácia (Pré/Pós-teste), Certificados com QR Code & Dossiê VISA
+- **Aba Treinamentos no Módulo NexaHR (`HRPanel.jsx` & `TrainingsTab.jsx`):**
+  - Implementação da nova aba dedicada "Treinamentos" para controle de capacitação continuada e conformidade sanitária (ANVISA RDC 63/2011 e NR-32).
+  - Painel com KPIs estratégicos em tempo real: Total de Treinamentos, Conclusões Totais, Taxa de Aprovação Média, Ganho Médio de Eficácia (+%) e Alertas de Reciclagem Periódica.
+  - Sub-aba "Catálogo": Visualização em grade dos programas ativos com botões de divulgação (QR Code), edição e exclusão.
+  - Sub-aba "Participações": Auditoria completa de colaboradores com data, notas pré e pós-teste, ganho de eficácia (+%) e acesso ao certificado emitido.
+  - Sub-aba "Reciclagem": Matriz de vencimentos de treinamentos periódicos com alertas visuais (Em dia, A vencer em 30d, Vencido) e link rápido de reciclagem.
+- **Portal Público do Colaborador Mobile-First (`EmployeeTrainingPortal.jsx`):**
+  - Página leve e responsiva projetada para celulares e tablets da clínica, acessível via link e QR Code sem necessidade de login prévio.
+  - Etapa 1 (Identificação): Consulta instantânea por CPF no banco de dados do RH, preenchendo automaticamente nome, cargo e setor.
+  - Etapa 2 (Pré-teste): Questionário diagnóstico inicial de sondagem para medir o conhecimento prévio.
+  - Etapa 3 (Conteúdo com Trava de Tempo): Estudo do material didático (vídeo ou texto estruturado) com temporizador ativo que exige a permanência mínima do colaborador antes de liberar o pós-teste.
+  - Etapa 4 (Pós-teste): Avaliação de fixação com cálculo imediato da nota e feedback explicativo de respostas.
+  - Etapa 5 (Resultado): Emissão imediata do certificado digital em caso de aprovação ou orientação para revisão do conteúdo e nova tentativa.
+- **Certificação Digital & Validação de Autenticidade (`CertificateView.jsx` & `CertificateVerifyPortal.jsx`):**
+  - Emissão de Certificado Digital de Capacitação com design institucional, dados do colaborador (nome, CPF, setor), carga horária, nota, ganho de eficácia e código de registro único.
+  - Exportação em PDF de alta qualidade via `jsPDF` e suporte a impressão direta em impressoras convencionais e térmicas.
+  - QR Code no certificado apontando para o validador público do NexaCLINIC (`?certificado=ID`), atestando a autenticidade perante fiscais e auditores.
+- **Dossiê Vigilância Sanitária em 1 Clique (`TrainingDossierModal.jsx`):**
+  - Gerador oficial de Dossiê Sanitário em PDF para auditorias municipais (VISA), reunindo ementa do curso, lista de presenças e aprovações com CPFs, notas diagnóstica e de fixação, ganho médio de eficácia e campos formais para assinatura do RT e visto do fiscal.
+- **Modelos Prontos Hospitalares (`TrainingModal.jsx` & `hrService.ts`):**
+  - Templates pré-configurados prontos para uso com conteúdo validado e questionários de NR-32 & Biossegurança, PGRSS & Descarte de Resíduos, Higienização das Mãos & Precauções Padrão, Atendimento Humanizado e LGPD em Saúde.
+- **Roteamento Público no Sistema (`App.jsx`):**
+  - Suporte a rotas diretas `?treinamento=ID` e `?certificado=ID` (e paths equivalentes) carregando os respectivos portais sem exigir autenticação administrativa.
+- **Atualização do Manual e Regras de UI (`moduleGuidesData.js`):**
+  - Atualização completa do guia do módulo de RH com Recursos, Tutorial passo a passo e FAQ com dúvidas sobre eficácia e validação de certificados.
+
+---
+
+## [v4.9.77] - 16 de Setembro, 2026
+### Nex-Ai CLINIC — Padronização Oficial de Design (.CLINIC), Central de Relatórios Especializados & 5 KPI Cards
+- **Padrão Oficial de Cabeçalho dos Módulos (`ModuleHeader.jsx` & `ClinicalPanel.jsx`):**
+  - Implementação do cabeçalho unificado com identificador `.CLINIC`, gradiente roxo/violeta (`#8b5cf6` / `#7c3aed`), ícone `HeartPulse`, dotColor `#8b5cf6` e botões rápidos contextuais (`Copiloto` e `Relatórios`).
+  - Remoção terminante do `<UnitSelector />` do interior do módulo clínico, mantendo a responsabilidade única e centralizada na Navbar superior global.
+- **Faixa de Indicadores de Gestão (5 KPI Cards):**
+  - Adição de 5 cards consolidados com métricas em tempo real: `Pacientes` (base cadastrada), `Prescrições` (protocolos vigentes), `Sessões` (realizadas/previstas hoje), `Evoluções` (notas do prontuário) e `Farmácia` (medicamentos ativos) com navegação rápida para as abas ao clicar.
+- **Nova Central de Relatórios Clínicos & Nefrológicos (`ClinicalReportsModal.jsx`):**
+  - Criação da central analítica do módulo com 12 relatórios especializados:
+    1. Censo Geral de Pacientes Renais
+    2. Mapa de Acessos Vasculares (FAV, Próteses, CDL, Permcath)
+    3. Prescrições Dialíticas Vigentes (QB, QD, capilares, heparina)
+    4. Monitoramento Horário de Sessões (pressão, perda, intercorrências)
+    5. Auditoria de Taxa de Ultrafiltração (> 13 mL/kg/h com alerta hemodinâmico)
+    6. Painel Laboratorial Consolidado & Semáforo SBN
+    7. Controle de Anemia & Cinética de Ferro (Hb, Ferritina, SAT)
+    8. Metabolismo Ósseo e Mineral (Cálcio, Fósforo, Ca x P, PTH)
+    9. Regulação & Validade de Laudos APAC (alerta preventivo de 30 dias)
+    10. Farmacoterapia & Dispensação Clínica (fármacos intradialíticos)
+    11. Auditoria de Evoluções no Prontuário (médica, enfermagem, nutrição, psicologia, social)
+    12. Alertas Assistenciais & Ocorrências no Mural
+  - Filtros dinâmicos por Salão (Salão 1, 2, 3, Isolamento), Turno (1º, 2º, 3º) e busca em tempo real por paciente/máquina.
+  - Exportação instantânea em Planilha Excel (`.xlsx`) e Documento Formatado em PDF (`.pdf`) com cabeçalho institucional e impressão nativa.
+- **Roteamento Global de Relatórios (`App.jsx`):**
+  - Conexão do atalho global `[Relatórios]` da Navbar superior diretamente ao `ClinicalPanel` repassando `isReportsOpen` e `setIsReportsOpen`.
+- **Higienização Ativa de Rótulos (Boy Scout Rule):**
+  - Remoção de barras e termos redundantes nos formulários clínicos (`Máquina *`, `Peso Inicial`, `Peso Final`, `Perda`, `Conduta`, `Capilar *`, `Duração *`, `Fluxo (QB) *`, `Dialisato (QD) *`, `Heparina *`, `Peso Seco *`, `Evolução *`, `Evento`).
+- **Atualização Contínua dos Manuais (`moduleGuidesData.js`):**
+  - Limpeza de chave duplicada legada e documentação completa das novas funcionalidades do `.CLINIC` nas seções `Recursos`, `Tutorial` e `Dúvidas`.
 
 ---
 

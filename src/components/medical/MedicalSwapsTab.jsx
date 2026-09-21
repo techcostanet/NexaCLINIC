@@ -328,10 +328,10 @@ export default function MedicalSwapsTab({
                   </div>
 
                   <div className="form-group">
-                    <label>Motivo da Troca</label>
+                    <label>Motivo</label>
                     <textarea
                       className="form-control"
-                      placeholder="Ex: Participação em congresso de nefrologia / compromisso pessoal..."
+                      placeholder="Ex: Participação em congresso, viagem ou compromisso pessoal..."
                       value={swapReason}
                       onChange={e => setSwapReason(e.target.value)}
                       rows={3}

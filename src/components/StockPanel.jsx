@@ -255,6 +255,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
 
   // View Mode: 'compact' (Padrão) | 'normal' | 'cards'
   const [productViewMode, setProductViewMode] = useState('compact');
+  const [invoiceViewMode, setInvoiceViewMode] = useState('compact');
   const [editingInvoiceValueId, setEditingInvoiceValueId] = useState(null);
   const [tempInvoiceValue, setTempInvoiceValue] = useState('');
   const [detailValueInput, setDetailValueInput] = useState('');
@@ -509,27 +510,95 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                   value={invoiceTypeFilter}
                   onChange={e => setInvoiceTypeFilter(e.target.value)}
                   style={styles.filterSelect}
-                  title="Filtrar por Tipo de Nota"
+                  title="Filtrar por tipo"
                 >
-                  <option value="all">Todas as Entradas</option>
-                  <option value="product">Produtos (NF-e)</option>
-                  <option value="service">Serviços (NFS-e)</option>
+                  <option value="all">Todas</option>
+                  <option value="product">Produtos</option>
+                  <option value="service">Serviços</option>
                 </select>
+
+                {/* View Mode Segmented Controls for Invoices */}
+                <div style={{ display: 'inline-flex', alignItems: 'center', backgroundColor: 'var(--bg-body)', padding: '0.2rem', borderRadius: '8px', border: '1px solid var(--border-color)', gap: '0.2rem' }}>
+                  <button 
+                    type="button"
+                    onClick={() => setInvoiceViewMode('compact')} 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: '0.35rem 0.65rem',
+                      borderRadius: '6px',
+                      fontSize: '0.78rem',
+                      fontWeight: '600',
+                      border: 'none',
+                      cursor: 'pointer',
+                      backgroundColor: invoiceViewMode === 'compact' ? '#f59e0b' : 'transparent',
+                      color: invoiceViewMode === 'compact' ? '#fff' : 'var(--text-secondary)',
+                      transition: 'all 0.15s ease'
+                    }}
+                    title="Visualização Compacta"
+                  >
+                    <AlignJustify size={14} /> Compacta
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setInvoiceViewMode('normal')} 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: '0.35rem 0.65rem',
+                      borderRadius: '6px',
+                      fontSize: '0.78rem',
+                      fontWeight: '600',
+                      border: 'none',
+                      cursor: 'pointer',
+                      backgroundColor: invoiceViewMode === 'normal' ? '#f59e0b' : 'transparent',
+                      color: invoiceViewMode === 'normal' ? '#fff' : 'var(--text-secondary)',
+                      transition: 'all 0.15s ease'
+                    }}
+                    title="Visualização Normal"
+                  >
+                    <Table size={14} /> Normal
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setInvoiceViewMode('cards')} 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: '0.35rem 0.65rem',
+                      borderRadius: '6px',
+                      fontSize: '0.78rem',
+                      fontWeight: '600',
+                      border: 'none',
+                      cursor: 'pointer',
+                      backgroundColor: invoiceViewMode === 'cards' ? '#f59e0b' : 'transparent',
+                      color: invoiceViewMode === 'cards' ? '#fff' : 'var(--text-secondary)',
+                      transition: 'all 0.15s ease'
+                    }}
+                    title="Visualização em Cards"
+                  >
+                    <LayoutGrid size={14} /> Cards
+                  </button>
+                </div>
+
                 <button 
                   onClick={handleStartImportWizard} 
                   className="btn btn-primary" 
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#f59e0b' }}
-                  title="Importar NF-e ou NFS-e via arquivo XML ou PDF"
+                  title="Importar nota fiscal via arquivo XML ou PDF"
                 >
-                  <UploadCloud size={16} /> Importar (XML ou PDF)
+                  <UploadCloud size={16} /> Importar
                 </button>
                 <button 
                   onClick={() => handleStartManualServiceEntry('service')} 
                   className="btn btn-primary" 
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#8b5cf6' }}
-                  title="Lançamento manual de nota de serviços prestados"
+                  title="Lançamento manual de nota de serviços"
                 >
-                  <Plus size={16} /> Lançar Serviço
+                  <Plus size={16} /> Serviço
                 </button>
               </div>
             )}
@@ -964,7 +1033,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div>
                     <h2 style={{ fontSize: '1.15rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Package size={22} color="#f59e0b" /> Kits de Insumos & Procedimentos
+                      <Package size={22} color="#f59e0b" /> Kits
                     </h2>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>
                       Pacotes padronizados para abertura de sessão de hemodiálise, curativos e punções.
@@ -975,7 +1044,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                     className="btn btn-primary"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f59e0b' }}
                   >
-                    <Plus size={16} /> Novo Kit
+                    <Plus size={16} /> Kit
                   </button>
                 </div>
 
@@ -984,11 +1053,11 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                     <thead>
                       <tr>
                         {renderSortHeader('Código', 'code', kitSort, setKitSort)}
-                        {renderSortHeader('Nome do Kit', 'name', kitSort, setKitSort)}
+                        {renderSortHeader('Kit', 'name', kitSort, setKitSort)}
                         {renderSortHeader('Categoria', 'category', kitSort, setKitSort)}
-                        <th>Salão Padrão</th>
-                        <th>Composição ({filteredKits.length > 0 ? 'Itens' : '0'})</th>
-                        {renderSortHeader('Custo Estimado', 'totalCost', kitSort, setKitSort)}
+                        <th>Local</th>
+                        <th>Composição</th>
+                        {renderSortHeader('Custo', 'totalCost', kitSort, setKitSort)}
                         <th>Ações</th>
                       </tr>
                     </thead>
@@ -1242,31 +1311,388 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
               return true;
             });
 
+            const sortedInvoices = sortData(filteredInvoices, invoiceSort);
+
             return (
-              <div style={styles.tableWrapper}>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th style={styles.th}>Tipo</th>
-                      {renderSortHeader('Nota', 'number', invoiceSort, setInvoiceSort)}
-                      {renderSortHeader('Código', 'accessKey', invoiceSort, setInvoiceSort)}
-                      {renderSortHeader('Fornecedor', 'supplierName', invoiceSort, setInvoiceSort)}
-                      {renderSortHeader('Emissão', 'issueDate', invoiceSort, setInvoiceSort)}
-                      {renderSortHeader('Entrada', 'entryDate', invoiceSort, setInvoiceSort)}
-                      {renderSortHeader('Valor', 'totalValue', invoiceSort, setInvoiceSort)}
-                      <th style={styles.th}>Boleto</th>
-                      <th style={styles.th}>Detalhes</th>
-                      <th style={styles.th}>Status</th>
-                      <th style={styles.th}>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredInvoices.length === 0 ? (
-                      <tr>
-                        <td colSpan="11" style={styles.noDataCell}>Nenhuma nota fiscal encontrada no filtro selecionado.</td>
-                      </tr>
+              <div>
+                {/* 1. VIEW MODE: COMPACTA */}
+                {invoiceViewMode === 'compact' && (
+                  <div style={styles.tableWrapper}>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr>
+                          <th style={styles.th}>Tipo</th>
+                          {renderSortHeader('Nota', 'number', invoiceSort, setInvoiceSort)}
+                          {renderSortHeader('Fornecedor', 'supplierName', invoiceSort, setInvoiceSort)}
+                          {renderSortHeader('Emissão', 'issueDate', invoiceSort, setInvoiceSort)}
+                          {renderSortHeader('Entrada', 'entryDate', invoiceSort, setInvoiceSort)}
+                          {renderSortHeader('Valor', 'totalValue', invoiceSort, setInvoiceSort)}
+                          <th style={styles.th}>Boleto</th>
+                          <th style={styles.th}>Status</th>
+                          <th style={styles.th}>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sortedInvoices.length === 0 ? (
+                          <tr>
+                            <td colSpan="9" style={styles.noDataCell}>Nenhuma nota fiscal encontrada no filtro selecionado.</td>
+                          </tr>
+                        ) : (
+                          sortedInvoices.map((inv, idx) => {
+                            const sumInst = (inv?.installments && inv.installments.length > 0)
+                              ? inv.installments.reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0)
+                              : 0;
+                            const totalVal = (parseFloat(inv?.totalValue) > 0)
+                              ? parseFloat(inv.totalValue)
+                              : (sumInst > 0 ? sumInst : (parseFloat(inv?.amount) || 0));
+
+                            const isService = inv?.invoiceType === 'service' || 
+                                              (!inv?.items || inv?.items.length === 0) || 
+                                              Boolean(inv?.serviceDescription);
+                            const hasBoleto = Boolean(inv?.hasBoleto || inv?.boletoUrl || (inv?.installments && inv.installments.some(inst => inst.boletoUrl || inst.digitableLine)));
+
+                            return (
+                              <tr key={inv?.id || idx} style={{ height: '36px' }}>
+                                <td style={{ padding: '0.35rem 0.5rem' }}>
+                                  <span style={{
+                                    padding: '0.15rem 0.45rem',
+                                    borderRadius: '10px',
+                                    fontSize: '0.7rem',
+                                    fontWeight: '700',
+                                    backgroundColor: isService ? '#f3e8ff' : '#e0f2fe',
+                                    color: isService ? '#7e22ce' : '#0369a1'
+                                  }}>
+                                    {isService ? 'Serviço' : 'Produto'}
+                                  </span>
+                                </td>
+                                <td style={{ fontWeight: '700', padding: '0.35rem 0.5rem', cursor: 'pointer' }} onClick={() => { setSelectedInvoiceDetail(inv); setShowInvoiceDetailModal(true); }}>
+                                  {inv?.number ? `Nº ${inv.number}` : 'S/N'}
+                                </td>
+                                <td style={{ fontWeight: '600', padding: '0.35rem 0.5rem', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {inv?.supplierName || inv?.supplier || 'Fornecedor Desconhecido'}
+                                </td>
+                                <td style={{ padding: '0.35rem 0.5rem', fontSize: '0.78rem' }}>
+                                  {inv?.issueDate && !isNaN(new Date(inv.issueDate).getTime()) ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}
+                                </td>
+                                <td style={{ padding: '0.35rem 0.5rem', fontSize: '0.78rem' }}>
+                                  {inv?.entryDate && !isNaN(new Date(inv.entryDate).getTime()) ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}
+                                </td>
+                                <td style={{ fontWeight: '700', padding: '0.35rem 0.5rem' }}>
+                                  {editingInvoiceValueId === inv?.id ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>R$</span>
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        autoFocus
+                                        value={tempInvoiceValue}
+                                        onChange={e => setTempInvoiceValue(e.target.value)}
+                                        onKeyDown={e => {
+                                          if (e.key === 'Enter') {
+                                            handleSaveInvoiceValue(inv.id, tempInvoiceValue);
+                                            setEditingInvoiceValueId(null);
+                                          }
+                                          if (e.key === 'Escape') setEditingInvoiceValueId(null);
+                                        }}
+                                        style={{ width: '85px', padding: '0.15rem 0.3rem', fontSize: '0.78rem', fontWeight: '700', borderRadius: '4px', border: '1px solid #0284c7' }}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          handleSaveInvoiceValue(inv.id, tempInvoiceValue);
+                                          setEditingInvoiceValueId(null);
+                                        }}
+                                        style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.2rem 0.35rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                        title="Salvar valor"
+                                      >
+                                        <Check size={12} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingInvoiceValueId(null)}
+                                        style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.2rem 0.35rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                        title="Cancelar"
+                                      >
+                                        <X size={12} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div 
+                                      onClick={() => {
+                                        setEditingInvoiceValueId(inv.id);
+                                        setTempInvoiceValue(totalVal > 0 ? totalVal : '');
+                                      }}
+                                      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer', padding: '0.15rem 0.3rem', borderRadius: '4px' }}
+                                      title="Clique para editar o valor"
+                                    >
+                                      <span>R$ {totalVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                      <Edit2 size={11} color="#0284c7" style={{ opacity: 0.85 }} />
+                                    </div>
+                                  )}
+                                </td>
+                                <td style={{ padding: '0.35rem 0.5rem' }}>
+                                  {hasBoleto ? (
+                                    <span style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      padding: '0.15rem 0.45rem',
+                                      borderRadius: '10px',
+                                      fontSize: '0.7rem',
+                                      fontWeight: '700',
+                                      backgroundColor: '#ecfdf5',
+                                      color: '#166534',
+                                      border: '1px solid #a7f3d0'
+                                    }}>
+                                      <FileText size={11} /> Boleto
+                                    </span>
+                                  ) : (
+                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Pendente</span>
+                                  )}
+                                </td>
+                                <td style={{ padding: '0.35rem 0.5rem' }}>
+                                  <span style={{ ...styles.badgeNormal, fontSize: '0.7rem', padding: '0.1rem 0.4rem' }}>Processada</span>
+                                </td>
+                                <td style={{ padding: '0.35rem 0.5rem' }}>
+                                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                    <button 
+                                      onClick={() => { setSelectedInvoiceDetail(inv); setShowInvoiceDetailModal(true); }}
+                                      style={{ ...styles.actionEditBtn, padding: '0.2rem 0.45rem', fontSize: '0.75rem' }} 
+                                      title="Ver Detalhes"
+                                    >
+                                      <Eye size={12} /> Ver
+                                    </button>
+                                    <button 
+                                      onClick={() => handleDeleteInvoice(inv?.id)} 
+                                      style={{ ...styles.actionEditBtn, padding: '0.2rem 0.45rem', backgroundColor: '#fee2e2', color: '#991b1b' }} 
+                                      title="Excluir Nota"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* 2. VIEW MODE: NORMAL (TABELA COMPLETA) */}
+                {invoiceViewMode === 'normal' && (
+                  <div style={styles.tableWrapper}>
+                    <table style={styles.table}>
+                      <thead>
+                        <tr>
+                          <th style={styles.th}>Tipo</th>
+                          {renderSortHeader('Nota', 'number', invoiceSort, setInvoiceSort)}
+                          {renderSortHeader('Código', 'accessKey', invoiceSort, setInvoiceSort)}
+                          {renderSortHeader('Fornecedor', 'supplierName', invoiceSort, setInvoiceSort)}
+                          {renderSortHeader('Emissão', 'issueDate', invoiceSort, setInvoiceSort)}
+                          {renderSortHeader('Entrada', 'entryDate', invoiceSort, setInvoiceSort)}
+                          {renderSortHeader('Valor', 'totalValue', invoiceSort, setInvoiceSort)}
+                          <th style={styles.th}>Boleto</th>
+                          <th style={styles.th}>Detalhes</th>
+                          <th style={styles.th}>Status</th>
+                          <th style={styles.th}>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sortedInvoices.length === 0 ? (
+                          <tr>
+                            <td colSpan="11" style={styles.noDataCell}>Nenhuma nota fiscal encontrada no filtro selecionado.</td>
+                          </tr>
+                        ) : (
+                          sortedInvoices.map((inv, idx) => {
+                            const sumInst = (inv?.installments && inv.installments.length > 0)
+                              ? inv.installments.reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0)
+                              : 0;
+                            const totalVal = (parseFloat(inv?.totalValue) > 0)
+                              ? parseFloat(inv.totalValue)
+                              : (sumInst > 0 ? sumInst : (parseFloat(inv?.amount) || 0));
+
+                            const isService = inv?.invoiceType === 'service' || 
+                                              (!inv?.items || inv?.items.length === 0) || 
+                                              Boolean(inv?.serviceDescription);
+                            return (
+                              <tr key={inv?.id || idx}>
+                                <td>
+                                  <span style={{
+                                    padding: '0.2rem 0.55rem',
+                                    borderRadius: '12px',
+                                    fontSize: '0.72rem',
+                                    fontWeight: '700',
+                                    backgroundColor: isService ? '#f3e8ff' : '#e0f2fe',
+                                    color: isService ? '#7e22ce' : '#0369a1',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}>
+                                    {isService ? 'Serviço' : 'Produto'}
+                                  </span>
+                                </td>
+                                <td style={{ fontWeight: '700' }}>{inv?.number ? `Nº ${inv.number}` : 'S/N'}</td>
+                                <td style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                  {inv?.accessKey ? (inv.accessKey.length > 18 ? `${inv.accessKey.slice(0, 10)}...${inv.accessKey.slice(-6)}` : inv.accessKey) : '-'}
+                                </td>
+                                <td style={{ fontWeight: '600' }}>{inv?.supplierName || inv?.supplier || 'Fornecedor Desconhecido'}</td>
+                                <td>{inv?.issueDate && !isNaN(new Date(inv.issueDate).getTime()) ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}</td>
+                                <td>{inv?.entryDate && !isNaN(new Date(inv.entryDate).getTime()) ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}</td>
+                                <td style={{ fontWeight: '700' }}>
+                                  {editingInvoiceValueId === inv?.id ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>R$</span>
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        autoFocus
+                                        value={tempInvoiceValue}
+                                        onChange={e => setTempInvoiceValue(e.target.value)}
+                                        onKeyDown={e => {
+                                          if (e.key === 'Enter') {
+                                            handleSaveInvoiceValue(inv.id, tempInvoiceValue);
+                                            setEditingInvoiceValueId(null);
+                                          }
+                                          if (e.key === 'Escape') setEditingInvoiceValueId(null);
+                                        }}
+                                        style={{ width: '95px', padding: '0.2rem 0.35rem', fontSize: '0.82rem', fontWeight: '700', borderRadius: '4px', border: '1px solid #0284c7' }}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          handleSaveInvoiceValue(inv.id, tempInvoiceValue);
+                                          setEditingInvoiceValueId(null);
+                                        }}
+                                        style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.25rem 0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                        title="Salvar valor"
+                                      >
+                                        <Check size={13} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingInvoiceValueId(null)}
+                                        style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.25rem 0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                        title="Cancelar"
+                                      >
+                                        <X size={13} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div 
+                                      onClick={() => {
+                                        setEditingInvoiceValueId(inv.id);
+                                        setTempInvoiceValue(totalVal > 0 ? totalVal : '');
+                                      }}
+                                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '0.2rem 0.4rem', borderRadius: '4px', border: '1px dashed transparent', transition: 'all 0.2s' }}
+                                      title="Clique para editar o valor da nota"
+                                      onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                                      onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
+                                    >
+                                      <span>R$ {totalVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                      <Edit2 size={12} color="#0284c7" style={{ opacity: 0.85 }} />
+                                    </div>
+                                  )}
+                                </td>
+                                <td>
+                                  {(() => {
+                                    const hasBoleto = Boolean(inv?.hasBoleto || inv?.boletoUrl || (inv?.installments && inv.installments.some(inst => inst.boletoUrl || inst.digitableLine)));
+                                    return hasBoleto ? (
+                                      <span style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        padding: '0.2rem 0.55rem',
+                                        borderRadius: '12px',
+                                        fontSize: '0.72rem',
+                                        fontWeight: '700',
+                                        backgroundColor: '#ecfdf5',
+                                        color: '#166534',
+                                        border: '1px solid #a7f3d0'
+                                      }} title="Boleto bancário vinculado">
+                                        <FileText size={12} /> Boleto
+                                      </span>
+                                    ) : (
+                                      <span style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        padding: '0.2rem 0.5rem',
+                                        borderRadius: '12px',
+                                        fontSize: '0.72rem',
+                                        backgroundColor: '#f1f5f9',
+                                        color: '#94a3b8'
+                                      }} title="Sem boleto anexado">
+                                        Pendente
+                                      </span>
+                                    );
+                                  })()}
+                                </td>
+                                <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', maxWidth: '240px' }}>
+                                  {isService ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                      <span style={{ fontWeight: '600', color: '#7e22ce' }} title={inv?.serviceDescription || 'Serviço Prestado'}>
+                                        🛠️ Serviço
+                                      </span>
+                                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                        {inv?.serviceCategory || (inv?.serviceDescription ? (inv.serviceDescription.length > 25 ? `${inv.serviceDescription.slice(0, 25)}...` : inv.serviceDescription) : 'Prestado')}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span>📦 {inv?.items?.length || 0} produto(s)</span>
+                                  )}
+                                </td>
+                                <td><span style={styles.badgeNormal}>Processada</span></td>
+                                <td>
+                                  <div style={{ display: 'flex', gap: '0.35rem' }}>
+                                    <button 
+                                      onClick={() => { setSelectedInvoiceDetail(inv); setShowInvoiceDetailModal(true); }}
+                                      style={styles.actionEditBtn} 
+                                      title="Ver Detalhes da Nota"
+                                    >
+                                      <Eye size={13} /> Ver
+                                    </button>
+                                    {isService && inv?.invoiceType !== 'service' && (
+                                      <button
+                                        onClick={() => handleFixInvoiceType(inv, 'service')}
+                                        style={{ ...styles.actionEditBtn, backgroundColor: '#f3e8ff', color: '#7e22ce' }}
+                                        title="Corrigir Tipo para Serviço"
+                                      >
+                                        <RefreshCw size={13} />
+                                      </button>
+                                    )}
+                                    <button 
+                                      onClick={() => handleDeleteInvoice(inv?.id)} 
+                                      style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} 
+                                      title="Excluir Nota"
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* 3. VIEW MODE: CARDS (GRADE VISUAL DE NOTAS) */}
+                {invoiceViewMode === 'cards' && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                    gap: '1.25rem'
+                  }}>
+                    {sortedInvoices.length === 0 ? (
+                      <div style={{ ...styles.noDataCell, gridColumn: '1 / -1', padding: '2.5rem', textAlign: 'center', backgroundColor: '#fff', borderRadius: '8px' }}>
+                        Nenhuma nota fiscal encontrada no filtro selecionado.
+                      </div>
                     ) : (
-                      sortData(filteredInvoices, invoiceSort).map((inv, idx) => {
+                      sortedInvoices.map((inv, idx) => {
                         const sumInst = (inv?.installments && inv.installments.length > 0)
                           ? inv.installments.reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0)
                           : 0;
@@ -1277,9 +1703,26 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                         const isService = inv?.invoiceType === 'service' || 
                                           (!inv?.items || inv?.items.length === 0) || 
                                           Boolean(inv?.serviceDescription);
+                        const hasBoleto = Boolean(inv?.hasBoleto || inv?.boletoUrl || (inv?.installments && inv.installments.some(inst => inst.boletoUrl || inst.digitableLine)));
+
                         return (
-                          <tr key={inv?.id || idx}>
-                            <td>
+                          <div
+                            key={inv?.id || idx}
+                            style={{
+                              borderRadius: '12px',
+                              backgroundColor: 'var(--bg-card)',
+                              border: '1px solid var(--border-color)',
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                              padding: '1.15rem',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              gap: '0.85rem',
+                              transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                            }}
+                          >
+                            {/* Card Header: Badges */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
                               <span style={{
                                 padding: '0.2rem 0.55rem',
                                 borderRadius: '12px',
@@ -1291,125 +1734,141 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                 alignItems: 'center',
                                 gap: '4px'
                               }}>
-                                {isService ? 'Serviço' : 'Produto'}
+                                {isService ? '🛠️ Serviço' : '📦 Produto'}
                               </span>
-                            </td>
-                            <td style={{ fontWeight: '700' }}>{inv?.number ? `Nº ${inv.number}` : 'S/N'}</td>
-                            <td style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                              {inv?.accessKey ? (inv.accessKey.length > 18 ? `${inv.accessKey.slice(0, 10)}...${inv.accessKey.slice(-6)}` : inv.accessKey) : '-'}
-                            </td>
-                            <td style={{ fontWeight: '600' }}>{inv?.supplierName || inv?.supplier || 'Fornecedor Desconhecido'}</td>
-                            <td>{inv?.issueDate && !isNaN(new Date(inv.issueDate).getTime()) ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}</td>
-                            <td>{inv?.entryDate && !isNaN(new Date(inv.entryDate).getTime()) ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}</td>
-                            <td style={{ fontWeight: '700' }}>
-                              {editingInvoiceValueId === inv?.id ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>R$</span>
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    autoFocus
-                                    value={tempInvoiceValue}
-                                    onChange={e => setTempInvoiceValue(e.target.value)}
-                                    onKeyDown={e => {
-                                      if (e.key === 'Enter') {
-                                        handleSaveInvoiceValue(inv.id, tempInvoiceValue);
-                                        setEditingInvoiceValueId(null);
-                                      }
-                                      if (e.key === 'Escape') setEditingInvoiceValueId(null);
-                                    }}
-                                    style={{ width: '95px', padding: '0.2rem 0.35rem', fontSize: '0.82rem', fontWeight: '700', borderRadius: '4px', border: '1px solid #0284c7' }}
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      handleSaveInvoiceValue(inv.id, tempInvoiceValue);
-                                      setEditingInvoiceValueId(null);
-                                    }}
-                                    style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.25rem 0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                                    title="Salvar valor"
-                                  >
-                                    <Check size={13} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setEditingInvoiceValueId(null)}
-                                    style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.25rem 0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                                    title="Cancelar"
-                                  >
-                                    <X size={13} />
-                                  </button>
-                                </div>
-                              ) : (
-                                <div 
-                                  onClick={() => {
-                                    setEditingInvoiceValueId(inv.id);
-                                    setTempInvoiceValue(totalVal > 0 ? totalVal : '');
-                                  }}
-                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '0.2rem 0.4rem', borderRadius: '4px', border: '1px dashed transparent', transition: 'all 0.2s' }}
-                                  title="Clique para editar o valor da nota"
-                                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-                                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
-                                >
-                                  <span>R$ {totalVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                  <Edit2 size={12} color="#0284c7" style={{ opacity: 0.85 }} />
-                                </div>
-                              )}
-                            </td>
-                            <td>
-                              {(() => {
-                                const hasBoleto = Boolean(inv?.hasBoleto || inv?.boletoUrl || (inv?.installments && inv.installments.some(inst => inst.boletoUrl || inst.digitableLine)));
-                                return hasBoleto ? (
+
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                {hasBoleto ? (
                                   <span style={{
                                     display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '4px',
-                                    padding: '0.2rem 0.55rem',
-                                    borderRadius: '12px',
-                                    fontSize: '0.72rem',
+                                    gap: '3px',
+                                    padding: '0.15rem 0.45rem',
+                                    borderRadius: '10px',
+                                    fontSize: '0.68rem',
                                     fontWeight: '700',
                                     backgroundColor: '#ecfdf5',
                                     color: '#166534',
                                     border: '1px solid #a7f3d0'
-                                  }} title="Boleto bancário vinculado">
-                                    <FileText size={12} /> Boleto
+                                  }}>
+                                    <FileText size={11} /> Boleto
                                   </span>
                                 ) : (
-                                  <span style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    padding: '0.2rem 0.5rem',
-                                    borderRadius: '12px',
-                                    fontSize: '0.72rem',
-                                    backgroundColor: '#f1f5f9',
-                                    color: '#94a3b8'
-                                  }} title="Sem boleto anexado">
-                                    Pendente
-                                  </span>
-                                );
-                              })()}
-                            </td>
-                            <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', maxWidth: '240px' }}>
-                              {isService ? (
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                  <span style={{ fontWeight: '600', color: '#7e22ce' }} title={inv?.serviceDescription || 'Serviço Prestado'}>
-                                    🛠️ Serviço
-                                  </span>
-                                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                    {inv?.serviceCategory || (inv?.serviceDescription ? (inv.serviceDescription.length > 25 ? `${inv.serviceDescription.slice(0, 25)}...` : inv.serviceDescription) : 'Prestado')}
-                                  </span>
+                                  <span style={{ fontSize: '0.68rem', color: '#94a3b8', backgroundColor: '#f1f5f9', padding: '0.15rem 0.4rem', borderRadius: '10px' }}>Sem boleto</span>
+                                )}
+                                <span style={{ ...styles.badgeNormal, fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>Processada</span>
+                              </div>
+                            </div>
+
+                            {/* Card Identity */}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                              <div style={{
+                                width: '44px',
+                                height: '44px',
+                                borderRadius: '10px',
+                                backgroundColor: isService ? '#f3e8ff' : '#fef3c7',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}>
+                                <FileText size={22} color={isService ? '#7e22ce' : '#d97706'} />
+                              </div>
+
+                              <div style={{ overflow: 'hidden', flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                                  <h3 
+                                    onClick={() => { setSelectedInvoiceDetail(inv); setShowInvoiceDetailModal(true); }}
+                                    style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', cursor: 'pointer', textDecoration: 'underline' }}
+                                    title="Ver detalhes da nota"
+                                  >
+                                    {inv?.number ? `Nota Nº ${inv.number}` : 'Nota S/N'}
+                                  </h3>
                                 </div>
-                              ) : (
-                                <span>📦 {inv?.items?.length || 0} produto(s)</span>
-                              )}
-                            </td>
-                            <td><span style={styles.badgeNormal}>Processada</span></td>
-                            <td>
+                                <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#334155', marginTop: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {inv?.supplierName || inv?.supplier || 'Fornecedor Desconhecido'}
+                                </div>
+                                {inv?.accessKey && (
+                                  <div style={{ fontFamily: 'monospace', fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                                    {inv.accessKey.length > 22 ? `${inv.accessKey.slice(0, 10)}...${inv.accessKey.slice(-8)}` : inv.accessKey}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Valor & Datas Box */}
+                            <div style={{
+                              padding: '0.75rem 0.85rem',
+                              backgroundColor: 'var(--bg-body)',
+                              borderRadius: '8px',
+                              border: '1px solid var(--border-color)',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center'
+                            }}>
+                              <div>
+                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: '700' }}>
+                                  Valor Total
+                                </span>
+                                {editingInvoiceValueId === inv?.id ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      autoFocus
+                                      value={tempInvoiceValue}
+                                      onChange={e => setTempInvoiceValue(e.target.value)}
+                                      onKeyDown={e => {
+                                        if (e.key === 'Enter') {
+                                          handleSaveInvoiceValue(inv.id, tempInvoiceValue);
+                                          setEditingInvoiceValueId(null);
+                                        }
+                                        if (e.key === 'Escape') setEditingInvoiceValueId(null);
+                                      }}
+                                      style={{ width: '85px', padding: '0.15rem 0.3rem', fontSize: '0.8rem', fontWeight: '700', borderRadius: '4px', border: '1px solid #0284c7' }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        handleSaveInvoiceValue(inv.id, tempInvoiceValue);
+                                        setEditingInvoiceValueId(null);
+                                      }}
+                                      style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.2rem 0.35rem', cursor: 'pointer' }}
+                                    >
+                                      <Check size={12} />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div 
+                                    onClick={() => {
+                                      setEditingInvoiceValueId(inv.id);
+                                      setTempInvoiceValue(totalVal > 0 ? totalVal : '');
+                                    }}
+                                    style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                    title="Clique para editar valor"
+                                  >
+                                    <span>{formatCurrencyBR(totalVal)}</span>
+                                    <Edit2 size={11} color="#0284c7" />
+                                  </div>
+                                )}
+                              </div>
+
+                              <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                <div><span style={{ color: 'var(--text-muted)' }}>Emissão:</span> {inv?.issueDate && !isNaN(new Date(inv.issueDate).getTime()) ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}</div>
+                                <div><span style={{ color: 'var(--text-muted)' }}>Entrada:</span> {inv?.entryDate && !isNaN(new Date(inv.entryDate).getTime()) ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}</div>
+                              </div>
+                            </div>
+
+                            {/* Card Footer: Summary & Actions */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '0.65rem' }}>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                {isService ? 'Serviço prestado' : `${inv?.items?.length || 0} produto(s)`}
+                              </span>
+
                               <div style={{ display: 'flex', gap: '0.35rem' }}>
                                 <button 
                                   onClick={() => { setSelectedInvoiceDetail(inv); setShowInvoiceDetailModal(true); }}
-                                  style={styles.actionEditBtn} 
+                                  style={{ ...styles.actionEditBtn, padding: '0.25rem 0.6rem', fontSize: '0.78rem' }} 
                                   title="Ver Detalhes da Nota"
                                 >
                                   <Eye size={13} /> Ver
@@ -1417,7 +1876,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                 {isService && inv?.invoiceType !== 'service' && (
                                   <button
                                     onClick={() => handleFixInvoiceType(inv, 'service')}
-                                    style={{ ...styles.actionEditBtn, backgroundColor: '#f3e8ff', color: '#7e22ce' }}
+                                    style={{ ...styles.actionEditBtn, padding: '0.25rem 0.45rem', backgroundColor: '#f3e8ff', color: '#7e22ce' }}
                                     title="Corrigir Tipo para Serviço"
                                   >
                                     <RefreshCw size={13} />
@@ -1425,19 +1884,19 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                 )}
                                 <button 
                                   onClick={() => handleDeleteInvoice(inv?.id)} 
-                                  style={{ ...styles.actionEditBtn, backgroundColor: '#fee2e2', color: '#991b1b' }} 
+                                  style={{ ...styles.actionEditBtn, padding: '0.25rem 0.45rem', backgroundColor: '#fee2e2', color: '#991b1b' }} 
                                   title="Excluir Nota"
                                 >
                                   <Trash2 size={13} />
                                 </button>
                               </div>
-                            </td>
-                          </tr>
+                            </div>
+                          </div>
                         );
                       })
                     )}
-                  </tbody>
-                </table>
+                  </div>
+                )}
               </div>
             );
           })()}
@@ -2364,36 +2823,40 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                 <div className="form-group">
                   <label>Categoria *</label>
                   <select 
-                    className="form-control" value={itemForm.category}
+                    className="form-control" 
+                    value={itemForm.category}
                     onChange={e => setItemForm({ ...itemForm, category: e.target.value })}
+                    required
                   >
-                    <option value="Insumo Clínico / MatMed">Insumo Clínico / MatMed</option>
-                    <option value="Medicamento">Medicamento</option>
-                    <option value="Concentrado">Concentrado</option>
-                    <option value="OPME">OPME</option>
-                    <option value="Descartáveis">Descartáveis</option>
-                    <option value="Outros">Outros</option>
+                    <option value="">Selecione...</option>
+                    {categoriesList.map(c => (
+                      <option key={c.id || c.name} value={c.name}>{c.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Almoxarifado/Setor Padrão</label>
+                  <label>Almoxarifado</label>
                   <select 
-                    className="form-control" value={itemForm.defaultSectorId}
+                    className="form-control" 
+                    value={itemForm.defaultSectorId}
                     onChange={e => setItemForm({ ...itemForm, defaultSectorId: e.target.value })}
                   >
-                    {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    <option value="">Selecione...</option>
+                    {(stockLocations && stockLocations.length > 0 ? stockLocations : sectors).map(loc => (
+                      <option key={loc.id} value={loc.id}>{loc.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="form-group">
-                    <label>Estoque Inicial</label>
+                    <label>Inicial</label>
                     <input 
                       type="number" className="form-control" disabled={editingItem !== null}
                       value={itemForm.currentStock} onChange={e => setItemForm({ ...itemForm, currentStock: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label>Estoque Mínimo *</label>
+                    <label>Mínimo *</label>
                     <input 
                       type="number" className="form-control" required
                       value={itemForm.minStock} onChange={e => setItemForm({ ...itemForm, minStock: e.target.value })}
@@ -2402,14 +2865,14 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="form-group">
-                    <label>Unidade de Medida</label>
+                    <label>Unidade</label>
                     <input 
                       type="text" className="form-control" placeholder="Ex: unidades, frascos"
                       value={itemForm.unit} onChange={e => setItemForm({ ...itemForm, unit: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label>Preço Unitário (R$)</label>
+                    <label>Preço (R$)</label>
                     <input 
                       type="text" className="form-control" placeholder="0.00"
                       value={itemForm.price} onChange={e => setItemForm({ ...itemForm, price: e.target.value })}
@@ -2427,7 +2890,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                   />
                   <div>
                     <label htmlFor="item-batch-control-checkbox" style={{ fontWeight: '700', fontSize: '0.85rem', color: '#166534', cursor: 'pointer', margin: 0, display: 'block' }}>
-                      Controla Lote & Rastreabilidade
+                      Rastreabilidade
                     </label>
                     <span style={{ fontSize: '0.75rem', color: '#15803d', display: 'block' }}>
                       Exige registro de número de lote e data de validade na entrada e rastreia o paciente na dispensação.
@@ -2445,7 +2908,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                   />
                   <div>
                     <label htmlFor="item-controlled-checkbox" style={{ fontWeight: '700', fontSize: '0.85rem', color: '#991b1b', cursor: 'pointer', margin: 0, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <span>🔒 Medicamento Controlado</span>
+                      <span>🔒 Controlado</span>
                       <span style={{ fontSize: '0.7rem', backgroundColor: '#991b1b', color: '#fff', padding: '0.1rem 0.35rem', borderRadius: '4px' }}>Portaria 344</span>
                     </label>
                     <span style={{ fontSize: '0.75rem', color: '#b91c1c', display: 'block' }}>

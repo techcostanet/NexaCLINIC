@@ -3975,9 +3975,9 @@ export const mockFirestore = {
       cnpj: productionData.doctorCrm || 'CRM ' + productionData.doctorName,
       category: 'Honorários Médicos',
       costCenter: 'Corpo Clínico & Nefrologia',
-      description: `Repasse Honorários ${productionData.month} - ${productionData.shiftsCount} Plantões, ${productionData.consultationsCount} Consultas, ${productionData.proceduresCount} Procedimentos`,
+      description: `Repasse Honorários ${productionData.month} - ${productionData.shiftsCount} Plantões, ${productionData.consultationsCount} Consultas, ${productionData.proceduresCount} Procedimentos${productionData.adjustmentReason ? ` (${productionData.adjustmentReason})` : ''}`,
       amount: parseFloat(productionData.netTotal || productionData.grossTotal),
-      dueDate: `${productionData.month}-30`,
+      dueDate: productionData.dueDate || `${productionData.month}-30`,
       status: 'pending',
       paymentMethod: 'PIX',
       pixKey: productionData.pixKey || 'Chave cadastrada no NexaMED',
@@ -4002,6 +4002,19 @@ export const mockFirestore = {
 
     setDB(db);
     return { production: prodRecord, payable: payableTitle };
+  },
+
+  cancelMedicalProductionHomologation: async (productionId, payableId) => {
+    await new Promise(resolve => setTimeout(resolve, 350));
+    const db = getDB();
+    if (db.medical_productions) {
+      db.medical_productions = db.medical_productions.filter(p => p.id !== productionId);
+    }
+    if (db.accounts_payable && payableId) {
+      db.accounts_payable = db.accounts_payable.filter(p => p.id !== payableId);
+    }
+    setDB(db);
+    return { success: true };
   },
 
   // Stock/Inventory Items
@@ -4245,12 +4258,26 @@ export const mockFirestore = {
     const db = getDB();
     if (!db.product_categories || db.product_categories.length === 0) {
       db.product_categories = [
-        { id: 'cat-1', name: 'Insumo Clínico', module: 'Estoque', description: 'Linhas de sangue, dialisadores, agulhas de fístula' },
-        { id: 'cat-2', name: 'Concentrado', module: 'Estoque', description: 'Solução ácida, bicarbonato de sódio para diálise' },
-        { id: 'cat-3', name: 'Medicamento', module: 'Estoque', description: 'Epoetina, ferro injetável, calcitriol, heparina' },
-        { id: 'cat-4', name: 'Material Médico', module: 'Estoque', description: 'Gaze, luvas estéreis, seringas, esparadrapos' },
-        { id: 'cat-5', name: 'Equipamento', module: 'Estoque/Financeiro', description: 'Peças de reposição e bombas de hemodiálise' },
-        { id: 'cat-6', name: 'Serviço/Utilidades', module: 'Financeiro', description: 'Energia elétrica, água, manutenção preventiva' }
+        { id: 'cat-matmed', name: 'MatMed', module: 'Estoque', description: 'Insumos hospitalares, materiais médicos e de enfermagem' },
+        { id: 'cat-medicamento', name: 'Medicamento', module: 'Estoque', description: 'Medicamentos orais e parenterais' },
+        { id: 'cat-controlado', name: 'Controlado', module: 'Estoque', description: 'Medicamentos sujeitos a controle especial (Portaria 344)' },
+        { id: 'cat-concentrado', name: 'Concentrado', module: 'Estoque', description: 'Soluções ácidas e bicarbonato para hemodiálise' },
+        { id: 'cat-capilar', name: 'Dialisador', module: 'Estoque', description: 'Capilares e dialisadores de baixo e alto fluxo' },
+        { id: 'cat-linhas', name: 'Linhas', module: 'Estoque', description: 'Linhas de sangue arterial e venosa, equipos e extensores' },
+        { id: 'cat-fistula', name: 'Acesso', module: 'Estoque', description: 'Agulhas de fístula, cateteres de duplo lúmen e permcath' },
+        { id: 'cat-curativo', name: 'Curativo', module: 'Estoque', description: 'Fitas, micropore, gazes, compressas e curativos estéreis' },
+        { id: 'cat-opme', name: 'OPME', module: 'Estoque', description: 'Órteses, próteses e materiais especiais cirúrgicos' },
+        { id: 'cat-fios', name: 'Sutura', module: 'Estoque', description: 'Fios cirúrgicos e agulhados' },
+        { id: 'cat-descartaveis', name: 'Descartáveis', module: 'Estoque', description: 'Seringas, agulhas, luvas e descartáveis em geral' },
+        { id: 'cat-epi', name: 'EPI', module: 'Estoque', description: 'Equipamentos de proteção individual (máscaras, aventais, óculos)' },
+        { id: 'cat-limpeza', name: 'Higiene', module: 'Estoque', description: 'Materiais de assepsia, desinfecção e limpeza hospitalar' },
+        { id: 'cat-osmose', name: 'Osmose', module: 'Estoque', description: 'Tratamento de água e produtos de osmose reversa' },
+        { id: 'cat-peritoneal', name: 'Peritoneal', module: 'Estoque', description: 'Bolsas e insumos para diálise peritoneal contínua' },
+        { id: 'cat-nutricao', name: 'Nutrição', module: 'Estoque', description: 'Suplementos nutricionais e alimentação clínica' },
+        { id: 'cat-ti', name: 'Tecnologia', module: 'Estoque', description: 'Equipamentos e insumos de tecnologia e conectividade' },
+        { id: 'cat-manutencao', name: 'Manutenção', module: 'Estoque', description: 'Peças e insumos para engenharia clínica e manutenção' },
+        { id: 'cat-escritorio', name: 'Escritório', module: 'Estoque', description: 'Papelaria e suprimentos administrativos' },
+        { id: 'cat-patrimonio', name: 'Patrimônio', module: 'Estoque', description: 'Bens duráveis e equipamentos permanentes' }
       ];
       setDB(db);
     }
@@ -4287,6 +4314,153 @@ export const mockFirestore = {
     const db = getDB();
     if (db.product_categories) {
       db.product_categories = db.product_categories.filter(c => c.id !== id);
+    }
+    setDB(db);
+    return { success: true };
+  },
+
+  // Product Kits API (Kits de Insumos para Hemodiálise)
+  getProductKits: async () => {
+    const db = getDB();
+    if (!db.product_kits || db.product_kits.length === 0) {
+      db.product_kits = [
+        {
+          id: 'kit-hemo-01',
+          code: 'KIT-HEMO-01',
+          name: 'Punção FAV',
+          category: 'Hemodiálise',
+          suggestedLocation: 'Salão 1',
+          description: 'Kit para punção segura de fístula arteriovenosa no início da sessão.',
+          items: [
+            { itemId: 'prod-hosp-38', itemName: 'AGULHA FISTULA 16G', quantity: 2, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-12', itemName: 'LUVA DE TOQUE', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-53', itemName: 'CLOREXIDINA 0,5% SOLUÇÃO ALCOOLICA', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-125', itemName: 'CAMPO OPERATORIO (25X28) COMPRESSA CIRÚRGICA', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-26', itemName: 'MICROPORE 25MMX10M', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-35', itemName: 'SERINGA 1ML COM AGULHA', quantity: 1, unit: 'unidades', price: 10 }
+          ],
+          totalCost: 70
+        },
+        {
+          id: 'kit-hemo-02',
+          code: 'KIT-HEMO-02',
+          name: 'Curativo Cateter',
+          category: 'Hemodiálise',
+          suggestedLocation: 'Farmácia da Diálise',
+          description: 'Kit para higienização e curativo estéril de cateter venoso central (CDL ou Permcath).',
+          items: [
+            { itemId: 'prod-hosp-53', itemName: 'CLOREXIDINA 0,5% SOLUÇÃO ALCOOLICA', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-2', itemName: 'MASCARA DESCARTAVEL', quantity: 2, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-23', itemName: 'LUVA CIRURGICA 7,5', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-125', itemName: 'CAMPO OPERATORIO (25X28) COMPRESSA CIRÚRGICA', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-41', itemName: 'MICROPORE 50MMX10M', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-71', itemName: 'HEPARINA 5.000 UI', quantity: 1, unit: 'unidades', price: 10, isControlled: true },
+            { itemId: 'prod-hosp-35', itemName: 'SERINGA 1ML COM AGULHA', quantity: 2, unit: 'unidades', price: 10 }
+          ],
+          totalCost: 90
+        },
+        {
+          id: 'kit-hemo-03',
+          code: 'KIT-HEMO-03',
+          name: 'Conexão Hemodiálise',
+          category: 'Hemodiálise',
+          suggestedLocation: 'Salão 1',
+          description: 'Kit completo de linhas e dialisador para conexão do paciente à máquina de hemodiálise.',
+          items: [
+            { itemId: 'prod-hosp-184', itemName: 'KIT DE LINHA ARTERIAL E VENOSA', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-101', itemName: 'CAPILAR B-20HF- ALTO FLUXO- USO UNICO', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-87', itemName: 'SORO FISIOLOGICO 0,9% FRASCO 1000ML', quantity: 2, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-203', itemName: 'SOLUÇÃO ACIDA CALCIO 3,0 MEQ/L/K 2.0 MEQ/L 1:44', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-147', itemName: 'EXTENSOR DE EQUIPO 40CM', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-71', itemName: 'HEPARINA 5.000 UI', quantity: 1, unit: 'unidades', price: 10, isControlled: true }
+          ],
+          totalCost: 70
+        },
+        {
+          id: 'kit-hemo-04',
+          code: 'KIT-HEMO-04',
+          name: 'Desconexão Hemodiálise',
+          category: 'Hemodiálise',
+          suggestedLocation: 'Salão 1',
+          description: 'Kit para devolução de sangue e curativo compressivo pós-sessão de hemodiálise.',
+          items: [
+            { itemId: 'prod-hosp-87', itemName: 'SORO FISIOLOGICO 0,9% FRASCO 1000ML', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-125', itemName: 'CAMPO OPERATORIO (25X28) COMPRESSA CIRÚRGICA', quantity: 2, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-74', itemName: 'ESPARADRAPO 10CM X 4,5M', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-26', itemName: 'MICROPORE 25MMX10M', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-12', itemName: 'LUVA DE TOQUE', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-336', itemName: 'ALCOOL ETILICO 70% ALMOTOLIA 100ML', quantity: 1, unit: 'unidades', price: 10 }
+          ],
+          totalCost: 70
+        },
+        {
+          id: 'kit-hemo-05',
+          code: 'KIT-HEMO-05',
+          name: 'Prime Circuito',
+          category: 'Hemodiálise',
+          suggestedLocation: 'Almoxarifado Central',
+          description: 'Kit para preenchimento (prime), heparinização e lavagem do circuito extracorpóreo.',
+          items: [
+            { itemId: 'prod-hosp-87', itemName: 'SORO FISIOLOGICO 0,9% FRASCO 1000ML', quantity: 2, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-184', itemName: 'KIT DE LINHA ARTERIAL E VENOSA', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-101', itemName: 'CAPILAR B-20HF- ALTO FLUXO- USO UNICO', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-147', itemName: 'EXTENSOR DE EQUIPO 40CM', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-47', itemName: 'AGULHA DESCARTAVEL 25X8', quantity: 2, unit: 'unidades', price: 10 }
+          ],
+          totalCost: 70
+        },
+        {
+          id: 'kit-hemo-06',
+          code: 'KIT-HEMO-06',
+          name: 'Emergência Hemodiálise',
+          category: 'Hemodiálise',
+          suggestedLocation: 'Posto de Enfermagem',
+          description: 'Kit para resposta imediata a hipotensão arterial, coagulação de circuito ou reação alérgica.',
+          items: [
+            { itemId: 'prod-hosp-87', itemName: 'SORO FISIOLOGICO 0,9% FRASCO 1000ML', quantity: 2, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-147', itemName: 'EXTENSOR DE EQUIPO 40CM', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-28', itemName: 'CATETER NASAL TIPO OCULOS', quantity: 1, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-71', itemName: 'HEPARINA 5.000 UI', quantity: 1, unit: 'unidades', price: 10, isControlled: true },
+            { itemId: 'prod-hosp-48', itemName: 'AGULHA DESCARTAVEL 25X7', quantity: 2, unit: 'unidades', price: 10 },
+            { itemId: 'prod-hosp-35', itemName: 'SERINGA 1ML COM AGULHA', quantity: 2, unit: 'unidades', price: 10 }
+          ],
+          totalCost: 90
+        }
+      ];
+      setDB(db);
+    }
+    return db.product_kits;
+  },
+
+  saveProductKit: async (kitData) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (!db.product_kits) db.product_kits = [];
+
+    const isEdit = !!kitData.id;
+    const kitId = kitData.id || 'kit-' + Math.random().toString(36).substr(2, 9);
+    const updatedKit = {
+      ...kitData,
+      id: kitId,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (isEdit) {
+      const idx = db.product_kits.findIndex(k => k.id === kitId);
+      if (idx > -1) db.product_kits[idx] = updatedKit;
+    } else {
+      db.product_kits.push(updatedKit);
+    }
+
+    setDB(db);
+    return updatedKit;
+  },
+
+  deleteProductKit: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (db.product_kits) {
+      db.product_kits = db.product_kits.filter(k => k.id !== id);
     }
     setDB(db);
     return { success: true };

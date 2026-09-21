@@ -349,7 +349,7 @@ export default function MedicalReportsModal({
         kpis = [
           { label: 'Trocas no Mês', value: data.length, color: '#0f172a' },
           { label: 'Homologadas', value: homologadas, color: '#10b981' },
-          { label: 'Pendentes / Recusadas', value: pendentes, color: '#f59e0b' }
+          { label: 'Pendentes', value: pendentes, color: '#f59e0b' }
         ];
         break;
       }
@@ -389,7 +389,7 @@ export default function MedicalReportsModal({
           { header: 'Data', key: 'date' },
           { header: 'Paciente', key: 'patient' },
           { header: 'Acesso', key: 'type' },
-          { header: 'Sítio / Local', key: 'site' },
+          { header: 'Sítio', key: 'site' },
           { header: 'Médico Executor', key: 'doctor' },
           { header: 'Indicação', key: 'indication' },
           { header: 'Desfecho', key: 'outcome' }
@@ -484,7 +484,7 @@ export default function MedicalReportsModal({
         cols = [
           { header: 'Médico', key: 'name' },
           { header: 'CRM', key: 'crm' },
-          { header: 'Chave PIX / Banco', key: 'pix' },
+          { header: 'PIX', key: 'pix' },
           { header: 'Valor Líquido', key: 'liquidVal' },
           { header: 'Status Repasse', key: 'status' },
           { header: 'Contas a Pagar', key: 'finStatus' }
@@ -547,15 +547,15 @@ export default function MedicalReportsModal({
         kpis = [
           { label: 'Total no Corpo Clínico', value: data.length, color: '#0f172a' },
           { label: 'Contrato PJ', value: pj, color: '#0284c7' },
-          { label: 'Contrato CLT / Outros', value: clt || (data.length - pj), color: '#10b981' }
+          { label: 'Contrato CLT', value: clt || (data.length - pj), color: '#10b981' }
         ];
         break;
       }
 
       case 'MED_TABELA_PARAMETROS': {
         cols = [
-          { header: 'Item / Procedimento', key: 'item' },
-          { header: 'Setor / Aplicação', key: 'sector' },
+          { header: 'Item', key: 'item' },
+          { header: 'Setor', key: 'sector' },
           { header: 'Valor Referência (R$)', key: 'val' },
           { header: 'Repasse Médico (%)', key: 'repasse' },
           { header: 'Vigência', key: 'vigencia' }
@@ -845,7 +845,7 @@ export default function MedicalReportsModal({
                   >
                     <option value="Todos">Todos</option>
                     <option value="Confirmado">Confirmado</option>
-                    <option value="Vago">Vago / Descoberto</option>
+                    <option value="Vago">Vago</option>
                   </select>
                 </div>
               </div>

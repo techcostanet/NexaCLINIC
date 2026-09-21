@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   DollarSign, CheckCircle2, FileText, Send, 
-  Printer, ArrowRight, ShieldCheck, ChevronRight
+  Printer, ArrowRight, ShieldCheck, ChevronRight, Search, X
 } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
 import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
+import MedicalHomologationModal from './MedicalHomologationModal';
 
 export default function MedicalProductionTab({
   selectedMonth,
@@ -15,11 +16,15 @@ export default function MedicalProductionTab({
   productions = [],
   settings = {},
   onHomologateProduction,
+  onCancelHomologation,
   onOpenStatement,
   onSaveSettings,
   loading = false
 }) {
-  const [homologatingId, setHomologatingId] = useState(null);
+  const [selectedProdForHomologation, setSelectedProdForHomologation] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('Todos'); // 'Todos' | 'Pendentes' | 'Homologados'
+  const [searchDoctor, setSearchDoctor] = useState('');
+
   const availableDoctors = Array.isArray(doctors) && doctors.length > 0 ? doctors : FALLBACK_DOCTORS;
 
   const shiftFee = settings.shiftFee || 726.0;
@@ -27,86 +32,85 @@ export default function MedicalProductionTab({
   const shiftFees = settings.shiftFees || { 'Manhã': 726.0, 'Tarde': 726.0, 'Noite': 825.0 };
   const consultFees = settings.consultationFees || { 'Ambulatorial': 100.0, 'Peritonial': 160.0 };
 
-  // Compute production metrics for each doctor
-  const doctorProductions = sortDoctorsByName(availableDoctors).map(doc => {
-    const docId = doc.id || doc.uid;
-    // 1. Shifts: Only present or confirmed shifts with shift-specific fees
-    const docShifts = schedules.filter(s => 
-      (s.doctorId === docId || s.doctorId === doc.id || s.doctorId === doc.uid) && 
-      (s.checkinStatus === 'Presente' || s.checkinStatus === 'Substituído' || (s.status === 'Confirmado' && s.checkinStatus !== 'Ausente'))
-    );
-    const shiftsCount = docShifts.length;
-    const shiftsTotal = docShifts.reduce((acc, s) => {
-      const fee = shiftFees[s.shift] || (s.shift === 'Noite' ? 825.0 : (settings.shiftFee || 726.0));
-      return acc + fee;
-    }, 0);
+  // Apurar métricas de produção para cada médico
+  const doctorProductions = useMemo(() => {
+    return sortDoctorsByName(availableDoctors).map(doc => {
+      const docId = doc.id || doc.uid;
+      // 1. Plantões: apenas turnos presentes ou confirmados com taxa de turno
+      const docShifts = schedules.filter(s => 
+        (s.doctorId === docId || s.doctorId === doc.id || s.doctorId === doc.uid) && 
+        (s.checkinStatus === 'Presente' || s.checkinStatus === 'Substituído' || (s.status === 'Confirmado' && s.checkinStatus !== 'Ausente'))
+      );
+      const shiftsCount = docShifts.length;
+      const shiftsTotal = docShifts.reduce((acc, s) => {
+        const fee = shiftFees[s.shift] || (s.shift === 'Noite' ? 825.0 : (settings.shiftFee || 726.0));
+        return acc + fee;
+      }, 0);
 
-    // 2. Consultations: Appointments completed in calendar
-    const docConsults = appointments.filter(a => 
-      (a.doctorId === docId || a.doctorId === doc.id || a.doctorId === doc.uid || a.doctorName?.includes(doc.name)) &&
-      (a.status === 'Concluída' || a.status === 'Atendido' || a.status === 'completed' || a.status === 'Finalizado')
-    );
-    const consultationsCount = docConsults.length > 0 ? docConsults.length : 8; // default realistic fallback for demo
-    const consultationsTotal = consultationsCount * (consultFees['Ambulatorial'] || settings.consultationFee || 100.0);
+      // 2. Consultas: atendimentos concluídos na Agenda médica (0 se não houver atendimentos)
+      const docConsults = appointments.filter(a => 
+        (a.doctorId === docId || a.doctorId === doc.id || a.doctorId === doc.uid || a.doctorName?.includes(doc.name)) &&
+        (a.status === 'Concluída' || a.status === 'Atendido' || a.status === 'completed' || a.status === 'Finalizado')
+      );
+      const consultationsCount = docConsults.length;
+      const consultationsTotal = consultationsCount * (consultFees['Ambulatorial'] || settings.consultationFee || 100.0);
 
-    // 3. Procedures
-    const docProcs = procedures.filter(p => p.doctorId === docId || p.doctorId === doc.id || p.doctorId === doc.uid);
-    const proceduresCount = docProcs.length;
-    const proceduresTotal = docProcs.reduce((acc, p) => acc + (parseFloat(p.value) || 0), 0);
+      // 3. Procedimentos: lançados na competência
+      const docProcs = procedures.filter(p => p.doctorId === docId || p.doctorId === doc.id || p.doctorId === doc.uid);
+      const proceduresCount = docProcs.length;
+      const proceduresTotal = docProcs.reduce((acc, p) => acc + (parseFloat(p.value) || 0), 0);
 
-    const grossTotal = shiftsTotal + consultationsTotal + proceduresTotal;
-    const netTotal = grossTotal; // PJ without INSS or standard
+      const grossTotal = shiftsTotal + consultationsTotal + proceduresTotal;
 
-    // Check if already homologated
-    const existingProd = productions.find(p => p.month === selectedMonth && (p.doctorId === docId || p.doctorId === doc.id || p.doctorId === doc.uid));
-    const isHomologated = existingProd?.status === 'Homologado';
+      // Verificar registro de homologação persistido
+      const existingProd = productions.find(p => 
+        p.month === selectedMonth && 
+        (p.doctorId === docId || p.doctorId === doc.id || p.doctorId === doc.uid)
+      );
+      const isHomologated = existingProd?.status === 'Homologado';
 
-    return {
-      doctorId: docId,
-      doctorName: formatDoctorDisplayName(doc.name),
-      doctorCrm: doc.crm || '',
-      pixKey: doc.pixKey || '',
-      contractType: doc.contractType || 'PJ',
-      shiftsCount,
-      shiftsTotal,
-      consultationsCount,
-      consultationsTotal,
-      proceduresCount,
-      proceduresTotal,
-      grossTotal,
-      netTotal,
-      isHomologated,
-      payableId: existingProd?.payableId,
-      homologatedAt: existingProd?.homologatedAt
-    };
-  });
+      return {
+        id: existingProd?.id,
+        doctorId: docId,
+        doctorName: formatDoctorDisplayName(doc.name),
+        doctorCrm: doc.crm || '',
+        pixKey: doc.pixKey || '',
+        bank: doc.bank || '',
+        contractType: doc.contractType || 'PJ',
+        shiftsCount,
+        shiftsTotal,
+        consultationsCount,
+        consultationsTotal,
+        proceduresCount,
+        proceduresTotal,
+        grossTotal,
+        adjustment: existingProd?.adjustment || 0,
+        adjustmentReason: existingProd?.adjustmentReason || '',
+        dueDate: existingProd?.dueDate,
+        netTotal: existingProd ? (existingProd.netTotal || grossTotal) : grossTotal,
+        isHomologated,
+        payableId: existingProd?.payableId,
+        homologatedAt: existingProd?.homologatedAt
+      };
+    });
+  }, [availableDoctors, schedules, appointments, procedures, productions, selectedMonth, shiftFees, consultFees, settings]);
 
-  const grandTotal = doctorProductions.reduce((acc, curr) => acc + curr.grossTotal, 0);
+  const grandTotal = doctorProductions.reduce((acc, curr) => acc + (curr.netTotal || curr.grossTotal), 0);
   const homologatedCount = doctorProductions.filter(p => p.isHomologated).length;
 
-  const handleHomologate = async (prod) => {
-    setHomologatingId(prod.doctorId);
-    try {
-      await onHomologateProduction({
-        month: selectedMonth,
-        doctorId: prod.doctorId,
-        doctorName: prod.doctorName,
-        doctorCrm: prod.doctorCrm,
-        pixKey: prod.pixKey,
-        contractType: prod.contractType,
-        shiftsCount: prod.shiftsCount,
-        shiftsTotal: prod.shiftsTotal,
-        consultationsCount: prod.consultationsCount,
-        consultationsTotal: prod.consultationsTotal,
-        proceduresCount: prod.proceduresCount,
-        proceduresTotal: prod.proceduresTotal,
-        grossTotal: prod.grossTotal,
-        netTotal: prod.netTotal
-      });
-    } finally {
-      setHomologatingId(null);
-    }
-  };
+  const filteredProductions = useMemo(() => {
+    return doctorProductions.filter(p => {
+      if (statusFilter === 'Pendentes' && p.isHomologated) return false;
+      if (statusFilter === 'Homologados' && !p.isHomologated) return false;
+      if (searchDoctor.trim()) {
+        const term = searchDoctor.toLowerCase();
+        const docName = (p.doctorName || '').toLowerCase();
+        const docCrm = (p.doctorCrm || '').toLowerCase();
+        return docName.includes(term) || docCrm.includes(term);
+      }
+      return true;
+    });
+  }, [doctorProductions, statusFilter, searchDoctor]);
 
   return (
     <div style={styles.container}>
@@ -144,6 +148,58 @@ export default function MedicalProductionTab({
         </div>
       </div>
 
+      {/* Toolbar: Busca e Filtros de Status */}
+      <div style={styles.toolbar}>
+        <div style={styles.searchBox}>
+          <Search size={15} color="#64748b" />
+          <input
+            type="text"
+            placeholder="Pesquisar médico..."
+            value={searchDoctor}
+            onChange={e => setSearchDoctor(e.target.value)}
+            style={styles.searchInput}
+          />
+          {searchDoctor && (
+            <button onClick={() => setSearchDoctor('')} style={styles.clearBtn}>
+              <X size={13} />
+            </button>
+          )}
+        </div>
+
+        <div style={styles.filterGroup}>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('Todos')}
+            style={{
+              ...styles.filterBtn,
+              ...(statusFilter === 'Todos' ? styles.filterBtnActive : {})
+            }}
+          >
+            Todos ({doctorProductions.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('Pendentes')}
+            style={{
+              ...styles.filterBtn,
+              ...(statusFilter === 'Pendentes' ? styles.filterBtnActiveWarn : {})
+            }}
+          >
+            Pendentes ({doctorProductions.length - homologatedCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('Homologados')}
+            style={{
+              ...styles.filterBtn,
+              ...(statusFilter === 'Homologados' ? styles.filterBtnActiveSuccess : {})
+            }}
+          >
+            Homologados ({homologatedCount})
+          </button>
+        </div>
+      </div>
+
       {/* Production Table */}
       <div style={styles.tableWrapper}>
         <table style={styles.table}>
@@ -159,98 +215,128 @@ export default function MedicalProductionTab({
             </tr>
           </thead>
           <tbody>
-            {doctorProductions.map(prod => (
-              <tr key={prod.doctorId}>
-                <td>
-                  <div style={{ fontWeight: '800', color: '#0f172a' }}>{formatDoctorDisplayName(prod.doctorName)}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                    Vínculo: <strong>{prod.contractType}</strong>
-                  </div>
-                </td>
-
-                <td>
-                  <div style={{ fontWeight: '700', color: '#1e293b' }}>
-                    {prod.shiftsCount} plantões
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: '#0284c7', fontWeight: '600' }}>
-                    R$ {prod.shiftsTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                </td>
-
-                <td>
-                  <div style={{ fontWeight: '700', color: '#1e293b' }}>
-                    {prod.consultationsCount} consultas
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: '#0284c7', fontWeight: '600' }}>
-                    R$ {prod.consultationsTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                </td>
-
-                <td>
-                  <div style={{ fontWeight: '700', color: '#1e293b' }}>
-                    {prod.proceduresCount} procedimentos
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: '#0284c7', fontWeight: '600' }}>
-                    R$ {prod.proceduresTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                </td>
-
-                <td>
-                  <div style={{ fontSize: '1.05rem', fontWeight: '900', color: '#059669' }}>
-                    R$ {prod.netTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                  {prod.pixKey && (
-                    <div style={{ fontSize: '0.65rem', color: '#64748b' }}>PIX: {prod.pixKey}</div>
-                  )}
-                </td>
-
-                <td>
-                  {prod.isHomologated ? (
-                    <span style={styles.homologatedBadge}>
-                      ✓ Homologado (Financeiro)
-                    </span>
-                  ) : (
-                    <span style={styles.pendingBadge}>
-                      Pendente de Homologação
-                    </span>
-                  )}
-                </td>
-
-                <td>
-                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                    <button
-                      type="button"
-                      onClick={() => onOpenStatement(prod)}
-                      style={styles.extratoBtn}
-                      title="Emitir holerite / extrato detalhado em PDF"
-                    >
-                      <Printer size={13} />
-                      <span>Extrato</span>
-                    </button>
-
-                    {!prod.isHomologated ? (
-                      <button
-                        type="button"
-                        onClick={() => handleHomologate(prod)}
-                        disabled={loading || homologatingId === prod.doctorId}
-                        style={styles.homologarBtn}
-                        title="Aprovar e lançar título no Contas a Pagar do Financeiro"
-                      >
-                        <Send size={13} />
-                        <span>{homologatingId === prod.doctorId ? 'Lançando...' : 'Homologar'}</span>
-                      </button>
-                    ) : (
-                      <span style={{ fontSize: '0.7rem', color: '#166534', fontWeight: '700' }}>
-                        ✓ Enviado
-                      </span>
-                    )}
-                  </div>
+            {filteredProductions.length === 0 ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+                  Nenhum registro encontrado para os filtros selecionados.
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredProductions.map(prod => (
+                <tr key={prod.doctorId}>
+                  <td>
+                    <div style={{ fontWeight: '800', color: '#0f172a' }}>{formatDoctorDisplayName(prod.doctorName)}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                      Vínculo: <strong>{prod.contractType}</strong>
+                    </div>
+                  </td>
+
+                  <td>
+                    <div style={{ fontWeight: '700', color: '#1e293b' }}>
+                      {prod.shiftsCount} plantões
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#0284c7', fontWeight: '600' }}>
+                      R$ {prod.shiftsTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div style={{ fontWeight: '700', color: '#1e293b' }}>
+                      {prod.consultationsCount} consultas
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#0284c7', fontWeight: '600' }}>
+                      R$ {prod.consultationsTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div style={{ fontWeight: '700', color: '#1e293b' }}>
+                      {prod.proceduresCount} procedimentos
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#0284c7', fontWeight: '600' }}>
+                      R$ {prod.proceduresTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div style={{ fontSize: '1.05rem', fontWeight: '900', color: '#059669' }}>
+                      R$ {prod.netTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                    {prod.pixKey && (
+                      <div style={{ fontSize: '0.65rem', color: '#64748b' }}>PIX: {prod.pixKey}</div>
+                    )}
+                  </td>
+
+                  <td>
+                    {prod.isHomologated ? (
+                      <span style={styles.homologatedBadge}>
+                        ✓ Homologado
+                      </span>
+                    ) : (
+                      <span style={styles.pendingBadge}>
+                        Pendente
+                      </span>
+                    )}
+                  </td>
+
+                  <td>
+                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => onOpenStatement(prod)}
+                        style={styles.extratoBtn}
+                        title="Emitir extrato detalhado em PDF"
+                      >
+                        <Printer size={13} />
+                        <span>Extrato</span>
+                      </button>
+
+                      {!prod.isHomologated ? (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedProdForHomologation(prod)}
+                          disabled={loading}
+                          style={styles.homologarBtn}
+                          title="Conferir e homologar repasse médico"
+                        >
+                          <Send size={13} />
+                          <span>Homologar</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedProdForHomologation(prod)}
+                          style={styles.detalhesBtn}
+                          title="Ver detalhes da homologação e comprovante financeiro"
+                        >
+                          <CheckCircle2 size={13} />
+                          <span>Detalhes</span>
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
+
+      {/* Modal de Homologação Médica */}
+      {selectedProdForHomologation && (
+        <MedicalHomologationModal
+          production={selectedProdForHomologation}
+          month={selectedMonth}
+          schedules={schedules}
+          procedures={procedures}
+          appointments={appointments}
+          settings={settings}
+          onClose={() => setSelectedProdForHomologation(null)}
+          onConfirmHomologate={onHomologateProduction}
+          onCancelHomologation={onCancelHomologation}
+          loading={loading}
+        />
+      )}
     </div>
   );
 }
@@ -305,6 +391,71 @@ const styles = {
     fontSize: '0.75rem',
     color: '#94a3b8',
   },
+  toolbar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.75rem',
+    marginTop: '0.25rem'
+  },
+  searchBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    backgroundColor: '#fff',
+    border: '1px solid #cbd5e1',
+    borderRadius: '8px',
+    padding: '0.4rem 0.75rem',
+    maxWidth: '320px',
+    width: '100%'
+  },
+  searchInput: {
+    border: 'none',
+    outline: 'none',
+    fontSize: '0.82rem',
+    width: '100%',
+    color: '#0f172a'
+  },
+  clearBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#94a3b8',
+    cursor: 'pointer',
+    padding: 0,
+    display: 'flex',
+    alignItems: 'center'
+  },
+  filterGroup: {
+    display: 'flex',
+    gap: '0.35rem'
+  },
+  filterBtn: {
+    padding: '0.4rem 0.85rem',
+    fontSize: '0.78rem',
+    fontWeight: '700',
+    backgroundColor: '#f1f5f9',
+    color: '#475569',
+    border: '1px solid #cbd5e1',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  filterBtnActive: {
+    backgroundColor: '#0f172a',
+    color: '#fff',
+    borderColor: '#0f172a'
+  },
+  filterBtnActiveWarn: {
+    backgroundColor: '#f59e0b',
+    color: '#fff',
+    borderColor: '#f59e0b'
+  },
+  filterBtnActiveSuccess: {
+    backgroundColor: '#10b981',
+    color: '#fff',
+    borderColor: '#10b981'
+  },
   tableWrapper: {
     overflowX: 'auto',
     backgroundColor: '#fff',
@@ -322,16 +473,16 @@ const styles = {
     fontWeight: '700',
     backgroundColor: '#dcfce7',
     color: '#166534',
-    padding: '0.15rem 0.5rem',
+    padding: '0.2rem 0.55rem',
     borderRadius: '4px',
     display: 'inline-block',
   },
   pendingBadge: {
     fontSize: '0.7rem',
-    fontWeight: '600',
+    fontWeight: '700',
     backgroundColor: '#fef3c7',
     color: '#b45309',
-    padding: '0.15rem 0.5rem',
+    padding: '0.2rem 0.55rem',
     borderRadius: '4px',
     display: 'inline-block',
   },
@@ -339,7 +490,7 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.3rem',
-    padding: '0.3rem 0.6rem',
+    padding: '0.35rem 0.65rem',
     fontSize: '0.75rem',
     fontWeight: '700',
     backgroundColor: '#f1f5f9',
@@ -351,13 +502,27 @@ const styles = {
   homologarBtn: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.3rem',
-    padding: '0.3rem 0.7rem',
+    gap: '0.35rem',
+    padding: '0.35rem 0.75rem',
     fontSize: '0.75rem',
-    fontWeight: '700',
+    fontWeight: '800',
     backgroundColor: '#10b981',
     color: '#fff',
     border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
+  },
+  detalhesBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.35rem 0.75rem',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    backgroundColor: '#ecfdf5',
+    color: '#047857',
+    border: '1px solid #a7f3d0',
     borderRadius: '6px',
     cursor: 'pointer',
   }

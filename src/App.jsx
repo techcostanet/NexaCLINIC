@@ -24,6 +24,8 @@ import MedicalPanel from './components/MedicalPanel';
 import SupplierQuotePortal from './components/purchasing/SupplierQuotePortal';
 import MachineTicketPortal from './components/maintenance/MachineTicketPortal';
 import TvCallPanel from './components/tv/TvCallPanel';
+import EmployeeTrainingPortal from './components/training/EmployeeTrainingPortal';
+import CertificateVerifyPortal from './components/training/CertificateVerifyPortal';
 import ErrorBoundary from './components/ErrorBoundary';
 import ModuleGuideModal from './components/common/ModuleGuideModal';
 import { UnitProvider } from './contexts/UnitContext';
@@ -38,12 +40,17 @@ export default function App() {
 
   // Verificação de Acesso Público de Fornecedor via Token, QR Code de Manutenção ou Painel TV
   const urlParams = new URLSearchParams(window.location.search);
-  const quoteToken = urlParams.get('token') || urlParams.get('cotacao');
-  const qrMachineId = urlParams.get('chamado_equipamento') || urlParams.get('eq') || urlParams.get('chamado');
-
-  // Detecção flexível e universal do Painel da TV (suporta /tv, /tv/betim, hash #tv ou query ?painel_tv=1)
   const pathname = (window.location.pathname || '').toLowerCase();
   const hash = (window.location.hash || '').toLowerCase();
+
+  const quoteToken = urlParams.get('token') || urlParams.get('cotacao');
+  const qrMachineId = urlParams.get('chamado_equipamento') || urlParams.get('eq') || urlParams.get('chamado');
+  const trainingId = urlParams.get('treinamento') || urlParams.get('training') || 
+    (pathname.startsWith('/treinamento/') ? pathname.split('/')[2] : null);
+  const certificateId = urlParams.get('certificado') || urlParams.get('cert') || 
+    (pathname.startsWith('/certificado/') ? pathname.split('/')[2] : null);
+
+  // Detecção flexível e universal do Painel da TV (suporta /tv, /tv/betim, hash #tv ou query ?painel_tv=1)
   const isTvPath = pathname === '/tv' || pathname.startsWith('/tv/') || pathname.includes('painel_tv') || pathname.includes('painel-tv') || pathname.includes('chamada_tv');
   const isTvHash = hash.includes('tv') || hash.includes('painel');
   const isTvQuery = urlParams.has('painel_tv') || urlParams.has('tv') || urlParams.get('painel') === 'tv' || urlParams.has('chamada_tv');
@@ -156,6 +163,34 @@ export default function App() {
     );
   }
 
+  // Se o link acessado for do portal de treinamento do colaborador (link/QR Code público)
+  if (trainingId) {
+    return (
+      <ErrorBoundary>
+        <EmployeeTrainingPortal 
+          trainingId={trainingId} 
+          onExitPortal={() => {
+            window.location.href = window.location.origin;
+          }} 
+        />
+      </ErrorBoundary>
+    );
+  }
+
+  // Se o link acessado for de validação pública de certificado (QR Code do certificado)
+  if (certificateId) {
+    return (
+      <ErrorBoundary>
+        <CertificateVerifyPortal 
+          certificateId={certificateId} 
+          onExitPortal={() => {
+            window.location.href = window.location.origin;
+          }} 
+        />
+      </ErrorBoundary>
+    );
+  }
+
   if (loading) {
     return (
       <div style={styles.loadingContainer}>
@@ -189,7 +224,7 @@ export default function App() {
       case 'reception':
         return <ErrorBoundary><ReceptionPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'clinical':
-        return <ErrorBoundary><ClinicalPanel currentUser={user} /></ErrorBoundary>;
+        return <ErrorBoundary><ClinicalPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'stock':
         return <ErrorBoundary><StockPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'maintenance':

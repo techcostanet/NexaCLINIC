@@ -15,10 +15,14 @@ import ClinicalCalculatorsTab from './clinical/ClinicalCalculatorsTab';
 import ClinicalExportModal from './clinical/ClinicalExportModal';
 import ClinicalAiSummaryModal from './clinical/ClinicalAiSummaryModal';
 import { useUnit } from '../contexts/UnitContext';
-import UnitSelector from './common/UnitSelector';
+import ModuleHeader from './common/ModuleHeader';
+import ClinicalReportsModal from './clinical/ClinicalReportsModal';
 
-export default function ClinicalPanel() {
+export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
+  const [localReportsOpen, setLocalReportsOpen] = useState(false);
+  const isReportsModalOpen = isReportsOpen !== undefined ? isReportsOpen : localReportsOpen;
+  const handleSetReportsOpen = setIsReportsOpen || setLocalReportsOpen;
   const [activeTab, setActiveTab] = useState('prescriptions'); 
   // 'prescriptions' | 'medications' | 'monitoring' | 'evolutions' | 'labexams' | 'apac' | 'calculators' | 'dispensations' | 'timeline'
 
@@ -552,14 +556,143 @@ export default function ClinicalPanel() {
 
   return (
     <div style={styles.container}>
-      {/* Top Main Title Header */}
-      <div style={styles.cardHeader}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <h1 style={styles.title}>Nex-Ai.CLINIC</h1>
-            <p style={styles.subtitle}>Prontuário eletrônico nefrológico, prescrições dialíticas, farmacoterapia e regulação APAC.</p>
+      {/* Header Oficial Padronizado */}
+      <ModuleHeader
+        icon={HeartPulse}
+        title=".CLINIC"
+        subtitle="Prontuário eletrônico nefrológico, prescrições dialíticas, farmacoterapia e regulação APAC."
+        gradient="linear-gradient(135deg, #8b5cf6, #7c3aed)"
+        dotColor="#8b5cf6"
+        actions={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button
+              type="button"
+              onClick={() => setShowAiModal(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.48rem 0.85rem',
+                borderRadius: '8px',
+                backgroundColor: '#f5f3ff',
+                color: '#7c3aed',
+                border: '1px solid #ddd6fe',
+                fontSize: '0.825rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              title="Abrir Copiloto IA Clínico"
+            >
+              <Sparkles size={15} color="#8b5cf6" />
+              <span>Copiloto</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSetReportsOpen(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.48rem 0.85rem',
+                borderRadius: '8px',
+                backgroundColor: '#ecfdf5',
+                color: '#047857',
+                border: '1px solid #a7f3d0',
+                fontSize: '0.825rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              title="Abrir Central de Relatórios Clínicos"
+            >
+              <FileText size={15} color="#10b981" />
+              <span>Relatórios</span>
+            </button>
           </div>
-          <UnitSelector compact showLabel={false} />
+        }
+      />
+
+      {/* KPI Cards Row (5 Indicadores Nefrológicos) */}
+      <div style={styles.kpiRow}>
+        <div 
+          style={{ ...styles.kpiCard, borderLeft: '4px solid #8b5cf6', cursor: 'pointer' }}
+          onClick={() => setActiveTab('prescriptions')}
+          title="Ver pacientes cadastrados na unidade"
+        >
+          <div style={{ ...styles.kpiIconWrap, backgroundColor: '#f5f3ff' }}>
+            <User size={20} color="#8b5cf6" />
+          </div>
+          <div>
+            <span style={styles.kpiLabel}>Pacientes</span>
+            <div style={{ ...styles.kpiValue, color: '#7c3aed' }}>{currentPatients.length}</div>
+            <span style={styles.kpiSub}>Cadastrados na unidade</span>
+          </div>
+        </div>
+
+        <div 
+          style={{ ...styles.kpiCard, borderLeft: '4px solid #10b981', cursor: 'pointer' }}
+          onClick={() => setActiveTab('prescriptions')}
+          title="Ver prescrições dialíticas vigentes"
+        >
+          <div style={{ ...styles.kpiIconWrap, backgroundColor: '#ecfdf5' }}>
+            <ClipboardList size={20} color="#10b981" />
+          </div>
+          <div>
+            <span style={styles.kpiLabel}>Prescrições</span>
+            <div style={{ ...styles.kpiValue, color: '#059669' }}>{prescriptions.length}</div>
+            <span style={styles.kpiSub}>Protocolos ativos</span>
+          </div>
+        </div>
+
+        <div 
+          style={{ ...styles.kpiCard, borderLeft: '4px solid #0284c7', cursor: 'pointer' }}
+          onClick={() => setActiveTab('monitoring')}
+          title="Ver acompanhamento intradialítico de hoje"
+        >
+          <div style={{ ...styles.kpiIconWrap, backgroundColor: '#eff6ff' }}>
+            <Activity size={20} color="#0284c7" />
+          </div>
+          <div>
+            <span style={styles.kpiLabel}>Sessões</span>
+            <div style={{ ...styles.kpiValue, color: '#0284c7' }}>
+              {sessionsLogs.filter(l => l.date === new Date().toISOString().substring(0, 10)).length}/{todayPatients.length}
+            </div>
+            <span style={styles.kpiSub}>Realizadas hoje</span>
+          </div>
+        </div>
+
+        <div 
+          style={{ ...styles.kpiCard, borderLeft: '4px solid #ec4899', cursor: 'pointer' }}
+          onClick={() => setActiveTab('evolutions')}
+          title="Ver evoluções da equipe multiprofissional"
+        >
+          <div style={{ ...styles.kpiIconWrap, backgroundColor: '#fdf2f8' }}>
+            <MessageSquare size={20} color="#db2777" />
+          </div>
+          <div>
+            <span style={styles.kpiLabel}>Evoluções</span>
+            <div style={{ ...styles.kpiValue, color: '#db2777' }}>{clinicalNotes.length}</div>
+            <span style={styles.kpiSub}>Prontuário multiprofissional</span>
+          </div>
+        </div>
+
+        <div 
+          style={{ ...styles.kpiCard, borderLeft: '4px solid #f59e0b', cursor: 'pointer' }}
+          onClick={() => setActiveTab('medications')}
+          title="Ver farmacoterapia e medicamentos"
+        >
+          <div style={{ ...styles.kpiIconWrap, backgroundColor: '#fffbeb' }}>
+            <Pill size={20} color="#d97706" />
+          </div>
+          <div>
+            <span style={styles.kpiLabel}>Farmácia</span>
+            <div style={{ ...styles.kpiValue, color: '#d97706' }}>
+              {medications.length || (patientDispensations || []).length}
+            </div>
+            <span style={styles.kpiSub}>Fármacos e dispensações</span>
+          </div>
         </div>
       </div>
 
@@ -669,7 +802,7 @@ export default function ClinicalPanel() {
                   {/* Machine and Pre/Post Weight Row */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <div className="form-group">
-                      <label>Máquina de Diálise *</label>
+                      <label>Máquina *</label>
                       <select className="form-control" value={machineId} onChange={e => setMachineId(e.target.value)}>
                         <option value="Máquina 01 - Fresenius 4008S">Máquina 01 - Fresenius 4008S</option>
                         <option value="Máquina 02 - Gambro AK98">Máquina 02 - Gambro AK98</option>
@@ -679,7 +812,7 @@ export default function ClinicalPanel() {
                     </div>
 
                     <div className="form-group">
-                      <label>Peso Pré-Diálise (kg)</label>
+                      <label>Peso Inicial (kg)</label>
                       <input 
                         type="number" step="0.1" className="form-control" placeholder="Ex: 66.5"
                         value={preWeight} onChange={e => setPreWeight(e.target.value)}
@@ -687,7 +820,7 @@ export default function ClinicalPanel() {
                     </div>
 
                     <div className="form-group">
-                      <label>Peso Pós-Diálise (kg)</label>
+                      <label>Peso Final (kg)</label>
                       <input 
                         type="number" step="0.1" className="form-control" placeholder="Ex: 64.0"
                         value={finalWeight} onChange={e => setFinalWeight(e.target.value)}
@@ -695,7 +828,7 @@ export default function ClinicalPanel() {
                     </div>
 
                     <div className="form-group">
-                      <label>Perda de Peso Total</label>
+                      <label>Perda (kg)</label>
                       <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0284c7', paddingTop: '0.4rem' }}>
                         {preWeight && finalWeight ? `${(parseFloat(preWeight) - parseFloat(finalWeight)).toFixed(1)} kg` : '--'}
                       </div>
@@ -812,7 +945,7 @@ export default function ClinicalPanel() {
 
                   {/* Doctor/Nurse overall comments */}
                   <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                    <label>Evolução Final da Diálise / Condutas</label>
+                    <label>Conduta</label>
                     <textarea 
                       className="form-control" rows="3" placeholder="Insira o resumo do encerramento da diálise, peso final retirado e intercorrências médicas se houver..."
                       value={sessionNotes} onChange={e => setSessionNotes(e.target.value)}
@@ -1008,14 +1141,14 @@ export default function ClinicalPanel() {
                                 </select>
                               </div>
                               <div className="form-group">
-                                <label>Capilar (Dialisador) *</label>
+                                <label>Capilar *</label>
                                 <input 
                                   type="text" className="form-control" placeholder="Ex: HF80 (Alto Fluxo)"
                                   value={prescForm.dialyzerModel} onChange={e => setPrescForm({ ...prescForm, dialyzerModel: e.target.value })} required
                                 />
                               </div>
                               <div className="form-group">
-                                <label>Duração (Horas) *</label>
+                                <label>Duração *</label>
                                 <select 
                                   className="form-control" value={prescForm.sessionTime}
                                   onChange={e => setPrescForm({ ...prescForm, sessionTime: e.target.value })}
@@ -1027,14 +1160,14 @@ export default function ClinicalPanel() {
                                 </select>
                               </div>
                               <div className="form-group">
-                                <label>Fluxo Sangue (QB) *</label>
+                                <label>Fluxo (QB) *</label>
                                 <input 
                                   type="number" className="form-control" placeholder="300"
                                   value={prescForm.bloodFlow} onChange={e => setPrescForm({ ...prescForm, bloodFlow: e.target.value })} required
                                 />
                               </div>
                               <div className="form-group">
-                                <label>Fluxo Dialisato (QD) *</label>
+                                <label>Dialisato (QD) *</label>
                                 <select 
                                   className="form-control" value={prescForm.dialysateFlow}
                                   onChange={e => setPrescForm({ ...prescForm, dialysateFlow: e.target.value })}
@@ -1056,7 +1189,7 @@ export default function ClinicalPanel() {
                                 </select>
                               </div>
                               <div className="form-group">
-                                <label>Dose Heparina *</label>
+                                <label>Heparina *</label>
                                 <input 
                                   type="text" className="form-control" placeholder="Ex: 5000 UI"
                                   value={prescForm.heparinDose} onChange={e => setPrescForm({ ...prescForm, heparinDose: e.target.value })} required
@@ -1077,7 +1210,7 @@ export default function ClinicalPanel() {
                                 />
                               </div>
                               <div className="form-group">
-                                <label>Peso Seco Alvo (kg) *</label>
+                                <label>Peso Seco *</label>
                                 <input 
                                   type="number" step="0.1" className="form-control" placeholder="Ex: 68.5"
                                   value={prescForm.dryWeight} onChange={e => setPrescForm({ ...prescForm, dryWeight: e.target.value })} required
@@ -1219,7 +1352,7 @@ export default function ClinicalPanel() {
                             </div>
                           </div>
                           <div className="form-group">
-                            <label>Texto da Evolução Clínica *</label>
+                            <label>Evolução *</label>
                             <textarea 
                               className="form-control" rows="4" placeholder="Descreva a evolução do paciente, parâmetros laboratoriais, queixas ou recomendações terapêuticas..."
                               value={noteText} onChange={e => setNoteText(e.target.value)} required
@@ -1397,7 +1530,7 @@ export default function ClinicalPanel() {
                         <form onSubmit={handleSaveQuickAssistPost} style={{ padding: '1.25rem', borderRadius: '12px', borderLeft: '4px solid #ec4899', backgroundColor: '#fdf2f8', marginBottom: '1.5rem', border: '1px solid #fbcfe8' }}>
                           <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
                             <div style={{ flex: 1, minWidth: '160px' }}>
-                              <label style={{ fontSize: '0.8rem', fontWeight: '600', display: 'block', marginBottom: '0.25rem' }}>Tipo de Evento</label>
+                              <label style={{ fontSize: '0.8rem', fontWeight: '600', display: 'block', marginBottom: '0.25rem' }}>Evento</label>
                               <select 
                                 className="form-control" 
                                 value={quickAssistCategory} 
@@ -1530,6 +1663,22 @@ export default function ClinicalPanel() {
           }}
         />
       )}
+
+      {/* Central de Relatórios Especializados */}
+      <ClinicalReportsModal 
+        isOpen={isReportsModalOpen}
+        onClose={() => handleSetReportsOpen(false)}
+        patients={currentPatients}
+        prescriptions={prescriptions}
+        sessionsLogs={sessionsLogs}
+        clinicalNotes={clinicalNotes}
+        medications={medications}
+        labExams={labExams}
+        apacRecords={apacRecords}
+        patientDispensations={patientDispensations}
+        assistPosts={assistPosts}
+        currentUser={currentUser}
+      />
     </div>
   );
 }
@@ -1539,6 +1688,48 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1.25rem',
+  },
+  kpiRow: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '1rem',
+  },
+  kpiCard: {
+    backgroundColor: '#fff',
+    borderRadius: '12px',
+    padding: '1rem',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.9rem',
+    transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+  },
+  kpiIconWrap: {
+    width: '42px',
+    height: '42px',
+    borderRadius: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  kpiLabel: {
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+  },
+  kpiValue: {
+    fontSize: '1.35rem',
+    fontWeight: '800',
+    lineHeight: 1.2,
+  },
+  kpiSub: {
+    fontSize: '0.72rem',
+    color: '#94a3b8',
+    display: 'block',
   },
   cardHeader: {
     display: 'flex',

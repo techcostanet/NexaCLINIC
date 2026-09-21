@@ -330,11 +330,28 @@ export default function MedicalPanel({ currentUser, onBack, isReportsOpen, setIs
   const handleHomologateProduction = async (productionData) => {
     try {
       setLoading(true);
-      const res = await dbService.homologateMedicalProduction(productionData);
-      showToast(`Repasse do ${productionData.doctorName} homologado e lançado no Contas a Pagar do Financeiro!`);
+      await dbService.homologateMedicalProduction(productionData);
+      showToast(`Repasse de ${productionData.doctorName} homologado e lançado no Contas a Pagar!`);
       await loadAllData();
     } catch (err) {
       console.error(err);
+      showToast('Erro ao homologar produção.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelHomologation = async (productionId, payableId, doctorName) => {
+    try {
+      setLoading(true);
+      if (dbService.cancelMedicalProductionHomologation) {
+        await dbService.cancelMedicalProductionHomologation(productionId, payableId);
+      }
+      showToast(`Homologação de ${doctorName || 'Médico'} desfeita e título removido do Contas a Pagar.`);
+      await loadAllData();
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao desfazer homologação.');
     } finally {
       setLoading(false);
     }
@@ -383,30 +400,6 @@ export default function MedicalPanel({ currentUser, onBack, isReportsOpen, setIs
         subtitle="Escala de plantões nos salões, produção ambulatorial, bolsa de trocas e repasse financeiro."
         gradient="linear-gradient(135deg, #0284c7, #2563eb)"
         dotColor="#0284c7"
-        actions={
-          <button
-            type="button"
-            onClick={() => handleSetReportsOpen(true)}
-            title="Abrir Central de Relatórios Médicos"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              padding: '0.45rem 0.85rem',
-              borderRadius: '8px',
-              backgroundColor: '#ecfdf5',
-              color: '#047857',
-              border: '1px solid #a7f3d0',
-              fontSize: '0.825rem',
-              fontWeight: '700',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-          >
-            <FileText size={15} />
-            <span>Relatórios</span>
-          </button>
-        }
       />
 
       {/* Navigation Tabs Bar */}
@@ -498,6 +491,7 @@ export default function MedicalPanel({ currentUser, onBack, isReportsOpen, setIs
             productions={currentProductions}
             settings={settings}
             onHomologateProduction={handleHomologateProduction}
+            onCancelHomologation={handleCancelHomologation}
             onOpenStatement={setStatementData}
             onSaveSettings={handleSaveSettings}
             loading={loading}

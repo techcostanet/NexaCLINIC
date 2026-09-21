@@ -184,6 +184,34 @@ export const MODULE_GUIDES = {
       {
         title: 'Saúde Ocupacional & Imunização',
         desc: 'Acompanhamento de doses vacinais (Hepatite B, dT, Gripe), validades de reforço e alertas preventivos.'
+      },
+      {
+        title: 'Gestão de Treinamentos & Capacitação',
+        desc: 'Criação e gestão de programas de capacitação continuada com questionários pré e pós-treinamento para mensuração científica de eficácia (RDC 63/2011 da ANVISA e NR-32).'
+      },
+      {
+        title: 'Portal do Colaborador (Mobile & QR Code)',
+        desc: 'Acesso público e responsivo onde o funcionário digita seu CPF no celular, responde ao pré-teste, estuda o conteúdo com tempo mínimo, realiza o pós-teste e recebe seu certificado.'
+      },
+      {
+        title: 'Certificação Digital & Validador de Autenticidade',
+        desc: 'Geração de certificados digitais em alta resolução para download e impressão, equipados com QR Code rastreável para validação de autenticidade pública no NexaCLINIC.'
+      },
+      {
+        title: 'Dossiê Vigilância Sanitária (PDF em 1 Clique)',
+        desc: 'Relatório oficial consolidado para fiscalizações municipais e auditorias, reunindo ementa do curso, lista de presenças, notas pré e pós-teste, ganho de eficácia e assinaturas de responsabilidade técnica.'
+      },
+      {
+        title: '15 Treinamentos Especializados em Nefrologia',
+        desc: 'Matriz completa com 15 capacitações clínicas cobrindo todos os setores (Enfermagem FAV/CVC/Emergências/Reuso, Tratamento de Água RDC 11/2014, Engenharia Clínica, Médico Kt/V, Farmácia, Higienização Hepatite B, Nutrição, Psicologia, Recepção, Faturamento APAC, Segurança do Paciente e T.I./LGPD).'
+      },
+      {
+        title: 'Logomarca Institucional nos Portais & Certificados',
+        desc: 'Aplicação da identidade visual da clínica no topo do Portal do Colaborador, nos certificados digitais em tela, no documento PDF vetorial e no Dossiê da Vigilância Sanitária.'
+      },
+      {
+        title: 'Sincronização 1-Clique de Modelos no Firestore',
+        desc: 'Botão Sincronizar na barra superior e auto-seed inteligente que carrega e atualiza todos os 15 treinamentos no banco de dados automaticamente.'
       }
     ],
     tutorial: [
@@ -203,6 +231,48 @@ export const MODULE_GUIDES = {
           'Acesse o "Painel de Controle" do Nex-Ai.HR.',
           'Consulte o card "Alertas de Exames Periódicos (ASO)" para conferir o resumo de exames vencidos, em 7d, 14d e 30d.',
           'Clique no botão "Lançar" diretamente na lista de alertas para realizar a renovação imediata do colaborador prestes a vencer.'
+        ]
+      },
+      {
+        title: 'Como Sincronizar e Utilizar os 15 Treinamentos de Nefrologia',
+        steps: [
+          'No módulo de RH, acesse a aba "Treinamentos".',
+          'Clique no botão "Sincronizar" na barra superior para carregar ou atualizar todos os 15 treinamentos oficiais no banco de dados da clínica.',
+          'Localize o curso do setor desejado no Catálogo (ex: FAV para Enfermagem, Tratamento de Água para Manutenção ou Acolhimento para Recepção).',
+          'Clique em "Divulgar" para imprimir o cartaz com a logomarca e QR Code para o mural do setor ou copiar o link direto de envio pelo WhatsApp.',
+          'Acompanhe as conclusões e notas na aba "Participações" e gere o Dossiê para a Vigilância Sanitária quando necessário.'
+        ]
+      },
+      {
+        title: 'Como Cadastrar e Divulgar um Treinamento',
+        steps: [
+          'No módulo de RH, acesse a aba "Treinamentos".',
+          'Clique no botão "+ Treinamento" ou escolha um dos "Modelos Prontos" (NR-32, PGRSS, Higienização das Mãos, Atendimento Humanizado, LGPD).',
+          'Ajuste o Título, Carga Horária, Validade de Reciclagem (ex: 12 meses), Nota Mínima e Tempo Mínimo de Leitura.',
+          'Configure o Conteúdo (vídeo ou texto explicativo), as questões do Pré-teste e as questões do Pós-teste com o gabarito.',
+          'Clique em "Salvar Treinamento".',
+          'No card do treinamento, clique em "Divulgar" para copiar o link direto ou imprimir o cartaz com QR Code para fixação no mural do setor.'
+        ]
+      },
+      {
+        title: 'Como o Colaborador Realiza a Capacitação',
+        steps: [
+          'O colaborador aponta a câmera do celular para o QR Code ou clica no link recebido via WhatsApp/e-mail.',
+          'Informa seu CPF para identificação automática na base do RH (ou preenche nome e setor se for novo).',
+          'Responde às perguntas do Pré-teste diagnóstico.',
+          'Assiste ao vídeo ou lê atentamente as diretrizes do conteúdo, aguardando o tempo mínimo de permanência.',
+          'Responde às questões do Pós-teste de fixação.',
+          'Atingindo a nota mínima (ex: 70%), o sistema calcula o ganho de eficácia (+%) e libera o Certificado Digital imediatamente para visualização e download em PDF.'
+        ]
+      },
+      {
+        title: 'Como Emitir o Dossiê para a Vigilância Sanitária',
+        steps: [
+          'Acesse a aba "Treinamentos" no módulo de RH.',
+          'Clique no botão "Dossiê VISA" na barra superior.',
+          'Filtre pelo treinamento desejado ou selecione "Todos os Treinamentos".',
+          'Confira a prévia dos colaboradores capacitados, médias pré/pós e índice de eficácia.',
+          'Clique em "Emitir Dossiê PDF (VISA)". O documento formal será gerado pronto para impressão e apresentação à fiscalização.'
         ]
       },
       {
@@ -241,6 +311,26 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Os 15 treinamentos de nefrologia já vêm com questões pré e pós-teste prontas?',
+        resposta: 'Sim. Cada um dos 15 treinamentos possui rigorosamente 5 perguntas de pré-teste (diagnóstico) e 5 perguntas de pós-teste (avaliação de fixação) com justificativas clínicas detalhadas e cálculo automático do ganho de eficácia (+%).'
+      },
+      {
+        pergunta: 'Como a logomarca da clínica é inserida nos certificados e documentos?',
+        resposta: 'A logomarca oficial da clínica é renderizada automaticamente no cabeçalho do Portal Mobile, no topo do Certificado Digital (em tela e no PDF exportado via jsPDF), no Cartaz de Divulgação para o mural e no Dossiê consolidado para a Vigilância Sanitária.'
+      },
+      {
+        pergunta: 'Como é calculada a eficácia do treinamento exigida pela Vigilância Sanitária?',
+        resposta: 'O sistema calcula matematicamente a diferença entre a nota obtida no Pós-teste e a nota obtida no Pré-teste diagnóstico (Eficácia = Pós-teste - Pré-teste). Esse indicador comprova para o auditor da VISA que o colaborador efetivamente absorveu novos conhecimentos.'
+      },
+      {
+        pergunta: 'Como funciona a validação pública de autenticidade do certificado?',
+        resposta: 'Cada certificado gerado possui um código alfanumérico único e um QR Code. Qualquer pessoa ou fiscal sanitário que escanear o código é redirecionado para a página oficial do NexaCLINIC, que valida se o certificado é autêntico, a data de emissão, o CPF do titular e a clínica emissora.'
+      },
+      {
+        pergunta: 'O colaborador precisa ter login e senha no sistema para fazer o treinamento?',
+        resposta: 'Não. O portal foi desenvolvido para acesso simplificado via link externo e QR Code no celular, exigindo apenas o CPF do funcionário para vincular seu histórico e emitir o certificado.'
+      },
       {
         pergunta: 'Os exames periódicos aplicam-se a profissionais PJ além de CLT?',
         resposta: 'Sim. O sistema monitora o ciclo ocupacional tanto de colaboradores CLT quanto de prestadores e profissionais PJ, garantindo total conformidade operacional na clínica.'
@@ -365,6 +455,22 @@ export const MODULE_GUIDES = {
       {
         title: 'Painel de Busca Reversa (Recall)',
         desc: 'Rastreabilidade completa de ponta a ponta: fornecedor, nota fiscal de compra e todos os pacientes que receberam o lote.'
+      },
+      {
+        title: '3 Modos de Visualização em Entradas',
+        desc: 'Alternância ágil entre modo Compacta (tabela condensada com edição rápida de valores), Normal (visão completa com chaves fiscais e emitentes) e Cards (grade responsiva com faturas, fornecedores e badges).'
+      },
+      {
+        title: 'Categorias Clínicas Dinâmicas',
+        desc: 'Catálogo integrado a 20 categorias especializadas de nefrologia e materiais médicos (MatMed, Dialisador, Concentrado, Linhas, Acesso, Curativo, etc.), gerenciadas no módulo Configurações.'
+      },
+      {
+        title: 'Gestão de Almoxarifados e Setores de Guarda',
+        desc: 'Vínculo obrigatório de insumos ao almoxarifado de estoque padrão (Almoxarifado Central, Farmácia da Diálise, Posto de Enfermagem), garantindo rastreabilidade territorial.'
+      },
+      {
+        title: '6 Kits Padronizados de Enfermagem em Hemodiálise',
+        desc: 'Kits assistenciais completos prontos para uso: Conexão FAV, Desconexão FAV, Curativo Permcath, Implante/Troca CDL, Recirculação/Priming e Intercorrência/Coagulação com composição e custos calculados.'
       }
     ],
     tutorial: [
@@ -473,9 +579,37 @@ export const MODULE_GUIDES = {
           'Você pode clicar em "Visualizar" no banner de alerta para auditar o documento original já registrado.',
           'Na Etapa 3 (Financeiro), ao informar ou ler a linha digitável do boleto ou das parcelas, o sistema confere se ela já foi lançada no Contas a Pagar ou em outra duplicata, impedindo o avanço até a correção.'
         ]
+      },
+      {
+        title: 'Como Alternar os Modos de Visualização em Entradas',
+        steps: [
+          'Acesse a aba "Entradas" no módulo de Estoque.',
+          'No canto superior direito da barra de filtros, localize os botões "Compacta", "Normal" e "Cards".',
+          'Clique em "Compacta" para uma tabela densa com edição rápida inline do valor da nota fiscal.',
+          'Clique em "Normal" para a tabela detalhada com número de itens, fornecedor, chave de acesso e parcelas.',
+          'Clique em "Cards" para navegar em formato de cartões visuais com status, fornecedor e valor em destaque.'
+        ]
+      },
+      {
+        title: 'Como Utilizar os Kits Clínicos de Hemodiálise',
+        steps: [
+          'Acesse a aba "Kits" no módulo de Estoque.',
+          'Visualize os 6 kits clínicos padronizados de enfermagem (KIT-HEMO-01 a KIT-HEMO-06).',
+          'Clique no botão de visualização ou edição para auditar os insumos componentes e as quantidades de cada pacote.',
+          'O custo total é calculado automaticamente a partir do preço de custo cadastrado para cada produto do kit.',
+          'Utilize os kits ao criar ou aprovar requisições para os postos de enfermagem e salões de diálise.'
+        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Onde configuro novas categorias ou novos almoxarifados para o estoque?',
+        resposta: 'No módulo Nex-Ai.CONFIG, acesse as abas "Almoxarifados" e "Categorias". Qualquer inclusão, alteração ou remoção feita lá é sincronizada imediatamente nos formulários do Estoque.'
+      },
+      {
+        pergunta: 'Os 6 kits de enfermagem já vêm com os insumos reais do estoque?',
+        resposta: 'Sim. Os 6 kits foram estruturados com base nos insumos hospitalares e nefrológicos reais cadastrados no sistema (agulhas fístula, linhas arteriais/venosas, dialisadores, heparina, curativos estéreis e soluções).'
+      },
       {
         pergunta: 'O sistema permite dar entrada duas vezes na mesma nota fiscal ou mesmo boleto?',
         resposta: 'Não. O sistema possui blindagem ativa contra duplicidade. Notas fiscais com a mesma Chave de Acesso ou mesmo Número + Fornecedor são detectadas e bloqueadas. O mesmo ocorre com boletos bancários cuja linha digitável já foi cadastrada no Contas a Pagar da clínica ou da rede.'
@@ -858,24 +992,6 @@ export const MODULE_GUIDES = {
     ]
   },
 
-
-  clinical: {
-    id: 'clinical',
-    name: 'Módulo Clínico & Prescrição',
-    subtitle: 'Nex-Ai.CLINIC — Prontuário Eletrônico & Evoluções',
-    color: '#8b5cf6',
-    recursos: [
-      { title: 'Prontuário Médico & Diálise', desc: 'Prescrição de hemodiálise, parâmetros de fluxo, heparina e dialisador.' },
-      { title: 'Evoluções Multidisciplinares', desc: 'Registros de Enfermagem, Nutrição, Psicologia e Serviço Social.' }
-    ],
-    tutorial: [
-      { title: 'Operação Clínica', steps: ['Consulte a documentação clínica disponível no protocolo institucional.'] }
-    ],
-    duvidas: [
-      { pergunta: 'Manual em finalização', resposta: 'As instruções detalhadas deste módulo serão liberadas nas próximas atualizações.' }
-    ]
-  },
-
   maintenance: {
     id: 'maintenance',
     name: 'Manutenção & Engenharia Clínica',
@@ -1089,9 +1205,29 @@ export const MODULE_GUIDES = {
     color: '#8b5cf6',
     recursos: [
       { title: 'Gestão de Usuários & RBAC', desc: 'Controle de permissões, papéis de acesso e customização de tema.' },
+      { title: 'Gestão Centralizada de Almoxarifados', desc: 'Cadastro, edição e controle de almoxarifados, farmácias satélites e locais físicos de guarda de insumos com indicação de responsáveis.' },
+      { title: 'Categorias Globais de Produtos', desc: 'Gerenciamento completo das categorias de insumos e despesas utilizadas nos módulos de Estoque, Financeiro e RH.' },
       { title: 'Tempo de Vida das Requisições (TTL)', desc: 'Parametrização do tempo limite (1h padrão, 2h, 4h, 8h/turno, 12h, 24h) para atendimento de materiais antes da liberação automática de saldo reservado.' }
     ],
     tutorial: [
+      {
+        title: 'Como Cadastrar ou Editar um Almoxarifado',
+        steps: [
+          'Acesse o módulo Nex-Ai.CONFIG e clique na aba "Almoxarifados".',
+          'Para cadastrar, clique no botão "+ Novo Almoxarifado".',
+          'Informe o Nome (ex: Almoxarifado Central, Farmácia da Diálise), o Responsável, Status e Descrição.',
+          'Clique em "Cadastrar". O novo local estará disponível imediatamente para seleção no catálogo de produtos e transferências.'
+        ]
+      },
+      {
+        title: 'Como Cadastrar ou Editar uma Categoria de Produtos',
+        steps: [
+          'Acesse o módulo Nex-Ai.CONFIG e clique na aba "Categorias".',
+          'Clique no botão "+ Nova Categoria".',
+          'Digite o Nome da categoria (ex: Dialisadores, Concentrados, Curativo), selecione o Módulo (Estoque, Financeiro, RH) e a Descrição.',
+          'Clique em "Cadastrar". Os novos insumos do Estoque poderão ser classificados sob essa categoria.'
+        ]
+      },
       {
         title: 'Como Configurar o TTL de Requisições',
         steps: [
@@ -1103,6 +1239,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Ao criar um novo almoxarifado ou categoria, ele já aparece no módulo de Estoque?',
+        resposta: 'Sim! A sincronização é instantânea. O novo almoxarifado já poderá ser selecionado no cadastro de produtos e transferências, e as novas categorias aparecerão no filtro e no modal de edição de produto.'
+      },
       { pergunta: 'O que acontece ao alterar o TTL?', resposta: 'O novo limite temporal passa a valer para a verificação contínua de requisições pendentes, recalculando o prazo para que requisições não atendidas expirem.' }
     ]
   },
@@ -1319,6 +1459,18 @@ export const MODULE_GUIDES = {
     color: '#8b5cf6',
     recursos: [
       {
+        title: 'Cabeçalho Oficial Padronizado (.CLINIC)',
+        desc: 'Identificação visual oficial com gradiente roxo/violeta, ícone HeartPulse, indicador dotColor e atalhos rápidos para o Copiloto IA e Central de Relatórios sem redundância de unidade.'
+      },
+      {
+        title: 'Faixa de Indicadores de Gestão (KPI Cards)',
+        desc: '5 métricas essenciais em tempo real: Pacientes Cadastrados, Prescrições Vigentes, Sessões de Hoje, Evoluções no Prontuário e Farmacoterapia Ativa com navegação rápida em 1 clique.'
+      },
+      {
+        title: 'Central de Relatórios Clínicos Especializados (12 Relatórios)',
+        desc: 'Relatórios analíticos cobrindo Censo de Pacientes, Acessos Vasculares, Prescrições, Monitoramento Horário, Alerta de Taxa de UF (>13 mL/kg/h), Metas SBN, Anemia, Metabolismo Ósseo (DMO), Validade APAC, Farmacoterapia, Evoluções e Mural de Ocorrências com exportação em Excel (.xlsx) e PDF.'
+      },
+      {
         title: 'Cockpit 360 do Paciente Renal',
         desc: 'Visão unificada com identificação do paciente, tipo e sítio do acesso vascular, peso seco alvo, alertas de segurança (alergias em destaque e sorologias) e atalhos rápidos.'
       },
@@ -1353,6 +1505,15 @@ export const MODULE_GUIDES = {
     ],
     tutorial: [
       {
+        title: 'Como Acessar e Exportar a Central de Relatórios Clínicos',
+        steps: [
+          'Clique no botão "Relatórios" no cabeçalho oficial do módulo (.CLINIC) ou na barra de navegação global superior.',
+          'Navegue entre as seções temáticas (Censo, Diálise, Exames, APAC, Equipe) ou visualize a lista completa.',
+          'Utilize os filtros rápidos de Salão, Turno ou o campo de busca por paciente e máquina.',
+          'Clique em "Excel" para baixar a planilha estruturada (.xlsx) ou em "PDF" para gerar o documento formatado com cabeçalho da clínica.'
+        ]
+      },
+      {
         title: 'Como Prescrever Medicamentos Intradialíticos',
         steps: [
           'Selecione o paciente na lista lateral e clique na aba "Medicamentos".',
@@ -1381,13 +1542,17 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Utilizar o Copiloto Clínico IA',
         steps: [
-          'No cabeçalho do cockpit do paciente, clique no botão "Copiloto" (com ícone de brilho).',
+          'No cabeçalho do cockpit do paciente ou no topo do módulo, clique no botão "Copiloto".',
           'A IA analisará os últimos exames, medicamentos, prescrição e intercorrências dos últimos 30 dias.',
           'Revise as recomendações nefrológicas e clique em "Inserir como Evolução" para salvar diretamente no prontuário.'
         ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como exportar os relatórios em planilha Excel ou documento PDF?',
+        resposta: 'Basta abrir a Central de Relatórios pelo botão do cabeçalho (.CLINIC), escolher qualquer um dos 12 relatórios disponíveis e clicar em "Excel" (.xlsx) ou "PDF". O download iniciará instantaneamente com todas as colunas estruturadas.'
+      },
       {
         pergunta: 'Como funciona o cálculo de adequação dialítica (Kt/V)?',
         resposta: 'O sistema utiliza a fórmula de Daugirdas de 2ª geração single-pool (-ln(R - 0.008*t) + (4 - 3.5*R) * (UF/W)), considerando as dosagens de ureia pré e pós, tempo e ultrafiltração. Resultados ≥ 1.20 são classificados como adequados.'
@@ -1545,15 +1710,18 @@ export const MODULE_GUIDES = {
         title: 'Como Homologar a Produção Médica e Enviar ao Financeiro',
         steps: [
           'A Coordenação Médica acessa a aba "Produção" do Nex-Ai.MED.',
-          'Confere o espelho de cada médico (soma de plantões auditados + consultas concluídas na agenda + procedimentos).',
-          'Clica no botão "Homologar". O sistema cria instantaneamente a duplicata a pagar no Contas a Pagar do Nex-Ai.FINANCE.',
-          'Clique em "Extrato" para gerar e imprimir o holerite detalhado do médico em PDF.'
+          'Confere o espelho apurado de cada nefrologista (plantões auditados pela ronda + atendimentos concluídos na agenda + procedimentos realizados).',
+          'Clica no botão "Homologar" na linha do médico para abrir o modal oficial de conferência da Gestão Médica.',
+          'Revisa a discriminação itemizada dos plantões, consultas ambulatoriais e procedimentos, podendo adicionar ajustes/bônus/descontos e definir a data de vencimento.',
+          'Clica em "Confirmar e Homologar". O sistema consolida a produção e lança automaticamente o título no Contas a Pagar do Nex-Ai.FINANCE com a chave PIX do médico.',
+          'Para médicos já homologados, o botão "Detalhes" permite auditar a homologação com número do título financeiro e estornar/desfazer o lançamento se necessário.',
+          'Clique em "Extrato" para visualizar ou imprimir o demonstrativo detalhado do médico em PDF.'
         ]
       },
       {
         title: 'Como Utilizar a Central de Relatórios do Nex-Ai.MED',
         steps: [
-          'Clique no botão "Relatórios" na barra superior global ou no cabeçalho do módulo Nex-Ai.MED.',
+          'Clique no botão "Relatórios" na barra superior global.',
           'Alterne entre as abas temáticas limpas: "Todos", "Escala", "Plantões", "Trocas", "Procedimentos", "Produção" ou "Profissionais".',
           'Selecione o relatório desejado na lista lateral para analisar a prévia dos dados e os cards de indicadores rápidos (KPIs).',
           'Filtre pelo Mês de competência, Médico ou Status desejado.',

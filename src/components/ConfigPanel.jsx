@@ -817,7 +817,7 @@ export default function ConfigPanel() {
           <Users size={16} /> Usuários ({usersList.length})
         </button>
         <button onClick={() => setActiveTab('locations')} style={{ ...styles.tabBtn, ...(activeTab === 'locations' ? styles.tabBtnActive : {}) }}>
-          <Warehouse size={16} /> Locais ({stockLocations.length})
+          <Warehouse size={16} /> Almoxarifados ({stockLocations.length})
         </button>
         <button onClick={() => setActiveTab('categories')} style={{ ...styles.tabBtn, ...(activeTab === 'categories' ? styles.tabBtnActive : {}) }}>
           <ListFilter size={16} /> Categorias ({categoriesList.length})
@@ -1170,25 +1170,25 @@ export default function ConfigPanel() {
             </div>
           )}
 
-          {/* TAB: Stock Locations (Locais de Estoque) */}
+          {/* TAB: Stock Locations (Almoxarifados) */}
           {activeTab === 'locations' && (
             <div style={styles.tableCard}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
-                  <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>🏭 Locais de Estoque da Clínica</h3>
+                  <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>🏬 Almoxarifados</h3>
                   <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    Cadastre os depósitos, almoxarifados e pontos de consumo de insumos (Almoxarifado Central, Farmácia da Diálise, Posto de Enfermagem, etc.).
+                    Almoxarifados, farmácias satélites e locais padrão de armazenamento para o módulo de estoque.
                   </span>
                 </div>
                 <button onClick={handleOpenLocationAdd} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Plus size={16} /> Novo Local de Estoque
+                  <Plus size={16} /> Novo Almoxarifado
                 </button>
               </div>
 
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    <th>Local</th>
+                    <th>Almoxarifado</th>
                     <th>Descrição</th>
                     <th>Responsável</th>
                     <th>Status</th>
@@ -1199,7 +1199,7 @@ export default function ConfigPanel() {
                   {stockLocations.length === 0 ? (
                     <tr>
                       <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                        Nenhum local de estoque cadastrado. Clique em "Novo Local de Estoque" para adicionar.
+                        Nenhum almoxarifado cadastrado. Clique em "Novo Almoxarifado" para adicionar.
                       </td>
                     </tr>
                   ) : (
@@ -1248,9 +1248,9 @@ export default function ConfigPanel() {
             <div style={styles.tableCard}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
-                  <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>🏷️ Categorias de Produtos & Módulos</h3>
+                  <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>🏷️ Categorias</h3>
                   <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    Gerencie centralidamente as categorias dos produtos de Estoque, Financeiro e RH.
+                    Gerencie centralizadamente as categorias dos produtos de Estoque, Financeiro e RH.
                   </span>
                 </div>
                 <button onClick={handleOpenCategoryAdd} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1918,20 +1918,20 @@ export default function ConfigPanel() {
           <div style={{ ...styles.modalCard, maxWidth: '500px' }}>
             <div style={styles.modalHeader}>
               <div>
-                <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{editingLocation ? 'Editar Local' : 'Cadastrar Local'}</h3>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Defina os locais físicos e almoxarifados da clínica.</span>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{editingLocation ? 'Editar Almoxarifado' : 'Novo Almoxarifado'}</h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Almoxarifados, farmácias satélites e pontos de consumo.</span>
               </div>
               <button onClick={() => setShowLocationModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
             </div>
             
             <form onSubmit={handleSaveLocation} style={styles.modalForm}>
               <div className="form-group" style={{ marginBottom: '0.85rem' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Local *</label>
+                <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>Almoxarifado *</label>
                 <input 
                   type="text" 
                   className="form-control" 
                   required 
-                  placeholder="Ex: Almoxarifado Central, Farmácia UTI, Centro Cirúrgico" 
+                  placeholder="Ex: Almoxarifado Central, Farmácia da Diálise, Posto de Enfermagem" 
                   value={locationForm.name} 
                   onChange={e => setLocationForm({ ...locationForm, name: e.target.value })} 
                   style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: 'var(--text-primary)', fontSize: '0.875rem' }} 
@@ -1978,7 +1978,7 @@ export default function ConfigPanel() {
               <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setShowLocationModal(false)} className="btn btn-secondary" style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer' }}>Cancelar</button>
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', color: '#ffffff', padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}>
-                  {actionLoading ? 'Salvando...' : (editingLocation ? 'Salvar Alterações' : 'Cadastrar Local')}
+                  {actionLoading ? 'Salvando...' : (editingLocation ? 'Salvar' : 'Cadastrar')}
                 </button>
               </div>
             </form>
@@ -1992,7 +1992,7 @@ export default function ConfigPanel() {
           <div style={{ ...styles.modalCard, maxWidth: '500px' }}>
             <div style={styles.modalHeader}>
               <div>
-                <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{editingCategory ? 'Editar Categoria' : 'Cadastrar Categoria'}</h3>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{editingCategory ? 'Editar Categoria' : 'Nova Categoria'}</h3>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Defina o nome e o módulo de aplicação da categoria.</span>
               </div>
               <button onClick={() => setShowCategoryModal(false)} style={styles.modalCloseBtn}><X size={20} /></button>
@@ -2043,7 +2043,7 @@ export default function ConfigPanel() {
               <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setShowCategoryModal(false)} className="btn btn-secondary" style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer' }}>Cancelar</button>
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', color: '#ffffff', padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '600', fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}>
-                  {actionLoading ? 'Salvando...' : (editingCategory ? 'Salvar Categoria' : 'Cadastrar Categoria')}
+                  {actionLoading ? 'Salvando...' : (editingCategory ? 'Salvar' : 'Cadastrar')}
                 </button>
               </div>
             </form>

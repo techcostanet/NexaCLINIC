@@ -6,7 +6,7 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v4.9.79',
+      version: 'v4.9.85',
       date: '21/09/2026',
       title: 'Nex-Ai CLINIC — Checklists Oficiais SESMT: EPIs (11 Itens Clínicos), Nova Aba Copa (7 Itens) & Ficha de Auditoria Oficial A4 (.SESMT)',
       description: 'Implementação dos formulários de vistoria baseados nas planilhas oficiais Saude.xlsx e Copa.xlsx: expansão dos EPIs para 11 itens clínicos com setores de hemodiálise, nova aba dedicada para a Copa com 7 itens de segurança alimentar, coleta de assinatura digital touch/caneta para Nutricionista, Enfermeiro e Técnico, unificação dos KPIs no painel e geração de ficha de auditoria oficial para impressão idêntica à prancheta física A4.',
@@ -17,6 +17,71 @@ export default function ChangelogModal({ isOpen, onClose }) {
         { type: 'Indicadores Unificados no Painel', text: 'Cálculo integrado da Taxa de Conformidade Geral e ranking de não-conformidades ponderando tanto os setores clínicos quanto a Copa.' },
         { type: 'Ficha de Auditoria Oficial A4', text: 'Geração e impressão de espelho fiel da prancheta física oficial com assinalamento de conformidade (X em C/NC/NA), anotações de campo e blocos de assinatura com a imagem digitalizada.' },
         { type: 'Manual Atualizado & Padrão de 1 Palavra', text: 'Documentação do SESMT em moduleGuidesData.js atualizada com as novas rotinas e higienização estrita de rótulos diretos sem conectivos ou barras redundantes.' }
+      ]
+    },
+    {
+      version: 'v4.9.84',
+      date: '19/09/2026',
+      title: 'Nex-Ai CLINIC — Padronização Oficial de Cabeçalhos (.HR e .CALENDAR) & Desduplicação de Unidades',
+      description: 'Aplicação integral do design system oficial de cabeçalhos nos módulos de Recursos Humanos (HRPanel.jsx) e Agenda (CalendarPanel.jsx): adoção do componente padronizado ModuleHeader com identificações .HR e .CALENDAR, gradientes temáticos, centralização única do seletor de Unidade na Navbar global e unificação dos containers sem margens duplicadas.',
+      changes: [
+        { type: 'Cabeçalho Oficial .HR', text: 'Substituição do heroSection antigo pelo ModuleHeader oficial com identificação .HR, gradiente índigo (#6366f1 / #4f46e5), botão de ação direta "+ Colaborador" e remoção do UnitSelector duplicado.' },
+        { type: 'Cabeçalho Oficial .CALENDAR', text: 'Implementação do ModuleHeader na Agenda (.CALENDAR) com gradiente ciano (#06b6d4 / #0891b2), ações contextuais consolidadas (Grade, Bloquear, Painel TV, Atualizar, Agendar) e remoção do seletor redundante de filial.' },
+        { type: 'Alinhamento Arquitetural de Layout', text: 'Ajuste do container raiz de ambos os módulos com display flex, flexDirection column e gap 1.25rem, eliminando padding de 1.5rem que causava recuo duplo na Agenda.' }
+      ]
+    },
+    {
+      version: 'v4.9.83',
+      date: '19/09/2026',
+      title: 'Nex-Ai CLINIC — Módulo RH: Correção no Modal de Edição de Treinamentos (React Error #31) & Padronização de Rótulos',
+      description: 'Correção de segurança e estabilidade no módulo de Recursos Humanos, solucionando o erro React #31 ao editar ou criar treinamentos através do mapeamento correto dos setores e tratamento de integridade retrocompatível, além da higienização ativa de rótulos conforme o padrão de 1 termo único.',
+      changes: [
+        { type: 'Correção de Edição de Treinamentos', text: 'Corrigido o seletor de setor no TrainingModal.jsx, eliminando o erro React #31 provocado pela passagem de objeto no elemento option e garantindo a abertura imediata do formulário de edição e cadastro.' },
+        { type: 'Retrocompatibilidade de Setores', text: 'Adicionado suporte defensivo para exibição e preservação de setores personalizados gravados previamente no banco de dados.' },
+        { type: 'Conformidade de UI/UX & Boy Scout Rule', text: 'Padronização de rótulos diretos em TrainingModal.jsx (Instrutor, Cargo, Carga, Validade, Corte, Duração, Tipo, Vídeo, Conteúdo, Justificativa) e TrainingsTab.jsx (Realização, Reciclar, Controle de Reciclagem).' }
+      ]
+    },
+    {
+      version: 'v4.9.82',
+      date: '19/09/2026',
+      title: 'Nex-Ai CLINIC — Módulo .STOCK & .CONFIG: Categorias Dinâmicas, Almoxarifados, Kits de Hemodiálise & 3 Modos de Entradas',
+      description: 'Evolução estrutural do módulo de Estoque (.STOCK) e configurações centrais (.CONFIG): integração de categorias dinâmicas com CRUD completo no .CONFIG e pré-carga de 20 categorias nefrológicas, correção da seleção de almoxarifados com gestão total de locais no .CONFIG, 6 kits clínicos padronizados de enfermagem em hemodiálise baseados no catálogo real, e implementação dos 3 modos padrão de visualização na aba Entradas (Compacta, Normal e Cards).',
+      changes: [
+        { type: 'Categorias Dinâmicas com CRUD no .CONFIG', text: 'O catálogo de produtos agora carrega categorias dinâmicas gerenciadas no .CONFIG, com pré-cadastro de 20 categorias hospitalares e nefrológicas (MatMed, Medicamento, Controlado, Dialisador, Linhas, Acesso, Curativo, etc.).' },
+        { type: 'Almoxarifados Padrão Corrigidos', text: 'Correção do vínculo de almoxarifado no cadastro e edição de produtos, mapeando os locais físicos oficiais com CRUD completo na aba Almoxarifados do módulo .CONFIG.' },
+        { type: '6 Kits Clínicos de Hemodiálise para Enfermagem', text: 'Criação de 6 kits assistenciais reais para a enfermagem (Conexão FAV, Desconexão FAV, Curativo Permcath, Implante/Troca CDL, Recirculação/Priming e Intercorrência/Coagulação) com precificação e insumos automatizados.' },
+        { type: '3 Modos de Visualização em Entradas', text: 'Implementado controle segmentado na aba Entradas permitindo alternar entre modo Compacta (alta densidade com edição rápida de valor), Normal (visão completa com chaves fiscais) e Cards (grade responsiva de faturas com badges e ações).' },
+        { type: 'Conformidade de UI/UX & Boy Scout Rule', text: 'Higienização rigorosa de rótulos compostos por termos únicos e objetivos (Almoxarifado, Categoria, Preço, Saldo, Status, Ações) em todo o módulo de Estoque e Configurações.' },
+        { type: 'Manuais Atualizados', text: 'Atualização das seções de recursos, tutoriais e dúvidas nos manuais operacionais de Estoque e Configurações em moduleGuidesData.js.' }
+      ]
+    },
+    {
+      version: 'v4.9.81',
+      date: '19/09/2026',
+      title: 'Nex-Ai CLINIC — Módulo .MED: Tela de Homologação Médica, Apuração Real de Consultas & Limpeza de UI',
+      description: 'Aprimoramento completo do fluxo de Gestão Médica (.MED): nova tela modal de conferência e homologação da produção médica com integração ao Contas a Pagar (NexaFINANCE) e opção de estorno, eliminação do valor fictício de 8 consultas na aba Produção, remoção do botão duplicado de relatórios no cabeçalho, novos filtros por status e pesquisa rápida, higienização rigorosa de rótulos e atualização dos manuais do sistema.',
+      changes: [
+        { type: 'Nova Tela de Homologação Médica', text: 'Implementado modal interativo oficial da Gestão Médica ao clicar em "Homologar", apresentando discriminação completa de plantões presenciais auditados, consultas ambulatoriais concluídas na Agenda e procedimentos nefrológicos, com seletor de vencimento e campo de ajuste financeiro.' },
+        { type: 'Integração Automática com Contas a Pagar', text: 'Ao confirmar a homologação, um título a pagar é gerado instantaneamente no NexaFINANCE na categoria "Honorários Médicos" com a chave PIX do médico e vencimento programado.' },
+        { type: 'Recurso de Desfazer Homologação', text: 'Adicionada opção segura para a Gestão Médica auditar a homologação com número do título financeiro gerado e desfazer o lançamento caso seja necessário ajustar algum item antes do pagamento.' },
+        { type: 'Apuração Real de Consultas', text: 'Eliminado o valor fixo fictício de 8 consultas na aba de Produção, passando a contabilizar estritamente os atendimentos finalizados na Agenda médica (ou 0 se não houver consultas no mês).' },
+        { type: 'Cabeçalho Padronizado (.MED)', text: 'Remoção do botão verde redundante "Relatórios" do ModuleHeader, consolidando o acesso centralizado na Navbar global e eliminando duplicidades na interface.' },
+        { type: 'Busca e Filtros de Produção', text: 'Adicionada barra de filtros rápidos por status (Todos, Pendentes, Homologados) com contadores em tempo real e pesquisa por nome ou CRM do nefrologista.' },
+        { type: 'Boy Scout Rule & Rótulos Concisos', text: 'Higienização ativa de rótulos com barras em relatórios, cadastros e formulários do módulo médico (Sítio, PIX, Contrato CLT, Item, Setor, Vago, Cartão SUS, Motivo).' },
+        { type: 'Manuais Atualizados', text: 'Atualização do guia e tutoriais do módulo médico em moduleGuidesData.js com o passo a passo completo da nova rotina de homologação e repasse financeiro.' }
+      ]
+    },
+    {
+      version: 'v4.9.79',
+      date: '17/09/2026',
+      title: 'Nex-Ai CLINIC — 15 Treinamentos Especializados em Nefrologia, Logomarca Institucional & Sincronização 1-Clique',
+      description: 'Expansão profunda do módulo de Educação Continuada com 15 treinamentos clínicos completos e exclusivos para clínicas de Nefrologia e Hemodiálise abrangendo todos os setores (Enfermagem, Médico, Tratamento de Água, Engenharia Clínica, Farmácia, Higienização, Nutrição, Psicologia, Recepção, Faturamento/APAC, Qualidade/NSP e T.I./LGPD). Cada treinamento conta com ementa técnica detalhada, 5 questões pré-teste e 5 questões pós-teste com explicações clínicas, integração da logomarca oficial nos portais, certificados PDF e dossiês, além de botão de sincronização em 1 clique no Firestore.',
+      changes: [
+        { type: '15 Treinamentos Especializados', text: 'Criação de matriz com 15 cursos clínicos em nefrologia com conformidade estrita com a RDC 11/2014, RDC 222/2018 e NR-32.' },
+        { type: '5 Questões Pré e 5 Pós-teste', text: 'Cada um dos 15 módulos possui rigorosamente 5 perguntas diagnósticas pré-teste e 5 perguntas avaliativas pós-teste com justificativas clínicas para aferição científica da eficácia.' },
+        { type: 'Cobertura Integral de Setores', text: 'Treinamentos dedicados para Enfermagem (FAV, CVC, Intercorrências, Reuso), Manutenção (Água, Proporcionadoras), Médico (Kt/V, DMO-DRC), Farmácia, Higienização (Hepatite B), Nutrição Renal, Apoio Psicossocial, Recepção, Faturamento APAC, Qualidade/NSP e T.I./LGPD.' },
+        { type: 'Branding e Logomarca Oficial', text: 'Integração visual da logomarca da clínica no topo do Portal Mobile do Colaborador, no Certificado Digital (em tela e no PDF vetorial) e no Dossiê da Vigilância Sanitária.' },
+        { type: 'Sincronização 1-Clique no Firestore', text: 'Novo botão Sincronizar na barra de ferramentas do RH e auto-seed inteligente que carrega e atualiza todos os 15 treinamentos no banco de dados automaticamente.' }
       ]
     },
     {
@@ -31,6 +96,48 @@ export default function ChangelogModal({ isOpen, onClose }) {
         { type: 'Histórico & Visualização de Assinaturas', text: 'Exibição da assinatura digital colhida no modal de detalhes da inspeção no histórico, permitindo auditorias e conferências em tempo real.' },
         { type: 'Cabeçalho Oficial & UI/UX (1 Palavra)', text: 'Adoção do componente oficial ModuleHeader (.SESMT) com ícone de escudo temático, gradiente ciano e higienização de rótulos e cabeçalhos conforme as regras do projeto.' },
         { type: 'Manual do SESMT em moduleGuidesData.js', text: 'Documentação oficial completa com recursos, tutoriais de campo e FAQ do módulo SESMT acessível diretamente no botão de manual.' }
+      ]
+    },
+    {
+      version: 'v4.9.77-hotfix',
+      date: '17/09/2026',
+      title: 'Nex-Ai CLINIC — Correção de Inicialização da Tela Principal (Hotfix ReferenceError)',
+      description: 'Correção de erro crítico na ordem de inicialização de variáveis de roteamento público no arquivo raiz App.jsx (Temporal Dead Zone), restaurando o carregamento imediato da tela principal e módulos do sistema.',
+      changes: [
+        { type: 'Hotfix de Roteamento', text: 'Reordenada a declaração das constantes de rota (pathname e hash) antes da extração de parâmetros de treinamento e certificado, eliminando ReferenceError e restabelecendo o fluxo normal da aplicação.' }
+      ]
+    },
+    {
+      version: 'v4.9.77',
+      date: '17/09/2026',
+      title: 'Nex-Ai CLINIC — Gestão de Treinamentos (.HR), Avaliação de Eficácia (Pré/Pós-teste), Certificados com QR Code & Dossiê VISA',
+      description: 'Implementação do sistema integrado de Gestão de Treinamentos e Educação Continuada no módulo de Recursos Humanos (.HR): portal público do colaborador responsivo para smartphones com validação por CPF, questionários pré e pós-treinamento para comprovação científica de eficácia (RDC 63/2011 e NR-32), emissão instantânea de certificado digital com QR Code de autenticidade, gerador de Dossiê para a Vigilância Sanitária em PDF e matriz de reciclagem periódica.',
+      changes: [
+        { type: 'Aba Treinamentos no NexaHR', text: 'Nova aba dedicada no módulo de RH com catálogo de cursos, auditoria de participações, matriz de reciclagem e KPIs de eficácia (+%), aprovação e vencimentos.' },
+        { type: 'Portal do Colaborador (Mobile)', text: 'Portal web público leve e responsivo acessível via link e QR Code, com identificação imediata por CPF na base do RH, sem necessidade de login corporativo.' },
+        { type: 'Avaliação de Eficácia (Pré e Pós-teste)', text: 'Mecanismo com questionário diagnóstico prévio e avaliação de fixação pós-conteúdo, calculando automaticamente o ganho de eficácia (+%) do treinamento.' },
+        { type: 'Tempo Mínimo de Estudo Obrigatório', text: 'Cronômetro regressivo com trava inteligente no conteúdo que exige a permanência mínima do colaborador antes de liberar o pós-teste.' },
+        { type: 'Certificação Digital com QR Code', text: 'Geração de certificado em alta resolução para download em PDF e impressão direta, contendo QR Code exclusivo para validação pública de autenticidade no sistema.' },
+        { type: 'Validador Público de Autenticidade', text: 'Página oficial de validação de certificados aberta ao escanear o QR Code, confirmando os dados do titular e a autenticidade do registro sanitário.' },
+        { type: 'Dossiê Vigilância Sanitária (PDF)', text: 'Emissão em 1 clique de relatório consolidado para fiscalizações municipais (ANVISA / VISA), reunindo ementa, lista de presença com CPFs, notas e ganho de eficácia com campo para visto do fiscal.' },
+        { type: 'Modelos Prontos Hospitalares', text: 'Catálogo de templates com conteúdo completo e questões prontas de NR-32, PGRSS, Higienização das Mãos, Atendimento Humanizado e LGPD.' },
+        { type: 'Manuais Atualizados', text: 'Atualização da documentação do módulo de RH em moduleGuidesData.js com instruções para criação de cursos, realização pelo colaborador e emissão do Dossiê VISA.' }
+      ]
+    },
+    {
+      version: 'v4.9.76',
+      date: '16/09/2026',
+      title: 'Nex-Ai CLINIC — Padronização Oficial de Design (.CLINIC), Central de Relatórios Especializados & 5 KPI Cards',
+      description: 'Aplicação integral do design system oficial no módulo Nex-Ai.CLINIC: adoção do componente padronizado ModuleHeader com identificação .CLINIC e atalhos rápidos, faixa moderna com 5 KPI Cards interativos (Pacientes, Prescrições, Sessões Hoje, Evoluções e Farmácia), criação da Central de Relatórios Clínicos Especializados (ClinicalReportsModal) com 12 relatórios analíticos, filtros dinâmicos e exportação em Excel (.xlsx) e PDF, remoção da duplicação do seletor de unidade e higienização rigorosa de rótulos.',
+      changes: [
+        { type: 'Cabeçalho Oficial (.CLINIC)', text: 'Implementação do componente oficial ModuleHeader no ClinicalPanel com ícone HeartPulse, gradiente roxo (#8b5cf6 / #7c3aed), ponto de destaque colorido e botões contextuais Copiloto e Relatórios.' },
+        { type: 'Eliminação de Redundância de Unidade', text: 'Remoção do UnitSelector duplicado no interior do módulo clínico, mantendo a responsabilidade única e centralizada na Navbar superior global.' },
+        { type: 'Faixa de Indicadores (5 KPI Cards)', text: 'Adicionada linha moderna de indicadores com Pacientes Ativos, Prescrições Vigentes, Sessões do Dia (realizadas/previstas), Evoluções Multiprofissionais e Farmacoterapia com navegação rápida em 1 clique.' },
+        { type: 'Nova Central de Relatórios Clínicos', text: 'Criação do componente ClinicalReportsModal com 12 relatórios nefrológicos analíticos (Censo Geral, Acessos Vasculares, Prescrições, Acompanhamento Horário, Taxa de UF >13 mL/kg/h, Metas SBN, Anemia, Metabolismo Ósseo DMO, Validade APAC, Farmacoterapia, Evoluções e Mural de Ocorrências) com exportação em Excel (.xlsx) e PDF.' },
+        { type: 'Roteamento Global de Relatórios', text: 'Conexão do botão [Relatórios] da Navbar superior ao painel clínico através do repasse de isReportsOpen e setIsReportsOpen no App.jsx.' },
+        { type: 'Higienização de Rótulos (1 Palavra)', text: 'Remoção de termos duplos e barras nos formulários clínicos (Máquina, Peso Inicial, Peso Final, Perda, Conduta, Capilar, Duração, Fluxo QB, Dialisato QD, Heparina, Peso Seco, Evolução, Evento).' },
+        { type: 'Manuais Atualizados', text: 'Limpeza de chave duplicada e atualização detalhada da documentação oficial do módulo clínico em moduleGuidesData.js com Recursos, Tutorial e FAQ de Dúvidas.' }
+>>>>>>> origin/main
       ]
     },
     {

@@ -296,4 +296,311 @@ export const deleteOccupationalExam = async (id: string): Promise<any> => {
   return { success: true };
 };
 
+// ----------------------------------------------------
+// Gestão de Treinamentos, Pré/Pós-Testes e Certificados
+// ----------------------------------------------------
+
+export interface TrainingQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation?: string;
+}
+
+export interface Training {
+  id?: string;
+  title: string;
+  description: string;
+  sector: string; // 'Geral' ou setor específico (ex: 'Enfermagem', 'Recepção')
+  targetSectors?: string[];
+  workloadHours: number; // Carga horária (ex: 2, 4)
+  validityMonths: number; // Validade da reciclagem em meses (ex: 12 = anual)
+  minPassingScore: number; // Nota mínima em % (ex: 70)
+  minDurationMinutes: number; // Tempo mínimo no conteúdo (ex: 5)
+  status: 'Ativo' | 'Rascunho' | 'Arquivado';
+  contentType: 'video' | 'text' | 'document';
+  videoUrl?: string;
+  documentUrl?: string;
+  textContent?: string;
+  preTestQuestions: TrainingQuestion[];
+  postTestQuestions: TrainingQuestion[];
+  instructorName?: string;
+  instructorRole?: string;
+  unitId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TrainingSubmission {
+  id?: string;
+  trainingId: string;
+  trainingTitle: string;
+  employeeId?: string;
+  employeeName: string;
+  cpf: string;
+  role?: string;
+  sector?: string;
+  unitId?: string;
+  unit?: string;
+  preScore: number; // % (0 a 100)
+  postScore: number; // % (0 a 100)
+  gainEfficacy: number; // postScore - preScore
+  passed: boolean;
+  completedAt: string; // ISO
+  expiresAt?: string; // ISO
+  certificateId: string; // Ex: NEXA-TRN-2026-XXXX
+  status: 'Aprovado' | 'Reprovado';
+  timeSpentSeconds?: number;
+  answers?: {
+    preAnswers?: Record<string, number>;
+    postAnswers?: Record<string, number>;
+  };
+  createdAt?: string;
+}
+
+import { NEPHROLOGY_TRAININGS } from '../../data/nephrologyTrainingsData';
+
+export const DEFAULT_TRAININGS: Training[] = NEPHROLOGY_TRAININGS as unknown as Training[];
+
+export const syncNephrologyTrainings = async (): Promise<{ count: number }> => {
+  const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+  const db = getFirestore(app);
+  let count = 0;
+  for (const t of NEPHROLOGY_TRAININGS) {
+    const { id, ...data } = t;
+    await setDoc(doc(db, 'hr_trainings', id!), {
+      ...data,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    count++;
+  }
+  try {
+    localStorage.setItem('nexa_trainings_cache', JSON.stringify(NEPHROLOGY_TRAININGS));
+  } catch (_) {}
+  return { count };
+};
+
+export const getTrainings = async (): Promise<Training[]> => {
+  try {
+    const { getFirestore, collection, getDocs, setDoc, doc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const snap = await getDocs(collection(db, 'hr_trainings'));
+    
+    if (snap.empty) {
+      // Seed todos os 15 treinamentos clínicos no Firestore
+      for (const t of DEFAULT_TRAININGS) {
+        const { id, ...data } = t;
+        await setDoc(doc(db, 'hr_trainings', id!), {
+          ...data,
+          createdAt: new Date().toISOString()
+        });
+      }
+      return DEFAULT_TRAININGS;
+    }
+
+    // Auto-seed: se algum dos 15 treinamentos oficiais ainda não estiver no Firestore, adiciona
+    const existingIds = new Set(snap.docs.map(d => d.id));
+    const missingDefaults = DEFAULT_TRAININGS.filter(t => t.id && !existingIds.has(t.id));
+    if (missingDefaults.length > 0) {
+      for (const t of missingDefaults) {
+        const { id, ...data } = t;
+        await setDoc(doc(db, 'hr_trainings', id!), {
+          ...data,
+          createdAt: new Date().toISOString()
+        });
+      }
+      const refreshedSnap = await getDocs(collection(db, 'hr_trainings'));
+      return refreshedSnap.docs.map(d => ({ id: d.id, ...d.data() } as Training));
+    }
+
+    return snap.docs.map(d => ({ id: d.id, ...d.data() } as Training));
+  } catch (err) {
+    console.warn('Fallback para DEFAULT_TRAININGS:', err);
+    try {
+      const local = localStorage.getItem('nexa_trainings_cache');
+      if (local) return JSON.parse(local);
+    } catch (_) {}
+    return DEFAULT_TRAININGS;
+  }
+};
+
+export const getTrainingById = async (id: string): Promise<Training | null> => {
+  try {
+    const { getFirestore, doc, getDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const snap = await getDoc(doc(db, 'hr_trainings', id));
+    if (snap.exists()) {
+      return { id: snap.id, ...snap.data() } as Training;
+    }
+  } catch (e) {
+    console.warn('Erro ao buscar treinamento no Firestore:', e);
+  }
+  const defaults = DEFAULT_TRAININGS.find(t => t.id === id);
+  if (defaults) return defaults;
+  try {
+    const local = localStorage.getItem('nexa_trainings_cache');
+    if (local) {
+      const parsed: Training[] = JSON.parse(local);
+      const found = parsed.find(t => t.id === id);
+      if (found) return found;
+    }
+  } catch (_) {}
+  return null;
+};
+
+export const createTraining = async (trainingData: Omit<Training, 'id'>): Promise<Training> => {
+  try {
+    const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const dataToSave = {
+      ...trainingData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    const docRef = await addDoc(collection(db, 'hr_trainings'), dataToSave);
+    const newTraining = { id: docRef.id, ...dataToSave } as Training;
+    
+    try {
+      const current = await getTrainings();
+      localStorage.setItem('nexa_trainings_cache', JSON.stringify([newTraining, ...current]));
+    } catch (_) {}
+    
+    return newTraining;
+  } catch (err) {
+    const fallbackId = 'trn-' + Date.now();
+    const fallback = { id: fallbackId, ...trainingData, createdAt: new Date().toISOString() } as Training;
+    try {
+      const local = JSON.parse(localStorage.getItem('nexa_trainings_cache') || '[]');
+      localStorage.setItem('nexa_trainings_cache', JSON.stringify([fallback, ...local]));
+    } catch (_) {}
+    return fallback;
+  }
+};
+
+export const updateTraining = async (id: string, trainingData: Partial<Training>): Promise<Training> => {
+  try {
+    const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const dataToUpdate = {
+      ...trainingData,
+      updatedAt: new Date().toISOString()
+    };
+    await updateDoc(doc(db, 'hr_trainings', id), dataToUpdate);
+  } catch (e) {
+    console.warn('Erro ao atualizar treinamento no Firestore:', e);
+  }
+  return { id, ...trainingData } as Training;
+};
+
+export const deleteTraining = async (id: string): Promise<boolean> => {
+  try {
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'hr_trainings', id));
+  } catch (e) {
+    console.warn('Erro ao deletar treinamento no Firestore:', e);
+  }
+  return true;
+};
+
+export const getTrainingSubmissions = async (trainingId?: string): Promise<TrainingSubmission[]> => {
+  try {
+    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    let q = collection(db, 'hr_training_submissions');
+    const snap = await getDocs(q);
+    let list = snap.docs.map(d => ({ id: d.id, ...d.data() } as TrainingSubmission));
+    if (trainingId) {
+      list = list.filter(item => item.trainingId === trainingId);
+    }
+    return list.sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''));
+  } catch (e) {
+    console.warn('Recuperando submissões do cache local:', e);
+    try {
+      const local = localStorage.getItem('nexa_training_submissions');
+      if (local) {
+        let parsed: TrainingSubmission[] = JSON.parse(local);
+        if (trainingId) parsed = parsed.filter(s => s.trainingId === trainingId);
+        return parsed;
+      }
+    } catch (_) {}
+    return [];
+  }
+};
+
+export const createTrainingSubmission = async (data: Omit<TrainingSubmission, 'id'>): Promise<TrainingSubmission> => {
+  const payload = {
+    ...data,
+    createdAt: new Date().toISOString()
+  };
+  try {
+    const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const docRef = await addDoc(collection(db, 'hr_training_submissions'), payload);
+    const created = { id: docRef.id, ...payload };
+    
+    try {
+      const local = JSON.parse(localStorage.getItem('nexa_training_submissions') || '[]');
+      localStorage.setItem('nexa_training_submissions', JSON.stringify([created, ...local]));
+    } catch (_) {}
+    
+    return created;
+  } catch (err) {
+    console.warn('Salvando submissão em cache local offline:', err);
+    const fallbackId = 'sub-' + Date.now();
+    const created = { id: fallbackId, ...payload };
+    try {
+      const local = JSON.parse(localStorage.getItem('nexa_training_submissions') || '[]');
+      localStorage.setItem('nexa_training_submissions', JSON.stringify([created, ...local]));
+    } catch (_) {}
+    return created;
+  }
+};
+
+export const getTrainingSubmissionByCertificateId = async (certId: string): Promise<TrainingSubmission | null> => {
+  try {
+    const { getFirestore, collection, getDocs, query, where } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const q = query(collection(db, 'hr_training_submissions'), where('certificateId', '==', certId));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const doc = snap.docs[0];
+      return { id: doc.id, ...doc.data() } as TrainingSubmission;
+    }
+  } catch (e) {
+    console.warn('Erro ao buscar certificado no Firestore:', e);
+  }
+  try {
+    const local = localStorage.getItem('nexa_training_submissions');
+    if (local) {
+      const list: TrainingSubmission[] = JSON.parse(local);
+      const found = list.find(s => s.certificateId === certId);
+      if (found) return found;
+    }
+  } catch (_) {}
+  return null;
+};
+
+export const validateEmployeeCpf = async (rawCpf: string): Promise<{ found: boolean; employee?: any }> => {
+  const cleanCpf = (rawCpf || '').replace(/\D/g, '');
+  if (!cleanCpf || cleanCpf.length !== 11) {
+    return { found: false };
+  }
+  try {
+    const employees = await getEmployees();
+    const match = employees.find(e => {
+      const empCpfClean = (e.cpf || '').replace(/\D/g, '');
+      return empCpfClean === cleanCpf;
+    });
+    if (match) {
+      return { found: true, employee: match };
+    }
+  } catch (e) {
+    console.warn('Erro ao validar CPF de funcionário:', e);
+  }
+  return { found: false };
+};
+
+
 

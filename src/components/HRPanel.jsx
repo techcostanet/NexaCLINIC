@@ -6,7 +6,8 @@ import {
   CheckCircle2, AlertTriangle, Eye, Award, Check, UserCheck, HelpCircle,
   Gift, Bus, ArrowUp, ArrowDown, ArrowUpDown, Move, Settings, Save, 
   RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Trophy, Printer, Clock,
-  AlignJustify, Table, LayoutGrid, Phone, Mail, ExternalLink, Stethoscope, Activity, FileCheck
+  AlignJustify, Table, LayoutGrid, Phone, Mail, ExternalLink, Stethoscope, Activity, FileCheck,
+  GraduationCap
 } from 'lucide-react';
 
 const DEFAULT_DASHBOARD_LAYOUT = [
@@ -28,8 +29,9 @@ const DEFAULT_DASHBOARD_LAYOUT = [
 import { useHRLogic } from './HR/hooks/useHRLogic';
 import AwardReportModal from './HR/AwardReportModal';
 import HRReportsModal from './HRReportsModal';
+import TrainingsTab from './HR/TrainingsTab';
 import { STANDARD_ROLES, STANDARD_SECTORS, normalizeSingleWord, normalizeSectorName } from '../data/hrConstants';
-import UnitSelector from './common/UnitSelector';
+import ModuleHeader from './common/ModuleHeader';
 
 export const formatDateBR = (dateVal) => {
   if (!dateVal) return '-';
@@ -239,31 +241,24 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
 
   return (
     <div style={styles.container}>
-      {/* Header / Hero Section (Assist style) */}
-      <div style={styles.heroSection}>
-        <div style={styles.heroLeft}>
-          <div style={styles.heroIconBadge}>
-            <Users size={28} color="#fff" />
-          </div>
-          <div>
-            <h1 style={styles.heroTitle}>NexaHR</h1>
-            <p style={styles.heroSubtitle}>
-              Gestão estratégica de pessoas, controle de vale-transporte, advertências disciplinares, aniversariantes e conformidade trabalhista.
-            </p>
-          </div>
-        </div>
-
-        <div style={styles.heroActions}>
-          <UnitSelector compact showLabel={false} />
+      {/* Header Oficial Padronizado */}
+      <ModuleHeader
+        icon={Users}
+        title=".HR"
+        subtitle="Gestão estratégica de pessoas, controle de vale-transporte, exames ocupacionais, treinamentos e conformidade trabalhista."
+        gradient="linear-gradient(135deg, #6366f1, #4f46e5)"
+        dotColor="#6366f1"
+        actions={
           <button 
+            type="button"
             onClick={handleOpenEmpAdd}
             style={styles.primaryHeroBtn}
           >
-            <UserPlus size={18} />
-            <span>Novo Funcionário</span>
+            <UserPlus size={16} />
+            <span>Colaborador</span>
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Primary Tabs */}
       <div style={styles.tabsWrapper}>
@@ -289,11 +284,14 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
             </span>
           )}
         </button>
+        <button onClick={() => setActiveTab('trainings')} style={{ ...styles.tabBtn, ...(activeTab === 'trainings' ? styles.tabBtnActive : {}) }}>
+          <GraduationCap size={16} /> Treinamentos
+        </button>
         <button onClick={() => setActiveTab('transport')} style={{ ...styles.tabBtn, ...(activeTab === 'transport' ? styles.tabBtnActive : {}) }}>
           <Bus size={16} /> Vale-Transporte
         </button>
         <button onClick={() => setActiveTab('audit')} style={{ ...styles.tabBtn, ...(activeTab === 'audit' ? styles.tabBtnActive : {}) }}>
-          Auditoria & Logs
+          Auditoria
         </button>
       </div>
 
@@ -1907,6 +1905,11 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
             );
           })()}
 
+          {/* TAB: Treinamentos */}
+          {activeTab === 'trainings' && (
+            <TrainingsTab currentUser={currentUser} />
+          )}
+
           {/* TAB 4: Audit Logs */}
           {activeTab === 'audit' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -3060,7 +3063,7 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem',
+    gap: '1.25rem',
   },
   heroSection: {
     display: 'flex',

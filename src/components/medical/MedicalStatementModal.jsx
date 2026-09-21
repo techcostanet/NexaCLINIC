@@ -127,12 +127,22 @@ export default function MedicalStatementModal({
               )}
             </tbody>
             <tfoot>
+              {production.adjustment ? (
+                <tr>
+                  <td colSpan="3" style={{ textAlign: 'right', fontWeight: '700', fontSize: '0.85rem', color: '#475569' }}>
+                    Ajuste ({production.adjustmentReason || 'Ajuste apurado'}):
+                  </td>
+                  <td style={{ textAlign: 'right', fontWeight: '800', fontSize: '0.95rem', color: production.adjustment >= 0 ? '#166534' : '#b91c1c' }}>
+                    {production.adjustment >= 0 ? '+' : ''} R$ {parseFloat(production.adjustment).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </td>
+                </tr>
+              ) : null}
               <tr style={styles.totalRow}>
                 <td colSpan="3" style={{ textAlign: 'right', fontWeight: '800', fontSize: '0.95rem' }}>
                   TOTAL LÍQUIDO A REPASSAR:
                 </td>
                 <td style={{ textAlign: 'right', fontWeight: '900', fontSize: '1.15rem', color: '#059669' }}>
-                  R$ {production.netTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {(production.netTotal || production.grossTotal || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
               </tr>
             </tfoot>
