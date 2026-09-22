@@ -19,9 +19,6 @@ export const getSurgeries = async (filters = {}) => {
   try {
     const snap = await getDocs(collection(db, 'surgeries'));
     if (snap.empty) {
-      if (mockFirestore.getSurgeries) {
-        return mockFirestore.getSurgeries(filters);
-      }
       return [];
     }
 

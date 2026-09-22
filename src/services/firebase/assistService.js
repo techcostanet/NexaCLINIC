@@ -224,9 +224,6 @@ export const getAssistPosts = async () => {
   try {
     const snap = await getDocs(collection(db, 'assist_posts'));
     if (snap.empty) {
-      if (mockFirestore.getAssistPosts) {
-        return mockFirestore.getAssistPosts();
-      }
       return [];
     }
 
@@ -267,13 +264,7 @@ export const subscribeToAssistPosts = (callback) => {
           items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
           callback(items);
         } else {
-          if (mockFirestore.getAssistPosts) {
-            mockFirestore.getAssistPosts().then(res => {
-              if (!isCancelled) callback(res || []);
-            });
-          } else {
-            callback([]);
-          }
+          callback([]);
         }
       }, (err) => {
         console.warn("Aviso no listener real-time de assist_posts:", err);

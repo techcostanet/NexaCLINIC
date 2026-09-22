@@ -67,7 +67,7 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
   const [weekDisplayType, setWeekDisplayType] = useState('cards');
 
   // Data de Referência (Default inteligente: 2026-09-08 para coincidir com o período vascular)
-  const [currentDate, setCurrentDate] = useState('2026-09-08');
+  const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -84,7 +84,7 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
 
   // Formulário de Agendamento
   const [formData, setFormData] = useState({
-    date: '2026-09-08',
+    date: new Date().toISOString().split('T')[0],
     time: '08:00',
     patientId: '',
     patientName: '',
@@ -209,7 +209,7 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
 
   const handleToday = () => {
     const todayIso = new Date().toISOString().split('T')[0];
-    setCurrentDate(todayIso.startsWith('2026-09') ? todayIso : '2026-09-08');
+    setCurrentDate(new Date().toISOString().split('T')[0]);
   };
 
   // Filtragem de Cirurgias
