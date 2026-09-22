@@ -4,7 +4,7 @@ import {
   Megaphone, Search, Plus, Clock, User, RefreshCw, Building2, 
   Trash2, Edit3, AlertTriangle, List, LayoutList, LayoutGrid, X,
   Calendar, MessageSquare, Activity, FileText
-} from 'lucide-react';
+, Paperclip, ExternalLink, ZoomIn, Eye, Printer, Image as ImageIcon } from 'lucide-react';
 import DialysisScheduleTab from './assist/DialysisScheduleTab';
 import AssistSurgeriesTab from './assist/AssistSurgeriesTab';
 import AssistReportsModal from './assist/AssistReportsModal';
@@ -46,6 +46,13 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
   const [datePreset, setDatePreset] = useState('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+
+  // Anexos de Fotos e Laudos (Item 3)
+  const [attachmentFile, setAttachmentFile] = useState(null);
+  const [attachmentPreview, setAttachmentPreview] = useState(null);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const [selectedLightboxImage, setSelectedLightboxImage] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Modais
   const [showPostModal, setShowPostModal] = useState(false);
@@ -389,6 +396,22 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
 
     setActionLoading(true);
     try {
+      let finalAttachmentUrl = postForm.attachmentUrl || '';
+      let finalAttachmentType = postForm.attachmentType || '';
+      let finalAttachmentName = postForm.attachmentName || '';
+
+      if (attachmentFile) {
+        setUploadingAttachment(true);
+        if (dbService.uploadAssistPostAttachment) {
+          const uploaded = await dbService.uploadAssistPostAttachment(attachmentFile, editingPost?.id || 'post_' + Date.now());
+          if (uploaded && uploaded.url) {
+            finalAttachmentUrl = uploaded.url;
+            finalAttachmentType = uploaded.type;
+            finalAttachmentName = uploaded.name;
+          }
+        }
+      }
+
       const targetUnitId = activeUnitId === 'all' ? 'betim' : activeUnitId;
       const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
 
@@ -429,6 +452,164 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
     } finally {
       setActionLoading(false);
     }
+  };
+
+
+  // Item 6: Impressão do Resumo do Turno em Formato Prancheta A4
+  const handlePrintTurnSummary = () => {
+    const listToPrint = filteredPosts || [];
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('pt-BR');
+    const formattedTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    iframe.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (!doc) {
+      window.print();
+      document.body.removeChild(iframe);
+      return;
+    }
+
+    const rowsHtml = listToPrint.length === 0
+      ? '<tr><td colspan="5" style="text-align: center; padding: 24px; color: #64748b;">Nenhum comunicado registrado para os filtros selecionados (' + selectedShift + ' / ' + selectedRoom + ').</td></tr>'
+      : listToPrint.map((p, idx) => {
+          const pDate = p.createdAt ? new Date(p.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+          const isUrgent = p.urgency === 'Urgente' || p.category === 'Óbito' || p.category === 'Intercorrência';
+          return `
+            <tr style="background-color: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}; page-break-inside: avoid;">
+              <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: 700; white-space: nowrap; vertical-align: top; text-align: center; font-size: 11px;">${pDate}</td>
+              <td style="padding: 8px; border: 1px solid #cbd5e1; vertical-align: top;">
+                <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background-color: ${isUrgent ? '#fee2e2' : '#e0f2fe'}; color: ${isUrgent ? '#b91c1c' : '#0369a1'};">
+                  ${p.category || 'Geral'} • ${p.urgency || 'Informativo'}
+                </span>
+              </td>
+              <td style="padding: 8px; border: 1px solid #cbd5e1; vertical-align: top; font-size: 11px;">
+                <strong>${p.patientName ? p.patientName.toUpperCase() : 'COMUNICADO GERAL'}</strong><br/>
+                <span style="color: #64748b; font-size: 10px;">${p.room || 'Salão Geral'} • ${p.shift || 'Turno Geral'}</span>
+              </td>
+              <td style="padding: 8px; border: 1px solid #cbd5e1; vertical-align: top; font-size: 11px; line-height: 1.4;">
+                ${p.title && p.title !== p.patientName && !p.title.startsWith(p.category + ' -') ? '<strong>' + p.title + '</strong><br/>' : ''}
+                ${(p.message || '').replace(/\n/g, '<br/>')}
+                ${p.attachmentUrl ? '<br/><span style="font-size: 10px; color: #0284c7; font-weight: 600;">📎 Anexo: ' + (p.attachmentName || 'Documento / Laudo') + '</span>' : ''}
+              </td>
+              <td style="padding: 8px; border: 1px solid #cbd5e1; vertical-align: top; font-size: 10px; white-space: nowrap;">
+                ${p.author || 'Equipe'}<br/>
+                <span style="color: #64748b;">${p.authorRole || 'Assistência'}</span>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Resumo Operacional do Turno - Mural Assistencial</title>
+        <style>
+          @page { size: A4 portrait; margin: 12mm 12mm 15mm 12mm; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: #0f172a; margin: 0; padding: 0; font-size: 11px; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 10px; }
+          .title { font-size: 15px; font-weight: 800; color: #0284c7; text-transform: uppercase; margin: 0; }
+          .subtitle { font-size: 11px; color: #64748b; margin-top: 2px; }
+          .meta-box { display: flex; gap: 14px; background: #f8fafc; padding: 6px 10px; border-radius: 6px; margin-bottom: 12px; font-size: 11px; border: 1px solid #e2e8f0; }
+          .meta-item { display: flex; flex-direction: column; }
+          .meta-label { color: #64748b; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+          .meta-value { font-weight: 700; color: #0f172a; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th { background-color: #0284c7; color: #ffffff; font-weight: 700; text-align: left; padding: 6px 8px; font-size: 10px; border: 1px solid #0284c7; }
+          .signatures { display: flex; justify-content: space-between; margin-top: 36px; page-break-inside: avoid; }
+          .sig-box { width: 45%; text-align: center; border-top: 1px solid #0f172a; padding-top: 6px; font-size: 10px; }
+          .sig-role { color: #64748b; font-size: 9px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <h1 class="title">Nexa Clínicas & Hemodiálise</h1>
+            <div class="subtitle">Mural Assistencial • Espelho Operacional de Turno (Prancheta)</div>
+          </div>
+          <div style="text-align: right; font-size: 10px; color: #64748b;">
+            Emissão: <strong>${formattedDate} às ${formattedTime}</strong>
+          </div>
+        </div>
+
+        <div class="meta-box">
+          <div class="meta-item">
+            <span class="meta-label">Salão</span>
+            <span class="meta-value">${selectedRoom === 'all' ? 'Todos os Salões' : selectedRoom}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Turno</span>
+            <span class="meta-value">${selectedShift === 'all' ? 'Todos os Turnos' : selectedShift}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Categoria</span>
+            <span class="meta-value">${selectedCategory === 'all' ? 'Todas' : selectedCategory}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Ocorrências</span>
+            <span class="meta-value">${listToPrint.length} registros</span>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 45px; text-align: center;">Hora</th>
+              <th style="width: 120px;">Categoria & Urgência</th>
+              <th style="width: 160px;">Paciente / Local</th>
+              <th>Descrição Clínica & Conduta</th>
+              <th style="width: 120px;">Registrado Por</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+
+        <div class="signatures">
+          <div class="sig-box">
+            <strong>Enfermeiro(a) Responsável do Turno</strong>
+            <div class="sig-role">Assinatura & Carimbo COREN</div>
+          </div>
+          <div class="sig-box">
+            <strong>Médico(a) Nefrologista do Plantão</strong>
+            <div class="sig-role">Assinatura & Carimbo CRM</div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    doc.open();
+    doc.write(htmlContent);
+    doc.close();
+
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch (err) {
+        console.error('Erro na impressão:', err);
+      } finally {
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }, 1500);
+      }
+    }, 300);
   };
 
   const handleDeletePost = async (post) => {
@@ -964,7 +1145,72 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
                       {post.title && post.title !== post.patientName && !post.title.startsWith(`${post.category} -`) && (
                         <h4 style={styles.postTitle}>{post.title}</h4>
                       )}
-                      <p style={styles.postMessage}>{post.message}</p>
+                                            <p style={styles.postMessage}>{post.message}</p>
+
+                      {/* Anexo Clínico (Item 3) */}
+                      {post.attachmentUrl && (
+                        <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px dashed #e2e8f0' }}>
+                          {post.attachmentType === 'image' || (/\.(jpg|jpeg|png|webp|gif)$/i.test(post.attachmentUrl)) ? (
+                            <div 
+                              onClick={(e) => { e.stopPropagation(); setSelectedLightboxImage(post.attachmentUrl); }}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '6px 12px',
+                                borderRadius: '8px',
+                                backgroundColor: '#f8fafc',
+                                border: '1px solid #cbd5e1',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                maxWidth: '100%'
+                              }}
+                              title="Clique para ampliar a imagem"
+                            >
+                              <img 
+                                src={post.attachmentUrl} 
+                                alt={post.attachmentName || 'Foto / Exame Anexo'} 
+                                style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0' }} 
+                              />
+                              <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '220px' }}>
+                                  {post.attachmentName || 'Foto / Exame Anexo'}
+                                </span>
+                                <span style={{ fontSize: '0.7rem', color: '#0284c7', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                  <Eye size={12} /> Clique para ampliar
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <a 
+                              href={post.attachmentUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '6px 12px',
+                                borderRadius: '8px',
+                                backgroundColor: '#f0f9ff',
+                                border: '1px solid #bae6fd',
+                                color: '#0284c7',
+                                textDecoration: 'none',
+                                fontSize: '0.82rem',
+                                fontWeight: '600'
+                              }}
+                              title="Abrir laudo / documento PDF"
+                            >
+                              <FileText size={16} color="#0284c7" />
+                              <span style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {post.attachmentName || 'Visualizar Laudo / PDF'}
+                              </span>
+                              <ExternalLink size={12} />
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div style={styles.cardFooter}>

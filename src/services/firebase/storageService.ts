@@ -86,3 +86,24 @@ export const deleteFileFromStorage = async (fileUrlOrPath: string): Promise<void
     console.warn('Aviso ao excluir arquivo do Cloud Storage (pode já ter sido removido):', error);
   }
 };
+
+/**
+ * Upload especializado de anexos do Mural Assistencial (Fotos de lesões, laudos, PDFs)
+ * @param file Arquivo selecionado (Imagem ou PDF)
+ * @param postId Identificador do comunicado
+ * @returns Metadados do anexo com URL pública segura
+ */
+export const uploadAssistPostAttachment = async (
+  file: File,
+  postId: string = 'new'
+): Promise<{ url: string; type: 'image' | 'pdf'; name: string }> => {
+  const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+  const type: 'image' | 'pdf' = isPdf ? 'pdf' : 'image';
+  const cleanPostId = (postId || 'post').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const timestamp = Date.now();
+  const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const path = `assist_attachments/${cleanPostId}/${timestamp}_${cleanFileName}`;
+
+  const url = await uploadFileToStorage(file, path);
+  return { url, type, name: file.name };
+};

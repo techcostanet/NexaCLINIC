@@ -1,3 +1,26 @@
+## [v4.9.92] - 22 de Setembro, 2026
+### Nex-Ai CLINIC (.ASSIST) — Grande Pacote de Melhorias no Mural de Avisos e Painel de Cirurgias Vasculares
+- **Item 3 — Anexo de Imagens e Laudos no Mural de Avisos:**
+  - Suporte completo a upload de fotos (JPG, PNG) e documentos em PDF diretamente nos recados do Mural.
+  - Pré-visualização de imagem antes da postagem e exclusão dinâmica.
+  - Miniaturas nos cards com abertura em Lightbox modal de alta resolução e link direto para download seguro.
+  - Armazenamento em nuvem via Firebase Storage integrado (`assist_attachments/`).
+- **Item 6 — Impressão e Exportação em PDF do Resumo do Turno:**
+  - Botão dedicado "Imprimir Turno" na barra de ferramentas do Mural.
+  - Geração de relatório hospitalar formatado em folha A4 com KPIs do turno, alertas críticos, tabela consolidada de recados e blocos de assinatura médica e de enfermagem (COREN/CRM).
+- **Item 8 — Checklist Pré-Operatório de Segurança Vascular:**
+  - 5 verificações cirúrgicas essenciais: Risco Cardiológico (ECG), Coagulograma (TAP/INR), Hemograma Recente, Jejum Orientado (8h) e Mapeamento Duplex.
+  - Badge dinâmico no card da cirurgia indicando o progresso (Completo 5/5, Parcial ou Pendente).
+  - Popover rápido no card para marcação e alternância com 1 clique sem abrir o modal.
+  - Seção integrada no formulário de criação/edição da cirurgia.
+- **Item 10 — Disparo de Orientações e Preparo Pré-Operatório via WhatsApp:**
+  - Botão de acesso rápido no card da cirurgia.
+  - Modal com preenchimento automático do telefone do paciente, gerador de mensagem estruturada com data, horário, cirurgião, jejum e recomendações de internação.
+  - Botões para copiar o texto ou abrir diretamente no WhatsApp Web / Desktop com payload sanitizado.
+- **Item 13 — Sincronização Automática de Acesso Vascular com Prontuário:**
+  - Detecção inteligente do procedimento realizado (FAV, Permcath, CDL, Prótese) e lateralidade (Direito/Esquerdo).
+  - Modal automático acionado ao marcar a cirurgia como "Realizado" solicitando confirmação para atualizar o prontuário do paciente de forma imediata no Cloud Firestore.
+
 ## [v4.9.88] - 21 de Setembro, 2026
 ### Nex-Ai CLINIC — Correção de Permissão e Persistência do Checklist da Copa no SESMT (.SESMT)
 - **Correção de Permissão no Firebase Firestore (`firestore.rules`):**

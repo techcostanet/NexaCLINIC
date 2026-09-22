@@ -7,7 +7,7 @@ import {
   AlertTriangle, Shield, MapPin, Stethoscope, AlertCircle, X, Check,
   Activity, ArrowRight, RefreshCw, FileText, Lock, Unlock,
   LayoutGrid, List, CheckCircle, Tag, Eye, HeartPulse, Sparkles
-} from 'lucide-react';
+, MessageSquare, Copy, Send, ExternalLink, CheckSquare } from 'lucide-react';
 import { useUnit } from '../../contexts/UnitContext';
 
 // Procedimentos Frequentes (Sugestões Rápidas de 1 Clique)
@@ -82,6 +82,27 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
   const [selectedDateForBlock, setSelectedDateForBlock] = useState('');
   const [blockReason, setBlockReason] = useState('NÃO TEREMOS AGENDAMENTO DEVIDO FERIADO');
 
+  // Item 8: Popover de Checklist Rápido
+  const [activeChecklistPopoverId, setActiveChecklistPopoverId] = useState(null);
+
+  // Item 10: Modal de Disparo de Orientações via WhatsApp
+  const [whatsappModal, setWhatsappModal] = useState({
+    isOpen: false,
+    surgery: null,
+    phone: '',
+    message: '',
+    copied: false
+  });
+
+  // Item 13: Modal de Sincronização de Acesso Vascular com Prontuário
+  const [syncAccessModal, setSyncAccessModal] = useState({
+    isOpen: false,
+    surgery: null,
+    patient: null,
+    suggestedAccess: '',
+    accessSide: 'Esquerdo'
+  });
+
   // Formulário de Agendamento
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -96,7 +117,14 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
     status: 'Agendado',
     antibiotic: 'Cefazolina 2g IV',
     observations: '',
-    postToMural: true
+    postToMural: true,
+    checklist: {
+      cardiacRisk: false,
+      coagulogram: false,
+      hemogram: false,
+      fastingOriented: false,
+      duplexMapping: false
+    }
   });
 
   const [patientSearch, setPatientSearch] = useState('');
@@ -311,7 +339,14 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
       status: 'Agendado',
       antibiotic: 'Cefazolina 2g IV',
       observations: '',
-      postToMural: true
+      postToMural: true,
+      checklist: {
+        cardiacRisk: false,
+        coagulogram: false,
+        hemogram: false,
+        fastingOriented: false,
+        duplexMapping: false
+      }
     });
     setPatientSearch('');
     setShowSurgeryModal(true);
@@ -335,10 +370,167 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
       status: surgery.status || 'Agendado',
       antibiotic: surgery.antibiotic || '',
       observations: surgery.observations || '',
-      postToMural: false
+      postToMural: false,
+      checklist: surgery.checklist || {
+        cardiacRisk: false,
+        coagulogram: false,
+        hemogram: false,
+        fastingOriented: false,
+        duplexMapping: false
+      }
     });
     setPatientSearch(surgery.patientName || '');
     setShowSurgeryModal(true);
+  };
+
+
+  // Item 10: Gerador de Mensagem Profissional para WhatsApp
+  const generateWhatsAppMessage = (surg) => {
+    const pDate = surg.date ? surg.date.split('-').reverse().join('/') : '--/--/----';
+    const pTime = surg.time || '08:00';
+
+    let fastingTime = '22:00 do dia anterior';
+    try {
+      const [h, m] = pTime.split(':').map(Number);
+      const fastingH = (h - 8 + 24) % 24;
+      fastingTime = String(fastingH).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+      if (h < 8) fastingTime += ' do dia anterior';
+    } catch (_) {}
+
+    return `🏥 *NEXA CLÍNICAS — ORIENTAÇÕES CIRÚRGICAS VASCULARES*
+Olá, *${surg.patientName || 'Paciente'}*!
+
+Confirmamos o seu agendamento cirúrgico vascular:
+🩺 *Procedimento:* ${surg.procedure || 'Cirurgia Geral'}
+📅 *Data:* ${pDate} às ${pTime}
+🏥 *Local:* ${surg.hospital || 'Hospital Regional'}
+👨‍⚕️ *Cirurgião:* ${surg.surgeon || 'Corpo Clínico'}
+💉 *Anestesista:* ${surg.anesthesiologist || 'Sem Agenda'}
+
+⚠️ *ORIENTAÇÕES PRÉ-OPERATÓRIAS OBRIGATÓRIAS:*
+1️⃣ *Jejum Absoluto:* Não comer nem beber nada (inclusive água) a partir das *${fastingTime}* (mínimo de 8 horas de jejum).
+2️⃣ *Documentos:* Levar RG/CNH original, Cartão SUS/Convênio e exames pré-operatórios mais recentes (sangue e ECG).
+3️⃣ *Acompanhante:* Comparecer acompanhado de 1 adulto maior de 18 anos.
+4️⃣ *Higiene:* Tomar banho prévio com sabonete neutro ou antisséptico. Não usar cremes ou perfumes no braço/tórax.
+5️⃣ *Objetos:* Deixar joias, relógios e próteses móveis em casa.
+
+Dúvidas ou imprevistos? Responda a esta mensagem. Desejamos um excelente procedimento!`;
+  };
+
+  const handleOpenWhatsAppModal = (surg) => {
+    let phone = '';
+    if (surg.patientId) {
+      const matched = patients.find(p => p.id === surg.patientId);
+      if (matched && matched.phone) phone = matched.phone;
+    }
+    if (!phone && surg.patientName) {
+      const matched = patients.find(p => (p.name || '').trim().toUpperCase() === surg.patientName.trim().toUpperCase());
+      if (matched && matched.phone) phone = matched.phone;
+    }
+    const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
+
+    setWhatsappModal({
+      isOpen: true,
+      surgery: surg,
+      phone: cleanPhone,
+      message: generateWhatsAppMessage(surg),
+      copied: false
+    });
+  };
+
+  const handleSendWhatsApp = () => {
+    if (!whatsappModal.phone) {
+      showAlert('Por favor, informe o telefone do paciente com DDD.', 'warning');
+      return;
+    }
+    const clean = whatsappModal.phone.replace(/\D/g, '');
+    const fullPhone = clean.startsWith('55') ? clean : '55' + clean;
+    const url = 'https://api.whatsapp.com/send?phone=' + fullPhone + '&text=' + encodeURIComponent(whatsappModal.message);
+    window.open(url, '_blank');
+    setWhatsappModal(prev => ({ ...prev, isOpen: false }));
+  };
+
+  // Item 13: Verificação Inteligente e Sincronização de Acesso Vascular com Prontuário
+  const checkAndPromptAccessSync = (surg) => {
+    const procUpper = (surg.procedure || '').toUpperCase();
+    let suggestedAccess = null;
+    if (procUpper.includes('FAV') || procUpper.includes('FISTULA') || procUpper.includes('FÍSTULA')) {
+      suggestedAccess = 'Fístula Arteriovenosa';
+    } else if (procUpper.includes('PERMCATH')) {
+      suggestedAccess = 'Permcath';
+    } else if (procUpper.includes('CDL') || procUpper.includes('DUPLO LUMEN') || procUpper.includes('DUPLO LÚMEN')) {
+      suggestedAccess = 'Cateter Duplo Lúmen';
+    } else if (procUpper.includes('PROTESE') || procUpper.includes('PRÓTESE') || procUpper.includes('PTFE')) {
+      suggestedAccess = 'Prótese';
+    }
+
+    if (!suggestedAccess) return;
+
+    let matched = null;
+    if (surg.patientId) {
+      matched = patients.find(p => p.id === surg.patientId);
+    }
+    if (!matched && surg.patientName) {
+      const cleanTarget = surg.patientName.trim().toUpperCase();
+      matched = patients.find(p => (p.name || '').trim().toUpperCase() === cleanTarget);
+    }
+
+    if (matched) {
+      let side = matched.accessSide || 'Esquerdo';
+      if (procUpper.includes('DIREIT') || procUpper.includes('MSD') || procUpper.includes('MID')) {
+        side = 'Direito';
+      } else if (procUpper.includes('ESQUERD') || procUpper.includes('MSE') || procUpper.includes('MIE')) {
+        side = 'Esquerdo';
+      }
+
+      setSyncAccessModal({
+        isOpen: true,
+        surgery: surg,
+        patient: matched,
+        suggestedAccess,
+        accessSide: side
+      });
+    }
+  };
+
+  const handleConfirmSyncAccess = async () => {
+    if (!syncAccessModal.patient) return;
+    setActionLoading(true);
+    try {
+      const pId = syncAccessModal.patient.id;
+      const updatePayload = {
+        accessType: syncAccessModal.suggestedAccess,
+        accessSide: syncAccessModal.accessSide,
+        accessDate: syncAccessModal.surgery?.date || new Date().toISOString().split('T')[0],
+        updatedAt: new Date().toISOString()
+      };
+      if (dbService.updatePatient) {
+        await dbService.updatePatient(pId, updatePayload);
+      }
+      showAlert('Prontuário de ' + syncAccessModal.patient.name + ' atualizado para ' + syncAccessModal.suggestedAccess + '!', 'success');
+      setSyncAccessModal({ isOpen: false, surgery: null, patient: null, suggestedAccess: '', accessSide: 'Esquerdo' });
+      loadData();
+    } catch (err) {
+      console.error('Erro ao atualizar acesso vascular no prontuário:', err);
+      showAlert('Erro ao atualizar prontuário do paciente.', 'danger');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Item 8: Toggle Rápido de Item do Checklist Pré-Operatório
+  const handleQuickToggleChecklist = async (surg, checkKey) => {
+    const updatedChecklist = {
+      ...(surg.checklist || {}),
+      [checkKey]: !surg.checklist?.[checkKey]
+    };
+    try {
+      await dbService.updateSurgery(surg.id, { checklist: updatedChecklist }, currentUser);
+      setSurgeries(prev => prev.map(s => s.id === surg.id ? { ...s, checklist: updatedChecklist } : s));
+    } catch (err) {
+      console.error('Erro ao atualizar checklist:', err);
+      showAlert('Erro ao atualizar item do checklist.', 'danger');
+    }
   };
 
   // Salvar Agendamento
@@ -369,6 +561,9 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
 
       setShowSurgeryModal(false);
       loadData();
+      if (payload.status === 'Realizado' && (!editingSurgery || editingSurgery.status !== 'Realizado')) {
+        checkAndPromptAccessSync({ ...payload, id: editingSurgery?.id || 'new' });
+      }
     } catch (err) {
       console.error(err);
       showAlert('Erro ao salvar agendamento.', 'danger');
@@ -385,6 +580,9 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
       await dbService.updateSurgery(surgery.id, { ...surgery, status: nextStatus }, currentUser);
       showAlert(`Situação atualizada para ${nextStatus}!`, 'success');
       loadData();
+      if (nextStatus === 'Realizado') {
+        checkAndPromptAccessSync({ ...surgery, status: 'Realizado' });
+      }
     } catch (err) {
       console.error(err);
       showAlert('Erro ao atualizar situação.', 'danger');
@@ -920,6 +1118,89 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
                           </div>
 
                           {/* Rodapé de Ações Rápidas */}
+                          {/* Item 8: Checklist Pré-Op Badge */}
+                          <div style={{ marginTop: '6px', marginBottom: '8px', position: 'relative' }}>
+                            {(() => {
+                              const chk = surg.checklist || {};
+                              const count = Object.values(chk).filter(Boolean).length;
+                              const isFull = count === 5;
+                              const isPartial = count >= 3;
+                              const bg = isFull ? '#ecfdf5' : isPartial ? '#fffbeb' : '#fef2f2';
+                              const color = isFull ? '#059669' : isPartial ? '#d97706' : '#dc2626';
+                              const border = isFull ? '#a7f3d0' : isPartial ? '#fde68a' : '#fecaca';
+
+                              return (
+                                <div>
+                                  <div 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveChecklistPopoverId(activeChecklistPopoverId === surg.id ? null : surg.id);
+                                    }}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '5px',
+                                      padding: '3px 8px',
+                                      borderRadius: '6px',
+                                      backgroundColor: bg,
+                                      color: color,
+                                      border: '1px solid ' + border,
+                                      fontSize: '0.72rem',
+                                      fontWeight: '700',
+                                      cursor: 'pointer'
+                                    }}
+                                    title="Clique para ver ou alternar os exames do checklist pré-operatório"
+                                  >
+                                    <Shield size={12} />
+                                    <span>Pré-Op: {count}/5 {isFull ? 'Completo' : isPartial ? 'Parcial' : 'Pendente'}</span>
+                                  </div>
+
+                                  {/* Popover Rápido de Checklist */}
+                                  {activeChecklistPopoverId === surg.id && (
+                                    <div 
+                                      onClick={(e) => e.stopPropagation()}
+                                      style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: 0,
+                                        zIndex: 30,
+                                        backgroundColor: '#ffffff',
+                                        boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+                                        border: '1px solid #cbd5e1',
+                                        borderRadius: '8px',
+                                        padding: '10px',
+                                        width: '230px',
+                                        marginTop: '4px'
+                                      }}
+                                    >
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', borderBottom: '1px solid #f1f5f9', paddingBottom: '4px' }}>
+                                        <strong style={{ fontSize: '0.75rem', color: '#1e293b' }}>Checklist Pré-Operatório</strong>
+                                        <button onClick={() => setActiveChecklistPopoverId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#94a3b8' }}>×</button>
+                                      </div>
+                                      {[
+                                        { key: 'cardiacRisk', label: '🫀 Risco Cardiológico' },
+                                        { key: 'coagulogram', label: '🩸 Coagulograma (TAP/INR)' },
+                                        { key: 'hemogram', label: '🔬 Hemograma Recente' },
+                                        { key: 'fastingOriented', label: '⏱️ Jejum Orientado (8h)' },
+                                        { key: 'duplexMapping', label: '📡 Mapeamento Duplex' }
+                                      ].map(item => (
+                                        <label key={item.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', color: '#334155', cursor: 'pointer', padding: '3px 0' }}>
+                                          <input 
+                                            type="checkbox"
+                                            checked={!!chk[item.key]}
+                                            onChange={() => handleQuickToggleChecklist(surg, item.key)}
+                                            style={{ accentColor: '#0284c7' }}
+                                          />
+                                          <span>{item.label}</span>
+                                        </label>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </div>
+
                           <div style={styles.surgeryCardFooter}>
                             <button
                               onClick={() => handleToggleStatus(surg)}
@@ -933,6 +1214,30 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
                               <CheckCircle size={14} />
                               <span>{surg.status === 'Realizado' ? 'Realizado' : 'Concluir'}</span>
                             </button>
+                            {/* Item 10: Botão WhatsApp */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenWhatsAppModal(surg)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                                backgroundColor: '#f0fdf4',
+                                color: '#16a34a',
+                                border: '1px solid #bbf7d0',
+                                fontSize: '0.74rem',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                              title="Disparar orientações cirúrgicas pelo WhatsApp"
+                            >
+                              <MessageSquare size={13} color="#16a34a" />
+                              <span>WhatsApp</span>
+                            </button>
+
 
                             <div style={{ display: 'flex', gap: '6px' }}>
                               <button
@@ -1466,6 +1771,82 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
                 />
               </div>
 
+              {/* Item 8: Checklist Pré-Operatório Vascular no Modal */}
+              <div style={{ padding: '0.85rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.6rem' }}>
+                  <Shield size={16} color="#0284c7" />
+                  <span style={{ fontSize: '0.84rem', fontWeight: '700', color: '#1e293b' }}>
+                    Checklist Pré-Operatório Vascular
+                  </span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '8px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#334155', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox"
+                      checked={!!formData.checklist?.cardiacRisk}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        checklist: { ...(prev.checklist || {}), cardiacRisk: e.target.checked }
+                      }))}
+                      style={{ accentColor: '#0284c7' }}
+                    />
+                    <span>🫀 Risco Cardiológico / ECG</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#334155', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox"
+                      checked={!!formData.checklist?.coagulogram}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        checklist: { ...(prev.checklist || {}), coagulogram: e.target.checked }
+                      }))}
+                      style={{ accentColor: '#0284c7' }}
+                    />
+                    <span>🩸 Coagulograma (TAP/INR)</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#334155', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox"
+                      checked={!!formData.checklist?.hemogram}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        checklist: { ...(prev.checklist || {}), hemogram: e.target.checked }
+                      }))}
+                      style={{ accentColor: '#0284c7' }}
+                    />
+                    <span>🔬 Hemograma Recente</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#334155', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox"
+                      checked={!!formData.checklist?.fastingOriented}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        checklist: { ...(prev.checklist || {}), fastingOriented: e.target.checked }
+                      }))}
+                      style={{ accentColor: '#0284c7' }}
+                    />
+                    <span>⏱️ Jejum Orientado (8h)</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#334155', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox"
+                      checked={!!formData.checklist?.duplexMapping}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        checklist: { ...(prev.checklist || {}), duplexMapping: e.target.checked }
+                      }))}
+                      style={{ accentColor: '#0284c7' }}
+                    />
+                    <span>📡 Mapeamento Duplex</span>
+                  </label>
+                </div>
+              </div>
+
               {!editingSurgery && (
                 <label style={styles.checkboxContainer}>
                   <input
@@ -1553,6 +1934,172 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
           </div>
         </div>
       )}
+
+      {/* MODAL: Disparo WhatsApp (Item 10) */}
+      {whatsappModal.isOpen && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalCard, maxWidth: '520px' }}>
+            <div style={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MessageSquare size={22} color="#16a34a" />
+                <h3 style={styles.modalTitle}>Enviar Orientações via WhatsApp</h3>
+              </div>
+              <button onClick={() => setWhatsappModal(prev => ({ ...prev, isOpen: false }))} style={styles.modalCloseBtn}>×</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '14px' }}>
+              <div>
+                <label style={styles.formLabel}>Paciente:</label>
+                <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '0.92rem' }}>
+                  {whatsappModal.surgery?.patientName}
+                </div>
+              </div>
+
+              <div>
+                <label style={styles.formLabel}>Telefone / WhatsApp com DDD:</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: 31999998888"
+                  value={whatsappModal.phone}
+                  onChange={(e) => setWhatsappModal(prev => ({ ...prev, phone: e.target.value }))}
+                  style={styles.formInput}
+                />
+                <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                  Apenas números com DDD (ex: 31999998888). O código do país (+55) será adicionado automaticamente.
+                </span>
+              </div>
+
+              <div>
+                <label style={styles.formLabel}>Mensagem Pré-Formatada:</label>
+                <textarea 
+                  rows={8}
+                  value={whatsappModal.message}
+                  onChange={(e) => setWhatsappModal(prev => ({ ...prev, message: e.target.value }))}
+                  style={{ ...styles.formInput, fontSize: '0.8rem', lineHeight: '1.4', fontFamily: 'monospace' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(whatsappModal.message);
+                    setWhatsappModal(prev => ({ ...prev, copied: true }));
+                    setTimeout(() => setWhatsappModal(prev => ({ ...prev, copied: false })), 3000);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    backgroundColor: '#ffffff',
+                    color: '#475569',
+                    fontSize: '0.84rem',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Copy size={15} />
+                  <span>{whatsappModal.copied ? 'Copiado!' : 'Copiar Texto'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSendWhatsApp}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: '#16a34a',
+                    color: '#ffffff',
+                    fontSize: '0.84rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(22, 163, 74, 0.3)'
+                  }}
+                >
+                  <Send size={15} />
+                  <span>Abrir no WhatsApp</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Sincronização Automática de Acesso Vascular (Item 13) */}
+      {syncAccessModal.isOpen && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalCard, maxWidth: '480px' }}>
+            <div style={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Stethoscope size={22} color="#0284c7" />
+                <h3 style={styles.modalTitle}>Atualizar Acesso no Prontuário?</h3>
+              </div>
+              <button onClick={() => setSyncAccessModal(prev => ({ ...prev, isOpen: false }))} style={styles.modalCloseBtn}>×</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '14px' }}>
+              <div style={{ padding: '12px', backgroundColor: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd', fontSize: '0.86rem', color: '#0369a1', lineHeight: '1.5' }}>
+                A cirurgia de <strong>{syncAccessModal.surgery?.procedure}</strong> para <strong>{syncAccessModal.patient?.name}</strong> foi marcada como <strong>Realizada</strong>.
+                <br/><br/>
+                Deseja atualizar automaticamente o tipo de acesso vascular cadastrado no prontuário do paciente?
+              </div>
+
+              <div>
+                <label style={styles.formLabel}>Novo Tipo de Acesso:</label>
+                <select 
+                  value={syncAccessModal.suggestedAccess}
+                  onChange={(e) => setSyncAccessModal(prev => ({ ...prev, suggestedAccess: e.target.value }))}
+                  style={styles.formSelect}
+                >
+                  <option value="Fístula Arteriovenosa">Fístula Arteriovenosa (FAV)</option>
+                  <option value="Permcath">Permcath</option>
+                  <option value="Cateter Duplo Lúmen">Cateter Duplo Lúmen (CDL)</option>
+                  <option value="Prótese">Prótese Vascular (PTFE)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={styles.formLabel}>Lado Anatômico:</label>
+                <select 
+                  value={syncAccessModal.accessSide}
+                  onChange={(e) => setSyncAccessModal(prev => ({ ...prev, accessSide: e.target.value }))}
+                  style={styles.formSelect}
+                >
+                  <option value="Esquerdo">Esquerdo (MSE/MIE)</option>
+                  <option value="Direito">Direito (MSD/MID)</option>
+                  <option value="Bilateral">Bilateral</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setSyncAccessModal(prev => ({ ...prev, isOpen: false }))}
+                  style={styles.modalCancelBtn}
+                >
+                  Apenas Concluir Cirurgia
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleConfirmSyncAccess}
+                  style={styles.modalSubmitBtn}
+                >
+                  Sim, Atualizar Prontuário
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
