@@ -1,3 +1,14 @@
+## [v4.9.93] - 22 de Setembro, 2026
+### Nex-Ai CLINIC — Atualização de Recursos Humanos e Perfis de Acesso (Config & RH)
+- **Módulo RH (.HR):**
+  - Adicionado o cargo padronizado **Copeiro** em `STANDARD_ROLES` e na regra de normalização de cargos.
+  - Adicionado o setor padronizado **Copa** (`{ id: 'copa', name: 'Copa', description: 'Copa e Serviços de Alimentação' }`) em `STANDARD_SECTORS` e na regra de normalização de setores.
+  - Disponível automaticamente em todo o ecossistema de RH: listagens, filtros por setor/cargo, formulários de admissão e edição de colaboradores, dossiês de treinamentos e premiações.
+- **Módulo Configurações (.CONFIG):**
+  - Adicionado o perfil de segurança RBAC **Enfermagem** (`id: 'nursing'`) em `DEFAULT_USER_PROFILES`.
+  - Configurado com permissões completas de assistência (`assist: write`, `clinical: write`, `requisitions: write`, `calendar: write`, `maintenance: write`, leituras clínicas e de estoque).
+  - Integração no auto-seed do Cloud Firestore (`user_profiles`), tabela de permissões por perfil, seleção no cadastro de usuários e no seletor dinâmico de módulos.
+
 ## [v4.9.92] - 22 de Setembro, 2026
 ### Nex-Ai CLINIC (.ASSIST) — Grande Pacote de Melhorias no Mural de Avisos e Painel de Cirurgias Vasculares
 - **Item 3 — Anexo de Imagens e Laudos no Mural de Avisos:**

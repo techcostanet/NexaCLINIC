@@ -12,6 +12,7 @@ export const STANDARD_ROLES = [
   'Biomédico',
   'Comprador',
   'Coordenador',
+  'Copeiro',
   'Diretor',
   'Enfermeiro',
   'Engenheiro',
@@ -41,6 +42,7 @@ export const STANDARD_SECTORS = [
   { id: 'atendimento', name: 'Atendimento', description: 'Atendimento ao Paciente' },
   { id: 'clinica', name: 'Clínica', description: 'Área Clínica Geral' },
   { id: 'compras', name: 'Compras', description: 'Compras e Suprimentos' },
+  { id: 'copa', name: 'Copa', description: 'Copa e Serviços de Alimentação' },
   { id: 'diretoria', name: 'Diretoria', description: 'Diretoria Geral' },
   { id: 'enfermagem', name: 'Enfermagem', description: 'Equipe de Enfermagem' },
   { id: 'estoque', name: 'Estoque', description: 'Controle de Estoque' },
@@ -70,6 +72,7 @@ export const normalizeSingleWord = (val) => {
     return upper;
   }
   const lower = trimmed.toLowerCase();
+  if (lower.includes('copeir') || lower.includes('copa')) return 'Copeiro';
   if (lower.includes('enferm')) return 'Enfermeiro';
   if (lower.includes('médic') || lower.includes('medic')) return 'Médico';
   if (lower.includes('técnic') || lower.includes('tecnic')) return 'Técnico';
@@ -105,6 +108,7 @@ export const normalizeSectorName = (val) => {
     return upper;
   }
   const lower = trimmed.toLowerCase();
+  if (lower.includes('copa')) return 'Copa';
   if (lower.includes('hemod')) return 'Hemodiálise';
   if (lower.includes('periton') || lower.includes('dp')) return 'Peritoneal';
   if (lower.includes('médic') || lower.includes('medic') || lower.includes('corpo')) return 'Médico';

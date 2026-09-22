@@ -1126,10 +1126,10 @@ export default function ConfigPanel() {
                               borderRadius: '12px', 
                               fontSize: '0.75rem', 
                               fontWeight: '700',
-                              backgroundColor: user.role === 'admin' ? '#fee2e2' : '#f1f5f9',
-                              color: user.role === 'admin' ? '#991b1b' : '#475569'
+                              backgroundColor: user.role === 'admin' ? '#fee2e2' : user.role === 'nursing' ? '#e0f2fe' : '#f1f5f9',
+                              color: user.role === 'admin' ? '#991b1b' : user.role === 'nursing' ? '#0369a1' : '#475569'
                             }}>
-                              {profile ? profile.name : (user.role === 'rh' || user.role === 'hr' ? 'Recursos Humanos (RH)' : user.role)}
+                              {profile ? profile.name : (user.role === 'rh' || user.role === 'hr' ? 'Recursos Humanos (RH)' : user.role === 'nursing' ? 'Enfermagem' : user.role)}
                             </span>
                           </td>
                           <td>{emp ? emp.name : <span style={{ color: 'var(--text-muted)' }}>Nenhum</span>}</td>

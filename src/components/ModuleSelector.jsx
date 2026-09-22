@@ -28,7 +28,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
       description: 'Mural de comunicados rápidos, altas hospitalares, internações por salão/turno e leitor de e-mails com IA.',
       icon: Megaphone,
       color: '#ec4899', // pink-500
-      allowedRoles: ['admin', 'professional', 'clinical', 'doctor', 'receptionist', 'rh', 'sesmt']
+      allowedRoles: ['admin', 'nursing', 'professional', 'clinical', 'doctor', 'receptionist', 'rh', 'sesmt']
     },
     {
       id: 'medical',
@@ -37,7 +37,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
       description: 'Escala mensal de plantões por salão/DP, bolsa de trocas com e-mail, portal do médico e fechamento de honorários.',
       icon: Stethoscope,
       color: '#0284c7', // sky-600
-      allowedRoles: ['admin', 'professional', 'clinical', 'doctor']
+      allowedRoles: ['admin', 'nursing', 'professional', 'clinical', 'doctor']
     },
     {
       id: 'reception',
@@ -118,7 +118,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
       description: 'Grade horária diária, semanal e mensal, controle de salas, confirmação de pacientes e bloqueio de conflito de escalas.',
       icon: Calendar,
       color: '#06b6d4', // cyan-500
-      allowedRoles: ['admin', 'professional', 'clinical', 'doctor', 'receptionist']
+      allowedRoles: ['admin', 'nursing', 'professional', 'clinical', 'doctor', 'receptionist']
     },
     {
       id: 'purchasing',
@@ -136,7 +136,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
       description: 'Digitação de sessões de hemodiálise, escala de salão, requisição de insumos e abertura de chamados de máquinas.',
       icon: HeartPulse,
       color: '#14b8a6', // teal-500
-      allowedRoles: ['admin', 'nurse_tech', 'professional', 'clinical', 'doctor', 'technician']
+      allowedRoles: ['admin', 'nursing', 'nurse_tech', 'professional', 'clinical', 'doctor', 'technician']
     },
     {
       id: 'config',
