@@ -1,3 +1,23 @@
+## [v4.9.94] - 22 de Setembro, 2026
+### Nex-Ai CLINIC (.ASSIST) — Otimização do Modal de Agendamento Cirúrgico Vascular
+- **Remoção dos Chips Rápidos de Procedimentos:**
+  - Removida a barra de botões clicáveis de procedimentos populares (`CONFECÇÃO DE FAV SIMPLES`, `IMPLANTE DE PERMCATH`, `RETIRADA DE PERMCATH`, `DUPLEX`), mantendo apenas a seleção oficial no dropdown do catálogo e a opção de digitação manual sob demanda.
+- **Expansão e Modernização do Campo de Motivo Cirúrgico:**
+  - Substituído o input de texto com datalist por um componente `<select>` nativo e responsivo com seta indicativa, perfeitamente harmonizado com o campo de Situação.
+  - Cadastrado catálogo amplo com 11 motivos cirúrgicos vasculares padronizados:
+    - *ACESSO*
+    - *INFECÇÃO / BACTEREMIA DE CATETER*
+    - *TROMBOSE DE FAV*
+    - *DISFUNÇÃO / BAIXO FLUXO SANGUÍNEO*
+    - *ESTENOSE / HIPERPLASIA DE FAV*
+    - *SUBSTITUIÇÃO DE CATETER (CDL / PERMCATH)*
+    - *MATURAÇÃO DE FAV (RETIRADA DE CATETER)*
+    - *DOR / DIFICULDADE DE PUNÇÃO*
+    - *ABAULAMENTO / PSEUDOANEURISMA*
+    - *URGÊNCIA DIALÍTICA*
+    - *REVISÃO / REPARO DE ACESSO*
+  - Incluído botão *"Digitar Manualmente"* para permitir lançamentos de motivos atípicos ou observações específicas.
+
 ## [v4.9.93] - 22 de Setembro, 2026
 ### Nex-Ai CLINIC — Atualização de Recursos Humanos e Perfis de Acesso (Config & RH)
 - **Módulo RH (.HR):**

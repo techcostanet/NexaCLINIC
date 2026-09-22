@@ -22,16 +22,19 @@ const QUICK_PROCEDURES = [
   'LIGADURA DE FAV'
 ];
 
-// Motivos Clínicos Frequentes (Sugestões Rápidas)
+// Motivos Clínicos Frequentes (Sugestões Padronizadas)
 const COMMON_MOTIVES = [
   'ACESSO',
-  'DOR PUNÇÃO FAV',
-  'DOR EM FAV',
-  'DIFICULDADE DE PUNÇÃO',
-  'ABAULAMENTO DE FAV',
-  'ESTENOSE DE FAV',
+  'INFECÇÃO / BACTEREMIA DE CATETER',
   'TROMBOSE DE FAV',
-  'URGÊNCIA'
+  'DISFUNÇÃO / BAIXO FLUXO SANGUÍNEO',
+  'ESTENOSE / HIPERPLASIA DE FAV',
+  'SUBSTITUIÇÃO DE CATETER (CDL / PERMCATH)',
+  'MATURAÇÃO DE FAV (RETIRADA DE CATETER)',
+  'DOR / DIFICULDADE DE PUNÇÃO',
+  'ABAULAMENTO / PSEUDOANEURISMA',
+  'URGÊNCIA DIALÍTICA',
+  'REVISÃO / REPARO DE ACESSO'
 ];
 
 // Cirurgiões Conhecidos
@@ -56,6 +59,7 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
   const [patients, setPatients] = useState([]);
   const [catalogProcedures, setCatalogProcedures] = useState(INITIAL_PROCEDURES);
   const [isCustomProcedure, setIsCustomProcedure] = useState(false);
+  const [isCustomMotive, setIsCustomMotive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -325,6 +329,7 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
   const handleOpenCreateModal = (targetDate = null, defaultTime = '08:00') => {
     setEditingSurgery(null);
     setIsCustomProcedure(false);
+    setIsCustomMotive(false);
     const initialProc = availableProcedures[0] || 'CONFECÇÃO DE FAV SIMPLES';
     setFormData({
       date: targetDate || currentDate,
@@ -357,6 +362,8 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
     const currentProc = surgery.procedure || '';
     const isCustom = !!(currentProc && !availableProcedures.includes(currentProc));
     setIsCustomProcedure(isCustom);
+    const currentMotive = surgery.indication || surgery.motive || "ACESSO";
+    setIsCustomMotive(!!(currentMotive && !COMMON_MOTIVES.includes(currentMotive)));
     setFormData({
       date: surgery.date || currentDate,
       time: surgery.time || '08:00',
@@ -1626,24 +1633,6 @@ Dúvidas ou imprevistos? Responda a esta mensagem. Desejamos um excelente proced
                   </button>
                 </div>
 
-                {/* Chips de Procedimentos Populares */}
-                <div style={styles.quickChipsRow}>
-                  {QUICK_PROCEDURES.slice(0, 4).map(qp => (
-                    <button
-                      key={qp}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, procedure: qp })}
-                      style={{
-                        ...styles.quickChip,
-                        backgroundColor: formData.procedure === qp ? '#0284c7' : '#f1f5f9',
-                        color: formData.procedure === qp ? '#ffffff' : '#475569'
-                      }}
-                    >
-                      {qp}
-                    </button>
-                  ))}
-                </div>
-
                 {!isCustomProcedure ? (
                   <select
                     required
@@ -1674,18 +1663,43 @@ Dúvidas ou imprevistos? Responda a esta mensagem. Desejamos um excelente proced
 
               <div style={styles.formGrid2}>
                 <div>
-                  <label style={styles.formLabel}>Motivo</label>
-                  <input
-                    type="text"
-                    required
-                    list="motivesList"
-                    value={formData.indication}
-                    onChange={(e) => setFormData({ ...formData, indication: e.target.value })}
-                    style={styles.formInput}
-                  />
-                  <datalist id="motivesList">
-                    {COMMON_MOTIVES.map(m => <option key={m} value={m} />)}
-                  </datalist>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label style={styles.formLabel}>Motivo</label>
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomMotive(!isCustomMotive)}
+                      style={{ ...styles.toggleCustomBtn, fontSize: '0.72rem' }}
+                    >
+                      {isCustomMotive ? 'Selecionar da Lista' : 'Digitar Manualmente'}
+                    </button>
+                  </div>
+
+                  {!isCustomMotive ? (
+                    <select
+                      required
+                      value={formData.indication}
+                      onChange={(e) => setFormData({ ...formData, indication: e.target.value })}
+                      style={styles.formSelect}
+                    >
+                      <option value="">Selecione o motivo...</option>
+                      {COMMON_MOTIVES.map(m => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                      {formData.indication && !COMMON_MOTIVES.includes(formData.indication) && (
+                        <option value={formData.indication}>{formData.indication}</option>
+                      )}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Digite o motivo do procedimento..."
+                      value={formData.indication}
+                      onChange={(e) => setFormData({ ...formData, indication: e.target.value })}
+                      style={styles.formInput}
+                      autoFocus
+                      required
+                    />
+                  )}
                 </div>
 
                 <div>
