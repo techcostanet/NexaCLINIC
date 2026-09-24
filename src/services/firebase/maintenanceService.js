@@ -3103,324 +3103,29 @@ export const calculateSlaDeadline = (priority, startDateStr = null) => {
   return deadline.toISOString();
 };
 
-export const INITIAL_IT_SERVICE_ORDERS = [
-  {
-    id: 'OS-TI-2026-0001',
-    code: 'TI-2026-0001',
-    origin: 'user',
-    title: 'Impressora Zebra não imprime etiquetas de tubo',
-    category: 'Impressoras',
-    subcategory: 'Zebra / Etiquetadora',
-    sector: 'Recepção',
-    unitId: 'betim',
-    unit: 'Betim',
-    priority: 'Alta',
-    slaHours: 8,
-    status: 'Em Atendimento',
-    requesterName: 'Patrícia Souza',
-    requesterEmail: 'recepcao@dialize.com.br',
-    requesterSector: 'Recepção',
-    assignedTechnician: 'Lucas T.I.',
-    description: 'A impressora de código de barras da recepção 1 está travando a fita ribbon e acusando erro de mídia vermelha.',
-    diagnostic: 'Sensor de mídia desalinhado e rolete de tração sujo com resíduo de cola adesiva.',
-    solutionApplied: 'Realizado alinhamento do sensor de gap, limpeza técnica do rolete com álcool isopropílico e recalibração automática de mídia.',
-    openDate: '2026-08-27T08:15:00.000Z',
-    slaDeadline: '2026-08-27T16:15:00.000Z',
-    completionDate: null,
-    totalCost: 0,
-    partsUsed: [],
-    timelineLogs: [
-      {
-        id: 'log-1',
-        date: '2026-08-27T08:15:00.000Z',
-        author: 'Patrícia Souza',
-        status: 'Aberta',
-        note: 'Chamado aberto no sistema.'
-      },
-      {
-        id: 'log-2',
-        date: '2026-08-27T08:30:00.000Z',
-        author: 'Lucas T.I.',
-        status: 'Em Atendimento',
-        note: 'Atendimento presencial iniciado na recepção.'
-      }
-    ]
-  },
-  {
-    id: 'OS-TI-2026-0002',
-    code: 'TI-2026-0002',
-    origin: 'user',
-    title: 'Lentidão e queda intermitente de Wi-Fi no Salão A',
-    category: 'Rede',
-    subcategory: 'Wi-Fi / Conectividade',
-    sector: 'Salão A de Hemodiálise',
-    unitId: 'betim',
-    unit: 'Betim',
-    priority: 'Crítico',
-    slaHours: 2,
-    status: 'Em Atendimento',
-    requesterName: 'Enf. Juliana Castro',
-    requesterEmail: 'enfermagem@dialize.com.br',
-    requesterSector: 'Posto de Enfermagem',
-    assignedTechnician: 'Administrador TechCosta',
-    description: 'Os tablets de evolução da enfermagem estão desconectando da rede sem fio durante o turno.',
-    diagnostic: 'Access Point Ubiquiti do corredor central reiniciando devido a oscilação na porta PoE do switch.',
-    solutionApplied: 'Substituída a porta PoE e atualizado o firmware do Access Point para versão estável.',
-    openDate: '2026-08-27T09:00:00.000Z',
-    slaDeadline: '2026-08-27T11:00:00.000Z',
-    completionDate: null,
-    totalCost: 0,
-    partsUsed: [],
-    timelineLogs: [
-      {
-        id: 'log-1',
-        date: '2026-08-27T09:00:00.000Z',
-        author: 'Enf. Juliana Castro',
-        status: 'Aberta',
-        note: 'Chamado urgente aberto pela enfermagem.'
-      },
-      {
-        id: 'log-2',
-        date: '2026-08-27T09:10:00.000Z',
-        author: 'Administrador TechCosta',
-        status: 'Em Atendimento',
-        note: 'Verificação dos switches e análise de tráfego de rede em andamento.'
-      }
-    ]
-  },
-  {
-    id: 'OS-TI-2026-0003',
-    code: 'TI-2026-0003',
-    origin: 'user',
-    title: 'Instalação de Certificado Digital A1 no Consultório 2',
-    category: 'Sistemas',
-    subcategory: 'Certificado Digital',
-    sector: 'Consultório Médico',
-    unitId: 'betim',
-    unit: 'Betim',
-    priority: 'Média',
-    slaHours: 24,
-    status: 'Resolvida',
-    requesterName: 'Dr. Roberto Mendes',
-    requesterEmail: 'medico@dialize.com.br',
-    requesterSector: 'Consultório Médico',
-    assignedTechnician: 'Lucas T.I.',
-    description: 'Necessário instalar e configurar o novo certificado digital A1 para assinatura eletrônica de prescrições e laudos.',
-    diagnostic: 'Certificado A1 importado com sucesso no repositório pessoal do Windows e integrado ao NexaCLINIC.',
-    solutionApplied: 'Certificado instalado, permissões validadas e teste de assinatura em PDF executado com sucesso.',
-    openDate: '2026-08-26T10:00:00.000Z',
-    slaDeadline: '2026-08-27T10:00:00.000Z',
-    completionDate: '2026-08-26T14:30:00.000Z',
-    totalCost: 0,
-    partsUsed: [],
-    timelineLogs: [
-      {
-        id: 'log-1',
-        date: '2026-08-26T10:00:00.000Z',
-        author: 'Dr. Roberto Mendes',
-        status: 'Aberta',
-        note: 'Solicitação de instalação de certificado digital.'
-      },
-      {
-        id: 'log-2',
-        date: '2026-08-26T14:30:00.000Z',
-        author: 'Lucas T.I.',
-        status: 'Resolvida',
-        note: 'Certificado instalado e testado com sucesso junto ao médico.'
-      }
-    ]
-  },
-  {
-    id: 'OS-TI-2026-0004',
-    code: 'TI-2026-0004',
-    origin: 'user',
-    title: 'Computador do Faturamento não liga após chuva',
-    category: 'Hardware',
-    subcategory: 'Desktop / Fonte',
-    sector: 'Faturamento / APAC',
-    unitId: 'betim',
-    unit: 'Betim',
-    priority: 'Alta',
-    slaHours: 8,
-    status: 'Resolvida',
-    requesterName: 'Dália Moraes',
-    requesterEmail: 'daliam@nexa.com',
-    requesterSector: 'Faturamento / APAC',
-    assignedTechnician: 'Lucas T.I.',
-    description: 'A máquina principal de faturamento SUS não dá sinal de energia.',
-    diagnostic: 'Fonte de alimentação ATX 500W queimada devido a surto elétrico na rede.',
-    solutionApplied: 'Substituída a fonte ATX queimada por fonte bivolt nova de 500W e conectado a nobreak protegido.',
-    openDate: '2026-08-25T08:00:00.000Z',
-    slaDeadline: '2026-08-25T16:00:00.000Z',
-    completionDate: '2026-08-25T11:20:00.000Z',
-    totalCost: 180,
-    partsUsed: [
-      { itemId: 'TI-FNT-500', name: 'Fonte ATX 500W 80 Plus', quantity: 1, unitCost: 180.00 }
-    ],
-    timelineLogs: [
-      {
-        id: 'log-1',
-        date: '2026-08-25T08:00:00.000Z',
-        author: 'Dália Moraes',
-        status: 'Aberta',
-        note: 'Chamado aberto com urgência.'
-      },
-      {
-        id: 'log-2',
-        date: '2026-08-25T11:20:00.000Z',
-        author: 'Lucas T.I.',
-        status: 'Resolvida',
-        note: 'Fonte trocada e computador operacional.'
-      }
-    ]
-  },
-  {
-    id: 'OS-TI-2026-0005',
-    code: 'TI-2026-0005',
-    origin: 'internal',
-    taskType: 'Infraestrutura',
-    title: 'Reorganização e identificação de patch cords no Rack Sala de Servidores',
-    category: 'Rede',
-    subcategory: 'Switch/Roteador',
-    sector: 'Sala de Servidores',
-    unitId: 'betim',
-    unit: 'Betim',
-    priority: 'Média',
-    slaHours: 24,
-    status: 'Em Atendimento',
-    requesterName: 'Equipe T.I.',
-    requesterEmail: 'suporte@techcosta.net',
-    requesterSector: 'T.I.',
-    assignedTechnician: 'Lucas T.I.',
-    description: 'Substituição de patch cords desgastados e fixação de etiquetas de identificação nas portas dos switches do CPD.',
-    diagnostic: 'Fiação confusa dificultava a identificação rápida em caso de parada de porta.',
-    solutionApplied: 'Instalados organizadores horizontais 1U e cabeamento Cat6 certificado.',
-    openDate: '2026-09-22T08:00:00.000Z',
-    slaDeadline: '2026-09-25T18:00:00.000Z',
-    completionDate: null,
-    totalCost: 95,
-    partsUsed: [
-      { itemId: 'TI-CAB-CAT6', name: 'Patch Cord Cat6 1.5m', quantity: 12, unitCost: 7.90 }
-    ],
-    timelineLogs: [
-      {
-        id: 'log-1',
-        date: '2026-09-22T08:00:00.000Z',
-        author: 'Lucas T.I.',
-        status: 'Aberta',
-        note: 'Tarefa interna proativa cadastrada pela equipe de T.I.'
-      },
-      {
-        id: 'log-2',
-        date: '2026-09-23T14:00:00.000Z',
-        author: 'Lucas T.I.',
-        status: 'Em Atendimento',
-        note: 'Iniciada montagem dos organizadores de cabo.'
-      }
-    ]
-  },
-  {
-    id: 'OS-TI-2026-0006',
-    code: 'TI-2026-0006',
-    origin: 'internal',
-    taskType: 'Preventiva',
-    title: 'Troca preventiva de baterias do Nobreak 3kVA (CPD)',
-    category: 'Hardware',
-    subcategory: 'Nobreak',
-    sector: 'Sala de Servidores',
-    unitId: 'betim',
-    unit: 'Betim',
-    priority: 'Alta',
-    slaHours: 8,
-    status: 'Aguardando Peça',
-    requesterName: 'Equipe T.I.',
-    requesterEmail: 'suporte@techcosta.net',
-    requesterSector: 'T.I.',
-    assignedTechnician: 'Lucas T.I.',
-    description: 'Baterias seladas 12V 7Ah atingiram 24 meses de ciclo útil. Prevenção contra desligamento abrupto do servidor principal.',
-    diagnostic: 'Teste de autonomia apontou queda rápida de carga sob regime de hemodiálise.',
-    solutionApplied: 'Pedido de compra aprovado. Aguardando entrega das 8 baterias seladas.',
-    openDate: '2026-09-23T09:30:00.000Z',
-    slaDeadline: '2026-09-26T17:00:00.000Z',
-    completionDate: null,
-    totalCost: 0,
-    partsUsed: [],
-    timelineLogs: [
-      {
-        id: 'log-1',
-        date: '2026-09-23T09:30:00.000Z',
-        author: 'Lucas T.I.',
-        status: 'Aberta',
-        note: 'Tarefa preventiva iniciada por rotina do T.I.'
-      },
-      {
-        id: 'log-2',
-        date: '2026-09-23T11:00:00.000Z',
-        author: 'Lucas T.I.',
-        status: 'Aguardando Peça',
-        note: 'Solicitada compra de baterias seladas para o nobreak do CPD.'
-      }
-    ]
-  },
-  {
-    id: 'OS-TI-2026-0007',
-    code: 'TI-2026-0007',
-    origin: 'internal',
-    taskType: 'Melhoria',
-    title: 'Higienização e revisão de fontes nos computadores do Salão B',
-    category: 'Hardware',
-    subcategory: 'Desktop',
-    sector: 'Salão B de Hemodiálise',
-    unitId: 'betim',
-    unit: 'Betim',
-    priority: 'Baixa',
-    slaHours: 48,
-    status: 'Resolvida',
-    requesterName: 'Equipe T.I.',
-    requesterEmail: 'suporte@techcosta.net',
-    requesterSector: 'T.I.',
-    assignedTechnician: 'Lucas T.I.',
-    description: 'Manutenção preventiva e despoeiramento interno nos 6 computadores dos postos de hemodiálise do Salão B.',
-    diagnostic: 'Poeira acumulada nos coolers de CPU com início de ruído mecânico.',
-    solutionApplied: 'Aspiração técnica, troca de pasta térmica de prata e lubrificação dos ventiladores. Todas operando em 38°C.',
-    openDate: '2026-09-20T13:00:00.000Z',
-    slaDeadline: '2026-09-22T13:00:00.000Z',
-    completionDate: '2026-09-21T16:45:00.000Z',
-    totalCost: 25,
-    partsUsed: [
-      { itemId: 'TI-PST-TERM', name: 'Pasta Térmica Prata 10g', quantity: 1, unitCost: 25.00 }
-    ],
-    timelineLogs: [
-      {
-        id: 'log-1',
-        date: '2026-09-20T13:00:00.000Z',
-        author: 'Lucas T.I.',
-        status: 'Aberta',
-        note: 'Tarefa de melhoria interna aberta.'
-      },
-      {
-        id: 'log-2',
-        date: '2026-09-21T16:45:00.000Z',
-        author: 'Lucas T.I.',
-        status: 'Resolvida',
-        note: 'Higienização completa finalizada com sucesso.'
-      }
-    ]
-  }
-];
+export const INITIAL_IT_SERVICE_ORDERS = [];
 
 const getStoredITOrders = () => {
   try {
     const data = localStorage.getItem(LOCAL_STORAGE_IT_ORDERS_KEY);
     if (data) {
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) {
+        // Purgar chamados de teste antigos com códigos ou IDs de mock
+        const cleaned = parsed.filter(o => 
+          !o.id?.startsWith('OS-TI-2026-000') && 
+          !o.code?.startsWith('TI-2026-000')
+        );
+        if (cleaned.length !== parsed.length) {
+          saveStoredITOrders(cleaned);
+        }
+        return cleaned;
+      }
     }
   } catch (e) {
     console.warn('Erro ao ler IT service orders do localStorage:', e);
   }
-  localStorage.setItem(LOCAL_STORAGE_IT_ORDERS_KEY, JSON.stringify(INITIAL_IT_SERVICE_ORDERS));
-  return INITIAL_IT_SERVICE_ORDERS;
+  return [];
 };
 
 const saveStoredITOrders = (orders) => {
@@ -3434,23 +3139,33 @@ const saveStoredITOrders = (orders) => {
 export const getITServiceOrders = async () => {
   if (USE_MOCK) return getStoredITOrders();
   try {
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+    const { getFirestore, collection, getDocs, doc, deleteDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
     const snap = await getDocs(collection(db, 'it_service_orders'));
     const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    if (items.length === 0) {
-      const { doc, writeBatch } = await import('firebase/firestore');
-      const batch = writeBatch(db);
-      const colRef = collection(db, 'it_service_orders');
-      for (const os of INITIAL_IT_SERVICE_ORDERS) {
-        const newRef = doc(colRef, os.id);
-        batch.set(newRef, { ...os, createdAt: new Date().toISOString() });
+    // Identificar e purgar chamados de teste do Firestore se ainda existirem
+    const testItems = items.filter(o => 
+      o.id?.startsWith('OS-TI-2026-000') || 
+      o.code?.startsWith('TI-2026-000')
+    );
+    if (testItems.length > 0) {
+      for (const t of testItems) {
+        try {
+          await deleteDoc(doc(db, 'it_service_orders', t.id));
+        } catch (delErr) {
+          console.warn('Aviso ao remover chamado de teste do Firestore:', delErr);
+        }
       }
-      await batch.commit();
-      const newSnap = await getDocs(collection(db, 'it_service_orders'));
-      return newSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const cleaned = items.filter(o => 
+        !o.id?.startsWith('OS-TI-2026-000') && 
+        !o.code?.startsWith('TI-2026-000')
+      );
+      saveStoredITOrders(cleaned);
+      return cleaned;
     }
+
+    saveStoredITOrders(items);
     return items;
   } catch (err) {
     console.error('Erro ao carregar it_service_orders do Firestore:', err);
@@ -3608,13 +3323,13 @@ export const subscribeToITServiceOrders = (callback) => {
   import('firebase/firestore').then(({ getFirestore, collection, onSnapshot }) => {
     const db = getFirestore(app);
     unsubscribe = onSnapshot(collection(db, 'it_service_orders'), (snap) => {
-      const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (items.length > 0) {
-        items.sort((a, b) => new Date(b.createdAt || b.openDate || 0) - new Date(a.createdAt || a.openDate || 0));
-        callback(items);
-      } else {
-        getITServiceOrders().then(callback);
-      }
+      let items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      items = items.filter(o => 
+        !o.id?.startsWith('OS-TI-2026-000') && 
+        !o.code?.startsWith('TI-2026-000')
+      );
+      items.sort((a, b) => new Date(b.createdAt || b.openDate || 0) - new Date(a.createdAt || a.openDate || 0));
+      callback(items);
     }, (err) => {
       console.error("Erro no listener real-time de it_service_orders:", err);
       callback(getStoredITOrders());

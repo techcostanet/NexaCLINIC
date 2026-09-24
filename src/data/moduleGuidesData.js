@@ -1113,6 +1113,14 @@ export const MODULE_GUIDES = {
       {
         title: 'Ordenação Automática em Todas as Colunas',
         desc: 'Classificação instantânea crescente e decrescente com um único clique no cabeçalho de qualquer coluna em todas as tabelas do módulo (Ordens, Equipamentos, Calendário e T.I.).'
+      },
+      {
+        title: 'CRUD Completo de Chamados e Tarefas de T.I.',
+        desc: 'Controle integral com criação, visualização, edição completa de campos e exclusão definitiva com confirmação de segurança para ordens de serviço e tarefas internas da equipe técnica.'
+      },
+      {
+        title: 'Cobrança de Agilidade & Alertas em Tempo Real',
+        desc: 'Recurso dedicado para o solicitante cobrar agilidade com motivos predefinidos (Setor Parado, Prazo Excedido, Impacto Assistencial ou Impressão Travada), badge pulsante de urgência, filtro rápido e respostas prontas dos técnicos.'
       }
     ],
     tutorial: [
@@ -1225,6 +1233,23 @@ export const MODULE_GUIDES = {
           'Filtre pelas categorias "Hardware", "Redes", "Sistemas" ou "Segurança".',
           'Abra o artigo para seguir os passos técnicos do Procedimento Operacional Padrão.'
         ]
+      },
+      {
+        title: 'Como Cobrar Agilidade de um Chamado de T.I.',
+        steps: [
+          'Na aba "Chamados T.I." (ou "Meus Chamados T.I."), localize a demanda aberta que necessita de atendimento prioritário.',
+          'Clique no botão com ícone de raio ("Cobrar") na tabela, no card ou no cabeçalho do chamado.',
+          'Selecione um motivo rápido (Setor Parado, Prazo Excedido, Impacto Assistencial ou Impressão Travada) e preencha observações complementares.',
+          'Clique em "Cobrar Agilidade". O chamado receberá um badge dourado de cobrança ativa na tabela e no Kanban, notificando a equipe técnica em tempo real.'
+        ]
+      },
+      {
+        title: 'Como Editar ou Excluir Chamados e Tarefas de T.I.',
+        steps: [
+          'Localize a demanda na tabela, no modo Cards ou no quadro Kanban.',
+          'Para editar, clique no botão azul ("Editar"), ajuste título, categoria, setor, prioridade ou técnico responsável e salve as alterações.',
+          'Para excluir definitivamente, clique no botão vermelho ("Excluir") e confirme no diálogo de segurança. O chamado e seu histórico serão removidos permanentemente.'
+        ]
       }
     ],
     duvidas: [
@@ -1275,6 +1300,14 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'A impressão das etiquetas e do QR Code cabe em uma única folha?',
         resposta: 'Sim. O sistema foi calibrado com regras CSS rígidas (@page e page-break-after: avoid) e dimensões compactas (card de 300px e QR Code de 125px), garantindo que tanto a etiqueta individual quanto a grade de etiquetas em lote sejam impressas estritamente em uma única folha física, sem quebras para a segunda página.'
+      },
+      {
+        pergunta: 'Como funciona a Cobrança de Agilidade em chamados de T.I.?',
+        resposta: 'A Cobrança de Agilidade é um canal direto para momentos em que o setor está travado aguardando solução técnica. Ao cobrar, o chamado recebe um badge dourado de urgência, é computado no filtro "Cobrados" e notifica a equipe de T.I. com o motivo selecionado, permitindo que os técnicos enviem respostas rápidas de status.'
+      },
+      {
+        pergunta: 'Quem pode editar ou excluir chamados e tarefas de T.I.?',
+        resposta: 'Técnicos de T.I., engenheiros clínicos e administradores possuem permissão completa para editar e excluir qualquer demanda. Além disso, o colaborador que abriu o chamado pode editar seus dados ou excluí-lo caso o problema tenha sido resolvido por outros meios.'
       }
     ]
   },

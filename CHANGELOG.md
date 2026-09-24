@@ -1,3 +1,19 @@
+## [v4.9.101] - 24 de Setembro, 2026
+### Nex-Ai CLINIC (.SERVICE) — CRUD Completo de Chamados e Tarefas de T.I., Purga de Testes e Sistema de Cobrança de Agilidade
+- **Purga Definitiva dos Chamados de Teste:**
+  - Remoção dos chamados de teste mock (`TI-2026-0001` a `0004`) do Firestore e do armazenamento local via rotina de higienização automatizada em `maintenanceService.js`.
+- **CRUD Completo de Chamados e Tarefas (.SERVICE):**
+  - Criação do modal de edição completa (`ITEditModal.jsx`) permitindo alteração de todos os parâmetros: título, descrição, categoria, subcategoria, setor, prioridade, técnico atribuído, status, origem e tipo de tarefa interna.
+  - Exclusão com modal de confirmação protetiva e irreversível na listagem de chamados, no modo cards e no Kanban.
+- **Sistema de Cobrança de Agilidade:**
+  - Novo modal dedicado (`ITUrgencyModal.jsx`) permitindo ao solicitante cobrar prioridade com motivos de 1 clique: *Setor Parado*, *Prazo Excedido*, *Impacto Assistencial* ou *Impressão Travada*, com campo de observação adicional.
+  - Sinalização visual com badge dourado pulsante `⚡ Cobrado (Nx)` na Tabela, nos Cards e no Kanban.
+  - Nova pílula de filtro `Cobrados (Nx)` no topo da aba para a equipe técnica isolar chamados que demandam agilidade imediata.
+  - Banner de alerta em destaque no topo do modal de atendimento do chamado.
+  - Chips de respostas rápidas de 1 clique para técnicos na linha do tempo de interações (*Técnico a caminho*, *No laboratório*, *Peça solicitada*, *Aguardando acesso*).
+- **Boy Scout Rule & Padrão de Rótulos de 1 Palavra:**
+  - Varredura e higienização de rótulos compostos ou com barras em todo o fluxo de chamados e formulários de suporte técnico.
+
 ## [v4.9.99] - 24 de Setembro, 2026
 ### Nex-Ai CLINIC (.HR) — Hotfix Ordem de React Hooks no Mural de Aniversariantes (Minified React Error #310)
 - **Correção da Ordem dos Hooks (React Rules of Hooks):**

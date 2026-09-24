@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.101',
+      date: '24/09/2026',
+      title: 'Nex-Ai CLINIC — CRUD Completo de Chamados e Tarefas de T.I., Purga de Testes e Sistema de Cobrança de Agilidade (.SERVICE)',
+      description: 'Implementação de gestão completa de ciclo de vida das demandas de Tecnologia da Informação (.SERVICE): criação de CRUD integral com modal de edição de todos os parâmetros e exclusão com diálogo de confirmação protetiva para chamados e tarefas internas; purga automatizada de dados mock e chamados de teste (TI-2026-0001 a 0004); e novo sistema de Cobrança de Agilidade com motivos rápidos, badges pulsantes de urgência, filtro exclusivo "Cobrados", banner de alerta e respostas rápidas predefinidas para os técnicos.',
+      changes: [
+        { type: 'Purga de Chamados de Teste', text: 'Eliminação definitiva dos chamados de teste do banco de dados e do armazenamento local, com rotina de higienização automática no serviço de manutenção.' },
+        { type: 'CRUD Completo (.SERVICE)', text: 'Novo modal de edição (ITEditModal) para ajuste de título, descrição, categoria, subcategoria, setor, prioridade, técnico e status, além de exclusão definitiva com confirmação protetiva.' },
+        { type: 'Cobrança de Agilidade', text: 'Novo modal dedicado (ITUrgencyModal) para o solicitante cobrar agilidade com opções rápidas (Setor Parado, Prazo Excedido, Impacto Assistencial ou Impressão Travada) e justificativa.' },
+        { type: 'Sinalização Visual & Filtro', text: 'Badge dourado de cobrança ativa (⚡ Cobrado Nx) exibido na Tabela, nos Cards e no Kanban, acompanhado de nova pílula de filtro "Cobrados" no cabeçalho.' },
+        { type: 'Respostas Rápidas de T.I.', text: 'Chips de réplica instantânea no histórico de interações para técnicos informarem com 1 clique se estão a caminho, em análise laboratorial ou aguardando peças.' },
+        { type: 'Boy Scout Rule (Rótulos)', text: 'Varredura e remoção de todos os rótulos compostos ou redundantes com barras, aplicando o padrão rigoroso de termo único em todos os componentes de manutenção.' }
+      ]
+    },
+    {
       version: 'v4.9.99',
       date: '24/09/2026',
       title: 'Nex-Ai CLINIC — Hotfix Ordem de React Hooks no Mural de Aniversariantes (Minified React Error #310) (.HR)',

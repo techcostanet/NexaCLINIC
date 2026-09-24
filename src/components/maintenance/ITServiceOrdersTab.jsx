@@ -14,12 +14,14 @@ import ITNewTaskModal from './ITNewTaskModal';
 import ITDailyRoundModal from './ITDailyRoundModal';
 import ITAssetsModal from './ITAssetsModal';
 import ITWikiModal from './ITWikiModal';
+import ITEditModal from './ITEditModal';
+import ITUrgencyModal from './ITUrgencyModal';
 
 const IT_CATEGORIES = [
-  { id: 'Hardware', name: 'Hardware', subcategories: ['Desktop', 'Notebook', 'Monitor', 'Nobreak', 'Teclado/Mouse', 'Fonte/Cabos', 'Outro'] },
+  { id: 'Hardware', name: 'Hardware', subcategories: ['Desktop', 'Notebook', 'Monitor', 'Nobreak', 'Periféricos', 'Cabos', 'Outro'] },
   { id: 'Sistemas', name: 'Sistemas', subcategories: ['Nex-Ai CLINIC', 'Windows', 'Microsoft 365', 'Antivírus', 'Certificado Digital', 'Navegador', 'Outro'] },
-  { id: 'Rede', name: 'Rede', subcategories: ['Wi-Fi', 'Cabo Desconectado', 'Lentidão', 'Queda de Link', 'Switch/Roteador', 'Outro'] },
-  { id: 'Impressoras', name: 'Impressoras', subcategories: ['Zebra / Etiquetadora', 'Laser / Prescrição', 'Leitor de Barras', 'Scanner', 'Outro'] },
+  { id: 'Rede', name: 'Rede', subcategories: ['Wi-Fi', 'Cabo Desconectado', 'Lentidão', 'Queda de Link', 'Switch', 'Outro'] },
+  { id: 'Impressoras', name: 'Impressoras', subcategories: ['Zebra', 'Laser', 'Leitor de Barras', 'Scanner', 'Outro'] },
   { id: 'Acessos', name: 'Acessos', subcategories: ['Novo Usuário', 'Redefinição de Senha', 'Permissão de Módulo', 'E-mail Corporativo', 'Outro'] },
   { id: 'Telefonia', name: 'Telefonia', subcategories: ['Ramal VoIP', 'Aparelho Físico', 'Linha Muda', 'Outro'] },
   { id: 'Segurança', name: 'Segurança', subcategories: ['Arquivo Deletado', 'Suspeita de Vírus', 'Bloqueio de Segurança', 'Outro'] },
@@ -36,12 +38,12 @@ const CLINIC_SECTORS = [
   "Consultório Médico",
   "Farmácia Clínica",
   "Laboratório",
-  "Tratamento de Água (CTA)",
+  "CTA",
   "Reúso de Dialisadores",
-  "Expurgo / CME",
-  "Faturamento / APAC",
+  "CME",
+  "Faturamento",
   "Financeiro",
-  "Recursos Humanos (RH)",
+  "RH",
   "Compras",
   "SESMT",
   "Diretoria",
@@ -85,6 +87,12 @@ export default function ITServiceOrdersTab({
   const [showAssetsModal, setShowAssetsModal] = useState(false);
   const [showWikiModal, setShowWikiModal] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [orderToEdit, setOrderToEdit] = useState(null);
+  const [showUrgencyModal, setShowUrgencyModal] = useState(false);
+  const [orderToCobrar, setOrderToCobrar] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [newComment, setNewComment] = useState('');
 
@@ -269,10 +277,11 @@ export default function ITServiceOrdersTab({
       const matchesCat = categoryFilter === 'all' || order.category === categoryFilter;
       const matchesSector = sectorFilter === 'all' || order.sector === sectorFilter;
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-      const matchesPriority = priorityFilter === 'all' || order.priority === priorityFilter;
       const matchesOrigin = 
         originFilter === 'all' || 
-        (originFilter === 'internal' ? order.origin === 'internal' : order.origin !== 'internal');
+        (originFilter === 'internal' ? order.origin === 'internal' : 
+         originFilter === 'user' ? order.origin !== 'internal' :
+         originFilter === 'urgent' ? (order.urgencyCount || 0) > 0 : true);
 
       let matchesSla = true;
       if (slaFilter !== 'all') {
@@ -425,6 +434,7 @@ export default function ITServiceOrdersTab({
 
     const userCount = scopedOrders.filter(o => o.origin !== 'internal').length;
     const internalCount = scopedOrders.filter(o => o.origin === 'internal').length;
+    const urgentCount = scopedOrders.filter(o => (o.urgencyCount || 0) > 0).length;
     const proactiveRate = total > 0 ? Math.round((internalCount / total) * 100) : 0;
 
     const avgResolutionTime = resolvedOrders.length > 0
@@ -435,6 +445,7 @@ export default function ITServiceOrdersTab({
       total,
       userCount,
       internalCount,
+      urgentCount,
       proactiveRate,
       openCount: openOrders.length,
       resolvedCount: resolvedOrders.length,
@@ -614,6 +625,158 @@ export default function ITServiceOrdersTab({
     }
   };
 
+  // Permission helper for full edit / delete
+  const canModifyOrder = (order) => {
+    if (!order) return false;
+    if (isTechOrAdmin) return true;
+    const uEmail = (currentUser?.email || '').trim().toLowerCase();
+    const uName = (currentUser?.name || '').trim().toLowerCase();
+    const oEmail = (order.requesterEmail || '').trim().toLowerCase();
+    const oName = (order.requesterName || '').trim().toLowerCase();
+    return (uEmail && oEmail === uEmail) || (uName && oName === uName);
+  };
+
+  // Handle Open Edit Modal
+  const handleOpenEdit = (order) => {
+    setOrderToEdit(order);
+    setShowEditModal(true);
+  };
+
+  // Handle Save Full Edit
+  const handleSaveEdit = async (updatedOrder) => {
+    try {
+      const now = new Date().toISOString();
+      const updatedLogs = [
+        {
+          id: `log-${Date.now()}`,
+          date: now,
+          author: currentUser?.name || 'Técnico T.I.',
+          status: updatedOrder.status,
+          note: `Alterações salvas na edição completa da demanda.`
+        },
+        ...(updatedOrder.timelineLogs || [])
+      ];
+
+      const payload = {
+        ...updatedOrder,
+        timelineLogs: updatedLogs,
+        lastUpdatedBy: currentUser?.name || 'Técnico T.I.'
+      };
+
+      await dbService.saveITServiceOrder(payload, 'Alterações salvas via edição completa.', false);
+      showAlert(`Demanda ${payload.code} atualizada com sucesso!`, 'success');
+      setShowEditModal(false);
+      setOrderToEdit(null);
+      if (selectedOrder && selectedOrder.id === payload.id) {
+        setSelectedOrder(payload);
+      }
+      fetchOrders();
+    } catch (err) {
+      console.error('Erro ao editar demanda de T.I.:', err);
+      showAlert('Erro ao atualizar demanda.', 'danger');
+    }
+  };
+
+  // Handle Open Delete Modal
+  const handleOpenDelete = (order) => {
+    setOrderToDelete(order);
+    setShowDeleteModal(true);
+  };
+
+  // Handle Confirm Delete
+  const handleConfirmDelete = async () => {
+    if (!orderToDelete) return;
+    try {
+      await dbService.deleteITServiceOrder(orderToDelete.id);
+      showAlert(`Demanda ${orderToDelete.code} excluída permanentemente.`, 'success');
+      setShowDeleteModal(false);
+      if (selectedOrder && selectedOrder.id === orderToDelete.id) {
+        setShowManageModal(false);
+        setSelectedOrder(null);
+      }
+      setOrderToDelete(null);
+      fetchOrders();
+    } catch (err) {
+      console.error('Erro ao excluir demanda:', err);
+      showAlert('Erro ao excluir demanda.', 'danger');
+    }
+  };
+
+  // Handle Open Cobrança de Agilidade
+  const handleOpenCobrar = (order) => {
+    setOrderToCobrar(order);
+    setShowUrgencyModal(true);
+  };
+
+  // Handle Confirm Cobrança de Agilidade
+  const handleConfirmCobrança = async (reason, note) => {
+    if (!orderToCobrar) return;
+    try {
+      const now = new Date().toISOString();
+      const newCount = (orderToCobrar.urgencyCount || 0) + 1;
+      const urgencyLog = {
+        id: `urgency-${Date.now()}`,
+        date: now,
+        author: currentUser?.name || 'Solicitante',
+        type: 'urgency',
+        status: orderToCobrar.status,
+        note: `⚡ COBRANÇA DE AGILIDADE (${newCount}ª cobrança): [${reason}] ${note ? '- ' + note : ''}`
+      };
+
+      const updatedLogs = [urgencyLog, ...(orderToCobrar.timelineLogs || [])];
+      const payload = {
+        ...orderToCobrar,
+        urgencyCount: newCount,
+        isUrgentFollowUp: true,
+        lastCobradoAt: now,
+        lastCobradoBy: currentUser?.name || 'Solicitante',
+        timelineLogs: updatedLogs
+      };
+
+      await dbService.saveITServiceOrder(payload, `Cobrança de agilidade registrada: ${reason}`, true);
+      showAlert(`⚡ Cobrança de agilidade enviada para a equipe de T.I.!`, 'success');
+      setShowUrgencyModal(false);
+      setOrderToCobrar(null);
+      if (selectedOrder && selectedOrder.id === payload.id) {
+        setSelectedOrder(payload);
+      }
+      fetchOrders();
+    } catch (err) {
+      console.error('Erro ao enviar cobrança:', err);
+      showAlert('Erro ao registrar cobrança de agilidade.', 'danger');
+    }
+  };
+
+  // Quick Reply from Tech to Requester
+  const handleSendQuickReply = async (replyText) => {
+    if (!selectedOrder) return;
+    try {
+      const now = new Date().toISOString();
+      const replyLog = {
+        id: `reply-${Date.now()}`,
+        date: now,
+        author: currentUser?.name || 'Técnico T.I.',
+        status: selectedOrder.status,
+        note: `💬 Resposta da T.I.: ${replyText}`
+      };
+
+      const updatedLogs = [replyLog, ...(selectedOrder.timelineLogs || [])];
+      const payload = {
+        ...selectedOrder,
+        timelineLogs: updatedLogs,
+        lastUpdatedBy: currentUser?.name || 'Técnico T.I.'
+      };
+
+      await dbService.saveITServiceOrder(payload, replyText, true);
+      setSelectedOrder(payload);
+      showAlert('Resposta rápida enviada ao solicitante!', 'success');
+      fetchOrders();
+    } catch (err) {
+      console.error('Erro ao enviar resposta rápida:', err);
+      showAlert('Erro ao registrar resposta rápida.', 'danger');
+    }
+  };
+
   // Print IT Service Order
   const handlePrintOrder = (order) => {
     const printWindow = window.open('', '_blank');
@@ -672,9 +835,9 @@ export default function ITServiceOrdersTab({
           <div class="grid-item"><span class="label">Setor Afetado:</span> <span class="value">${order.sector}</span></div>
           <div class="grid-item"><span class="label">Unidade:</span> <span class="value">${order.unit || 'Betim'}</span></div>
           <div class="grid-item"><span class="label">Categoria:</span> <span class="value">${order.category} (${order.subcategory || 'Geral'})</span></div>
-          <div class="grid-item"><span class="label">Prioridade / SLA:</span> <span class="value">${order.priority} (${order.slaHours || 24}h)</span></div>
+          <div class="grid-item"><span class="label">Prioridade:</span> <span class="value">${order.priority} (${order.slaHours || 24}h)</span></div>
           <div class="grid-item"><span class="label">Abertura:</span> <span class="value">${new Date(order.openDate).toLocaleString('pt-BR')}</span></div>
-          <div class="grid-item"><span class="label">Prazo Limite (SLA):</span> <span class="value">${order.slaDeadline ? new Date(order.slaDeadline).toLocaleString('pt-BR') : 'N/A'}</span></div>
+          <div class="grid-item"><span class="label">Prazo Limite:</span> <span class="value">${order.slaDeadline ? new Date(order.slaDeadline).toLocaleString('pt-BR') : 'N/A'}</span></div>
         </div>
 
         <div class="section-title">2. Descrição da Ocorrência</div>
@@ -683,21 +846,21 @@ export default function ITServiceOrdersTab({
           <div>${order.description}</div>
         </div>
 
-        <div class="section-title">3. Parecer Técnico & Solução Aplicada</div>
+        <div class="section-title">3. Parecer Técnico & Solução</div>
         <div class="box">
-          <div style="margin-bottom: 6px;"><strong>Técnico / Analista:</strong> ${order.assignedTechnician || 'Em atribuição'}</div>
+          <div style="margin-bottom: 6px;"><strong>Técnico:</strong> ${order.assignedTechnician || 'Em atribuição'}</div>
           <div style="margin-bottom: 6px;"><strong>Diagnóstico Técnico:</strong> ${order.diagnostic || 'Em análise técnica.'}</div>
-          <div><strong>Solução Aplicada:</strong> ${order.solutionApplied || 'Pendente de encerramento.'}</div>
+          <div><strong>Solução:</strong> ${order.solutionApplied || 'Pendente de encerramento.'}</div>
           ${order.completionDate ? `<div style="margin-top: 6px; color: #166534;"><strong>Concluído em:</strong> ${new Date(order.completionDate).toLocaleString('pt-BR')}</div>` : ''}
         </div>
 
         <div class="signatures">
           <div>
-            <div class="sign-line">Suporte Técnico / Analista de T.I.</div>
+            <div class="sign-line">Suporte Técnico</div>
             <div style="font-size: 10px; color: #64748b;">Assinatura do Técnico</div>
           </div>
           <div>
-            <div class="sign-line">Solicitante / Responsável do Setor</div>
+            <div class="sign-line">Solicitante</div>
             <div style="font-size: 10px; color: #64748b;">Aceite e Homologação</div>
           </div>
         </div>
@@ -799,6 +962,16 @@ export default function ITServiceOrdersTab({
           >
             <Wrench size={13} /> Tarefas Internas ({slaMetrics.internalCount})
           </button>
+          <button
+            type="button"
+            onClick={() => setOriginFilter('urgent')}
+            style={{
+              ...styles.originPill,
+              ...(originFilter === 'urgent' ? styles.originPillActiveUrgent : {})
+            }}
+          >
+            <Zap size={13} color={originFilter === 'urgent' ? '#ffffff' : '#f59e0b'} /> Cobrados ({slaMetrics.urgentCount})
+          </button>
         </div>
       </div>
 
@@ -837,7 +1010,7 @@ export default function ITServiceOrdersTab({
             <AlertTriangle size={18} color="#ef4444" />
           </div>
           <div style={{ ...styles.kpiValue, color: '#ef4444' }}>{slaMetrics.criticalCount}</div>
-          <span style={styles.kpiSub}>{slaMetrics.overdueCount} Estourados / Atrasados</span>
+          <span style={styles.kpiSub}>{slaMetrics.overdueCount} Atrasados</span>
         </div>
 
         <div style={styles.kpiCard}>
@@ -1054,15 +1227,22 @@ export default function ITServiceOrdersTab({
                     <tr key={order.id} style={styles.tr}>
                       <td style={styles.tdBold}>
                         <div>{order.code}</div>
-                        {order.origin === 'internal' ? (
-                          <span style={styles.badgeInternalMini}>
-                            <Wrench size={9} /> Tarefa
-                          </span>
-                        ) : (
-                          <span style={styles.badgeTicketMini}>
-                            <Laptop size={9} /> Chamado
-                          </span>
-                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginTop: '2px' }}>
+                          {order.origin === 'internal' ? (
+                            <span style={styles.badgeInternalMini}>
+                              <Wrench size={9} /> Tarefa
+                            </span>
+                          ) : (
+                            <span style={styles.badgeTicketMini}>
+                              <Laptop size={9} /> Chamado
+                            </span>
+                          )}
+                          {(order.urgencyCount || 0) > 0 && (
+                            <span style={styles.badgeUrgentMini} title={`Cobrado ${order.urgencyCount}x por ${order.lastCobradoBy || 'solicitante'}`}>
+                              <Zap size={9} /> {order.urgencyCount}x
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td style={styles.td}>
                         <div style={{ fontWeight: 600, color: '#1e293b' }}>{order.title}</div>
@@ -1101,20 +1281,47 @@ export default function ITServiceOrdersTab({
                         </span>
                       </td>
                       <td style={{ ...styles.td, textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
                           <button 
                             onClick={() => handleOpenManage(order)}
-                            title={isTechOrAdmin ? "Atender" : "Detalhes"}
+                            title={isTechOrAdmin ? "Atender" : "Ver"}
                             style={styles.actionBtnPrimary}
                           >
-                            <Eye size={14} /> {isTechOrAdmin ? 'Atender' : 'Ver'}
+                            <Eye size={13} /> {isTechOrAdmin ? 'Atender' : 'Ver'}
                           </button>
+                          {!['Resolvida', 'Cancelada', 'Concluída'].includes(order.status) && (
+                            <button 
+                              onClick={() => handleOpenCobrar(order)}
+                              title="Cobrar agilidade da T.I."
+                              style={styles.actionBtnZap}
+                            >
+                              <Zap size={13} />
+                            </button>
+                          )}
+                          {canModifyOrder(order) && (
+                            <button 
+                              onClick={() => handleOpenEdit(order)}
+                              title="Editar chamado/tarefa"
+                              style={styles.actionBtnEdit}
+                            >
+                              <Edit size={13} />
+                            </button>
+                          )}
+                          {canModifyOrder(order) && (
+                            <button 
+                              onClick={() => handleOpenDelete(order)}
+                              title="Excluir chamado"
+                              style={styles.actionBtnDelete}
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
                           <button 
                             onClick={() => handlePrintOrder(order)}
                             title="Imprimir O.S."
                             style={styles.actionBtnSecondary}
                           >
-                            <Printer size={14} />
+                            <Printer size={13} />
                           </button>
                         </div>
                       </td>
@@ -1141,7 +1348,7 @@ export default function ITServiceOrdersTab({
               return (
                 <div key={order.id} style={styles.card}>
                   <div style={styles.cardTop}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                       <span style={styles.cardCode}>{order.code}</span>
                       {order.origin === 'internal' ? (
                         <span style={styles.badgeInternalMini}>
@@ -1150,6 +1357,11 @@ export default function ITServiceOrdersTab({
                       ) : (
                         <span style={styles.badgeTicketMini}>
                           <Laptop size={10} /> Chamado
+                        </span>
+                      )}
+                      {(order.urgencyCount || 0) > 0 && (
+                        <span style={styles.badgeUrgentMini} title={`Cobrado ${order.urgencyCount}x por ${order.lastCobradoBy || 'solicitante'}`}>
+                          <Zap size={9} /> Cobrado ({order.urgencyCount}x)
                         </span>
                       )}
                       <span style={{ ...styles.badge, backgroundColor: pStyle.bg, color: pStyle.text, borderColor: pStyle.border }}>
@@ -1175,12 +1387,27 @@ export default function ITServiceOrdersTab({
                     <span style={{ ...styles.badge, backgroundColor: sStyle.bg, color: sStyle.text, borderColor: sStyle.border }}>
                       {order.status}
                     </span>
-                    <div style={{ display: 'flex', gap: '6px' }}>
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      {!['Resolvida', 'Cancelada', 'Concluída'].includes(order.status) && (
+                        <button onClick={() => handleOpenCobrar(order)} style={styles.actionBtnZap} title="Cobrar agilidade da T.I.">
+                          <Zap size={13} />
+                        </button>
+                      )}
+                      {canModifyOrder(order) && (
+                        <button onClick={() => handleOpenEdit(order)} style={styles.actionBtnEdit} title="Editar">
+                          <Edit size={13} />
+                        </button>
+                      )}
+                      {canModifyOrder(order) && (
+                        <button onClick={() => handleOpenDelete(order)} style={styles.actionBtnDelete} title="Excluir">
+                          <Trash2 size={13} />
+                        </button>
+                      )}
                       <button onClick={() => handlePrintOrder(order)} style={styles.actionBtnSecondary} title="Imprimir">
-                        <Printer size={14} />
+                        <Printer size={13} />
                       </button>
                       <button onClick={() => handleOpenManage(order)} style={styles.actionBtnPrimary}>
-                        <Eye size={14} /> {isTechOrAdmin ? 'Atender' : 'Detalhes'}
+                        <Eye size={13} /> {isTechOrAdmin ? 'Atender' : 'Ver'}
                       </button>
                     </div>
                   </div>
@@ -1219,15 +1446,22 @@ export default function ITServiceOrdersTab({
                         <div key={order.id} style={styles.kanbanCard}>
                           {/* Card top */}
                           <div style={styles.kanbanCardTop}>
-                            {isInternal ? (
-                              <span style={styles.badgeInternalTag}>
-                                <Wrench size={10} /> Tarefa {order.taskType ? `• ${order.taskType}` : ''}
-                              </span>
-                            ) : (
-                              <span style={styles.badgeTicketTag}>
-                                <Laptop size={10} /> Chamado
-                              </span>
-                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                              {isInternal ? (
+                                <span style={styles.badgeInternalTag}>
+                                  <Wrench size={10} /> Tarefa {order.taskType ? `• ${order.taskType}` : ''}
+                                </span>
+                              ) : (
+                                <span style={styles.badgeTicketTag}>
+                                  <Laptop size={10} /> Chamado
+                                </span>
+                              )}
+                              {(order.urgencyCount || 0) > 0 && (
+                                <span style={styles.badgeUrgentMini} title={`Cobrado ${order.urgencyCount}x`}>
+                                  <Zap size={9} /> {order.urgencyCount}x
+                                </span>
+                              )}
+                            </div>
                             <span style={{ ...styles.badge, backgroundColor: pStyle.bg, color: pStyle.text, borderColor: pStyle.border, fontSize: '10px' }}>
                               {order.priority}
                             </span>
@@ -1250,7 +1484,7 @@ export default function ITServiceOrdersTab({
 
                           {/* Card Actions & Moves */}
                           <div style={styles.kanbanCardActions}>
-                            <div style={{ display: 'flex', gap: '4px' }}>
+                            <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
                               <button 
                                 type="button"
                                 onClick={() => handleOpenManage(order)}
@@ -1259,6 +1493,36 @@ export default function ITServiceOrdersTab({
                               >
                                 <Eye size={12} />
                               </button>
+                              {!['Resolvida', 'Cancelada', 'Concluída'].includes(order.status) && (
+                                <button 
+                                  type="button"
+                                  onClick={() => handleOpenCobrar(order)}
+                                  style={styles.actionBtnZap}
+                                  title="Cobrar agilidade da T.I."
+                                >
+                                  <Zap size={12} />
+                                </button>
+                              )}
+                              {canModifyOrder(order) && (
+                                <button 
+                                  type="button"
+                                  onClick={() => handleOpenEdit(order)}
+                                  style={styles.actionBtnEdit}
+                                  title="Editar"
+                                >
+                                  <Edit size={12} />
+                                </button>
+                              )}
+                              {canModifyOrder(order) && (
+                                <button 
+                                  type="button"
+                                  onClick={() => handleOpenDelete(order)}
+                                  style={styles.actionBtnDelete}
+                                  title="Excluir"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              )}
                               <button 
                                 type="button"
                                 onClick={() => handlePrintOrder(order)}
@@ -1421,7 +1685,7 @@ export default function ITServiceOrdersTab({
                   <label style={styles.label}>Título</label>
                   <input 
                     type="text" 
-                    placeholder="Ex: Impressora da recepção travou / Wi-Fi salão A"
+                    placeholder="Ex: Impressora travou ou sem conexão Wi-Fi"
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
                     required
@@ -1543,17 +1807,54 @@ export default function ITServiceOrdersTab({
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={styles.modalIconBox}><Laptop size={20} color="#4f46e5" /></div>
                 <div>
-                  <h2 style={styles.modalTitle}>Chamado {selectedOrder.code}</h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <h2 style={styles.modalTitle}>Chamado {selectedOrder.code}</h2>
+                    {(selectedOrder.urgencyCount || 0) > 0 && (
+                      <span style={styles.badgeUrgentMini}>
+                        <Zap size={10} /> Cobrança Ativa ({selectedOrder.urgencyCount}x)
+                      </span>
+                    )}
+                  </div>
                   <p style={styles.modalSubtitle}>{selectedOrder.title}</p>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                {!['Resolvida', 'Cancelada', 'Concluída'].includes(selectedOrder.status) && (
+                  <button onClick={() => handleOpenCobrar(selectedOrder)} style={styles.actionBtnZap} title="Cobrar agilidade da T.I.">
+                    <Zap size={14} /> Cobrar
+                  </button>
+                )}
+                {canModifyOrder(selectedOrder) && (
+                  <button onClick={() => handleOpenEdit(selectedOrder)} style={styles.actionBtnEdit} title="Editar chamado/tarefa">
+                    <Edit size={14} /> Editar
+                  </button>
+                )}
+                {canModifyOrder(selectedOrder) && (
+                  <button onClick={() => handleOpenDelete(selectedOrder)} style={styles.actionBtnDelete} title="Excluir chamado">
+                    <Trash2 size={14} /> Excluir
+                  </button>
+                )}
                 <button onClick={() => handlePrintOrder(selectedOrder)} style={styles.actionBtnSecondary} title="Imprimir">
-                  <Printer size={16} /> Imprimir
+                  <Printer size={14} /> Imprimir
                 </button>
                 <button onClick={() => setShowManageModal(false)} style={styles.closeBtn}><X size={18} /></button>
               </div>
             </div>
+
+            {/* Urgency Alert Banner if charged */}
+            {(selectedOrder.urgencyCount || 0) > 0 && (
+              <div style={styles.urgencyAlertBanner}>
+                <Zap size={20} color="#d97706" style={{ flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontWeight: 700, color: '#92400e', fontSize: '13px' }}>
+                    Cobrança de Agilidade Ativa ({selectedOrder.urgencyCount}ª solicitação de prioridade)
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#b45309', marginTop: '2px' }}>
+                    Cobrado por <strong>{selectedOrder.lastCobradoBy || 'Solicitante'}</strong> em {selectedOrder.lastCobradoAt ? new Date(selectedOrder.lastCobradoAt).toLocaleString('pt-BR') : 'recente'}.
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Quick Summary Info Box */}
             <div style={styles.orderSummaryBox}>
@@ -1666,9 +1967,40 @@ export default function ITServiceOrdersTab({
 
             {/* TIMELINE / MESSAGES SECTION */}
             <div style={styles.timelineSection}>
-              <h4 style={styles.timelineTitle}>
-                <MessageSquare size={16} /> Histórico & Interações
-              </h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h4 style={styles.timelineTitle}>
+                  <MessageSquare size={16} /> Histórico & Interações
+                </h4>
+                {!['Resolvida', 'Cancelada', 'Concluída'].includes(selectedOrder.status) && (
+                  <button 
+                    type="button" 
+                    onClick={() => handleOpenCobrar(selectedOrder)}
+                    style={styles.btnUrgencyLink}
+                    title="Cobrar agilidade da equipe de T.I."
+                  >
+                    <Zap size={13} /> Cobrar Agilidade
+                  </button>
+                )}
+              </div>
+
+              {/* Quick Tech Replies Chips (if Tech/Admin) */}
+              {isTechOrAdmin && !['Resolvida', 'Cancelada', 'Concluída'].includes(selectedOrder.status) && (
+                <div style={styles.quickRepliesContainer}>
+                  <span style={styles.quickReplyLabel}>Respostas Rápidas:</span>
+                  <button type="button" onClick={() => handleSendQuickReply('Técnico a caminho do setor.')} style={styles.quickReplyChip}>
+                    🚶 Técnico a caminho
+                  </button>
+                  <button type="button" onClick={() => handleSendQuickReply('Em análise no laboratório de T.I.')} style={styles.quickReplyChip}>
+                    🔬 No laboratório
+                  </button>
+                  <button type="button" onClick={() => handleSendQuickReply('Peça de reposição solicitada ao compras.')} style={styles.quickReplyChip}>
+                    📦 Peça solicitada
+                  </button>
+                  <button type="button" onClick={() => handleSendQuickReply('Aguardando liberação de acesso/rede.')} style={styles.quickReplyChip}>
+                    🔐 Aguardando acesso
+                  </button>
+                </div>
+              )}
 
               <div style={styles.commentInputRow}>
                 <input 
@@ -1685,22 +2017,98 @@ export default function ITServiceOrdersTab({
               </div>
 
               <div style={styles.timelineList}>
-                {(selectedOrder.timelineLogs || []).map((log, idx) => (
-                  <div key={log.id || idx} style={styles.timelineItem}>
-                    <div style={styles.timelineBullet}></div>
-                    <div style={styles.timelineBody}>
-                      <div style={styles.timelineHeader}>
-                        <span style={styles.timelineAuthor}>{log.author}</span>
-                        <span style={styles.timelineDate}>{new Date(log.date).toLocaleString('pt-BR')}</span>
-                        {log.status && <span style={styles.timelineStatus}>{log.status}</span>}
+                {(selectedOrder.timelineLogs || []).map((log, idx) => {
+                  const isUrgency = log.type === 'urgency' || (log.note && log.note.includes('COBRANÇA DE AGILIDADE'));
+                  return (
+                    <div 
+                      key={log.id || idx} 
+                      style={{
+                        ...styles.timelineItem,
+                        ...(isUrgency ? styles.timelineItemUrgent : {})
+                      }}
+                    >
+                      <div style={{ ...styles.timelineBullet, ...(isUrgency ? styles.timelineBulletUrgent : {}) }}>
+                        {isUrgency ? <Zap size={10} color="#ffffff" /> : null}
                       </div>
-                      <div style={styles.timelineNote}>{log.note}</div>
+                      <div style={styles.timelineBody}>
+                        <div style={styles.timelineHeader}>
+                          <span style={{ ...styles.timelineAuthor, ...(isUrgency ? { color: '#92400e', fontWeight: 700 } : {}) }}>
+                            {log.author}
+                          </span>
+                          <span style={styles.timelineDate}>{new Date(log.date).toLocaleString('pt-BR')}</span>
+                          {log.status && <span style={styles.timelineStatus}>{log.status}</span>}
+                          {isUrgency && <span style={styles.timelineUrgentTag}>⚡ Cobrança</span>}
+                        </div>
+                        <div style={{ ...styles.timelineNote, ...(isUrgency ? { color: '#78350f', fontWeight: 500 } : {}) }}>
+                          {log.note}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT IT SERVICE ORDER / TASK */}
+      <ITEditModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setOrderToEdit(null);
+        }}
+        order={orderToEdit}
+        onSave={handleSaveEdit}
+        currentUser={currentUser}
+      />
+
+      {/* MODAL: COBRANÇA DE AGILIDADE */}
+      <ITUrgencyModal
+        isOpen={showUrgencyModal}
+        onClose={() => {
+          setShowUrgencyModal(false);
+          setOrderToCobrar(null);
+        }}
+        order={orderToCobrar}
+        onConfirm={handleConfirmCobrança}
+        currentUser={currentUser}
+      />
+
+      {/* MODAL: CONFIRM DELETE */}
+      {showDeleteModal && orderToDelete && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalContent, maxWidth: '440px', textAlign: 'center' }}>
+            <div style={styles.deleteModalIcon}>
+              <Trash2 size={24} />
+            </div>
+            <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>
+              Excluir Demanda {orderToDelete.code}?
+            </h3>
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px', lineHeight: 1.5 }}>
+              Esta ação é <strong>irreversível</strong> e removerá permanentemente o chamado <strong>"{orderToDelete.title}"</strong> e todo o seu histórico de interações.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setOrderToDelete(null);
+                }} 
+                style={styles.btnSecondary}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button" 
+                onClick={handleConfirmDelete} 
+                style={styles.btnDanger}
+              >
+                <Trash2 size={15} /> Confirmar Exclusão
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -2709,5 +3117,178 @@ const styles = {
   timelineNote: {
     color: '#475569',
     lineHeight: 1.4
+  },
+  originPillActiveUrgent: {
+    background: '#d97706',
+    color: '#ffffff'
+  },
+  badgeUrgentMini: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
+    background: '#fffbeb',
+    color: '#b45309',
+    border: '1px solid #fde68a',
+    borderRadius: '4px',
+    padding: '1px 5px',
+    fontSize: '10px',
+    fontWeight: 700
+  },
+  actionBtnZap: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '3px',
+    background: '#fffbeb',
+    color: '#b45309',
+    border: '1px solid #fde68a',
+    padding: '4px 7px',
+    borderRadius: '4px',
+    fontSize: '11px',
+    fontWeight: 700,
+    cursor: 'pointer'
+  },
+  actionBtnEdit: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '3px',
+    background: '#f8fafc',
+    color: '#0284c7',
+    border: '1px solid #bae6fd',
+    padding: '4px 7px',
+    borderRadius: '4px',
+    fontSize: '11px',
+    fontWeight: 600,
+    cursor: 'pointer'
+  },
+  actionBtnDelete: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '3px',
+    background: '#fef2f2',
+    color: '#dc2626',
+    border: '1px solid #fecaca',
+    padding: '4px 7px',
+    borderRadius: '4px',
+    fontSize: '11px',
+    fontWeight: 600,
+    cursor: 'pointer'
+  },
+  btnCobrarHeader: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    background: '#fffbeb',
+    color: '#b45309',
+    border: '1px solid #fde68a',
+    padding: '4px 9px',
+    borderRadius: '4px',
+    fontSize: '12px',
+    fontWeight: 700,
+    cursor: 'pointer'
+  },
+  urgencyAlertBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    background: '#fffbeb',
+    border: '1px solid #fde68a',
+    borderRadius: '8px',
+    padding: '10px 14px',
+    marginBottom: '12px'
+  },
+  btnUrgencyLink: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    background: '#fffbeb',
+    color: '#b45309',
+    border: '1px solid #fde68a',
+    padding: '3px 8px',
+    borderRadius: '5px',
+    fontSize: '11px',
+    fontWeight: 700,
+    cursor: 'pointer'
+  },
+  quickRepliesContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    flexWrap: 'wrap',
+    marginBottom: '10px',
+    background: '#f8fafc',
+    padding: '6px 10px',
+    borderRadius: '6px',
+    border: '1px solid #e2e8f0'
+  },
+  quickReplyLabel: {
+    fontSize: '10px',
+    fontWeight: 700,
+    color: '#64748b',
+    textTransform: 'uppercase'
+  },
+  quickReplyChip: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    background: '#ffffff',
+    border: '1px solid #cbd5e1',
+    color: '#334155',
+    padding: '2px 8px',
+    borderRadius: '12px',
+    fontSize: '10px',
+    fontWeight: 600,
+    cursor: 'pointer'
+  },
+  timelineItemUrgent: {
+    background: '#fffbeb',
+    border: '1px solid #fde68a',
+    borderRadius: '6px',
+    padding: '6px 8px'
+  },
+  timelineBulletUrgent: {
+    width: '18px',
+    height: '18px',
+    borderRadius: '50%',
+    background: '#f59e0b',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: '2px'
+  },
+  timelineUrgentTag: {
+    background: '#fef3c7',
+    color: '#b45309',
+    fontSize: '9px',
+    fontWeight: 800,
+    padding: '1px 5px',
+    borderRadius: '3px',
+    border: '1px solid #fde68a'
+  },
+  deleteModalIcon: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '12px',
+    background: '#fee2e2',
+    color: '#dc2626',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 12px'
+  },
+  btnDanger: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: '#dc2626',
+    color: '#ffffff',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: 700,
+    cursor: 'pointer'
   }
 };
