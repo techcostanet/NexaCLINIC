@@ -9,22 +9,41 @@ import {
   RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Stethoscope,
   Activity, FileCheck, Clock
 } from 'lucide-react';
+import { getTrainings, getTrainingSubmissions } from '../../../services/firebase/hrService';
 
-const DEFAULT_DASHBOARD_LAYOUT = [
-  { id: 'total_employees', title: 'Total de Funcionários', size: 'small' },
-  { id: 'exams_kpi', title: 'Exames Ocupacionais (ASO)', size: 'small' },
-  { id: 'turnover', title: 'Turnover (Mensal)', size: 'small' },
-  { id: 'absenteeism', title: 'Absenteísmo (Mensal)', size: 'small' },
-  { id: 'warnings_kpi', title: 'Advertências Registradas', size: 'small' },
-  { id: 'experience_kpi', title: 'Em Experiência', size: 'small' },
-  { id: 'exams_alerts_list', title: 'Alertas de Exames Periódicos (ASO)', size: 'medium' },
-  { id: 'presenca_premiada', title: 'Presença Premiada', size: 'medium' },
-  { id: 'birthdays', title: 'Aniversariantes do Mês', size: 'medium' },
-  { id: 'expiring_contracts', title: 'Contratos em Experiência', size: 'medium' },
-  { id: 'vaccines_list', title: 'Próximas Vacinações Vencendo', size: 'medium' },
-  { id: 'warnings_list', title: 'Últimas Advertências', size: 'medium' },
-  { id: 'absences_list', title: 'Últimas Ausências / Faltas', size: 'medium' },
+export const DEFAULT_DASHBOARD_LAYOUT = [
+  { id: 'total_employees', title: 'Colaboradores', size: 'small' },
+  { id: 'exams_kpi', title: 'Exames', size: 'small' },
+  { id: 'turnover', title: 'Turnover', size: 'small' },
+  { id: 'absenteeism', title: 'Absenteísmo', size: 'small' },
+  { id: 'warnings_kpi', title: 'Advertências', size: 'small' },
+  { id: 'experience_kpi', title: 'Experiência', size: 'small' },
+  { id: 'trainings_kpi', title: 'Treinamentos', size: 'small' },
+  { id: 'birthdays', title: 'Aniversariantes', size: 'medium' },
+  { id: 'jubilee', title: 'Jubileu', size: 'medium' },
+  { id: 'exams_alerts_list', title: 'Exames ASO', size: 'medium' },
+  { id: 'presenca_premiada', title: 'Assiduidade', size: 'medium' },
+  { id: 'leaves_vacations', title: 'Afastamentos', size: 'medium' },
+  { id: 'cnh_alerts', title: 'Habilitações', size: 'medium' },
+  { id: 'contract_types', title: 'Vínculos', size: 'medium' },
+  { id: 'expiring_contracts', title: 'Contratos', size: 'medium' },
+  { id: 'vaccines_list', title: 'Vacinações', size: 'medium' },
+  { id: 'warnings_list', title: 'Ocorrências', size: 'medium' },
+  { id: 'absences_list', title: 'Ausências', size: 'medium' },
 ];
+
+export const mergeDashboardWithDefaults = (savedLayout) => {
+  if (!Array.isArray(savedLayout) || savedLayout.length === 0) {
+    return DEFAULT_DASHBOARD_LAYOUT;
+  }
+  const existingIds = new Set(savedLayout.map(c => c.id));
+  const missing = DEFAULT_DASHBOARD_LAYOUT.filter(c => !existingIds.has(c.id));
+  const updated = savedLayout.map(c => {
+    const def = DEFAULT_DASHBOARD_LAYOUT.find(d => d.id === c.id);
+    return def ? { ...c, title: def.title } : c;
+  });
+  return [...updated, ...missing];
+};
 
 export function useHRLogic(currentUser) {
   const { activeUnitId, filterByActiveUnit, matchItemUnit } = useUnit();
@@ -36,6 +55,8 @@ export function useHRLogic(currentUser) {
   const [sectors, setSectors] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [occupationalExams, setOccupationalExams] = useState([]);
+  const [trainingsList, setTrainingsList] = useState([]);
+  const [trainingSubmissionsList, setTrainingSubmissionsList] = useState([]);
   
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -189,14 +210,14 @@ export function useHRLogic(currentUser) {
     // Load saved dashboard layout preferences for the user
     const userKey = currentUser?.uid || currentUser?.email || 'default';
     if (currentUser?.hrDashboardLayout && Array.isArray(currentUser.hrDashboardLayout)) {
-      setDashboardLayout(currentUser.hrDashboardLayout);
+      setDashboardLayout(mergeDashboardWithDefaults(currentUser.hrDashboardLayout));
     } else {
       const saved = localStorage.getItem(`hr_dashboard_layout_${userKey}`);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setDashboardLayout(parsed);
+            setDashboardLayout(mergeDashboardWithDefaults(parsed));
           }
         } catch (err) {
           console.error('Error loading dashboard layout preference:', err);
@@ -208,13 +229,15 @@ export function useHRLogic(currentUser) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [empList, userList, secList, logList, vtList, examsList] = await Promise.all([
+      const [empList, userList, secList, logList, vtList, examsList, trnList, subList] = await Promise.all([
         dbService.getEmployees(),
         dbService.getUsers(),
         dbService.getSectors(),
         dbService.getAuditLogs(),
         dbService.getTransportVouchers(),
-        dbService.getOccupationalExams ? dbService.getOccupationalExams() : []
+        dbService.getOccupationalExams ? dbService.getOccupationalExams() : [],
+        getTrainings().catch(() => []),
+        getTrainingSubmissions().catch(() => [])
       ]);
       setEmployees(empList);
       setUsersList(userList);
@@ -222,6 +245,8 @@ export function useHRLogic(currentUser) {
       setAuditLogs(logList);
       setTransportVouchers(vtList);
       setOccupationalExams(examsList || []);
+      setTrainingsList(trnList || []);
+      setTrainingSubmissionsList(subList || []);
 
       if (secList.length > 0) {
         setEmpForm(f => ({ ...f, sectorId: secList[0].id }));
@@ -1716,7 +1741,10 @@ export function useHRLogic(currentUser) {
   };
 
   const getBirthdaysThisMonth = () => {
-    const currentMonth = new Date().getMonth();
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const todayDay = today.getDate();
+
     return currentEmployees.filter(e => {
       if (e.status === 'Inativo') return false;
       if (!e.birthDate) return false;
@@ -1727,18 +1755,192 @@ export function useHRLogic(currentUser) {
     }).map(e => {
       const parts = e.birthDate.split('-');
       const day = parseInt(parts[2], 10);
+      const isToday = day === todayDay;
       return {
         id: e.id,
         name: e.name,
         photo: e.photo,
         day,
         role: e.role,
-        sectorId: e.sectorId
+        sectorId: e.sectorId,
+        phone: e.phone,
+        email: e.email,
+        birthDate: e.birthDate,
+        isToday
       };
-    }).sort((a, b) => a.day - b.day);
+    }).sort((a, b) => {
+      if (a.isToday && !b.isToday) return -1;
+      if (!a.isToday && b.isToday) return 1;
+      return a.day - b.day;
+    });
+  };
+
+  const getCompanyAnniversariesThisMonth = () => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const todayDay = today.getDate();
+
+    return currentEmployees.filter(e => {
+      if (e.status === 'Inativo') return false;
+      if (!e.admissionDate) return false;
+      const parts = e.admissionDate.split('-');
+      if (parts.length < 2) return false;
+      const admYear = parseInt(parts[0], 10);
+      const admMonth = parseInt(parts[1], 10) - 1;
+      const yearsCompleted = currentYear - admYear;
+      return admMonth === currentMonth && yearsCompleted >= 1;
+    }).map(e => {
+      const parts = e.admissionDate.split('-');
+      const admYear = parseInt(parts[0], 10);
+      const day = parseInt(parts[2], 10) || 1;
+      const years = currentYear - admYear;
+      const isToday = day === todayDay;
+      return {
+        id: e.id,
+        name: e.name,
+        photo: e.photo,
+        day,
+        admissionDate: e.admissionDate,
+        years,
+        role: e.role,
+        sectorId: e.sectorId,
+        phone: e.phone,
+        isToday
+      };
+    }).sort((a, b) => {
+      if (a.isToday && !b.isToday) return -1;
+      if (!a.isToday && b.isToday) return 1;
+      return a.day - b.day;
+    });
+  };
+
+  const getActiveLeavesAndVacations = () => {
+    return currentEmployees.filter(e => {
+      if (e.status === 'Inativo') return false;
+      if (e.status === 'Férias' || e.status === 'Afastado') return true;
+      if (Array.isArray(e.absences) && e.absences.length > 0) {
+        const hasRecentActive = e.absences.some(abs => {
+          if (!abs.date) return false;
+          const absDate = new Date(abs.date);
+          const diffDays = Math.round((new Date() - absDate) / (1000 * 60 * 60 * 24));
+          const duration = parseInt(abs.days, 10) || 1;
+          return diffDays >= 0 && diffDays <= duration;
+        });
+        if (hasRecentActive) return true;
+      }
+      return false;
+    }).map(e => {
+      const activeAbsence = Array.isArray(e.absences) ? e.absences[0] : null;
+      return {
+        id: e.id,
+        name: e.name,
+        photo: e.photo,
+        status: e.status || (activeAbsence ? activeAbsence.type : 'Afastado'),
+        role: e.role,
+        sectorId: e.sectorId,
+        phone: e.phone,
+        detail: activeAbsence ? `${activeAbsence.type || 'Licença'} (${activeAbsence.days || 1}d)` : (e.status || 'Afastado')
+      };
+    });
+  };
+
+  const getCnhAlerts = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return currentEmployees.filter(e => {
+      if (e.status === 'Inativo') return false;
+      return Boolean(e.cnhNumber && e.cnhExpiry);
+    }).map(e => {
+      const expDate = new Date(e.cnhExpiry);
+      expDate.setHours(0, 0, 0, 0);
+      const diffTime = expDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      let statusColor = '#10b981';
+      let statusBg = '#d1fae5';
+      let statusLabel = 'Em dia';
+
+      if (diffDays < 0) {
+        statusColor = '#ef4444';
+        statusBg = '#fee2e2';
+        statusLabel = `Vencida (${Math.abs(diffDays)}d)`;
+      } else if (diffDays <= 30) {
+        statusColor = '#dc2626';
+        statusBg = '#fecaca';
+        statusLabel = `Vence em ${diffDays}d`;
+      } else if (diffDays <= 60) {
+        statusColor = '#ea580c';
+        statusBg = '#ffedd5';
+        statusLabel = `Vence em ${diffDays}d`;
+      }
+
+      return {
+        id: e.id,
+        name: e.name,
+        photo: e.photo,
+        role: e.role,
+        cnhNumber: e.cnhNumber,
+        cnhExpiry: e.cnhExpiry,
+        diffDays,
+        statusColor,
+        statusBg,
+        statusLabel,
+        isAlert: diffDays <= 60
+      };
+    }).sort((a, b) => a.diffDays - b.diffDays);
+  };
+
+  const getContractTypeBreakdown = () => {
+    const activeEmps = currentEmployees.filter(e => e.status !== 'Inativo');
+    const total = activeEmps.length;
+    let clt = 0;
+    let pj = 0;
+    let estagio = 0;
+    let outros = 0;
+
+    activeEmps.forEach(e => {
+      const type = (e.contractType || '').toUpperCase().trim();
+      if (type === 'CLT') clt++;
+      else if (type === 'PJ') pj++;
+      else if (type.includes('ESTÁGIO') || type.includes('ESTAGIO')) estagio++;
+      else outros++;
+    });
+
+    return {
+      total,
+      clt: { count: clt, percent: total > 0 ? Math.round((clt / total) * 100) : 0 },
+      pj: { count: pj, percent: total > 0 ? Math.round((pj / total) * 100) : 0 },
+      estagio: { count: estagio, percent: total > 0 ? Math.round((estagio / total) * 100) : 0 },
+      outros: { count: outros, percent: total > 0 ? Math.round((outros / total) * 100) : 0 }
+    };
+  };
+
+  const getTrainingMetrics = () => {
+    const totalTrainings = trainingsList.length;
+    const activeSubmissions = trainingSubmissionsList.length;
+    const activeEmps = currentEmployees.filter(e => e.status !== 'Inativo');
+    const certifiedEmpIds = new Set(trainingSubmissionsList.map(s => s.employeeId || s.cpf));
+    const certifiedCount = activeEmps.filter(e => certifiedEmpIds.has(e.id) || certifiedEmpIds.has(e.cpf)).length;
+    const complianceRate = activeEmps.length > 0 ? Math.round((certifiedCount / activeEmps.length) * 100) : 0;
+    return {
+      totalTrainings,
+      activeSubmissions,
+      certifiedCount,
+      totalActiveEmps: activeEmps.length,
+      complianceRate
+    };
   };
 
   const birthdaysThisMonth = getBirthdaysThisMonth();
+  const todaysBirthdays = birthdaysThisMonth.filter(b => b.isToday);
+  const jubileeEmployees = getCompanyAnniversariesThisMonth();
+  const leavesAndVacations = getActiveLeavesAndVacations();
+  const cnhAlertEmployees = getCnhAlerts();
+  const contractTypeBreakdown = getContractTypeBreakdown();
+  const trainingMetrics = getTrainingMetrics();
+
   const { turnover, absenteeism, recentAbsences } = calculateCurrentMonthMetrics();
   const filteredEmployees = getFilteredEmployees();
   const recentWarnings = getRecentWarnings();
@@ -1879,6 +2081,14 @@ export function useHRLogic(currentUser) {
     calculateCurrentMonthMetrics,
     getBirthdaysThisMonth,
     birthdaysThisMonth,
+    todaysBirthdays,
+    jubileeEmployees,
+    leavesAndVacations,
+    cnhAlertEmployees,
+    contractTypeBreakdown,
+    trainingMetrics,
+    DEFAULT_DASHBOARD_LAYOUT,
+    mergeDashboardWithDefaults,
     filteredEmployees,
     recentWarnings,
     upcomingVaccines,

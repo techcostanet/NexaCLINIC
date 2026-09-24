@@ -1,3 +1,22 @@
+## [v4.9.96] - 24 de Setembro, 2026
+### Nex-Ai CLINIC (.HR) — Mural de Aniversariantes, Felicitações via WhatsApp e Novos Cards Estratégicos no RH
+- **Mural de Aniversariantes Completo:**
+  - Removido o limite fixo de 5 registros (`.slice(0, 5)`); todos os aniversariantes do mês agora são exibidos em contêiner com rolagem suave.
+  - Destaque comemorativo para quem faz aniversário no dia com tag dourada (`🎉 Hoje!`) e posicionamento prioritário no topo da lista.
+  - Exibição de cargo completo em subtítulo e telefone/contato direto.
+  - Botão rápido de WhatsApp para envio de felicitações personalizadas com mensagem pronta em 1 clique.
+  - Novo modal **Mural de Aniversariantes** com filtros (Todos, Hoje, Próximos, Anteriores, por Setor), busca em tempo real, métricas gerais, exportação para CSV e modo de impressão em folha A4 otimizada para quadros de aviso institucionais.
+  - Banner festivo dinâmico no topo do painel quando houver aniversariantes no dia com atalho direto ao Mural.
+- **Novos Cards Estratégicos no Dashboard RH:**
+  - **Jubileu de Empresa:** Aniversários de contratação e tempo de casa no mês vigente para homenagens de fidelidade funcional.
+  - **Afastamentos & Férias:** Monitoramento em tempo real de licenças médicas, afastamentos e férias ativas com identificação de setor e status.
+  - **Habilitações (CNH Condutores):** Alerta preventivo de vencimento de CNH de motoristas e condutores de ambulância para conformidade de trânsito.
+  - **Vínculos Contratuais:** Distribuição percentual e absoluta dos contratos (CLT, PJ, Estágio, Outros) com barra visual proporcional.
+  - **Treinamentos Ocupacionais (KPI):** Taxa de conformidade, total de participações e índice de eficácia de capacitações (NR-32 e ANVISA RDC 63/2011).
+- **Boy Scout Rule & Padrão de Rótulos de 1 Termo Único:**
+  - Removidos limites estáticos de 4 registros em todos os cards de listas do painel (`Advertências`, `Absenteísmo`, `Vacinas`, `Contratos`).
+  - Higienização de rótulos duplos e redundantes para conformidade estrita com o padrão de interface de termo único.
+
 ## [v4.9.94] - 22 de Setembro, 2026
 ### Nex-Ai CLINIC (.ASSIST) — Otimização do Modal de Agendamento Cirúrgico Vascular
 - **Remoção dos Chips Rápidos de Procedimentos:**

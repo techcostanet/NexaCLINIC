@@ -6,6 +6,23 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.96',
+      date: '24/09/2026',
+      title: 'Nex-Ai CLINIC — Mural de Aniversariantes, Felicitações via WhatsApp e Novos Cards Estratégicos no RH (.HR)',
+      description: 'Reestruturação completa dos cards do módulo de Recursos Humanos com remoção de limites estáticos: novo Mural de Aniversariantes com visualização ilimitada por rolagem suave, destaque de aniversariantes do dia ("Hoje!"), botão de felicitação rápida no WhatsApp, exportação e impressão em formato A4 para murais físicos. Criação de 5 novos cards analíticos estratégicos (Jubileu de Empresa, Afastamentos & Férias ativas, Alerta de Habilitações CNH de condutores, Distribuição de Vínculos Contratuais e KPI de Treinamentos NRs), além da higienização ativa de rótulos concisos de termo único.',
+      changes: [
+        { type: 'Mural de Aniversariantes', text: 'Remoção do truncamento de 5 colaboradores com lista de rolagem fluida, destaque para quem faz aniversário no dia ("Hoje!"), modal com filtros por período e setor, exportação em CSV/PDF e impressão de cartaz A4 para quadro de avisos.' },
+        { type: 'Felicitações WhatsApp', text: 'Botão de disparo rápido para envio de mensagem festiva e personalizada via WhatsApp web/app para o colaborador aniversariante.' },
+        { type: 'Topo Comemorativo', text: 'Banner festivo no topo do painel sempre que houver aniversariantes na data de hoje, com atalho direto para o Mural.' },
+        { type: 'Card Jubileu de Empresa', text: 'Novo indicador de aniversários de contratação no mês com cálculo de tempo de casa para reconhecimento funcional e homenagens de fidelidade.' },
+        { type: 'Card Afastamentos & Férias', text: 'Monitoramento em tempo real de licenças médicas, maternidade e férias ativas com identificação de setor e status.' },
+        { type: 'Card Habilitações (CNH)', text: 'Controle preventivo das carteiras de habilitação de condutores de ambulância e veículos com alertas de vencimento.' },
+        { type: 'Card Vínculos Contratuais', text: 'Distribuição percentual e absoluta entre colaboradores CLT, PJ, Estágio e Outros com barra visual proporcional.' },
+        { type: 'Card Treinamentos (KPI)', text: 'Indicadores de conformidade em treinamentos regulamentares (NR-32, ANVISA RDC 63/2011), eficácia média e total de participações.' },
+        { type: 'Boy Scout Rule (Rótulos)', text: 'Remoção de truncamentos de 4 itens em advertências, vacinas e contratos de experiência, com padronização rigorosa de rótulos diretos de termo único.' }
+      ]
+    },
+    {
       version: 'v4.9.88',
       date: '21/09/2026',
       title: 'Nex-Ai CLINIC — Correção de Permissão e Persistência do Checklist da Copa no SESMT (.SESMT)',

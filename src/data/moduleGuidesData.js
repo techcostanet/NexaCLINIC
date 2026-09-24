@@ -154,6 +154,18 @@ export const MODULE_GUIDES = {
     color: '#ec4899',
     recursos: [
       {
+        title: 'Mural de Aniversariantes & Felicitações WhatsApp',
+        desc: 'Card sem limite fixo com rolagem suave, destaque para aniversariantes do dia ("Hoje!"), botão de envio de parabéns direto no WhatsApp e modal "Mural de Aniversariantes" com filtros, exportação e impressão de cartaz A4 para murais físicos.'
+      },
+      {
+        title: 'Novos Indicadores Estratégicos no Dashboard RH',
+        desc: 'Cards dedicados de Jubileu (aniversário de empresa/tempo de casa), Afastamentos & Férias ativas, Habilitações CNH de condutores/ambulâncias, Vínculos contratuais (CLT/PJ/Estágio) e KPI de Conformidade de Treinamentos.'
+      },
+      {
+        title: 'Listas Dinâmicas Sem Truncamento',
+        desc: 'Remoção de limites estáticos de 4 ou 5 registros em todos os cards do dashboard (Advertências, Absenteísmo, Vacinas, Contratos de Experiência e ASO) com contêineres roláveis e rótulos concisos.'
+      },
+      {
         title: 'Central de 15 Relatórios Estratégicos',
         desc: 'Relatórios completos em PDF e Excel (Cadastro Geral, VT, Presença Premiada, Aniversariantes, Advertências, Absenteísmo, Turnover, Experiência, Vacinas, Dependentes, Folha Sintética, Dados Bancários/PIX, Documentos/CNH, Efetivo e Auditoria LGPD).'
       },
@@ -215,6 +227,26 @@ export const MODULE_GUIDES = {
       }
     ],
     tutorial: [
+      {
+        title: 'Como Utilizar o Mural de Aniversariantes & Felicitar via WhatsApp',
+        steps: [
+          'No card "Aniversariantes" do painel de controle, visualize os aniversariantes do mês com rolagem suave (sem limite de 5).',
+          'Colaboradores que fazem aniversário hoje ganham destaque dourado ("🎉 Hoje!").',
+          'Clique no botão verde de WhatsApp ao lado do nome para enviar uma mensagem carinhosa de parabéns personalizada em 1 clique.',
+          'Clique no botão "Mural" para abrir o Mural de Aniversariantes com filtros por data e setor.',
+          'No Mural, utilize "Imprimir Mural" para gerar uma folha A4 formatada para quadro de avisos ou "Exportar" para planilha/PDF.'
+        ]
+      },
+      {
+        title: 'Como Acompanhar os Novos Cards Estratégicos (Jubileu, Afastamentos, CNH e Vínculos)',
+        steps: [
+          'No card "Jubileu de Empresa", identifique os funcionários que completam anos de casa no mês vigente para homenagens de tempo de serviço.',
+          'No card "Afastamentos", monitore licenças médicas, maternidade e férias em andamento.',
+          'No card "Habilitações", acompanhe a validade da CNH dos motoristas e condutores de ambulância para evitar penalidades e paralisações.',
+          'No card "Vínculos", visualize a proporção entre contratos CLT, PJ e Estágio.',
+          'Clique sobre o nome de qualquer colaborador listado nos cards para abrir diretamente sua ficha cadastral.'
+        ]
+      },
       {
         title: 'Como Lançar e Renovar Exames Ocupacionais (ASO)',
         steps: [
@@ -348,8 +380,12 @@ export const MODULE_GUIDES = {
         resposta: 'O modo padrão é a "Visualização Compacta", focada em velocidade e alta densidade de registros na tela.'
       },
       {
-        pergunta: 'Onde encontro a lista de aniversariantes e advertências?',
-        resposta: 'Todos os relatórios operacionais e analíticos agora estão centralizados no botão "Relatórios" no topo da navbar, com opções completas de PDF e Excel.'
+        pergunta: 'Quantos aniversariantes aparecem no card do Dashboard?',
+        resposta: 'Todos os aniversariantes do mês! O card possui rolagem vertical suave sem limite de 5 pessoas, destacando no topo os aniversariantes do dia ("Hoje!") com botão rápido de felicitação via WhatsApp. Além disso, ao clicar em "Mural", abre-se a visão ampliada com busca, filtros e impressão em formato A4.'
+      },
+      {
+        pergunta: 'Como imprimir a lista de aniversariantes para o mural físico da clínica?',
+        resposta: 'No card de Aniversariantes do painel ou no topo comemorativo, clique no botão "Mural". Em seguida, clique em "Imprimir Mural". O sistema abrirá a folha oficial formatada para papel A4 com cabeçalho institucional, pronta para afixação.'
       },
       {
         pergunta: 'Como funciona a elegibilidade da Presença Premiada?',

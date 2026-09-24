@@ -7,27 +7,12 @@ import {
   Gift, Bus, ArrowUp, ArrowDown, ArrowUpDown, Move, Settings, Save, 
   RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Trophy, Printer, Clock,
   AlignJustify, Table, LayoutGrid, Phone, Mail, ExternalLink, Stethoscope, Activity, FileCheck,
-  GraduationCap
+  GraduationCap, Car, Sparkles, MessageCircle
 } from 'lucide-react';
 
-const DEFAULT_DASHBOARD_LAYOUT = [
-  { id: 'total_employees', title: 'Total de Funcionários', size: 'small' },
-  { id: 'turnover', title: 'Turnover (Mensal)', size: 'small' },
-  { id: 'absenteeism', title: 'Absenteísmo (Mensal)', size: 'small' },
-  { id: 'exams_kpi', title: 'Exames Ocupacionais (ASO)', size: 'small' },
-  { id: 'warnings_kpi', title: 'Advertências Registradas', size: 'small' },
-  { id: 'experience_kpi', title: 'Em Experiência', size: 'small' },
-  { id: 'exams_alerts_list', title: 'Alertas de Exames Periódicos (ASO)', size: 'medium' },
-  { id: 'presenca_premiada', title: 'Presença Premiada', size: 'medium' },
-  { id: 'birthdays', title: 'Aniversariantes do Mês', size: 'medium' },
-  { id: 'expiring_contracts', title: 'Contratos em Experiência', size: 'medium' },
-  { id: 'vaccines_list', title: 'Próximas Vacinações Vencendo', size: 'medium' },
-  { id: 'warnings_list', title: 'Últimas Advertências', size: 'medium' },
-  { id: 'absences_list', title: 'Últimas Ausências / Faltas', size: 'medium' },
-];
-
-import { useHRLogic } from './HR/hooks/useHRLogic';
+import { useHRLogic, DEFAULT_DASHBOARD_LAYOUT } from './HR/hooks/useHRLogic';
 import AwardReportModal from './HR/AwardReportModal';
+import BirthdayMuralModal from './HR/BirthdayMuralModal';
 import HRReportsModal from './HRReportsModal';
 import TrainingsTab from './HR/TrainingsTab';
 import { STANDARD_ROLES, STANDARD_SECTORS, normalizeSingleWord, normalizeSectorName } from '../data/hrConstants';
@@ -190,9 +175,14 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
     isEmployeeInProbation,
     getExpiringContracts,
     getPresencaPremiadaData,
-    calculateCurrentMonthMetrics,
     getBirthdaysThisMonth,
     birthdaysThisMonth,
+    todaysBirthdays,
+    jubileeEmployees,
+    leavesAndVacations,
+    cnhAlertEmployees,
+    contractTypeBreakdown,
+    trainingMetrics,
     filteredEmployees,
     recentWarnings,
     upcomingVaccines,
@@ -238,6 +228,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
 
   // View Mode: 'compact' (Padrão) | 'normal' | 'cards'
   const [employeeViewMode, setEmployeeViewMode] = useState('compact');
+  const [showBirthdayMuralModal, setShowBirthdayMuralModal] = useState(false);
 
   return (
     <div style={styles.container}>
@@ -359,6 +350,67 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                 </div>
               </div>
 
+              {/* Banner Comemorativo de Aniversariantes do Dia */}
+              {todaysBirthdays && todaysBirthdays.length > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.9rem 1.25rem',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(90deg, #fdf2f8 0%, #fce7f3 100%)',
+                  border: '1px solid #fbcfe8',
+                  boxShadow: '0 4px 12px rgba(236, 72, 153, 0.12)',
+                  flexWrap: 'wrap',
+                  gap: '0.75rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                    <div style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      backgroundColor: '#ec4899',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(236, 72, 153, 0.3)'
+                    }}>
+                      <Gift size={22} />
+                    </div>
+                    <div>
+                      <strong style={{ color: '#9d174d', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        🎉 {todaysBirthdays.length === 1 ? 'Aniversariante do Dia!' : `${todaysBirthdays.length} Aniversariantes do Dia!`}
+                      </strong>
+                      <div style={{ fontSize: '0.82rem', color: '#be185d', marginTop: '0.15rem' }}>
+                        Hoje é dia de festa para <strong>{todaysBirthdays.map(b => b.name).join(', ')}</strong>! Deseje felicitações e celebre com a equipe!
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button
+                      onClick={() => setShowBirthdayMuralModal(true)}
+                      style={{
+                        padding: '0.45rem 0.9rem',
+                        fontSize: '0.8rem',
+                        fontWeight: '700',
+                        borderRadius: '8px',
+                        backgroundColor: '#ec4899',
+                        color: '#ffffff',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        boxShadow: '0 2px 6px rgba(236, 72, 153, 0.25)'
+                      }}
+                    >
+                      <Sparkles size={14} /> Ver Mural Completo
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Dynamic Grid Container */}
               <div style={{
                 display: 'grid',
@@ -417,7 +469,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       {card.id === 'total_employees' && (
                         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={styles.kpiLabel}>Total de Funcionários</span>
+                            <span style={styles.kpiLabel}>Colaboradores</span>
                             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(236,72,153,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <Users size={17} color="#ec4899" />
                             </div>
@@ -425,7 +477,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                           <div>
                             <span style={{ ...styles.kpiVal, color: '#ec4899' }}>{employees.filter(e => e.status !== 'Inativo').length}</span>
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
-                              Colaboradores ativos ({employees.length} total no banco)
+                              Colaboradores ativos ({employees.length} no banco)
                             </span>
                           </div>
                         </div>
@@ -434,7 +486,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       {card.id === 'turnover' && (
                         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={styles.kpiLabel}>Turnover (Mensal)</span>
+                            <span style={styles.kpiLabel}>Turnover</span>
                             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <RotateCcw size={17} color="#10b981" />
                             </div>
@@ -442,7 +494,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                           <div>
                             <span style={{ ...styles.kpiVal, color: '#10b981' }}>{formatNumberBR(turnover)}%</span>
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
-                              Índice de rotatividade de equipe
+                              Rotatividade mensal de equipe
                             </span>
                           </div>
                         </div>
@@ -451,7 +503,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       {card.id === 'absenteeism' && (
                         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={styles.kpiLabel}>Absenteísmo (Mensal)</span>
+                            <span style={styles.kpiLabel}>Absenteísmo</span>
                             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <Clock size={17} color="#3b82f6" />
                             </div>
@@ -468,7 +520,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       {card.id === 'exams_kpi' && (
                         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={styles.kpiLabel}>Exames Ocupacionais (ASO)</span>
+                            <span style={styles.kpiLabel}>Exames</span>
                             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(2,132,199,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <Stethoscope size={17} color="#0284c7" />
                             </div>
@@ -520,7 +572,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       {card.id === 'experience_kpi' && (
                         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={styles.kpiLabel}>Em Experiência</span>
+                            <span style={styles.kpiLabel}>Experiência</span>
                             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <UserCheck size={17} color="#f59e0b" />
                             </div>
@@ -536,39 +588,262 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                         </div>
                       )}
 
+                      {card.id === 'trainings_kpi' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={styles.kpiLabel}>Treinamentos</span>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <GraduationCap size={17} color="#6366f1" />
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+                              <span style={{ ...styles.kpiVal, color: '#6366f1' }}>{trainingMetrics?.complianceRate || 0}%</span>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>conformidade</span>
+                            </div>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
+                              {trainingMetrics?.certifiedCount || 0} de {trainingMetrics?.totalActiveEmps || 0} colaboradores capacitados
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => setActiveTab('trainings')}
+                            style={{
+                              marginTop: '0.35rem',
+                              border: 'none',
+                              background: 'none',
+                              color: '#6366f1',
+                              fontSize: '0.72rem',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              padding: 0
+                            }}
+                          >
+                            Catálogo de NRs <ExternalLink size={11} />
+                          </button>
+                        </div>
+                      )}
+
                       {card.id === 'birthdays' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ec4899', fontSize: '0.9rem', margin: '0 0 0.5rem 0' }}>
-                            <Gift size={16} /> 🎂 Aniversariantes do Mês ({birthdaysThisMonth.length})
-                          </h3>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
-                            {birthdaysThisMonth.length === 0 ? (
-                              <p style={styles.noDataMini}>Sem aniversariantes este mês.</p>
-                            ) : (
-                              birthdaysThisMonth.slice(0, 5).map((b, idx) => (
-                                <div key={idx} onClick={() => handleOpenEmpByName(b.id || b.name)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.5rem', borderRadius: '6px', backgroundColor: 'var(--bg-body)', cursor: 'pointer', border: '1px solid var(--border-color)' }} title={`Clique para abrir a ficha de ${b.name}`}>
-                                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#fdf2f8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#db2777', overflow: 'hidden', fontSize: '0.7rem' }}>
-                                    {b.photo ? <img src={b.photo} alt={b.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : b.name.substring(0, 2).toUpperCase()}
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 0.5rem 0' }}>
+                              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#db2777', fontSize: '0.9rem', margin: 0, fontWeight: '800' }}>
+                                <Gift size={16} /> 🎂 Aniversariantes ({birthdaysThisMonth.length})
+                              </h3>
+                              <button
+                                onClick={() => setShowBirthdayMuralModal(true)}
+                                style={{
+                                  border: 'none',
+                                  background: 'none',
+                                  color: '#db2777',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '700',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.2rem'
+                                }}
+                                title="Abrir Mural Festivo de Aniversários"
+                              >
+                                Mural <ExternalLink size={12} />
+                              </button>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '270px', overflowY: 'auto', paddingRight: '4px' }}>
+                              {birthdaysThisMonth.length === 0 ? (
+                                <p style={styles.noDataMini}>Sem aniversariantes este mês.</p>
+                              ) : (
+                                birthdaysThisMonth.map((b, idx) => (
+                                  <div 
+                                    key={b.id || idx} 
+                                    onClick={() => handleOpenEmpByName(b.id || b.name)} 
+                                    style={{ 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'space-between',
+                                      padding: '0.4rem 0.55rem', 
+                                      borderRadius: '8px', 
+                                      backgroundColor: b.isToday ? 'rgba(253, 242, 248, 0.9)' : 'var(--bg-body)', 
+                                      cursor: 'pointer', 
+                                      border: b.isToday ? '2px solid #ec4899' : '1px solid var(--border-color)',
+                                      boxShadow: b.isToday ? '0 2px 8px rgba(236,72,153,0.15)' : 'none',
+                                      transition: 'all 0.15s ease'
+                                    }} 
+                                    title={`Clique para abrir a ficha de ${b.name}`}
+                                  >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0, flex: 1 }}>
+                                      <div style={{ 
+                                        width: '32px', 
+                                        height: '32px', 
+                                        borderRadius: '50%', 
+                                        backgroundColor: b.isToday ? '#ec4899' : '#fdf2f8', 
+                                        color: b.isToday ? '#ffffff' : '#db2777',
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center', 
+                                        fontWeight: '800', 
+                                        fontSize: '0.75rem', 
+                                        overflow: 'hidden',
+                                        flexShrink: 0,
+                                        boxShadow: b.isToday ? '0 2px 6px rgba(236,72,153,0.3)' : 'none'
+                                      }}>
+                                        {b.photo ? <img src={b.photo} alt={b.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : b.name.substring(0, 2).toUpperCase()}
+                                      </div>
+                                      <div style={{ minWidth: 0, flex: 1 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                                          <span style={{ fontWeight: '700', fontSize: '0.82rem', color: b.isToday ? '#be185d' : '#db2777', textDecoration: 'underline', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {b.name}
+                                          </span>
+                                          {b.isToday && (
+                                            <span style={{ fontSize: '0.68rem', backgroundColor: '#ec4899', color: '#fff', padding: '0.1rem 0.35rem', borderRadius: '8px', fontWeight: '800' }}>
+                                              🎉 Hoje!
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                          Dia {b.day} • {b.role || 'Geral'}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginLeft: '0.5rem', flexShrink: 0 }}>
+                                      {b.phone && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const cleanPhone = b.phone.replace(/\D/g, '');
+                                            const fullPhone = cleanPhone.length === 10 || cleanPhone.length === 11 ? `55${cleanPhone}` : cleanPhone;
+                                            const msg = `Olá ${b.name}! 🎉 Em nome de toda a equipe da clínica, desejamos a você um Feliz Aniversário! Muita saúde, paz e realizações neste novo ciclo! 🎂✨`;
+                                            window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+                                          }}
+                                          style={{
+                                            border: 'none',
+                                            backgroundColor: '#25D366',
+                                            color: '#ffffff',
+                                            borderRadius: '6px',
+                                            padding: '0.2rem 0.45rem',
+                                            fontSize: '0.68rem',
+                                            fontWeight: '700',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.2rem',
+                                            boxShadow: '0 2px 4px rgba(37,211,102,0.2)'
+                                          }}
+                                          title="Felicitar no WhatsApp"
+                                        >
+                                          <MessageCircle size={12} /> WhatsApp
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div>
-                                    <div style={{ fontWeight: '700', fontSize: '0.8rem', color: '#ec4899', textDecoration: 'underline' }}>{b.name}</div>
-                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Dia {b.day} ({b.role})</div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.4rem' }}>
+                            <button
+                              onClick={() => setShowBirthdayMuralModal(true)}
+                              style={{
+                                padding: '0.3rem 0.65rem',
+                                fontSize: '0.75rem',
+                                fontWeight: '700',
+                                backgroundColor: '#fdf2f8',
+                                color: '#db2777',
+                                border: '1px solid #fbcfe8',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.3rem'
+                              }}
+                            >
+                              <Gift size={13} /> Mural Festivo ({birthdaysThisMonth.length})
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {card.id === 'jubilee' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 0.5rem 0' }}>
+                              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#b45309', fontSize: '0.9rem', margin: 0, fontWeight: '800' }}>
+                                <Award size={16} /> 🎖️ Jubileu ({jubileeEmployees?.length || 0})
+                              </h3>
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Tempo de Casa</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '270px', overflowY: 'auto', paddingRight: '4px' }}>
+                              {!jubileeEmployees || jubileeEmployees.length === 0 ? (
+                                <p style={styles.noDataMini}>Nenhum colaborador completando ano de casa neste mês.</p>
+                              ) : (
+                                jubileeEmployees.map((j, idx) => (
+                                  <div 
+                                    key={j.id || idx} 
+                                    onClick={() => handleOpenEmpByName(j.id || j.name)} 
+                                    style={{ 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'space-between',
+                                      padding: '0.4rem 0.55rem', 
+                                      borderRadius: '8px', 
+                                      backgroundColor: 'var(--bg-body)', 
+                                      cursor: 'pointer', 
+                                      border: '1px solid var(--border-color)' 
+                                    }} 
+                                    title={`Clique para abrir a ficha de ${j.name}`}
+                                  >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0, flex: 1 }}>
+                                      <div style={{ 
+                                        width: '32px', 
+                                        height: '32px', 
+                                        borderRadius: '50%', 
+                                        backgroundColor: '#fef3c7', 
+                                        color: '#b45309',
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center', 
+                                        fontWeight: '800', 
+                                        fontSize: '0.75rem', 
+                                        overflow: 'hidden',
+                                        flexShrink: 0 
+                                      }}>
+                                        {j.photo ? <img src={j.photo} alt={j.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : j.name.substring(0, 2).toUpperCase()}
+                                      </div>
+                                      <div style={{ minWidth: 0, flex: 1 }}>
+                                        <div style={{ fontWeight: '700', fontSize: '0.82rem', color: '#b45309', textDecoration: 'underline', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                          {j.name}
+                                        </div>
+                                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                          Admissão: {formatDateBR(j.admissionDate)} • {j.role || 'Geral'}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span style={{ padding: '0.2rem 0.55rem', borderRadius: '8px', backgroundColor: '#fef3c7', color: '#92400e', fontWeight: '800', fontSize: '0.75rem', whiteSpace: 'nowrap', border: '1px solid #fde68a' }}>
+                                      🏅 {j.years} {j.years === 1 ? 'Ano' : 'Anos'}
+                                    </span>
                                   </div>
-                                </div>
-                              ))
-                            )}
+                                ))
+                              )}
+                            </div>
                           </div>
                         </div>
                       )}
 
                       {card.id === 'warnings_list' && (
                         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                          <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>⚠️ Últimas Advertências</h3>
-                          <div style={styles.listWrapper}>
+                          <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '800' }}>
+                            <ShieldAlert size={16} color="#ef4444" /> ⚠️ Advertências ({recentWarnings.length})
+                          </h3>
+                          <div style={{ ...styles.listWrapper, maxHeight: '250px', overflowY: 'auto', paddingRight: '4px', marginTop: '0.2rem' }}>
                             {recentWarnings.length === 0 ? (
                               <p style={styles.noDataMini}>Nenhuma advertência recente.</p>
                             ) : (
-                              recentWarnings.slice(0, 4).map((w, idx) => (
+                              recentWarnings.map((w, idx) => (
                                 <div key={idx} style={styles.listItem}>
                                   <div>
                                     <strong onClick={() => handleOpenEmpByName(w.empName)} style={{ color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }} title={`Abrir ficha de ${w.empName}`}>{w.empName}</strong> - {w.motive}
@@ -587,7 +862,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                           <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                               <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '700' }}>
-                                <Stethoscope size={16} color="#0284c7" /> Alertas de Exames Periódicos (ASO)
+                                <Stethoscope size={16} color="#0284c7" /> 🩺 Exames ASO
                               </h3>
                               <button 
                                 onClick={() => setActiveTab('exams')}
@@ -617,11 +892,11 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                               </div>
                             </div>
 
-                            <div style={styles.listWrapper}>
+                            <div style={{ ...styles.listWrapper, maxHeight: '230px', overflowY: 'auto', paddingRight: '4px' }}>
                               {examAlertMetrics.urgentAlertsList.length === 0 ? (
                                 <p style={styles.noDataMini}>Nenhum exame ASO vencido ou a vencer nos próximos 30 dias. Todos em dia!</p>
                               ) : (
-                                examAlertMetrics.urgentAlertsList.slice(0, 4).map((item, idx) => (
+                                examAlertMetrics.urgentAlertsList.map((item, idx) => (
                                   <div key={idx} style={{ ...styles.listItem, padding: '0.45rem 0.6rem' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
@@ -677,12 +952,14 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
 
                       {card.id === 'vaccines_list' && (
                         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                          <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>💉 Próximas Vacinações</h3>
-                          <div style={styles.listWrapper}>
+                          <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '800' }}>
+                            💉 Vacinações ({upcomingVaccines.length})
+                          </h3>
+                          <div style={{ ...styles.listWrapper, maxHeight: '250px', overflowY: 'auto', paddingRight: '4px', marginTop: '0.2rem' }}>
                             {upcomingVaccines.length === 0 ? (
                               <p style={styles.noDataMini}>Sem vacinas com validade próxima.</p>
                             ) : (
-                              upcomingVaccines.slice(0, 4).map((v, idx) => (
+                              upcomingVaccines.map((v, idx) => (
                                 <div key={idx} style={styles.listItem}>
                                   <div>
                                     <strong onClick={() => handleOpenEmpByName(v.empName)} style={{ color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }} title={`Abrir ficha de ${v.empName}`}>{v.empName}</strong> - {v.name}
@@ -700,12 +977,14 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
 
                       {card.id === 'absences_list' && (
                         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                          <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>📅 Últimas Ausências</h3>
-                          <div style={styles.listWrapper}>
+                          <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '800' }}>
+                            <Calendar size={16} /> 📅 Ausências ({recentAbsences.length})
+                          </h3>
+                          <div style={{ ...styles.listWrapper, maxHeight: '250px', overflowY: 'auto', paddingRight: '4px', marginTop: '0.2rem' }}>
                             {recentAbsences.length === 0 ? (
                               <p style={styles.noDataMini}>Nenhuma ausência registrada.</p>
                             ) : (
-                              recentAbsences.slice(0, 4).map((abs, idx) => (
+                              recentAbsences.map((abs, idx) => (
                                 <div key={idx} style={styles.listItem}>
                                   <div>
                                     <strong onClick={() => handleOpenEmpByName(abs.empName)} style={{ color: '#ec4899', cursor: 'pointer', textDecoration: 'underline' }} title={`Abrir ficha de ${abs.empName}`}>{abs.empName}</strong> - {abs.type} ({abs.days !== undefined ? `${abs.days} dia(s)` : `${abs.hours}h`})
@@ -727,12 +1006,14 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
 
                       {card.id === 'expiring_contracts' && (
                         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                          <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>⏳ Contratos em Experiência</h3>
-                          <div style={styles.listWrapper}>
+                          <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem 0', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '800' }}>
+                            <Clock size={16} /> ⏳ Contratos ({expiringContracts.length})
+                          </h3>
+                          <div style={{ ...styles.listWrapper, maxHeight: '250px', overflowY: 'auto', paddingRight: '4px', marginTop: '0.2rem' }}>
                             {expiringContracts.length === 0 ? (
                               <p style={styles.noDataMini}>Nenhum contrato em experiência no período.</p>
                             ) : (
-                              expiringContracts.slice(0, 4).map((e, idx) => {
+                              expiringContracts.map((e, idx) => {
                                 const target = e.expTargetDate ? e.expTargetDate : new Date(new Date(e.admissionDate).getTime() + 90 * 24 * 60 * 60 * 1000);
                                 return (
                                   <div key={idx} style={styles.listItem}>
@@ -756,7 +1037,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                           <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.25rem' }}>
                               <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '700' }}>
-                                <Trophy size={16} color="#10b981" /> Presença Premiada
+                                <Trophy size={16} color="#10b981" /> 🏆 Assiduidade
                               </h3>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                                 <span style={{ fontSize: '0.7rem', fontWeight: '600' }}>Prêmio: R$</span>
@@ -780,7 +1061,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                                   Nenhum colaborador elegível (&gt;90d CLT sem faltas).
                                 </div>
                               ) : (
-                                presencaPremiada.eligible.slice(0, 4).map(emp => (
+                                presencaPremiada.eligible.map(emp => (
                                   <div key={emp.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', padding: '0.2rem 0.4rem', borderRadius: '4px', backgroundColor: 'rgba(16,185,129,0.06)' }}>
                                     <span onClick={() => handleOpenEmpEdit(emp)} style={{ fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>
                                       {emp.name}
@@ -813,6 +1094,192 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                           >
                             <Printer size={13} /> Relatório & Impressão de Ganhadores
                           </button>
+                        </div>
+                      )}
+
+                      {card.id === 'leaves_vacations' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 0.5rem 0' }}>
+                              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', fontSize: '0.9rem', margin: 0, fontWeight: '800' }}>
+                                <Calendar size={16} /> 🏖️ Afastamentos ({leavesAndVacations?.length || 0})
+                              </h3>
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Férias e Licenças</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '270px', overflowY: 'auto', paddingRight: '4px' }}>
+                              {!leavesAndVacations || leavesAndVacations.length === 0 ? (
+                                <p style={styles.noDataMini}>Nenhum colaborador em férias ou afastamento no momento.</p>
+                              ) : (
+                                leavesAndVacations.map((lv, idx) => (
+                                  <div 
+                                    key={lv.id || idx} 
+                                    onClick={() => handleOpenEmpByName(lv.id || lv.name)} 
+                                    style={{ 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'space-between',
+                                      padding: '0.4rem 0.55rem', 
+                                      borderRadius: '8px', 
+                                      backgroundColor: 'var(--bg-body)', 
+                                      cursor: 'pointer', 
+                                      border: '1px solid var(--border-color)' 
+                                    }} 
+                                    title={`Clique para abrir a ficha de ${lv.name}`}
+                                  >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0, flex: 1 }}>
+                                      <div style={{ 
+                                        width: '32px', 
+                                        height: '32px', 
+                                        borderRadius: '50%', 
+                                        backgroundColor: lv.status === 'Férias' ? '#dcfce7' : '#ffedd5', 
+                                        color: lv.status === 'Férias' ? '#15803d' : '#c2410c',
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center', 
+                                        fontWeight: '800', 
+                                        fontSize: '0.75rem', 
+                                        overflow: 'hidden',
+                                        flexShrink: 0 
+                                      }}>
+                                        {lv.photo ? <img src={lv.photo} alt={lv.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : lv.name.substring(0, 2).toUpperCase()}
+                                      </div>
+                                      <div style={{ minWidth: 0, flex: 1 }}>
+                                        <div style={{ fontWeight: '700', fontSize: '0.82rem', color: 'var(--text-primary)', textDecoration: 'underline', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                          {lv.name}
+                                        </div>
+                                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                          {lv.role || 'Geral'} • {lv.detail || lv.status}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span style={{ 
+                                      padding: '0.2rem 0.55rem', 
+                                      borderRadius: '6px', 
+                                      backgroundColor: lv.status === 'Férias' ? '#dcfce7' : '#ffedd5', 
+                                      color: lv.status === 'Férias' ? '#15803d' : '#c2410c', 
+                                      fontWeight: '700', 
+                                      fontSize: '0.72rem',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      {lv.status}
+                                    </span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {card.id === 'cnh_alerts' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 0.5rem 0' }}>
+                              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#c2410c', fontSize: '0.9rem', margin: 0, fontWeight: '800' }}>
+                                <Car size={16} /> 🚗 Habilitações ({cnhAlertEmployees?.length || 0})
+                              </h3>
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Condutores</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '270px', overflowY: 'auto', paddingRight: '4px' }}>
+                              {!cnhAlertEmployees || cnhAlertEmployees.length === 0 ? (
+                                <p style={styles.noDataMini}>Todas as habilitações cadastradas estão em dia.</p>
+                              ) : (
+                                cnhAlertEmployees.map((cnh, idx) => (
+                                  <div 
+                                    key={cnh.id || idx} 
+                                    onClick={() => handleOpenEmpByName(cnh.id || cnh.name)} 
+                                    style={{ 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'space-between',
+                                      padding: '0.4rem 0.55rem', 
+                                      borderRadius: '8px', 
+                                      backgroundColor: 'var(--bg-body)', 
+                                      cursor: 'pointer', 
+                                      border: '1px solid var(--border-color)' 
+                                    }} 
+                                    title={`Clique para abrir a ficha de ${cnh.name}`}
+                                  >
+                                    <div style={{ minWidth: 0, flex: 1 }}>
+                                      <div style={{ fontWeight: '700', fontSize: '0.82rem', color: 'var(--text-primary)', textDecoration: 'underline', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {cnh.name}
+                                      </div>
+                                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {cnh.role || 'Motorista'} • CNH: {cnh.cnhNumber}
+                                      </div>
+                                    </div>
+                                    <span style={{ 
+                                      padding: '0.2rem 0.55rem', 
+                                      borderRadius: '6px', 
+                                      backgroundColor: cnh.statusBg, 
+                                      color: cnh.statusColor, 
+                                      fontWeight: '700', 
+                                      fontSize: '0.72rem',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      {cnh.statusLabel}
+                                    </span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {card.id === 'contract_types' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 0.5rem 0' }}>
+                              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#4f46e5', fontSize: '0.9rem', margin: 0, fontWeight: '800' }}>
+                                <Users size={16} /> 👥 Vínculos ({contractTypeBreakdown?.total || 0})
+                              </h3>
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Regimes Contratuais</span>
+                            </div>
+
+                            {/* Barra de distribuição proporcional */}
+                            <div style={{ width: '100%', height: '8px', borderRadius: '4px', backgroundColor: '#e2e8f0', display: 'flex', overflow: 'hidden', margin: '0.4rem 0 0.65rem 0' }}>
+                              <div style={{ width: `${contractTypeBreakdown?.clt?.percent || 0}%`, backgroundColor: '#3b82f6' }} title={`CLT: ${contractTypeBreakdown?.clt?.count || 0}`} />
+                              <div style={{ width: `${contractTypeBreakdown?.pj?.percent || 0}%`, backgroundColor: '#8b5cf6' }} title={`PJ: ${contractTypeBreakdown?.pj?.count || 0}`} />
+                              <div style={{ width: `${contractTypeBreakdown?.estagio?.percent || 0}%`, backgroundColor: '#f59e0b' }} title={`Estágio: ${contractTypeBreakdown?.estagio?.count || 0}`} />
+                              <div style={{ width: `${contractTypeBreakdown?.outros?.percent || 0}%`, backgroundColor: '#10b981' }} title={`Outros: ${contractTypeBreakdown?.outros?.count || 0}`} />
+                            </div>
+
+                            {/* Mini cards de regimes */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem' }}>
+                              <div style={{ padding: '0.4rem 0.55rem', borderRadius: '6px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#1d4ed8' }}>CLT</span>
+                                  <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#1d4ed8' }}>{contractTypeBreakdown?.clt?.percent || 0}%</span>
+                                </div>
+                                <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#1e40af' }}>{contractTypeBreakdown?.clt?.count || 0}</span>
+                              </div>
+
+                              <div style={{ padding: '0.4rem 0.55rem', borderRadius: '6px', backgroundColor: '#f5f3ff', border: '1px solid #ddd6fe' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#6d28d9' }}>PJ</span>
+                                  <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#6d28d9' }}>{contractTypeBreakdown?.pj?.percent || 0}%</span>
+                                </div>
+                                <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#5b21b6' }}>{contractTypeBreakdown?.pj?.count || 0}</span>
+                              </div>
+
+                              <div style={{ padding: '0.4rem 0.55rem', borderRadius: '6px', backgroundColor: '#fffbeb', border: '1px solid #fde68a' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#b45309' }}>Estágio</span>
+                                  <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#b45309' }}>{contractTypeBreakdown?.estagio?.percent || 0}%</span>
+                                </div>
+                                <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#92400e' }}>{contractTypeBreakdown?.estagio?.count || 0}</span>
+                              </div>
+
+                              <div style={{ padding: '0.4rem 0.55rem', borderRadius: '6px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#047857' }}>Outros</span>
+                                  <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#047857' }}>{contractTypeBreakdown?.outros?.percent || 0}%</span>
+                                </div>
+                                <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#065f46' }}>{contractTypeBreakdown?.outros?.count || 0}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       )}
 
@@ -3040,6 +3507,15 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
         sectors={sectors}
         currentUser={currentUser}
         onExportCSV={handleExportAwardReportCSV}
+      />
+
+      {/* Birthday Mural Modal */}
+      <BirthdayMuralModal
+        isOpen={showBirthdayMuralModal}
+        onClose={() => setShowBirthdayMuralModal(false)}
+        birthdays={birthdaysThisMonth}
+        sectors={sectors}
+        onOpenEmployee={handleOpenEmpByName}
       />
 
       {/* 15 HR Reports Modal */}
