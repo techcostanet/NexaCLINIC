@@ -3514,6 +3514,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
         isOpen={showBirthdayMuralModal}
         onClose={() => setShowBirthdayMuralModal(false)}
         birthdays={birthdaysThisMonth}
+        employees={employees}
         sectors={sectors}
         onOpenEmployee={handleOpenEmpByName}
       />

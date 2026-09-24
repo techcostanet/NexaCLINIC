@@ -233,8 +233,8 @@ export const MODULE_GUIDES = {
           'No card "Aniversariantes" do painel de controle, visualize os aniversariantes do mês com rolagem suave (sem limite de 5).',
           'Colaboradores que fazem aniversário hoje ganham destaque dourado ("🎉 Hoje!").',
           'Clique no botão verde de WhatsApp ao lado do nome para enviar uma mensagem carinhosa de parabéns personalizada em 1 clique.',
-          'Clique no botão "Mural" para abrir o Mural de Aniversariantes com filtros por data e setor.',
-          'No Mural, utilize "Imprimir Mural" para gerar uma folha A4 formatada para quadro de avisos ou "Exportar" para planilha/PDF.'
+          'Clique no botão "Mural" para abrir o Mural de Aniversariantes com navegação entre meses passados e futuros, seletor de ano e botão de retorno rápido "Mês Atual".',
+          'No Mural, utilize "Imprimir" para gerar um cartaz oficial formatado em folha A4 pronta para fixação em murais físicos da clínica ou "Exportar" para planilha/PDF.'
         ]
       },
       {
@@ -1035,6 +1035,30 @@ export const MODULE_GUIDES = {
     color: '#0891b2',
     recursos: [
       {
+        title: 'Chamados vs. Tarefas Internas de T.I.',
+        desc: 'Separação estrutural entre chamados abertos por colaboradores/setores da clínica e tarefas internas proativas da equipe de T.I. (manutenções de servidores, atualizações de antivírus, organização de cabos e backups), sem disparar e-mails de notificação a terceiros.'
+      },
+      {
+        title: 'Quadro Kanban Ágil de T.I.',
+        desc: 'Visualização dinâmica em colunas por estágio de atendimento (Pendente, Em Andamento, Aguardando e Concluído) com movimentação rápida de status em 1 clique e badges visuais por categoria e prioridade.'
+      },
+      {
+        title: 'Ronda Diária Matinal de T.I.',
+        desc: 'Rotina preventiva padronizada para conferência diária no início do expediente: links de internet (principal e contingência), temperatura do CPD, rotina de backups, impressoras térmicas Zebra, leitores de código de barras e nobreaks, com histórico rastreável.'
+      },
+      {
+        title: 'Inventário de Ativos de T.I. com QR Code',
+        desc: 'Gestão completa do parque tecnológico (desktops, notebooks, servidores, switches e impressoras) com código patrimonial, IP, setor, responsável e emissão de etiquetas técnicas com QR Code para identificação física imediata.'
+      },
+      {
+        title: 'Base de Conhecimento & Procedimentos (Wiki T.I.)',
+        desc: 'Acervo técnico com Procedimentos Operacionais Padrão (POPs) detalhados para atendimento ágil: calibração de impressoras térmicas Zebra, comutação de link 4G de contingência, reset de leitor de código de barras e importação de certificados digitais A1.'
+      },
+      {
+        title: 'Indicador de Atuação Proativa',
+        desc: 'KPI executivo em tempo real que calcula o percentual de tarefas preventivas/internas da equipe de T.I. frente ao total de ordens, estimulando a prevenção antes da ocorrência de incidentes críticos.'
+      },
+      {
         title: 'Etiqueta Patrimonial & QR Code em Folha Única',
         desc: 'Geração de QR Code em alta definição e etiqueta patrimonial compacta calibrada com CSS anti-overflow para caber estritamente em 1 folha física de papel ou impressora térmica, sem quebras para a segunda página.'
       },
@@ -1164,9 +1188,62 @@ export const MODULE_GUIDES = {
           'Analise os equipamentos com status vermelho "ATRASADA!" para priorizar a revisão.',
           'Clique no botão "Agendar" na linha do equipamento para abrir a Ordem de Serviço Preventiva pré-preenchida.'
         ]
+      },
+      {
+        title: 'Como Gerenciar Chamados e Tarefas Internas no Kanban de T.I.',
+        steps: [
+          'Na aba "Chamados T.I.", utilize os filtros de visualização no topo para alternar entre "Tabela", "Cards" e "Kanban".',
+          'Utilize as pílulas de origem ("Todos", "Chamados" e "Tarefas Internas") para separar solicitações externas de rotinas próprias da equipe de T.I.',
+          'Para criar uma rotina interna preventiva, clique no botão roxo "+ Tarefa T.I.", defina o tipo (Servidor, Backup, Rede, Antivírus, Infra) e salve.',
+          'No modo Kanban, altere o status das tarefas em 1 clique utilizando os botões de ação rápida nos cards.'
+        ]
+      },
+      {
+        title: 'Como Executar a Ronda Diária Matinal de T.I.',
+        steps: [
+          'No topo da aba de T.I., clique no botão "Ronda Diária".',
+          'Preencha o nome do técnico responsável pelo turno matinal.',
+          'Marque cada item verificado: Link Principal (Fibra), Link Contingência (4G), Temperatura CPD (18-22°C), Backups diários, Impressoras Zebra de etiquetas, Scanners e Nobreaks.',
+          'Se houver alguma irregularidade, desmarque o item e descreva as observações.',
+          'Clique em "Salvar Ronda". O registro será gravado no histórico de auditoria com data e hora.'
+        ]
+      },
+      {
+        title: 'Como Gerenciar Ativos de T.I. e Imprimir Etiquetas com QR Code',
+        steps: [
+          'Clique no botão "Inventário" na aba de T.I.',
+          'Cadastre os novos ativos preenchendo Código Patrimonial, Descrição, Categoria, IP de rede, Setor e Responsável.',
+          'Clique no ícone de impressora no ativo para gerar a etiqueta patrimonial padronizada com QR Code de alta resolução.',
+          'Clique em "Imprimir" para enviar à impressora térmica ou padrão.'
+        ]
+      },
+      {
+        title: 'Como Consultar a Wiki Técnica de T.I.',
+        steps: [
+          'Clique no botão "Wiki" na aba de T.I.',
+          'Pesquise pelo procedimento desejado (ex: Zebra, 4G, Leitor, Certificado).',
+          'Filtre pelas categorias "Hardware", "Redes", "Sistemas" ou "Segurança".',
+          'Abra o artigo para seguir os passos técnicos do Procedimento Operacional Padrão.'
+        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Qual a diferença entre um Chamado e uma Tarefa Interna de T.I.?',
+        resposta: 'Chamados são solicitações de suporte abertas por colaboradores dos setores da clínica que notificam o solicitante e geram acompanhamento de SLA individual. Tarefas Internas são ações proativas da própria equipe técnica (manutenção de switches, rotina de backup, organização de racks, etc.) que não geram e-mails externos e pontuam no indicador de proatividade.'
+      },
+      {
+        pergunta: 'O que indica a métrica de Atuação Proativa no painel de SLA?',
+        resposta: 'O card "Atuação Proativa" calcula a porcentagem de tarefas internas e preventivas de T.I. em relação ao total de ordens registradas. Um percentual elevado indica que o time atua de forma preventiva antes que os problemas se tornem paradas críticas para os usuários.'
+      },
+      {
+        pergunta: 'O que é conferido na Ronda Diária Matinal de T.I.?',
+        resposta: 'A ronda matinal verifica 7 itens críticos da clínica: conectividade de links de internet, temperatura do CPD (18-22°C), integridade dos backups em nuvem e locais, calibração e fita das impressoras Zebra do salão/farmácia, leitores de código de barras e autonomia de baterias dos nobreaks.'
+      },
+      {
+        pergunta: 'As etiquetas de Ativos de T.I. possuem QR Code?',
+        resposta: 'Sim. Cada ativo cadastrado no Inventário de T.I. possui código patrimonial único e QR Code gerado instantaneamente no modal de impressão, facilitando a identificação rápida e conferência física em campo.'
+      },
       {
         pergunta: 'Qualquer equipamento pode ser excluído do sistema?',
         resposta: 'Sim. Usuários autorizados (engenheiros clínicos, técnicos e administradores) podem excluir qualquer equipamento obsoleto, alienado ou cadastrado indevidamente, tanto pela listagem (botão lixeira) quanto dentro do modal de edição.'

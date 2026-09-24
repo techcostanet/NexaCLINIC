@@ -1,59 +1,133 @@
-import React, { useState, useRef } from 'react';
-import { Gift, X, Printer, Download, Search, MessageCircle, Calendar, Sparkles, User, Heart } from 'lucide-react';
+import React, { useState, useMemo, useRef } from 'react';
+import { Gift, X, Printer, Download, Search, MessageCircle, Calendar, Sparkles, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { normalizeSectorName } from '../../data/hrConstants';
+
+const MONTH_NAMES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
 
 export default function BirthdayMuralModal({
   isOpen,
   onClose,
   birthdays = [],
+  employees = [],
   sectors = [],
   onOpenEmployee
 }) {
+  const today = new Date();
+  const todayDay = today.getDate();
+  const currentRealMonth = today.getMonth();
+  const currentRealYear = today.getFullYear();
+
+  const [selectedMonth, setSelectedMonth] = useState(currentRealMonth);
+  const [selectedYear, setSelectedYear] = useState(currentRealYear);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all'); // 'all' | 'today' | 'upcoming' | 'past'
   const printRef = useRef(null);
 
   if (!isOpen) return null;
 
-  const today = new Date();
-  const todayDay = today.getDate();
-  const currentMonthName = today.toLocaleString('pt-BR', { month: 'long' });
-  const capitalizedMonth = currentMonthName.charAt(0).toUpperCase() + currentMonthName.slice(1);
-  const currentYear = today.getFullYear();
+  const isCurrentMonthView = selectedMonth === currentRealMonth && selectedYear === currentRealYear;
+  const isFutureMonthView = selectedYear > currentRealYear || (selectedYear === currentRealYear && selectedMonth > currentRealMonth);
+  const isPastMonthView = selectedYear < currentRealYear || (selectedYear === currentRealYear && selectedMonth < currentRealMonth);
+
+  const selectedMonthName = MONTH_NAMES[selectedMonth];
+
+  // Navegação entre meses
+  const handlePrevMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear(prev => prev - 1);
+    } else {
+      setSelectedMonth(prev => prev - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear(prev => prev + 1);
+    } else {
+      setSelectedMonth(prev => prev + 1);
+    }
+  };
+
+  const handleResetToCurrentMonth = () => {
+    setSelectedMonth(currentRealMonth);
+    setSelectedYear(currentRealYear);
+  };
+
+  // Filtrar aniversariantes do mês selecionado
+  const activeBirthdays = useMemo(() => {
+    if (employees && employees.length > 0) {
+      return employees.filter(e => {
+        if (e.status === 'Inativo') return false;
+        if (!e.birthDate) return false;
+        const parts = e.birthDate.split('-');
+        if (parts.length < 2) return false;
+        const bMonth = parseInt(parts[1], 10) - 1;
+        return bMonth === selectedMonth;
+      }).map(e => {
+        const parts = e.birthDate.split('-');
+        const day = parseInt(parts[2], 10);
+        return {
+          id: e.id,
+          name: e.name,
+          photo: e.photo,
+          day,
+          role: e.role,
+          sectorId: e.sectorId,
+          phone: e.phone,
+          email: e.email,
+          birthDate: e.birthDate
+        };
+      }).sort((a, b) => a.day - b.day);
+    }
+
+    if (isCurrentMonthView) {
+      return birthdays;
+    }
+    return [];
+  }, [employees, birthdays, selectedMonth, isCurrentMonthView]);
 
   // Enriquecer dados dos aniversariantes
-  const enrichedBirthdays = birthdays.map(b => {
-    const isToday = b.day === todayDay;
-    const isUpcoming = b.day > todayDay;
-    const isPast = b.day < todayDay;
-    const sectorObj = sectors.find(s => s.id === b.sectorId);
-    const sectorName = sectorObj ? normalizeSectorName(sectorObj.name) : 'Geral';
-    return {
-      ...b,
-      isToday,
-      isUpcoming,
-      isPast,
-      sectorName
-    };
-  });
+  const enrichedBirthdays = useMemo(() => {
+    return activeBirthdays.map(b => {
+      const isToday = isCurrentMonthView && b.day === todayDay;
+      const isUpcoming = isCurrentMonthView ? b.day > todayDay : isFutureMonthView;
+      const isPast = isCurrentMonthView ? b.day < todayDay : isPastMonthView;
+      const sectorObj = sectors.find(s => s.id === b.sectorId);
+      const sectorName = sectorObj ? normalizeSectorName(sectorObj.name) : 'Geral';
+      return {
+        ...b,
+        isToday,
+        isUpcoming,
+        isPast,
+        sectorName
+      };
+    }).sort((a, b) => {
+      if (a.isToday && !b.isToday) return -1;
+      if (!a.isToday && b.isToday) return 1;
+      return a.day - b.day;
+    });
+  }, [activeBirthdays, isCurrentMonthView, isFutureMonthView, isPastMonthView, todayDay, sectors]);
 
   // Métricas rápidas
   const todaysCount = enrichedBirthdays.filter(b => b.isToday).length;
   const upcomingCount = enrichedBirthdays.filter(b => b.isUpcoming).length;
   const pastCount = enrichedBirthdays.filter(b => b.isPast).length;
 
-  // Filtragem
+  // Filtragem da lista
   const filteredList = enrichedBirthdays.filter(b => {
-    // Filtro por termo
     const matchesSearch = (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (b.role || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (b.sectorName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           String(b.day).includes(searchTerm);
     if (!matchesSearch) return false;
 
-    // Filtro por período
     if (filterType === 'today') return b.isToday;
     if (filterType === 'upcoming') return b.isUpcoming;
     if (filterType === 'past') return b.isPast;
@@ -90,7 +164,7 @@ export default function BirthdayMuralModal({
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(16);
       doc.setTextColor(255, 255, 255);
-      doc.text(`🎂 MURAL DE ANIVERSARIANTES • ${capitalizedMonth.toUpperCase()} / ${currentYear}`, pageWidth / 2, 15, { align: 'center' });
+      doc.text(`🎂 MURAL DE ANIVERSARIANTES • ${selectedMonthName.toUpperCase()} / ${selectedYear}`, pageWidth / 2, 15, { align: 'center' });
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
@@ -131,7 +205,7 @@ export default function BirthdayMuralModal({
         }
       });
 
-      doc.save(`Mural_Aniversariantes_${capitalizedMonth}_${currentYear}.pdf`);
+      doc.save(`Mural_Aniversariantes_${selectedMonthName}_${selectedYear}.pdf`);
     } catch (err) {
       console.error('Erro ao gerar PDF de aniversariantes:', err);
       alert('Não foi possível gerar o PDF de aniversariantes.');
@@ -165,12 +239,29 @@ export default function BirthdayMuralModal({
             position: absolute;
             left: 0;
             top: 0;
-            width: 100%;
+            width: 100% !important;
+            max-height: none !important;
+            height: auto !important;
+            overflow: visible !important;
             background: white !important;
-            padding: 20px !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 10px !important;
+          }
+          .birthday-list-scroll {
+            max-height: none !important;
+            overflow: visible !important;
           }
           .no-print {
             display: none !important;
+          }
+          .only-print {
+            display: block !important;
+          }
+        }
+        @media screen {
+          .only-print {
+            display: none;
           }
         }
       `}</style>
@@ -182,7 +273,7 @@ export default function BirthdayMuralModal({
           backgroundColor: 'var(--bg-card, #ffffff)',
           borderRadius: '16px',
           width: '100%',
-          maxWidth: '860px',
+          maxWidth: '880px',
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
@@ -219,7 +310,7 @@ export default function BirthdayMuralModal({
                 🎂 Mural de Aniversariantes
               </h2>
               <p style={{ margin: 0, fontSize: '0.82rem', color: '#be185d', fontWeight: '600' }}>
-                Celebrações de {capitalizedMonth} de {currentYear} • {birthdays.length} colaboradores
+                Celebrações de {selectedMonthName} de {selectedYear} • {enrichedBirthdays.length} colaboradores
               </p>
             </div>
           </div>
@@ -283,6 +374,139 @@ export default function BirthdayMuralModal({
           </div>
         </div>
 
+        {/* Header exclusivo para Impressão A4 */}
+        <div className="only-print" style={{ padding: '1rem', borderBottom: '2px solid #db2777', marginBottom: '1rem', textAlign: 'center' }}>
+          <h1 style={{ margin: 0, fontSize: '1.5rem', color: '#831843', textTransform: 'uppercase' }}>
+            🎂 Mural de Aniversariantes • {selectedMonthName} de {selectedYear}
+          </h1>
+          <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.9rem', color: '#64748b' }}>
+            Nex-Ai CLINIC • Homenagem aos Aniversariantes do Mês ({enrichedBirthdays.length} colaboradores)
+          </p>
+        </div>
+
+        {/* Barra de Navegação de Mês & Ano */}
+        <div className="no-print" style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0.65rem 1.5rem',
+          backgroundColor: '#fdf2f8',
+          borderBottom: '1px solid #fbcfe8',
+          flexWrap: 'wrap',
+          gap: '0.75rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Calendar size={17} style={{ color: '#db2777' }} />
+            <span style={{ fontSize: '0.82rem', fontWeight: '800', color: '#831843' }}>Período:</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: '700', color: '#be185d' }}>
+              {selectedMonthName} / {selectedYear}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '30px',
+                height: '30px',
+                borderRadius: '8px',
+                border: '1px solid #f472b6',
+                backgroundColor: '#ffffff',
+                color: '#db2777',
+                cursor: 'pointer'
+              }}
+              title="Mês Anterior"
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(parseInt(e.target.value, 10))}
+              style={{
+                padding: '0.3rem 0.6rem',
+                borderRadius: '8px',
+                border: '1px solid #f472b6',
+                backgroundColor: '#ffffff',
+                color: '#831843',
+                fontWeight: '700',
+                fontSize: '0.82rem',
+                cursor: 'pointer'
+              }}
+            >
+              {MONTH_NAMES.map((m, idx) => (
+                <option key={idx} value={idx}>{m}</option>
+              ))}
+            </select>
+
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
+              style={{
+                padding: '0.3rem 0.6rem',
+                borderRadius: '8px',
+                border: '1px solid #f472b6',
+                backgroundColor: '#ffffff',
+                color: '#831843',
+                fontWeight: '700',
+                fontSize: '0.82rem',
+                cursor: 'pointer'
+              }}
+            >
+              {[currentRealYear - 1, currentRealYear, currentRealYear + 1, currentRealYear + 2].map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '30px',
+                height: '30px',
+                borderRadius: '8px',
+                border: '1px solid #f472b6',
+                backgroundColor: '#ffffff',
+                color: '#db2777',
+                cursor: 'pointer'
+              }}
+              title="Próximo Mês"
+            >
+              <ChevronRight size={16} />
+            </button>
+
+            {!isCurrentMonthView && (
+              <button
+                type="button"
+                onClick={handleResetToCurrentMonth}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  padding: '0.3rem 0.65rem',
+                  borderRadius: '8px',
+                  border: '1px solid #db2777',
+                  backgroundColor: '#db2777',
+                  color: '#ffffff',
+                  fontWeight: '700',
+                  fontSize: '0.78rem',
+                  cursor: 'pointer'
+                }}
+                title="Voltar ao mês atual"
+              >
+                <RotateCcw size={13} /> Mês Atual
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Metric Badges */}
         <div className="no-print" style={{
           display: 'grid',
@@ -301,11 +525,15 @@ export default function BirthdayMuralModal({
             <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#db2777' }}>{todaysCount}</span>
           </div>
           <div style={{ backgroundColor: '#ffffff', padding: '0.6rem 0.8rem', borderRadius: '10px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-            <span style={{ fontSize: '0.75rem', color: '#475569', fontWeight: '700', display: 'block' }}>Próximos</span>
+            <span style={{ fontSize: '0.75rem', color: '#475569', fontWeight: '700', display: 'block' }}>
+              {isFutureMonthView ? 'Próximos' : 'Próximos'}
+            </span>
             <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0284c7' }}>{upcomingCount}</span>
           </div>
           <div style={{ backgroundColor: '#ffffff', padding: '0.6rem 0.8rem', borderRadius: '10px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-            <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '700', display: 'block' }}>Já Comemorados</span>
+            <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '700', display: 'block' }}>
+              {isPastMonthView ? 'Comemorados' : 'Já Comemorados'}
+            </span>
             <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#64748b' }}>{pastCount}</span>
           </div>
         </div>
@@ -352,14 +580,15 @@ export default function BirthdayMuralModal({
                 key={tab.id}
                 onClick={() => setFilterType(tab.id)}
                 style={{
-                  padding: '0.35rem 0.65rem',
-                  fontSize: '0.75rem',
+                  padding: '0.4rem 0.75rem',
+                  fontSize: '0.78rem',
                   fontWeight: '700',
                   borderRadius: '6px',
-                  border: filterType === tab.id ? '1px solid #db2777' : '1px solid var(--border-color, #cbd5e1)',
+                  border: filterType === tab.id ? '1px solid #ec4899' : '1px solid var(--border-color, #cbd5e1)',
                   backgroundColor: filterType === tab.id ? '#fdf2f8' : 'transparent',
-                  color: filterType === tab.id ? '#db2777' : 'var(--text-secondary, #64748b)',
-                  cursor: 'pointer'
+                  color: filterType === tab.id ? '#be185d' : 'var(--text-secondary, #475569)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
                 }}
               >
                 {tab.label}
@@ -368,19 +597,28 @@ export default function BirthdayMuralModal({
           </div>
         </div>
 
-        {/* List of Birthdays (Scrollable) */}
-        <div style={{
-          padding: '1.25rem 1.5rem',
-          overflowY: 'auto',
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.65rem'
-        }}>
+        {/* Birthday List */}
+        <div 
+          className="birthday-list-scroll"
+          style={{
+            flex: '1',
+            overflowY: 'auto',
+            padding: '1rem 1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.65rem'
+          }}
+        >
           {filteredList.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-              <Gift size={36} style={{ color: '#cbd5e1', marginBottom: '0.5rem' }} />
-              <p style={{ margin: 0, fontWeight: '600', fontSize: '0.9rem' }}>Nenhum aniversariante encontrado com os filtros aplicados.</p>
+            <div style={{
+              textAlign: 'center',
+              padding: '2.5rem 1rem',
+              color: 'var(--text-muted, #94a3b8)'
+            }}>
+              <Gift size={36} style={{ margin: '0 auto 0.5rem auto', opacity: 0.3, color: '#ec4899' }} />
+              <p style={{ margin: 0, fontWeight: '600', fontSize: '0.9rem' }}>
+                Nenhum aniversariante encontrado em {selectedMonthName} de {selectedYear} com os filtros selecionados.
+              </p>
             </div>
           ) : (
             filteredList.map((b) => (
@@ -390,11 +628,11 @@ export default function BirthdayMuralModal({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '0.65rem 0.9rem',
-                  borderRadius: '10px',
-                  backgroundColor: b.isToday ? 'rgba(253, 242, 248, 0.85)' : 'var(--bg-body, #f8fafc)',
-                  border: b.isToday ? '2px solid #ec4899' : '1px solid var(--border-color, #e2e8f0)',
-                  boxShadow: b.isToday ? '0 4px 12px rgba(236,72,153,0.15)' : 'none',
+                  padding: '0.65rem 1rem',
+                  borderRadius: '12px',
+                  backgroundColor: b.isToday ? '#fdf2f8' : 'var(--bg-card, #ffffff)',
+                  border: b.isToday ? '1.5px solid #f472b6' : '1px solid var(--border-color, #e2e8f0)',
+                  boxShadow: b.isToday ? '0 4px 12px rgba(236,72,153,0.12)' : '0 1px 3px rgba(0,0,0,0.02)',
                   transition: 'all 0.15s ease'
                 }}
               >

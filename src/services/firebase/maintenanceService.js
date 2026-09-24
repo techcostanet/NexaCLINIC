@@ -3107,6 +3107,7 @@ export const INITIAL_IT_SERVICE_ORDERS = [
   {
     id: 'OS-TI-2026-0001',
     code: 'TI-2026-0001',
+    origin: 'user',
     title: 'Impressora Zebra não imprime etiquetas de tubo',
     category: 'Impressoras',
     subcategory: 'Zebra / Etiquetadora',
@@ -3148,6 +3149,7 @@ export const INITIAL_IT_SERVICE_ORDERS = [
   {
     id: 'OS-TI-2026-0002',
     code: 'TI-2026-0002',
+    origin: 'user',
     title: 'Lentidão e queda intermitente de Wi-Fi no Salão A',
     category: 'Rede',
     subcategory: 'Wi-Fi / Conectividade',
@@ -3189,6 +3191,7 @@ export const INITIAL_IT_SERVICE_ORDERS = [
   {
     id: 'OS-TI-2026-0003',
     code: 'TI-2026-0003',
+    origin: 'user',
     title: 'Instalação de Certificado Digital A1 no Consultório 2',
     category: 'Sistemas',
     subcategory: 'Certificado Digital',
@@ -3230,6 +3233,7 @@ export const INITIAL_IT_SERVICE_ORDERS = [
   {
     id: 'OS-TI-2026-0004',
     code: 'TI-2026-0004',
+    origin: 'user',
     title: 'Computador do Faturamento não liga após chuva',
     category: 'Hardware',
     subcategory: 'Desktop / Fonte',
@@ -3267,6 +3271,139 @@ export const INITIAL_IT_SERVICE_ORDERS = [
         author: 'Lucas T.I.',
         status: 'Resolvida',
         note: 'Fonte trocada e computador operacional.'
+      }
+    ]
+  },
+  {
+    id: 'OS-TI-2026-0005',
+    code: 'TI-2026-0005',
+    origin: 'internal',
+    taskType: 'Infraestrutura',
+    title: 'Reorganização e identificação de patch cords no Rack Sala de Servidores',
+    category: 'Rede',
+    subcategory: 'Switch/Roteador',
+    sector: 'Sala de Servidores',
+    unitId: 'betim',
+    unit: 'Betim',
+    priority: 'Média',
+    slaHours: 24,
+    status: 'Em Atendimento',
+    requesterName: 'Equipe T.I.',
+    requesterEmail: 'suporte@techcosta.net',
+    requesterSector: 'T.I.',
+    assignedTechnician: 'Lucas T.I.',
+    description: 'Substituição de patch cords desgastados e fixação de etiquetas de identificação nas portas dos switches do CPD.',
+    diagnostic: 'Fiação confusa dificultava a identificação rápida em caso de parada de porta.',
+    solutionApplied: 'Instalados organizadores horizontais 1U e cabeamento Cat6 certificado.',
+    openDate: '2026-09-22T08:00:00.000Z',
+    slaDeadline: '2026-09-25T18:00:00.000Z',
+    completionDate: null,
+    totalCost: 95,
+    partsUsed: [
+      { itemId: 'TI-CAB-CAT6', name: 'Patch Cord Cat6 1.5m', quantity: 12, unitCost: 7.90 }
+    ],
+    timelineLogs: [
+      {
+        id: 'log-1',
+        date: '2026-09-22T08:00:00.000Z',
+        author: 'Lucas T.I.',
+        status: 'Aberta',
+        note: 'Tarefa interna proativa cadastrada pela equipe de T.I.'
+      },
+      {
+        id: 'log-2',
+        date: '2026-09-23T14:00:00.000Z',
+        author: 'Lucas T.I.',
+        status: 'Em Atendimento',
+        note: 'Iniciada montagem dos organizadores de cabo.'
+      }
+    ]
+  },
+  {
+    id: 'OS-TI-2026-0006',
+    code: 'TI-2026-0006',
+    origin: 'internal',
+    taskType: 'Preventiva',
+    title: 'Troca preventiva de baterias do Nobreak 3kVA (CPD)',
+    category: 'Hardware',
+    subcategory: 'Nobreak',
+    sector: 'Sala de Servidores',
+    unitId: 'betim',
+    unit: 'Betim',
+    priority: 'Alta',
+    slaHours: 8,
+    status: 'Aguardando Peça',
+    requesterName: 'Equipe T.I.',
+    requesterEmail: 'suporte@techcosta.net',
+    requesterSector: 'T.I.',
+    assignedTechnician: 'Lucas T.I.',
+    description: 'Baterias seladas 12V 7Ah atingiram 24 meses de ciclo útil. Prevenção contra desligamento abrupto do servidor principal.',
+    diagnostic: 'Teste de autonomia apontou queda rápida de carga sob regime de hemodiálise.',
+    solutionApplied: 'Pedido de compra aprovado. Aguardando entrega das 8 baterias seladas.',
+    openDate: '2026-09-23T09:30:00.000Z',
+    slaDeadline: '2026-09-26T17:00:00.000Z',
+    completionDate: null,
+    totalCost: 0,
+    partsUsed: [],
+    timelineLogs: [
+      {
+        id: 'log-1',
+        date: '2026-09-23T09:30:00.000Z',
+        author: 'Lucas T.I.',
+        status: 'Aberta',
+        note: 'Tarefa preventiva iniciada por rotina do T.I.'
+      },
+      {
+        id: 'log-2',
+        date: '2026-09-23T11:00:00.000Z',
+        author: 'Lucas T.I.',
+        status: 'Aguardando Peça',
+        note: 'Solicitada compra de baterias seladas para o nobreak do CPD.'
+      }
+    ]
+  },
+  {
+    id: 'OS-TI-2026-0007',
+    code: 'TI-2026-0007',
+    origin: 'internal',
+    taskType: 'Melhoria',
+    title: 'Higienização e revisão de fontes nos computadores do Salão B',
+    category: 'Hardware',
+    subcategory: 'Desktop',
+    sector: 'Salão B de Hemodiálise',
+    unitId: 'betim',
+    unit: 'Betim',
+    priority: 'Baixa',
+    slaHours: 48,
+    status: 'Resolvida',
+    requesterName: 'Equipe T.I.',
+    requesterEmail: 'suporte@techcosta.net',
+    requesterSector: 'T.I.',
+    assignedTechnician: 'Lucas T.I.',
+    description: 'Manutenção preventiva e despoeiramento interno nos 6 computadores dos postos de hemodiálise do Salão B.',
+    diagnostic: 'Poeira acumulada nos coolers de CPU com início de ruído mecânico.',
+    solutionApplied: 'Aspiração técnica, troca de pasta térmica de prata e lubrificação dos ventiladores. Todas operando em 38°C.',
+    openDate: '2026-09-20T13:00:00.000Z',
+    slaDeadline: '2026-09-22T13:00:00.000Z',
+    completionDate: '2026-09-21T16:45:00.000Z',
+    totalCost: 25,
+    partsUsed: [
+      { itemId: 'TI-PST-TERM', name: 'Pasta Térmica Prata 10g', quantity: 1, unitCost: 25.00 }
+    ],
+    timelineLogs: [
+      {
+        id: 'log-1',
+        date: '2026-09-20T13:00:00.000Z',
+        author: 'Lucas T.I.',
+        status: 'Aberta',
+        note: 'Tarefa de melhoria interna aberta.'
+      },
+      {
+        id: 'log-2',
+        date: '2026-09-21T16:45:00.000Z',
+        author: 'Lucas T.I.',
+        status: 'Resolvida',
+        note: 'Higienização completa finalizada com sucesso.'
       }
     ]
   }
@@ -3337,18 +3474,27 @@ export const saveITServiceOrder = async (orderData, updateNote = '', notifyEmail
     orderData.category = orderData.category || 'Hardware';
     orderData.subcategory = orderData.subcategory || 'Geral';
     orderData.sector = orderData.sector || 'Geral';
+    orderData.origin = orderData.origin || 'user'; // 'user' | 'internal'
+    orderData.taskType = orderData.taskType || (orderData.origin === 'internal' ? 'Preventiva' : null);
+    if (orderData.origin === 'internal') {
+      orderData.requesterName = orderData.requesterName || 'Equipe T.I.';
+      orderData.requesterSector = orderData.requesterSector || 'T.I.';
+    }
     orderData.slaHours = SLA_HOURS_MAP[orderData.priority] || 24;
     orderData.slaDeadline = orderData.slaDeadline || calculateSlaDeadline(orderData.priority, orderData.openDate);
     orderData.partsUsed = orderData.partsUsed || [];
     orderData.laborCost = Number(orderData.laborCost || 0);
     orderData.totalCost = Number(orderData.totalCost || 0);
+    const initialNote = orderData.origin === 'internal'
+      ? 'Tarefa interna proativa cadastrada pela equipe de T.I.'
+      : 'Chamado de T.I. aberto no sistema.';
     orderData.timelineLogs = [
       {
         id: `log-${Date.now()}`,
         date: now,
-        author: orderData.requesterName || 'Solicitante',
+        author: orderData.requesterName || (orderData.origin === 'internal' ? 'Equipe T.I.' : 'Solicitante'),
         status: orderData.status,
-        note: 'Chamado de T.I. aberto no sistema.'
+        note: initialNote
       }
     ];
   } else {
@@ -3371,7 +3517,7 @@ export const saveITServiceOrder = async (orderData, updateNote = '', notifyEmail
   }
 
   // Handle Automatic Email Notification
-  if (notifyEmail && orderData.requesterEmail) {
+  if (notifyEmail && orderData.requesterEmail && orderData.origin !== 'internal') {
     const notification = {
       date: now,
       recipientEmail: orderData.requesterEmail,
@@ -3479,4 +3625,327 @@ export const subscribeToITServiceOrders = (callback) => {
 
   return () => unsubscribe();
 };
+
+// ==========================================
+// T.I. DAILY ROUNDS (RONDA DIÁRIA DE T.I.)
+// ==========================================
+const LOCAL_STORAGE_IT_ROUNDS_KEY = 'nexa_it_daily_rounds';
+
+const INITIAL_IT_DAILY_ROUNDS = [
+  {
+    id: 'round-sample-1',
+    date: '2026-09-24T07:40:00.000Z',
+    technician: 'Lucas T.I.',
+    unitId: 'betim',
+    unit: 'Betim',
+    status: 'Conforme',
+    summary: 'Ronda matinal 100% aprovada. Links redundantes ok, servidores 19°C e Zebras operacionais.',
+    items: {
+      internetPrimary: 'conforme',
+      internetSecondary: 'conforme',
+      serverRoomTemp: 'conforme',
+      nightlyBackup: 'conforme',
+      nobreaks: 'conforme',
+      zebraPrinters: 'conforme',
+      barcodeScanners: 'conforme',
+      receptionTerminals: 'conforme'
+    },
+    notes: 'Realizada antes da abertura do 1º turno de hemodiálise. Sem pendências.'
+  }
+];
+
+export const getITDailyRounds = async () => {
+  if (USE_MOCK) {
+    try {
+      const data = localStorage.getItem(LOCAL_STORAGE_IT_ROUNDS_KEY);
+      if (data) return JSON.parse(data);
+    } catch (e) {
+      console.warn('Erro ao ler rondas de T.I. do localStorage:', e);
+    }
+    return INITIAL_IT_DAILY_ROUNDS;
+  }
+  try {
+    const { getFirestore, collection, getDocs, query, orderBy } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const q = query(collection(db, 'it_daily_rounds'), orderBy('date', 'desc'));
+    const snap = await getDocs(q);
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (items.length === 0) {
+      return INITIAL_IT_DAILY_ROUNDS;
+    }
+    return items;
+  } catch (err) {
+    console.error('Erro ao buscar rondas de T.I. no Firestore:', err);
+    try {
+      const data = localStorage.getItem(LOCAL_STORAGE_IT_ROUNDS_KEY);
+      if (data) return JSON.parse(data);
+    } catch (e) {}
+    return INITIAL_IT_DAILY_ROUNDS;
+  }
+};
+
+export const saveITDailyRound = async (roundData) => {
+  const now = new Date().toISOString();
+  const id = roundData.id || `round-${Date.now()}`;
+  const record = { ...roundData, id, date: roundData.date || now, createdAt: now };
+
+  try {
+    const existing = await getITDailyRounds();
+    const updated = [record, ...existing.filter(r => r.id !== id)];
+    localStorage.setItem(LOCAL_STORAGE_IT_ROUNDS_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.warn('Erro ao salvar ronda no localStorage:', e);
+  }
+
+  if (USE_MOCK) return record;
+
+  try {
+    const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await setDoc(doc(db, 'it_daily_rounds', id), record, { merge: true });
+    return record;
+  } catch (err) {
+    console.error('Erro ao salvar ronda no Firestore (salvo localmente):', err);
+    return record;
+  }
+};
+
+// ==========================================
+// T.I. ASSETS INVENTORY (INVENTÁRIO DE ATIVOS T.I.)
+// ==========================================
+const LOCAL_STORAGE_IT_ASSETS_KEY = 'nexa_it_assets';
+
+const INITIAL_IT_ASSETS = [
+  {
+    id: 'TI-AST-001',
+    code: 'TI-PAT-001',
+    name: 'Impressora Térmica Zebra ZD220',
+    type: 'Impressora',
+    sector: 'Recepção',
+    location: 'Guichê 1',
+    unitId: 'betim',
+    unit: 'Betim',
+    brand: 'Zebra',
+    model: 'ZD220T 203DPI',
+    serialNumber: 'ZBR2024-98211',
+    ipAddress: '192.168.10.45',
+    macAddress: '00:07:4D:A2:1F:B4',
+    status: 'Operacional',
+    acquisitionDate: '2024-03-15',
+    notes: 'Impressora de etiquetas de tubos e exames laboratoriais.'
+  },
+  {
+    id: 'TI-AST-002',
+    code: 'TI-PAT-002',
+    name: 'Desktop Dell OptiPlex 7090',
+    type: 'Desktop',
+    sector: 'Posto de Enfermagem',
+    location: 'Bancada Central Salão A',
+    unitId: 'betim',
+    unit: 'Betim',
+    brand: 'Dell',
+    model: 'OptiPlex 7090 i5 16GB SSD 512GB',
+    serialNumber: '8FJ2912',
+    ipAddress: '192.168.10.60',
+    macAddress: 'F4:02:70:9A:88:21',
+    status: 'Operacional',
+    acquisitionDate: '2024-01-20',
+    notes: 'Estação clínica para evolução e prescrição médica.'
+  },
+  {
+    id: 'TI-AST-003',
+    code: 'TI-PAT-003',
+    name: 'Switch Gerenciável 24P PoE+',
+    type: 'Rede',
+    sector: 'Sala de Servidores',
+    location: 'Rack Principal - U08',
+    unitId: 'betim',
+    unit: 'Betim',
+    brand: 'Ubiquiti',
+    model: 'UniFi Switch Pro 24 PoE',
+    serialNumber: 'UBQ2023-4410',
+    ipAddress: '192.168.10.2',
+    macAddress: '70:A7:41:2B:65:01',
+    status: 'Operacional',
+    acquisitionDate: '2023-11-10',
+    notes: 'Distribuição de rede e alimentação PoE para Access Points.'
+  },
+  {
+    id: 'TI-AST-004',
+    code: 'TI-PAT-004',
+    name: 'Nobreak Senoidal 3000VA',
+    type: 'Energia',
+    sector: 'Sala de Servidores',
+    location: 'Piso Rack CPD',
+    unitId: 'betim',
+    unit: 'Betim',
+    brand: 'SMS',
+    model: 'Mirassol Sinus Triad 3kVA',
+    serialNumber: 'SMS-3000-8812',
+    ipAddress: '192.168.10.15',
+    status: 'Operacional',
+    acquisitionDate: '2023-08-15',
+    notes: 'Alimentação ininterrupta do servidor Nexa e switches centrais.'
+  },
+  {
+    id: 'TI-AST-005',
+    code: 'TI-PAT-005',
+    name: 'Leitor Código de Barras 2D',
+    type: 'Periférico',
+    sector: 'Farmácia Clínica',
+    location: 'Bancada Fracionamento',
+    unitId: 'betim',
+    unit: 'Betim',
+    brand: 'Honeywell',
+    model: 'Voyager 1400g 2D USB',
+    serialNumber: 'HNW-2024-5519',
+    status: 'Operacional',
+    acquisitionDate: '2024-05-10',
+    notes: 'Leitura de lote e validade de medicamentos e kits.'
+  }
+];
+
+export const getITAssets = async () => {
+  if (USE_MOCK) {
+    try {
+      const data = localStorage.getItem(LOCAL_STORAGE_IT_ASSETS_KEY);
+      if (data) return JSON.parse(data);
+    } catch (e) {
+      console.warn('Erro ao ler ativos T.I. do localStorage:', e);
+    }
+    return INITIAL_IT_ASSETS;
+  }
+  try {
+    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const snap = await getDocs(collection(db, 'it_assets'));
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (items.length === 0) {
+      return INITIAL_IT_ASSETS;
+    }
+    return items;
+  } catch (err) {
+    console.error('Erro ao buscar ativos T.I. no Firestore:', err);
+    try {
+      const data = localStorage.getItem(LOCAL_STORAGE_IT_ASSETS_KEY);
+      if (data) return JSON.parse(data);
+    } catch (e) {}
+    return INITIAL_IT_ASSETS;
+  }
+};
+
+export const saveITAsset = async (assetData) => {
+  const isNew = !assetData.id;
+  const now = new Date().toISOString();
+  const id = assetData.id || `TI-AST-${Date.now().toString(36).toUpperCase()}`;
+  const record = { ...assetData, id, updatedAt: now };
+  if (isNew) record.createdAt = now;
+
+  try {
+    const existing = await getITAssets();
+    const list = isNew ? [record, ...existing] : existing.map(a => a.id === id ? record : a);
+    localStorage.setItem(LOCAL_STORAGE_IT_ASSETS_KEY, JSON.stringify(list));
+  } catch (e) {
+    console.warn('Erro ao salvar ativo T.I. no localStorage:', e);
+  }
+
+  if (USE_MOCK) return record;
+
+  try {
+    const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await setDoc(doc(db, 'it_assets', id), record, { merge: true });
+    return record;
+  } catch (err) {
+    console.error('Erro ao salvar ativo T.I. no Firestore:', err);
+    return record;
+  }
+};
+
+export const deleteITAsset = async (id) => {
+  try {
+    const existing = await getITAssets();
+    const list = existing.filter(a => a.id !== id);
+    localStorage.setItem(LOCAL_STORAGE_IT_ASSETS_KEY, JSON.stringify(list));
+  } catch (e) {
+    console.warn('Erro ao deletar ativo no localStorage:', e);
+  }
+
+  if (USE_MOCK) return { success: true, id };
+
+  try {
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'it_assets', id));
+    return { success: true, id };
+  } catch (err) {
+    console.error('Erro ao deletar ativo no Firestore:', err);
+    return { success: true, id };
+  }
+};
+
+// ==========================================
+// T.I. KNOWLEDGE BASE (WIKI & PROCEDIMENTOS RÁPIDOS)
+// ==========================================
+export const INITIAL_IT_WIKI_ARTICLES = [
+  {
+    id: 'wiki-1',
+    title: 'Calibração e Troca de Ribbon na Impressora Zebra ZD220',
+    category: 'Impressoras',
+    summary: 'Procedimento para resolver luz vermelha piscante e desalinhamento de etiquetas.',
+    steps: [
+      'Abra a tampa superior pressionando as duas travas amarelas laterais.',
+      'Verifique se o rolo de etiquetas está encaixado no suporte com os roletes centralizadores bem ajustados.',
+      'Passe as etiquetas sob as duas guias transparentes ajustáveis até a saída frontal.',
+      'Feche a tampa firmemente até ouvir os dois cliques laterais.',
+      'Com a impressora ligada, segure o botão de avanço (Feed) até o LED piscar 2 vezes e solte imediatamente.',
+      'A impressora puxará 2 a 3 etiquetas e calibrará automaticamente a altura do sensor de gap.'
+    ]
+  },
+  {
+    id: 'wiki-2',
+    title: 'Falha de Internet e Ativação do Link Redundante 4G',
+    category: 'Rede',
+    summary: 'Procedimento para restabelecimento de conexão em contingência durante hemodiálise.',
+    steps: [
+      'Acesse a Sala de Servidores (CPD) e localize o roteador concentrador na U12.',
+      'Verifique o LED da porta WAN 1 (Fibra Principal): se apagado ou laranja piscante, a operadora teve indisponibilidade.',
+      'O sistema comuta automaticamente para o modem 4G/5G corporativo da porta WAN 2.',
+      'Nos postos clínicos, aguarde 30 segundos ou desconecte e reconecte o cabo de rede para renovar o lease DHCP.',
+      'Abra o navegador no Nex-Ai CLINIC e confirme o banner verde de conexão ativa.'
+    ]
+  },
+  {
+    id: 'wiki-3',
+    title: 'Reset e Configuração de Leitor de Código de Barras USB',
+    category: 'Periféricos',
+    summary: 'Como restabelecer leitura rápida quando o scanner não envia os dados ao sistema.',
+    steps: [
+      'Desconecte o cabo USB do computador e aguarde 5 segundos.',
+      'Reconecte em uma porta USB traseira da CPU (alimentação mais estável que as frontais).',
+      'Aguarde o duplo bipe agudo indicando inicialização correta da porta serial virtual.',
+      'Abra o Bloco de Notas (Notepad) no Windows e leia um código de barras de teste.',
+      'Se o código for digitado e o cursor saltar de linha (Enter automático), o leitor está homologado.'
+    ]
+  },
+  {
+    id: 'wiki-4',
+    title: 'Instalação do Certificado Digital A1 no Windows',
+    category: 'Sistemas',
+    summary: 'Passos para importar arquivo .pfx de médico para prescrições e laudos eletrônicos.',
+    steps: [
+      'Copie o arquivo do certificado (.pfx ou .p12) para a pasta Downloads da estação.',
+      'Dê duplo clique no arquivo e selecione "Usuário Atual" no assistente do Windows.',
+      'Clique em Avançar, digite a senha fornecida pela Autoridade Certificadora.',
+      'Marque a opção "Marcar chave como exportável" e clique em Avançar.',
+      'Selecione "Selecionar automaticamente o repositório de certificados conforme o tipo".',
+      'Clique em Concluir. Abra o módulo .MED do Nex-Ai para assinar prescrições.'
+    ]
+  }
+];
+
+export const getITWikiArticles = () => {
+  return INITIAL_IT_WIKI_ARTICLES;
+};
+
 

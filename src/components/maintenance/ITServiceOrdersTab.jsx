@@ -7,8 +7,13 @@ import {
   ChevronRight, RefreshCw, Check, AlertOctagon, Activity, DollarSign, 
   List, LayoutGrid, User, Eye, Printer, ShieldCheck, HelpCircle,
   MessageSquare, Send, ArrowRight, Gauge, CheckSquare, Zap, Tag,
-  ArrowUpDown, ArrowUp, ArrowDown
+  ArrowUpDown, ArrowUp, ArrowDown, Wrench, BookOpen, Kanban, Play,
+  Pause, RotateCcw, ArrowRightCircle
 } from 'lucide-react';
+import ITNewTaskModal from './ITNewTaskModal';
+import ITDailyRoundModal from './ITDailyRoundModal';
+import ITAssetsModal from './ITAssetsModal';
+import ITWikiModal from './ITWikiModal';
 
 const IT_CATEGORIES = [
   { id: 'Hardware', name: 'Hardware', subcategories: ['Desktop', 'Notebook', 'Monitor', 'Nobreak', 'Teclado/Mouse', 'Fonte/Cabos', 'Outro'] },
@@ -58,7 +63,8 @@ export default function ITServiceOrdersTab({
   filterByActiveUnit,
   onOpenNewOrderGlobal
 }) {
-  const [viewMode, setViewMode] = useState('compact'); // 'compact' | 'cards' | 'sla'
+  const [viewMode, setViewMode] = useState('compact'); // 'compact' | 'cards' | 'kanban' | 'sla'
+  const [originFilter, setOriginFilter] = useState('all'); // 'all' | 'user' | 'internal'
   const [orders, setOrders] = useState([]);
   const [itSort, setItSort] = useState({ field: 'code', dir: 'desc' });
   const [loading, setLoading] = useState(true);
@@ -74,9 +80,20 @@ export default function ITServiceOrdersTab({
 
   // Modals
   const [showNewModal, setShowNewModal] = useState(false);
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [showDailyRoundModal, setShowDailyRoundModal] = useState(false);
+  const [showAssetsModal, setShowAssetsModal] = useState(false);
+  const [showWikiModal, setShowWikiModal] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [newComment, setNewComment] = useState('');
+
+  const KANBAN_COLUMNS = [
+    { id: 'pendente', title: 'Pendente', color: '#6366f1', statuses: ['Aberta', 'Em Triagem'] },
+    { id: 'andamento', title: 'Em Andamento', color: '#0284c7', statuses: ['Em Atendimento'] },
+    { id: 'aguardando', title: 'Aguardando', color: '#f59e0b', statuses: ['Aguardando Usuário', 'Aguardando Peça'] },
+    { id: 'concluido', title: 'Concluído', color: '#10b981', statuses: ['Resolvida', 'Concluída', 'Cancelada'] }
+  ];
 
   // Form State - New Order
   const [form, setForm] = useState({
@@ -253,6 +270,9 @@ export default function ITServiceOrdersTab({
       const matchesSector = sectorFilter === 'all' || order.sector === sectorFilter;
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
       const matchesPriority = priorityFilter === 'all' || order.priority === priorityFilter;
+      const matchesOrigin = 
+        originFilter === 'all' || 
+        (originFilter === 'internal' ? order.origin === 'internal' : order.origin !== 'internal');
 
       let matchesSla = true;
       if (slaFilter !== 'all') {
@@ -263,9 +283,9 @@ export default function ITServiceOrdersTab({
         else if (slaFilter === 'met') matchesSla = sla.type === 'met';
       }
 
-      return matchesSearch && matchesCat && matchesSector && matchesStatus && matchesPriority && matchesSla;
+      return matchesSearch && matchesCat && matchesSector && matchesStatus && matchesPriority && matchesSla && matchesOrigin;
     });
-  }, [scopedOrders, searchTerm, categoryFilter, sectorFilter, statusFilter, priorityFilter, slaFilter]);
+  }, [scopedOrders, searchTerm, categoryFilter, sectorFilter, statusFilter, priorityFilter, slaFilter, originFilter]);
 
   // Handle IT Sorting
   const handleItSort = (field) => {
@@ -403,12 +423,19 @@ export default function ITServiceOrdersTab({
       ? Math.round((metSlaCount / totalResolvedWithSla) * 100) 
       : 100;
 
+    const userCount = scopedOrders.filter(o => o.origin !== 'internal').length;
+    const internalCount = scopedOrders.filter(o => o.origin === 'internal').length;
+    const proactiveRate = total > 0 ? Math.round((internalCount / total) * 100) : 0;
+
     const avgResolutionTime = resolvedOrders.length > 0
       ? (totalResolutionTimeHours / resolvedOrders.length).toFixed(1)
       : '0.0';
 
     return {
       total,
+      userCount,
+      internalCount,
+      proactiveRate,
       openCount: openOrders.length,
       resolvedCount: resolvedOrders.length,
       criticalCount: criticalOrders.length,
@@ -505,6 +532,53 @@ export default function ITServiceOrdersTab({
     } catch (err) {
       console.error('Erro ao atualizar chamado:', err);
       showAlert('Erro ao atualizar chamado.', 'danger');
+    }
+  };
+
+  // Quick Status Transition (Kanban)
+  const handleQuickStatusChange = async (order, nextStatus) => {
+    try {
+      const now = new Date().toISOString();
+      const updatedLogs = [
+        {
+          id: `log-${Date.now()}`,
+          date: now,
+          author: currentUser?.name || 'Técnico T.I.',
+          status: nextStatus,
+          note: `Status alterado no Kanban para: ${nextStatus}`
+        },
+        ...(order.timelineLogs || [])
+      ];
+
+      const payload = {
+        ...order,
+        status: nextStatus,
+        lastUpdatedBy: currentUser?.name || 'Técnico T.I.',
+        timelineLogs: updatedLogs
+      };
+
+      if (['Resolvida', 'Concluída'].includes(nextStatus)) {
+        payload.completionDate = now;
+      }
+
+      await dbService.saveITServiceOrder(payload, `Status alterado para ${nextStatus}`, false);
+      showAlert(`Status de ${order.code} alterado para ${nextStatus}!`, 'success');
+      fetchOrders();
+    } catch (err) {
+      console.error('Erro ao atualizar status no Kanban:', err);
+      showAlert('Erro ao atualizar status da tarefa.', 'danger');
+    }
+  };
+
+  // Handle Save Internal Task
+  const handleSaveInternalTask = async (taskPayload) => {
+    try {
+      const saved = await dbService.saveITServiceOrder(taskPayload, 'Tarefa interna proativa cadastrada pela equipe de T.I.', false);
+      showAlert(`Tarefa ${saved.code} cadastrada com sucesso!`, 'success');
+      fetchOrders();
+    } catch (err) {
+      console.error('Erro ao salvar tarefa interna:', err);
+      showAlert('Erro ao cadastrar tarefa interna.', 'danger');
     }
   };
 
@@ -692,6 +766,42 @@ export default function ITServiceOrdersTab({
         </div>
       )}
 
+      {/* Origin Segmentation Filters */}
+      <div style={styles.originTabsRow}>
+        <div style={styles.originPillsGroup}>
+          <button
+            type="button"
+            onClick={() => setOriginFilter('all')}
+            style={{
+              ...styles.originPill,
+              ...(originFilter === 'all' ? styles.originPillActive : {})
+            }}
+          >
+            Todos ({slaMetrics.total})
+          </button>
+          <button
+            type="button"
+            onClick={() => setOriginFilter('user')}
+            style={{
+              ...styles.originPill,
+              ...(originFilter === 'user' ? styles.originPillActiveUser : {})
+            }}
+          >
+            <Laptop size={13} /> Chamados ({slaMetrics.userCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setOriginFilter('internal')}
+            style={{
+              ...styles.originPill,
+              ...(originFilter === 'internal' ? styles.originPillActiveInternal : {})
+            }}
+          >
+            <Wrench size={13} /> Tarefas Internas ({slaMetrics.internalCount})
+          </button>
+        </div>
+      </div>
+
       {/* KPI Cards Row */}
       <div style={styles.kpiGrid}>
         <div style={styles.kpiCard}>
@@ -732,6 +842,15 @@ export default function ITServiceOrdersTab({
 
         <div style={styles.kpiCard}>
           <div style={styles.kpiHeader}>
+            <span style={styles.kpiLabel}>Atuação Proativa</span>
+            <Activity size={18} color="#7c3aed" />
+          </div>
+          <div style={{ ...styles.kpiValue, color: '#7c3aed' }}>{slaMetrics.proactiveRate}%</div>
+          <span style={styles.kpiSub}>{slaMetrics.internalCount} Proativas • {slaMetrics.userCount} Reativas</span>
+        </div>
+
+        <div style={styles.kpiCard}>
+          <div style={styles.kpiHeader}>
             <span style={styles.kpiLabel}>Conformidade SLA</span>
             <Gauge size={18} color="#6366f1" />
           </div>
@@ -756,6 +875,12 @@ export default function ITServiceOrdersTab({
             <LayoutGrid size={15} /> Cards
           </button>
           <button 
+            style={{ ...styles.viewBtn, ...(viewMode === 'kanban' ? styles.viewBtnActive : {}) }}
+            onClick={() => setViewMode('kanban')}
+          >
+            <Kanban size={15} /> Kanban
+          </button>
+          <button 
             style={{ ...styles.viewBtn, ...(viewMode === 'sla' ? styles.viewBtnActive : {}) }}
             onClick={() => setViewMode('sla')}
           >
@@ -763,9 +888,49 @@ export default function ITServiceOrdersTab({
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button onClick={handleOpenNew} style={styles.btnPrimary}>
-            <Plus size={16} /> Novo Chamado
+            <Plus size={16} /> Chamado
+          </button>
+
+          {isTechOrAdmin && (
+            <>
+              <button 
+                type="button"
+                onClick={() => setShowNewTaskModal(true)} 
+                style={styles.btnPurple}
+                title="Cadastrar ação interna da equipe de T.I."
+              >
+                <Wrench size={15} /> Tarefa T.I.
+              </button>
+
+              <button 
+                type="button"
+                onClick={() => setShowDailyRoundModal(true)} 
+                style={styles.btnSky}
+                title="Checklist matinal de rotina de infraestrutura"
+              >
+                <ShieldCheck size={15} /> Ronda Diária
+              </button>
+
+              <button 
+                type="button"
+                onClick={() => setShowAssetsModal(true)} 
+                style={styles.btnIndigo}
+                title="Controle patrimonial e etiquetas com QR Code"
+              >
+                <HardDrive size={15} /> Inventário
+              </button>
+            </>
+          )}
+
+          <button 
+            type="button"
+            onClick={() => setShowWikiModal(true)} 
+            style={styles.btnEmerald}
+            title="Procedimentos rápidos e soluções técnicas"
+          >
+            <BookOpen size={15} /> Wiki
           </button>
         </div>
       </div>
@@ -887,7 +1052,18 @@ export default function ITServiceOrdersTab({
 
                   return (
                     <tr key={order.id} style={styles.tr}>
-                      <td style={styles.tdBold}>{order.code}</td>
+                      <td style={styles.tdBold}>
+                        <div>{order.code}</div>
+                        {order.origin === 'internal' ? (
+                          <span style={styles.badgeInternalMini}>
+                            <Wrench size={9} /> Tarefa
+                          </span>
+                        ) : (
+                          <span style={styles.badgeTicketMini}>
+                            <Laptop size={9} /> Chamado
+                          </span>
+                        )}
+                      </td>
                       <td style={styles.td}>
                         <div style={{ fontWeight: 600, color: '#1e293b' }}>{order.title}</div>
                         <div style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px' }}>
@@ -967,6 +1143,15 @@ export default function ITServiceOrdersTab({
                   <div style={styles.cardTop}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={styles.cardCode}>{order.code}</span>
+                      {order.origin === 'internal' ? (
+                        <span style={styles.badgeInternalMini}>
+                          <Wrench size={10} /> Tarefa
+                        </span>
+                      ) : (
+                        <span style={styles.badgeTicketMini}>
+                          <Laptop size={10} /> Chamado
+                        </span>
+                      )}
                       <span style={{ ...styles.badge, backgroundColor: pStyle.bg, color: pStyle.text, borderColor: pStyle.border }}>
                         {order.priority}
                       </span>
@@ -1003,6 +1188,150 @@ export default function ITServiceOrdersTab({
               );
             })
           )}
+        </div>
+      )}
+
+      {/* VIEW 3: KANBAN BOARD */}
+      {viewMode === 'kanban' && (
+        <div style={styles.kanbanContainer}>
+          {KANBAN_COLUMNS.map(col => {
+            const colOrders = sortedOrders.filter(o => col.statuses.includes(o.status));
+            return (
+              <div key={col.id} style={styles.kanbanCol}>
+                <div style={{ ...styles.kanbanColHeader, borderTopColor: col.color }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ ...styles.kanbanDot, backgroundColor: col.color }} />
+                    <span style={styles.kanbanColTitle}>{col.title}</span>
+                  </div>
+                  <span style={styles.kanbanCountBadge}>{colOrders.length}</span>
+                </div>
+
+                <div style={styles.kanbanCardsList}>
+                  {colOrders.length === 0 ? (
+                    <div style={styles.kanbanEmpty}>Nenhuma demanda</div>
+                  ) : (
+                    colOrders.map(order => {
+                      const sla = getSlaStatus(order);
+                      const pStyle = getPriorityBadgeStyle(order.priority);
+                      const isInternal = order.origin === 'internal';
+
+                      return (
+                        <div key={order.id} style={styles.kanbanCard}>
+                          {/* Card top */}
+                          <div style={styles.kanbanCardTop}>
+                            {isInternal ? (
+                              <span style={styles.badgeInternalTag}>
+                                <Wrench size={10} /> Tarefa {order.taskType ? `• ${order.taskType}` : ''}
+                              </span>
+                            ) : (
+                              <span style={styles.badgeTicketTag}>
+                                <Laptop size={10} /> Chamado
+                              </span>
+                            )}
+                            <span style={{ ...styles.badge, backgroundColor: pStyle.bg, color: pStyle.text, borderColor: pStyle.border, fontSize: '10px' }}>
+                              {order.priority}
+                            </span>
+                          </div>
+
+                          <div style={styles.kanbanCardCode}>{order.code}</div>
+                          <div style={styles.kanbanCardTitle}>{order.title}</div>
+
+                          <div style={styles.kanbanCardMeta}>
+                            <div>Setor: <strong style={{ color: '#1e293b' }}>{order.sector}</strong></div>
+                            <div>Técnico: <strong style={{ color: '#4338ca' }}>{order.assignedTechnician || 'Pendente'}</strong></div>
+                          </div>
+
+                          {/* SLA Pill */}
+                          <div style={{ margin: '6px 0' }}>
+                            <span style={{ ...styles.badge, backgroundColor: sla.bg, color: sla.color, borderColor: sla.border, fontWeight: 700, fontSize: '10px' }}>
+                              {sla.badgeText || sla.label}
+                            </span>
+                          </div>
+
+                          {/* Card Actions & Moves */}
+                          <div style={styles.kanbanCardActions}>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <button 
+                                type="button"
+                                onClick={() => handleOpenManage(order)}
+                                style={styles.actionBtnPrimary}
+                                title={isTechOrAdmin ? "Atender" : "Ver"}
+                              >
+                                <Eye size={12} />
+                              </button>
+                              <button 
+                                type="button"
+                                onClick={() => handlePrintOrder(order)}
+                                style={styles.actionBtnSecondary}
+                                title="Imprimir"
+                              >
+                                <Printer size={12} />
+                              </button>
+                            </div>
+
+                            {isTechOrAdmin && (
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                {col.id === 'pendente' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleQuickStatusChange(order, 'Em Atendimento')}
+                                    style={styles.kanbanMoveBtn}
+                                    title="Iniciar atendimento"
+                                  >
+                                    <Play size={10} /> Iniciar
+                                  </button>
+                                )}
+                                {col.id === 'andamento' && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleQuickStatusChange(order, 'Aguardando Peça')}
+                                      style={styles.kanbanMoveBtnWait}
+                                      title="Aguardar Peça/Usuário"
+                                    >
+                                      <Pause size={10} /> Pausar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleQuickStatusChange(order, 'Resolvida')}
+                                      style={styles.kanbanMoveBtnSuccess}
+                                      title="Concluir demanda"
+                                    >
+                                      <Check size={10} /> Concluir
+                                    </button>
+                                  </>
+                                )}
+                                {col.id === 'aguardando' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleQuickStatusChange(order, 'Em Atendimento')}
+                                    style={styles.kanbanMoveBtn}
+                                    title="Retomar atendimento"
+                                  >
+                                    <Play size={10} /> Retomar
+                                  </button>
+                                )}
+                                {col.id === 'concluido' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleQuickStatusChange(order, 'Aberta')}
+                                    style={styles.kanbanMoveBtnReopen}
+                                    title="Reabrir demanda"
+                                  >
+                                    <RotateCcw size={10} /> Reabrir
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -1375,6 +1704,35 @@ export default function ITServiceOrdersTab({
           </div>
         </div>
       )}
+
+      {/* MODAL: NOVA TAREFA PROATIVA DE T.I. */}
+      <ITNewTaskModal
+        isOpen={showNewTaskModal}
+        onClose={() => setShowNewTaskModal(false)}
+        onSave={handleSaveInternalTask}
+        currentUser={currentUser}
+      />
+
+      {/* MODAL: RONDA DIÁRIA DE T.I. */}
+      <ITDailyRoundModal
+        isOpen={showDailyRoundModal}
+        onClose={() => setShowDailyRoundModal(false)}
+        currentUser={currentUser}
+        onRoundSaved={() => showAlert('Ronda matinal de T.I. registrada com sucesso!', 'success')}
+      />
+
+      {/* MODAL: INVENTÁRIO DE ATIVOS T.I. */}
+      <ITAssetsModal
+        isOpen={showAssetsModal}
+        onClose={() => setShowAssetsModal(false)}
+        currentUser={currentUser}
+      />
+
+      {/* MODAL: BASE DE CONHECIMENTO (WIKI T.I.) */}
+      <ITWikiModal
+        isOpen={showWikiModal}
+        onClose={() => setShowWikiModal(false)}
+      />
     </div>
   );
 }
@@ -1384,6 +1742,301 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '16px'
+  },
+  originTabsRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '10px'
+  },
+  originPillsGroup: {
+    display: 'flex',
+    gap: '6px',
+    background: 'var(--card-bg, #ffffff)',
+    border: '1px solid var(--border-color, #e2e8f0)',
+    borderRadius: '10px',
+    padding: '4px'
+  },
+  originPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 14px',
+    borderRadius: '7px',
+    border: 'none',
+    background: 'transparent',
+    color: '#64748b',
+    fontSize: '12px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  originPillActive: {
+    background: '#1e293b',
+    color: '#ffffff'
+  },
+  originPillActiveUser: {
+    background: '#2563eb',
+    color: '#ffffff'
+  },
+  originPillActiveInternal: {
+    background: '#7c3aed',
+    color: '#ffffff'
+  },
+  btnPurple: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: '#7c3aed',
+    color: '#ffffff',
+    border: 'none',
+    padding: '7px 12px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    boxShadow: '0 1px 3px rgba(124, 58, 237, 0.2)'
+  },
+  btnSky: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: '#0284c7',
+    color: '#ffffff',
+    border: 'none',
+    padding: '7px 12px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: 600,
+    cursor: 'pointer'
+  },
+  btnIndigo: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: '#4f46e5',
+    color: '#ffffff',
+    border: 'none',
+    padding: '7px 12px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: 600,
+    cursor: 'pointer'
+  },
+  btnEmerald: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: '#059669',
+    color: '#ffffff',
+    border: 'none',
+    padding: '7px 12px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: 600,
+    cursor: 'pointer'
+  },
+  badgeInternalMini: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
+    padding: '1px 5px',
+    borderRadius: '4px',
+    fontSize: '9px',
+    fontWeight: 700,
+    background: '#f5f3ff',
+    color: '#7c3aed',
+    border: '1px solid #ddd6fe',
+    marginTop: '2px'
+  },
+  badgeTicketMini: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
+    padding: '1px 5px',
+    borderRadius: '4px',
+    fontSize: '9px',
+    fontWeight: 700,
+    background: '#eff6ff',
+    color: '#2563eb',
+    border: '1px solid #bfdbfe',
+    marginTop: '2px'
+  },
+  badgeInternalTag: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    fontSize: '10px',
+    fontWeight: 700,
+    background: '#f5f3ff',
+    color: '#7c3aed',
+    border: '1px solid #ddd6fe'
+  },
+  badgeTicketTag: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    fontSize: '10px',
+    fontWeight: 700,
+    background: '#eff6ff',
+    color: '#2563eb',
+    border: '1px solid #bfdbfe'
+  },
+  kanbanContainer: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '14px',
+    alignItems: 'flex-start'
+  },
+  kanbanCol: {
+    background: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderTop: '3px solid',
+    borderRadius: '10px',
+    padding: '12px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px'
+  },
+  kanbanColHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: '6px',
+    borderBottom: '1px solid #e2e8f0'
+  },
+  kanbanDot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%'
+  },
+  kanbanColTitle: {
+    fontSize: '13px',
+    fontWeight: 700,
+    color: '#1e293b'
+  },
+  kanbanCountBadge: {
+    fontSize: '11px',
+    fontWeight: 700,
+    background: '#ffffff',
+    border: '1px solid #cbd5e1',
+    color: '#475569',
+    padding: '1px 6px',
+    borderRadius: '10px'
+  },
+  kanbanCardsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    minHeight: '120px'
+  },
+  kanbanCard: {
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    padding: '10px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+  kanbanCardTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  kanbanCardCode: {
+    fontSize: '11px',
+    fontWeight: 800,
+    color: '#4338ca'
+  },
+  kanbanCardTitle: {
+    fontSize: '12px',
+    fontWeight: 600,
+    color: '#0f172a',
+    lineHeight: 1.3
+  },
+  kanbanCardMeta: {
+    fontSize: '10px',
+    color: '#64748b',
+    background: '#f8fafc',
+    padding: '5px 7px',
+    borderRadius: '5px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px'
+  },
+  kanbanCardActions: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTop: '1px solid #f1f5f9',
+    paddingTop: '6px',
+    marginTop: '2px'
+  },
+  kanbanEmpty: {
+    padding: '24px',
+    textAlign: 'center',
+    color: '#94a3b8',
+    fontSize: '11px',
+    fontStyle: 'italic'
+  },
+  kanbanMoveBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
+    background: '#f0fdf4',
+    color: '#15803d',
+    border: '1px solid #bbf7d0',
+    padding: '3px 6px',
+    borderRadius: '4px',
+    fontSize: '10px',
+    fontWeight: 700,
+    cursor: 'pointer'
+  },
+  kanbanMoveBtnWait: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
+    background: '#fffbeb',
+    color: '#b45309',
+    border: '1px solid #fde68a',
+    padding: '3px 6px',
+    borderRadius: '4px',
+    fontSize: '10px',
+    fontWeight: 700,
+    cursor: 'pointer'
+  },
+  kanbanMoveBtnSuccess: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
+    background: '#dcfce7',
+    color: '#166534',
+    border: '1px solid #86efac',
+    padding: '3px 6px',
+    borderRadius: '4px',
+    fontSize: '10px',
+    fontWeight: 700,
+    cursor: 'pointer'
+  },
+  kanbanMoveBtnReopen: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
+    background: '#f1f5f9',
+    color: '#475569',
+    border: '1px solid #cbd5e1',
+    padding: '3px 6px',
+    borderRadius: '4px',
+    fontSize: '10px',
+    fontWeight: 700,
+    cursor: 'pointer'
   },
   alert: {
     display: 'flex',

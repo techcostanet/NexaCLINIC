@@ -6,6 +6,22 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.98',
+      date: '24/09/2026',
+      title: 'Nex-Ai CLINIC — Gestão Completa de T.I. (.SERVICE): Tarefas Internas, Kanban, Ronda Diária, Ativos com QR Code, Wiki Técnica & Navegação Mensal de Aniversariantes (.HR)',
+      description: 'Expansão e profissionalização do suporte de Tecnologia da Informação (.SERVICE): separação estrutural entre chamados externos e tarefas internas da equipe de T.I., visualização Kanban ágil por colunas com movimentação em 1 clique, rotina de Ronda Diária Matinal com checklist e histórico de auditoria, gestão de Inventário de Ativos de T.I. com geração e impressão de etiquetas patrimoniais com QR Code, Base de Conhecimento técnica (Wiki T.I.) com POPs da clínica, e novo KPI de Atuação Proativa. No módulo de RH (.HR), inclusão de navegação entre meses passados e futuros no Mural de Aniversariantes, seletor de ano, retorno ao mês atual e impressão oficial em formato A4 para murais físicos.',
+      changes: [
+        { type: 'Mural de Aniversariantes (.HR)', text: 'Navegação dinâmica de meses (anterior/próximo), seletor de ano, botão "Mês Atual", recálculo instantâneo de aniversários e layout oficial de impressão A4.' },
+        { type: 'Chamados vs. Tarefas Internas', text: 'Separação clara entre chamados externos de usuários e rotinas internas de T.I., com botões dedicados (+ Chamado e + Tarefa T.I.) e sem disparo de notificações desnecessárias a terceiros.' },
+        { type: 'Quadro Kanban Ágil', text: 'Visualização dinâmica em colunas de atendimento (Pendente, Em Andamento, Aguardando, Concluído) com transição de status ágil em 1 clique.' },
+        { type: 'Ronda Diária Matinal de T.I.', text: 'Checklist preventivo de início de expediente para links de internet, CPD, backups, Zebras, scanners e nobreaks, com histórico persistido.' },
+        { type: 'Inventário de Ativos & QR Code', text: 'Controle de hardware com IP, localização, setor, responsável e geração de etiquetas patrimoniais com QR Code prontas para impressão.' },
+        { type: 'Wiki & POPs de T.I.', text: 'Base de conhecimento integrada com procedimentos técnicos passo a passo (Zebra, link de contingência 4G, leitor de código de barras e certificados).' },
+        { type: 'KPI de Atuação Proativa', text: 'Novo indicador no painel de SLA que mede o percentual de tarefas preventivas da equipe de T.I. frente aos chamados reativos de usuários.' },
+        { type: 'Boy Scout Rule (Rótulos)', text: 'Conformidade com a diretriz de rótulos estritos de 1 palavra/termo único em todos os novos componentes.' }
+      ]
+    },
+    {
       version: 'v4.9.96',
       date: '24/09/2026',
       title: 'Nex-Ai CLINIC — Mural de Aniversariantes, Felicitações via WhatsApp e Novos Cards Estratégicos no RH (.HR)',

@@ -1,3 +1,29 @@
+## [v4.9.98] - 24 de Setembro, 2026
+### Nex-Ai CLINIC (.SERVICE & .HR) — Gestão Completa de T.I.: Tarefas Internas, Kanban, Ronda Diária, Ativos com QR Code, Wiki Técnica & Navegação de Aniversariantes
+- **Mural de Aniversariantes (.HR):**
+  - Navegação dinâmica entre meses (anterior/próximo), seletor de ano e botão de retorno ágil "Mês Atual".
+  - Recálculo dinâmico automático de todos os aniversariantes do mês selecionado.
+  - Layout oficial para impressão de cartaz A4 formatado para fixação nos murais físicos e quadros de aviso da clínica.
+- **Separação de Chamados vs. Tarefas Internas (.SERVICE):**
+  - Pílulas de filtro de origem rápida (`Todos`, `Chamados`, `Tarefas Internas`).
+  - Dois botões distintos de criação: `+ Chamado` (para abertura padrão de chamados de usuários) e `+ Tarefa T.I.` (para rotinas internas proativas).
+  - Formulário rápido de Tarefas Internas com tipo de atividade (Servidor, Backup, Rede, Antivírus, Infra, Outro), sem notificações de e-mail a solicitantes externos.
+- **Quadro Kanban Ágil de T.I.:**
+  - Visualização dinâmica em colunas de status: `Pendente`, `Em Andamento`, `Aguardando` e `Concluído`.
+  - Cards detalhados com código, categoria, prioridade, técnico, setor e botões de avanço de status em 1 clique.
+- **Ronda Diária Matinal de T.I.:**
+  - Checklist preventivo estruturado para conferência diária no início do expediente: Links de internet (Fibra e 4G Contingência), Temperatura do CPD (18-22°C), Rotina de Backups, Impressoras Zebra de etiquetas, Scanners e Nobreaks.
+  - Histórico de auditoria de rondas executadas com data, hora, responsável e observações.
+- **Inventário de Ativos de T.I. com QR Code:**
+  - Cadastro completo de estações de trabalho, notebooks, servidores, switches e impressoras com IP de rede, setor físico e responsável.
+  - Emissão e impressão de etiquetas patrimoniais com QR Code de alta resolução em layout pronto para impressoras térmicas e A4.
+- **Base de Conhecimento Técnica (Wiki T.I.):**
+  - Acervo prático de Procedimentos Operacionais Padrão (POPs) cobrindo Calibração de Zebra GC420t/ZD220, Ativação de contingência 4G, Reset de leitor de código de barras e Importação de certificados digitais A1.
+- **Indicador de Atuação Proativa:**
+  - Métrica de maturidade de T.I. no painel executivo de SLA calculando a proporção de ações preventivas internas frente ao total de chamados reativos.
+- **Boy Scout Rule & Padrão de Rótulos de 1 Palavra:**
+  - Higienização e aplicação rígida do padrão de termo único em todos os novos componentes e modais criados.
+
 ## [v4.9.96] - 24 de Setembro, 2026
 ### Nex-Ai CLINIC (.HR) — Mural de Aniversariantes, Felicitações via WhatsApp e Novos Cards Estratégicos no RH
 - **Mural de Aniversariantes Completo:**
