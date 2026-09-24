@@ -1,3 +1,11 @@
+## [v4.9.99] - 24 de Setembro, 2026
+### Nex-Ai CLINIC (.HR) — Hotfix Ordem de React Hooks no Mural de Aniversariantes (Minified React Error #310)
+- **Correção da Ordem dos Hooks (React Rules of Hooks):**
+  - Realocada a checagem condicional `if (!isOpen) return null;` para após todos os hooks (`useState`, `useRef`, `useEffect` e `useMemo`) em `BirthdayMuralModal.jsx`.
+  - Solucionado o erro `Minified React error #310` ("Rendered more hooks than during the previous render"), permitindo que o mural abra perfeitamente ao clicar em "Mural" nos cards ou no banner festivo.
+- **Ciclo de Vida & Reset na Abertura:**
+  - Adicionado `useEffect` com dependência de `isOpen` para redefinir o mês/ano selecionado para o atual, limpar termos de busca e reiniciar o filtro sempre que o mural for aberto.
+
 ## [v4.9.98] - 24 de Setembro, 2026
 ### Nex-Ai CLINIC (.SERVICE & .HR) — Gestão Completa de T.I.: Tarefas Internas, Kanban, Ronda Diária, Ativos com QR Code, Wiki Técnica & Navegação de Aniversariantes
 - **Mural de Aniversariantes (.HR):**

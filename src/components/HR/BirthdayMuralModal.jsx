@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Gift, X, Printer, Download, Search, MessageCircle, Calendar, Sparkles, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -28,7 +28,14 @@ export default function BirthdayMuralModal({
   const [filterType, setFilterType] = useState('all'); // 'all' | 'today' | 'upcoming' | 'past'
   const printRef = useRef(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedMonth(currentRealMonth);
+      setSelectedYear(currentRealYear);
+      setSearchTerm('');
+      setFilterType('all');
+    }
+  }, [isOpen, currentRealMonth, currentRealYear]);
 
   const isCurrentMonthView = selectedMonth === currentRealMonth && selectedYear === currentRealYear;
   const isFutureMonthView = selectedYear > currentRealYear || (selectedYear === currentRealYear && selectedMonth > currentRealMonth);
@@ -114,6 +121,8 @@ export default function BirthdayMuralModal({
       return a.day - b.day;
     });
   }, [activeBirthdays, isCurrentMonthView, isFutureMonthView, isPastMonthView, todayDay, sectors]);
+
+  if (!isOpen) return null;
 
   // Métricas rápidas
   const todaysCount = enrichedBirthdays.filter(b => b.isToday).length;

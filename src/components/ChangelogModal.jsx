@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.99',
+      date: '24/09/2026',
+      title: 'Nex-Ai CLINIC — Hotfix Ordem de React Hooks no Mural de Aniversariantes (Minified React Error #310) (.HR)',
+      description: 'Correção crítica na execução do modal Mural de Aniversariantes no módulo de Recursos Humanos (.HR): reordenação estrita dos React Hooks (useMemo, useEffect, useState, useRef) garantindo que todas as chamadas de hooks ocorram incondicionalmente no topo do componente antes de qualquer saída condicional, eliminando o erro React #310 ("Rendered more hooks than during the previous render") e restaurando a abertura instantânea do mural.',
+      changes: [
+        { type: 'Hotfix React Error #310', text: 'Movida a verificação condicional if (!isOpen) return null para após a declaração de todos os hooks useMemo, preservando a paridade de renderização entre os estados aberto e fechado do modal.' },
+        { type: 'Ciclo de Vida & Reset', text: 'Inclusão de hook useEffect com dependência de isOpen para reiniciar automaticamente a busca, os filtros e selecionar o mês/ano vigente no momento da abertura do mural.' },
+        { type: 'Estabilidade do Mural', text: 'Garantia de carregamento seguro dos aniversariantes em tempo de execução sem travamento de tela ou exceção minificada no console.' }
+      ]
+    },
+    {
       version: 'v4.9.98',
       date: '24/09/2026',
       title: 'Nex-Ai CLINIC — Gestão Completa de T.I. (.SERVICE): Tarefas Internas, Kanban, Ronda Diária, Ativos com QR Code, Wiki Técnica & Navegação Mensal de Aniversariantes (.HR)',
