@@ -14,6 +14,15 @@ import CalendarReportsModal from './CalendarReportsModal';
 import TvTipsManagerModal from './tv/TvTipsManagerModal';
 import QRCode from 'qrcode';
 import { formatDoctorDisplayName, sortDoctorsByName } from '../utils/doctorFormatters';
+import { getDoctorColor } from '../utils/doctorColors';
+import { 
+  generateDoctorTimeSlots, 
+  isDoctorAttendingOnDate, 
+  getDoctorDayShiftSummary, 
+  findNextAttendingDate, 
+  WEEKDAY_NAMES, 
+  getDayOfWeekFromDate 
+} from '../utils/scheduleSlots';
 import { useUnit } from '../contexts/UnitContext';
 import ModuleHeader from './common/ModuleHeader';
 
@@ -591,9 +600,12 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
     }
   };
 
-  // Formatted Current Date
+  // Formatted Current Date (em tempo local sem discrepâncias de fuso)
   const formattedCurrentDate = useMemo(() => {
-    return currentDate.toISOString().substring(0, 10);
+    const y = currentDate.getFullYear();
+    const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const d = String(currentDate.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   }, [currentDate]);
 
   // Brazilian holiday for current date
@@ -609,6 +621,63 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
       (selectedDoctorId === 'all' || b.doctorId === 'all' || b.doctorId === selectedDoctorId)
     );
   }, [currentScheduleBlocks, formattedCurrentDate, selectedDoctorId]);
+
+  // Selected Doctor Object & Schedule Hooks
+  const selectedDoctorObj = useMemo(() => {
+    if (selectedDoctorId === 'all') return null;
+    return doctors.find(d => d.uid === selectedDoctorId) || null;
+  }, [doctors, selectedDoctorId]);
+
+  const selectedDoctorSched = useMemo(() => {
+    if (selectedDoctorId === 'all') return null;
+    return currentDoctorSchedules.find(s => s.doctorId === selectedDoctorId) || 
+           doctorSchedules.find(s => s.doctorId === selectedDoctorId) || null;
+  }, [currentDoctorSchedules, doctorSchedules, selectedDoctorId]);
+
+  const selectedDocColor = useMemo(() => {
+    if (!selectedDoctorObj) return getDoctorColor('clinica');
+    return getDoctorColor(selectedDoctorObj.uid || selectedDoctorObj.name);
+  }, [selectedDoctorObj]);
+
+  const isDoctorWorkingToday = useMemo(() => {
+    if (!selectedDoctorSched) return false;
+    return isDoctorAttendingOnDate(selectedDoctorSched, formattedCurrentDate);
+  }, [selectedDoctorSched, formattedCurrentDate]);
+
+  const selectedDoctorDaySummary = useMemo(() => {
+    if (!selectedDoctorSched) return null;
+    return getDoctorDayShiftSummary(selectedDoctorSched, formattedCurrentDate);
+  }, [selectedDoctorSched, formattedCurrentDate]);
+
+  const doctorSlotsForDate = useMemo(() => {
+    if (!selectedDoctorSched || !isDoctorWorkingToday) return [];
+    return generateDoctorTimeSlots(selectedDoctorSched, formattedCurrentDate);
+  }, [selectedDoctorSched, isDoctorWorkingToday, formattedCurrentDate]);
+
+  const nextWorkingDate = useMemo(() => {
+    if (selectedDoctorId !== 'all' && selectedDoctorSched && !isDoctorWorkingToday) {
+      return findNextAttendingDate(selectedDoctorSched, formattedCurrentDate);
+    }
+    return null;
+  }, [selectedDoctorId, selectedDoctorSched, isDoctorWorkingToday, formattedCurrentDate]);
+
+  // Resumo de médicos com atendimento hoje (para barra de presença na visão geral)
+  const todayDoctorsScheduleSummary = useMemo(() => {
+    return doctors.map(doc => {
+      const sched = currentDoctorSchedules.find(s => s.doctorId === doc.uid) || 
+                    doctorSchedules.find(s => s.doctorId === doc.uid);
+      if (!sched) return null;
+      const shiftSummary = getDoctorDayShiftSummary(sched, formattedCurrentDate);
+      if (!shiftSummary.isAttending) return null;
+      const color = getDoctorColor(doc.uid || doc.name);
+      return {
+        doctor: doc,
+        schedule: sched,
+        summary: shiftSummary,
+        color
+      };
+    }).filter(Boolean);
+  }, [doctors, currentDoctorSchedules, doctorSchedules, formattedCurrentDate]);
 
   // 🔍 GLOBAL SEARCH RESULTS (Searches across ALL days, ALL months, ALL years)
   const globalSearchResults = useMemo(() => {
@@ -689,8 +758,26 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
   // Dynamic Time Slots for Day View
   const dynamicTimeSlots = useMemo(() => {
     const aptTimes = dayAppointments.map(a => a.time).filter(Boolean);
+
+    // Quando um médico específico está selecionado
+    if (selectedDoctorId !== 'all') {
+      if (selectedDoctorSched) {
+        if (isDoctorWorkingToday) {
+          const gridTimes = doctorSlotsForDate.map(s => s.time);
+          return Array.from(new Set([...gridTimes, ...aptTimes])).sort();
+        } else {
+          // Dia sem atendimento regular: exibe apenas os horários com agendamentos já existentes (ex: encaixes)
+          return Array.from(new Set(aptTimes)).sort();
+        }
+      } else {
+        // Médico sem grade configurada ainda: régua padrão + consultas
+        return Array.from(new Set([...defaultTimeSlots, ...aptTimes])).sort();
+      }
+    }
+
+    // Visão Geral (Todos os Médicos): horários padrão + consultas existentes
     return Array.from(new Set([...defaultTimeSlots, ...aptTimes])).sort();
-  }, [dayAppointments, defaultTimeSlots]);
+  }, [dayAppointments, defaultTimeSlots, selectedDoctorId, selectedDoctorSched, isDoctorWorkingToday, doctorSlotsForDate]);
 
   // Filtered patients for autocomplete modal
   const modalFilteredPatients = useMemo(() => {
@@ -884,158 +971,383 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
 
   // 1. Day View (Timeline Table)
   const renderDayView = () => {
+    // Caso especial: Médico selecionado, possui grade, mas não atende hoje e não há agendamentos extraordinários
+    if (selectedDoctorId !== 'all' && selectedDoctorSched && !isDoctorWorkingToday && dayAppointments.length === 0) {
+      return (
+        <div style={styles.noScheduleDayCard}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexDirection: 'column' }}>
+            <div style={{ ...styles.docAvatarCircle, backgroundColor: selectedDocColor.badgeBg, color: selectedDocColor.text }}>
+              <User size={28} />
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                <strong style={{ fontSize: '1.1rem', color: '#0f172a' }}>
+                  {formatDoctorDisplayName(selectedDoctorObj?.name)}
+                </strong>
+                <span style={{ fontSize: '0.72rem', fontWeight: '700', padding: '0.15rem 0.5rem', borderRadius: '9999px', backgroundColor: '#f1f5f9', color: '#64748b' }}>
+                  Sem Atendimento
+                </span>
+              </div>
+              <p style={{ margin: '0.35rem 0 0', fontSize: '0.85rem', color: '#64748b', maxWidth: '480px' }}>
+                Este profissional não possui grade de atendimento configurada para <strong>{WEEKDAY_NAMES[getDayOfWeekFromDate(formattedCurrentDate)]}s</strong> ({formattedCurrentDate.split('-').reverse().join('/')}).
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+            {nextWorkingDate && (
+              <button
+                type="button"
+                onClick={() => setCurrentDate(nextWorkingDate.dateObj)}
+                style={{ ...styles.btnPrimarySmall, backgroundColor: selectedDocColor.primary }}
+              >
+                <CalendarIcon size={14} />
+                Próximo ({nextWorkingDate.dayName}, {nextWorkingDate.dateStr.split('-').reverse().slice(0, 2).join('/')})
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => handleOpenAddModal({ 
+                date: formattedCurrentDate, 
+                isEncaixe: true, 
+                doctorId: selectedDoctorId, 
+                room: selectedDoctorSched?.defaultRoom || 'Consultório 1' 
+              })}
+              style={styles.btnSecondarySmall}
+            >
+              <Zap size={14} color="#f59e0b" />
+              Encaixe
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDoctorScheduleModal(true)}
+              style={styles.btnOutlineSmall}
+            >
+              <Sliders size={14} />
+              Grade
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div style={styles.tableWrapper}>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={{ ...styles.th, width: '130px', textAlign: 'center' }}>Horário</th>
-              <th style={styles.th}>Paciente</th>
-              <th style={styles.th}>Médico</th>
-              <th style={styles.th}>WhatsApp</th>
-              <th style={styles.th}>Status</th>
-              <th style={{ ...styles.th, width: '170px', textAlign: 'center' }}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {dynamicTimeSlots.map(time => {
-              const aptsAtThisTime = dayAppointments.filter(a => a.time === time);
-              
-              const isSlotBlocked = currentDayBlocks.some(b => {
-                if (b.period === 'Dia Inteiro') return true;
-                if (b.period === 'Manhã') return time < '12:00';
-                if (b.period === 'Tarde') return time >= '12:00';
-                if (b.period === 'Horário') return time >= (b.startTime || '00:00') && time <= (b.endTime || '23:59');
-                return false;
-              });
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {/* Banner: Escala de Profissionais Atendendo Hoje (Visão Todos) */}
+        {selectedDoctorId === 'all' && todayDoctorsScheduleSummary.length > 0 && (
+          <div style={styles.todayScheduleBanner}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0f172a', fontWeight: '700', fontSize: '0.82rem' }}>
+              <Users size={15} color="#0284c7" />
+              <span>Escala:</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+              {todayDoctorsScheduleSummary.map(item => (
+                <button
+                  key={item.doctor.uid}
+                  type="button"
+                  onClick={() => setSelectedDoctorId(item.doctor.uid)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    backgroundColor: item.color.bg,
+                    border: `1px solid ${item.color.border}`,
+                    color: item.color.text,
+                    padding: '0.2rem 0.55rem',
+                    borderRadius: '6px',
+                    fontSize: '0.78rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                  title={`Filtrar agenda do Dr(a). ${formatDoctorDisplayName(item.doctor.name)}`}
+                >
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: item.color.primary }} />
+                  <span>{formatDoctorDisplayName(item.doctor.name)}</span>
+                  <span style={{ fontSize: '0.7rem', opacity: 0.85 }}>({item.summary.text} • {item.summary.room})</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
-              if (aptsAtThisTime.length === 0) {
-                return (
-                  <tr key={time} style={{ ...styles.trEmpty, backgroundColor: isSlotBlocked ? '#fef2f2' : '#ffffff' }}>
-                    <td style={styles.tdTime}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.2rem' }}>
-                        <Clock size={13} color={isSlotBlocked ? '#dc2626' : '#94a3b8'} />
-                        <span style={{ fontWeight: '700', fontSize: '0.88rem', color: isSlotBlocked ? '#dc2626' : '#64748b' }}>{time}</span>
-                      </div>
-                    </td>
-                    <td colSpan={5} style={styles.tdEmptySlot}>
-                      {isSlotBlocked ? (
-                        <div style={styles.blockedSlotBanner}>
-                          <Lock size={13} color="#dc2626" />
-                          <span>Horário Bloqueado</span>
-                          <button 
-                            type="button" 
-                            onClick={() => setShowScheduleBlockModal(true)} 
-                            style={styles.manageBlockSmallBtn}
-                          >
-                            Gerenciar
-                          </button>
+        {/* Banner: Grade Ativa do Médico Selecionado */}
+        {selectedDoctorId !== 'all' && selectedDoctorSched && isDoctorWorkingToday && (
+          <div style={{
+            ...styles.activeDoctorHeaderBanner,
+            backgroundColor: selectedDocColor.bg,
+            borderColor: selectedDocColor.border,
+            color: selectedDocColor.text
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <span style={{ width: '9px', height: '9px', borderRadius: '50%', backgroundColor: selectedDocColor.primary }} />
+              <strong style={{ fontSize: '0.88rem' }}>Grade • {formatDoctorDisplayName(selectedDoctorObj?.name)}</strong>
+              <span style={{ fontSize: '0.78rem', opacity: 0.9 }}>
+                • {selectedDoctorDaySummary?.text} ({selectedDoctorSched.defaultRoom || 'Consultório 1'} • {selectedDoctorSched.slotDuration || 30} min)
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowDoctorScheduleModal(true)}
+              style={{ ...styles.manageBlockSmallBtn, backgroundColor: '#ffffff', color: selectedDocColor.primary, borderColor: selectedDocColor.border }}
+            >
+              Grade
+            </button>
+          </div>
+        )}
+
+        {/* Banner: Dia sem atendimento regular com agendamento extraordinário */}
+        {selectedDoctorId !== 'all' && selectedDoctorSched && !isDoctorWorkingToday && dayAppointments.length > 0 && (
+          <div style={styles.offScheduleBanner}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <AlertTriangle size={15} color="#d97706" />
+              <span>
+                Dia sem atendimento regular na grade de <strong>{formatDoctorDisplayName(selectedDoctorObj?.name)}</strong>. Exibindo {dayAppointments.length} agendamento(s) extraordinário(s).
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowDoctorScheduleModal(true)}
+              style={{ ...styles.manageBlockSmallBtn, backgroundColor: '#ffffff', color: '#b45309', borderColor: '#fde68a' }}
+            >
+              Grade
+            </button>
+          </div>
+        )}
+
+        {/* Banner: Médico sem grade configurada */}
+        {selectedDoctorId !== 'all' && !selectedDoctorSched && (
+          <div style={styles.noScheduleConfiguredBanner}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Sparkles size={15} color="#2563eb" />
+              <span>
+                <strong>{formatDoctorDisplayName(selectedDoctorObj?.name)}</strong> ainda não possui grade de atendimento configurada.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowDoctorScheduleModal(true)}
+              style={{ ...styles.manageBlockSmallBtn, backgroundColor: '#ffffff', color: '#1d4ed8', borderColor: '#bfdbfe' }}
+            >
+              Configurar
+            </button>
+          </div>
+        )}
+
+        <div style={styles.tableWrapper}>
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={{ ...styles.th, width: '130px', textAlign: 'center' }}>Horário</th>
+                <th style={styles.th}>Paciente</th>
+                <th style={styles.th}>Médico</th>
+                <th style={styles.th}>WhatsApp</th>
+                <th style={styles.th}>Status</th>
+                <th style={{ ...styles.th, width: '170px', textAlign: 'center' }}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dynamicTimeSlots.map(time => {
+                const aptsAtThisTime = dayAppointments.filter(a => a.time === time);
+                
+                const isSlotBlocked = currentDayBlocks.some(b => {
+                  if (b.period === 'Dia Inteiro') return true;
+                  if (b.period === 'Manhã') return time < '12:00';
+                  if (b.period === 'Tarde') return time >= '12:00';
+                  if (b.period === 'Horário') return time >= (b.startTime || '00:00') && time <= (b.endTime || '23:59');
+                  return false;
+                });
+
+                if (aptsAtThisTime.length === 0) {
+                  const gridSlot = doctorSlotsForDate.find(s => s.time === time);
+                  const slotDuration = gridSlot?.duration || selectedDoctorSched?.slotDuration || 30;
+                  const slotEndTime = gridSlot?.endTime || addMinutesToTime(time, slotDuration);
+                  const slotRoom = gridSlot?.room || selectedDoctorSched?.defaultRoom || 'Consultório 1';
+                  const isDocGridActive = selectedDoctorId !== 'all' && isDoctorWorkingToday;
+
+                  return (
+                    <tr 
+                      key={time} 
+                      style={{ 
+                        ...styles.trEmpty, 
+                        backgroundColor: isSlotBlocked ? '#fef2f2' : (isDocGridActive ? selectedDocColor.bg : '#ffffff'),
+                        borderLeft: isDocGridActive ? `4px solid ${selectedDocColor.primary}` : 'none'
+                      }}
+                    >
+                      <td style={{ ...styles.tdTime, backgroundColor: isDocGridActive ? selectedDocColor.bg : '#fafbfc' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.2rem' }}>
+                          <Clock size={13} color={isSlotBlocked ? '#dc2626' : (isDocGridActive ? selectedDocColor.primary : '#94a3b8')} />
+                          <span style={{ fontWeight: '700', fontSize: '0.88rem', color: isSlotBlocked ? '#dc2626' : (isDocGridActive ? selectedDocColor.text : '#64748b') }}>{time}</span>
                         </div>
-                      ) : (
-                        <button 
-                          onClick={() => handleOpenAddModal({ time, date: formattedCurrentDate })} 
-                          style={styles.emptySlotBtn}
-                        >
-                          <Plus size={13} /> Horário Livre — Clique para Agendar
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              }
-
-              return (
-                <React.Fragment key={time}>
-                  {aptsAtThisTime.map((apt, idx) => {
-                    const patAge = apt.patientBirthDate ? calculateAge(apt.patientBirthDate) : null;
-                    const isMultiple = aptsAtThisTime.length > 1;
-
-                    return (
-                      <tr 
-                        key={apt.id} 
-                        style={{ 
-                          borderBottom: idx === aptsAtThisTime.length - 1 ? '2px solid #e2e8f0' : '1px dashed #e2e8f0',
-                          backgroundColor: apt.isEncaixe ? '#fffbeb' : '#ffffff'
-                        }}
-                      >
-                        {idx === 0 ? (
-                          <td 
-                            rowSpan={aptsAtThisTime.length}
-                            style={{ 
-                              fontWeight: '800', 
-                              color: '#0891b2', 
-                              textAlign: 'center', 
-                              backgroundColor: '#fafbfc',
-                              borderRight: '1px solid #e2e8f0',
-                              verticalAlign: 'top',
-                              paddingTop: '0.75rem'
+                      </td>
+                      <td colSpan={5} style={styles.tdEmptySlot}>
+                        {isSlotBlocked ? (
+                          <div style={styles.blockedSlotBanner}>
+                            <Lock size={13} color="#dc2626" />
+                            <span>Horário Bloqueado</span>
+                            <button 
+                              type="button" 
+                              onClick={() => setShowScheduleBlockModal(true)} 
+                              style={styles.manageBlockSmallBtn}
+                            >
+                              Gerenciar
+                            </button>
+                          </div>
+                        ) : isDocGridActive ? (
+                          <button 
+                            onClick={() => handleOpenAddModal({ 
+                              time, 
+                              endTime: slotEndTime, 
+                              date: formattedCurrentDate, 
+                              doctorId: selectedDoctorId, 
+                              room: slotRoom 
+                            })} 
+                            style={{
+                              ...styles.emptySlotBtn,
+                              borderColor: selectedDocColor.border,
+                              backgroundColor: '#ffffff'
                             }}
                           >
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                                <Clock size={14} />
-                                <span style={{ fontSize: '0.95rem' }}>{time}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0 0.25rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <Plus size={13} color={selectedDocColor.primary} />
+                                <span style={{ color: selectedDocColor.text }}>
+                                  <strong>Livre</strong> • {formatDoctorDisplayName(selectedDoctorObj?.name)}
+                                </span>
+                                <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                                  ({slotRoom} • {slotDuration} min)
+                                </span>
                               </div>
-                              {apt.endTime && (
-                                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>até {apt.endTime}</span>
-                              )}
-                              {isMultiple && (
-                                <span style={styles.multipleBadge}>
-                                  {aptsAtThisTime.length} pacientes
+                              <span style={{
+                                fontSize: '0.68rem',
+                                fontWeight: '700',
+                                padding: '0.12rem 0.45rem',
+                                borderRadius: '4px',
+                                backgroundColor: selectedDocColor.badgeBg,
+                                color: selectedDocColor.text
+                              }}>
+                                Oficial
+                              </span>
+                            </div>
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => handleOpenAddModal({ time, date: formattedCurrentDate })} 
+                            style={styles.emptySlotBtn}
+                          >
+                            <Plus size={13} /> Horário Livre — Clique para Agendar
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                }
+
+                return (
+                  <React.Fragment key={time}>
+                    {aptsAtThisTime.map((apt, idx) => {
+                      const patAge = apt.patientBirthDate ? calculateAge(apt.patientBirthDate) : null;
+                      const isMultiple = aptsAtThisTime.length > 1;
+                      const aptDocColor = getDoctorColor(apt.doctorId || apt.doctorName);
+
+                      return (
+                        <tr 
+                          key={apt.id} 
+                          style={{ 
+                            borderBottom: idx === aptsAtThisTime.length - 1 ? '2px solid #e2e8f0' : '1px dashed #e2e8f0',
+                            backgroundColor: apt.isEncaixe ? '#fffbeb' : '#ffffff',
+                            borderLeft: `4px solid ${aptDocColor.primary}`
+                          }}
+                        >
+                          {idx === 0 ? (
+                            <td 
+                              rowSpan={aptsAtThisTime.length}
+                              style={{ 
+                                fontWeight: '800', 
+                                color: '#0891b2', 
+                                textAlign: 'center', 
+                                backgroundColor: '#fafbfc',
+                                borderRight: '1px solid #e2e8f0',
+                                verticalAlign: 'top',
+                                paddingTop: '0.75rem'
+                              }}
+                            >
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                  <Clock size={14} />
+                                  <span style={{ fontSize: '0.95rem' }}>{time}</span>
+                                </div>
+                                {apt.endTime && (
+                                  <span style={{ fontSize: '0.7rem', color: '#64748b' }}>até {apt.endTime}</span>
+                                )}
+                                {isMultiple && (
+                                  <span style={styles.multipleBadge}>
+                                    {aptsAtThisTime.length} pacientes
+                                  </span>
+                                )}
+                                <button 
+                                  onClick={() => handleOpenAddModal({ time, date: formattedCurrentDate, isEncaixe: true, doctorId: apt.doctorId, room: apt.room })}
+                                  style={{ ...styles.addEncaixeBtn, marginTop: '0.4rem' }}
+                                  title="Adicionar Encaixe neste horário"
+                                >
+                                  <Zap size={10} /> + Encaixe
+                                </button>
+                              </div>
+                            </td>
+                          ) : null}
+
+                          {/* Paciente Info */}
+                          <td style={{ padding: '0.6rem 0.75rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                <strong style={{ fontSize: '0.92rem', color: '#0f172a' }}>{apt.patientName}</strong>
+                                {apt.isEncaixe && (
+                                  <span style={styles.encaixeBadge}>
+                                    <Zap size={11} /> ENCAIXE
+                                  </span>
+                                )}
+                              </div>
+
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#64748b', flexWrap: 'wrap' }}>
+                                <span style={{ fontWeight: '700', color: apt.type?.includes('Primeira') ? '#0891b2' : '#10b981' }}>
+                                  {apt.type}
+                                </span>
+                                {patAge && (
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', color: '#475569', backgroundColor: '#f1f5f9', padding: '0.1rem 0.35rem', borderRadius: '4px' }}>
+                                    <Cake size={11} color="#64748b" /> {patAge}
+                                  </span>
+                                )}
+                                {apt.patientPhone && <span>• 📞 {apt.patientPhone}</span>}
+                              </div>
+                              
+                              {apt.notes && (
+                                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                                  Obs: {apt.notes}
                                 </span>
                               )}
-                              <button 
-                                onClick={() => handleOpenAddModal({ time, date: formattedCurrentDate, isEncaixe: true })}
-                                style={{ ...styles.addEncaixeBtn, marginTop: '0.4rem' }}
-                                title="Adicionar Encaixe neste horário"
-                              >
-                                <Zap size={10} /> + Encaixe
-                              </button>
                             </div>
                           </td>
-                        ) : null}
 
-                        {/* Paciente Info */}
-                        <td style={{ padding: '0.6rem 0.75rem' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                              <strong style={{ fontSize: '0.92rem', color: '#0f172a' }}>{apt.patientName}</strong>
-                              {apt.isEncaixe && (
-                                <span style={styles.encaixeBadge}>
-                                  <Zap size={11} /> ENCAIXE
-                                </span>
-                              )}
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#64748b', flexWrap: 'wrap' }}>
-                              <span style={{ fontWeight: '700', color: apt.type?.includes('Primeira') ? '#0891b2' : '#10b981' }}>
-                                {apt.type}
+                          {/* Médico & Sala */}
+                          <td style={{ padding: '0.6rem 0.75rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                              <span style={{
+                                fontWeight: '700',
+                                fontSize: '0.8rem',
+                                color: aptDocColor.text,
+                                backgroundColor: aptDocColor.badgeBg,
+                                padding: '0.15rem 0.45rem',
+                                borderRadius: '4px',
+                                display: 'inline-block',
+                                width: 'fit-content'
+                              }}>
+                                {apt.doctorName}
                               </span>
-                              {patAge && (
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', color: '#475569', backgroundColor: '#f1f5f9', padding: '0.1rem 0.35rem', borderRadius: '4px' }}>
-                                  <Cake size={11} color="#64748b" /> {patAge}
-                                </span>
-                              )}
-                              {apt.patientPhone && <span>• 📞 {apt.patientPhone}</span>}
-                            </div>
-                            
-                            {apt.notes && (
-                              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontStyle: 'italic' }}>
-                                Obs: {apt.notes}
+                              <span style={{ fontSize: '0.75rem', color: apt.room === 'Nenhum' ? '#94a3b8' : '#64748b', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                                <Building2 size={12} /> {apt.room}
                               </span>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Médico & Sala */}
-                        <td style={{ padding: '0.6rem 0.75rem' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontWeight: '700', fontSize: '0.85rem', color: '#334155' }}>{apt.doctorName}</span>
-                            <span style={{ fontSize: '0.75rem', color: apt.room === 'Nenhum' ? '#94a3b8' : '#64748b', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
-                              <Building2 size={12} /> {apt.room}
-                            </span>
-                          </div>
-                        </td>
+                            </div>
+                          </td>
 
                         {/* WhatsApp */}
                         <td style={{ padding: '0.6rem 0.75rem' }}>
@@ -1155,8 +1467,9 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
           </tbody>
         </table>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   // 2. Multi-Room Grid View
   const renderRoomsView = () => {
@@ -1186,17 +1499,26 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                     </button>
                   </div>
                 ) : (
-                  roomApts.map(apt => (
-                    <div key={apt.id} style={{ ...styles.roomAptItem, ...(apt.isEncaixe ? { borderLeft: '3px solid #f97316', backgroundColor: '#fffbeb' } : {}) }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                          <strong style={{ color: '#0891b2', fontSize: '0.85rem' }}>{apt.time}{apt.endTime ? ` - ${apt.endTime}` : ''}</strong>
-                          {apt.isEncaixe && <span style={styles.encaixeBadgeSmall}>⚡ Encaixe</span>}
+                  roomApts.map(apt => {
+                    const docColor = getDoctorColor(apt.doctorId || apt.doctorName);
+                    return (
+                      <div 
+                        key={apt.id} 
+                        style={{ 
+                          ...styles.roomAptItem, 
+                          borderLeft: apt.isEncaixe ? '3px solid #f97316' : `3px solid ${docColor.primary}`,
+                          backgroundColor: apt.isEncaixe ? '#fffbeb' : '#ffffff' 
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <strong style={{ color: '#0891b2', fontSize: '0.85rem' }}>{apt.time}{apt.endTime ? ` - ${apt.endTime}` : ''}</strong>
+                            {apt.isEncaixe && <span style={styles.encaixeBadgeSmall}>⚡ Encaixe</span>}
+                          </div>
+                          <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#64748b' }}>{apt.status}</span>
                         </div>
-                        <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#64748b' }}>{apt.status}</span>
-                      </div>
-                      <span style={{ fontWeight: '700', fontSize: '0.85rem', color: '#1e293b' }}>{apt.patientName}</span>
-                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Médico: {apt.doctorName}</span>
+                        <span style={{ fontWeight: '700', fontSize: '0.85rem', color: '#1e293b' }}>{apt.patientName}</span>
+                        <span style={{ fontSize: '0.75rem', color: docColor.text, fontWeight: '700' }}>Médico: {apt.doctorName}</span>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.3rem', marginTop: '0.3rem', flexWrap: 'wrap' }}>
                         <button 
                           onClick={() => handleCallPatient(apt)} 
@@ -1217,8 +1539,9 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                         </button>
                       </div>
                     </div>
-                  ))
-                )}
+                  );
+                })
+              )}
               </div>
             </div>
           );
@@ -1289,7 +1612,7 @@ export default function CalendarPanel({ currentUser, isReportsOpen, setIsReports
                         <span style={{ fontSize: '0.65rem', fontWeight: '700', color: '#64748b' }}>{apt.room}</span>
                       </div>
                       <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#0f172a', margin: '0.1rem 0' }}>{apt.patientName}</div>
-                      <div style={{ fontSize: '0.7rem', color: '#475569' }}>{apt.doctorName}</div>
+                      <div style={{ fontSize: '0.7rem', color: getDoctorColor(apt.doctorId || apt.doctorName).text, fontWeight: '700' }}>{apt.doctorName}</div>
                     </div>
                   ))
                 )}
@@ -2752,6 +3075,105 @@ const styles = {
     padding: '0.15rem 0.45rem',
     borderRadius: '4px',
     cursor: 'pointer'
+  },
+  todayScheduleBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    padding: '0.55rem 0.85rem',
+    borderRadius: '8px',
+    marginBottom: '0.75rem',
+    flexWrap: 'wrap',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+  },
+  activeDoctorHeaderBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.75rem',
+    padding: '0.55rem 0.85rem',
+    borderRadius: '8px',
+    border: '1px solid',
+    marginBottom: '0.75rem',
+    flexWrap: 'wrap',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+  },
+  noScheduleDayCard: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '10px',
+    padding: '3rem 1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    gap: '1rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+  },
+  docAvatarCircle: {
+    width: '54px',
+    height: '54px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  btnPrimarySmall: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.45rem 0.85rem',
+    borderRadius: '6px',
+    border: 'none',
+    color: '#ffffff',
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    cursor: 'pointer',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+  },
+  btnOutlineSmall: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.45rem 0.85rem',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: '#ffffff',
+    color: '#475569',
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    cursor: 'pointer'
+  },
+  offScheduleBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+    backgroundColor: '#fffbeb',
+    border: '1px solid #fef3c7',
+    color: '#b45309',
+    padding: '0.55rem 0.85rem',
+    borderRadius: '6px',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    marginBottom: '0.75rem'
+  },
+  noScheduleConfiguredBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+    backgroundColor: '#eff6ff',
+    border: '1px solid #dbeafe',
+    color: '#1d4ed8',
+    padding: '0.55rem 0.85rem',
+    borderRadius: '6px',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    marginBottom: '0.75rem'
   },
   multipleBadge: {
     fontSize: '0.65rem',

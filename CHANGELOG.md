@@ -1,3 +1,19 @@
+## [v4.9.102] - 28 de Setembro, 2026
+### Nex-Ai CLINIC (.CAL) — Grade Dinâmica por Médico, Slots Reais Personalizados, Escala Diária e Cores Executivas de Profissionais
+- **Grade Dinâmica e Fiel por Profissional:**
+  - Ao selecionar um médico no filtro da visão "Horários", a grade abandona réguas genéricas cegas e renderiza com exatidão matemática os slots configurados (ex: 20 minutos para o Dr. Danrley, totalizando 7 slots das 11:00 às 13:20).
+  - Elimina o risco operacional da recepção agendar consultas fora do expediente ou em turnos em que o profissional não atende.
+- **Escala Diária e Barra de Presença:**
+  - Barra dinâmica no topo da visão geral exibindo os médicos escalados no dia, turnos e salas, com chips clicáveis de 1 toque para alternância instantânea.
+- **Paleta Executiva de Cores Médicas:**
+  - Sistema com algoritmo determinístico de hash atribuindo automaticamente cores clínicas e elegantes para cada médico em cards, slots livres e visões multissalas/semanal.
+- **Gestão Inteligente de Folgas & Atalho "Próximo":**
+  - Card explicativo em dias sem atendimento com botão para avançar diretamente para a próxima data disponível na grade do profissional e botão de encaixe extraordinário.
+- **Agendamento com 1 Clique:**
+  - Pré-preenchimento automático de médico, consultório e horários exatos de início e fim no formulário ao clicar em qualquer slot livre da grade oficial.
+- **Boy Scout Rule & Rótulos Concisos:**
+  - Aplicação rigorosa da diretriz de 1 palavra em todos os novos botões, filtros e cabeçalhos (`Escala`, `Próximo`, `Encaixe`, `Grade`, `Configurar`, `Oficial`).
+
 ## [v4.9.101] - 24 de Setembro, 2026
 ### Nex-Ai CLINIC (.SERVICE) — CRUD Completo de Chamados e Tarefas de T.I., Purga de Testes e Sistema de Cobrança de Agilidade
 - **Purga Definitiva dos Chamados de Teste:**

@@ -1921,6 +1921,18 @@ export const MODULE_GUIDES = {
         desc: 'Emissão instantânea de relatórios com cabeçalho institucional timbrado em PDF (A4) e planilhas dinâmicas em Excel prontas para auditorias e BI.'
       },
       {
+        title: 'Grade Dinâmica e Slots Personalizados por Médico',
+        desc: 'Geração automática de horários reais na visão Horários respeitando a duração de consulta (ex: 20 min), turnos manhã/tarde e consultório do médico selecionado, com pré-preenchimento instantâneo no agendamento.'
+      },
+      {
+        title: 'Escala de Profissionais e Barra de Presença Diária',
+        desc: 'Identificação visual no topo da Agenda com os médicos escalados para o dia e atalhos em 1 clique para filtrar diretamente a timeline de cada profissional.'
+      },
+      {
+        title: 'Identidade Visual Executiva e Cores por Profissional',
+        desc: 'Paleta refinada de cores médicas que destaca discretamente cada profissional nos agendamentos, na escala do dia e nos slots oficiais livres sem poluição visual.'
+      },
+      {
         title: 'Configuração Anual de Grade e Cotas',
         desc: 'Parametrização de cotas anuais e mensais de primeiras consultas, retornos e procedimentos por médico, com botão de replicação para os 12 meses do ano em 1 clique e painel de capacidade anual consolidada.'
       },
@@ -1950,6 +1962,15 @@ export const MODULE_GUIDES = {
       }
     ],
     tutorial: [
+      {
+        title: 'Como Utilizar a Grade Dinâmica por Médico',
+        steps: [
+          'No seletor de "Médico" na barra superior da visualização "Horários", selecione o profissional desejado.',
+          'O sistema renderizará imediatamente a régua com a duração exata da consulta (ex: 20 min) e os turnos em que o médico atende.',
+          'Clique em qualquer slot "+ Livre" para abrir o formulário já pré-preenchido com o médico, consultório e horários exatos de início e término.',
+          'Se o médico não atender no dia selecionado, utilize o botão "Próximo" para saltar automaticamente para o próximo dia com atendimento na grade.'
+        ]
+      },
       {
         title: 'Como Acessar e Exportar Relatórios da Agenda',
         steps: [
@@ -1999,6 +2020,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Por que os horários mudam ao selecionar um médico específico?',
+        resposta: 'Para garantir total precisão e segurança na recepção, quando um médico é selecionado, a visão "Horários" se ajusta automaticamente à grade oficial daquele profissional (duração do slot, turnos e consultório). Isso impede que a recepção agende pacientes fora do horário em que o médico atende.'
+      },
+      {
+        pergunta: 'O que fazer se um paciente precisar de atendimento num dia em que o médico não atende?',
+        resposta: 'Na tela de aviso de ausência da grade regular, a atendente pode clicar no botão "Encaixe" para lançar um agendamento extraordinário diretamente para aquele dia.'
+      },
       {
         pergunta: 'A TV da sala de espera precisa de login e senha para funcionar?',
         resposta: 'Não. O painel da TV (/tv) foi projetado com acesso público e seguro para exibição direta na sala de espera, conectando-se em tempo real às chamadas da recepção e consultórios sem exigir autenticação.'

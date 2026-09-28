@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.102',
+      date: '28/09/2026',
+      title: 'Nex-Ai CLINIC — Grade Dinâmica por Médico, Slots Reais Personalizados, Escala Diária e Cores Executivas de Profissionais (.CAL)',
+      description: 'Revolução visual e operacional no módulo Agenda (.CAL): geração dinâmica e automática dos slots de atendimento de acordo com a grade cadastrada de cada médico (respeitando a duração real de consulta de 20 min, turnos de atendimento e consultório oficial), eliminando o risco da recepção agendar consultas fora do expediente; barra de presença e escala diária com chips clicáveis na visão consolidada; sistema executivo de cores médicas sem saturação estridente para identificação imediata do profissional; detecção inteligente de dias sem atendimento com atalho de salto direto para a próxima data na grade do médico; e pré-preenchimento automático de parâmetros ao clicar em horários livres.',
+      changes: [
+        { type: 'Grade Dinâmica por Médico', text: 'Ao filtrar por um médico na visão Horários, a tabela renderiza exclusivamente os turnos e slots reais da grade oficial com a duração exata da consulta (ex: 20 min).' },
+        { type: 'Escala do Dia (Barra de Presença)', text: 'Barra no topo da visão geral listando todos os profissionais com atendimento ativo hoje, com chips interativos que filtram a agenda com 1 clique.' },
+        { type: 'Cores Executivas por Médico', text: 'Paleta clínica suave com algoritmo determinístico de cores para identificar cada médico em slots livres, cartões de consulta, visão de Salas e Semanal.' },
+        { type: 'Gestão de Folgas & Atalho Próximo', text: 'Card elegante exibido em dias sem atendimento do médico, com botão de salto instantâneo para o próximo dia disponível e botão direto para encaixes.' },
+        { type: 'Agendamento com 1 Clique', text: 'Ao clicar no slot livre da grade oficial, o modal já abre pré-preenchido com médico, horários corretos de início/término e consultório cadastrado.' },
+        { type: 'Boy Scout Rule (Rótulos)', text: 'Manutenção rigorosa do padrão de 1 palavra nos novos controles e cabeçalhos (Escala, Próximo, Encaixe, Grade, Configurar, Oficial).' }
+      ]
+    },
+    {
       version: 'v4.9.101',
       date: '24/09/2026',
       title: 'Nex-Ai CLINIC — CRUD Completo de Chamados e Tarefas de T.I., Purga de Testes e Sistema de Cobrança de Agilidade (.SERVICE)',
