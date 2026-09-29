@@ -86,6 +86,30 @@ export const FALLBACK_DOCTORS = [
     pixKey: 'georgiaar@nexa.com',
     bank: 'Banco do Brasil (001) Ag 3201 CC 82485-9',
     active: true
+  },
+  {
+    id: 'doc-moises-uid',
+    name: 'Moisés Arantes Diniz',
+    crm: '61245/MG',
+    specialty: 'Cirurgia Vascular',
+    email: 'moises.diniz@nexa.com',
+    phone: '(31) 98822-3344',
+    contractType: 'PJ',
+    pixKey: '61245000100',
+    bank: 'Unicred (136) Ag 3302 CC 61245-8',
+    active: true
+  },
+  {
+    id: 'doc-alexandre-uid',
+    name: 'Alexandre Jesus',
+    crm: '58932/MG',
+    specialty: 'Cirurgia Vascular',
+    email: 'alexandre.jesus@nexa.com',
+    phone: '(31) 98733-4455',
+    contractType: 'PJ',
+    pixKey: 'alexandre.jesus@pix.com',
+    bank: 'Sicoob (756) Ag 2101 CC 58932-3',
+    active: true
   }
 ];
 

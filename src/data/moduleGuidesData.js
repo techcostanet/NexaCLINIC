@@ -1748,6 +1748,10 @@ export const MODULE_GUIDES = {
         desc: 'Registro de procedimentos nefrológicos executados (CDL, Permcath, biópsias, mapeamentos de FAV) vinculando paciente e data.'
       },
       {
+        title: 'Integração de Cirurgias e Procedimentos',
+        desc: 'Captura automática em tempo real de cirurgias concluídas no Hub de Cirurgias (Nex-Ai.ASSIST) e procedimentos clínicos da Agenda (Nex-Ai.CAL), creditando honorários e discriminando a procedência (Cirurgia, Agenda, Manual).'
+      },
+      {
         title: 'Integração com Agenda (Nex-Ai.CAL)',
         desc: 'Captura automática de atendimentos e consultas concluídas na agenda para a apuração da produção médica.'
       },
@@ -1865,6 +1869,16 @@ export const MODULE_GUIDES = {
         ]
       },
       {
+        title: 'Como Cirurgias Concluídas Alimentam a Produção Médica',
+        steps: [
+          'No Hub de Cirurgias (Nex-Ai.ASSIST), marque o agendamento cirúrgico como "Concluir" (situação: Realizado).',
+          'O sistema precifica automaticamente o procedimento com base no Catálogo Unificado e vincula ao cirurgião responsável.',
+          'No Nex-Ai.MED, acesse a aba "Procedimentos" para conferir a listagem com o badge azul "Cirurgia".',
+          'Na aba "Produção", o cirurgião recebe imediatamente o incremento de quantidade e valor correspondente no mês da cirurgia.',
+          'No fechamento mensal, a coordenação visualiza os procedimentos no modal de homologação e o valor é repassado ao Contas a Pagar.'
+        ]
+      },
+      {
         title: 'Como Utilizar a Central de Relatórios do Nex-Ai.MED',
         steps: [
           'Clique no botão "Relatórios" na barra superior global.',
@@ -1876,6 +1890,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Uma cirurgia concluída no Hub de Cirurgias aparece automaticamente na Produção Médica?',
+        resposta: 'Sim! Todas as cirurgias com situação "Realizado" são integradas instantaneamente à Produção Médica do cirurgião responsável no mês da cirurgia, com precificação automática do catálogo e badge indicativo "Cirurgia".'
+      },
+      {
+        pergunta: 'O que acontece se uma cirurgia concluída for reaberta ou desmarcada?',
+        resposta: 'Ao reabrir a cirurgia para a situação "Agendado" (seja no Hub de Cirurgias ou na aba Procedimentos do Nex-Ai.MED), ela é imediatamente removida da apuração de produção médica do cirurgião.'
+      },
       {
         pergunta: 'Por que o cadastro médico é feito em 2 etapas (T.I. e Nex-Ai.MED)?',
         resposta: 'Para garantir máxima segurança: a criação da conta e concessão do perfil RBAC "Médico" fica centralizada no T.I., enquanto a complementação de dados sensíveis da prática médica (CRM, SUS, CPF, PIX e banco) fica sob gestão da Coordenação Médica.'

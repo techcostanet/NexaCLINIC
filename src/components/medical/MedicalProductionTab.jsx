@@ -4,7 +4,7 @@ import {
   Printer, ArrowRight, ShieldCheck, ChevronRight, Search, X
 } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
-import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
+import { formatDoctorDisplayName, sortDoctorsByName, isProcedureForDoctor } from '../../utils/doctorFormatters';
 import MedicalHomologationModal from './MedicalHomologationModal';
 
 export default function MedicalProductionTab({
@@ -47,16 +47,20 @@ export default function MedicalProductionTab({
         return acc + fee;
       }, 0);
 
-      // 2. Consultas: atendimentos concluídos na Agenda médica (0 se não houver atendimentos)
+      // 2. Consultas: atendimentos ambulatoriais concluídos na Agenda médica (excluindo procedimentos e cirurgias)
       const docConsults = appointments.filter(a => 
-        (a.doctorId === docId || a.doctorId === doc.id || a.doctorId === doc.uid || a.doctorName?.includes(doc.name)) &&
-        (a.status === 'Concluída' || a.status === 'Atendido' || a.status === 'completed' || a.status === 'Finalizado')
+        (a.doctorId === docId || a.doctorId === doc.id || a.doctorId === doc.uid || (a.doctorName && doc.name && a.doctorName.toLowerCase().includes(doc.name.toLowerCase()))) &&
+        (a.status === 'Concluída' || a.status === 'Atendido' || a.status === 'completed' || a.status === 'Finalizado') &&
+        (a.type !== 'Procedimento Clínico' && a.type !== 'Procedimento' && a.type !== 'Cirurgia')
       );
       const consultationsCount = docConsults.length;
       const consultationsTotal = consultationsCount * (consultFees['Ambulatorial'] || settings.consultationFee || 100.0);
 
-      // 3. Procedimentos: lançados na competência
-      const docProcs = procedures.filter(p => p.doctorId === docId || p.doctorId === doc.id || p.doctorId === doc.uid);
+      // 3. Procedimentos: procedimentos manuais, cirurgias e procedimentos da agenda apurados na competência
+      const docProcs = procedures.filter(p => 
+        isProcedureForDoctor(p, doc) &&
+        (!p.date || p.date.substring(0, 7) === selectedMonth)
+      );
       const proceduresCount = docProcs.length;
       const proceduresTotal = docProcs.reduce((acc, p) => acc + (parseFloat(p.value) || 0), 0);
 

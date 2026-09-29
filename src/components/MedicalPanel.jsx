@@ -5,7 +5,9 @@ import {
 } from 'lucide-react';
 import { dbService } from '../firebase';
 import { FALLBACK_DOCTORS } from '../services/firebase/medicalService';
-import { formatDoctorDisplayName, sortDoctorsByName } from '../utils/doctorFormatters';
+import { formatDoctorDisplayName, sortDoctorsByName, matchDoctorByNameOrId, isProcedureForDoctor } from '../utils/doctorFormatters';
+import { resolveProcedurePrice } from '../utils/procedurePriceResolver';
+import { INITIAL_PROCEDURES } from '../services/firebase/procedureService';
 
 import MedicalScheduleTab from './medical/MedicalScheduleTab';
 import MedicalMyShiftsTab from './medical/MedicalMyShiftsTab';
@@ -87,7 +89,9 @@ export default function MedicalPanel({ currentUser, onBack, isReportsOpen, setIs
         procsData,
         prodsData,
         patsData,
-        apptsData
+        apptsData,
+        surgeriesData,
+        catalogProcsData
       ] = await Promise.all([
         dbService.getMedicalDoctors ? dbService.getMedicalDoctors().catch(() => FALLBACK_DOCTORS) : Promise.resolve(FALLBACK_DOCTORS),
         dbService.getUsers ? dbService.getUsers().catch(() => []) : Promise.resolve([]),
@@ -97,7 +101,9 @@ export default function MedicalPanel({ currentUser, onBack, isReportsOpen, setIs
         dbService.getMedicalProcedures ? dbService.getMedicalProcedures().catch(() => []) : Promise.resolve([]),
         dbService.getMedicalProductions ? dbService.getMedicalProductions(selectedMonth).catch(() => []) : Promise.resolve([]),
         dbService.getPatients ? dbService.getPatients().catch(() => []) : Promise.resolve([]),
-        dbService.getAppointments ? dbService.getAppointments().catch(() => []) : Promise.resolve([])
+        dbService.getAppointments ? dbService.getAppointments().catch(() => []) : Promise.resolve([]),
+        dbService.getSurgeries ? dbService.getSurgeries().catch(() => []) : Promise.resolve([]),
+        dbService.getProcedures ? dbService.getProcedures().catch(() => INITIAL_PROCEDURES) : Promise.resolve(INITIAL_PROCEDURES)
       ]);
 
       // Unify doctors from medicalService and users (from Agenda)
@@ -129,6 +135,32 @@ export default function MedicalPanel({ currentUser, onBack, isReportsOpen, setIs
         }
       });
 
+      // Auto-descoberta dinâmica de cirurgiões cadastrados nos agendamentos cirúrgicos
+      (surgeriesData || []).forEach(s => {
+        if (s.surgeon && typeof s.surgeon === 'string' && s.surgeon.trim()) {
+          const sName = s.surgeon.trim();
+          const cleanName = formatDoctorDisplayName(sName);
+          const exists = unifiedDocs.some(d => 
+            d.id === s.doctorId || 
+            (d.name && formatDoctorDisplayName(d.name).toLowerCase() === cleanName.toLowerCase())
+          );
+          if (!exists) {
+            unifiedDocs.push({
+              id: s.doctorId || `doc-surgeon-${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+              name: cleanName,
+              crm: 'CRM Ativo',
+              specialty: 'Cirurgia Vascular',
+              email: '',
+              phone: '',
+              contractType: 'PJ',
+              pixKey: '',
+              bank: 'Banco Principal',
+              active: true
+            });
+          }
+        }
+      });
+
       const sortedDocs = sortDoctorsByName(unifiedDocs);
       setDoctors(sortedDocs);
 
@@ -148,10 +180,95 @@ export default function MedicalPanel({ currentUser, onBack, isReportsOpen, setIs
         setCurrentDoctorId(sortedDocs[0].id || sortedDocs[0].uid);
       }
 
+      // Catálogo unificado ativo para resolução de precificação
+      const activeCatalog = Array.isArray(catalogProcsData) && catalogProcsData.length > 0 ? catalogProcsData : INITIAL_PROCEDURES;
+
+      // 1. Procedimentos manuais registrados diretamente no Nex-Ai.MED
+      const manualProcedures = (procsData || []).map(p => ({
+        ...p,
+        source: p.source || 'Manual',
+        sourceType: 'Manual',
+        value: (parseFloat(p.value) > 0) ? parseFloat(p.value) : resolveProcedurePrice(p.procedureType || p.name, activeCatalog, settingsData?.procedureFees)
+      }));
+
+      // 2. Cirurgias concluídas (status === 'Realizado') do Hub de Cirurgias
+      const completedSurgeries = (surgeriesData || []).filter(s => s.status === 'Realizado');
+      const surgeryProcedures = completedSurgeries.map(s => {
+        const matchedDoc = matchDoctorByNameOrId(sortedDocs, s.doctorId || s.surgeon);
+        const resolvedVal = (s.value && typeof s.value === 'number' && s.value > 0)
+          ? s.value
+          : resolveProcedurePrice(s.procedure, activeCatalog, settingsData?.procedureFees);
+
+        return {
+          id: `surgery_${s.id}`,
+          surgeryId: s.id,
+          source: 'Cirurgia',
+          sourceType: 'Cirurgia',
+          doctorId: matchedDoc ? (matchedDoc.id || matchedDoc.uid) : (s.doctorId || `doc-${(s.surgeon || 'cirurgiao').toLowerCase().replace(/\s+/g, '-')}`),
+          doctorName: matchedDoc ? formatDoctorDisplayName(matchedDoc.name) : formatDoctorDisplayName(s.surgeon || 'Cirurgião'),
+          doctorCrm: matchedDoc?.crm || 'CRM Ativo',
+          patientId: s.patientId || null,
+          patientName: s.patientName || 'Paciente',
+          date: s.date || new Date().toISOString().substring(0, 10),
+          time: s.time || '',
+          procedureType: s.procedure || 'Cirurgia Vascular',
+          value: resolvedVal,
+          hospital: s.hospital || '',
+          status: 'Realizado',
+          unitId: s.unitId || 'all',
+          notes: s.observations || s.indication || s.motive || ''
+        };
+      });
+
+      // 3. Procedimentos clínicos concluídos na Agenda geral (Nex-Ai.CAL)
+      const appointmentProcedures = (apptsData || [])
+        .filter(a => 
+          (a.status === 'Concluída' || a.status === 'Atendido' || a.status === 'completed' || a.status === 'Finalizado') &&
+          (a.type === 'Procedimento Clínico' || a.type === 'Procedimento' || a.type === 'Cirurgia')
+        )
+        .map(a => {
+          const matchedDoc = matchDoctorByNameOrId(sortedDocs, a.doctorId || a.doctorName);
+          const resolvedVal = (a.value && typeof a.value === 'number' && a.value > 0)
+            ? a.value
+            : resolveProcedurePrice(a.procedureType || a.type || a.notes, activeCatalog, settingsData?.procedureFees);
+
+          return {
+            id: `appt_proc_${a.id}`,
+            appointmentId: a.id,
+            source: 'Agenda',
+            sourceType: 'Agenda',
+            doctorId: matchedDoc ? (matchedDoc.id || matchedDoc.uid) : (a.doctorId || 'doc-general'),
+            doctorName: matchedDoc ? formatDoctorDisplayName(matchedDoc.name) : formatDoctorDisplayName(a.doctorName || 'Médico'),
+            doctorCrm: matchedDoc?.crm || 'CRM Ativo',
+            patientId: a.patientId || null,
+            patientName: a.patientName || 'Paciente',
+            date: a.date || new Date().toISOString().substring(0, 10),
+            time: a.time || '',
+            procedureType: a.procedureType || a.notes || a.type || 'Procedimento Clínico',
+            value: resolvedVal,
+            status: 'Realizado',
+            unitId: a.unitId || 'all',
+            notes: a.notes || 'Procedimento realizado via Agenda'
+          };
+        });
+
+      // 4. Mesclar todos os procedimentos garantindo unicidade
+      const unifiedProcedures = [...manualProcedures];
+      [...surgeryProcedures, ...appointmentProcedures].forEach(item => {
+        const alreadyExists = unifiedProcedures.some(p => 
+          p.id === item.id || 
+          (item.surgeryId && p.surgeryId === item.surgeryId) ||
+          (item.appointmentId && p.appointmentId === item.appointmentId)
+        );
+        if (!alreadyExists) {
+          unifiedProcedures.push(item);
+        }
+      });
+
       setSettings(settingsData || {});
       setSchedules(schedsData || []);
       setSwaps(swapsData || []);
-      setProcedures(procsData || []);
+      setProcedures(unifiedProcedures);
       setProductions(prodsData || []);
       setPatients(patsData || []);
       setAppointments(apptsData || []);
@@ -284,15 +401,33 @@ export default function MedicalPanel({ currentUser, onBack, isReportsOpen, setIs
     }
   };
 
-  const handleDeleteProcedure = async (id) => {
-    if (!window.confirm('Deseja realmente excluir este procedimento?')) return;
+  const handleDeleteProcedure = async (id, procedureItem) => {
+    const isSurgery = procedureItem?.source === 'Cirurgia' || (typeof id === 'string' && id.startsWith('surgery_'));
+    const isAppointment = procedureItem?.source === 'Agenda' || (typeof id === 'string' && id.startsWith('appt_proc_'));
+
+    const confirmMsg = isSurgery
+      ? 'Deseja reabrir este agendamento cirúrgico no Hub de Cirurgias (revertendo status para "Agendado")?'
+      : (isAppointment ? 'Deseja reabrir este agendamento na Agenda (revertendo para "Agendado")?' : 'Deseja realmente excluir este procedimento?');
+
+    if (!window.confirm(confirmMsg)) return;
     try {
       setLoading(true);
-      await dbService.deleteMedicalProcedure(id);
-      showToast('Procedimento excluído com sucesso!');
+      if (isSurgery) {
+        const surgeryId = procedureItem?.surgeryId || (typeof id === 'string' ? id.replace('surgery_', '') : id);
+        await dbService.updateSurgery(surgeryId, { status: 'Agendado' }, currentUser);
+        showToast('Cirurgia reaberta e retirada da produção médica com sucesso!');
+      } else if (isAppointment) {
+        const apptId = procedureItem?.appointmentId || (typeof id === 'string' ? id.replace('appt_proc_', '') : id);
+        await dbService.updateAppointment(apptId, { status: 'Agendado' });
+        showToast('Agendamento reaberto na agenda com sucesso!');
+      } else {
+        await dbService.deleteMedicalProcedure(id);
+        showToast('Procedimento excluído com sucesso!');
+      }
       await loadAllData();
     } catch (err) {
       console.error(err);
+      showToast('Erro ao remover procedimento.');
     } finally {
       setLoading(false);
     }
@@ -522,8 +657,8 @@ export default function MedicalPanel({ currentUser, onBack, isReportsOpen, setIs
         <MedicalStatementModal
           production={statementData}
           month={selectedMonth}
-          procedures={procedures}
-          schedules={schedules}
+          procedures={currentProcedures}
+          schedules={currentSchedules}
           settings={settings}
           onClose={() => setStatementData(null)}
         />

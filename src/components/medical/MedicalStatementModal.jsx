@@ -1,6 +1,6 @@
 import React from 'react';
 import { Printer, Download, X, DollarSign, CheckCircle2 } from 'lucide-react';
-import { formatDoctorDisplayName } from '../../utils/doctorFormatters';
+import { formatDoctorDisplayName, isProcedureForDoctor } from '../../utils/doctorFormatters';
 
 export default function MedicalStatementModal({
   production,
@@ -12,7 +12,7 @@ export default function MedicalStatementModal({
 }) {
   if (!production) return null;
 
-  const docProcedures = procedures.filter(p => p.doctorId === production.doctorId);
+  const docProcedures = procedures.filter(p => isProcedureForDoctor(p, { id: production.doctorId, name: production.doctorName }) && (!p.date || p.date.substring(0, 7) === month));
   const docShifts = schedules.filter(s => s.doctorId === production.doctorId && (s.checkinStatus === 'Presente' || s.status === 'Confirmado'));
 
   const handlePrint = () => {
@@ -107,7 +107,22 @@ export default function MedicalStatementModal({
                 docProcedures.map((proc, idx) => (
                   <tr key={idx}>
                     <td>
-                      <strong>{proc.procedureType}</strong>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <strong>{proc.procedureType}</strong>
+                        {proc.source && (
+                          <span style={{
+                            fontSize: '0.65rem',
+                            fontWeight: '700',
+                            padding: '1px 5px',
+                            borderRadius: '4px',
+                            background: '#f1f5f9',
+                            color: '#475569',
+                            border: '1px solid #cbd5e1'
+                          }}>
+                            {proc.source}
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
                         Paciente: {proc.patientName} • Data: {new Date(proc.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                       </div>

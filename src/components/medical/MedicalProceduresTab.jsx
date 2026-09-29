@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Trash2, Edit2, Activity, CheckCircle, Search } from 'lucide-react';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
-import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
+import { formatDoctorDisplayName, sortDoctorsByName, isProcedureForDoctor } from '../../utils/doctorFormatters';
 import { dbService } from '../../firebase';
 
 export default function MedicalProceduresTab({
@@ -17,6 +17,7 @@ export default function MedicalProceduresTab({
 
   const [showModal, setShowModal] = useState(false);
   const [filterDoc, setFilterDoc] = useState('Todos');
+  const [filterSource, setFilterSource] = useState('Todos');
   const [searchTerm, setSearchTerm] = useState('');
 
   const uniqueSortedPatients = React.useMemo(() => {
@@ -95,16 +96,18 @@ export default function MedicalProceduresTab({
   });
 
   const filteredProcedures = procedures.filter(p => {
-    if (filterDoc !== 'Todos' && p.doctorId !== filterDoc) return false;
+    if (filterDoc !== 'Todos' && !isProcedureForDoctor(p, { id: filterDoc })) return false;
+    if (filterSource !== 'Todos' && (p.source || 'Manual') !== filterSource) return false;
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       const matchPat = p.patientName?.toLowerCase().includes(term);
       const matchDoc = p.doctorName?.toLowerCase().includes(term);
       const matchProc = p.procedureType?.toLowerCase().includes(term);
-      if (!matchPat && !matchDoc && !matchProc) return false;
+      const matchNotes = p.notes?.toLowerCase().includes(term);
+      if (!matchPat && !matchDoc && !matchProc && !matchNotes) return false;
     }
     return true;
-  }).sort((a, b) => b.date.localeCompare(a.date));
+  }).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
   const totalValue = filteredProcedures.reduce((acc, curr) => acc + (parseFloat(curr.value) || 0), 0);
 
@@ -181,10 +184,22 @@ export default function MedicalProceduresTab({
             onChange={e => setFilterDoc(e.target.value)}
             style={{ width: '220px', fontSize: '0.8rem' }}
           >
-            <option value="Todos">Todos</option>
+            <option value="Todos">Médico</option>
             {sortDoctorsByName(availableDoctors).map(doc => (
               <option key={doc.id || doc.uid} value={doc.id || doc.uid}>{formatDoctorDisplayName(doc.name)}</option>
             ))}
+          </select>
+
+          <select 
+            className="form-control" 
+            value={filterSource}
+            onChange={e => setFilterSource(e.target.value)}
+            style={{ width: '160px', fontSize: '0.8rem' }}
+          >
+            <option value="Todos">Origem</option>
+            <option value="Cirurgia">Cirurgia</option>
+            <option value="Agenda">Agenda</option>
+            <option value="Manual">Manual</option>
           </select>
 
           <input 
@@ -207,6 +222,7 @@ export default function MedicalProceduresTab({
               <th>Médico</th>
               <th>Paciente</th>
               <th>Procedimento</th>
+              <th>Origem</th>
               <th>Valor</th>
               <th>Status</th>
               <th>Ações</th>
@@ -215,7 +231,7 @@ export default function MedicalProceduresTab({
           <tbody>
             {filteredProcedures.length === 0 ? (
               <tr>
-                <td colSpan="7" style={styles.noDataCell}>
+                <td colSpan="8" style={styles.noDataCell}>
                   Nenhum procedimento registrado para os filtros aplicados.
                 </td>
               </tr>
@@ -233,6 +249,21 @@ export default function MedicalProceduresTab({
                     {proc.notes && <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{proc.notes}</div>}
                   </td>
                   <td style={{ fontWeight: '600' }}>{proc.procedureType}</td>
+                  <td>
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontWeight: '700',
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      background: proc.source === 'Cirurgia' ? '#eff6ff' : (proc.source === 'Agenda' ? '#fef3c7' : '#f0fdf4'),
+                      color: proc.source === 'Cirurgia' ? '#1d4ed8' : (proc.source === 'Agenda' ? '#b45309' : '#15803d'),
+                      border: `1px solid ${proc.source === 'Cirurgia' ? '#bfdbfe' : (proc.source === 'Agenda' ? '#fde68a' : '#bbf7d0')}`
+                    }}>
+                      {proc.source || 'Manual'}
+                    </span>
+                  </td>
                   <td style={{ fontWeight: '800', color: '#059669' }}>
                     R$ {(parseFloat(proc.value) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </td>
@@ -244,9 +275,9 @@ export default function MedicalProceduresTab({
                   <td>
                     <button
                       type="button"
-                      onClick={() => onDeleteProcedure(proc.id)}
+                      onClick={() => onDeleteProcedure(proc.id, proc)}
                       style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
-                      title="Excluir procedimento"
+                      title={proc.source === 'Cirurgia' ? 'Reabrir cirurgia' : (proc.source === 'Agenda' ? 'Reabrir agendamento' : 'Excluir procedimento')}
                     >
                       <Trash2 size={14} />
                     </button>

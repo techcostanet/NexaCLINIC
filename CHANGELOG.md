@@ -1,3 +1,20 @@
+## [v4.9.103] - 29 de Setembro, 2026
+### Nex-Ai CLINIC (.MED & .ASSIST) — Integração Total de Cirurgias e Procedimentos na Gestão Médica
+- **Integração em Tempo Real de Cirurgias Realizadas:**
+  - Cirurgias agendadas e concluídas no Hub de Cirurgias (`Nex-Ai.ASSIST`) com situação "Realizado" são agora capturadas automaticamente na Gestão Médica (`Nex-Ai.MED`).
+  - O procedimento cirúrgico (ex: cirurgia do paciente ADAIL) aparece instantaneamente na aba de Procedimentos e na produção do cirurgião responsável (Dr. Moisés Arantes Diniz / Dr. Alexandre Jesus).
+- **Precificação Automática Inteligente:**
+  - Implementação do resolvedor inteligente de valores (`procedurePriceResolver.js`) conectado ao Catálogo Unificado e às tabelas de honorários da clínica (PTFE: R$ 891,00; FAV simples: R$ 668,25; Permcath: R$ 800,00; CDL: R$ 385,00; Duplex: R$ 119,79; Transposição basílica: R$ 770,00; Ligadura: R$ 550,00).
+- **Badges de Origem e Rastreabilidade:**
+  - Nova coluna "Origem" na aba Procedimentos com badges coloridos para diferenciar: `Cirurgia` (azul), `Agenda` (âmbar) e `Manual` (verde).
+  - Filtro exclusivo por procedência na barra de ferramentas.
+- **Segregação Rigorosa na Apuração de Produção:**
+  - Separação clara entre consultas ambulatoriais e procedimentos clínicos da agenda (`Nex-Ai.CAL`), evitando distorções contábeis e cobranças em duplicidade.
+- **Homologação Financeira e Extrato:**
+  - Exibição discriminada dos procedimentos cirúrgicos no modal de homologação com envio automatizado ao Contas a Pagar do `Nex-Ai.FINANCE` e no demonstrativo mensal de honorários em PDF.
+- **Boy Scout Rule & Padrão de Rótulos de 1 Palavra:**
+  - Ajuste e limpeza de rótulos nos modais e tabelas, garantindo conformidade rigorosa com a regra de 1 palavra/termo único.
+
 ## [v4.9.102] - 28 de Setembro, 2026
 ### Nex-Ai CLINIC (.CAL) — Grade Dinâmica por Médico, Slots Reais Personalizados, Escala Diária e Cores Executivas de Profissionais
 - **Grade Dinâmica e Fiel por Profissional:**

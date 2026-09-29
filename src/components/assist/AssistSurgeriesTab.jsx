@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../../firebase';
 import { INITIAL_PROCEDURES } from '../../services/firebase/procedureService';
+import { resolveProcedurePrice } from '../../utils/procedurePriceResolver';
 import { 
   Calendar as CalendarIcon, Clock, User, Plus, Search, Filter, 
   Printer, ChevronLeft, ChevronRight, Edit3, Trash2, CheckCircle2, 
@@ -550,12 +551,14 @@ Dúvidas ou imprevistos? Responda a esta mensagem. Desejamos um excelente proced
 
     setActionLoading(true);
     try {
+      const procVal = formData.value ? parseFloat(formData.value) : resolveProcedurePrice(formData.procedure);
       const payload = {
         ...formData,
         patientName: formData.patientName.trim().toUpperCase(),
         procedure: formData.procedure.trim().toUpperCase(),
         indication: formData.indication.trim().toUpperCase(),
-        unitId: activeUnitId === 'all' ? 'betim' : activeUnitId
+        unitId: activeUnitId === 'all' ? 'betim' : activeUnitId,
+        value: procVal
       };
 
       if (editingSurgery) {
@@ -584,11 +587,14 @@ Dúvidas ou imprevistos? Responda a esta mensagem. Desejamos um excelente proced
     setActionLoading(true);
     try {
       const nextStatus = surgery.status === 'Realizado' ? 'Agendado' : 'Realizado';
-      await dbService.updateSurgery(surgery.id, { ...surgery, status: nextStatus }, currentUser);
-      showAlert(`Situação atualizada para ${nextStatus}!`, 'success');
+      const resolvedVal = (surgery.value && typeof surgery.value === 'number' && surgery.value > 0)
+        ? surgery.value
+        : resolveProcedurePrice(surgery.procedure);
+      await dbService.updateSurgery(surgery.id, { ...surgery, status: nextStatus, value: resolvedVal }, currentUser);
+      showAlert(`Situação atualizada para ${nextStatus}! Sincronizado com a Produção Médica.`, 'success');
       loadData();
       if (nextStatus === 'Realizado') {
-        checkAndPromptAccessSync({ ...surgery, status: 'Realizado' });
+        checkAndPromptAccessSync({ ...surgery, status: 'Realizado', value: resolvedVal });
       }
     } catch (err) {
       console.error(err);

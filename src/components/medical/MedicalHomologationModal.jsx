@@ -3,7 +3,7 @@ import {
   ShieldCheck, CheckCircle2, AlertCircle, X, Calendar, 
   DollarSign, Send, RotateCcw, FileText, ArrowRight, User
 } from 'lucide-react';
-import { formatDoctorDisplayName } from '../../utils/doctorFormatters';
+import { formatDoctorDisplayName, isProcedureForDoctor } from '../../utils/doctorFormatters';
 
 export default function MedicalHomologationModal({
   production,
@@ -30,9 +30,9 @@ export default function MedicalHomologationModal({
     )
     .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
-  // Filtrar procedimentos do médico no mês
+  // Filtrar procedimentos do médico no mês (manuais, cirurgias e agenda)
   const docProcs = procedures
-    .filter(p => p.doctorId === docId)
+    .filter(p => isProcedureForDoctor(p, { id: docId, name: production.doctorName }) && (!p.date || p.date.substring(0, 7) === month))
     .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
   // Formulário de homologação
@@ -245,7 +245,22 @@ export default function MedicalHomologationModal({
                 {docProcs.map((p, idx) => (
                   <div key={p.id || idx} style={styles.itemRow}>
                     <div>
-                      <div style={{ fontWeight: '700', color: '#0f172a' }}>{p.procedureType}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span style={{ fontWeight: '700', color: '#0f172a' }}>{p.procedureType}</span>
+                        {p.source && (
+                          <span style={{
+                            fontSize: '0.65rem',
+                            fontWeight: '700',
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            background: p.source === 'Cirurgia' ? '#eff6ff' : (p.source === 'Agenda' ? '#fef3c7' : '#f0fdf4'),
+                            color: p.source === 'Cirurgia' ? '#1d4ed8' : (p.source === 'Agenda' ? '#b45309' : '#15803d'),
+                            border: `1px solid ${p.source === 'Cirurgia' ? '#bfdbfe' : (p.source === 'Agenda' ? '#fde68a' : '#bbf7d0')}`
+                          }}>
+                            {p.source}
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
                         Paciente: {p.patientName || 'Paciente da Clínica'} • Data: {new Date(p.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                       </div>
@@ -272,7 +287,7 @@ export default function MedicalHomologationModal({
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem', marginTop: '0.5rem' }}>
                   <div>
-                    <label style={styles.inputLabel}>Ajuste (R$)</label>
+                    <label style={styles.inputLabel}>Ajuste</label>
                     <input
                       type="number"
                       step="0.01"
@@ -295,7 +310,7 @@ export default function MedicalHomologationModal({
                 </div>
 
                 <div style={{ marginTop: '0.6rem' }}>
-                  <label style={styles.inputLabel}>Data de Vencimento no Contas a Pagar *</label>
+                  <label style={styles.inputLabel}>Vencimento *</label>
                   <input
                     type="date"
                     value={dueDate}

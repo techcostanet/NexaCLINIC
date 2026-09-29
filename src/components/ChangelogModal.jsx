@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.103',
+      date: '29/09/2026',
+      title: 'Nex-Ai CLINIC — Integração Total de Cirurgias e Procedimentos na Gestão Médica (.MED & .ASSIST)',
+      description: 'Conexão em tempo real entre o Hub de Cirurgias (.ASSIST), Agenda Clínica (.CAL) e a Gestão Médica (.MED): sincronização automática de cirurgias concluídas (situação "Realizado") para a produção médica e honorários do cirurgião responsável (como Dr. Moisés Arantes Diniz e Dr. Alexandre Jesus), precificação dinâmica inteligente com base no Catálogo Unificado de Procedimentos, nova coluna e badges de procedência (Cirurgia, Agenda, Manual), segregação de consultas e procedimentos na apuração mensal, espelhamento no modal de homologação com envio ao Contas a Pagar do Nex-Ai.FINANCE e extratos médicos detalhados.',
+      changes: [
+        { type: 'Integração de Cirurgias', text: 'Cirurgias concluídas com 1 clique no Hub de Cirurgias são creditadas imediatamente na ficha do cirurgião na Gestão Médica (.MED) no mês correspondente.' },
+        { type: 'Precificação Inteligente', text: 'Resolução automática de valores monetários a partir do Catálogo Unificado de Procedimentos e tabela padrão (PTFE, FAV simples, Permcath, CDL, Duplex, transposições e ligaduras).' },
+        { type: 'Badges de Procedência', text: 'Nova coluna "Origem" na aba Procedimentos com identificação visual limpa para rastreabilidade: Cirurgia (azul), Agenda (âmbar) e Manual (verde).' },
+        { type: 'Corpo Clínico & Cirurgiões', text: 'Inclusão dos cirurgiões vasculares no corpo clínico padrão e auto-descoberta dinâmica de profissionais a partir dos agendamentos cirúrgicos.' },
+        { type: 'Homologação & Extrato', text: 'Exibição discriminada das cirurgias e procedimentos no modal de homologação financeira e no demonstrativo mensal de honorários em PDF.' },
+        { type: 'Boy Scout Rule (Rótulos)', text: 'Higienização rigorosa de rótulos nos modais e tabelas tocadas, assegurando padrão estrito de 1 palavra ou termo único.' }
+      ]
+    },
+    {
       version: 'v4.9.102',
       date: '28/09/2026',
       title: 'Nex-Ai CLINIC — Grade Dinâmica por Médico, Slots Reais Personalizados, Escala Diária e Cores Executivas de Profissionais (.CAL)',

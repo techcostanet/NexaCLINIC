@@ -34,3 +34,39 @@ export function sortDoctorsByName(doctors = []) {
     return nameA.localeCompare(nameB, 'pt-BR', { sensitivity: 'base' });
   });
 }
+
+/**
+ * Localiza médico na lista por ID exato ou por aproximação do nome
+ */
+export function matchDoctorByNameOrId(doctors = [], idOrName = '') {
+  if (!idOrName) return null;
+  const cleanSearch = formatDoctorDisplayName(String(idOrName)).toLowerCase().trim();
+  if (!cleanSearch) return null;
+
+  return doctors.find(d => {
+    if (d.id === idOrName || d.uid === idOrName) return true;
+    const dClean = formatDoctorDisplayName(d.name || '').toLowerCase().trim();
+    if (dClean === cleanSearch) return true;
+    if (cleanSearch.length > 3 && (dClean.includes(cleanSearch) || cleanSearch.includes(dClean))) return true;
+    return false;
+  }) || null;
+}
+
+/**
+ * Verifica se um procedimento pertence a um determinado médico por ID ou nome
+ */
+export function isProcedureForDoctor(procedure, doctor) {
+  if (!procedure || !doctor) return false;
+  const docId = doctor.id || doctor.uid || doctor.doctorId;
+  if (procedure.doctorId && docId && (procedure.doctorId === docId || procedure.doctorId === doctor.id || procedure.doctorId === doctor.uid)) {
+    return true;
+  }
+  const docClean = formatDoctorDisplayName(doctor.name || doctor.doctorName || '').toLowerCase().trim();
+  const procDocClean = formatDoctorDisplayName(procedure.doctorName || '').toLowerCase().trim();
+  if (docClean && procDocClean) {
+    if (docClean === procDocClean) return true;
+    if (docClean.length > 3 && (procDocClean.includes(docClean) || docClean.includes(procDocClean))) return true;
+  }
+  return false;
+}
+
