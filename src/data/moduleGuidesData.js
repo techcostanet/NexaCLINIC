@@ -1270,6 +1270,10 @@ export const MODULE_GUIDES = {
         resposta: 'Sim. Cada ativo cadastrado no Inventário de T.I. possui código patrimonial único e QR Code gerado instantaneamente no modal de impressão, facilitando a identificação rápida e conferência física em campo.'
       },
       {
+        pergunta: 'A equipe de Enfermagem pode abrir chamados de T.I. diretamente?',
+        resposta: 'Sim. O setor "Enfermagem" está totalmente integrado na seleção de setores ao abrir chamados. Todos os chamados gerados são sincronizados em nuvem no Firestore em tempo real, ficando instantaneamente visíveis na tela do solicitante, da equipe de T.I. e da gerência/administração.'
+      },
+      {
         pergunta: 'Qualquer equipamento pode ser excluído do sistema?',
         resposta: 'Sim. Usuários autorizados (engenheiros clínicos, técnicos e administradores) podem excluir qualquer equipamento obsoleto, alienado ou cadastrado indevidamente, tanto pela listagem (botão lixeira) quanto dentro do modal de edição.'
       },

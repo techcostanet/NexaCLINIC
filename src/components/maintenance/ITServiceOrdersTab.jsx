@@ -34,6 +34,7 @@ const CLINIC_SECTORS = [
   "Salão A de Hemodiálise",
   "Salão B de Hemodiálise",
   "Salão C de Hemodiálise",
+  "Enfermagem",
   "Posto de Enfermagem",
   "Consultório Médico",
   "Farmácia Clínica",
@@ -111,8 +112,8 @@ export default function ITServiceOrdersTab({
     sector: currentUser?.allowedSectors?.[0] ? currentUser.allowedSectors[0].charAt(0).toUpperCase() + currentUser.allowedSectors[0].slice(1) : 'Recepção',
     priority: 'Média',
     description: '',
-    requesterName: currentUser?.name || 'Colaborador',
-    requesterEmail: currentUser?.email || 'contato@techcosta.net',
+    requesterName: currentUser?.name || currentUser?.displayName || currentUser?.username || 'Colaborador',
+    requesterEmail: currentUser?.email || '',
     requesterSector: currentUser?.allowedSectors?.[0] || 'Geral',
     notifyEmail: true
   });
@@ -187,16 +188,37 @@ export default function ITServiceOrdersTab({
   }, [orders, activeUnitId, filterByActiveUnit]);
 
   // Visibility / RBAC:
-  // If standard user -> only their own orders
+  // If standard user -> their own orders or orders from their unit/sector
   // If admin/tech -> all orders
   const scopedOrders = useMemo(() => {
     if (isTechOrAdmin) return unitFilteredOrders;
+    const uUid = (currentUser?.uid || currentUser?.id || '').trim();
     const uEmail = (currentUser?.email || '').trim().toLowerCase();
-    const uName = (currentUser?.name || '').trim().toLowerCase();
+    const uName = (currentUser?.name || currentUser?.displayName || '').trim().toLowerCase();
+    const uUsername = (currentUser?.username || '').trim().toLowerCase();
+    const allowedSectors = (currentUser?.allowedSectors || []).map(s => String(s).toLowerCase().trim());
+
     return unitFilteredOrders.filter(o => {
+      const oUid = (o.requesterId || '').trim();
       const oEmail = (o.requesterEmail || '').trim().toLowerCase();
       const oName = (o.requesterName || '').trim().toLowerCase();
-      return (uEmail && oEmail === uEmail) || (uName && oName === uName);
+      const oUsername = (o.requesterUsername || '').trim().toLowerCase();
+      const oSector = (o.sector || o.requesterSector || '').toLowerCase().trim();
+
+      // Check UID
+      if (uUid && oUid && uUid === oUid) return true;
+      // Check Email
+      if (uEmail && oEmail && uEmail === oEmail) return true;
+      // Check Username
+      if (uUsername && oUsername && uUsername === oUsername) return true;
+      // Check Name
+      if (uName && oName && (uName.includes(oName) || oName.includes(uName))) return true;
+      // Allow users to see tickets from their sector/department
+      if (oSector && allowedSectors.includes(oSector)) return true;
+      // Retrocompatibility: if order has no explicit requester info or generic collaborator
+      if (!uEmail && !uUid && (oName === 'colaborador' || !oEmail)) return true;
+
+      return false;
     });
   }, [unitFilteredOrders, isTechOrAdmin, currentUser]);
 
@@ -277,6 +299,7 @@ export default function ITServiceOrdersTab({
       const matchesCat = categoryFilter === 'all' || order.category === categoryFilter;
       const matchesSector = sectorFilter === 'all' || order.sector === sectorFilter;
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+      const matchesPriority = priorityFilter === 'all' || order.priority === priorityFilter;
       const matchesOrigin = 
         originFilter === 'all' || 
         (originFilter === 'internal' ? order.origin === 'internal' : 
@@ -464,11 +487,11 @@ export default function ITServiceOrdersTab({
       title: '',
       category: 'Hardware',
       subcategory: 'Desktop',
-      sector: 'Recepção',
+      sector: currentUser?.allowedSectors?.[0] ? currentUser.allowedSectors[0].charAt(0).toUpperCase() + currentUser.allowedSectors[0].slice(1) : 'Recepção',
       priority: 'Média',
       description: '',
-      requesterName: currentUser?.name || 'Colaborador',
-      requesterEmail: currentUser?.email || 'contato@techcosta.net',
+      requesterName: currentUser?.name || currentUser?.displayName || currentUser?.username || 'Colaborador',
+      requesterEmail: currentUser?.email || '',
       requesterSector: currentUser?.allowedSectors?.[0] || 'Geral',
       notifyEmail: true
     });
@@ -489,12 +512,20 @@ export default function ITServiceOrdersTab({
 
       const payload = {
         ...form,
+        requesterId: currentUser?.uid || currentUser?.id || '',
+        requesterUsername: currentUser?.username || '',
+        requesterName: form.requesterName?.trim() || currentUser?.name || currentUser?.displayName || 'Colaborador',
+        requesterEmail: form.requesterEmail?.trim() || currentUser?.email || '',
+        requesterSector: form.sector || 'Geral',
         unitId: targetUnitId,
         unit: targetUnit,
         status: 'Aberta'
       };
 
       const saved = await dbService.saveITServiceOrder(payload, 'Chamado de T.I. aberto no sistema.', form.notifyEmail);
+      if (saved) {
+        setOrders(prev => [saved, ...prev.filter(o => o.id !== saved.id && o.code !== saved.code)]);
+      }
       showAlert(`✅ Chamado ${saved.code} registrado com sucesso! SLA: ${SLA_HOURS[form.priority]} horas.`, 'success');
       setShowNewModal(false);
       fetchOrders();

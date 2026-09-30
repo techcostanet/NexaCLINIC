@@ -63,16 +63,17 @@ export default function MaintenancePanel({ currentUser, isReportsOpen, setIsRepo
       "Salão A de Hemodiálise",
       "Salão B de Hemodiálise",
       "Salão C de Hemodiálise",
-      "Tratamento de Água (ETA / Osmose)",
-      "Reúso de Dialisadores",
+      "Tratamento de Água (ETA)",
+      "Reúso",
+      "Enfermagem",
       "Posto de Enfermagem",
       "Consultório Médico",
-      "EXPURGO / CME (Esterilização)",
-      "Recepção / Atendimento",
-      "Farmácia Clínica / Estoque",
-      "Área Técnica / Gerador / Compressores",
-      "Administrativo / Diretoria",
-      "Copa / Refeitório"
+      "CME",
+      "Recepção",
+      "Farmácia Clínica",
+      "Área Técnica",
+      "Administrativo",
+      "Copa"
     ];
     const existingSectors = currentEquipments.map(e => e.sector).filter(Boolean);
     return Array.from(new Set([...defaultSectors, ...existingSectors]));

@@ -18,6 +18,7 @@ const SECTORS = [
   "Salão A de Hemodiálise",
   "Salão B de Hemodiálise",
   "Salão C de Hemodiálise",
+  "Enfermagem",
   "Posto de Enfermagem",
   "Consultório Médico",
   "Farmácia Clínica",

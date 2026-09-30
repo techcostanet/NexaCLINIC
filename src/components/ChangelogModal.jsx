@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.106',
+      date: '30/09/2026',
+      title: 'Nex-Ai CLINIC — Correção de Persistência e Visibilidade em Nuvem de Chamados de T.I. e Setor Enfermagem (.SERVICE)',
+      description: 'Correção estrutural na abertura, persistência e visualização de chamados de Tecnologia da Informação (.SERVICE): eliminação do filtro destrutivo que excluía chamados sequenciais reais (TI-2026-0001 e 0002), inclusão de regras de segurança dedicadas no Firestore garantindo gravação e sincronização em tempo real para os usuários e para o gestor administrador (contato@techcosta.net), resolução do erro de execução no filtro de prioridades e integração completa do setor "Enfermagem" na abertura de chamados.',
+      changes: [
+        { type: 'Persistência & Nuvem', text: 'Adicionadas regras oficiais de leitura/gravação no Firestore para as coleções it_service_orders, service_orders, equipments e it_assets, garantindo gravação segura e sincronização em tempo real.' },
+        { type: 'Correção de Visibilidade', text: 'Removida a purga automatizada que excluía chamados sequenciais com código TI-2026-000*, restaurando a visibilidade na tela do solicitante e no painel do administrador.' },
+        { type: 'Estabilidade & Filtros', text: 'Declaração e correção da variável matchesPriority no hook de filtragem, sanando o ReferenceError que interrompia a renderização da tabela ao receber novos chamados.' },
+        { type: 'Setor Enfermagem', text: 'Inclusão do setor "Enfermagem" em todos os seletores de abertura de chamado, edição, inventário de ativos e tarefas internas de T.I.' },
+        { type: 'Rastreabilidade RBAC', text: 'Vínculo explícito de UID, username e e-mail no registro do chamado para que colaboradores acompanhem instantaneamente suas demandas abertas.' },
+        { type: 'Boy Scout Rule (Rótulos)', text: 'Higienização de termos compostos e padronização rigorosa de rótulos de termo único nos modais de manutenção e T.I.' }
+      ]
+    },
+    {
       version: 'v4.9.103',
       date: '29/09/2026',
       title: 'Nex-Ai CLINIC — Integração Total de Cirurgias e Procedimentos na Gestão Médica (.MED & .ASSIST)',

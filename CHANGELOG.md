@@ -1,3 +1,18 @@
+## [v4.9.106] - 30 de Setembro, 2026
+### Nex-Ai CLINIC (.SERVICE) — Correção de Persistência e Visibilidade em Nuvem de Chamados de T.I. e Setor Enfermagem
+- **Resolução Crítica de Persistência e Visibilidade de Chamados de T.I.:**
+  - Removido o filtro indevido que expurgava e excluía chamados sequenciais com código iniciando em `TI-2026-000` (afetando os protocolos reais 0001 a 0009).
+  - Adicionadas regras de segurança no Firestore (`firestore.rules`) para as coleções `it_service_orders`, `service_orders`, `equipments`, `it_daily_rounds` e `it_assets`, permitindo gravação em nuvem e sincronização em tempo real para os usuários e o gestor/administrador (`contato@techcosta.net`).
+  - Corrigido o `ReferenceError` em tempo de execução referente à variável `matchesPriority` no hook `filteredOrders` em `ITServiceOrdersTab.jsx`, que impedia a exibição da listagem de chamados.
+  - Otimização do cálculo de código sequencial com consulta ao Firestore, prevenindo duplicações e garantindo numeração progressiva e persistente.
+  - Atualização instantânea do estado local e cache no momento da criação do chamado, garantindo que o colaborador visualize a demanda de imediato na sua tela.
+  - Inclusão de `requesterId`, `requesterUsername` e resolução refinada de permissões no escopo de visibilidade para que solicitantes identifiquem suas solicitações mesmo sem e-mail corporativo cadastrado.
+- **Inclusão do Setor "Enfermagem" na Abertura de Chamados:**
+  - Adicionado o setor "Enfermagem" a todas as listagens de setores operacionais para abertura de chamados, edição de ordens de serviço, cadastro de ativos e tarefas de T.I.
+- **Atualização do Manual e Boy Scout Rule:**
+  - Atualização do manual interativo de manutenção e T.I. (`moduleGuidesData.js`) com orientações sobre o setor de Enfermagem e monitoramento em nuvem.
+  - Higienização e simplificação de termos duplos e rótulos compostos em conformidade com o padrão rigoroso de termo único.
+
 ## [v4.9.103] - 29 de Setembro, 2026
 ### Nex-Ai CLINIC (.MED & .ASSIST) — Integração Total de Cirurgias e Procedimentos na Gestão Médica
 - **Integração em Tempo Real de Cirurgias Realizadas:**

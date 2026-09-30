@@ -3111,15 +3111,7 @@ const getStoredITOrders = () => {
     if (data) {
       const parsed = JSON.parse(data);
       if (Array.isArray(parsed)) {
-        // Purgar chamados de teste antigos com códigos ou IDs de mock
-        const cleaned = parsed.filter(o => 
-          !o.id?.startsWith('OS-TI-2026-000') && 
-          !o.code?.startsWith('TI-2026-000')
-        );
-        if (cleaned.length !== parsed.length) {
-          saveStoredITOrders(cleaned);
-        }
-        return cleaned;
+        return parsed;
       }
     }
   } catch (e) {
@@ -3139,32 +3131,12 @@ const saveStoredITOrders = (orders) => {
 export const getITServiceOrders = async () => {
   if (USE_MOCK) return getStoredITOrders();
   try {
-    const { getFirestore, collection, getDocs, doc, deleteDoc } = await import('firebase/firestore');
+    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
     const db = getFirestore(app);
     const snap = await getDocs(collection(db, 'it_service_orders'));
     const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    // Identificar e purgar chamados de teste do Firestore se ainda existirem
-    const testItems = items.filter(o => 
-      o.id?.startsWith('OS-TI-2026-000') || 
-      o.code?.startsWith('TI-2026-000')
-    );
-    if (testItems.length > 0) {
-      for (const t of testItems) {
-        try {
-          await deleteDoc(doc(db, 'it_service_orders', t.id));
-        } catch (delErr) {
-          console.warn('Aviso ao remover chamado de teste do Firestore:', delErr);
-        }
-      }
-      const cleaned = items.filter(o => 
-        !o.id?.startsWith('OS-TI-2026-000') && 
-        !o.code?.startsWith('TI-2026-000')
-      );
-      saveStoredITOrders(cleaned);
-      return cleaned;
-    }
-
+    items.sort((a, b) => new Date(b.createdAt || b.openDate || 0) - new Date(a.createdAt || a.openDate || 0));
     saveStoredITOrders(items);
     return items;
   } catch (err) {
@@ -3179,8 +3151,29 @@ export const saveITServiceOrder = async (orderData, updateNote = '', notifyEmail
 
   if (isNew) {
     const dateStr = new Date().getFullYear();
-    const existing = getStoredITOrders();
-    const count = existing.length + 1;
+    let count = 1;
+    try {
+      const stored = getStoredITOrders();
+      count = (stored?.length || 0) + 1;
+      if (!USE_MOCK) {
+        const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+        const db = getFirestore(app);
+        const snap = await getDocs(collection(db, 'it_service_orders'));
+        if (!snap.empty) {
+          count = Math.max(count, snap.size + 1);
+          snap.docs.forEach(docSnap => {
+            const c = docSnap.data().code;
+            if (c && c.startsWith(`TI-${dateStr}-`)) {
+              const num = parseInt(c.replace(`TI-${dateStr}-`, ''), 10);
+              if (!isNaN(num) && num >= count) count = num + 1;
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao calcular sequência do chamado de T.I.:', e);
+    }
+
     const seqStr = String(count).padStart(4, '0');
     orderData.code = orderData.code || `TI-${dateStr}-${seqStr}`;
     orderData.openDate = orderData.openDate || now;
@@ -3265,19 +3258,27 @@ export const saveITServiceOrder = async (orderData, updateNote = '', notifyEmail
   try {
     const { getFirestore, collection, doc, setDoc, addDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
+    let resultDoc;
     if (!isNew) {
       await setDoc(doc(db, 'it_service_orders', orderData.id), {
         ...orderData,
         updatedAt: now
       }, { merge: true });
-      return orderData;
+      resultDoc = { ...orderData, updatedAt: now };
     } else {
       const docRef = await addDoc(collection(db, 'it_service_orders'), {
         ...orderData,
         createdAt: now
       });
-      return { id: docRef.id, ...orderData };
+      resultDoc = { id: docRef.id, ...orderData, createdAt: now };
     }
+
+    const list = getStoredITOrders();
+    const idx = list.findIndex(o => o.id === resultDoc.id || (resultDoc.code && o.code === resultDoc.code));
+    if (idx >= 0) list[idx] = { ...list[idx], ...resultDoc };
+    else list.unshift(resultDoc);
+    saveStoredITOrders(list);
+    return resultDoc;
   } catch (err) {
     console.error('Erro ao salvar it_service_orders no Firestore, utilizando salvamento resiliente:', err);
     const list = getStoredITOrders();
@@ -3324,11 +3325,8 @@ export const subscribeToITServiceOrders = (callback) => {
     const db = getFirestore(app);
     unsubscribe = onSnapshot(collection(db, 'it_service_orders'), (snap) => {
       let items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      items = items.filter(o => 
-        !o.id?.startsWith('OS-TI-2026-000') && 
-        !o.code?.startsWith('TI-2026-000')
-      );
       items.sort((a, b) => new Date(b.createdAt || b.openDate || 0) - new Date(a.createdAt || a.openDate || 0));
+      saveStoredITOrders(items);
       callback(items);
     }, (err) => {
       console.error("Erro no listener real-time de it_service_orders:", err);

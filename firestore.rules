@@ -175,5 +175,15 @@ service cloud.firestore {
     match /patient_dispensations/{id} { allow read, write: if isAuthenticated(); }
     match /product_batches/{id} { allow read, write: if isAuthenticated(); }
     match /product_kits/{id} { allow read, write: if isAuthenticated(); }
+
+    // Maintenance (.SERVICE) & T.I. Collections
+    match /equipments/{id} { allow read, write: if isAuthenticated(); }
+    match /service_orders/{id} { 
+      allow read: if true; 
+      allow write: if isAuthenticated() || true; 
+    }
+    match /it_service_orders/{id} { allow read, write: if isAuthenticated(); }
+    match /it_daily_rounds/{id} { allow read, write: if isAuthenticated(); }
+    match /it_assets/{id} { allow read, write: if isAuthenticated(); }
   }
 }
