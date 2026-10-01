@@ -1,3 +1,10 @@
+## [v4.9.120] - 01 de Outubro, 2026
+### Nex-Ai CLINIC (.CONFIG) — Correção de Importação de Ícone (ShieldCheck)
+- **Correção Crítica de Importação no NexaCONFIG:**
+  - Adicionada a importação ausente do ícone `ShieldCheck` da biblioteca `lucide-react` em `ConfigPanel.jsx`.
+  - Solucionado o erro em produção (`ReferenceError: ShieldCheck is not defined`) que impedia a renderização do módulo de configurações e governança de segurança.
+  - Validação completa do bundle e integridade de componentes de tela.
+
 ## [v4.9.118] - 01 de Outubro, 2026
 ### Nex-Ai CLINIC (.CONFIG & SEGURANÇA) — Primeiro Acesso Obrigatório e Expiração Periódica de Senhas
 - **Controles de Segurança Parametrizáveis no NexaCONFIG:**

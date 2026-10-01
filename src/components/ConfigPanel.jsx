@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../firebase';
 import { 
   Settings, Users, Shield, Globe, Database, Key, Check, Plus, X, 
-  Trash2, ShieldAlert, CheckCircle2, Copy, Download, Upload, Palette,
+  Trash2, ShieldAlert, ShieldCheck, CheckCircle2, Copy, Download, Upload, Palette,
   ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock, Mail, Activity, Calendar, Sparkles
 } from 'lucide-react';
 import EmailSettingsTab from './config/EmailSettingsTab';

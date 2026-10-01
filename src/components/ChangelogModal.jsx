@@ -6,6 +6,17 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.120',
+      date: '01/10/2026',
+      title: 'Nex-Ai CLINIC — Correção de Importação de Ícone (ShieldCheck) (.CONFIG)',
+      description: 'Correção emergencial de importação do componente ShieldCheck da biblioteca lucide-react no arquivo ConfigPanel.jsx. O problema causava erro de execução (ReferenceError) ao abrir o módulo de configurações do sistema após as atualizações recentes de governança de senhas.',
+      changes: [
+        { type: 'Importação lucide-react', text: 'Inclusão do ícone ShieldCheck na lista de importação de ConfigPanel.jsx.' },
+        { type: 'Correção de Tela', text: 'Eliminação imediata do ReferenceError e restauração plena do painel Nex-Ai.CONFIG.' },
+        { type: 'Integridade de Build', text: 'Validação e geração bem-sucedida do pacote de produção com Vite.' }
+      ]
+    },
+    {
       version: 'v4.9.118',
       date: '01/10/2026',
       title: 'Nex-Ai CLINIC — Primeiro Acesso Obrigatório e Expiração Periódica de Senhas (.CONFIG & SEGURANÇA)',
