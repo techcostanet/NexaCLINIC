@@ -119,30 +119,30 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Data:** 01/10/2026
 - **Módulo:** `.CONFIG` (Configurações) / Autenticação Geral
 - **Título:** Forçar Troca Obrigatória de Senha no Primeiro Acesso ou após Redefinição Temporária
-- **Status:** `Pendente / Aguardando Decisão Futura`
-- **Origem / Contexto:** Identificada durante o desenvolvimento da alteração simplificada de senhas e do seletor de dificuldade no NexaCONFIG.
+- **Status:** `Aprovada / Implementada (v4.9.118)`
+- **Origem / Contexto:** Identificada durante o desenvolvimento da alteração simplificada de senhas e do seletor de dificuldade no NexaCONFIG. Aprovada pelo usuário com opção de ativar/desativar no módulo config (desativada por padrão).
 - **Descrição Técnica:**
   - No cadastro de usuário pelo administrador ou ao gerar uma senha temporária dinâmica, gravar a flag `mustChangePassword: true` no documento do usuário no Firestore (`users`).
-  - No `App.jsx`, caso o usuário logado possua `user.mustChangePassword === true`, abrir compulsoriamente o `ChangePasswordModal` com bloqueio de cancelamento/saída até que ele defina e salve sua senha definitiva compatível com a política da clínica.
-  - Após a alteração bem-sucedida, desmarcar a flag para `false`.
+  - No `ModuleSelector.jsx` e `Navbar.jsx`, caso a clínica ative o controle e o colaborador possua `mustChangePassword === true`, abrir compulsoriamente o `ChangePasswordModal` em modo bloqueante (`isForced`) com opção de saída segura (`LogOut`) até que ele defina e salve sua senha definitiva compatível com a política da clínica.
+  - Após a alteração bem-sucedida, desmarcar a flag para `false` e atualizar `passwordUpdatedAt`.
 - **Benefício Operacional:** Garante que senhas padrão iniciais (ex.: `123456` ou senhas provisórias repassadas por WhatsApp/e-mail) sejam obrigatoriamente substituídas por senhas particulares de conhecimento exclusivo do colaborador, eliminando riscos de vazamento de senhas compartilhadas.
-- **Arquivos Envolvidos:** `src/App.jsx`, `src/components/common/ChangePasswordModal.jsx`, `src/services/firebase/authService.js`, `src/components/ConfigPanel.jsx`.
+- **Arquivos Envolvidos:** `src/utils/passwordPolicy.js`, `src/components/common/ChangePasswordModal.jsx`, `src/services/firebase/authService.js`, `src/components/ConfigPanel.jsx`, `src/components/ModuleSelector.jsx`, `src/components/Navbar.jsx`.
 - **Complexidade:** Baixa.
 
 ---
 
-### [SM-008] Expiração Periódica de Senhas para Conformidade Hospitalar (60/90/180 dias)
+### [SM-008] Expiração Periódica de Senhas para Conformidade Hospitalar (30/60/90/180 dias)
 - **Data:** 01/10/2026
 - **Módulo:** `.CONFIG` (Configurações) / Segurança
 - **Título:** Parâmetro de Renovação Obrigatória Periódica de Senhas (Expiração por Validade)
-- **Status:** `Pendente / Aguardando Decisão Futura`
-- **Origem / Contexto:** Identificada no desenho da tela de políticas de segurança e complexidade de senhas no NexaCONFIG.
+- **Status:** `Aprovada / Implementada (v4.9.118)`
+- **Origem / Contexto:** Identificada no desenho da tela de políticas de segurança e complexidade de senhas no NexaCONFIG. Aprovada pelo usuário com chave de ativação/desativação no Config (desativada por padrão).
 - **Descrição Técnica:**
-  - Na aba `Senhas` do NexaCONFIG, incluir um seletor de vigência da credencial: `Nunca expirar (padrão)`, `60 dias`, `90 dias` ou `180 dias`.
-  - Armazenar o timestamp `passwordUpdatedAt` no Firestore.
-  - Ao fazer login, verificar se o intervalo foi ultrapassado. Se expirado, exibir o modal de alteração de senha antes de liberar os portais operacionais.
+  - Na aba `Senhas` do NexaCONFIG, controles ativáveis de renovação periódica com seletor de ciclo (30, 60, 90 ou 180 dias; padrão 90 dias quando ativado).
+  - Armazenar o timestamp `passwordUpdatedAt` no Firestore e na sessão local.
+  - Ao carregar o seletor ou navbar, verificar se a credencial está expirada ou nos últimos 7 dias de validade (aviso preventivo com botão rápido `Renovar`).
 - **Benefício Operacional:** Atende a requisitos formais de auditorias hospitalares, acreditação ONA (Organização Nacional de Acreditação) e exigências rigorosas de proteção a dados sensíveis de saúde da LGPD.
-- **Arquivos Envolvidos:** `src/utils/passwordPolicy.js`, `src/components/ConfigPanel.jsx`, `src/services/firebase/authService.js`, `src/App.jsx`.
+- **Arquivos Envolvidos:** `src/utils/passwordPolicy.js`, `src/components/ConfigPanel.jsx`, `src/services/firebase/authService.js`, `src/components/ModuleSelector.jsx`, `src/components/Navbar.jsx`.
 - **Complexidade:** Média.
 
 

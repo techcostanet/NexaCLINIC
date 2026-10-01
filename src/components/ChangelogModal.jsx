@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.118',
+      date: '01/10/2026',
+      title: 'Nex-Ai CLINIC — Primeiro Acesso Obrigatório e Expiração Periódica de Senhas (.CONFIG & SEGURANÇA)',
+      description: 'Implementação de controles adicionais de segurança e governança de acessos no módulo Nex-Ai.CONFIG: opções de ativação/desativação individual para "Primeiro Acesso" (força a definição de nova senha no primeiro login de novos colaboradores ou senhas resetadas) e "Expiração Periódica" (ciclos de renovação de 30, 60, 90 ou 180 dias com aviso preventivo 7 dias antes do término). Ambos os recursos vêm desativados por padrão para preservar a flexibilidade de cada instituição, operando de forma integrada no Navbar, ModuleSelector e cadastro de usuários.',
+      changes: [
+        { type: 'Controles no Config', text: 'Seção Controles na aba Senhas do NexaCONFIG com interruptores Ativo/Inativo para Primeiro Acesso e Expiração com seletor de vigência (30d, 60d, 90d, 180d).' },
+        { type: 'Primeiro Acesso Bloqueante', text: 'Quando ativo, novos usuários ou colaboradores com senhas provisórias são direcionados para troca obrigatória com opção de logout seguro.' },
+        { type: 'Alerta Preventivo de Expiração', text: 'Aviso visual exibido no topo do seletor de portais e indicador na chave do Navbar nos últimos 7 dias antes do vencimento com botão rápido "Renovar".' },
+        { type: 'Desativado por Padrão', text: 'Ambas as funções respeitam a autonomia de cada cliente, vindo inativas por padrão e podendo ser ligadas com um único clique.' },
+        { type: 'Backlog & Manuais', text: 'Atualização do backlog de melhorias SUGESTOES_MELHORIAS.md e inclusão de tutoriais e FAQs no manual oficial (moduleGuidesData.js).' }
+      ]
+    },
+    {
       version: 'v4.9.117',
       date: '01/10/2026',
       title: 'Nex-Ai CLINIC — Política de Complexidade de Senhas Parametrizável e Alteração Simplificada de Credencial (.CONFIG & GLOBAL)',

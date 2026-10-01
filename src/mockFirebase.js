@@ -2618,6 +2618,8 @@ export const mockAuth = {
       employeeId: extraData.employeeId || '',
       status: extraData.status || 'active',
       password: extraData.password || `${cleanEmail.split('@')[0]}123`,
+      mustChangePassword: extraData.mustChangePassword !== undefined ? extraData.mustChangePassword : true,
+      passwordUpdatedAt: null,
       createdAt: new Date().toISOString()
     };
     db.users.push(newUser);
@@ -2688,6 +2690,8 @@ export const mockFirestore = {
     if (user) {
       user.password = newPassword;
       user.authPassword = newPassword;
+      user.mustChangePassword = false;
+      user.passwordUpdatedAt = new Date().toISOString();
       user.updatedAt = new Date().toISOString();
       setDB(db);
       return true;

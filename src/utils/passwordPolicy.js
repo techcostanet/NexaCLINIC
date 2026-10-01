@@ -69,7 +69,10 @@ export function getEffectivePasswordPolicy(tenantSettings) {
   if (!policyData) {
     return {
       ...PASSWORD_DIFFICULTY_LEVELS[DEFAULT_POLICY_ID],
-      level: DEFAULT_POLICY_ID
+      level: DEFAULT_POLICY_ID,
+      forceChangeOnFirstLogin: false,
+      isExpirationActive: false,
+      expirationDays: 90
     };
   }
 
@@ -77,7 +80,10 @@ export function getEffectivePasswordPolicy(tenantSettings) {
   if (typeof policyData === 'string' && PASSWORD_DIFFICULTY_LEVELS[policyData]) {
     return {
       ...PASSWORD_DIFFICULTY_LEVELS[policyData],
-      level: policyData
+      level: policyData,
+      forceChangeOnFirstLogin: false,
+      isExpirationActive: false,
+      expirationDays: 90
     };
   }
 
@@ -94,6 +100,9 @@ export function getEffectivePasswordPolicy(tenantSettings) {
     requireNumbers: policyData.requireNumbers !== undefined ? !!policyData.requireNumbers : baseLevel.requireNumbers,
     requireUppercase: policyData.requireUppercase !== undefined ? !!policyData.requireUppercase : baseLevel.requireUppercase,
     requireSpecialChars: policyData.requireSpecialChars !== undefined ? !!policyData.requireSpecialChars : baseLevel.requireSpecialChars,
+    forceChangeOnFirstLogin: !!policyData.forceChangeOnFirstLogin,
+    isExpirationActive: !!policyData.isExpirationActive,
+    expirationDays: typeof policyData.expirationDays === 'number' ? policyData.expirationDays : 90,
     level: policyData.level || DEFAULT_POLICY_ID
   };
 }
@@ -212,4 +221,68 @@ export function validatePasswordAgainstPolicy(password = '', policyInput) {
     errors,
     error: errors[0] || null
   };
+}
+
+/**
+ * Verifica o status de expiração da senha do usuário
+ */
+export function checkPasswordExpiration(user, tenantSettings) {
+  const policy = getEffectivePasswordPolicy(tenantSettings);
+  if (!policy.isExpirationActive || !policy.expirationDays) {
+    return { isExpired: false, daysRemaining: null, daysSinceChange: 0, isExpiringSoon: false };
+  }
+
+  // Data de referência: passwordUpdatedAt ou createdAt
+  const changeDateStr = user?.passwordUpdatedAt || user?.passwordLastChangedAt || user?.createdAt;
+  if (!changeDateStr) {
+    return { isExpired: false, daysRemaining: policy.expirationDays, daysSinceChange: 0, isExpiringSoon: false };
+  }
+
+  const changeDate = new Date(changeDateStr);
+  const now = new Date();
+  const diffTime = now.getTime() - changeDate.getTime();
+  const daysSinceChange = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const daysRemaining = policy.expirationDays - daysSinceChange;
+
+  const isExpired = daysRemaining <= 0;
+  // Alerta preventivo se faltar 7 dias ou menos
+  const isExpiringSoon = !isExpired && daysRemaining <= 7;
+
+  return {
+    isExpired,
+    daysRemaining: Math.max(0, daysRemaining),
+    daysSinceChange,
+    isExpiringSoon,
+    expiryDaysTotal: policy.expirationDays
+  };
+}
+
+/**
+ * Avalia se o usuário deve ser forçado a alterar a senha
+ */
+export function shouldForcePasswordChange(user, tenantSettings) {
+  if (!user) return { shouldForce: false, reason: '' };
+
+  const policy = getEffectivePasswordPolicy(tenantSettings);
+
+  // 1. Checagem de Primeiro Acesso
+  if (policy.forceChangeOnFirstLogin) {
+    if (user.mustChangePassword === true) {
+      return { shouldForce: true, reason: 'first_login' };
+    }
+    // Se o usuário foi criado e nunca atualizou a senha (não tem passwordUpdatedAt)
+    if (!user.passwordUpdatedAt && user.createdAt) {
+      return { shouldForce: true, reason: 'first_login' };
+    }
+  }
+
+  // 2. Checagem de Expiração Periódica
+  if (policy.isExpirationActive) {
+    const expiration = checkPasswordExpiration(user, tenantSettings);
+    if (expiration.isExpired) {
+      return { shouldForce: true, reason: 'expired', expiration };
+    }
+  }
+
+  return { shouldForce: false, reason: '' };
 }

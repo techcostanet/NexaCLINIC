@@ -1,3 +1,21 @@
+## [v4.9.118] - 01 de Outubro, 2026
+### Nex-Ai CLINIC (.CONFIG & SEGURANÇA) — Primeiro Acesso Obrigatório e Expiração Periódica de Senhas
+- **Controles de Segurança Parametrizáveis no NexaCONFIG:**
+  - Adicionada a seção `Controles` na aba `Senhas` do módulo `Nex-Ai.CONFIG`, oferecendo gestão completa e flexível do ciclo de vida das credenciais de acesso.
+  - **Primeiro Acesso Obrigatório:**
+    - Chave ativável/desativável (desativada por padrão) para obrigar novos colaboradores ou usuários que receberam senha provisória a definirem uma senha particular logo após o login.
+    - Modal bloqueante que impede o acesso às rotinas da clínica até a definição da nova senha, com botão de logout seguro caso prefira sair.
+  - **Expiração Periódica de Senhas (LGPD & ONA):**
+    - Chave ativável/desativável (desativada por padrão) com seleção de vigência (30, 60, 90 ou 180 dias; padrão 90 dias quando ativado).
+    - Notificação preventiva automática com contagem regressiva em dias no topo da tela inicial de portais (`ModuleSelector`) e indicador na chave do `Navbar` 7 dias antes do término, com botão rápido "Renovar".
+    - Bloqueio automático para renovação obrigatória caso o prazo expire.
+- **Sincronização & Trilha de Auditoria:**
+  - Integração nativa com `users` no Firestore (`mustChangePassword`, `passwordUpdatedAt`), atualização automática da sessão local e registro em logs de auditoria.
+  - Checkbox opcional de exigir troca no próximo login diretamente no cadastro/edição de usuários pelo administrador.
+- **Backlog & Documentação:**
+  - Conclusão e atualização dos itens `SM-007` e `SM-008` no backlog `SUGESTOES_MELHORIAS.md`.
+  - Manual oficial atualizado em `moduleGuidesData.js` com recursos, tutoriais de ativação e FAQs explicativos.
+
 ## [v4.9.117] - 01 de Outubro, 2026
 ### Nex-Ai CLINIC (.CONFIG & GLOBAL) — Política de Complexidade de Senhas Parametrizável e Alteração Simplificada de Credenciais
 - **Política de Complexidade de Senhas Parametrizável por Clínica (SaaS):**

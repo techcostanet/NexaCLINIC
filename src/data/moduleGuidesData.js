@@ -2724,6 +2724,14 @@ export const MODULE_GUIDES = {
         desc: 'Parametrização por clínica do nível de segurança das senhas dos usuários: níveis Simples (4+ dígitos livres), Padrão (6+ caracteres com letras e números), Forte (8+ caracteres com maiúsculas) e Rigoroso (8+ caracteres com símbolos LGPD), com simulador interativo em tempo real.'
       },
       {
+        title: 'Controle de Primeiro Acesso Obrigatório',
+        desc: 'Possibilidade de ativar a exigência de troca compulsória de senha no primeiro login de novos colaboradores ou após redefinição administrativa de credenciais provisórias (desativado por padrão).'
+      },
+      {
+        title: 'Expiração Periódica de Senhas (Conformidade & LGPD)',
+        desc: 'Parâmetro ativável para exigir a renovação periódica das credenciais a cada 30, 60, 90 ou 180 dias, com notificação preventiva emitida 7 dias antes do vencimento (desativado por padrão).'
+      },
+      {
         title: 'Alteração Simplificada de Senha pelo Usuário',
         desc: 'Modal intuitivo acessível na barra superior (Navbar) e na tela inicial de portais (ModuleSelector), com medidor de força em tempo real, validação simultânea de critérios da clínica e confirmação instantânea.'
       },
@@ -2773,6 +2781,16 @@ export const MODULE_GUIDES = {
           'Se desejar, personalize o comprimento mínimo e os requisitos específicos nas caixas de seleção.',
           'Use o campo "Simulador" para digitar senhas de exemplo e verificar em tempo real se seriam aprovadas ou reprovadas pela política configurada.',
           'Clique no botão "Salvar" para aplicar a política imediatamente a toda a instituição.'
+        ]
+      },
+      {
+        title: 'Como Ativar o Primeiro Acesso Obrigatório e a Expiração Periódica',
+        steps: [
+          'Acesse Nex-Ai.CONFIG e clique na aba "Senhas".',
+          'Localize a seção "Controles". Ambos os recursos vêm desativados por padrão.',
+          'Para forçar a troca no primeiro acesso de novos colaboradores ou senhas resetadas, clique na pílula do card "Primeiro Acesso" para alternar para "Ativo".',
+          'Para definir um ciclo de expiração de senhas, clique na pílula do card "Expiração" para alternar para "Ativo" e selecione o ciclo desejado (30, 60, 90 ou 180 dias).',
+          'Clique em "Salvar" no rodapé para sincronizar com as regras de acesso da clínica.'
         ]
       },
       {
@@ -2834,6 +2852,14 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'O que acontece quando o administrador altera a política de senhas da clínica?',
         resposta: 'A nova política entra em vigor imediatamente para qualquer nova criação de usuário ou alteração de senha realizada a partir daquele momento. Os usuários que já possuem senha cadastrada continuam acessando normalmente até decidirem realizar uma nova troca de credenciais.'
+      },
+      {
+        pergunta: 'Como funciona o bloqueio de Primeiro Acesso?',
+        resposta: 'Quando o controle "Primeiro Acesso" é ativado no Config, qualquer novo usuário ou colaborador que teve sua senha temporária gerada pelo administrador é recebido com o modal obrigatório de troca de senha logo após o login. O usuário não consegue fechar o modal até cadastrar uma nova senha pessoal definitiva que cumpra a política da clínica (ou clicar em "Sair" caso prefira encerrar a sessão).'
+      },
+      {
+        pergunta: 'Como funciona a notificação preventiva de Expiração Periódica?',
+        resposta: 'Se o controle de Expiração estiver ativo, o sistema monitora o tempo transcorrido desde a última alteração. Ao faltar 7 dias ou menos para a senha expirar, um alerta em destaque com botão rápido "Renovar" é exibido no topo da tela de portais (ModuleSelector) e sinalizado com um ponto indicador na chave do Navbar, permitindo que o colaborador renove sua credencial com tranquilidade antes do bloqueio.'
       },
       {
         pergunta: 'Como desativar o encaminhamento por e-mail ou reabrir o Mural para todos?',

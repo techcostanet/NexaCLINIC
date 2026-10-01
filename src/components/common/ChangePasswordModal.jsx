@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, KeyRound, Eye, EyeOff, CheckCircle2, ShieldCheck, 
-  AlertCircle, Lock, Sparkles, UserCheck 
+  AlertCircle, Lock, Sparkles, UserCheck, LogOut, Clock, ShieldAlert 
 } from 'lucide-react';
 import { authService, dbService } from '../../firebase';
 import { getEffectivePasswordPolicy, validatePasswordAgainstPolicy } from '../../utils/passwordPolicy';
 
-export default function ChangePasswordModal({ isOpen, onClose, currentUser }) {
+export default function ChangePasswordModal({ isOpen, onClose, currentUser, isForced = false, forcedReason = '', onSuccess }) {
   if (!isOpen) return null;
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -68,6 +68,7 @@ export default function ChangePasswordModal({ isOpen, onClose, currentUser }) {
 
       setSuccessMsg('Senha alterada com sucesso!');
       setTimeout(() => {
+        if (onSuccess) onSuccess();
         onClose();
       }, 1400);
     } catch (err) {
@@ -78,8 +79,17 @@ export default function ChangePasswordModal({ isOpen, onClose, currentUser }) {
     }
   };
 
+  const handleForcedLogout = async () => {
+    try {
+      await authService.logout();
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
-    <div style={styles.overlay} onClick={onClose}>
+    <div style={styles.overlay} onClick={() => { if (!isForced) onClose(); }}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={styles.header}>
@@ -94,13 +104,49 @@ export default function ChangePasswordModal({ isOpen, onClose, currentUser }) {
                   Regra: {policy.name}
                 </span>
               </div>
-              <p style={styles.subtitle}>Altere sua credencial de acesso ao sistema</p>
+              <p style={styles.subtitle}>
+                {isForced
+                  ? (forcedReason === 'first_login' ? 'Definição obrigatória de senha pessoal' : 'Renovação periódica obrigatória')
+                  : 'Altere sua credencial de acesso ao sistema'}
+              </p>
             </div>
           </div>
-          <button onClick={onClose} style={styles.closeBtn} title="Fechar">
-            <X size={18} />
-          </button>
+          {!isForced && (
+            <button onClick={onClose} style={styles.closeBtn} title="Fechar">
+              <X size={18} />
+            </button>
+          )}
         </div>
+
+        {/* Forced Change Banner */}
+        {isForced && (
+          <div style={{
+            margin: '0.75rem 1.5rem 0 1.5rem',
+            padding: '0.75rem 1rem',
+            borderRadius: '10px',
+            backgroundColor: forcedReason === 'first_login' ? '#eff6ff' : '#fffbeb',
+            border: `1px solid ${forcedReason === 'first_login' ? '#bfdbfe' : '#fde68a'}`,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.65rem'
+          }}>
+            {forcedReason === 'first_login' ? (
+              <ShieldCheck size={18} color="#2563eb" style={{ flexShrink: 0, marginTop: '2px' }} />
+            ) : (
+              <Clock size={18} color="#d97706" style={{ flexShrink: 0, marginTop: '2px' }} />
+            )}
+            <div style={{ fontSize: '0.8rem', lineHeight: '1.4' }}>
+              <strong style={{ color: forcedReason === 'first_login' ? '#1e40af' : '#92400e', display: 'block', marginBottom: '2px' }}>
+                {forcedReason === 'first_login' ? 'Primeiro Acesso' : 'Senha Expirada'}
+              </strong>
+              <span style={{ color: forcedReason === 'first_login' ? '#1e3a8a' : '#78350f' }}>
+                {forcedReason === 'first_login'
+                  ? 'Por segurança e conformidade da clínica, cadastre sua nova senha pessoal antes de continuar.'
+                  : 'O prazo de validade da sua credencial expirou. Cadastre uma nova senha para restabelecer o acesso.'}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* User identification strip */}
         <div style={styles.userStrip}>
@@ -266,14 +312,25 @@ export default function ChangePasswordModal({ isOpen, onClose, currentUser }) {
 
           {/* Footer buttons */}
           <div style={styles.footer}>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              style={styles.cancelBtn}
-            >
-              Cancelar
-            </button>
+            {isForced ? (
+              <button
+                type="button"
+                onClick={handleForcedLogout}
+                style={{ ...styles.cancelBtn, display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#ef4444' }}
+                title="Sair do sistema"
+              >
+                <LogOut size={15} /> Sair
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                style={styles.cancelBtn}
+              >
+                Cancelar
+              </button>
+            )}
             <button
               type="submit"
               disabled={!canSubmit}

@@ -257,6 +257,8 @@ export const createUser = async (email, name, role, allowedSectors = [], primary
         status: extraData.status || 'active',
         password: initialPassword,
         authPassword: initialPassword, // Save this to help heal Firebase Auth later
+        mustChangePassword: extraData.mustChangePassword !== undefined ? extraData.mustChangePassword : true,
+        passwordUpdatedAt: null,
         createdAt: new Date().toISOString()
       };
 
@@ -529,8 +531,14 @@ export const changeCurrentUserPassword = async (currentUser, currentPassword, ne
         const parsed = JSON.parse(session);
         parsed.password = newPassword;
         parsed.authPassword = newPassword;
+        parsed.mustChangePassword = false;
+        parsed.passwordUpdatedAt = new Date().toISOString();
         localStorage.setItem('nexa_custom_session', JSON.stringify(parsed));
       } catch (e) {}
+    }
+    if (currentUser) {
+      currentUser.mustChangePassword = false;
+      currentUser.passwordUpdatedAt = new Date().toISOString();
     }
     return true;
   }
@@ -572,6 +580,8 @@ export const changeCurrentUserPassword = async (currentUser, currentPassword, ne
       await setDoc(doc(db, 'users', targetUid), {
         password: newPassword,
         authPassword: newPassword,
+        mustChangePassword: false,
+        passwordUpdatedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }, { merge: true });
     }
@@ -583,8 +593,15 @@ export const changeCurrentUserPassword = async (currentUser, currentPassword, ne
         const parsed = JSON.parse(customSession);
         parsed.password = newPassword;
         parsed.authPassword = newPassword;
+        parsed.mustChangePassword = false;
+        parsed.passwordUpdatedAt = new Date().toISOString();
         localStorage.setItem('nexa_custom_session', JSON.stringify(parsed));
       } catch (e) {}
+    }
+
+    if (currentUser) {
+      currentUser.mustChangePassword = false;
+      currentUser.passwordUpdatedAt = new Date().toISOString();
     }
 
     return true;

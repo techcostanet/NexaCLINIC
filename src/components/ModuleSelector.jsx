@@ -2,17 +2,48 @@ import React from 'react';
 import { 
   BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, 
   Settings, ShoppingCart, Calendar, ClipboardList, FileText, Wrench, ShieldCheck,
-  LayoutGrid, List, LayoutList, Columns, ArrowRight, Search, Megaphone, Stethoscope, KeyRound
+  LayoutGrid, List, LayoutList, Columns, ArrowRight, Search, Megaphone, Stethoscope, KeyRound, Clock
 } from 'lucide-react';
-import { authService } from '../firebase';
+import { authService, dbService } from '../firebase';
 import UnitSelector from './common/UnitSelector';
 import NexAiBrand from './common/NexAiBrand';
 import ChangePasswordModal from './common/ChangePasswordModal';
+import { shouldForcePasswordChange, checkPasswordExpiration } from '../utils/passwordPolicy';
 
 export default function ModuleSelector({ user, onSelectModule }) {
   const [viewMode, setViewMode] = React.useState('grid'); // 'grid' (padrão), 'list', 'compact', 'expanded'
   const [searchTerm, setSearchTerm] = React.useState('');
   const [passwordModalOpen, setPasswordModalOpen] = React.useState(false);
+  const [isForcedPassword, setIsForcedPassword] = React.useState(false);
+  const [forcedPasswordReason, setForcedPasswordReason] = React.useState('');
+  const [expiringWarning, setExpiringWarning] = React.useState(null);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    async function verifyPasswordSecurity() {
+      try {
+        if (dbService.getTenantSettings && user) {
+          const tenant = await dbService.getTenantSettings();
+          if (!isMounted) return;
+          const forceCheck = shouldForcePasswordChange(user, tenant);
+          if (forceCheck.shouldForce) {
+            setIsForcedPassword(true);
+            setForcedPasswordReason(forceCheck.reason);
+            setPasswordModalOpen(true);
+          } else {
+            const expCheck = checkPasswordExpiration(user, tenant);
+            if (expCheck.isExpiringSoon) {
+              setExpiringWarning(expCheck);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao checar segurança de senha no seletor:', err);
+      }
+    }
+    verifyPasswordSecurity();
+    return () => { isMounted = false; };
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -338,6 +369,47 @@ export default function ModuleSelector({ user, onSelectModule }) {
           </div>
         </div>
 
+        {/* Alerta de Expiração Preventiva de Senha */}
+        {expiringWarning && !isForcedPassword && (
+          <div style={{
+            backgroundColor: '#fffbeb',
+            border: '1px solid #fde68a',
+            borderRadius: '12px',
+            padding: '0.75rem 1rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            flexWrap: 'wrap',
+            boxShadow: '0 2px 6px rgba(245,158,11,0.08)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#92400e' }}>
+              <Clock size={18} color="#d97706" style={{ flexShrink: 0 }} />
+              <span>Sua credencial expira em <strong>{expiringWarning.daysRemaining} {expiringWarning.daysRemaining === 1 ? 'dia' : 'dias'}</strong>. Recomendamos renová-la preventivamente.</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsForcedPassword(false);
+                setPasswordModalOpen(true);
+              }}
+              style={{
+                padding: '0.35rem 0.85rem',
+                borderRadius: '8px',
+                backgroundColor: '#d97706',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: '0.75rem',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+            >
+              Renovar
+            </button>
+          </div>
+        )}
+
         {/* 1. Visão GRID PADRÃO (Cards) */}
         {viewMode === 'grid' && (
           <div style={styles.grid}>
@@ -488,8 +560,17 @@ export default function ModuleSelector({ user, onSelectModule }) {
 
         <ChangePasswordModal 
           isOpen={passwordModalOpen} 
-          onClose={() => setPasswordModalOpen(false)} 
+          onClose={() => {
+            if (!isForcedPassword) setPasswordModalOpen(false);
+          }} 
           currentUser={user} 
+          isForced={isForcedPassword}
+          forcedReason={forcedPasswordReason}
+          onSuccess={() => {
+            setIsForcedPassword(false);
+            setExpiringWarning(null);
+            setPasswordModalOpen(false);
+          }}
         />
       </div>
     </div>

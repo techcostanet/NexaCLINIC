@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { authService, dbService } from '../firebase';
-import { Activity, LogOut, Menu, X, BarChart3, UploadCloud, Users, HeartPulse, FileText, LayoutGrid, Megaphone, ShoppingCart, BookOpen, KeyRound } from 'lucide-react';
+import { Activity, LogOut, Menu, X, BarChart3, UploadCloud, Users, HeartPulse, FileText, LayoutGrid, Megaphone, ShoppingCart, BookOpen, KeyRound, Clock } from 'lucide-react';
 import ChangelogModal from './ChangelogModal';
 import ChangePasswordModal from './common/ChangePasswordModal';
 import UnitSelector from './common/UnitSelector';
 import NexAiBrand from './common/NexAiBrand';
+import { shouldForcePasswordChange, checkPasswordExpiration } from '../utils/passwordPolicy';
 
 export default function Navbar({ user, currentPage, setCurrentPage, currentModule, setCurrentModule, setIsReportsOpen, setIsGuideOpen }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [isForcedPassword, setIsForcedPassword] = useState(false);
+  const [forcedPasswordReason, setForcedPasswordReason] = useState('');
+  const [expiringWarning, setExpiringWarning] = useState(null);
   const [tenantSettings, setTenantSettings] = useState({ name: 'Nex-Ai CLINIC', logo: '' });
 
   const loadBranding = async () => {
@@ -17,6 +21,19 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
       const settings = await dbService.getTenantSettings();
       if (settings) {
         setTenantSettings({ name: settings.name || 'Nex-Ai CLINIC', logo: settings.logo || '' });
+        if (user) {
+          const forceCheck = shouldForcePasswordChange(user, settings);
+          if (forceCheck.shouldForce) {
+            setIsForcedPassword(true);
+            setForcedPasswordReason(forceCheck.reason);
+            setPasswordModalOpen(true);
+          } else {
+            const expCheck = checkPasswordExpiration(user, settings);
+            if (expCheck.isExpiringSoon) {
+              setExpiringWarning(expCheck);
+            }
+          }
+        }
       }
     } catch (e) {
       console.error(e);
@@ -148,11 +165,29 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
             </span>
           </div>
           <button 
-            onClick={() => setPasswordModalOpen(true)} 
-            style={styles.passwordTriggerBtn} 
-            title="Alterar Senha"
+            onClick={() => {
+              setIsForcedPassword(false);
+              setPasswordModalOpen(true);
+            }} 
+            style={{
+              ...styles.passwordTriggerBtn,
+              position: 'relative',
+              ...(expiringWarning ? { color: '#d97706', borderColor: '#fde68a', backgroundColor: '#fffbeb' } : {})
+            }} 
+            title={expiringWarning ? `Senha expira em ${expiringWarning.daysRemaining} dias!` : "Alterar Senha"}
           >
             <KeyRound size={16} />
+            {expiringWarning && (
+              <span style={{
+                position: 'absolute',
+                top: '-3px',
+                right: '-3px',
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: '#d97706'
+              }} />
+            )}
           </button>
           <button 
             onClick={() => setChangelogOpen(true)} 
@@ -235,8 +270,17 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
       <ChangelogModal isOpen={changelogOpen} onClose={() => setChangelogOpen(false)} />
       <ChangePasswordModal 
         isOpen={passwordModalOpen} 
-        onClose={() => setPasswordModalOpen(false)} 
+        onClose={() => {
+          if (!isForcedPassword) setPasswordModalOpen(false);
+        }} 
         currentUser={user} 
+        isForced={isForcedPassword}
+        forcedReason={forcedPasswordReason}
+        onSuccess={() => {
+          setIsForcedPassword(false);
+          setExpiringWarning(null);
+          setPasswordModalOpen(false);
+        }}
       />
     </nav>
   );

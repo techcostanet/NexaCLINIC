@@ -249,10 +249,13 @@ export default function ConfigPanel() {
   const handleSelectDifficultyLevel = (levelId) => {
     const preset = PASSWORD_DIFFICULTY_LEVELS[levelId];
     if (preset) {
-      setPasswordPolicyForm({
+      setPasswordPolicyForm(prev => ({
         ...preset,
-        level: levelId
-      });
+        level: levelId,
+        forceChangeOnFirstLogin: prev.forceChangeOnFirstLogin || false,
+        isExpirationActive: prev.isExpirationActive || false,
+        expirationDays: prev.expirationDays || 90
+      }));
     }
   };
 
@@ -304,11 +307,13 @@ export default function ConfigPanel() {
     setUserForm({
       name: '',
       email: '',
+      password: '',
       role: profiles[0]?.id || 'reception',
       employeeId: employees[0]?.id || '',
       primaryUnit: 'betim',
       allowedUnits: ['betim'],
-      status: 'active'
+      status: 'active',
+      mustChangePassword: passwordPolicyForm.forceChangeOnFirstLogin || false
     });
     setShowUserModal(true);
   };
@@ -321,11 +326,13 @@ export default function ConfigPanel() {
     setUserForm({
       name: user.name || '',
       email: user.email || '',
+      password: '',
       role: matchedRole,
       employeeId: user.employeeId || '',
       primaryUnit: uUnit,
       allowedUnits: user.allowedUnits || (uUnit === 'all' ? ['all', 'betim', 'taguatinga'] : [uUnit]),
-      status: user.status || 'active'
+      status: user.status || 'active',
+      mustChangePassword: !!user.mustChangePassword
     });
     setShowUserModal(true);
   };
@@ -337,6 +344,12 @@ export default function ConfigPanel() {
     try {
       const identifier = targetUser.email || targetUser.uid;
       const tempPass = await dbService.generateTempPassword(identifier);
+      if (dbService.updateUser && (targetUser.uid || targetUser.id)) {
+        await dbService.updateUser(targetUser.uid || targetUser.id, {
+          mustChangePassword: true,
+          passwordUpdatedAt: null
+        });
+      }
       setGeneratedTempPass(tempPass);
       showAlert(`Senha temporária gerada e salva na nuvem para ${targetUser.name || targetUser.email}!`, 'success');
       logAudit('Senha Temporária Gerada', `Gerada nova senha temporária para o usuário ${targetUser.email}.`);
@@ -371,7 +384,8 @@ export default function ConfigPanel() {
           employeeId: userForm.employeeId || '',
           primaryUnit: userForm.primaryUnit || 'betim',
           allowedUnits: allowedUnitsToSave,
-          status: userForm.status || 'active'
+          status: userForm.status || 'active',
+          mustChangePassword: !!userForm.mustChangePassword
         });
         if (userForm.password) {
           const identifier = editingUser.email || editingUser.uid;
@@ -392,7 +406,10 @@ export default function ConfigPanel() {
           {
             employeeId: userForm.employeeId || '',
             status: userForm.status || 'active',
-            password: tempPass
+            password: tempPass,
+            mustChangePassword: userForm.mustChangePassword !== undefined
+              ? !!userForm.mustChangePassword
+              : (passwordPolicyForm.forceChangeOnFirstLogin || false)
           }
         );
         const msg = res?.isExisting
@@ -1455,6 +1472,150 @@ export default function ConfigPanel() {
                   </div>
                 </div>
 
+                {/* Additional Security Policies / Controles de Acesso */}
+                <div style={{ backgroundColor: 'var(--bg-body, #f8fafc)', borderRadius: '12px', padding: '1.25rem', border: '1px solid var(--border-color, #e2e8f0)', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <Shield size={16} color={passwordPolicyForm.color || 'var(--primary-color, #ec4899)'} />
+                    <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                      Controles
+                    </h4>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      (Diretrizes complementares de governança e ciclo de credenciais)
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                    {/* Item 1: Forçar troca de senha no primeiro acesso */}
+                    <div style={{
+                      backgroundColor: '#ffffff',
+                      border: passwordPolicyForm.forceChangeOnFirstLogin ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
+                      borderRadius: '10px',
+                      padding: '1rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      boxShadow: passwordPolicyForm.forceChangeOnFirstLogin ? '0 2px 8px rgba(37,99,235,0.1)' : 'none',
+                      transition: 'all 0.2s'
+                    }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <ShieldCheck size={18} color={passwordPolicyForm.forceChangeOnFirstLogin ? '#2563eb' : '#64748b'} />
+                            <strong style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>Primeiro Acesso</strong>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setPasswordPolicyForm({
+                              ...passwordPolicyForm,
+                              forceChangeOnFirstLogin: !passwordPolicyForm.forceChangeOnFirstLogin
+                            })}
+                            style={{
+                              padding: '0.2rem 0.65rem',
+                              borderRadius: '999px',
+                              fontSize: '0.75rem',
+                              fontWeight: '700',
+                              border: 'none',
+                              cursor: 'pointer',
+                              backgroundColor: passwordPolicyForm.forceChangeOnFirstLogin ? '#dbeafe' : '#f1f5f9',
+                              color: passwordPolicyForm.forceChangeOnFirstLogin ? '#1e40af' : '#64748b',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {passwordPolicyForm.forceChangeOnFirstLogin ? 'Ativo' : 'Inativo'}
+                          </button>
+                        </div>
+                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.4' }}>
+                          Obriga o colaborador a definir uma nova senha no primeiro login ou após redefinição administrativa.
+                        </p>
+                      </div>
+                      <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px dashed #f1f5f9', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                        Padrão do sistema: <strong>Desativado</strong>
+                      </div>
+                    </div>
+
+                    {/* Item 2: Expiração periódica de senhas */}
+                    <div style={{
+                      backgroundColor: '#ffffff',
+                      border: passwordPolicyForm.isExpirationActive ? '1.5px solid #f59e0b' : '1px solid #e2e8f0',
+                      borderRadius: '10px',
+                      padding: '1rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      boxShadow: passwordPolicyForm.isExpirationActive ? '0 2px 8px rgba(245,158,11,0.1)' : 'none',
+                      transition: 'all 0.2s'
+                    }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Clock size={18} color={passwordPolicyForm.isExpirationActive ? '#f59e0b' : '#64748b'} />
+                            <strong style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>Expiração</strong>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setPasswordPolicyForm({
+                              ...passwordPolicyForm,
+                              isExpirationActive: !passwordPolicyForm.isExpirationActive,
+                              expirationDays: passwordPolicyForm.expirationDays || 90
+                            })}
+                            style={{
+                              padding: '0.2rem 0.65rem',
+                              borderRadius: '999px',
+                              fontSize: '0.75rem',
+                              fontWeight: '700',
+                              border: 'none',
+                              cursor: 'pointer',
+                              backgroundColor: passwordPolicyForm.isExpirationActive ? '#fef3c7' : '#f1f5f9',
+                              color: passwordPolicyForm.isExpirationActive ? '#92400e' : '#64748b',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {passwordPolicyForm.isExpirationActive ? 'Ativo' : 'Inativo'}
+                          </button>
+                        </div>
+                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.5rem 0', lineHeight: '1.4' }}>
+                          Exige a renovação periódica de credenciais para prevenir acessos obsoletos.
+                        </p>
+
+                        {passwordPolicyForm.isExpirationActive && (
+                          <div style={{ marginTop: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Validade:</span>
+                            {[
+                              { days: 30, label: '30d (Mensal)' },
+                              { days: 60, label: '60d (Bimestral)' },
+                              { days: 90, label: '90d (Trimestral)' },
+                              { days: 180, label: '180d (Semestral)' }
+                            ].map(opt => (
+                              <button
+                                key={opt.days}
+                                type="button"
+                                onClick={() => setPasswordPolicyForm({ ...passwordPolicyForm, expirationDays: opt.days })}
+                                style={{
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '6px',
+                                  fontSize: '0.72rem',
+                                  fontWeight: '700',
+                                  cursor: 'pointer',
+                                  border: (passwordPolicyForm.expirationDays || 90) === opt.days ? '1px solid #f59e0b' : '1px solid #cbd5e1',
+                                  backgroundColor: (passwordPolicyForm.expirationDays || 90) === opt.days ? '#fef3c7' : '#ffffff',
+                                  color: (passwordPolicyForm.expirationDays || 90) === opt.days ? '#92400e' : '#64748b'
+                                }}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px dashed #f1f5f9', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                        {passwordPolicyForm.isExpirationActive
+                          ? `Aviso preventivo automático emitido 7 dias antes do término.`
+                          : `Padrão do sistema: Desativado`}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Real-time Simulator / Tester for Admin */}
                 <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '1.25rem', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
@@ -2273,6 +2434,23 @@ export default function ConfigPanel() {
                 })()}
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
                   Regra da clínica: <strong>{passwordPolicyForm.name}</strong> (mínimo de {passwordPolicyForm.minLength} caracteres)
+                </span>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                  <input
+                    type="checkbox"
+                    checked={userForm.mustChangePassword || false}
+                    onChange={e => setUserForm({ ...userForm, mustChangePassword: e.target.checked })}
+                    style={{ width: '16px', height: '16px' }}
+                  />
+                  <span>Exigir troca no próximo login</span>
+                </label>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: '1.5rem', display: 'block' }}>
+                  {passwordPolicyForm.forceChangeOnFirstLogin
+                    ? 'Ativado automaticamente pela política da clínica.'
+                    : 'Obriga o colaborador a definir uma nova senha pessoal ao acessar.'}
                 </span>
               </div>
 
