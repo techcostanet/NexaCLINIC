@@ -121,6 +121,10 @@ export const MODULE_GUIDES = {
     ],
     duvidas: [
       {
+        pergunta: 'Como funciona o Modo Noturno com 2 níveis do sistema?',
+        resposta: 'O sistema disponibiliza 3 experiências visuais completas: o Modo Claro (padrão diurno hospitalar), o Modo Noturno Suave (Nível 1, com fundo grafite e ardósia que reduz a fadiga ocular em salas de plantão com pouca luz) e o Modo Noturno OLED (Nível 2, com preto absoluto que proporciona máxima nitidez e economia energética em monitores e tablets OLED).'
+      },
+      {
         pergunta: 'Como funciona o acesso de operadoras de filiais remotas (ex: Taguatinga)?',
         resposta: 'Colaboradores com acesso restrito a Taguatinga só visualizam e lançam despesas e notas da sua respectiva unidade. Já a Gestora Financeira e Administradores possuem visão de Todas as Unidades simultaneamente.'
       },
@@ -2181,9 +2185,21 @@ export const MODULE_GUIDES = {
       {
         title: 'Controle de Importação de E-mails Clínicos (Titan)',
         desc: 'Chave mestre para habilitar ou pausar a ingestão automática contínua de e-mails da caixa integracao@dialize.com.br que alimentam o Mural do Nex-Ai.ASSIST.'
+      },
+      {
+        title: 'Modo Noturno com 2 Níveis (Visual & Ergonomia)',
+        desc: 'Alternância instantânea de temas visuais: Claro (padrão diurno de alta luminosidade), Noturno Suave (Nível 1 - tons de ardósia para alívio visual contínuo nos plantões) e Preto OLED (Nível 2 - contraste absoluto para telas OLED/AMOLED e economia de energia).'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Alternar Entre os Modos Visuais (Claro, Suave e OLED)',
+        steps: [
+          'No canto superior direito da barra de navegação (ao lado das suas informações de perfil) ou na tela de seleção de portais, clique no ícone do tema ativo (Sol, Lua ou Estrela).',
+          'Escolha a opção desejada: Claro (padrão diurno), Suave (Nível 1 - Dark Slate) ou OLED (Nível 2 - Preto total).',
+          'A sua escolha é salva de forma persistente no seu navegador e sincronizada em tempo real em todas as abas e módulos do sistema.'
+        ]
+      },
       {
         title: 'Como Ligar ou Desligar a Importação Automática de E-mails do Mural',
         steps: [

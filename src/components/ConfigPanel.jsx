@@ -6,6 +6,7 @@ import {
   ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock, Mail, Activity, Calendar, Sparkles
 } from 'lucide-react';
 import EmailSettingsTab from './config/EmailSettingsTab';
+import ThemeToggle from './common/ThemeToggle';
 import { 
   PASSWORD_DIFFICULTY_LEVELS, 
   getEffectivePasswordPolicy, 
@@ -990,6 +991,15 @@ export default function ConfigPanel() {
                         />
                       ))}
                     </div>
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Tema do Sistema (Modo Visual)</label>
+                    <div style={{ marginTop: '0.4rem' }}>
+                      <ThemeToggle variant="segmented" />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      Escolha entre Claro (Padrão), Noturno Suave (Nível 1) ou Preto OLED (Nível 2).
+                    </span>
                   </div>
                   <div className="form-group" style={{ flex: 1 }}>
                     <label>Logomarca (Upload de Arquivo)</label>

@@ -1,3 +1,21 @@
+## [v5.0.1] - 01 de Outubro, 2026
+### Nex-Ai CLINIC — Modo Noturno com 2 Níveis e Virada de Versão Major (v5.0.1)
+- **Modo Noturno com 2 Níveis Especializados (Ergonomia & Conforto Visual):**
+  - Implementado o sistema visual tri-modal de ponta na plataforma Nex-Ai CLINIC, mantendo o **Modo Claro** como padrão nativo do sistema e disponibilizando dois níveis especializados de Modo Noturno:
+    - **Modo Claro (Padrão Hospitalar Diurno):** Design clássico de alta luminosidade com fundo neutro (#f8fafc) e superfícies alvas, ideal para ambientes clínicos diurnos e estações de recepção.
+    - **Nível 1 — Noturno Suave (Dark Slate):** Paleta balanceada em tons nobres de ardósia e grafite (#0b1120 / #151f32), projetada para alívio visual contínuo e redução de fadiga ocular em salas de plantão com baixa iluminação.
+    - **Nível 2 — Noturno OLED (Pitch Black):** Preto cirúrgico absoluto (#000000 / #09090b) com contraste de alta fidelidade para telas AMOLED/OLED, oferecendo máxima economia energética e imersão total.
+  - **Componente Seletor de Tema Universal (ThemeToggle):**
+    - Modo compacto com popover inteligente na barra superior global (Navbar) e na tela de login.
+    - Modo segmentado em pílula na tela de seleção de portais (ModuleSelector) e no módulo Nex-Ai.CONFIG (aba Customização).
+  - **Persistência Inteligente & Zero Flicker:**
+    - Armazenamento em localStorage com carregamento síncrono no head do HTML, eliminando qualquer cintilação visual (flicker) ao recarregar a página.
+    - Transições CSS suaves de 200ms entre as trocas de modo.
+- **Virada de Versão Maior (Major Release v5.0.1):**
+  - Atualização do número de versão do sistema para **v5.0.1** no package.json, rodapé global e modais de histórico.
+- **Manuais & Governança Atualizados:**
+  - Atualização do manual oficial em moduleGuidesData.js com documentação, tutoriais de uso e perguntas frequentes sobre os novos modos visuais.
+
 ## [v4.9.120] - 01 de Outubro, 2026
 ### Nex-Ai CLINIC (.CONFIG) — Correção de Importação de Ícone (ShieldCheck)
 - **Correção Crítica de Importação no NexaCONFIG:**

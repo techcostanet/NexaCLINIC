@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.1',
+      date: '01/10/2026',
+      title: 'Nex-Ai CLINIC — Modo Noturno com 2 Níveis e Versão Major v5.0.1 (GLOBAL & VISUAL)',
+      description: 'Marco histórico de evolução da plataforma Nex-Ai CLINIC: virada oficial para a versão v5.0.1 e lançamento do sistema visual com Modo Noturno em 2 níveis especializados. Mantendo o Modo Claro como padrão hospitalar do sistema, os profissionais contam agora com o Modo Suave (Nível 1 - Dark Slate) para conforto ocular em plantões noturnos e o Modo OLED (Nível 2 - Pitch Black) para contraste cirúrgico e economia em telas AMOLED/OLED.',
+      changes: [
+        { type: 'Modo Claro (Padrão)', text: 'Interface tradicional de alta luminosidade preservada como padrão diurno do sistema.' },
+        { type: 'Noturno Suave (Nível 1)', text: 'Paleta em tons de ardósia e grafite escuro que descansa a visão durante longas jornadas noturnas.' },
+        { type: 'Noturno OLED (Nível 2)', text: 'Preto absoluto cirúrgico de contraste nítido, ideal para telas OLED/AMOLED e economia de energia.' },
+        { type: 'Seletor Universal', text: 'Novo controle ThemeToggle disponível no Navbar superior, no seletor de portais, no login e no NexaCONFIG.' },
+        { type: 'Versão v5.0.1', text: 'Virada para versão 5.0.1 com atualização de manuais, documentação e sincronização no ecossistema.' }
+      ]
+    },
+    {
       version: 'v4.9.120',
       date: '01/10/2026',
       title: 'Nex-Ai CLINIC — Correção de Importação de Ícone (ShieldCheck) (.CONFIG)',

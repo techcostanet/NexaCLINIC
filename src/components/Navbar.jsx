@@ -5,6 +5,7 @@ import ChangelogModal from './ChangelogModal';
 import ChangePasswordModal from './common/ChangePasswordModal';
 import UnitSelector from './common/UnitSelector';
 import NexAiBrand from './common/NexAiBrand';
+import ThemeToggle from './common/ThemeToggle';
 import { shouldForcePasswordChange, checkPasswordExpiration } from '../utils/passwordPolicy';
 
 export default function Navbar({ user, currentPage, setCurrentPage, currentModule, setCurrentModule, setIsReportsOpen, setIsGuideOpen }) {
@@ -189,6 +190,7 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
               }} />
             )}
           </button>
+          <ThemeToggle variant="compact" />
           <button 
             onClick={() => setChangelogOpen(true)} 
             style={styles.changelogTriggerBtn} 
@@ -261,6 +263,9 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
             <span>Novidades</span>
           </button>
           <div style={styles.mobileDivider}></div>
+          <div style={{ margin: "0.5rem 0", display: "flex", justifyContent: "center" }}>
+            <ThemeToggle variant="segmented" style={{ width: "100%", justifyContent: "center" }} />
+          </div>
           <button onClick={handleLogout} style={styles.mobileLogoutBtn}>
             <LogOut size={18} />
             <span>Sair</span>
@@ -288,7 +293,7 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
 
 const styles = {
   nav: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--card-bg, #ffffff)',
     borderBottom: '1px solid var(--border-color)',
     position: 'sticky',
     top: 0,

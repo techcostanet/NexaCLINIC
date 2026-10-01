@@ -57,7 +57,7 @@ export default function ModuleHeader({
               margin: 0,
               fontSize: '1.65rem',
               fontWeight: 800,
-              color: '#0f172a',
+              color: 'var(--text-primary, #0f172a)',
               letterSpacing: '-0.02em',
               display: 'flex',
               alignItems: 'center',
@@ -75,7 +75,7 @@ export default function ModuleHeader({
             <p
               style={{
                 fontSize: '0.85rem',
-                color: '#64748b',
+                color: 'var(--text-secondary, #64748b)',
                 margin: '0.2rem 0 0 0',
                 lineHeight: 1.3
               }}

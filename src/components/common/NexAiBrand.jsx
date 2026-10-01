@@ -50,8 +50,8 @@ export default function NexAiBrand({
   };
 
   const currentSize = sizeConfig[size] || sizeConfig.md;
-  const textColor = light ? '#ffffff' : '#0f172a';
-  const subtitleColor = light ? '#cbd5e1' : '#64748b';
+  const textColor = light ? '#ffffff' : 'var(--text-primary, #0f172a)';
+  const subtitleColor = light ? '#cbd5e1' : 'var(--text-secondary, #64748b)';
 
   return (
     <div

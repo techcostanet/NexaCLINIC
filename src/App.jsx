@@ -26,6 +26,7 @@ import MachineTicketPortal from './components/maintenance/MachineTicketPortal';
 import TvCallPanel from './components/tv/TvCallPanel';
 import EmployeeTrainingPortal from './components/training/EmployeeTrainingPortal';
 import CertificateVerifyPortal from './components/training/CertificateVerifyPortal';
+import { initTheme } from './utils/themeManager';
 import ErrorBoundary from './components/ErrorBoundary';
 import ModuleGuideModal from './components/common/ModuleGuideModal';
 import { UnitProvider } from './contexts/UnitContext';
@@ -73,6 +74,7 @@ export default function App() {
 
   useEffect(() => {
     let isMounted = true;
+    initTheme();
     
     // Safety fallback: Release loading screen after 3.5s if Auth is delayed/offline
     const authTimer = setTimeout(() => {
@@ -328,7 +330,7 @@ const styles = {
     animation: 'spin 1s linear infinite',
   },
   footer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--card-bg, #ffffff)',
     borderTop: '1px solid var(--border-color)',
     padding: '1.25rem 0',
     marginTop: 'auto',

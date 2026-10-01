@@ -4,6 +4,12 @@ const path = require('path');
 const pkgPath = path.join(__dirname, 'package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 
+// Allow skipping auto-increment when an explicit version is specified
+if (process.env.SKIP_VERSION_INCREMENT === 'true') {
+  console.log(`[Version Auto-Increment] Mantendo versão definida: ${pkg.version}`);
+  process.exit(0);
+}
+
 // Increment patch version (e.g. 1.0.0 -> 1.0.1)
 const parts = pkg.version.split('.');
 if (parts.length === 3) {

@@ -41,7 +41,7 @@ export default function UnitSelector({ compact = false, showLabel = true }) {
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
       {showLabel && (
-        <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.04em' }}>
+        <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary, #64748b)', letterSpacing: '0.04em' }}>
           Filial:
         </span>
       )}
@@ -54,9 +54,9 @@ export default function UnitSelector({ compact = false, showLabel = true }) {
             WebkitAppearance: 'none',
             padding: compact ? '5px 28px 5px 26px' : '6px 32px 6px 30px',
             borderRadius: '10px',
-            border: '1px solid #cbd5e1',
-            backgroundColor: isConsolidated ? '#f8fafc' : activeUnit?.badgeBg || '#ffffff',
-            color: isConsolidated ? '#334155' : activeUnit?.badgeText || '#1e293b',
+            border: '1px solid var(--border-color, #cbd5e1)',
+            backgroundColor: isConsolidated ? 'var(--surface-muted, #f8fafc)' : activeUnit?.badgeBg || 'var(--card-bg, #ffffff)',
+            color: isConsolidated ? 'var(--text-secondary, #334155)' : activeUnit?.badgeText || 'var(--text-primary, #1e293b)',
             fontSize: compact ? '0.78rem' : '0.84rem',
             fontWeight: '700',
             cursor: 'pointer',

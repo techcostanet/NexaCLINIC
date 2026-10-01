@@ -15,15 +15,18 @@
   --danger-color: #e11d48; /* rose-600 */
   --danger-light: #fff1f2; /* rose-50 */
   
-  /* Neutrals */
+  /* Neutrals (Modo Claro - Padrão) */
   --bg-color: #f8fafc; /* slate-50 */
   --card-bg: #ffffff;
   --bg-card: #ffffff;
+  --surface-muted: #f1f5f9;
   --text-primary: #0f172a; /* slate-900 */
   --text-secondary: #475569; /* slate-600 */
   --text-muted: #94a3b8; /* slate-400 */
   --border-color: #e2e8f0; /* slate-200 */
   --border-focus: #0891b2;
+  --selector-bg: linear-gradient(135deg, #ecfeff 0%, #f8fafc 100%);
+  --login-bg: linear-gradient(135deg, #f0fdfa 0%, #f8fafc 100%);
   
   /* Typography & Layout spacing */
   --border-radius-sm: 6px;
@@ -36,6 +39,64 @@
   --transition-normal: 0.25s ease;
   
   --max-width: 1280px;
+}
+
+/* ==========================================================================
+   TEMA NOTURNO — NÍVEL 1: DARK SUAVE (SLATE / GRAFITE CONFORTÁVEL)
+   ========================================================================== */
+[data-theme="dark-dim"],
+:root[data-theme="dark-dim"] {
+  --bg-color: #0b1120;
+  --card-bg: #151f32;
+  --bg-card: #151f32;
+  --surface-muted: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-color: #24324b;
+  --border-focus: #38bdf8;
+  
+  --primary-light: rgba(8, 145, 178, 0.22);
+  --secondary-color: #0d9488;
+  --success-light: rgba(5, 150, 105, 0.22);
+  --warning-light: rgba(217, 119, 6, 0.22);
+  --danger-light: rgba(225, 29, 72, 0.22);
+  
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 4px 8px -1px rgba(0, 0, 0, 0.55), 0 2px 4px -2px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 20px -3px rgba(0, 0, 0, 0.7);
+  
+  --selector-bg: radial-gradient(circle at top right, #1e293b 0%, #0b1120 100%);
+  --login-bg: radial-gradient(circle at top right, #1e293b 0%, #0b1120 100%);
+}
+
+/* ==========================================================================
+   TEMA NOTURNO — NÍVEL 2: PRETO OLED (PITCH BLACK / TOTAL)
+   ========================================================================== */
+[data-theme="dark-black"],
+:root[data-theme="dark-black"] {
+  --bg-color: #000000;
+  --card-bg: #09090b;
+  --bg-card: #09090b;
+  --surface-muted: #18181b;
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --border-color: #27272a;
+  --border-focus: #38bdf8;
+  
+  --primary-light: rgba(8, 145, 178, 0.28);
+  --secondary-color: #14b8a6;
+  --success-light: rgba(5, 150, 105, 0.28);
+  --warning-light: rgba(217, 119, 6, 0.28);
+  --danger-light: rgba(225, 29, 72, 0.28);
+  
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.85);
+  --shadow-md: 0 4px 10px -1px rgba(0, 0, 0, 0.9);
+  --shadow-lg: 0 16px 28px -3px rgba(0, 0, 0, 0.98);
+  
+  --selector-bg: #000000;
+  --login-bg: #000000;
 }
 
 * {
@@ -461,4 +522,139 @@ body.printing-ata .print-ata {
 .signature-line .line {
   border-top: 1px solid #000;
   margin-bottom: 5px;
+}
+
+
+/* ==========================================================================
+   REGRAS GLOBAIS DE COMPONENTES E SUPERFÍCIES PARA MODO NOTURNO
+   ========================================================================== */
+[data-theme="dark-dim"],
+[data-theme="dark-black"] {
+  color-scheme: dark;
+}
+
+[data-theme="dark-dim"] body,
+[data-theme="dark-black"] body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark-dim"] .app-container,
+[data-theme="dark-black"] .app-container {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+}
+
+/* Cartões, Modais, Tabelas e Painéis */
+[data-theme="dark-dim"] .card,
+[data-theme="dark-black"] .card,
+[data-theme="dark-dim"] .modal-content,
+[data-theme="dark-black"] .modal-content,
+[data-theme="dark-dim"] .table-container,
+[data-theme="dark-black"] .table-container {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark-dim"] .modal-header,
+[data-theme="dark-black"] .modal-header,
+[data-theme="dark-dim"] .modal-footer,
+[data-theme="dark-black"] .modal-footer {
+  border-color: var(--border-color) !important;
+  background-color: var(--card-bg) !important;
+}
+
+/* Formulários e Inputs */
+[data-theme="dark-dim"] input,
+[data-theme="dark-black"] input,
+[data-theme="dark-dim"] select,
+[data-theme="dark-black"] select,
+[data-theme="dark-dim"] textarea,
+[data-theme="dark-black"] textarea,
+[data-theme="dark-dim"] .form-control,
+[data-theme="dark-black"] .form-control {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark-dim"] input::placeholder,
+[data-theme="dark-black"] input::placeholder,
+[data-theme="dark-dim"] textarea::placeholder,
+[data-theme="dark-black"] textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Tabelas */
+[data-theme="dark-dim"] table,
+[data-theme="dark-black"] table {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+
+[data-theme="dark-dim"] th,
+[data-theme="dark-black"] th {
+  background-color: var(--surface-muted) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark-dim"] td,
+[data-theme="dark-black"] td {
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark-dim"] tr:hover td,
+[data-theme="dark-black"] tr:hover td {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Botões Secundários */
+[data-theme="dark-dim"] .btn-secondary,
+[data-theme="dark-black"] .btn-secondary {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark-dim"] .btn-secondary:hover:not(:disabled),
+[data-theme="dark-black"] .btn-secondary:hover:not(:disabled) {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Suporte a estilos inline legados em cards e painéis */
+[data-theme="dark-dim"] [style*="background-color: #ffffff"],
+[data-theme="dark-dim"] [style*="background-color: rgb(255, 255, 255)"],
+[data-theme="dark-dim"] [style*="background: #ffffff"],
+[data-theme="dark-dim"] [style*="background: rgb(255, 255, 255)"] {
+  background-color: var(--card-bg) !important;
+}
+
+[data-theme="dark-black"] [style*="background-color: #ffffff"],
+[data-theme="dark-black"] [style*="background-color: rgb(255, 255, 255)"],
+[data-theme="dark-black"] [style*="background: #ffffff"],
+[data-theme="dark-black"] [style*="background: rgb(255, 255, 255)"] {
+  background-color: var(--card-bg) !important;
+}
+
+[data-theme="dark-dim"] [style*="background-color: #f8fafc"],
+[data-theme="dark-dim"] [style*="background-color: rgb(248, 250, 252)"],
+[data-theme="dark-dim"] [style*="background: #f8fafc"],
+[data-theme="dark-dim"] [style*="background: rgb(248, 250, 252)"] {
+  background-color: var(--bg-color) !important;
+}
+
+[data-theme="dark-black"] [style*="background-color: #f8fafc"],
+[data-theme="dark-black"] [style*="background-color: rgb(248, 250, 252)"],
+[data-theme="dark-black"] [style*="background: #f8fafc"],
+[data-theme="dark-black"] [style*="background: rgb(248, 250, 252)"] {
+  background-color: var(--bg-color) !important;
+}
+
+/* Transições suaves ao alternar modos */
+html, body, .app-container, .main-content, nav, footer, .card, .modal-content, input, select, textarea {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }

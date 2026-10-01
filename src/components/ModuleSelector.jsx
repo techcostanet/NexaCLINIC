@@ -7,6 +7,7 @@ import {
 import { authService, dbService } from '../firebase';
 import UnitSelector from './common/UnitSelector';
 import NexAiBrand from './common/NexAiBrand';
+import ThemeToggle from './common/ThemeToggle';
 import ChangePasswordModal from './common/ChangePasswordModal';
 import { shouldForcePasswordChange, checkPasswordExpiration } from '../utils/passwordPolicy';
 
@@ -295,6 +296,7 @@ export default function ModuleSelector({ user, onSelectModule }) {
               <KeyRound size={13} />
               <span>Senha</span>
             </button>
+            <ThemeToggle variant="compact" style={{ marginLeft: "0.5rem" }} />
           </div>
         </div>
 
@@ -583,7 +585,8 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #ecfeff 0%, #f8fafc 100%)',
+    background: 'var(--selector-bg, linear-gradient(135deg, #ecfeff 0%, #f8fafc 100%))',
+    transition: 'background 0.25s ease',
     padding: '1.5rem 1rem',
   },
   wrapper: {
@@ -653,7 +656,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'var(--surface-muted, #f8fafc)',
     border: '1px solid #e2e8f0',
     borderRadius: '8px',
     padding: '0.4rem 0.75rem',
@@ -681,7 +684,7 @@ const styles = {
   },
   viewButtonGroup: {
     display: 'flex',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'var(--surface-muted, #f1f5f9)',
     padding: '3px',
     borderRadius: '8px',
     gap: '2px',
@@ -701,7 +704,7 @@ const styles = {
     transition: 'all 0.15s ease',
   },
   viewBtnActive: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--card-bg, #ffffff)',
     color: 'var(--primary-color, #0891b2)',
     boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
   },
@@ -717,7 +720,7 @@ const styles = {
     marginBottom: '2rem',
   },
   card: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--card-bg, #ffffff)',
     border: '1px solid var(--border-color)',
     borderRadius: 'var(--border-radius-md)',
     padding: '1.5rem 1.25rem',
@@ -753,7 +756,7 @@ const styles = {
     marginBottom: '0.75rem',
     padding: '0.2rem 0.5rem',
     borderRadius: '6px',
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'var(--surface-muted, #f8fafc)',
     border: '1px solid #e2e8f0',
     display: 'inline-block',
   },
@@ -785,7 +788,7 @@ const styles = {
     marginBottom: '2rem',
   },
   listCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--card-bg, #ffffff)',
     border: '1px solid var(--border-color, #e2e8f0)',
     borderRadius: 'var(--border-radius-md, 10px)',
     padding: '1rem 1.25rem',
@@ -862,7 +865,7 @@ const styles = {
     marginBottom: '2rem',
   },
   compactCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--card-bg, #ffffff)',
     border: '1px solid var(--border-color, #e2e8f0)',
     borderRadius: '8px',
     padding: '0.6rem 1rem',
@@ -928,7 +931,7 @@ const styles = {
     marginBottom: '2rem',
   },
   expandedCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--card-bg, #ffffff)',
     border: '1px solid var(--border-color, #e2e8f0)',
     borderRadius: 'var(--border-radius-md, 12px)',
     overflow: 'hidden',

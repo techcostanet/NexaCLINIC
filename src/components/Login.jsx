@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { authService } from '../firebase';
 import { Mail, Lock, ShieldAlert } from 'lucide-react';
 import NexAiBrand from './common/NexAiBrand';
+import ThemeToggle from './common/ThemeToggle';
 
 export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -35,6 +36,9 @@ export default function Login({ onLoginSuccess }) {
 
   return (
     <div style={styles.container}>
+      <div style={{ position: "absolute", top: "1rem", right: "1rem", zIndex: 10 }}>
+        <ThemeToggle variant="compact" />
+      </div>
       <div className="card shadow-sm" style={styles.card}>
         <div style={styles.header}>
           <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'center' }}>
@@ -108,7 +112,8 @@ const styles = {
     justifyContent: 'center',
     minHeight: '100vh',
     padding: '1rem',
-    background: 'linear-gradient(135deg, #f0fdfa 0%, #f8fafc 100%)',
+    background: 'var(--login-bg, linear-gradient(135deg, #f0fdfa 0%, #f8fafc 100%))',
+    position: 'relative',
   },
   card: {
     width: '100%',
