@@ -255,9 +255,9 @@ export const sendSystemEmail = async ({ to, subject, body, html, moduleSource = 
     const db = getFirestore(app);
     const docRef = await addDoc(collection(db, 'email_logs'), emailLog);
 
-    // Opcional: registrar na coleção 'mail' compatível com a extensão Firebase Trigger Email
+    // Enfileira na coleção 'mail' para disparo real via Cloud Function (processMailQueue)
     try {
-      await addDoc(collection(db, 'mail'), {
+      const mailDoc = await addDoc(collection(db, 'mail'), {
         to: Array.isArray(to) ? to : [to],
         message: {
           subject,
@@ -265,8 +265,9 @@ export const sendSystemEmail = async ({ to, subject, body, html, moduleSource = 
           html: html || (body ? body.replace(/\n/g, '<br>') : '')
         }
       });
-    } catch {
-      // Ignora se a extensão de trigger email não estiver provisionada
+      emailLog.mailId = mailDoc.id;
+    } catch (mailErr) {
+      console.warn('Erro ao enfileirar na coleção mail:', mailErr);
     }
 
     return { success: true, id: docRef.id, ...emailLog };
@@ -296,6 +297,28 @@ export const testEmailConnection = async (testRecipientEmail, currentSettings) =
   const target = testRecipientEmail || currentSettings?.senderEmail || 'ti@clinica.med.br';
   const testSubject = `[Nex-Ai CLINIC Teste de E-mail] Servidor ${currentSettings?.provider || 'SMTP'}`;
   const testBody = `Este é um e-mail de validação emitido pelo painel de T.I. (Nex-Ai.CONFIG).\n\nServidor SMTP: ${currentSettings?.smtpHost}:${currentSettings?.smtpPort}\nRemetente: ${currentSettings?.senderName} <${currentSettings?.senderEmail}>\nCriptografia: ${currentSettings?.encryption}\nData/Hora: ${new Date().toLocaleString('pt-BR')}\n\nSe você recebeu esta mensagem, o canal institucional de e-mails está ativo e pronto para atender todos os módulos do sistema.`;
+
+  // Validação em tempo real via Cloud Function testSmtpConnection
+  try {
+    const res = await fetch('https://us-central1-nexa-index.cloudfunctions.net/testSmtpConnection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: { targetEmail: target } })
+    });
+    if (res.ok) {
+      const respData = await res.json();
+      if (respData?.result?.success) {
+        return await sendSystemEmail({
+          to: target,
+          subject: testSubject,
+          body: testBody,
+          moduleSource: 'T.I. (Nex-Ai.CONFIG)'
+        });
+      }
+    }
+  } catch (fnErr) {
+    console.warn('Fallback testEmailConnection via fila mail:', fnErr);
+  }
 
   return await sendSystemEmail({
     to: target,

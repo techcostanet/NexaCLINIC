@@ -172,6 +172,7 @@ service cloud.firestore {
     match /medical_procedures/{id} { allow read, write: if isAuthenticated(); }
     match /settings/{id} { allow read, write: if isAuthenticated(); }
     match /email_logs/{id} { allow read, write: if isAuthenticated(); }
+    match /mail/{id} { allow read, write: if isAuthenticated(); }
     match /patient_dispensations/{id} { allow read, write: if isAuthenticated(); }
     match /product_batches/{id} { allow read, write: if isAuthenticated(); }
     match /product_kits/{id} { allow read, write: if isAuthenticated(); }

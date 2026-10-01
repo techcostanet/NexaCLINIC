@@ -1,3 +1,11 @@
+## [v4.9.111] - 01 de Outubro, 2026
+### Nex-Ai CLINIC (Nuvem & E-mails) — Disparo Real de E-mails via Firebase Cloud Functions e Integração SMTP
+- **Disparo Real de E-mails via Nuvem (Cloud Functions no Plano Blaze):**
+  - Implementada a Cloud Function `processMailQueue` acionada automaticamente pela coleção `mail` no Firestore, enviando e-mails reais através de conexão TLS/SSL com o servidor SMTP cadastrado (`smtp.titan.email:465` ou Gmail).
+  - Implementado o endpoint Callable `testSmtpConnection` permitindo validação em tempo real da conectividade e autenticação SMTP direto pelo painel NexaCONFIG, contornando limitações de CORS dos navegadores.
+  - Regras de segurança no Firestore (`firestore.rules`) atualizadas para autorizar a gravação de mensagens na fila `mail`.
+  - Comunicados do Mural Assistencial (.ASSIST) e testes do módulo de configurações agora são disparados fisicamente e entregues com sucesso na caixa de entrada do destinatário.
+
 ## [v4.9.109] - 01 de Outubro, 2026
 ### Nex-Ai CLINIC (.ASSIST & .CONFIG) — Modo Temporário para Enfermagem e Encaminhamento de Comunicados por E-mail
 - **Mural Exclusivo para Enfermagem (Modo Temporário):**

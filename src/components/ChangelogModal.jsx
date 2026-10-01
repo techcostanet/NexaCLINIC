@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.111',
+      date: '01/10/2026',
+      title: 'Nex-Ai CLINIC — Disparo Real de E-mails via Firebase Cloud Functions e Conexão SMTP Nativa',
+      description: 'Implementação de infraestrutura em nuvem no Firebase com Cloud Functions para transmissão real de mensagens eletrônicas: ativação da fila assíncrona processMailQueue no Firestore com envio direto via Nodemailer para o servidor SMTP corporativo (smtp.titan.email:465 ou Gmail), endpoint Callable testSmtpConnection para teste imediato com retorno de Message-ID, e liberação das regras de segurança na coleção mail.',
+      changes: [
+        { type: 'Nuvem & Cloud Functions', text: 'Função processMailQueue conectada ao servidor SMTP do Titan/Gmail, transmitindo todos os e-mails colocados na fila do banco de dados.' },
+        { type: 'Validação em Tempo Real', text: 'Endpoint testSmtpConnection que realiza o handshake SMTP imediatamente no backend, eliminando bloqueios de CORS do navegador.' },
+        { type: 'Mural Assistencial (.ASSIST)', text: 'Encaminhamento real e instantâneo de novos comunicados do mural para os e-mails de destino configurados no sistema.' },
+        { type: 'Segurança & Firestore Rules', text: 'Regras da coleção mail no Firestore ajustadas para autorizar escrita por usuários autenticados da clínica.' }
+      ]
+    },
+    {
       version: 'v4.9.109',
       date: '01/10/2026',
       title: 'Nex-Ai CLINIC — Mural Assistencial (.ASSIST) com Modo Temporário para Enfermagem e Encaminhamento por E-mail',
