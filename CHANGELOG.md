@@ -1,3 +1,19 @@
+## [v4.9.109] - 01 de Outubro, 2026
+### Nex-Ai CLINIC (.ASSIST & .CONFIG) — Modo Temporário para Enfermagem e Encaminhamento de Comunicados por E-mail
+- **Mural Exclusivo para Enfermagem (Modo Temporário):**
+  - Implementado interruptor no módulo de configurações (`NexaCONFIG > E-mail > Mural`) permitindo ativar o modo temporário onde apenas a equipe assistencial de enfermagem e administradores podem visualizar e publicar no Mural.
+  - Para colaboradores de outros setores, é exibida uma tela protegida e amigável informando o regime temporário exclusivo de enfermagem.
+- **Encaminhamento Automático por E-mail:**
+  - Qualquer postagem publicada no Mural Assistencial é imediatamente formatada e encaminhada em segundo plano para o e-mail configurado.
+  - Corpo da mensagem formatado em texto claro e HTML responsivo destacando urgência, categoria, paciente, sala, turno e autor.
+- **Configurador de E-mails com Teste em Tempo Real:**
+  - Painel com controles intuitivos para ligar/desligar o encaminhamento e o modo temporário a qualquer momento.
+  - Botão "Testar" para validar a recepção imediata na caixa de entrada sem precisar publicar comunicados reais.
+- **Manuais e Documentação Atualizados:**
+  - Manuais de `.ASSIST` e `.CONFIG` atualizados em `moduleGuidesData.js` com tópicos detalhados em Recursos, Tutoriais e Dúvidas Frequentes.
+- **Boy Scout Rule & Padrão de Rótulos de 1 Palavra:**
+  - Higienização e simplificação de rótulos nos cabeçalhos e tabelas para o padrão de termo único indispensável.
+
 ## [v4.9.106] - 30 de Setembro, 2026
 ### Nex-Ai CLINIC (.SERVICE) — Correção de Persistência e Visibilidade em Nuvem de Chamados de T.I. e Setor Enfermagem
 - **Resolução Crítica de Persistência e Visibilidade de Chamados de T.I.:**

@@ -10,6 +10,7 @@ export default function EmailSettingsTab({
   setEmailSettings,
   onSave,
   onTest,
+  onTestMural,
   testing = false,
   testResult = null,
   actionLoading = false,
@@ -18,14 +19,16 @@ export default function EmailSettingsTab({
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [testEmailInput, setTestEmailInput] = useState('');
+  const [testingMural, setTestingMural] = useState(false);
+  const [muralTestResult, setMuralTestResult] = useState(null);
   const [activePreset, setActivePreset] = useState(emailSettings.provider || 'smtp');
 
   const presets = [
-    { id: 'gmail', name: 'Google / Gmail', host: 'smtp.gmail.com', port: 587, enc: 'TLS', tip: 'Use uma Senha de Aplicativo de 16 dígitos gerada na Conta Google.' },
-    { id: 'outlook', name: 'Microsoft 365 / Outlook', host: 'smtp.office365.com', port: 587, enc: 'TLS', tip: 'Requer autenticação SMTP com e-mail corporativo ou App Password.' },
-    { id: 'ses', name: 'Amazon SES', host: 'email-smtp.us-east-1.amazonaws.com', port: 587, enc: 'TLS', tip: 'Utilize as credenciais SMTP geradas no console da AWS SES.' },
-    { id: 'resend', name: 'Resend / Mailgun', host: 'smtp.resend.com', port: 587, enc: 'TLS', tip: 'Usuário padrão "resend" e chave API como senha.' },
-    { id: 'smtp', name: 'SMTP Personalizado', host: emailSettings.smtpHost || '', port: emailSettings.smtpPort || 587, enc: emailSettings.encryption || 'TLS', tip: 'Configuração manual para servidor dedicado de correio eletrônico.' }
+    { id: 'gmail', name: 'Gmail', host: 'smtp.gmail.com', port: 587, enc: 'TLS', tip: 'Use uma Senha de Aplicativo de 16 dígitos gerada na Conta Google.' },
+    { id: 'outlook', name: 'Outlook', host: 'smtp.office365.com', port: 587, enc: 'TLS', tip: 'Requer autenticação SMTP com e-mail corporativo ou App Password.' },
+    { id: 'ses', name: 'SES', host: 'email-smtp.us-east-1.amazonaws.com', port: 587, enc: 'TLS', tip: 'Utilize as credenciais SMTP geradas no console da AWS SES.' },
+    { id: 'resend', name: 'Resend', host: 'smtp.resend.com', port: 587, enc: 'TLS', tip: 'Usuário padrão "resend" e chave API como senha.' },
+    { id: 'smtp', name: 'SMTP', host: emailSettings.smtpHost || '', port: emailSettings.smtpPort || 587, enc: emailSettings.encryption || 'TLS', tip: 'Configuração manual para servidor dedicado de correio eletrônico.' }
   ];
 
   const handleSelectPreset = (preset) => {
@@ -54,6 +57,34 @@ export default function EmailSettingsTab({
     onTest(testEmailInput || emailSettings.senderEmail);
   };
 
+  const handleMuralTestSubmit = async () => {
+    const target = emailSettings.muralRecipientEmail || emailSettings.senderEmail;
+    if (!target) return;
+    setTestingMural(true);
+    setMuralTestResult(null);
+    try {
+      if (onTestMural) {
+        await onTestMural(target);
+      } else {
+        const { testMuralEmailForwarding } = await import('../../services/firebase/systemService');
+        await testMuralEmailForwarding(target, emailSettings);
+      }
+      setMuralTestResult({
+        success: true,
+        message: `Comunicado de teste encaminhado para ${target}!`,
+        timestamp: new Date().toLocaleTimeString('pt-BR')
+      });
+    } catch (err) {
+      setMuralTestResult({
+        success: false,
+        message: 'Falha no teste: ' + (err.message || 'Verifique as credenciais SMTP.'),
+        timestamp: new Date().toLocaleTimeString('pt-BR')
+      });
+    } finally {
+      setTestingMural(false);
+    }
+  };
+
   const currentPresetInfo = presets.find(p => p.id === activePreset) || presets[4];
 
   return (
@@ -64,7 +95,7 @@ export default function EmailSettingsTab({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Server size={20} color={themeColor} />
-              <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)' }}>Provedor de E-mail</h3>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)' }}>Provedor</h3>
             </div>
             <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               Selecione um provedor pré-configurado para preenchimento ágil de portas e protocolos SMTP.
@@ -84,7 +115,7 @@ export default function EmailSettingsTab({
               color: emailSettings.enabled ? '#166534' : '#991b1b'
             }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: emailSettings.enabled ? '#16a34a' : '#dc2626' }}></span>
-              {emailSettings.enabled ? 'Servidor Ativo' : 'Servidor Inativo'}
+              {emailSettings.enabled ? 'Ativo' : 'Inativo'}
             </span>
           </div>
         </div>
@@ -116,7 +147,7 @@ export default function EmailSettingsTab({
         {currentPresetInfo?.tip && (
           <div style={styles.presetTipBox}>
             <Sparkles size={14} color={themeColor} style={{ flexShrink: 0 }} />
-            <span><strong>Dica do Provedor:</strong> {currentPresetInfo.tip}</span>
+            <span><strong>Dica:</strong> {currentPresetInfo.tip}</span>
           </div>
         )}
       </div>
@@ -127,7 +158,7 @@ export default function EmailSettingsTab({
         <form onSubmit={onSave} style={styles.card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
             <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Mail size={16} color={themeColor} /> Parâmetros de Disparo
+              <Mail size={16} color={themeColor} /> Parâmetros
             </h4>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-primary)' }}>
               <input
@@ -136,7 +167,7 @@ export default function EmailSettingsTab({
                 onChange={e => setEmailSettings({ ...emailSettings, enabled: e.target.checked })}
                 style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: themeColor }}
               />
-              Ativar Disparos
+              Ativar
             </label>
           </div>
 
@@ -292,12 +323,170 @@ export default function EmailSettingsTab({
           </div>
         </form>
 
-        {/* Right Column: Live Testing & Module Permissions */}
+        {/* Right Column: Live Testing, Mural Configuration & Module Permissions */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          
+          {/* Card: Mural (.ASSIST) - Encaminhamento de Comunicados & Modo Temporário Enfermagem */}
+          <div style={styles.card}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+              <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Megaphone size={16} color="#ec4899" /> Mural (.ASSIST)
+              </h4>
+              <span style={{
+                fontSize: '0.75rem',
+                fontWeight: '700',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                backgroundColor: emailSettings.muralForwardingEnabled ? '#fdf2f8' : '#f1f5f9',
+                color: emailSettings.muralForwardingEnabled ? '#be185d' : '#64748b',
+                border: `1px solid ${emailSettings.muralForwardingEnabled ? '#fbcfe8' : '#e2e8f0'}`
+              }}>
+                {emailSettings.muralForwardingEnabled ? 'Encaminhamento Ativo' : 'Encaminhamento Inativo'}
+              </span>
+            </div>
+
+            <p style={{ margin: '0.5rem 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Parametrize o encaminhamento eletrônico automático e a restrição temporária para a enfermagem.
+            </p>
+
+            {/* Toggle: Encaminhamento Automático */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.65rem 0.75rem',
+                borderRadius: '8px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: emailSettings.muralForwardingEnabled ? '#fdf2f8' : 'var(--bg-body)',
+                marginBottom: '0.75rem',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              onClick={() => setEmailSettings(prev => ({ ...prev, muralForwardingEnabled: !prev.muralForwardingEnabled }))}
+            >
+              <div>
+                <strong style={{ fontSize: '0.82rem', color: emailSettings.muralForwardingEnabled ? '#9d174d' : 'var(--text-primary)', display: 'block' }}>
+                  Encaminhar Comunicados
+                </strong>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  Envia cópia eletrônica a cada novo comunicado publicado no Mural.
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={!!emailSettings.muralForwardingEnabled}
+                onChange={() => {}} // Controlled by outer container
+                style={{ width: '16px', height: '16px', accentColor: '#ec4899', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Campo E-mail de Destino do Mural */}
+            <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+              <label>Destinatário</label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="ex: supervisao.enfermagem@clinica.med.br"
+                  value={emailSettings.muralRecipientEmail || ''}
+                  onChange={e => setEmailSettings({ ...emailSettings, muralRecipientEmail: e.target.value })}
+                  style={{ fontSize: '0.85rem' }}
+                />
+                <button
+                  type="button"
+                  disabled={testingMural || !emailSettings.muralRecipientEmail}
+                  onClick={handleMuralTestSubmit}
+                  className="btn"
+                  style={{
+                    backgroundColor: '#ec4899',
+                    color: '#ffffff',
+                    whiteSpace: 'nowrap',
+                    fontSize: '0.8rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: '0.45rem 0.75rem',
+                    borderRadius: '6px',
+                    border: 'none',
+                    cursor: !emailSettings.muralRecipientEmail ? 'not-allowed' : 'pointer',
+                    opacity: !emailSettings.muralRecipientEmail ? 0.6 : 1
+                  }}
+                  title="Enviar e-mail de teste para este endereço"
+                >
+                  {testingMural ? <RefreshCw size={14} className="spin" /> : <Send size={14} />}
+                  <span>Testar</span>
+                </button>
+              </div>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
+                Endereço de e-mail que receberá os comunicados (permite múltiplos separados por vírgula).
+              </span>
+            </div>
+
+            {/* Feedback do Teste do Mural */}
+            {muralTestResult && (
+              <div style={{
+                marginBottom: '0.75rem',
+                padding: '0.65rem 0.75rem',
+                borderRadius: '8px',
+                backgroundColor: muralTestResult.success ? '#f0fdf4' : '#fef2f2',
+                border: `1px solid ${muralTestResult.success ? '#bbf7d0' : '#fecaca'}`,
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.5rem'
+              }}>
+                {muralTestResult.success ? (
+                  <CheckCircle2 size={16} color="#16a34a" style={{ flexShrink: 0, marginTop: '2px' }} />
+                ) : (
+                  <AlertCircle size={16} color="#dc2626" style={{ flexShrink: 0, marginTop: '2px' }} />
+                )}
+                <div>
+                  <strong style={{ display: 'block', fontSize: '0.8rem', color: muralTestResult.success ? '#166534' : '#991b1b' }}>
+                    {muralTestResult.success ? 'Teste de Encaminhamento Realizado!' : 'Falha no Teste do Mural'}
+                  </strong>
+                  <span style={{ fontSize: '0.74rem', color: muralTestResult.success ? '#15803d' : '#b91c1c' }}>
+                    {muralTestResult.message} ({muralTestResult.timestamp})
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Toggle: Modo Restrito Temporário para Enfermagem */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.65rem 0.75rem',
+                borderRadius: '8px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: emailSettings.muralNursingOnly ? '#eff6ff' : 'var(--bg-body)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              onClick={() => setEmailSettings(prev => ({ ...prev, muralNursingOnly: !prev.muralNursingOnly }))}
+            >
+              <div>
+                <strong style={{ fontSize: '0.82rem', color: emailSettings.muralNursingOnly ? '#1d4ed8' : 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Lock size={13} color={emailSettings.muralNursingOnly ? '#1d4ed8' : 'currentColor'} /> Exclusivo Enfermagem (Temporário)
+                </strong>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  Restringe visualização e publicações do Mural temporariamente para a Enfermagem e Administradores.
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={!!emailSettings.muralNursingOnly}
+                onChange={() => {}} // Controlled by outer container
+                style={{ width: '16px', height: '16px', accentColor: '#2563eb', cursor: 'pointer' }}
+              />
+            </div>
+          </div>
+
           {/* Card: Live Email Testing */}
           <div style={styles.card}>
             <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
-              <Send size={16} color={themeColor} /> Testar Disparo
+              <Send size={16} color={themeColor} /> Teste
             </h4>
             <p style={{ margin: '0.5rem 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               Envie um e-mail de teste imediato para validar se os parâmetros SMTP estão respondendo sem erros.
@@ -361,7 +550,7 @@ export default function EmailSettingsTab({
           {/* Card: Connected Modules & Trigger Permissions */}
           <div style={styles.card}>
             <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
-              <ShieldCheck size={16} color={themeColor} /> Módulos Conectados
+              <ShieldCheck size={16} color={themeColor} /> Módulos
             </h4>
             <p style={{ margin: '0.5rem 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               Módulos autorizados a emitir notificações eletrônicas através deste servidor:

@@ -1408,6 +1408,14 @@ export const MODULE_GUIDES = {
         desc: 'Feed ágil de comunicados clínicos rápidos para passagem de plantão e alinhamento direto entre enfermagem, médicos, nutrição, psicologia e serviço social.'
       },
       {
+        title: 'Mural Temporário para Enfermagem',
+        desc: 'Opção de bloqueio temporário gerenciada no NexaCONFIG que restringe a visualização e publicação de novos comunicados exclusivamente para a equipe assistencial de enfermagem.'
+      },
+      {
+        title: 'Encaminhamento de Comunicados por E-mail',
+        desc: 'Transmissão automática imediata em segundo plano de qualquer nova postagem do mural para o e-mail de coordenação/gestão cadastrado no sistema, com cópia em HTML responsivo.'
+      },
+      {
         title: 'Agendamento de Cirurgias Vasculares',
         desc: 'Hub completo para programação cirúrgica de acessos vasculares (confecção e revisão de FAV simples, basílica, PTFE), implantes/retiradas de Permcath, CDL de urgência e exames Duplex.'
       },
@@ -1484,7 +1492,8 @@ export const MODULE_GUIDES = {
           'Selecione a Categoria clínica desejada (Internação, Alta, Intercorrência, etc.).',
           'Busque e selecione o paciente para vincular o aviso diretamente ao prontuário.',
           'Defina o Salão, Turno e nível de Urgência.',
-          'Digite a mensagem clínica e clique em "Publicar".'
+          'Digite a mensagem clínica e confira o aviso de encaminhamento por e-mail se ativo.',
+          'Clique em "Publicar". O comunicado será exibido no feed e encaminhado por e-mail se a integração estiver ligada.'
         ]
       },
       {
@@ -1507,6 +1516,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como funciona o modo temporário exclusivo para a Enfermagem no Mural?',
+        resposta: 'Quando ativado no NexaCONFIG, o Mural fica visível e editável exclusivamente para profissionais do setor de Enfermagem (e administradores). Para colaboradores de outros setores, uma tela informativa de bloqueio temporário é apresentada.'
+      },
+      {
+        pergunta: 'O encaminhamento de comunicados por e-mail atrasa o sistema?',
+        resposta: 'Não. O disparo do e-mail é feito em segundo plano de forma assíncrona, de modo que o comunicado é gravado e exibido na tela instantaneamente.'
+      },
       {
         pergunta: 'Como o agendamento de cirurgias se integra ao Mural Clínico?',
         resposta: 'Ao cadastrar uma nova cirurgia com a caixa "Publicar no Mural" marcada, o sistema gera automaticamente um comunicado assistencial no mural com os detalhes do paciente, cirurgião e procedimento, garantindo que toda a equipe de enfermagem esteja alinhada.'
@@ -2669,6 +2686,14 @@ export const MODULE_GUIDES = {
       {
         title: 'Servidor de E-mails SMTP & Logs de Disparo',
         desc: 'Parametrização do servidor corporativo de envio de e-mails para notificações de trocas de plantões, ordens de serviço e alertas.'
+      },
+      {
+        title: 'Parametrização do Mural (.ASSIST) & Encaminhamento',
+        desc: 'Controle central para ligar ou desligar o encaminhamento automático de novos comunicados do Mural para um e-mail de coordenação, além de ativar o modo temporário exclusivo para a enfermagem.'
+      },
+      {
+        title: 'Validação e Teste do Canal de E-mail do Mural',
+        desc: 'Botão de teste integrado que dispara um e-mail de teste formatado instantaneamente para conferir a entrega e a conectividade com a caixa de entrada.'
       }
     ],
     tutorial: [
@@ -2681,6 +2706,17 @@ export const MODULE_GUIDES = {
           'Defina a Frequência Semanal e a Ordem de Exibição nos seletores.',
           'Mantenha marcada a opção "Esquema ativo" e clique em "Cadastrar Esquema".',
           'Para pausar um esquema sem excluí-lo, clique diretamente na pílula "Ativo" para alternar para "Inativo". O esquema deixará de aparecer em novas admissões na recepção.'
+        ]
+      },
+      {
+        title: 'Como Configurar o Encaminhamento e Modo Temporário do Mural (.ASSIST)',
+        steps: [
+          'Acesse o módulo Nex-Ai.CONFIG e clique na aba "E-mail".',
+          'Role até o card dedicado "Mural (.ASSIST)".',
+          'Para encaminhar todas as novas postagens, ative o interruptor "Encaminhar Comunicados" e preencha o e-mail de destino no campo "Destinatário".',
+          'Clique no botão "Testar" para disparar um e-mail de verificação imediato e validar o recebimento.',
+          'Para restringir o mural temporariamente à equipe de enfermagem, ative o interruptor "Exclusivo Enfermagem (Temporário)".',
+          'Clique em "Salvar" no rodapé da página para sincronizar as configurações com todo o sistema em tempo real.'
         ]
       },
       {
@@ -2703,6 +2739,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como desativar o encaminhamento por e-mail ou reabrir o Mural para todos?',
+        resposta: 'Basta acessar Nex-Ai.CONFIG > E-mail, rolar até o card "Mural (.ASSIST)" e desativar os interruptores correspondentes quando desejar. Ao salvar, a alteração é propagada em tempo real para todos os usuários logados.'
+      },
       {
         pergunta: 'Como os esquemas cadastrados no Config refletem na Recepção?',
         resposta: 'Todos os esquemas cadastrados com status "Ativo" na aba "Esquemas" do Config alimentam automaticamente os seletores de frequência de diálise no cadastro/admissão de pacientes e no filtro da recepção, garantindo padronização institucional.'

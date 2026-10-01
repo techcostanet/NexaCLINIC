@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.109',
+      date: '01/10/2026',
+      title: 'Nex-Ai CLINIC — Mural Assistencial (.ASSIST) com Modo Temporário para Enfermagem e Encaminhamento por E-mail',
+      description: 'Implementação de controle centralizado no NexaCONFIG para gerenciamento do Mural Assistencial (.ASSIST): ativação temporária de modo exclusivo para a equipe de Enfermagem (com tela de bloqueio e aviso informativo para os demais setores), sistema completo de encaminhamento automático de novos comunicados do mural para um endereço de e-mail parametrizado, interruptor de ligar/desligar a qualquer momento, botão de teste imediato de disparo com feedback visual, e higienização de rótulos para o padrão estrito de termo único.',
+      changes: [
+        { type: 'Modo Temporário Enfermagem', text: 'Opção no NexaCONFIG para restringir visualização e publicação de comunicados exclusivamente para profissionais de enfermagem e administradores.' },
+        { type: 'Encaminhamento por E-mail', text: 'Disparo assíncrono em segundo plano de novos comunicados do mural para o e-mail de coordenação/gestão cadastrado, com formatação HTML responsiva.' },
+        { type: 'Configurador & Teste', text: 'Aba E-mail no NexaCONFIG com interruptores dedicados para encaminhamento e restrição, campo de destinatário e botão de teste imediato da entrega.' },
+        { type: 'Segurança & Rastreabilidade', text: 'Registro automático de todas as notificações disparadas na coleção email_logs com data, hora, assunto e status de envio.' },
+        { type: 'Manuais Atualizados', text: 'Documentação completa com recursos, passo a passo e perguntas frequentes atualizados em moduleGuidesData.js para os módulos .ASSIST e .CONFIG.' },
+        { type: 'Boy Scout Rule (Rótulos)', text: 'Higienização de rótulos nos formulários, tabelas e cabeçalhos em conformidade com a regra estrita de termo único.' }
+      ]
+    },
+    {
       version: 'v4.9.106',
       date: '30/09/2026',
       title: 'Nex-Ai CLINIC — Correção de Persistência e Visibilidade em Nuvem de Chamados de T.I. e Setor Enfermagem (.SERVICE)',

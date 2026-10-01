@@ -3,8 +3,9 @@ import { dbService } from '../firebase';
 import { 
   Megaphone, Search, Plus, Clock, User, RefreshCw, Building2, 
   Trash2, Edit3, AlertTriangle, List, LayoutList, LayoutGrid, X,
-  Calendar, MessageSquare, Activity, FileText
-, Paperclip, ExternalLink, ZoomIn, Eye, Printer, Image as ImageIcon } from 'lucide-react';
+  Calendar, MessageSquare, Activity, FileText, Lock, Mail,
+  Paperclip, ExternalLink, ZoomIn, Eye, Printer, Image as ImageIcon 
+} from 'lucide-react';
 import DialysisScheduleTab from './assist/DialysisScheduleTab';
 import AssistSurgeriesTab from './assist/AssistSurgeriesTab';
 import AssistReportsModal from './assist/AssistReportsModal';
@@ -34,6 +35,13 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   const patientsRef = useRef([]);
+
+  // Configurações do Mural (.ASSIST): Encaminhamento de E-mail & Modo Temporário Enfermagem
+  const [muralSettings, setMuralSettings] = useState({
+    muralForwardingEnabled: false,
+    muralRecipientEmail: '',
+    muralNursingOnly: false
+  });
 
   // Modo de Visualização: 'compact' | 'normal' | 'grid'
   const [viewMode, setViewMode] = useState('normal');
@@ -109,6 +117,24 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
     );
   };
 
+  // Identificação de Usuários do Setor de Enfermagem
+  const isNursingUser = (user) => {
+    if (!user) return false;
+    if (isUserAdmin(user)) return true;
+    const role = (user.role || '').toLowerCase();
+    const sector = (user.sector || user.sectorId || '').toLowerCase();
+    const allowed = Array.isArray(user.allowedSectors)
+      ? user.allowedSectors.map(s => String(s).toLowerCase())
+      : [];
+    return (
+      role === 'nursing' ||
+      role === 'nurse_tech' ||
+      role.includes('enferm') ||
+      sector === 'enfermagem' ||
+      allowed.includes('enfermagem')
+    );
+  };
+
   const canManagePost = (post) => {
     if (!currentUser || !post) return false;
     if (isUserAdmin(currentUser)) return true;
@@ -138,17 +164,27 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
   // Carregar dados na montagem e escutar em tempo real
   useEffect(() => {
     let unsubscribe = () => {};
+    let unsubscribeEmail = () => {};
 
     const loadInitialData = async () => {
       setLoading(true);
       try {
-        const [postList, patientList] = await Promise.all([
+        const [postList, patientList, emailConf] = await Promise.all([
           dbService.getAssistPosts(),
-          dbService.getPatients()
+          dbService.getPatients(),
+          dbService.getEmailSettings ? dbService.getEmailSettings() : null
         ]);
         const resolvedPatients = patientList || [];
         patientsRef.current = resolvedPatients;
         setPatients(resolvedPatients);
+
+        if (emailConf) {
+          setMuralSettings({
+            muralForwardingEnabled: !!emailConf.muralForwardingEnabled,
+            muralRecipientEmail: emailConf.muralRecipientEmail || '',
+            muralNursingOnly: !!emailConf.muralNursingOnly
+          });
+        }
 
         const rawPosts = postList || [];
         const autoLinked = dbService.autoLinkAssistPosts 
@@ -177,9 +213,24 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
       });
     }
 
+    if (dbService.subscribeToEmailSettings) {
+      unsubscribeEmail = dbService.subscribeToEmailSettings((conf) => {
+        if (conf) {
+          setMuralSettings({
+            muralForwardingEnabled: !!conf.muralForwardingEnabled,
+            muralRecipientEmail: conf.muralRecipientEmail || '',
+            muralNursingOnly: !!conf.muralNursingOnly
+          });
+        }
+      });
+    }
+
     return () => {
       if (typeof unsubscribe === 'function') {
         unsubscribe();
+      }
+      if (typeof unsubscribeEmail === 'function') {
+        unsubscribeEmail();
       }
     };
   }, []);
@@ -187,13 +238,22 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
   const fetchData = async (showSpinner = false) => {
     if (showSpinner) setLoading(true);
     try {
-      const [postList, patientList] = await Promise.all([
+      const [postList, patientList, emailConf] = await Promise.all([
         dbService.getAssistPosts(),
-        dbService.getPatients()
+        dbService.getPatients(),
+        dbService.getEmailSettings ? dbService.getEmailSettings() : null
       ]);
       const resolvedPatients = patientList || [];
       patientsRef.current = resolvedPatients;
       setPatients(resolvedPatients);
+
+      if (emailConf) {
+        setMuralSettings({
+          muralForwardingEnabled: !!emailConf.muralForwardingEnabled,
+          muralRecipientEmail: emailConf.muralRecipientEmail || '',
+          muralNursingOnly: !!emailConf.muralNursingOnly
+        });
+      }
 
       const rawPosts = postList || [];
       const autoLinked = dbService.autoLinkAssistPosts 
@@ -314,6 +374,10 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
 
   // Ações de Criação/Edição
   const handleOpenCreateModal = (patient = null) => {
+    if (muralSettings.muralNursingOnly && !isNursingUser(currentUser)) {
+      showAlert('O Mural está em modo temporário exclusivo para a equipe de Enfermagem.', 'warning');
+      return;
+    }
     setEditingPost(null);
     let pName = '';
     let pId = '';
@@ -441,7 +505,11 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
         showAlert('Comunicado atualizado com sucesso!', 'success');
       } else {
         await dbService.createAssistPost(payload);
-        showAlert('Comunicado publicado com sucesso no Feed Assistencial!', 'success');
+        if (muralSettings.muralForwardingEnabled && muralSettings.muralRecipientEmail) {
+          showAlert(`Comunicado publicado e encaminhado para ${muralSettings.muralRecipientEmail}!`, 'success');
+        } else {
+          showAlert('Comunicado publicado com sucesso no Feed Assistencial!', 'success');
+        }
       }
 
       setShowPostModal(false);
@@ -567,10 +635,10 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
           <thead>
             <tr>
               <th style="width: 45px; text-align: center;">Hora</th>
-              <th style="width: 120px;">Categoria & Urgência</th>
-              <th style="width: 160px;">Paciente / Local</th>
-              <th>Descrição Clínica & Conduta</th>
-              <th style="width: 120px;">Registrado Por</th>
+              <th style="width: 120px;">Categoria</th>
+              <th style="width: 160px;">Paciente</th>
+              <th>Descrição</th>
+              <th style="width: 120px;">Autor</th>
             </tr>
           </thead>
           <tbody>
@@ -742,7 +810,12 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
             <button 
               type="button"
               onClick={() => handleOpenCreateModal()}
-              style={styles.primaryBtn}
+              disabled={activeAssistTab === 'mural' && muralSettings.muralNursingOnly && !isNursingUser(currentUser)}
+              style={{
+                ...styles.primaryBtn,
+                ...(activeAssistTab === 'mural' && muralSettings.muralNursingOnly && !isNursingUser(currentUser) ? { opacity: 0.5, cursor: 'not-allowed' } : {})
+              }}
+              title={activeAssistTab === 'mural' && muralSettings.muralNursingOnly && !isNursingUser(currentUser) ? 'Mural exclusivo para enfermagem' : 'Novo comunicado'}
             >
               <Plus size={18} />
               <span>Comunicado</span>
@@ -761,8 +834,102 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
           currentUser={currentUser}
           onOpenPostModalWithPatient={(pData) => handleOpenCreateModal(pData)}
         />
+      ) : muralSettings.muralNursingOnly && !isNursingUser(currentUser) ? (
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '16px',
+          border: '1px solid #e2e8f0',
+          padding: '3.5rem 2rem',
+          textAlign: 'center',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '1rem',
+          maxWidth: '650px',
+          margin: '2rem auto'
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            backgroundColor: '#fef2f2',
+            color: '#ef4444',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 10px rgba(239, 68, 68, 0.15)'
+          }}>
+            <Lock size={32} />
+          </div>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b', margin: 0 }}>
+            Mural Restrito à Enfermagem
+          </h2>
+          <p style={{ fontSize: '0.92rem', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
+            Este mural está operando temporariamente em regime exclusivo para a equipe de Enfermagem.
+            As configurações de liberação ou encaminhamento de comunicados por e-mail são administradas no módulo <strong>NexaCONFIG</strong>.
+          </p>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '6px 14px',
+            borderRadius: '20px',
+            backgroundColor: '#f1f5f9',
+            color: '#475569',
+            fontSize: '0.8rem',
+            fontWeight: '600'
+          }}>
+            <span>Modo Temporário Ativo</span>
+          </div>
+        </div>
       ) : (
         <>
+          {/* Status Banners para Usuários com Acesso ao Mural */}
+          {(muralSettings.muralNursingOnly || muralSettings.muralForwardingEnabled) && (
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '0.75rem',
+              marginBottom: '0.5rem'
+            }}>
+              {muralSettings.muralNursingOnly && (
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 14px',
+                  borderRadius: '10px',
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  color: '#991b1b',
+                  fontSize: '0.82rem',
+                  fontWeight: '600'
+                }}>
+                  <Lock size={15} />
+                  <span>Modo Temporário Ativo: Acesso restrito à equipe de enfermagem.</span>
+                </div>
+              )}
+              {muralSettings.muralForwardingEnabled && muralSettings.muralRecipientEmail && (
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 14px',
+                  borderRadius: '10px',
+                  backgroundColor: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  color: '#065f46',
+                  fontSize: '0.82rem',
+                  fontWeight: '600'
+                }}>
+                  <Mail size={15} />
+                  <span>Encaminhamento Ativo: Novos comunicados são enviados para <strong>{muralSettings.muralRecipientEmail}</strong></span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Grade de Cards de Categorias (Sem cortes nos nomes) */}
           <div style={styles.compactCategoryGrid}>
             {/* Card Todos */}
@@ -1387,6 +1554,26 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
                   required
                 />
               </div>
+
+              {/* Informação sobre Encaminhamento por E-mail */}
+              {muralSettings.muralForwardingEnabled && muralSettings.muralRecipientEmail && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  backgroundColor: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  color: '#065f46',
+                  fontSize: '0.8rem',
+                  fontWeight: '500',
+                  marginBottom: '0.75rem'
+                }}>
+                  <Mail size={14} />
+                  <span>Este comunicado será automaticamente encaminhado para: <strong>{muralSettings.muralRecipientEmail}</strong></span>
+                </div>
+              )}
 
               {/* Ações */}
               <div style={styles.modalActions}>

@@ -5029,6 +5029,62 @@ export const mockFirestore = {
     return db.tenant_settings;
   },
 
+  // Email Server & Dispatch Settings (Módulo T.I)
+  getEmailSettings: async () => {
+    const db = getDB();
+    return db.email_settings || {
+      enabled: true,
+      senderName: 'Nex-Ai CLINIC — Notificações Automáticas',
+      senderEmail: 'notificacoes@clinica.med.br',
+      replyToEmail: 'contato@clinica.med.br',
+      provider: 'smtp',
+      smtpHost: 'smtp.gmail.com',
+      smtpPort: 587,
+      encryption: 'TLS',
+      smtpUser: 'notificacoes@clinica.med.br',
+      smtpPassword: '',
+      bccAudit: 'ti.auditoria@clinica.med.br',
+      footerSignature: 'Nex-Ai CLINIC — Ecossistema Inteligente de Gestão em Saúde\nEsta é uma notificação automática gerada pelo sistema. Por favor, não responda diretamente a este e-mail.',
+      muralForwardingEnabled: false,
+      muralRecipientEmail: '',
+      muralNursingOnly: true,
+      notifications: {
+        medicalSwaps: true,
+        serviceOrders: true,
+        hrAdmissions: true,
+        purchasingQuotes: true,
+        calendarReminders: true,
+        assistAlerts: true,
+        securityAlerts: true
+      }
+    };
+  },
+
+  saveEmailSettings: async (settings) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    db.email_settings = { ...(db.email_settings || {}), ...settings };
+    setDB(db);
+    return db.email_settings;
+  },
+
+  getEmailLogs: async () => {
+    const db = getDB();
+    return db.email_logs || [];
+  },
+
+  logEmailDispatch: async (log) => {
+    const db = getDB();
+    if (!db.email_logs) db.email_logs = [];
+    const newLog = {
+      id: 'elog-' + Date.now(),
+      ...log
+    };
+    db.email_logs.unshift(newLog);
+    setDB(db);
+    return newLog;
+  },
+
   // User Profiles (RBAC Roles)
   getUserProfiles: async () => {
     const db = getDB();
@@ -5393,6 +5449,21 @@ export const mockFirestore = {
       readBy: postData.readBy || []
     };
     db.assist_posts.unshift(newPost);
+
+    // Simula log de e-mail de encaminhamento do mural no mock
+    if (db.email_settings?.muralForwardingEnabled && db.email_settings?.muralRecipientEmail) {
+      if (!db.email_logs) db.email_logs = [];
+      db.email_logs.unshift({
+        id: 'elog-' + Date.now(),
+        to: db.email_settings.muralRecipientEmail,
+        subject: `[Mural .ASSIST] ${newPost.urgency === 'Urgente' ? '🚨 [URGENTE] ' : ''}${newPost.category} — ${newPost.patientName || newPost.title}`,
+        moduleSource: 'Mural Assistencial (.ASSIST)',
+        sentAt: new Date().toISOString(),
+        status: 'Enviado',
+        preview: newPost.message ? newPost.message.substring(0, 120) : 'Comunicado encaminhado.'
+      });
+    }
+
     setDB(db);
     return newPost;
   },

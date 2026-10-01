@@ -147,6 +147,10 @@ export const DEFAULT_EMAIL_SETTINGS = {
   smtpPassword: '',
   bccAudit: 'ti.auditoria@clinica.med.br',
   footerSignature: 'Nex-Ai CLINIC — Ecossistema Inteligente de Gestão em Saúde\nEsta é uma notificação automática gerada pelo sistema. Por favor, não responda diretamente a este e-mail.',
+  // Configurações do Mural (.ASSIST)
+  muralForwardingEnabled: false,
+  muralRecipientEmail: '',
+  muralNursingOnly: true, // Modo temporário ativo por padrão para a enfermagem conforme solicitação
   notifications: {
     medicalSwaps: true,       // Nex-Ai.MED: Trocas e homologações de plantão
     serviceOrders: true,      // Nex-Ai.SERVICE: Ordens de serviço e chamados
@@ -193,6 +197,44 @@ export const saveEmailSettings = async (emailSettings) => {
   return payload;
 };
 
+export const subscribeToEmailSettings = (callback) => {
+  if (USE_MOCK) {
+    if (mockFirestore.getEmailSettings) {
+      mockFirestore.getEmailSettings().then(callback);
+    } else {
+      callback(DEFAULT_EMAIL_SETTINGS);
+    }
+    return () => {};
+  }
+  let activeUnsubscribe = null;
+  let isCancelled = false;
+
+  import('firebase/firestore').then(({ getFirestore, doc, onSnapshot }) => {
+    if (isCancelled) return;
+    const db = getFirestore(app);
+    activeUnsubscribe = onSnapshot(doc(db, 'settings', 'email'), (snap) => {
+      if (snap.exists()) {
+        callback({ ...DEFAULT_EMAIL_SETTINGS, ...snap.data() });
+      } else {
+        callback(DEFAULT_EMAIL_SETTINGS);
+      }
+    }, (err) => {
+      console.warn('Erro ao escutar email settings:', err);
+      callback(DEFAULT_EMAIL_SETTINGS);
+    });
+  }).catch(err => {
+    console.warn('Falha ao importar Firestore para subscribeToEmailSettings:', err);
+    callback(DEFAULT_EMAIL_SETTINGS);
+  });
+
+  return () => {
+    isCancelled = true;
+    if (typeof activeUnsubscribe === 'function') {
+      activeUnsubscribe();
+    }
+  };
+};
+
 export const sendSystemEmail = async ({ to, subject, body, html, moduleSource = 'Sistema' }) => {
   const emailLog = {
     to,
@@ -212,6 +254,21 @@ export const sendSystemEmail = async ({ to, subject, body, html, moduleSource = 
     const { getFirestore, collection, addDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
     const docRef = await addDoc(collection(db, 'email_logs'), emailLog);
+
+    // Opcional: registrar na coleção 'mail' compatível com a extensão Firebase Trigger Email
+    try {
+      await addDoc(collection(db, 'mail'), {
+        to: Array.isArray(to) ? to : [to],
+        message: {
+          subject,
+          text: body || '',
+          html: html || (body ? body.replace(/\n/g, '<br>') : '')
+        }
+      });
+    } catch {
+      // Ignora se a extensão de trigger email não estiver provisionada
+    }
+
     return { success: true, id: docRef.id, ...emailLog };
   } catch (err) {
     console.warn('Erro ao registrar log de e-mail no Firestore:', err);
@@ -236,9 +293,9 @@ export const getEmailLogs = async () => {
 };
 
 export const testEmailConnection = async (testRecipientEmail, currentSettings) => {
-  const target = testRecipientEmail || currentSettings.senderEmail || 'ti@clinica.med.br';
-  const testSubject = `[Nex-Ai CLINIC Teste de E-mail] Conexão com Servidor de Disparo (${currentSettings.provider || 'SMTP'})`;
-  const testBody = `Este é um e-mail de validação emitido pelo painel de T.I. (Nex-Ai.CONFIG).\n\nServidor SMTP: ${currentSettings.smtpHost}:${currentSettings.smtpPort}\nRemetente: ${currentSettings.senderName} <${currentSettings.senderEmail}>\nCriptografia: ${currentSettings.encryption}\nData/Hora: ${new Date().toLocaleString('pt-BR')}\n\nSe você recebeu esta mensagem, o canal institucional de e-mails está ativo e pronto para atender todos os módulos do sistema.`;
+  const target = testRecipientEmail || currentSettings?.senderEmail || 'ti@clinica.med.br';
+  const testSubject = `[Nex-Ai CLINIC Teste de E-mail] Servidor ${currentSettings?.provider || 'SMTP'}`;
+  const testBody = `Este é um e-mail de validação emitido pelo painel de T.I. (Nex-Ai.CONFIG).\n\nServidor SMTP: ${currentSettings?.smtpHost}:${currentSettings?.smtpPort}\nRemetente: ${currentSettings?.senderName} <${currentSettings?.senderEmail}>\nCriptografia: ${currentSettings?.encryption}\nData/Hora: ${new Date().toLocaleString('pt-BR')}\n\nSe você recebeu esta mensagem, o canal institucional de e-mails está ativo e pronto para atender todos os módulos do sistema.`;
 
   return await sendSystemEmail({
     to: target,
@@ -247,5 +304,152 @@ export const testEmailConnection = async (testRecipientEmail, currentSettings) =
     moduleSource: 'T.I. (Nex-Ai.CONFIG)'
   });
 };
+
+/**
+ * Encaminha post do mural assistencial por e-mail caso habilitado
+ */
+export const forwardMuralPostByEmail = async (post, explicitRecipient = null) => {
+  try {
+    const settings = await getEmailSettings();
+    const isEnabled = explicitRecipient ? true : (settings?.muralForwardingEnabled && settings?.muralRecipientEmail);
+    if (!isEnabled) {
+      return { forwarded: false, reason: 'disabled' };
+    }
+
+    const rawTarget = explicitRecipient || settings.muralRecipientEmail;
+    const recipients = String(rawTarget)
+      .split(/[,;]+/)
+      .map(e => e.trim())
+      .filter(e => e.length > 0 && e.includes('@'));
+
+    if (recipients.length === 0) {
+      return { forwarded: false, reason: 'no_valid_recipients' };
+    }
+
+    const isUrgent = post.urgency === 'Urgente';
+    const urgencyBadge = isUrgent ? '🚨 [URGENTE] ' : '';
+    const patientInfo = post.patientName ? ` — Paciente: ${post.patientName}` : '';
+    const subject = `[Mural .ASSIST] ${urgencyBadge}${post.category || 'Comunicado'}${patientInfo}`;
+
+    const textBody = `COMUNICADO DO MURAL (.ASSIST) - Nex-Ai CLINIC
+----------------------------------------------------------------------
+Título: ${post.title || post.category || 'Comunicado da Enfermagem'}
+Categoria: ${post.category || 'Geral'}
+Urgência: ${post.urgency || 'Normal'}
+Paciente: ${post.patientName || 'Não vinculado'}
+Salão: ${post.room || 'Geral'}
+Turno: ${post.shift || 'Geral'}
+Unidade: ${post.unit || 'Clínica'}
+
+Autor: ${post.author || 'Equipe de Enfermagem'} (${post.authorRole || 'Enfermagem'})
+Data/Hora: ${new Date(post.createdAt || Date.now()).toLocaleString('pt-BR')}
+
+MENSAGEM:
+${post.message || ''}
+${post.attachmentUrl ? `\nANEXO: ${post.attachmentName || 'Arquivo'} (${post.attachmentUrl})` : ''}
+
+----------------------------------------------------------------------
+Notificação automática emitida pelo módulo NexaASSIST (.ASSIST).
+Para gerenciar o encaminhamento, acesse NexaCONFIG > E-mail > Mural.`;
+
+    const htmlBody = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 14px; background-color: #ffffff; color: #1e293b;">
+        <div style="background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); padding: 18px 22px; border-radius: 10px; color: #ffffff;">
+          <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700;">📌 Mural Assistencial (.ASSIST)</h2>
+          <p style="margin: 4px 0 0 0; font-size: 0.85rem; opacity: 0.92;">Novo comunicado registrado pela equipe</p>
+        </div>
+
+        <div style="padding: 20px 0; border-bottom: 1px solid #f1f5f9;">
+          <h3 style="margin: 0 0 14px 0; font-size: 1.15rem; color: #0f172a; line-height: 1.35;">
+            ${isUrgent ? '<span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; margin-right: 8px; font-weight: 800; display: inline-block;">URGENTE</span>' : ''}
+            ${post.title || post.category || 'Comunicado'}
+          </h3>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-bottom: 16px;">
+            <tr>
+              <td style="padding: 6px 0; font-weight: 600; width: 110px; color: #64748b;">Categoria:</td>
+              <td style="padding: 6px 0;"><span style="background: #fdf2f8; color: #be185d; padding: 2px 8px; border-radius: 4px; font-weight: 700; border: 1px solid #fbcfe8;">${post.category || 'Geral'}</span></td>
+            </tr>
+            ${post.patientName ? `
+            <tr>
+              <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Paciente:</td>
+              <td style="padding: 6px 0; font-weight: 700; color: #0f172a;">${post.patientName}</td>
+            </tr>` : ''}
+            <tr>
+              <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Local / Turno:</td>
+              <td style="padding: 6px 0;">${post.room || 'Geral'} &bull; ${post.shift || 'Geral'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Unidade:</td>
+              <td style="padding: 6px 0;">${post.unit || 'Clínica'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Publicado por:</td>
+              <td style="padding: 6px 0;"><strong>${post.author || 'Profissional'}</strong> (${post.authorRole || 'Enfermagem'})</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Data:</td>
+              <td style="padding: 6px 0;">${new Date(post.createdAt || Date.now()).toLocaleString('pt-BR')}</td>
+            </tr>
+          </table>
+
+          <div style="background: #f8fafc; border-left: 4px solid #ec4899; padding: 16px 20px; border-radius: 0 10px 10px 0; margin-top: 12px; border: 1px solid #f1f5f9; border-left: 4px solid #ec4899;">
+            <div style="font-weight: 700; font-size: 0.78rem; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;">Mensagem:</div>
+            <div style="color: #0f172a; font-size: 0.95rem; white-space: pre-wrap; line-height: 1.55;">${post.message || ''}</div>
+          </div>
+
+          ${post.attachmentUrl ? `
+          <div style="margin-top: 14px; padding: 12px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 0.85rem; color: #166534; display: flex; align-items: center; gap: 8px;">
+            <span>📎</span>
+            <span><strong>Anexo:</strong> <a href="${post.attachmentUrl}" target="_blank" rel="noopener noreferrer" style="color: #15803d; font-weight: 700; text-decoration: underline;">${post.attachmentName || 'Visualizar documento'}</a></span>
+          </div>` : ''}
+        </div>
+
+        <div style="padding-top: 16px; font-size: 0.75rem; color: #94a3b8; text-align: center; line-height: 1.45;">
+          Nex-Ai CLINIC &bull; Ecossistema Inteligente de Gestão em Saúde<br />
+          Esta mensagem foi encaminhada conforme parametrização do NexaCONFIG.
+        </div>
+      </div>
+    `;
+
+    for (const recipient of recipients) {
+      await sendSystemEmail({
+        to: recipient,
+        subject,
+        body: textBody,
+        html: htmlBody,
+        moduleSource: 'Mural Assistencial (.ASSIST)'
+      });
+    }
+
+    return { forwarded: true, recipients };
+  } catch (err) {
+    console.error('Erro ao encaminhar post do mural por e-mail:', err);
+    return { forwarded: false, error: err.message };
+  }
+};
+
+/**
+ * Dispara e-mail de teste para validação do canal de encaminhamento do Mural
+ */
+export const testMuralEmailForwarding = async (targetEmail, currentSettings) => {
+  const target = targetEmail || currentSettings?.muralRecipientEmail || currentSettings?.senderEmail || 'ti@clinica.med.br';
+  const samplePost = {
+    title: 'Orientações Pré-Diálise e Acesso Vascular',
+    category: 'Acesso Vascular',
+    urgency: 'Normal',
+    patientName: 'Paciente Modelo de Validação',
+    room: 'Salão 1',
+    shift: '1º Turno',
+    unit: 'Betim',
+    author: 'Supervisão de Enfermagem',
+    authorRole: 'Enfermeira Chefe',
+    createdAt: new Date().toISOString(),
+    message: 'Este é um e-mail de teste disparado pelo painel NexaCONFIG para validar o encaminhamento automático de comunicados do Mural (.ASSIST). Se você está recebendo esta mensagem na sua caixa de entrada, a integração de e-mails está ativa e funcionando perfeitamente!'
+  };
+
+  return await forwardMuralPostByEmail(samplePost, target);
+};
+
 
 

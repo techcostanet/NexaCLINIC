@@ -288,24 +288,36 @@ export const subscribeToAssistPosts = (callback) => {
  * Cria um novo comunicado assistencial
  */
 export const createAssistPost = async (postData) => {
+  let created = null;
+
   if (USE_MOCK) {
     if (mockFirestore.createAssistPost) {
-      return mockFirestore.createAssistPost(postData);
+      created = await mockFirestore.createAssistPost(postData);
+    } else {
+      created = { id: 'mock-' + Date.now(), ...postData, createdAt: new Date().toISOString(), readBy: [] };
     }
-    return { id: 'mock-' + Date.now(), ...postData, createdAt: new Date().toISOString(), readBy: [] };
+  } else {
+    const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+
+    const newPost = {
+      ...postData,
+      readBy: postData.readBy || [],
+      createdAt: postData.createdAt || new Date().toISOString()
+    };
+
+    const docRef = await addDoc(collection(db, 'assist_posts'), newPost);
+    created = { id: docRef.id, ...newPost };
   }
 
-  const { getFirestore, collection, addDoc } = await import('firebase/firestore');
-  const db = getFirestore(app);
+  // Encaminhamento automático por e-mail em background se habilitado nas configurações
+  import('./systemService').then(mod => {
+    if (mod && mod.forwardMuralPostByEmail) {
+      mod.forwardMuralPostByEmail(created).catch(e => console.warn('Erro no encaminhamento do mural por e-mail:', e));
+    }
+  }).catch(() => {});
 
-  const newPost = {
-    ...postData,
-    readBy: postData.readBy || [],
-    createdAt: postData.createdAt || new Date().toISOString()
-  };
-
-  const docRef = await addDoc(collection(db, 'assist_posts'), newPost);
-  return { id: docRef.id, ...newPost };
+  return created;
 };
 
 /**

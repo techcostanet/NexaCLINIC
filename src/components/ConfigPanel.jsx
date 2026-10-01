@@ -755,8 +755,16 @@ export default function ConfigPanel() {
     setActionLoading(true);
     try {
       await dbService.saveEmailSettings(emailSettings);
-      showAlert('Configurações do servidor de e-mail salvas com sucesso!', 'success');
-      logAudit('Configuração de E-mail', `Servidor SMTP ${emailSettings.smtpHost}:${emailSettings.smtpPort} (${emailSettings.senderEmail}) atualizado.`);
+      if (dbService.saveTenantSettings) {
+        await dbService.saveTenantSettings({
+          ...tenantSettings,
+          muralNursingOnly: !!emailSettings.muralNursingOnly,
+          muralForwardingEnabled: !!emailSettings.muralForwardingEnabled,
+          muralRecipientEmail: emailSettings.muralRecipientEmail || ''
+        });
+      }
+      showAlert('Configurações do servidor e do Mural salvas!', 'success');
+      logAudit('Configuração de E-mail', `Servidor SMTP e parâmetros do Mural (.ASSIST) atualizados. Encaminhamento: ${emailSettings.muralForwardingEnabled ? 'Ativo (' + emailSettings.muralRecipientEmail + ')' : 'Inativo'}. Restrição Enfermagem: ${emailSettings.muralNursingOnly ? 'Ativa' : 'Inativa'}.`);
       if (dbService.getEmailLogs) {
         const logs = await dbService.getEmailLogs();
         setEmailLogsList(logs);
@@ -766,6 +774,18 @@ export default function ConfigPanel() {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleTestMuralEmail = async (targetRecipient) => {
+    const target = targetRecipient || emailSettings.muralRecipientEmail || emailSettings.senderEmail;
+    if (dbService.testMuralEmailForwarding) {
+      await dbService.testMuralEmailForwarding(target, emailSettings);
+    }
+    if (dbService.getEmailLogs) {
+      const logs = await dbService.getEmailLogs();
+      setEmailLogsList(logs);
+    }
+    logAudit('Teste do Mural', `Teste de encaminhamento do Mural para ${target} disparado.`);
   };
 
   const handleTestEmail = async (targetRecipient) => {
@@ -1326,6 +1346,7 @@ export default function ConfigPanel() {
               setEmailSettings={setEmailSettings}
               onSave={handleSaveEmailSettings}
               onTest={handleTestEmail}
+              onTestMural={handleTestMuralEmail}
               testing={testingEmail}
               testResult={testResult}
               actionLoading={actionLoading}
