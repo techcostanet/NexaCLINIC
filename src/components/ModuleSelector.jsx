@@ -2,15 +2,17 @@ import React from 'react';
 import { 
   BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, 
   Settings, ShoppingCart, Calendar, ClipboardList, FileText, Wrench, ShieldCheck,
-  LayoutGrid, List, LayoutList, Columns, ArrowRight, Search, Megaphone, Stethoscope
+  LayoutGrid, List, LayoutList, Columns, ArrowRight, Search, Megaphone, Stethoscope, KeyRound
 } from 'lucide-react';
 import { authService } from '../firebase';
 import UnitSelector from './common/UnitSelector';
 import NexAiBrand from './common/NexAiBrand';
+import ChangePasswordModal from './common/ChangePasswordModal';
 
 export default function ModuleSelector({ user, onSelectModule }) {
   const [viewMode, setViewMode] = React.useState('grid'); // 'grid' (padrão), 'list', 'compact', 'expanded'
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [passwordModalOpen, setPasswordModalOpen] = React.useState(false);
 
   const handleLogout = async () => {
     try {
@@ -254,6 +256,14 @@ export default function ModuleSelector({ user, onSelectModule }) {
             <div style={{ marginLeft: '1rem', display: 'inline-flex' }}>
               <UnitSelector compact showLabel={true} />
             </div>
+            <button 
+              onClick={() => setPasswordModalOpen(true)} 
+              style={styles.headerPasswordBtn}
+              title="Alterar Senha"
+            >
+              <KeyRound size={13} />
+              <span>Senha</span>
+            </button>
           </div>
         </div>
 
@@ -462,11 +472,25 @@ export default function ModuleSelector({ user, onSelectModule }) {
         )}
 
         <div style={styles.footer}>
-          <button onClick={handleLogout} style={styles.logoutBtn}>
+          <button 
+            onClick={() => setPasswordModalOpen(true)} 
+            style={styles.passwordBtn}
+            title="Alterar Senha"
+          >
+            <KeyRound size={16} />
+            <span>Senha</span>
+          </button>
+          <button onClick={handleLogout} style={styles.logoutBtn} title="Sair do Sistema">
             <LogOut size={16} />
-            <span>Sair da Conta</span>
+            <span>Sair</span>
           </button>
         </div>
+
+        <ChangePasswordModal 
+          isOpen={passwordModalOpen} 
+          onClose={() => setPasswordModalOpen(false)} 
+          currentUser={user} 
+        />
       </div>
     </div>
   );
@@ -915,6 +939,37 @@ const styles = {
   footer: {
     display: 'flex',
     justifyContent: 'center',
+    gap: '0.75rem',
+  },
+  headerPasswordBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    marginLeft: '0.75rem',
+    backgroundColor: '#ffffff',
+    border: '1px solid #cbd5e1',
+    borderRadius: '16px',
+    padding: '0.15rem 0.6rem',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    color: '#0284c7',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+  },
+  passwordBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    background: 'none',
+    border: '1px solid #0284c7',
+    borderRadius: 'var(--border-radius-sm)',
+    padding: '0.5rem 0.85rem',
+    color: '#0284c7',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    backgroundColor: '#f0f9ff',
+    transition: 'all 0.15s ease',
   },
   logoutBtn: {
     display: 'flex',

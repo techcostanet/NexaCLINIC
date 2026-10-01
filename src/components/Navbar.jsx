@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { authService, dbService } from '../firebase';
-import { Activity, LogOut, Menu, X, BarChart3, UploadCloud, Users, HeartPulse, FileText, LayoutGrid, Megaphone, ShoppingCart, BookOpen } from 'lucide-react';
+import { Activity, LogOut, Menu, X, BarChart3, UploadCloud, Users, HeartPulse, FileText, LayoutGrid, Megaphone, ShoppingCart, BookOpen, KeyRound } from 'lucide-react';
 import ChangelogModal from './ChangelogModal';
+import ChangePasswordModal from './common/ChangePasswordModal';
 import UnitSelector from './common/UnitSelector';
 import NexAiBrand from './common/NexAiBrand';
 
 export default function Navbar({ user, currentPage, setCurrentPage, currentModule, setCurrentModule, setIsReportsOpen, setIsGuideOpen }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [tenantSettings, setTenantSettings] = useState({ name: 'Nex-Ai CLINIC', logo: '' });
 
   const loadBranding = async () => {
@@ -130,7 +132,11 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
 
         {/* User Profile Info & Logout */}
         <div style={styles.userInfoContainer}>
-          <div style={styles.userProfile}>
+          <div 
+            style={{ ...styles.userProfile, cursor: 'pointer' }}
+            onClick={() => setPasswordModalOpen(true)}
+            title="Alterar Senha"
+          >
             <span style={styles.userName}>{user?.name}</span>
             <span
               className={`badge ${
@@ -141,6 +147,13 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
               {user?.role === 'admin' ? 'Admin' : 'Profissional'}
             </span>
           </div>
+          <button 
+            onClick={() => setPasswordModalOpen(true)} 
+            style={styles.passwordTriggerBtn} 
+            title="Alterar Senha"
+          >
+            <KeyRound size={16} />
+          </button>
           <button 
             onClick={() => setChangelogOpen(true)} 
             style={styles.changelogTriggerBtn} 
@@ -199,20 +212,32 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
           })}
           <div style={styles.mobileDivider}></div>
           <button 
+            onClick={() => { setPasswordModalOpen(true); setMobileMenuOpen(false); }} 
+            style={styles.mobileNavLink}
+          >
+            <KeyRound size={18} />
+            <span>Senha</span>
+          </button>
+          <button 
             onClick={() => { setChangelogOpen(true); setMobileMenuOpen(false); }} 
             style={styles.mobileNavLink}
           >
             <Megaphone size={18} />
-            <span>Novidades da Versão</span>
+            <span>Novidades</span>
           </button>
           <div style={styles.mobileDivider}></div>
           <button onClick={handleLogout} style={styles.mobileLogoutBtn}>
             <LogOut size={18} />
-            <span>Sair do Sistema</span>
+            <span>Sair</span>
           </button>
         </div>
       )}
       <ChangelogModal isOpen={changelogOpen} onClose={() => setChangelogOpen(false)} />
+      <ChangePasswordModal 
+        isOpen={passwordModalOpen} 
+        onClose={() => setPasswordModalOpen(false)} 
+        currentUser={user} 
+      />
     </nav>
   );
 }
@@ -310,6 +335,18 @@ const styles = {
   roleBadge: {
     fontSize: '0.65rem',
     padding: '0.1rem 0.4rem',
+  },
+  passwordTriggerBtn: {
+    background: 'none',
+    border: '1px solid var(--border-color)',
+    borderRadius: 'var(--border-radius-sm)',
+    padding: '0.5rem',
+    color: '#0284c7',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all var(--transition-fast)',
   },
   changelogTriggerBtn: {
     position: 'relative',

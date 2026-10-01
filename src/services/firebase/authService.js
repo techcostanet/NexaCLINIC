@@ -503,6 +503,97 @@ export const updateUserPassword = async (identifier, newPassword) => {
   }
 };
 
+export const changeCurrentUserPassword = async (currentUser, currentPassword, newPassword, clinicPolicy) => {
+  if (!currentUser) throw new Error('Usuário não autenticado.');
+  if (!newPassword) throw new Error('A nova senha é obrigatória.');
+
+  // Validação frente à política de segurança da clínica se fornecida
+  if (clinicPolicy) {
+    const { validatePasswordAgainstPolicy } = await import('../../utils/passwordPolicy');
+    const validation = validatePasswordAgainstPolicy(newPassword, clinicPolicy);
+    if (!validation.isValid) {
+      throw new Error(validation.error || 'A nova senha não atende aos requisitos de segurança da clínica.');
+    }
+  }
+
+  const cleanEmail = (currentUser.email || '').trim().toLowerCase();
+  const targetUid = currentUser.uid;
+
+  if (USE_MOCK) {
+    if (mockFirestore.updateUserPassword) {
+      await mockFirestore.updateUserPassword(targetUid || cleanEmail, newPassword);
+    }
+    const session = localStorage.getItem('nexa_custom_session');
+    if (session) {
+      try {
+        const parsed = JSON.parse(session);
+        parsed.password = newPassword;
+        parsed.authPassword = newPassword;
+        localStorage.setItem('nexa_custom_session', JSON.stringify(parsed));
+      } catch (e) {}
+    }
+    return true;
+  }
+
+  try {
+    const { getAuth, updatePassword, reauthenticateWithCredential, EmailAuthProvider } = await import('firebase/auth');
+    const auth = getAuth(app);
+    let authSucceeded = false;
+
+    // Se o usuário estiver ativo na sessão primária do Firebase Auth
+    if (auth.currentUser && (auth.currentUser.uid === targetUid || (auth.currentUser.email || '').toLowerCase() === cleanEmail)) {
+      try {
+        if (currentPassword) {
+          const credential = EmailAuthProvider.credential(cleanEmail, currentPassword);
+          await reauthenticateWithCredential(auth.currentUser, credential);
+        }
+        await updatePassword(auth.currentUser, newPassword);
+        authSucceeded = true;
+      } catch (primaryErr) {
+        console.warn("Tentativa de updatePassword no Firebase Auth:", primaryErr.code, primaryErr.message);
+        if (primaryErr.code === 'auth/wrong-password' || primaryErr.code === 'auth/invalid-credential') {
+          throw new Error('A senha atual digitada está incorreta.');
+        }
+        if (primaryErr.code === 'auth/requires-recent-login' && !currentPassword) {
+          throw new Error('Por segurança, informe sua senha atual para autorizar a alteração.');
+        }
+      }
+    }
+
+    // Se a alteração nativa direta não rodou (ex: sessão persistida via token custom), usa rotina com secondary app
+    if (!authSucceeded) {
+      await updateUserPassword(targetUid || cleanEmail, newPassword);
+    }
+
+    // Sincroniza sempre o registro no Firestore
+    const { getFirestore, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    if (targetUid) {
+      await setDoc(doc(db, 'users', targetUid), {
+        password: newPassword,
+        authPassword: newPassword,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }
+
+    // Sincroniza sessão do localStorage
+    const customSession = localStorage.getItem('nexa_custom_session');
+    if (customSession) {
+      try {
+        const parsed = JSON.parse(customSession);
+        parsed.password = newPassword;
+        parsed.authPassword = newPassword;
+        localStorage.setItem('nexa_custom_session', JSON.stringify(parsed));
+      } catch (e) {}
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Erro ao alterar senha do usuário:", err);
+    throw err;
+  }
+};
+
 export const generateTempPassword = async (identifier) => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
   let tempPass = '';

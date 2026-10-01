@@ -2720,6 +2720,14 @@ export const MODULE_GUIDES = {
     color: '#8b5cf6',
     recursos: [
       {
+        title: 'Política de Complexidade de Senhas Personalizável',
+        desc: 'Parametrização por clínica do nível de segurança das senhas dos usuários: níveis Simples (4+ dígitos livres), Padrão (6+ caracteres com letras e números), Forte (8+ caracteres com maiúsculas) e Rigoroso (8+ caracteres com símbolos LGPD), com simulador interativo em tempo real.'
+      },
+      {
+        title: 'Alteração Simplificada de Senha pelo Usuário',
+        desc: 'Modal intuitivo acessível na barra superior (Navbar) e na tela inicial de portais (ModuleSelector), com medidor de força em tempo real, validação simultânea de critérios da clínica e confirmação instantânea.'
+      },
+      {
         title: 'Catálogo Central de Procedimentos',
         desc: 'Cadastro unificado de procedimentos cirúrgicos, intervencionistas e clínicos com parametrização de valores monetários (R$), código TUSS/SUS e interruptor de vigência ativo/inativo.'
       },
@@ -2757,6 +2765,26 @@ export const MODULE_GUIDES = {
       }
     ],
     tutorial: [
+      {
+        title: 'Como Configurar o Nível de Dificuldade de Senhas da Clínica',
+        steps: [
+          'Acesse o módulo de T.I. (Nex-Ai.CONFIG) e clique na aba "Senhas".',
+          'Escolha um dos 4 níveis pré-configurados clicando diretamente no card: "Simples" (4+ caracteres livres), "Padrão" (6+ caracteres com letras e números - recomendado), "Forte" (8+ caracteres com maiúsculas) ou "Rigoroso" (8+ caracteres com símbolos LGPD).',
+          'Se desejar, personalize o comprimento mínimo e os requisitos específicos nas caixas de seleção.',
+          'Use o campo "Simulador" para digitar senhas de exemplo e verificar em tempo real se seriam aprovadas ou reprovadas pela política configurada.',
+          'Clique no botão "Salvar" para aplicar a política imediatamente a toda a instituição.'
+        ]
+      },
+      {
+        title: 'Como o Usuário Altera sua Senha no Sistema',
+        steps: [
+          'Em qualquer tela do sistema, clique no botão de chave "Senha" na barra superior (Navbar) ou no rodapé da tela inicial de portais (ModuleSelector).',
+          'No modal que se abre, informe sua senha atual (se solicitada).',
+          'Digite a nova senha desejada observando o medidor de força colorido e o checklist de critérios da clínica.',
+          'Confirme a nova senha no campo de confirmação até que apareça a confirmação "Senhas conferem".',
+          'Clique em "Salvar" para atualizar sua credencial de forma segura e instantânea.'
+        ]
+      },
       {
         title: 'Como Cadastrar e Gerenciar Esquemas de Dias de Sessão',
         steps: [
@@ -2799,6 +2827,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Qual o nível de dificuldade de senha mais recomendado para cada tipo de cliente?',
+        resposta: 'O nível "Padrão" (mínimo de 6 caracteres combinando letras e números) é o mais recomendado para hospitais e clínicas gerais por aliar proteção sólida e facilidade de digitação. Para salões de hemodiálise com alta rotação em terminais rápidos, o nível "Simples" (4 dígitos livres) garante máxima agilidade operacional. Já para instituições com rígida auditoria de dados e conformidade estrita com LGPD, os níveis "Forte" ou "Rigoroso" garantem máxima blindagem.'
+      },
+      {
+        pergunta: 'O que acontece quando o administrador altera a política de senhas da clínica?',
+        resposta: 'A nova política entra em vigor imediatamente para qualquer nova criação de usuário ou alteração de senha realizada a partir daquele momento. Os usuários que já possuem senha cadastrada continuam acessando normalmente até decidirem realizar uma nova troca de credenciais.'
+      },
       {
         pergunta: 'Como desativar o encaminhamento por e-mail ou reabrir o Mural para todos?',
         resposta: 'Basta acessar Nex-Ai.CONFIG > E-mail, rolar até o card "Mural (.ASSIST)" e desativar os interruptores correspondentes quando desejar. Ao salvar, a alteração é propagada em tempo real para todos os usuários logados.'

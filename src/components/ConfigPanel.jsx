@@ -3,15 +3,22 @@ import { dbService } from '../firebase';
 import { 
   Settings, Users, Shield, Globe, Database, Key, Check, Plus, X, 
   Trash2, ShieldAlert, CheckCircle2, Copy, Download, Upload, Palette,
-  ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock, Mail, Activity, Calendar
+  ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock, Mail, Activity, Calendar, Sparkles
 } from 'lucide-react';
 import EmailSettingsTab from './config/EmailSettingsTab';
+import { 
+  PASSWORD_DIFFICULTY_LEVELS, 
+  getEffectivePasswordPolicy, 
+  validatePasswordAgainstPolicy 
+} from '../utils/passwordPolicy';
 
 export default function ConfigPanel() {
-  const [activeTab, setActiveTab] = useState('branding'); // 'branding' | 'profiles' | 'users' | 'locations' | 'categories' | 'email' | 'integrations' | 'logs' | 'schedules'
+  const [activeTab, setActiveTab] = useState('branding'); // 'branding' | 'profiles' | 'users' | 'passwords' | 'locations' | 'categories' | 'email' | 'integrations' | 'logs' | 'schedules'
   
   // Data States
   const [tenantSettings, setTenantSettings] = useState({ name: '', cnpj: '', logo: '', themeColor: '#ec4899' });
+  const [passwordPolicyForm, setPasswordPolicyForm] = useState(getEffectivePasswordPolicy());
+  const [passwordTesterInput, setPasswordTesterInput] = useState('');
   const [profiles, setProfiles] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -153,6 +160,9 @@ export default function ConfigPanel() {
         dbService.getDialysisFrequencies ? dbService.getDialysisFrequencies() : []
       ]);
       setTenantSettings(settings);
+      if (settings) {
+        setPasswordPolicyForm(getEffectivePasswordPolicy(settings));
+      }
       setProfiles(profileList);
       setUsersList(users);
       const sortedEmployees = (empList || []).slice().sort((a, b) => 
@@ -203,7 +213,12 @@ export default function ConfigPanel() {
     e.preventDefault();
     setActionLoading(true);
     try {
-      await dbService.saveTenantSettings(tenantSettings);
+      const payload = {
+        ...tenantSettings,
+        passwordPolicy: passwordPolicyForm
+      };
+      await dbService.saveTenantSettings(payload);
+      setTenantSettings(payload);
       document.documentElement.style.setProperty('--primary-color', tenantSettings.themeColor);
       showAlert('Configurações da clínica e tema visual salvos!', 'success');
       logAudit('Customização SaaS', `Configurações de marca e cor tema (${tenantSettings.themeColor}) atualizadas.`);
@@ -225,6 +240,40 @@ export default function ConfigPanel() {
         setTenantSettings(s => ({ ...s, logo: reader.result }));
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // ----------------------------------------------------
+  // Password Complexity Policy (SaaS)
+  // ----------------------------------------------------
+  const handleSelectDifficultyLevel = (levelId) => {
+    const preset = PASSWORD_DIFFICULTY_LEVELS[levelId];
+    if (preset) {
+      setPasswordPolicyForm({
+        ...preset,
+        level: levelId
+      });
+    }
+  };
+
+  const handleSavePasswordPolicy = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setActionLoading(true);
+    try {
+      const updatedTenant = {
+        ...tenantSettings,
+        passwordPolicy: passwordPolicyForm
+      };
+      await dbService.saveTenantSettings(updatedTenant);
+      setTenantSettings(updatedTenant);
+      showAlert(`Política de senhas da clínica atualizada para "${passwordPolicyForm.name}"!`, 'success');
+      logAudit('Política de Senhas', `Nível de complexidade definido como "${passwordPolicyForm.name}" (Mínimo: ${passwordPolicyForm.minLength} caracteres, Maiúsculas: ${passwordPolicyForm.requireUppercase ? 'Sim' : 'Não'}, Símbolos: ${passwordPolicyForm.requireSpecialChars ? 'Sim' : 'Não'}).`);
+      window.dispatchEvent(new Event('tenant-branding-changed'));
+    } catch (err) {
+      console.error(err);
+      showAlert('Erro ao gravar política de senhas.', 'danger');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -304,6 +353,12 @@ export default function ConfigPanel() {
     e.preventDefault();
     if (!userForm.name || !userForm.email) {
       return showAlert('Preencha os campos obrigatórios (Nome e E-mail).', 'warning');
+    }
+    if (userForm.password) {
+      const validation = validatePasswordAgainstPolicy(userForm.password, passwordPolicyForm);
+      if (!validation.isValid) {
+        return showAlert(validation.error || 'A senha não atende aos requisitos da política da clínica.', 'warning');
+      }
     }
     setActionLoading(true);
     try {
@@ -844,6 +899,9 @@ export default function ConfigPanel() {
         <button onClick={() => setActiveTab('users')} style={{ ...styles.tabBtn, ...(activeTab === 'users' ? styles.tabBtnActive : {}) }}>
           <Users size={16} /> Usuários ({usersList.length})
         </button>
+        <button onClick={() => setActiveTab('passwords')} style={{ ...styles.tabBtn, ...(activeTab === 'passwords' ? styles.tabBtnActive : {}) }}>
+          <KeyRound size={16} /> Senhas
+        </button>
         <button onClick={() => setActiveTab('locations')} style={{ ...styles.tabBtn, ...(activeTab === 'locations' ? styles.tabBtnActive : {}) }}>
           <Warehouse size={16} /> Almoxarifados ({stockLocations.length})
         </button>
@@ -863,7 +921,7 @@ export default function ConfigPanel() {
           <Key size={16} /> Integrações
         </button>
         <button onClick={() => setActiveTab('logs')} style={{ ...styles.tabBtn, ...(activeTab === 'logs' ? styles.tabBtnActive : {}) }}>
-          <ShieldAlert size={16} /> Segurança ({auditLogs.length})
+          <ShieldAlert size={16} /> Logs ({auditLogs.length})
         </button>
       </div>
 
@@ -1002,10 +1060,38 @@ export default function ConfigPanel() {
                       })}
                     </div>
                   </div>
+
+                  {/* Política de Senhas (Resumo SaaS) */}
+                  <div style={{ marginTop: '1.25rem', padding: '1rem', backgroundColor: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '700', fontSize: '0.9rem', color: '#0369a1' }}>
+                        <KeyRound size={16} /> Complexidade de Senhas
+                      </div>
+                      <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#0284c7' }}>
+                        Nível ativo: <strong>{passwordPolicyForm.name}</strong> ({passwordPolicyForm.badge} — {passwordPolicyForm.minLength}+ caracteres). Ajuste o nível para cada cliente.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('passwords')}
+                      style={{
+                        padding: '0.4rem 0.85rem',
+                        borderRadius: '6px',
+                        backgroundColor: '#0284c7',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '0.8rem',
+                        fontWeight: '700',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Configurar
+                    </button>
+                  </div>
                 </div>
 
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ backgroundColor: tenantSettings.themeColor || '#ec4899', alignSelf: 'flex-start', marginTop: '1rem' }}>
-                  {actionLoading ? 'Salvando...' : 'Aplicar Configurações & Cor de Marca'}
+                  {actionLoading ? 'Salvando...' : 'Salvar'}
                 </button>
               </form>
 
@@ -1194,6 +1280,269 @@ export default function ConfigPanel() {
                     })}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: Password Complexity Policy */}
+          {activeTab === 'passwords' && (
+            <div style={styles.panelGrid}>
+              <div style={{ ...styles.settingsCard, gridColumn: 'span 2' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div>
+                    <h3 style={{ margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <KeyRound size={20} color={passwordPolicyForm.color || '#0284c7'} /> Complexidade
+                    </h3>
+                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      Defina o nível de exigência de segurança para as senhas de acesso de cada cliente e instituição.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Nível:</span>
+                    <span style={{
+                      padding: '0.25rem 0.65rem',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      fontWeight: '700',
+                      backgroundColor: `${passwordPolicyForm.color || '#0284c7'}15`,
+                      color: passwordPolicyForm.color || '#0284c7',
+                      border: `1px solid ${passwordPolicyForm.color || '#0284c7'}40`
+                    }}>
+                      {passwordPolicyForm.name} ({passwordPolicyForm.badge})
+                    </span>
+                  </div>
+                </div>
+
+                {/* Preset Levels Cards */}
+                <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.75rem', display: 'block' }}>
+                  Níveis Pré-Configurados
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                  {Object.values(PASSWORD_DIFFICULTY_LEVELS).map((lvl) => {
+                    const isSelected = passwordPolicyForm.level === lvl.id;
+                    return (
+                      <div
+                        key={lvl.id}
+                        onClick={() => handleSelectDifficultyLevel(lvl.id)}
+                        style={{
+                          padding: '1.15rem',
+                          borderRadius: '12px',
+                          border: isSelected ? `2px solid ${lvl.color}` : '1px solid var(--border-color, #e2e8f0)',
+                          backgroundColor: isSelected ? `${lvl.color}08` : '#ffffff',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: isSelected ? `0 4px 12px ${lvl.color}25` : 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05))',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          position: 'relative'
+                        }}
+                      >
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '0.65rem',
+                            right: '0.65rem',
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            backgroundColor: lvl.color,
+                            color: '#ffffff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.75rem'
+                          }}>
+                            ✓
+                          </div>
+                        )}
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                            <span style={{ fontSize: '1rem', fontWeight: '700', color: isSelected ? lvl.color : 'var(--text-primary)' }}>
+                              {lvl.name}
+                            </span>
+                            <span style={{
+                              fontSize: '0.65rem',
+                              fontWeight: '700',
+                              padding: '0.1rem 0.4rem',
+                              borderRadius: '4px',
+                              backgroundColor: `${lvl.color}20`,
+                              color: lvl.color
+                            }}>
+                              {lvl.badge}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem 0', lineHeight: '1.35' }}>
+                            {lvl.description}
+                          </p>
+                        </div>
+                        <div style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '0.6rem', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          Exemplo: <code style={{ color: lvl.color, fontWeight: '600' }}>{lvl.example}</code>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Fine-Tuning Parameters */}
+                <div style={{ backgroundColor: 'var(--bg-body, #f8fafc)', borderRadius: '12px', padding: '1.25rem', border: '1px solid var(--border-color, #e2e8f0)', marginBottom: '1.5rem' }}>
+                  <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                    ⚙️ Regras Específicas
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', alignItems: 'center' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.35rem', display: 'block' }}>
+                        Comprimento
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input
+                          type="number"
+                          min="4"
+                          max="32"
+                          className="form-control"
+                          value={passwordPolicyForm.minLength}
+                          onChange={(e) => setPasswordPolicyForm({
+                            ...passwordPolicyForm,
+                            minLength: Math.max(4, parseInt(e.target.value, 10) || 4)
+                          })}
+                          style={{ width: '80px', textAlign: 'center', fontWeight: '700' }}
+                        />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>dígitos</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.825rem', fontWeight: '600' }}>
+                        <input
+                          type="checkbox"
+                          checked={passwordPolicyForm.requireNumbers}
+                          onChange={(e) => setPasswordPolicyForm({ ...passwordPolicyForm, requireNumbers: e.target.checked })}
+                          style={{ width: '16px', height: '16px' }}
+                        />
+                        Números (0-9)
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.825rem', fontWeight: '600' }}>
+                        <input
+                          type="checkbox"
+                          checked={passwordPolicyForm.requireLetters}
+                          onChange={(e) => setPasswordPolicyForm({ ...passwordPolicyForm, requireLetters: e.target.checked })}
+                          style={{ width: '16px', height: '16px' }}
+                        />
+                        Letras (a-z)
+                      </label>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.825rem', fontWeight: '600' }}>
+                        <input
+                          type="checkbox"
+                          checked={passwordPolicyForm.requireUppercase}
+                          onChange={(e) => setPasswordPolicyForm({ ...passwordPolicyForm, requireUppercase: e.target.checked })}
+                          style={{ width: '16px', height: '16px' }}
+                        />
+                        Maiúsculas (A-Z)
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.825rem', fontWeight: '600' }}>
+                        <input
+                          type="checkbox"
+                          checked={passwordPolicyForm.requireSpecialChars}
+                          onChange={(e) => setPasswordPolicyForm({ ...passwordPolicyForm, requireSpecialChars: e.target.checked })}
+                          style={{ width: '16px', height: '16px' }}
+                        />
+                        Símbolos (!@#$%)
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Real-time Simulator / Tester for Admin */}
+                <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '1.25rem', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <Sparkles size={16} color={passwordPolicyForm.color || 'var(--primary-color, #ec4899)'} />
+                    <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                      Simulador
+                    </h4>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      (Digite para testar a reação às senhas digitadas pelos colaboradores)
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                    <div style={{ flex: '1 1 280px' }}>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Digite uma senha para simular..."
+                        value={passwordTesterInput}
+                        onChange={(e) => setPasswordTesterInput(e.target.value)}
+                        style={{ width: '100%', padding: '0.55rem 0.85rem', fontSize: '0.875rem' }}
+                      />
+                      {passwordTesterInput.length > 0 && (() => {
+                        const testValidation = validatePasswordAgainstPolicy(passwordTesterInput, passwordPolicyForm);
+                        return (
+                          <div style={{ marginTop: '0.5rem' }}>
+                            <div style={{ width: '100%', height: '6px', backgroundColor: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
+                              <div style={{ width: `${testValidation.score}%`, height: '100%', backgroundColor: testValidation.strengthColor, transition: 'all 0.3s' }} />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                              <span style={{ color: testValidation.strengthColor, fontWeight: '700' }}>
+                                Força: {testValidation.strengthLabel} ({testValidation.score}%)
+                              </span>
+                              <span style={{ fontWeight: '700', color: testValidation.isValid ? '#059669' : '#dc2626' }}>
+                                {testValidation.isValid ? '✅ Atende à Política' : '❌ Não Atende'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    <div style={{ flex: '1 1 280px', display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                      {(() => {
+                        const testValidation = validatePasswordAgainstPolicy(passwordTesterInput, passwordPolicyForm);
+                        return testValidation.checks.map(chk => (
+                          <span
+                            key={chk.id}
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '6px',
+                              backgroundColor: chk.met ? '#ecfdf5' : '#fef2f2',
+                              color: chk.met ? '#059669' : '#991b1b',
+                              border: `1px solid ${chk.met ? '#a7f3d0' : '#fecaca'}`,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.3rem'
+                            }}
+                          >
+                            {chk.met ? '✓' : '✗'} {chk.label}
+                          </span>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                  <button
+                    onClick={handleSavePasswordPolicy}
+                    disabled={actionLoading}
+                    className="btn btn-primary"
+                    style={{
+                      backgroundColor: passwordPolicyForm.color || 'var(--primary-color, #ec4899)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.65rem 1.5rem',
+                      fontWeight: '700'
+                    }}
+                  >
+                    <CheckCircle2 size={16} />
+                    {actionLoading ? 'Salvando...' : 'Salvar'}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -1889,7 +2238,7 @@ export default function ConfigPanel() {
 
               <div className="form-group" style={{ marginBottom: '0.75rem' }}>
                 <label style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.35rem', display: 'block', color: 'var(--text-primary)' }}>
-                  {editingUser ? 'Nova Senha (deixe em branco para manter a atual)' : 'Senha de Acesso Inicial'}
+                  {editingUser ? 'Senha (deixe em branco para manter a atual)' : 'Senha Inicial'}
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <input 
@@ -1906,13 +2255,25 @@ export default function ConfigPanel() {
                       onClick={() => handleGenerateTempPassword(editingUser)}
                       disabled={actionLoading}
                       className="btn btn-outline"
-                      title="Gerar Senha Temporária Dinâmica"
+                      title="Gerar Senha Temporária"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: '600', color: '#f59e0b', borderColor: '#f59e0b', cursor: 'pointer', whiteSpace: 'nowrap' }}
                     >
-                      <RefreshCw size={14} /> Gerar Temporária
+                      <RefreshCw size={14} /> Temporária
                     </button>
                   )}
                 </div>
+                {userForm.password && (() => {
+                  const val = validatePasswordAgainstPolicy(userForm.password, passwordPolicyForm);
+                  return (
+                    <div style={{ marginTop: '0.35rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: val.isValid ? '#059669' : '#dc2626' }}>
+                      {val.isValid ? <CheckCircle2 size={13} /> : <ShieldAlert size={13} />}
+                      <span>{val.isValid ? `Atende à política (${passwordPolicyForm.name})` : val.error}</span>
+                    </div>
+                  );
+                })()}
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
+                  Regra da clínica: <strong>{passwordPolicyForm.name}</strong> (mínimo de {passwordPolicyForm.minLength} caracteres)
+                </span>
               </div>
 
               {generatedTempPass && (

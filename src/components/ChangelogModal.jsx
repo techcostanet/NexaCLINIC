@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.117',
+      date: '01/10/2026',
+      title: 'Nex-Ai CLINIC — Política de Complexidade de Senhas Parametrizável e Alteração Simplificada de Credencial (.CONFIG & GLOBAL)',
+      description: 'Implementação de esteira completa de segurança e governança de credenciais: criação da aba Senhas no módulo Nex-Ai.CONFIG com parametrização do nível de exigência por clínica (Simples, Padrão, Forte e Rigoroso/LGPD), ajuste customizado de comprimento mínimo e caracteres, simulador interativo em tempo real para o gestor de T.I., validação preventiva no cadastro de usuários e novo modal ChangePasswordModal integrado à barra global (Navbar) e ao seletor de módulos (ModuleSelector), permitindo que qualquer colaborador troque sua própria senha com facilidade, feedback visual de força e checklist dos critérios da clínica.',
+      changes: [
+        { type: 'Nível de Complexidade', text: 'Opções pré-configuradas Simples (4+ dígitos livres), Padrão (6+ caracteres com letras e números - recomendado), Forte (8+ caracteres com maiúsculas) e Rigoroso (8+ com símbolos LGPD) salvas no tenant da clínica.' },
+        { type: 'Troca Simples de Senha', text: 'Botão de chave e modal ChangePasswordModal disponível no Navbar e no ModuleSelector com medidor de força dinâmico, alternador de visibilidade e conferência em tempo real.' },
+        { type: 'Simulador em Tempo Real', text: 'Área interativa no NexaCONFIG para testar como a política reage à digitação de senhas antes de aplicar a toda a instituição.' },
+        { type: 'Sincronização Nativa & Firestore', text: 'Atualização automática e segura do Firebase Auth, do documento do usuário no Firestore e da sessão local, com trilha de auditoria completa.' },
+        { type: 'Manuais & Rótulos', text: 'Documentação oficial atualizada em moduleGuidesData.js e higienização estrita de rótulos de termo único.' }
+      ]
+    },
+    {
       version: 'v4.9.116',
       date: '01/10/2026',
       title: 'Nex-Ai CLINIC — Ingestão Automática de E-mails Titan (IMAP) e Controle de Ativação (.ASSIST & .CONFIG)',

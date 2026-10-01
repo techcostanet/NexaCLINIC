@@ -2680,6 +2680,21 @@ export const mockFirestore = {
     return { success: true };
   },
 
+  updateUserPassword: async (identifier, newPassword) => {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const db = getDB();
+    const cleanId = (identifier || '').trim().toLowerCase();
+    const user = (db.users || []).find(u => u.uid === identifier || (u.email || '').toLowerCase() === cleanId);
+    if (user) {
+      user.password = newPassword;
+      user.authPassword = newPassword;
+      user.updatedAt = new Date().toISOString();
+      setDB(db);
+      return true;
+    }
+    return false;
+  },
+
   // Sectors Methods
   getSectors: async () => {
     const db = getDB();

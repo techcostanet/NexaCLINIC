@@ -113,3 +113,36 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Arquivos Envolvidos:** `src/components/assist/AssistWall.jsx`, `src/services/firebase/assistService.js`.
 - **Complexidade:** Baixa.
 
+---
+
+### [SM-007] Exigência de Troca de Senha no Primeiro Acesso (Flag mustChangePassword)
+- **Data:** 01/10/2026
+- **Módulo:** `.CONFIG` (Configurações) / Autenticação Geral
+- **Título:** Forçar Troca Obrigatória de Senha no Primeiro Acesso ou após Redefinição Temporária
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Identificada durante o desenvolvimento da alteração simplificada de senhas e do seletor de dificuldade no NexaCONFIG.
+- **Descrição Técnica:**
+  - No cadastro de usuário pelo administrador ou ao gerar uma senha temporária dinâmica, gravar a flag `mustChangePassword: true` no documento do usuário no Firestore (`users`).
+  - No `App.jsx`, caso o usuário logado possua `user.mustChangePassword === true`, abrir compulsoriamente o `ChangePasswordModal` com bloqueio de cancelamento/saída até que ele defina e salve sua senha definitiva compatível com a política da clínica.
+  - Após a alteração bem-sucedida, desmarcar a flag para `false`.
+- **Benefício Operacional:** Garante que senhas padrão iniciais (ex.: `123456` ou senhas provisórias repassadas por WhatsApp/e-mail) sejam obrigatoriamente substituídas por senhas particulares de conhecimento exclusivo do colaborador, eliminando riscos de vazamento de senhas compartilhadas.
+- **Arquivos Envolvidos:** `src/App.jsx`, `src/components/common/ChangePasswordModal.jsx`, `src/services/firebase/authService.js`, `src/components/ConfigPanel.jsx`.
+- **Complexidade:** Baixa.
+
+---
+
+### [SM-008] Expiração Periódica de Senhas para Conformidade Hospitalar (60/90/180 dias)
+- **Data:** 01/10/2026
+- **Módulo:** `.CONFIG` (Configurações) / Segurança
+- **Título:** Parâmetro de Renovação Obrigatória Periódica de Senhas (Expiração por Validade)
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Identificada no desenho da tela de políticas de segurança e complexidade de senhas no NexaCONFIG.
+- **Descrição Técnica:**
+  - Na aba `Senhas` do NexaCONFIG, incluir um seletor de vigência da credencial: `Nunca expirar (padrão)`, `60 dias`, `90 dias` ou `180 dias`.
+  - Armazenar o timestamp `passwordUpdatedAt` no Firestore.
+  - Ao fazer login, verificar se o intervalo foi ultrapassado. Se expirado, exibir o modal de alteração de senha antes de liberar os portais operacionais.
+- **Benefício Operacional:** Atende a requisitos formais de auditorias hospitalares, acreditação ONA (Organização Nacional de Acreditação) e exigências rigorosas de proteção a dados sensíveis de saúde da LGPD.
+- **Arquivos Envolvidos:** `src/utils/passwordPolicy.js`, `src/components/ConfigPanel.jsx`, `src/services/firebase/authService.js`, `src/App.jsx`.
+- **Complexidade:** Média.
+
+

@@ -1,3 +1,28 @@
+## [v4.9.117] - 01 de Outubro, 2026
+### Nex-Ai CLINIC (.CONFIG & GLOBAL) — Política de Complexidade de Senhas Parametrizável e Alteração Simplificada de Credenciais
+- **Política de Complexidade de Senhas Parametrizável por Clínica (SaaS):**
+  - Implementada a nova aba `Senhas` no módulo `Nex-Ai.CONFIG` para governança de segurança adaptável às necessidades de cada cliente.
+  - Disponibilizados 4 níveis pré-configurados com 1 clique:
+    - **Simples (Flexível):** Mínimo de 4 dígitos ou caracteres livres. Projetado para máxima agilidade em terminais de salão de enfermagem e atendimento emergencial.
+    - **Padrão (Recomendado):** Mínimo de 6 caracteres combinando letras e números. Equilíbrio ideal entre praticidade diária e proteção de dados clínicos.
+    - **Forte (Corporativo):** Mínimo de 8 caracteres exigindo letras maiúsculas, minúsculas e números.
+    - **Rigoroso (LGPD Máxima):** Mínimo de 8 caracteres exigindo letras maiúsculas, minúsculas, números e símbolos especiais (`!@#$%...`).
+  - Personalização avançada de regras: permite ao administrador ajustar o comprimento mínimo e alternar requisitos específicos (números, letras, maiúsculas e símbolos).
+  - **Simulador Interativo em Tempo Real:** Área no NexaCONFIG para que o gestor de T.I. teste senhas e veja instantaneamente como a política reage à digitação dos colaboradores antes de aplicar à instituição.
+  - Sincronização automática na coleção `tenant_settings/main` do Firestore e reflexo instantâneo em todo o sistema.
+- **Alteração Simplificada de Senha pelo Usuário:**
+  - Novo componente `ChangePasswordModal` integrado à barra superior global (`Navbar`) e à tela de seleção de portais (`ModuleSelector`).
+  - Qualquer colaborador autenticado pode clicar no ícone de chave (`Senha`) e alterar sua credencial de forma simples e intuitiva.
+  - Medidor de força visual com barra colorida em tempo real (Fraca, Média, Forte, Excelente).
+  - Checklist interativo dinâmico que destaca com checkmarks verdes os critérios atendidos da política da clínica.
+  - Botão de alternância de visualização de senha (olho para exibir/ocultar) e indicador em tempo real de coincidência de senhas.
+  - Atualização simultânea no Firebase Authentication, no Firestore (`users`) e na sessão local (`localStorage`), além de trilha de auditoria completa em `audit_logs`.
+- **Validação Preventiva no Cadastro de Usuários:**
+  - O modal de criação e edição de usuários no NexaCONFIG agora exibe o nível de política ativo e valida a senha digitada pelo administrador antes do salvamento.
+- **Manuais & Governança UI:**
+  - Atualização completa do manual do módulo Config em `moduleGuidesData.js` (recursos, tutorial passo a passo e FAQ).
+  - Rótulos de campos e cabeçalhos estritamente limpos conforme o padrão de 1 palavra.
+
 ## [v4.9.116] - 01 de Outubro, 2026
 ### Nex-Ai CLINIC (.ASSIST & .CONFIG) — Ingestão Automática de E-mails Clínicos Titan (IMAP) e Controle de Ativação
 - **Ingestão Automática & Carga da Caixa Postal Corporativa (Titan IMAP):**
