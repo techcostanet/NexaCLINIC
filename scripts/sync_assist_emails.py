@@ -17,9 +17,9 @@ import unicodedata
 from html import unescape
 from datetime import datetime
 import time
+import functools
 
 # Garante compatibilidade UTF-8 no Windows Console e flush imediato de logs
-import functools
 print = functools.partial(print, flush=True)
 
 if hasattr(sys.stdout, 'reconfigure'):
@@ -35,17 +35,55 @@ TITAN_CONFIG = {
     'password': 'Dialize@#3344'
 }
 
+PROCESSED_IDS_FILE = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'processed_email_ids.json')
+SYNCED_POSTS_FILE = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'synced_assist_emails.json')
+CHECK_STATUS_SCRIPT = os.path.join(os.path.dirname(__file__), 'check_import_status.mjs')
+
+def is_import_enabled():
+    """Consulta o Firestore para verificar se a importação está ativa nas configurações do NexaCONFIG."""
+    if os.path.exists(CHECK_STATUS_SCRIPT):
+        try:
+            res = subprocess.run(['node', CHECK_STATUS_SCRIPT], capture_output=True, text=True, timeout=12)
+            if 'DISABLED' in res.stdout:
+                return False
+        except Exception:
+            return True
+    return True
+
+def load_processed_ids():
+    if os.path.exists(PROCESSED_IDS_FILE):
+        try:
+            with open(PROCESSED_IDS_FILE, 'r', encoding='utf-8') as f:
+                return set(json.load(f))
+        except Exception:
+            return set()
+    return set()
+
+def save_processed_ids(ids_set):
+    try:
+        with open(PROCESSED_IDS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(list(ids_set), f, indent=2)
+    except Exception as e:
+        print(f"Aviso ao salvar IDs processados: {e}")
+
 def decode_mime_words(s):
     if not s:
         return ""
-    decoded_fragments = decode_header(s)
-    result = []
-    for fragment, encoding in decoded_fragments:
-        if isinstance(fragment, bytes):
-            result.append(fragment.decode(encoding or 'utf-8', errors='ignore'))
-        else:
-            result.append(str(fragment))
-    return "".join(result)
+    try:
+        decoded_fragments = decode_header(s)
+        result = []
+        for fragment, encoding in decoded_fragments:
+            if isinstance(fragment, bytes):
+                enc = encoding or 'utf-8'
+                try:
+                    result.append(fragment.decode(enc, errors='ignore'))
+                except Exception:
+                    result.append(fragment.decode('latin-1', errors='ignore'))
+            else:
+                result.append(str(fragment))
+        return "".join(result)
+    except Exception:
+        return str(s)
 
 def clean_html_to_text(html_text):
     if not html_text:
@@ -72,6 +110,19 @@ def clean_html_to_text(html_text):
 
     return "\n".join(filtered)
 
+def decode_payload_part(part):
+    charset = part.get_content_charset() or 'utf-8'
+    payload = part.get_payload(decode=True)
+    if not payload:
+        return ""
+    try:
+        return payload.decode(charset, errors='replace')
+    except Exception:
+        try:
+            return payload.decode('latin-1', errors='replace')
+        except Exception:
+            return payload.decode('utf-8', errors='ignore')
+
 def get_body(msg):
     text_content = ""
     html_content = ""
@@ -82,27 +133,21 @@ def get_body(msg):
             if 'attachment' in cdispo:
                 continue
             if ctype == 'text/plain' and not text_content:
-                payload = part.get_payload(decode=True)
-                if payload:
-                    text_content = payload.decode('utf-8', errors='ignore')
+                text_content = decode_payload_part(part)
             elif ctype == 'text/html' and not html_content:
-                payload = part.get_payload(decode=True)
-                if payload:
-                    html_content = payload.decode('utf-8', errors='ignore')
+                html_content = decode_payload_part(part)
     else:
-        payload = msg.get_payload(decode=True)
-        if payload:
-            raw = payload.decode('utf-8', errors='ignore')
-            if msg.get_content_type() == 'text/html':
-                html_content = raw
-            else:
-                text_content = raw
+        raw = decode_payload_part(msg)
+        if msg.get_content_type() == 'text/html':
+            html_content = raw
+        else:
+            text_content = raw
 
     if text_content and len(text_content.strip()) > 10:
         return text_content.strip()
     elif html_content:
         return clean_html_to_text(html_content)
-    return ""
+    return text_content or ""
 
 def normalize_text(text):
     if not text:
@@ -191,7 +236,7 @@ def classify_content(subject, body):
     category = 'Geral'
     urgency = 'Informativo'
 
-    if any(w in full for w in ['infeccao', 'infecc', 'intercorrencia', 'sangramento', 'febre', 'cateter', 'fav', 'atb', 'ceftazidima', 'vancomicina', 'hemocultura', 'perda de acesso', 'puncao fav', 'retirada de cdl', 'cdl']):
+    if any(w in full for w in ['infeccao', 'infecc', 'intercorrencia', 'sangramento', 'febre', 'cateter', 'fav', 'atb', 'ceftazidima', 'vancomicina', 'hemocultura', 'perda de acesso', 'puncao fav', 'retirada de cdl', 'cdl', 'critico', 'resultado critico']):
         category = 'Intercorrência'
         urgency = 'Urgente'
     elif any(w in full for w in ['alta', 'alta hospitalar', 'retorno', 'desospitaliz']):
@@ -202,6 +247,9 @@ def classify_content(subject, body):
         urgency = 'Urgente'
     elif any(w in full for w in ['transfer', 'transferencia', 'vaga']):
         category = 'Transferência'
+        urgency = 'Atenção'
+    elif any(w in full for w in ['soroteca', 'coleta', 'exame', 'laboratorio', 'labicon', 'amostra']):
+        category = 'Intercorrência'
         urgency = 'Atenção'
     elif any(w in full for w in ['nutri', 'dieta', 'suplement', 'potassio', 'fosforo']):
         category = 'Nutrição'
@@ -220,8 +268,15 @@ def classify_content(subject, body):
 
 def sync_inbox():
     now_str = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-    print(f"[{now_str}] [NexaASSIST] Sincronizando caixa Titan ({TITAN_CONFIG['email']})...")
+
+    # 1. Checagem de permissão nas configurações do sistema
+    if not is_import_enabled():
+        print(f"[{now_str}] [NexaASSIST] Importação de e-mails DESLIGADA no NexaCONFIG. Aguardando ativação...")
+        return []
+
+    print(f"[{now_str}] [NexaASSIST] Verificando caixa Titan ({TITAN_CONFIG['email']})...")
     patients = load_patients()
+    processed_ids = load_processed_ids()
 
     try:
         mail = imaplib.IMAP4_SSL(TITAN_CONFIG['imap_server'], TITAN_CONFIG['imap_port'])
@@ -231,10 +286,13 @@ def sync_inbox():
         status, msg_ids = mail.search(None, 'ALL')
         ids = msg_ids[0].split()
         
-        all_posts = []
+        new_posts = []
 
         for msg_id in ids:
             id_str = msg_id.decode()
+            if id_str in processed_ids:
+                continue
+
             res, msg_data = mail.fetch(msg_id, '(RFC822)')
             if not msg_data or not isinstance(msg_data[0], tuple):
                 continue
@@ -245,8 +303,9 @@ def sync_inbox():
             date_str = msg.get('Date', '')
             body = get_body(msg)
 
-            # Ignora e-mails de boas-vindas do sistema Titan
+            # Ignora e-mails automáticos de dicas do Titan
             if 'titan-tips@titan.email' in sender.lower():
+                processed_ids.add(id_str)
                 continue
 
             matched_pat, conf, m_type = match_patient(f"{subject} {body}", patients)
@@ -262,8 +321,13 @@ def sync_inbox():
             except Exception:
                 created_at_iso = datetime.now().isoformat()
 
+            unit_id = 'betim'
+            if matched_pat and matched_pat.get('unitId'):
+                unit_id = matched_pat.get('unitId')
+
             post = {
                 'id': f"email-titan-{id_str}",
+                'unitId': unit_id,
                 'source': 'email',
                 'originalFrom': sender,
                 'originalSubject': subject,
@@ -277,41 +341,63 @@ def sync_inbox():
                 'shift': matched_pat.get('shift', 'Geral') if is_linked else 'Geral',
                 'matchConfidence': conf,
                 'matchType': m_type,
-                'status': 'published' if is_linked else 'pending_link',
+                'status': 'published',
                 'author': clean_author or 'Equipe Assistencial',
                 'authorRole': 'Enfermagem / Assistência (Titan)',
                 'createdAt': created_at_iso,
                 'readBy': []
             }
 
-            all_posts.append(post)
+            new_posts.append(post)
+            processed_ids.add(id_str)
+            print(f" -> NOVO E-MAIL [{id_str}]: Assunto='{subject}' | Paciente='{post['patientName']}' | Categoria='{category}'")
 
         mail.close()
         mail.logout()
 
-        # Ordena do mais novo para o mais antigo
-        all_posts.sort(key=lambda x: x.get('createdAt', ''), reverse=True)
+        save_processed_ids(processed_ids)
 
-        # Salva o arquivo local synced_assist_emails.json
-        output_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'synced_assist_emails.json')
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(all_posts, f, ensure_ascii=False, indent=2)
+        if new_posts:
+            # Carrega registros já existentes no arquivo local
+            existing_posts = []
+            if os.path.exists(SYNCED_POSTS_FILE):
+                try:
+                    with open(SYNCED_POSTS_FILE, 'r', encoding='utf-8') as f:
+                        existing_posts = json.load(f)
+                except Exception:
+                    existing_posts = []
 
-        print(f"[{now_str}] {len(all_posts)} comunicado(s) sincronizado(s) localmente.")
+            # Mescla sem duplicidade por ID
+            seen_ids = set()
+            all_posts = []
+            for p in (new_posts + existing_posts):
+                if p.get('id') and p['id'] not in seen_ids:
+                    seen_ids.add(p['id'])
+                    all_posts.append(p)
 
-        # Invoca o sincronizador do Firestore via Firebase Admin
-        node_script = os.path.join(os.path.dirname(__file__), 'push_to_firestore.mjs')
-        if os.path.exists(node_script):
-            subprocess.run(['node', node_script], check=False)
+            # Ordena do mais recente para o mais antigo
+            all_posts.sort(key=lambda x: x.get('createdAt', ''), reverse=True)
 
-        return all_posts
+            with open(SYNCED_POSTS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(all_posts, f, ensure_ascii=False, indent=2)
+
+            print(f"[{now_str}] {len(new_posts)} novo(s) e-mail(s) sincronizado(s) localmente. Atualizando Firestore...")
+
+            # Grava no Firestore via Firebase Admin
+            node_script = os.path.join(os.path.dirname(__file__), 'push_to_firestore.mjs')
+            if os.path.exists(node_script):
+                subprocess.run(['node', node_script], check=False)
+        else:
+            print(f"[{now_str}] Nenhum novo e-mail para processar. (Total processados: {len(processed_ids)})")
+
+        return new_posts
 
     except Exception as e:
         print(f"[{now_str}] Erro ao conectar/sincronizar IMAP Titan: {e}")
         return []
 
 def main():
-    interval = 60 # 60 segundos (1 minuto)
+    interval = 60 # 60 segundos
     if '--interval' in sys.argv:
         try:
             idx = sys.argv.index('--interval')
@@ -323,7 +409,7 @@ def main():
         print(f"==================================================")
         print(f"[ROBO NexaASSIST] Monitoramento Continuo Ativo")
         print(f"Conta: {TITAN_CONFIG['email']}")
-        print(f"Intervalo de Verificacao: {interval} segundos (1 minuto)")
+        print(f"Intervalo de Verificacao: {interval} segundos")
         print(f"==================================================")
         while True:
             try:

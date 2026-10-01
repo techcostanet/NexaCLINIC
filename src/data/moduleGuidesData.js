@@ -933,6 +933,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Isolamento de Filiais (Betim / MG vs Taguatinga / DF)',
         desc: 'Escalas de hemodiálise, pontos de diálise e comunicados do mural 100% segregados pela filial ativa, com visualização zerada para novas unidades em fase de implantação.'
+      },
+      {
+        title: 'Ingestão Automática de E-mails Clínicos (Titan IMAP)',
+        desc: 'Leitura contínua dos comunicados recebidos na caixa oficial integracao@dialize.com.br, com inteligência para categorização clínica imediata e auto-vínculo de pacientes.'
       }
     ],
     tutorial: [
@@ -1016,9 +1020,22 @@ export const MODULE_GUIDES = {
           'Na aba "Cirurgias", selecione o período desejado e clique no botão "Imprimir" para gerar a folha em formato A4.',
           'Para marcar dias sem agendamento (feriados ou manutenção do bloco), clique em "Bloquear" no cabeçalho do dia e confirme a justificativa.'
         ]
+      },
+      {
+        title: 'Como Funciona a Ingestão de E-mails do Titan no Mural',
+        steps: [
+          'Os comunicados enviados para o e-mail corporativo integracao@dialize.com.br são monitorados em segundo plano pelo robô de ingestão.',
+          'O sistema higieniza o conteúdo, detecta automaticamente o nome do paciente, salão, turno e categoriza a urgência clínica.',
+          'A publicação entra diretamente no Mural com a indicação de origem Titan e fica disponível em tempo real para a equipe assistencial.',
+          'Caso deseje pausar ou reativar esse recebimento, o gestor pode alternar o status diretamente em Configurações > E-mail.'
+        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como desativo ou ativo a importação automática de e-mails para o Mural?',
+        resposta: 'O controle fica centralizado no módulo Nex-Ai.CONFIG, na aba E-mail. Basta alternar o botão "Importar E-mails" para Ativo ou Inativo e clicar em Salvar.'
+      },
       {
         pergunta: 'As alterações de acesso e heparina feitas na escala afetam o cadastro do paciente?',
         resposta: 'Sim. Ao salvar uma alteração de acesso vascular, agulha ou heparina diretamente no mapa de leitos da escala, o sistema atualiza automaticamente o cadastro mestre do paciente, refletindo nos módulos de Pacientes, Recepção e Prontuário.'
@@ -2160,9 +2177,22 @@ export const MODULE_GUIDES = {
       {
         title: 'Backups & Logs de Auditoria',
         desc: 'Exportação completa do banco de dados em formato JSON e registro de logs de segurança com rastreabilidade de operadores.'
+      },
+      {
+        title: 'Controle de Importação de E-mails Clínicos (Titan)',
+        desc: 'Chave mestre para habilitar ou pausar a ingestão automática contínua de e-mails da caixa integracao@dialize.com.br que alimentam o Mural do Nex-Ai.ASSIST.'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Ligar ou Desligar a Importação Automática de E-mails do Mural',
+        steps: [
+          'Acesse o módulo "Configurações & TI" e selecione a aba "E-mail".',
+          'Na coluna direita, localize a opção "Importar E-mails" (integracao@dialize.com.br).',
+          'Clique para alternar entre "Ativo" (verde) ou "Inativo" (cinza).',
+          'Clique no botão "Salvar" para registrar a alteração no banco e pausar/retomar a sincronização.'
+        ]
+      },
       {
         title: 'Como Liberar ou Bloquear o Feed Assistencial e Médico na Matriz RBAC',
         steps: [
@@ -2212,6 +2242,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'O que acontece ao desativar a opção "Importar E-mails" em Configurações?',
+        resposta: 'O robô de sincronização em segundo plano respeita a configuração do sistema e não processa novas mensagens da caixa Titan, mantendo o Mural do Nex-Ai.ASSIST inalterado até que seja reativado.'
+      },
       {
         pergunta: 'Como faço para que determinado perfil veja o Feed Assistencial?',
         resposta: 'Na aba "Perfis de Acesso", altere a coluna "Assistencial" do perfil desejado para "Leitura" ou "Escrita". Ao logar com esse perfil, o módulo Nex-Ai.ASSIST aparecerá disponível na tela inicial.'

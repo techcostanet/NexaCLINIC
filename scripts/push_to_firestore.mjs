@@ -19,6 +19,16 @@ try {
   }
   const db = getFirestore();
 
+  // Verifica se a importação está ativa nas configurações
+  const settingsSnap = await db.collection('settings').doc('email').get();
+  if (settingsSnap.exists) {
+    const s = settingsSnap.data();
+    if (s.muralEmailImportEnabled === false) {
+      console.log('[NexaASSIST] Importação de e-mails desativada no NexaCONFIG (muralEmailImportEnabled=false). Operação ignorada.');
+      process.exit(0);
+    }
+  }
+
   const dataPath = path.join(__dirname, '..', 'src', 'data', 'synced_assist_emails.json');
   if (!fs.existsSync(dataPath)) {
     console.log('Nenhum arquivo synced_assist_emails.json encontrado.');
@@ -31,29 +41,32 @@ try {
   let addedCount = 0;
   let updatedCount = 0;
 
-  for (const post of posts) {
-    if (!post.id) continue;
-    const docRef = db.collection('assist_posts').doc(post.id);
-    const existingSnap = await docRef.get();
+  // Processa em lotes paralelos de 20 para agilidade
+  const BATCH_SIZE = 20;
+  for (let i = 0; i < posts.length; i += BATCH_SIZE) {
+    const chunk = posts.slice(i, i + BATCH_SIZE);
+    await Promise.all(chunk.map(async (post) => {
+      if (!post.id) return;
+      const docRef = db.collection('assist_posts').doc(post.id);
+      const existingSnap = await docRef.get();
 
-    if (!existingSnap.exists) {
-      await docRef.set({
-        ...post,
-        syncedAt: new Date().toISOString()
-      });
-      addedCount++;
-      console.log(` + [NOVO NO FIRESTORE] ${post.id}: ${post.title} (${post.patientName || 'Geral'})`);
-    } else {
-      // Atualiza campos mantendo status e readBy existentes
-      const existingData = existingSnap.data();
-      await docRef.set({
-        ...post,
-        readBy: existingData.readBy || post.readBy || [],
-        status: existingData.status || post.status,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-      updatedCount++;
-    }
+      if (!existingSnap.exists) {
+        await docRef.set({
+          ...post,
+          syncedAt: new Date().toISOString()
+        });
+        addedCount++;
+      } else {
+        const existingData = existingSnap.data();
+        await docRef.set({
+          ...post,
+          readBy: existingData.readBy || post.readBy || [],
+          status: existingData.status || post.status || 'published',
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+        updatedCount++;
+      }
+    }));
   }
 
   console.log(`\n======================================================`);

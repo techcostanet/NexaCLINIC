@@ -66,6 +66,10 @@ export default function ConfigPanel() {
     smtpPassword: '',
     bccAudit: 'ti.auditoria@clinica.med.br',
     footerSignature: 'Nex-Ai CLINIC — Ecossistema Inteligente de Gestão em Saúde\nEsta é uma notificação automática gerada pelo sistema. Por favor, não responda diretamente a este e-mail.',
+    muralForwardingEnabled: false,
+    muralRecipientEmail: '',
+    muralNursingOnly: true,
+    muralEmailImportEnabled: true,
     notifications: {
       medicalSwaps: true,
       serviceOrders: true,
@@ -754,17 +758,21 @@ export default function ConfigPanel() {
     if (e && e.preventDefault) e.preventDefault();
     setActionLoading(true);
     try {
-      await dbService.saveEmailSettings(emailSettings);
+      await dbService.saveEmailSettings({
+        ...emailSettings,
+        muralEmailImportEnabled: emailSettings.muralEmailImportEnabled !== false
+      });
       if (dbService.saveTenantSettings) {
         await dbService.saveTenantSettings({
           ...tenantSettings,
           muralNursingOnly: !!emailSettings.muralNursingOnly,
           muralForwardingEnabled: !!emailSettings.muralForwardingEnabled,
-          muralRecipientEmail: emailSettings.muralRecipientEmail || ''
+          muralRecipientEmail: emailSettings.muralRecipientEmail || '',
+          muralEmailImportEnabled: emailSettings.muralEmailImportEnabled !== false
         });
       }
       showAlert('Configurações do servidor e do Mural salvas!', 'success');
-      logAudit('Configuração de E-mail', `Servidor SMTP e parâmetros do Mural (.ASSIST) atualizados. Encaminhamento: ${emailSettings.muralForwardingEnabled ? 'Ativo (' + emailSettings.muralRecipientEmail + ')' : 'Inativo'}. Restrição Enfermagem: ${emailSettings.muralNursingOnly ? 'Ativa' : 'Inativa'}.`);
+      logAudit('Configuração de E-mail', `Servidor SMTP e parâmetros do Mural (.ASSIST) atualizados. Encaminhamento: ${emailSettings.muralForwardingEnabled ? 'Ativo (' + emailSettings.muralRecipientEmail + ')' : 'Inativo'}. Restrição Enfermagem: ${emailSettings.muralNursingOnly ? 'Ativa' : 'Inativa'}. Importação Titan: ${emailSettings.muralEmailImportEnabled !== false ? 'Ativa' : 'Inativa'}.`);
       if (dbService.getEmailLogs) {
         const logs = await dbService.getEmailLogs();
         setEmailLogsList(logs);

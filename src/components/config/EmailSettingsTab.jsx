@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Mail, Send, Server, Eye, EyeOff, CheckCircle2, AlertCircle, 
   ShieldCheck, RefreshCw, Save, Sparkles, Check, Clock, Stethoscope,
-  Wrench, Users, ShoppingCart, Calendar, Megaphone, Lock
+  Wrench, Users, ShoppingCart, Calendar, Megaphone, Lock, Inbox
 } from 'lucide-react';
 
 export default function EmailSettingsTab({
@@ -479,6 +479,58 @@ export default function EmailSettingsTab({
                 checked={!!emailSettings.muralNursingOnly}
                 onChange={() => {}} // Controlled by outer container
                 style={{ width: '16px', height: '16px', accentColor: '#2563eb', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Toggle: Importação Automática de E-mails (Titan IMAP) */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.65rem 0.75rem',
+                borderRadius: '8px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: emailSettings.muralEmailImportEnabled !== false ? '#f0fdf4' : 'var(--bg-body)',
+                marginTop: '0.75rem',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              onClick={() => setEmailSettings(prev => ({ ...prev, muralEmailImportEnabled: prev.muralEmailImportEnabled === false ? true : false }))}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <strong style={{ fontSize: '0.82rem', color: emailSettings.muralEmailImportEnabled !== false ? '#15803d' : 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Inbox size={13} color={emailSettings.muralEmailImportEnabled !== false ? '#15803d' : 'currentColor'} /> Importar E-mails
+                  </strong>
+                  <span style={{
+                    fontSize: '0.7rem',
+                    fontWeight: '700',
+                    padding: '1px 6px',
+                    borderRadius: '10px',
+                    backgroundColor: emailSettings.muralEmailImportEnabled !== false ? '#dcfce7' : '#f1f5f9',
+                    color: emailSettings.muralEmailImportEnabled !== false ? '#166534' : '#64748b'
+                  }}>
+                    {emailSettings.muralEmailImportEnabled !== false ? 'Ativo' : 'Inativo'}
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                  Alimenta o Mural com comunicados recebidos no e-mail corporativo da clínica.
+                </span>
+                {emailSettings.muralEmailImportEnabled !== false && (
+                  <div style={{ marginTop: '0.35rem', fontSize: '0.7rem', color: '#166534', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <span style={{ backgroundColor: '#dcfce7', padding: '1px 6px', borderRadius: '4px', fontWeight: '600' }}>
+                      integracao@dialize.com.br
+                    </span>
+                    <span style={{ color: 'var(--text-muted)' }}>imap.titan.email:993</span>
+                  </div>
+                )}
+              </div>
+              <input
+                type="checkbox"
+                checked={emailSettings.muralEmailImportEnabled !== false}
+                onChange={() => {}} // Controlled by outer container
+                style={{ width: '16px', height: '16px', accentColor: '#16a34a', cursor: 'pointer' }}
               />
             </div>
           </div>

@@ -1,3 +1,19 @@
+## [v4.9.116] - 01 de Outubro, 2026
+### Nex-Ai CLINIC (.ASSIST & .CONFIG) — Ingestão Automática de E-mails Clínicos Titan (IMAP) e Controle de Ativação
+- **Ingestão Automática & Carga da Caixa Postal Corporativa (Titan IMAP):**
+  - Conector inteligente com a caixa `integracao@dialize.com.br` (`imap.titan.email:993` via SSL/TLS), lendo e higienizando comunicados clínicos recebidos.
+  - Categorização clínica automatizada por termos-chave (Intercorrência, Urgência, Alta, Exames, Soroteca, Nutrição) e atribuição de níveis de criticidade (Urgente, Atenção, Informativo).
+  - Reconhecimento e auto-vínculo de pacientes cadastrados por correspondência de nome completo ou primeiro/último nome, preenchendo automaticamente o paciente, turno e salão.
+  - Sincronização direta na nuvem na coleção `assist_posts` do Firestore (396 comunicados históricos processados e disponíveis no feed em tempo real).
+- **Controle de Ligar / Desligar no NexaCONFIG:**
+  - Adicionado interruptor na aba `E-mail` do módulo `Nex-Ai.CONFIG` para ativar ou pausar a importação automática a qualquer momento.
+  - O robô de monitoramento contínuo consulta o status da configuração no Firestore antes de processar mensagens, pausando imediatamente caso a chave seja desativada pela coordenação.
+  - Mural mantido com visual 100% limpo, sem elementos excedentes ou atalhos desnecessários, conforme preferência da gestão.
+- **Robô Daemon Contínuo & Backlog:**
+  - Processo de monitoramento em segundo plano reativado com checagem contínua a cada 60 segundos.
+  - Registro de sugestão de atalho sob demanda no Mural cadastrada no backlog (`SUGESTOES_MELHORIAS.md` - `SM-006`).
+  - Manuais interativos de `.ASSIST` e `.CONFIG` atualizados em `moduleGuidesData.js` em conformidade com as regras do sistema.
+
 ## [v4.9.114] - 01 de Outubro, 2026
 ### Nex-Ai CLINIC (.STOCK) — Correção de Fuso de Data de Entrada, Desbloqueio de Anexo de Boletos e Reconhecimento de Faturas de Serviços
 - **Desbloqueio e Otimização do Anexo de Boletos em PDF:**

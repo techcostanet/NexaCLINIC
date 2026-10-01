@@ -151,6 +151,7 @@ export const DEFAULT_EMAIL_SETTINGS = {
   muralForwardingEnabled: false,
   muralRecipientEmail: '',
   muralNursingOnly: true, // Modo temporário ativo por padrão para a enfermagem conforme solicitação
+  muralEmailImportEnabled: true, // Ingestão/Sincronização de e-mails da caixa integracao@dialize.com.br (Titan IMAP)
   notifications: {
     medicalSwaps: true,       // Nex-Ai.MED: Trocas e homologações de plantão
     serviceOrders: true,      // Nex-Ai.SERVICE: Ordens de serviço e chamados

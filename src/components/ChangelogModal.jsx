@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.116',
+      date: '01/10/2026',
+      title: 'Nex-Ai CLINIC — Ingestão Automática de E-mails Titan (IMAP) e Controle de Ativação (.ASSIST & .CONFIG)',
+      description: 'Implementação de esteira inteligente para importação automática contínua de comunicados clínicos a partir da caixa postal corporativa integracao@dialize.com.br (Titan IMAP SSL): carga histórica de 396 comunicados gravados no Firestore, categorização clínica automática por palavras-chave, auto-vínculo de pacientes cadastrados por correspondência inteligente, interruptor mestre no módulo Nex-Ai.CONFIG (aba E-mail) para ligar e desligar a sincronização a qualquer momento sem poluir o Mural, e robô daemon de monitoramento contínuo em segundo plano a cada 60 segundos.',
+      changes: [
+        { type: 'Ingestão Titan IMAP', text: 'Conector com a caixa integracao@dialize.com.br com higienização de assinaturas, rodapés e tags HTML de e-mails recebidos.' },
+        { type: 'Inteligência Clínica', text: 'Categorização automática entre Intercorrência, Alta, Exames, Soroteca, Nutrição e Urgência com auto-vínculo de pacientes, salão e turno.' },
+        { type: 'Controle no NexaCONFIG', text: 'Chave mestre na aba E-mail do NexaCONFIG para ligar/desligar a importação a qualquer momento, mantendo o Mural 100% limpo.' },
+        { type: 'Monitoramento Contínuo', text: 'Robô daemon em segundo plano com verificação a cada 60 segundos e consulta prévia de permissão no Firestore.' },
+        { type: 'Manuais Atualizados', text: 'Documentação com recursos, tutoriais passo a passo e perguntas frequentes atualizados em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v4.9.114',
       date: '01/10/2026',
       title: 'Nex-Ai CLINIC — Correção de Fuso de Data de Entrada, Desbloqueio de Anexo de Boletos e Faturas de Serviços (.STOCK)',

@@ -97,3 +97,19 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Benefício Operacional:** Economia substancial de tempo no fechamento de contas do mês, permitindo processar 20 a 50 boletos de uma só vez em segundos.
 - **Arquivos Envolvidos:** `src/components/FinancePanel.jsx`, `src/utils/boletoParser.js`.
 - **Complexidade:** Média.
+
+---
+
+### [SM-006] Botão de Sincronização Manual sob Demanda no Mural Assistencial
+- **Data:** 01/10/2026
+- **Módulo:** `.ASSIST` (Mural Assistencial)
+- **Título:** Botão de Disparo Manual de Sincronização de E-mails Titan no Cabeçalho do Mural
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Sugerido durante a reativação da ingestão de e-mails corporativos da caixa `integracao@dialize.com.br`. O gestor optou por manter o Mural limpo sem botões extras, mantendo o controle exclusivo de ligar/desligar na aba de E-mail do NexaCONFIG.
+- **Descrição Técnica:**
+  - No cabeçalho do Feed Assistencial (`AssistWall.jsx`), adicionar botão discreto de ação com ícone `RefreshCw` para solicitar verificação instantânea da caixa postal.
+  - Integração com endpoint ou trigger de execução do script de sincronização sem aguardar o ciclo do serviço.
+- **Benefício Operacional:** Permitiria à equipe de enfermagem forçar a busca imediata de um comunicado urgente que acabou de ser enviado por um médico ou parceiro externo.
+- **Arquivos Envolvidos:** `src/components/assist/AssistWall.jsx`, `src/services/firebase/assistService.js`.
+- **Complexidade:** Baixa.
+

@@ -5050,6 +5050,7 @@ export const mockFirestore = {
       muralForwardingEnabled: false,
       muralRecipientEmail: '',
       muralNursingOnly: true,
+      muralEmailImportEnabled: true,
       notifications: {
         medicalSwaps: true,
         serviceOrders: true,
