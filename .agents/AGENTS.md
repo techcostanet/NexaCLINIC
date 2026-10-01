@@ -62,3 +62,18 @@ Toda vez que um deploy for realizado, a seguinte sequência de ações deve ser 
    - Sempre que identificar melhorias extras pertinentes, o assistente deve apresentá-las em um bloco claramente destacado e separado (ex.: `💡 Sugestões de Melhoria Identificadas (Opcional - Aguardando sua decisão)`).
    - Deve ser explicado de forma sucinta o benefício da melhoria proposta e consultado o usuário se ele deseja incluí-la no escopo atual ou manter apenas o pedido original.
    - A implementação de qualquer item extra só deve ocorrer após aprovação expressa do usuário.
+
+4. **Armazenamento Obrigatório no Backlog de Sugestões (`SUGESTOES_MELHORIAS.md`):**
+   - Toda e qualquer sugestão de melhoria identificada pelo assistente que **não seja aceita no momento**, que seja **recusada** ou que o usuário decida **guardar para outro momento** deve ser **obrigatoriamente registrada no arquivo [`SUGESTOES_MELHORIAS.md`](file:///c:/NexAi/NexAi.CLINIC/SUGESTOES_MELHORIAS.md)** na raiz do projeto.
+   - Cada registro deve detalhar rigorosamente:
+     - **ID Sequencial:** `SM-001`, `SM-002`, etc.
+     - **Data:** Data em que foi proposta.
+     - **Módulo:** Identificação do módulo afetado (`.STOCK`, `.FINANCE`, `.ASSIST`, `.CONFIG`, etc.).
+     - **Título:** Termo claro da oportunidade identificada.
+     - **Status:** Situação atual (`Pendente / Aguardando Decisão Futura`, `Aprovada / Implementada`, etc.).
+     - **Origem / Contexto:** Em qual rotina ou demanda a oportunidade surgiu.
+     - **Descrição Técnica:** O que precisa ser desenvolvido ou ajustado.
+     - **Benefício Operacional:** Ganho de tempo, segurança ou precisão para a equipe da clínica.
+     - **Arquivos Envolvidos:** Arquivos e componentes que serão modificados.
+     - **Complexidade:** `Baixa`, `Média` ou `Alta`.
+   - O arquivo deve ser versionado e sincronizado continuamente com o GitHub (`git push origin main`) para preservar a memória histórica e permitir decisões estratégicas futuras pelo gestor.
