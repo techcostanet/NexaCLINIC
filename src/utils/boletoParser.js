@@ -67,24 +67,36 @@ export function extractAmountFromDigitableLine(digits) {
  */
 export async function parseBoletoPdf(arrayBuffer) {
   try {
-    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-    const pdf = await loadingTask.promise;
     let fullText = '';
     const textItems = [];
 
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageItems = textContent.items || [];
-      
-      for (const item of pageItems) {
-        if (item.str) {
-          textItems.push(item.str.trim());
+    // 1. Extração via PDF.js com timeout de 3.5 segundos para evitar qualquer travamento
+    try {
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout no PDF.js')), 3500)
+      );
+
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await Promise.race([loadingTask.promise, timeoutPromise]);
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageItems = textContent.items || [];
+        
+        for (const item of pageItems) {
+          if (item.str) {
+            textItems.push(item.str.trim());
+          }
         }
+        
+        const pageText = pageItems.map(item => item.str).join(' ');
+        fullText += '\n' + pageText;
       }
-      
-      const pageText = pageItems.map(item => item.str).join(' ');
-      fullText += '\n' + pageText;
+    } catch (pdfErr) {
+      console.warn('PDF.js falhou ou deu timeout, usando fallback de texto puro para boleto:', pdfErr);
+      const decoder = new TextDecoder('utf-8', { fatal: false });
+      fullText = decoder.decode(arrayBuffer);
     }
 
     // 1. Busca por Linha Digitável
@@ -107,7 +119,15 @@ export async function parseBoletoPdf(arrayBuffer) {
       }
     }
 
-    // Tentativa 3: Linha de Concessionária / Arrecadação (48 dígitos, começa com 8)
+    // Tentativa 3: Linha contínua ininterrupta de 47 dígitos ou 48 dígitos (comum em boletos digitais Conta Azul, etc.)
+    if (!digitableLine) {
+      const matchContinuous = fullText.match(/\b(\d{47,48})\b/);
+      if (matchContinuous) {
+        digitableLine = cleanDigitableLine(matchContinuous[1]);
+      }
+    }
+
+    // Tentativa 4: Linha de Concessionária / Arrecadação (48 dígitos, começa com 8)
     if (!digitableLine) {
       const regex48Format = /(8\d{11}[\s\-]?\d?\s+\d{11}[\s\-]?\d?\s+\d{11}[\s\-]?\d?\s+\d{11}[\s\-]?\d?)/;
       const match48Format = fullText.match(regex48Format);
@@ -119,7 +139,7 @@ export async function parseBoletoPdf(arrayBuffer) {
       }
     }
 
-    // Tentativa 4: Varredura de números contínuos nos textos das páginas
+    // Tentativa 5: Varredura de números contínuos nos textos das páginas
     if (!digitableLine) {
       for (const item of textItems) {
         const cleaned = cleanDigitableLine(item);
@@ -130,7 +150,7 @@ export async function parseBoletoPdf(arrayBuffer) {
       }
     }
 
-    // Tentativa 5: Junta sequências numéricas adjacentes caso o PDF divida a linha em múltiplos spans
+    // Tentativa 6: Junta sequências numéricas adjacentes caso o PDF divida a linha em múltiplos spans
     if (!digitableLine) {
       const allDigitsOnly = fullText.replace(/[^\d\s]/g, '');
       const candidateMatches = allDigitsOnly.match(/(?:\d[\s\n]*){47,48}/g);
@@ -148,6 +168,8 @@ export async function parseBoletoPdf(arrayBuffer) {
     // 2. Busca por Data de Vencimento
     let dueDate = '';
     const dueDateMatch = fullText.match(/(?:vencimento|data\s+de\s+vencimento|venc)[:\s]*([0-9]{2}[\/\.-][0-9]{2}[\/\.-][0-9]{4})/i) ||
+                         fullText.match(/vencimento\s+em\s+([0-9]{2}[\/\.-][0-9]{2}[\/\.-][0-9]{4})/i) ||
+                         fullText.match(/(?:vencimento|data\s+de\s+vencimento|venc)[\s\S]{1,40}?([0-9]{2}[\/\.-][0-9]{2}[\/\.-][0-9]{4})/i) ||
                          fullText.match(/([0-9]{2}\/[0-9]{2}\/[0-9]{4})/);
     if (dueDateMatch) {
       const rawDate = dueDateMatch[1].replace(/[\.-]/g, '/');
@@ -169,7 +191,7 @@ export async function parseBoletoPdf(arrayBuffer) {
 
     // Se não obteve via linha digitável, procura no texto do PDF
     if (!amount) {
-      const valMatch = fullText.match(/(?:valor\s+do\s+documento|valor\s+cobrado|valor|total\s+a\s+pagar)[:\s]*R?\$?\s*([0-9\.,]+)/i);
+      const valMatch = fullText.match(/(?:valor\s+do\s+doc(?:umento)?|valor\s+a\s+pagar|valor\s+cobrado|valor|total\s+a\s+pagar)[:\s]*R?\$?\s*([0-9\.,]+)/i);
       if (valMatch) {
         const rawVal = valMatch[1].replace(/\./g, '').replace(',', '.');
         amount = parseFloat(rawVal) || 0;

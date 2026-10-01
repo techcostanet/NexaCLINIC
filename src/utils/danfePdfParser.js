@@ -15,38 +15,58 @@ try {
 
 export async function parseDanfePdf(arrayBuffer) {
   try {
-    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-    const pdf = await loadingTask.promise;
     let fullText = '';
     const lines = [];
 
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageItems = textContent.items || [];
+    // 1. Extração via PDF.js com timeout de 3.5 segundos para evitar qualquer travamento
+    try {
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout no PDF.js')), 3500)
+      );
+      const pdf = await Promise.race([loadingTask.promise, timeoutPromise]);
       
-      let lastY = null;
-      let currentLine = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageItems = textContent.items || [];
+        
+        let lastY = null;
+        let currentLine = '';
 
-      for (const item of pageItems) {
-        if (lastY === null || Math.abs(item.transform[5] - lastY) < 4) {
-          currentLine += (currentLine ? ' ' : '') + item.str;
-        } else {
-          if (currentLine.trim()) lines.push(currentLine.trim());
-          currentLine = item.str;
+        for (const item of pageItems) {
+          if (lastY === null || Math.abs(item.transform[5] - lastY) < 4) {
+            currentLine += (currentLine ? ' ' : '') + item.str;
+          } else {
+            if (currentLine.trim()) lines.push(currentLine.trim());
+            currentLine = item.str;
+          }
+          lastY = item.transform[5];
         }
-        lastY = item.transform[5];
+        if (currentLine.trim()) lines.push(currentLine.trim());
+        
+        const pageText = pageItems.map(item => item.str).join(' ');
+        fullText += '\n' + pageText;
       }
-      if (currentLine.trim()) lines.push(currentLine.trim());
-      
-      const pageText = pageItems.map(item => item.str).join(' ');
-      fullText += '\n' + pageText;
+    } catch (loadErr) {
+      console.warn('PDF.js expirou ou falhou, acionando fallback de decodificação direta:', loadErr);
+      try {
+        const decoder = new TextDecoder('latin1');
+        fullText = decoder.decode(arrayBuffer);
+        lines.push(...fullText.split(/[\r\n]+/).map(l => l.trim()).filter(Boolean));
+      } catch (decErr) {
+        console.error('Falha no fallback:', decErr);
+      }
     }
 
-    // Identificação de Tipo: Nota de Serviço (NFS-e) vs Nota de Produto (NF-e)
+    // 2. Identificação de Tipo: Nota de Serviço (NFS-e / Fatura / Conta Azul) vs Nota de Produto (NF-e)
     let isServiceNfse = /NOTA\s+FISCAL\s+(?:DE\s+)?SERVI[ÇC]O/i.test(fullText) ||
                         /NFS-?E\b/i.test(fullText) ||
                         /DANFSE\b/i.test(fullText) ||
+                        /FATURA\b/i.test(fullText) ||
+                        /CONTA\s*AZUL/i.test(fullText) ||
+                        /COBRAN[ÇC]A/i.test(fullText) ||
+                        /CONSULTORIA/i.test(fullText) ||
                         /DISCRIMINA[ÇC][ÃA]O\s+DOS\s+SERVI[ÇC]OS/i.test(fullText) ||
                         /PRESTADOR\s+(?:DE\s+)?SERVI[ÇC]OS?/i.test(fullText) ||
                         /C[ÓO]DIGO\s+DE\s+VERIFICA[ÇC][ÃA]O/i.test(fullText) ||
@@ -58,65 +78,85 @@ export async function parseDanfePdf(arrayBuffer) {
                         /TOMADOR\s+(?:DE\s+SERVI[ÇC]OS?)?/i.test(fullText) ||
                         /VALOR\s+DOS\s+SERVI[ÇC]OS/i.test(fullText) ||
                         /FATURA\s+(?:DE\s+)?LOCA[ÇC][ÃA]O/i.test(fullText) ||
-                        /RECIBO\s+(?:DE\s+)?LOCA[ÇC][ÃA]O/i.test(fullText);
+                        /RECIBO\s+(?:DE\s+)?(?:LOCA[ÇC][ÃA]O|SERVI[ÇC]O)/i.test(fullText);
 
-    // 1. Chave de Acesso (44 dígitos para NF-e) ou Código de Verificação (NFS-e)
+    // 3. Chave de Acesso (44 dígitos para NF-e) ou Código de Verificação (NFS-e)
     let accessKey = '';
     const cleanDigits = fullText.replace(/[\s\.-]/g, '');
     const keyMatch = cleanDigits.match(/\b\d{44}\b/) || fullText.match(/(?:\d{4}\s+){10}\d{4}/);
     if (keyMatch) {
       accessKey = keyMatch[0].replace(/\s+/g, '');
     } else if (isServiceNfse) {
-      const verifMatch = fullText.match(/C[ÓO]DIGO\s+(?:DE\s+)?VERIFICA[ÇC][ÃA]O[:\s]*([A-Z0-9\-_]{4,20})/i) ||
-                         fullText.match(/C[ÓO]D\.?\s*VERIFICA[ÇC][ÃA]O[:\s]*([A-Z0-9\-_]{4,20})/i) ||
-                         fullText.match(/AUTENTICIDADE[:\s]*([A-Z0-9\-_]{4,20})/i);
+      const verifMatch = fullText.match(/(?:C[ÓO]DIGO|C[ÓO]D\.?)\s+(?:DE\s+)?VERIFICA[ÇC][ÃA]O[:\s]*([A-Z0-9\-_]{4,25})/i) ||
+                         fullText.match(/AUTENTICIDADE[:\s]*([A-Z0-9\-_]{4,25})/i);
       if (verifMatch) {
         accessKey = verifMatch[1].trim();
       }
     }
 
-    // 2. Número da Nota Fiscal (NF-e ou NFS-e)
+    // 4. Número do Documento Fiscal (prioriza campos formais de Fatura/Venda/NFS-e)
     let number = '';
-    const nfeNumMatch = fullText.match(/N[ºo°\.\s]*([0-9]{1,3}(?:\.[0-9]{3})*|[0-9]{1,9})/i) ||
-                        fullText.match(/NF-e\s*N[ºo°\.\s]*([0-9\.]+)/i) ||
-                        fullText.match(/NFS-?e\s*N[ºo°\.\s]*([0-9\.]+)/i) ||
-                        fullText.match(/N[ÚU]MERO(?:\s+DA\s+NOTA)?[:\s]*([0-9\.]+)/i);
-    if (nfeNumMatch) {
+    const vendaMatch = fullText.match(/VENDA\s*[:\s]*([0-9]{3,9})/i);
+    const faturaNumMatch = fullText.match(/(?:FATURA|DUPLICATA|RECIBO)\s*(?:N[ºo°\.\s:]*|NUMERO[:\s]*)([0-9]{1,9})/i);
+    const nfseNumMatch = fullText.match(/NFS-?e\s*(?:N[ºo°\.\s:]*|NUMERO[:\s]*)([0-9\.]+)/i);
+    const nfeNumMatch = fullText.match(/NF-?e\s*(?:N[ºo°\.\s:]*|NUMERO[:\s]*)([0-9\.]+)/i);
+    const nossoNumMatch = fullText.match(/NOSSO\s+N[ÚU]MERO[:\s]*([0-9]{1,15})/i);
+    const docNumMatch = fullText.match(/N[ÚU]MERO(?:\s+DA\s+NOTA|\s+DA\s+FATURA|\s+DO\s+DOC(?:UMENTO)?)?[:\s]*([0-9\.]+)/i);
+
+    if (vendaMatch) {
+      number = vendaMatch[1];
+    } else if (faturaNumMatch) {
+      number = faturaNumMatch[1];
+    } else if (nfseNumMatch) {
+      number = nfseNumMatch[1].replace(/\./g, '');
+    } else if (nossoNumMatch) {
+      number = String(parseInt(nossoNumMatch[1], 10));
+    } else if (nfeNumMatch) {
       number = nfeNumMatch[1].replace(/\./g, '');
+    } else if (docNumMatch) {
+      number = docNumMatch[1].replace(/\./g, '');
     }
 
-    // 3. Data de Emissão
-    let issueDate = new Date().toISOString().substring(0, 10);
-    const dateMatch = fullText.match(/DATA\s+(?:DA\s+)?EMISS[ÃA]O[:\s]*([0-9]{2}\/[0-9]{2}\/[0-9]{4})/i) ||
-                      fullText.match(/EMISS[ÃA]O[:\s]*([0-9]{2}\/[0-9]{2}\/[0-9]{4})/i) ||
-                      fullText.match(/DATA\/HORA\s+DA\s+EMISS[ÃA]O[:\s]*([0-9]{2}\/[0-9]{2}\/[0-9]{4})/i) ||
-                      fullText.match(/([0-9]{2}\/[0-9]{2}\/[0-9]{4})/);
-    if (dateMatch) {
-      const parts = dateMatch[1].split('/');
+    // 5. Data de Emissão (suporta "Emissão em DD/MM/AAAA" e variações)
+    const nowLocal = new Date();
+    const todayLocalStr = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, '0')}-${String(nowLocal.getDate()).padStart(2, '0')}`;
+    let issueDate = todayLocalStr;
+
+    const emissaoMatch = fullText.match(/EMISS[ÃA]O\s*(?:EM|DE|:)?\s*([0-9]{2}[\/\.-][0-9]{2}[\/\.-][0-9]{4})/i) ||
+                         fullText.match(/DATA\s+(?:DA\s+)?EMISS[ÃA]O[:\s]*([0-9]{2}[\/\.-][0-9]{2}[\/\.-][0-9]{4})/i) ||
+                         fullText.match(/DATA\/HORA\s+DA\s+EMISS[ÃA]O[:\s]*([0-9]{2}[\/\.-][0-9]{2}[\/\.-][0-9]{4})/i) ||
+                         fullText.match(/([0-9]{2}\/[0-9]{2}\/[0-9]{4})/);
+    if (emissaoMatch) {
+      const parts = emissaoMatch[1].replace(/[\.-]/g, '/').split('/');
       if (parts.length === 3) {
-        issueDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        issueDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
       }
     }
 
-    // 4. CNPJs presentes no PDF (o 1º costuma ser o prestador/emitente)
+    // 6. CNPJ do Fornecedor / Prestador (exclui tomador e intermediadores de pagamento)
     let supplierCnpj = '';
     const cnpjMatches = fullText.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/g) || [];
-    if (cnpjMatches.length > 0) {
+    const nonDializeCnpjs = cnpjMatches.filter(c => !c.includes('58.476.786') && !c.includes('05.206.246'));
+    if (nonDializeCnpjs.length > 0) {
+      supplierCnpj = nonDializeCnpjs[0].replace(/\D/g, '');
+    } else if (cnpjMatches.length > 0) {
       supplierCnpj = cnpjMatches[0].replace(/\D/g, '');
     }
 
-    // 5. Nome do Fornecedor / Razão Social
+    // 7. Nome do Fornecedor / Razão Social
     let supplierName = '';
-    const emitMatch = fullText.match(/RECEBEMOS\s+DE\s+([^\.,\n]+)/i) ||
+    const emitMatch = fullText.match(/SACADOR\s*\/\s*AVALISTA[:\s]*([^\n\r]+)/i) ||
+                      fullText.match(/PRESTADOR\s+(?:DE\s+SERVI[ÇC]OS?)?[:\s]*([^\n\r]+)/i) ||
+                      fullText.match(/RECEBEMOS\s+DE\s+([^\.,\n]+)/i) ||
                       fullText.match(/RAZ[ÃA]O\s+SOCIAL[:\s]*([^\n]+)/i) ||
-                      fullText.match(/NOME\s*\/\s*RAZ[ÃA]O\s+SOCIAL[:\s]*([^\n]+)/i) ||
-                      fullText.match(/PRESTADOR\s+(?:DE\s+SERVI[ÇC]OS?)?[:\s]*([^\n]+)/i);
+                      fullText.match(/NOME\s*\/\s*RAZ[ÃA]O\s+SOCIAL[:\s]*([^\n]+)/i);
     if (emitMatch && emitMatch[1]) {
       supplierName = emitMatch[1].trim().replace(/\s{2,}/g, ' ');
     } else {
-      // Procura nas primeiras linhas antes do CNPJ
       for (const line of lines.slice(0, 15)) {
-        if (line.includes('LTDA') || line.includes('S.A') || line.includes('S/A') || line.includes('COMERCIO') || line.includes('DISTRIBUIDORA') || line.includes('INDUSTRIA') || line.includes('SERVICOS') || line.includes('ENGENHARIA') || line.includes('MEDICA')) {
+        const uLine = line.toUpperCase();
+        if ((uLine.includes('LTDA') || uLine.includes('S.A') || uLine.includes('S/A') || uLine.includes('CONSULTORIA') || uLine.includes('COMERCIO') || uLine.includes('DISTRIBUIDORA') || uLine.includes('INDUSTRIA') || uLine.includes('SERVICOS') || uLine.includes('ENGENHARIA') || uLine.includes('MEDICA')) &&
+            !uLine.includes('DIALIZE') && !uLine.includes('CONTA AZUL INSTITUICAO')) {
           supplierName = line.trim();
           break;
         }
@@ -126,22 +166,21 @@ export async function parseDanfePdf(arrayBuffer) {
       supplierName = isServiceNfse ? 'Prestador Identificado via PDF (NFS-e)' : 'Fornecedor Identificado via PDF';
     }
 
-    // 6. Valor Total da Nota
+    // 8. Valor Total do Documento
     let totalValue = 0;
-    const valMatch = fullText.match(/VALOR\s+TOTAL\s+DA\s+NOTA[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
-                     fullText.match(/VALOR\s+(?:L[ÍI]QUIDO|DOS\s+SERVI[ÇC]OS|TOTAL|DA\s+FATURA|COBRADO|DO\s+DOCUMENTO|A\s+PAGAR)[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
-                     fullText.match(/V\.?\s*TOTAL\s+DA\s+NOTA[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
+    const valMatch = fullText.match(/VALOR\s+(?:DO\s+DOC(?:UMENTO)?|A\s+PAGAR|DA\s+FATURA|DOS\s+SERVI[ÇC]OS|TOTAL)[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
+                     fullText.match(/VALOR\s+TOTAL\s+DA\s+NOTA[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
+                     fullText.match(/VALOR\s+(?:L[ÍI]QUIDO|COBRADO)[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
                      fullText.match(/TOTAL\s+DA\s+NOTA[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
                      fullText.match(/VALOR\s+TOTAL\s+L[ÍI]QUIDO[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
-                     fullText.match(/VALOR\s+L[ÍI]QUIDO\s+DA\s+NOTA[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
-                     fullText.match(/VALOR\s+A\s+PAGAR[:\s]*R?\$?\s*([0-9\.,]+)/i) ||
-                     fullText.match(/TOTAL\s+(?:G?ERAL|FATURA|A\s+PAGAR)?[:\s]*R?\$?\s*([0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})/i);
+                     fullText.match(/(?:VALOR|FATURA|TOTAL)\s*[:\s]*R\$\s*([0-9\.,]+)/i) ||
+                     fullText.match(/R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})/);
     if (valMatch) {
       const rawVal = valMatch[1].replace(/\./g, '').replace(',', '.');
       totalValue = parseFloat(rawVal) || 0;
     }
 
-    // 6.1 Discriminação dos Serviços Prestados (caso NFS-e)
+    // 8.1 Discriminação dos Serviços
     let serviceDescription = '';
     const discMatch = fullText.match(/DISCRIMINA[ÇC][ÃA]O\s+DOS\s+SERVI[ÇC]OS[:\s]*([\s\S]+?)(?=VALOR|RETEN[ÇC][ÕO]ES|C[ÓO]DIGO|IMPOSTOS|BASE\s+DE\s+C[ÁA]LCULO|INFORMA[ÇC][ÕO]ES|DADOS\s+ADICIONAIS|$)/i) ||
                       fullText.match(/DESCRI[ÇC][ÃA]O\s+DOS\s+SERVI[ÇC]OS[:\s]*([\s\S]+?)(?=VALOR|RETEN[ÇC][ÕO]ES|C[ÓO]DIGO|IMPOSTOS|$)/i) ||
@@ -150,17 +189,23 @@ export async function parseDanfePdf(arrayBuffer) {
       serviceDescription = discMatch[1].trim().replace(/\s{2,}/g, ' ').slice(0, 300);
     }
     if (!serviceDescription && isServiceNfse) {
-      serviceDescription = `Prestação de serviços hospitalares/clínicos conforme NFS-e Nº ${number || 'S/N'}`;
+      serviceDescription = `Prestação de serviços conforme documento Nº ${number || 'S/N'} (${supplierName})`;
     }
 
-    // 7. Faturas / Duplicatas / Parcelas
-    let installments = [];
+    // 8.2 Linha Digitável do Boleto Embutido (se presente no próprio PDF da nota/fatura)
+    let embeddedDigitableLine = '';
+    const boletoMatch = fullText.match(/(\d{5}[\.\s]?\d{5}\s+\d{5}[\.\s]?\d{6}\s+\d{5}[\.\s]?\d{6}\s+\d\s+\d{14})/) ||
+                        fullText.match(/\b(7759\d{43})\b/) ||
+                        fullText.match(/\b(\d{47,48})\b/);
+    if (boletoMatch) {
+      embeddedDigitableLine = boletoMatch[1].replace(/\D/g, '');
+    }
 
-    // 7.1 Busca por seção explícita de Faturas/Duplicatas (DANFE ou NFS-e)
+    // 9. Faturas / Duplicatas / Parcelas
+    let installments = [];
     const faturaSectionMatch = fullText.match(/(?:FATURA|DUPLICATA|PARCELAS|DADOS\s+DA\s+FATURA|CONDI[ÇC][ÕO]ES\s+DE\s+PAGAMENTO)[\s\S]{1,600}?(?=(?:C[ÁA]LCULO\s+DO\s+IMPOSTO|DADOS\s+DO\s+PRODUTO|TRANSPORTADOR|DADOS\s+ADICIONAIS|DISCRIMINA[ÇC][ÃA]O|VALOR\s+TOTAL|$))/i);
     const textToSearchInstallments = faturaSectionMatch ? faturaSectionMatch[0] : fullText;
 
-    // Padrão A: Número + Data + Valor (ex: 001 15/10/2026 1.500,00 ou 1 15/10/2026 R$ 1.500,00)
     const dupRegex = /(?:(\d{1,3}|\d{1,2}\/\d{1,2})\s+)?(\d{2}\/\d{2}\/\d{4})\s+(?:R\$\s*)?([0-9\.,]{3,15})/g;
     let dupMatch;
     const seenInstallments = new Set();
@@ -168,72 +213,43 @@ export async function parseDanfePdf(arrayBuffer) {
     while ((dupMatch = dupRegex.exec(textToSearchInstallments)) !== null) {
       const dParts = dupMatch[2].split('/');
       const year = parseInt(dParts[2], 10);
-      // Validar se é um ano plausível (2020 a 2035)
       if (year >= 2020 && year <= 2035) {
-        const dVenc = `${dParts[2]}-${dParts[1]}-${dParts[0]}`;
+        const dVenc = `${dParts[2]}-${dParts[1].padStart(2, '0')}-${dParts[0].padStart(2, '0')}`;
         const vVal = parseFloat(dupMatch[3].replace(/\./g, '').replace(',', '.')) || 0;
         const key = `${dVenc}_${vVal.toFixed(2)}`;
         
-        // Evitar pegar a própria data de emissão com o valor total se houver duplicatas reais
         if (vVal > 0 && !seenInstallments.has(key)) {
           seenInstallments.add(key);
           installments.push({
             installmentNumber: dupMatch[1] || String(installments.length + 1),
             dueDate: dVenc,
-            amount: vVal
+            amount: vVal,
+            digitableLine: embeddedDigitableLine || ''
           });
         }
       }
     }
 
-    // Padrão B: NFS-e comum "Parcela 1: DD/MM/AAAA - R$ X.XXX,XX"
+    // Padrão B: NFS-e / Fatura "Vencimento em DD/MM/AAAA"
     if (installments.length === 0) {
-      const nfseParcRegex = /(?:PARCELA|VENCIMENTO)\s*(?:N[º°]?\s*)?(\d{1,2})?[:\s]+(?:EM\s+)?(\d{2}\/\d{2}\/\d{4})[^\d\n\r]*?(?:R\$\s*)?([0-9\.,]{3,15})/gi;
-      let nfseMatch;
-      while ((nfseMatch = nfseParcRegex.exec(fullText)) !== null) {
-        const dParts = nfseMatch[2].split('/');
+      const singleVencMatch = fullText.match(/VENCIMENTO\s*(?:EM|DE|:)?\s*([0-9]{2}[\/\.-][0-9]{2}[\/\.-][0-9]{4})/i) ||
+                              fullText.match(/DATA\s+(?:DE\s+)?VENCIMENTO[:\s]*([0-9]{2}[\/\.-][0-9]{2}[\/\.-][0-9]{4})/i);
+      if (singleVencMatch) {
+        const dParts = singleVencMatch[1].replace(/[\.-]/g, '/').split('/');
         const year = parseInt(dParts[2], 10);
         if (year >= 2020 && year <= 2035) {
-          const dVenc = `${dParts[2]}-${dParts[1]}-${dParts[0]}`;
-          const vVal = parseFloat(nfseMatch[3].replace(/\./g, '').replace(',', '.')) || 0;
-          const key = `${dVenc}_${vVal.toFixed(2)}`;
-          if (vVal > 0 && !seenInstallments.has(key)) {
-            seenInstallments.add(key);
-            installments.push({
-              installmentNumber: nfseMatch[1] || String(installments.length + 1),
-              dueDate: dVenc,
-              amount: vVal
-            });
-          }
-        }
-      }
-    }
-
-    // Padrão C: Se o texto mencionar prazo (ex: "30 / 60 / 90 DIAS" ou "28 / 56 DIAS") e valor total existe mas sem parcelas explícitas
-    if (installments.length === 0 && totalValue > 0) {
-      const daysPattern = fullText.match(/(\d{1,3})\s*\/\s*(\d{1,3})(?:\s*\/\s*(\d{1,3}))?(?:\s*\/\s*(\d{1,3}))?\s*(?:DIAS|DD)/i);
-      if (daysPattern) {
-        const days = [daysPattern[1], daysPattern[2], daysPattern[3], daysPattern[4]].filter(Boolean).map(Number);
-        if (days.length > 1) {
-          const baseDate = issueDate ? new Date(issueDate) : new Date();
-          const partVal = Math.round((totalValue / days.length) * 100) / 100;
-          let sumParts = 0;
-          days.forEach((dayOffset, idx) => {
-            const dueDate = new Date(baseDate);
-            dueDate.setDate(dueDate.getDate() + dayOffset);
-            const thisVal = (idx === days.length - 1) ? Math.round((totalValue - sumParts) * 100) / 100 : partVal;
-            sumParts += thisVal;
-            installments.push({
-              installmentNumber: `${idx + 1}/${days.length}`,
-              dueDate: dueDate.toISOString().substring(0, 10),
-              amount: thisVal
-            });
+          const dVenc = `${dParts[2]}-${dParts[1].padStart(2, '0')}-${dParts[0].padStart(2, '0')}`;
+          installments.push({
+            installmentNumber: '1/1',
+            dueDate: dVenc,
+            amount: totalValue,
+            digitableLine: embeddedDigitableLine || ''
           });
         }
       }
     }
 
-    // Formatar número da parcela com padrão "1/N, 2/N, 3/N" se houver mais de uma
+    // Formatar número da parcela com padrão "1/N, 2/N, 3/N"
     if (installments.length > 1) {
       installments = installments.map((inst, idx) => ({
         ...inst,
@@ -243,16 +259,14 @@ export async function parseDanfePdf(arrayBuffer) {
       }));
     }
 
-    // Fallback de Valor Total: Se o cabeçalho não continha o valor total mas as parcelas foram encontradas
     const sumInstallments = installments.reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
     if (totalValue <= 0 && sumInstallments > 0) {
       totalValue = sumInstallments;
     }
 
-    // 8. Itens / Produtos da Nota
+    // 10. Itens de Produtos (apenas para notas físicas de produto)
     const items = [];
     if (!isServiceNfse) {
-      // Procura linhas com padrão de produtos (Código, Descrição, Qtd, Valor)
       const itemRegex = /(?:^|\n)\s*([A-Z0-9\-_]{2,15})\s+([A-Z0-9\s\/\.,\-\(\)]+?)\s+(?:[0-9]{8}\s+)?[0-9]{3,4}\s+[A-Z0-9]{2,4}\s+([0-9\.,]+)\s+([0-9\.,]+)\s+([0-9\.,]+)/gi;
       let itemMatch;
       while ((itemMatch = itemRegex.exec(fullText)) !== null) {
@@ -275,22 +289,17 @@ export async function parseDanfePdf(arrayBuffer) {
         }
       }
 
-      // Se nenhum item detalhado foi encontrado e não há chave de 44 dígitos,
-      // classifica como NFS-e / Serviços para não forçar mapeamento de estoque!
       if (items.length === 0 && !keyMatch) {
         isServiceNfse = true;
       }
     }
 
-    if (isServiceNfse) {
-      if (!serviceDescription) {
-        serviceDescription = `Prestação de serviços conforme documento Nº ${number || 'S/N'} (${supplierName})`;
-      }
+    if (isServiceNfse && !serviceDescription) {
+      serviceDescription = `Prestação de serviços conforme documento Nº ${number || 'S/N'} (${supplierName})`;
     }
 
     const defaultDueDate = new Date();
     defaultDueDate.setDate(defaultDueDate.getDate() + 30);
-
     const calculatedTotal = totalValue > 0 ? totalValue : (sumInstallments > 0 ? sumInstallments : 0);
 
     return {
@@ -304,11 +313,13 @@ export async function parseDanfePdf(arrayBuffer) {
       installments: installments.length > 0 ? installments : [{
         installmentNumber: '1/1',
         dueDate: defaultDueDate.toISOString().substring(0, 10),
-        amount: calculatedTotal
+        amount: calculatedTotal,
+        digitableLine: embeddedDigitableLine || ''
       }],
       sourceType: 'PDF',
       invoiceType: isServiceNfse ? 'service' : 'product',
-      serviceDescription: serviceDescription || ''
+      serviceDescription: serviceDescription || '',
+      digitableLine: embeddedDigitableLine || ''
     };
   } catch (error) {
     console.error('Erro ao fazer parse do PDF DANFE/NFS-e:', error);

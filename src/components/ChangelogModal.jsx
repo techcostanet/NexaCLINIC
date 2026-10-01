@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v4.9.114',
+      date: '01/10/2026',
+      title: 'Nex-Ai CLINIC — Correção de Fuso de Data de Entrada, Desbloqueio de Anexo de Boletos e Faturas de Serviços (.STOCK)',
+      description: 'Aprimoramentos estruturais no módulo de Estoque e Farmácia: eliminação do congelamento no botão de anexo de boletos em PDF com timeout preventivo de 3,5s e fallback textual, correção definitiva da data de entrada garantindo gravação no dia local sem recuos pelo fuso UTC, e suporte completo ao reconhecimento de faturas de prestação de serviços com boleto integrado (ex: Conta Azul / 4INFRA), com extração de número de venda, emissão, vencimento, valor e linha digitável.',
+      changes: [
+        { type: 'Boleto & Timeout', text: 'Temporizador de 3,5s no leitor de PDF e tolerância de 2,5s no Storage com fallback para Base64, impedindo travamento no botão de processamento.' },
+        { type: 'Data de Entrada Local', text: 'Correção de fuso horário UTC: datas gravadas e renderizadas com utilitário local formatDateBR, eliminando a exibição do dia de ontem.' },
+        { type: 'Faturas Conta Azul', text: 'Reconhecimento inteligente de faturas de serviços com boleto embutido, identificando o prestador real, número da fatura e linha digitável de 47 dígitos.' },
+        { type: 'Assistente & Manuais', text: 'Inclusão de campo de data de entrada no assistente e atualização dos manuais do módulo de estoque em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v4.9.111',
       date: '01/10/2026',
       title: 'Nex-Ai CLINIC — Disparo Real de E-mails via Firebase Cloud Functions e Conexão SMTP Nativa',

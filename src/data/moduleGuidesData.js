@@ -430,7 +430,15 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Leitura e Anexo de Boletos na Entrada de Notas',
-        desc: 'Anexo de boletos bancários em PDF ou imagem com extração automática da linha digitável (47 ou 48 dígitos) e sincronização direta com o Contas a Pagar do financeiro.'
+        desc: 'Anexo de boletos bancários em PDF ou imagem com extração automática da linha digitável (47 ou 48 dígitos), timeout de proteção contra travamentos e sincronização direta com o Contas a Pagar.'
+      },
+      {
+        title: 'Leitura de Faturas de Serviços e Cobranças Digitais (ex: Conta Azul)',
+        desc: 'Suporte avançado a faturas de prestação de serviços com boleto embutido, identificando o prestador real (filtrando intermediadoras de cobrança), número de venda/fatura, emissão, vencimento, valor e linha digitável.'
+      },
+      {
+        title: 'Controle Preciso de Data de Entrada Local',
+        desc: 'Garantia de gravação da data de entrada no dia local da clínica (evitando o recuo de 1 dia gerado pelo fuso horário UTC) com campo editável no assistente de notas.'
       },
       {
         title: 'Entrada Parcelada & Divisão Rápida de Duplicatas',
@@ -635,9 +643,27 @@ export const MODULE_GUIDES = {
           'O custo total é calculado automaticamente a partir do preço de custo cadastrado para cada produto do kit.',
           'Utilize os kits ao criar ou aprovar requisições para os postos de enfermagem e salões de diálise.'
         ]
+      },
+      {
+        title: 'Como Importar Faturas de Serviços com Boleto Embutido (ex: Conta Azul)',
+        steps: [
+          'Na aba "Entradas" do Estoque, clique em "Importar (XML ou PDF)".',
+          'Arraste ou selecione o arquivo PDF da fatura de serviços recebida.',
+          'O sistema identifica automaticamente o prestador real (filtrando intermediadoras financeiras), o número da fatura/venda, emissão e vencimento.',
+          'A linha digitável do boleto é extraída e vinculada de imediato na Etapa 3 (Financeiro).',
+          'Confira a data de emissão e de entrada, ajuste a categoria do serviço e confirme o lançamento.'
+        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Por que o anexo de boletos em PDF não trava mais em "Processando"?',
+        resposta: 'O módulo agora possui um leitor resiliente com temporizador de segurança (timeout) e fallback de decodificação direta de texto. Caso os serviços de worker externos do navegador demorem, o processamento textual é acionado em menos de 3 segundos, liberando o botão imediatamente.'
+      },
+      {
+        pergunta: 'Por que antes a data de entrada aparecia como o dia de ontem?',
+        resposta: 'Navegadores no fuso de Brasília (UTC-3) convertiam a data padrão ISO à meia-noite UTC recuando 3 horas, o que alterava o dia para a véspera. O sistema foi padronizado com utilitários de fuso local que mantêm exatamente a data em que a nota foi lançada.'
+      },
       {
         pergunta: 'Onde configuro novas categorias ou novos almoxarifados para o estoque?',
         resposta: 'No módulo Nex-Ai.CONFIG, acesse as abas "Almoxarifados" e "Categorias". Qualquer inclusão, alteração ou remoção feita lá é sincronizada imediatamente nos formulários do Estoque.'

@@ -1,3 +1,22 @@
+## [v4.9.114] - 01 de Outubro, 2026
+### Nex-Ai CLINIC (.STOCK) — Correção de Fuso de Data de Entrada, Desbloqueio de Anexo de Boletos e Reconhecimento de Faturas de Serviços
+- **Desbloqueio e Otimização do Anexo de Boletos em PDF:**
+  - Adicionado temporizador preventivo de segurança (timeout de 3,5s) no processamento do worker PDF.js com fallback automático para decodificação textual direta, impedindo qualquer bloqueio ou congelamento no botão "Processando...".
+  - Otimizado o upload de arquivos no Firebase Storage com tolerância de 2,5s e fallback instantâneo para armazenamento em Base64 / DataURL, contornando buckets indisponíveis ou demoras de rede.
+  - Limpeza automática do valor do seletor de arquivos (`e.target.value = ''`), permitindo reanexar o mesmo documento ou selecionar outro sem falha de evento.
+- **Correção da Data de Entrada Local (Imunidade a UTC):**
+  - Resolução da anomalia em que notas fiscais lançadas no dia vigente apareciam com a data de ontem (`30/09` em vez de `01/10`).
+  - Implementado o utilitário `formatDateBR` e `getLocalDateString` em `dateUtils.js`, eliminando a conversão distorcida do JavaScript que interpretava strings `YYYY-MM-DD` como meia-noite UTC (que no Brasil UTC-3 retrocedia 3 horas para a noite do dia anterior).
+  - Adicionado o campo editável de **Entrada** no assistente de notas fiscais (com valor padrão no dia local de hoje), além de exibição fiel em todas as tabelas (Normal, Compacta e Cards) e no modal de detalhes.
+- **Leitura e Reconhecimento de Faturas de Serviços e Cobranças Digitais (Conta Azul / 4INFRA):**
+  - Parser de DANFE e NFS-e (`danfePdfParser.js`) aprimorado para reconhecer faturas de serviços com boleto bancário e Pix embutidos (ex.: modelos Conta Azul).
+  - Identificação precisa do número da venda/fatura (ex.: Venda 216773), valor total do documento (R$ 585,00), data de emissão (`01/10/2026`) e vencimento (`10/10/2026`).
+  - Filtro inteligente de CNPJs: diferencia o prestador real do serviço (4INFRA) das empresas intermediadoras financeiras (Conta Azul) e do tomador da nota.
+  - Extração automática da linha digitável contínua de 47 dígitos do boleto e vinculação imediata às duplicatas no Contas a Pagar do Financeiro.
+- **Documentação & Padrões Visuais:**
+  - Manual interativo de Estoque atualizado em `moduleGuidesData.js` com tópicos sobre faturas digitais, datas de entrada e upload de boletos.
+  - Manutenção do padrão estrito de 1 palavra em todos os rótulos de campos e cabeçalhos em conformidade com as regras do projeto.
+
 ## [v4.9.111] - 01 de Outubro, 2026
 ### Nex-Ai CLINIC (Nuvem & E-mails) — Disparo Real de E-mails via Firebase Cloud Functions e Integração SMTP
 - **Disparo Real de E-mails via Nuvem (Cloud Functions no Plano Blaze):**

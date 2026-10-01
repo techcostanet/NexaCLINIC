@@ -4500,10 +4500,12 @@ export const mockFirestore = {
     if (!db.inventory_items) db.inventory_items = [];
 
     const isService = invoiceData.invoiceType === 'service';
+    const now = new Date();
+    const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const newInvoice = {
       id: 'inv-' + Math.random().toString(36).substr(2, 9),
       ...invoiceData,
-      entryDate: new Date().toISOString().substring(0, 10),
+      entryDate: invoiceData.entryDate || localToday,
       status: 'Processada'
     };
 

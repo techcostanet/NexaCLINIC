@@ -851,7 +851,11 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       const storagePath = `boletos/${targetUnitId}/${Date.now()}_${cleanFileName}`;
       let uploadedUrl = '';
       if (dbService.uploadFileToStorage) {
-        uploadedUrl = await dbService.uploadFileToStorage(file, storagePath);
+        try {
+          uploadedUrl = await dbService.uploadFileToStorage(file, storagePath);
+        } catch (uploadErr) {
+          console.warn('Aviso: falha no upload do boleto para storage:', uploadErr);
+        }
       }
       const patch = {
         boletoUrl: uploadedUrl,
@@ -873,6 +877,9 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       console.error('Erro no upload de boleto manual:', err);
     } finally {
       setManualBoletoLoading(false);
+      if (e.target) {
+        e.target.value = '';
+      }
     }
   };
 

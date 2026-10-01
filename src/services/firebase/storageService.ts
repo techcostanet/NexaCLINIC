@@ -28,14 +28,19 @@ export const uploadFileToStorage = async (
     const fileRef = ref(storage, storagePath);
     const contentType = file instanceof File && file.type ? file.type : 'application/octet-stream';
     
-    const snapshot = await uploadBytes(fileRef, file, {
-      contentType
-    });
+    // Timeout de 2.5s caso o bucket de storage não exista ou a conexão falhe, evitando travar a interface
+    const uploadPromise = (async () => {
+      const snapshot = await uploadBytes(fileRef, file, { contentType });
+      return await getDownloadURL(snapshot.ref);
+    })();
 
-    const downloadUrl = await getDownloadURL(snapshot.ref);
-    return downloadUrl;
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout Firebase Storage (bucket indisponível ou inacessível)')), 2500)
+    );
+
+    return await Promise.race([uploadPromise, timeoutPromise]);
   } catch (error) {
-    console.warn('Aviso: Falha no upload para o Cloud Storage. Utilizando fallback local/base64...', error);
+    console.warn('Aviso: Falha ou timeout no upload para o Cloud Storage. Utilizando fallback local/base64...', error);
     // Fallback gracioso: converte para Base64 para garantir que o registro do usuário não seja perdido
     return new Promise<string>((resolve) => {
       const reader = new FileReader();

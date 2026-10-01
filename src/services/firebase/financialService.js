@@ -210,7 +210,9 @@ export const createPurchaseInvoice = async (invoiceData) => {
     const batch = writeBatch(db);
     
     const invoiceRef = doc(collection(db, 'purchase_invoices'));
-    const entryDate = new Date().toISOString().substring(0, 10);
+    const now = new Date();
+    const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const entryDate = invoiceData.entryDate || localToday;
     const targetUnitId = invoiceData.unitId || 'betim';
     const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
     const isService = invoiceData.invoiceType === 'service';

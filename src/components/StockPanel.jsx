@@ -11,6 +11,7 @@ import {
 import { useStockLogic } from './Stock/hooks/useStockLogic';
 import StockReportsModal from './StockReportsModal';
 import ModuleHeader from './common/ModuleHeader';
+import { formatDateBR, getLocalDateString } from '../utils/dateUtils';
 
 export const formatCurrencyBR = (val) => {
   const num = parseFloat(val) || 0;
@@ -1372,10 +1373,10 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                   {inv?.supplierName || inv?.supplier || 'Fornecedor Desconhecido'}
                                 </td>
                                 <td style={{ padding: '0.35rem 0.5rem', fontSize: '0.78rem' }}>
-                                  {inv?.issueDate && !isNaN(new Date(inv.issueDate).getTime()) ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}
+                                  {formatDateBR(inv?.issueDate)}
                                 </td>
                                 <td style={{ padding: '0.35rem 0.5rem', fontSize: '0.78rem' }}>
-                                  {inv?.entryDate && !isNaN(new Date(inv.entryDate).getTime()) ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}
+                                  {formatDateBR(inv?.entryDate)}
                                 </td>
                                 <td style={{ fontWeight: '700', padding: '0.35rem 0.5rem' }}>
                                   {editingInvoiceValueId === inv?.id ? (
@@ -1538,8 +1539,8 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                                   {inv?.accessKey ? (inv.accessKey.length > 18 ? `${inv.accessKey.slice(0, 10)}...${inv.accessKey.slice(-6)}` : inv.accessKey) : '-'}
                                 </td>
                                 <td style={{ fontWeight: '600' }}>{inv?.supplierName || inv?.supplier || 'Fornecedor Desconhecido'}</td>
-                                <td>{inv?.issueDate && !isNaN(new Date(inv.issueDate).getTime()) ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}</td>
-                                <td>{inv?.entryDate && !isNaN(new Date(inv.entryDate).getTime()) ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}</td>
+                                <td>{formatDateBR(inv?.issueDate)}</td>
+                                <td>{formatDateBR(inv?.entryDate)}</td>
                                 <td style={{ fontWeight: '700' }}>
                                   {editingInvoiceValueId === inv?.id ? (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -1854,8 +1855,8 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                               </div>
 
                               <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                <div><span style={{ color: 'var(--text-muted)' }}>Emissão:</span> {inv?.issueDate && !isNaN(new Date(inv.issueDate).getTime()) ? new Date(inv.issueDate).toLocaleDateString('pt-BR') : '-'}</div>
-                                <div><span style={{ color: 'var(--text-muted)' }}>Entrada:</span> {inv?.entryDate && !isNaN(new Date(inv.entryDate).getTime()) ? new Date(inv.entryDate).toLocaleDateString('pt-BR') : '-'}</div>
+                                <div><span style={{ color: 'var(--text-muted)' }}>Emissão:</span> {formatDateBR(inv?.issueDate)}</div>
+                                <div><span style={{ color: 'var(--text-muted)' }}>Entrada:</span> {formatDateBR(inv?.entryDate)}</div>
                               </div>
                             </div>
 
@@ -3531,7 +3532,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                             </div>
                             <div>
                               <span style={{ color: '#991b1b', display: 'block', fontWeight: '600' }}>Data</span>
-                              <strong>{duplicateInvoiceWarning.invoice?.entryDate ? duplicateInvoiceWarning.invoice.entryDate.split('-').reverse().join('/') : (duplicateInvoiceWarning.invoice?.issueDate ? duplicateInvoiceWarning.invoice.issueDate.split('-').reverse().join('/') : 'N/I')}</strong>
+                              <strong>{formatDateBR(duplicateInvoiceWarning.invoice?.entryDate || duplicateInvoiceWarning.invoice?.issueDate)}</strong>
                             </div>
                             <div>
                               <span style={{ color: '#991b1b', display: 'block', fontWeight: '600' }}>Valor</span>
@@ -3685,8 +3686,17 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                           <input 
                             type="date" 
                             className="form-control" 
-                            value={xmlData?.issueDate || new Date().toISOString().substring(0, 10)}
+                            value={xmlData?.issueDate || getLocalDateString()}
                             onChange={e => setXmlData(prev => ({ ...prev, issueDate: e.target.value }))}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Entrada *</label>
+                          <input 
+                            type="date" 
+                            className="form-control" 
+                            value={xmlData?.entryDate || getLocalDateString()}
+                            onChange={e => setXmlData(prev => ({ ...prev, entryDate: e.target.value }))}
                           />
                         </div>
                         <div className="form-group">
@@ -3850,6 +3860,7 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                   <div style={styles.infoSummaryBox}>
                     <h4>Dados do Documento ({xmlData?.invoiceType === 'service' ? 'NFS-e de Serviços' : 'NF-e de Produtos'})</h4>
                     <p>Nota: <strong>{xmlData?.number}</strong></p>
+                    <p>Emissão: <strong>{formatDateBR(xmlData?.issueDate)}</strong> &nbsp;|&nbsp; Entrada: <strong>{formatDateBR(xmlData?.entryDate)}</strong></p>
                     <p>Código: <strong>{xmlData?.accessKey || 'Não informado'}</strong></p>
                     <p>Valor: <strong>R$ {xmlData?.totalValue ? parseFloat(xmlData.totalValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00'}</strong></p>
                   </div>
@@ -3915,7 +3926,11 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                         </div>
                         <div>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Emissão</span>
-                          <strong>{xmlData?.issueDate ? xmlData.issueDate.split('-').reverse().join('/') : 'Hoje'}</strong>
+                          <strong>{formatDateBR(xmlData?.issueDate)}</strong>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Entrada</span>
+                          <strong>{formatDateBR(xmlData?.entryDate)}</strong>
                         </div>
                         <div>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Fornecedor</span>
@@ -4743,11 +4758,11 @@ export default function StockPanel({ currentUser, isReportsOpen, setIsReportsOpe
                   </div>
                   <div>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Emissão</span>
-                    <span style={{ fontSize: '0.85rem' }}>{selectedInvoiceDetail.issueDate ? new Date(selectedInvoiceDetail.issueDate).toLocaleDateString('pt-BR') : '-'}</span>
+                    <span style={{ fontSize: '0.85rem' }}>{formatDateBR(selectedInvoiceDetail.issueDate)}</span>
                   </div>
                   <div>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Entrada</span>
-                    <span style={{ fontSize: '0.85rem' }}>{selectedInvoiceDetail.entryDate ? new Date(selectedInvoiceDetail.entryDate).toLocaleDateString('pt-BR') : '-'}</span>
+                    <span style={{ fontSize: '0.85rem' }}>{formatDateBR(selectedInvoiceDetail.entryDate)}</span>
                   </div>
                   <div>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Valor</span>

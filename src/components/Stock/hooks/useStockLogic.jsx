@@ -3,6 +3,7 @@ import { dbService } from '../../../firebase';
 import { useUnit } from '../../../contexts/UnitContext';
 import { parseDanfePdf } from '../../../utils/danfePdfParser';
 import { parseBoletoPdf, parseBoletoImage, formatDigitableLine, cleanDigitableLine } from '../../../utils/boletoParser';
+import { getLocalDateString, formatDateBR } from '../../../utils/dateUtils';
 import { 
   Package, Boxes, Clock, Calendar, Plus, Search, 
   X, FileText, UploadCloud, Briefcase, Warehouse,
@@ -1581,7 +1582,7 @@ export function useStockLogic(currentUser) {
     ensureInvoicesAndPayables();
     setDuplicateInvoiceWarning(null);
     setDuplicateBoletoWarning(null);
-    const today = new Date().toISOString().substring(0, 10);
+    const today = getLocalDateString();
     const defaultDueDate = new Date();
     defaultDueDate.setDate(defaultDueDate.getDate() + 30);
 
@@ -1592,6 +1593,7 @@ export function useStockLogic(currentUser) {
       number: '',
       accessKey: '',
       issueDate: today,
+      entryDate: today,
       totalValue: '',
       supplierName: '',
       supplierCnpj: '',
@@ -1690,24 +1692,38 @@ export function useStockLogic(currentUser) {
         const sumInst = (parsed.installments || []).reduce((acc, inst) => acc + (parseFloat(inst.amount) || 0), 0);
         const finalTotal = (parseFloat(parsed.totalValue) > 0) ? parseFloat(parsed.totalValue) : sumInst;
 
+        const todayLocal = getLocalDateString();
         setXmlData({
           number: parsed.number,
           accessKey: parsed.accessKey,
-          issueDate: parsed.issueDate,
+          issueDate: parsed.issueDate || todayLocal,
+          entryDate: todayLocal,
           totalValue: finalTotal,
           supplierName: parsed.supplierName,
           supplierCnpj: parsed.supplierCnpj,
           items: isService ? [] : parsed.items,
           installments: (parsed.installments && parsed.installments.length > 0) ? parsed.installments : [{
             installmentNumber: '1/1',
-            dueDate: parsed.issueDate || new Date().toISOString().substring(0, 10),
-            amount: finalTotal
+            dueDate: parsed.issueDate || todayLocal,
+            amount: finalTotal,
+            digitableLine: parsed.digitableLine || ''
           }],
           sourceType: 'PDF',
           invoiceType: isService ? 'service' : 'product',
           serviceDescription: parsed.serviceDescription || (isService ? `Prestação de serviços conforme documento Nº ${parsed.number}` : ''),
-          serviceCategory: xmlData?.serviceCategory || 'Serviços Terceirizados'
+          serviceCategory: xmlData?.serviceCategory || 'Serviços Terceirizados',
+          digitableLine: parsed.digitableLine || ''
         });
+
+        // Se o PDF já continha linha digitável de boleto (ex: 4INFRA / Conta Azul), pré-preenche boletoData
+        if (parsed.digitableLine) {
+          setBoletoData(prev => ({
+            ...prev,
+            digitableLine: parsed.digitableLine,
+            dueDate: parsed.installments?.[0]?.dueDate || '',
+            amount: String(finalTotal || '')
+          }));
+        }
 
         // Step 2 Setup: Check if supplier exists
         const formattedCnpj = formatCnpj(parsed.supplierCnpj);
@@ -1811,7 +1827,7 @@ export function useStockLogic(currentUser) {
 
           const dEmiRaw = xmlDoc.getElementsByTagName('DataEmissao')[0]?.textContent ||
                           xmlDoc.getElementsByTagName('dEmi')[0]?.textContent || '';
-          const issueDate = dEmiRaw ? dEmiRaw.substring(0, 10) : new Date().toISOString().substring(0, 10);
+          const issueDate = dEmiRaw ? dEmiRaw.substring(0, 10) : getLocalDateString();
 
           const prestadorNome = xmlDoc.querySelector('PrestadorServico RazaoSocial')?.textContent ||
                                 xmlDoc.querySelector('Prestador RazaoSocial')?.textContent ||
@@ -1891,6 +1907,7 @@ export function useStockLogic(currentUser) {
             number: numNfse,
             accessKey: codVerif,
             issueDate: issueDate,
+            entryDate: getLocalDateString(),
             totalValue: vServ,
             supplierName: prestadorNome,
             supplierCnpj: prestadorCnpj,
@@ -2028,13 +2045,14 @@ export function useStockLogic(currentUser) {
           }
         }
 
-        const issueDate = (dhEmi || '').substring(0, 10) || new Date().toISOString().substring(0, 10);
+        const issueDate = (dhEmi || '').substring(0, 10) || getLocalDateString();
 
         // Save parsed XML state
         setXmlData({
           number: nNF,
           accessKey: chNFe,
           issueDate: issueDate,
+          entryDate: getLocalDateString(),
           totalValue: vNF,
           supplierName: emitName,
           supplierCnpj: emitCnpj,
@@ -2260,7 +2278,11 @@ export function useStockLogic(currentUser) {
       let uploadedUrl = '';
 
       if (dbService.uploadFileToStorage) {
-        uploadedUrl = await dbService.uploadFileToStorage(file, storagePath);
+        try {
+          uploadedUrl = await dbService.uploadFileToStorage(file, storagePath);
+        } catch (uploadErr) {
+          console.warn('Aviso: erro ao fazer upload do arquivo de boleto para storage:', uploadErr);
+        }
       }
 
       setBoletoData({
@@ -2271,7 +2293,25 @@ export function useStockLogic(currentUser) {
         amount: parsed.amount ? String(parsed.amount) : ''
       });
 
+      // Se houver linha digitável e parcelas na nota, sincroniza na primeira parcela
       if (parsed.digitableLine) {
+        setXmlData(prev => {
+          if (!prev) return prev;
+          const insts = [...(prev.installments || [])];
+          if (insts.length > 0) {
+            insts[0] = {
+              ...insts[0],
+              digitableLine: parsed.digitableLine,
+              dueDate: parsed.dueDate || insts[0].dueDate,
+              amount: parsed.amount ? parsed.amount : insts[0].amount,
+              boletoFileName: file.name,
+              boletoUrl: uploadedUrl
+            };
+            return { ...prev, installments: insts };
+          }
+          return prev;
+        });
+
         const dupCheck = checkDuplicateBoleto(parsed.digitableLine);
         if (dupCheck.isDuplicate) {
           setDuplicateBoletoWarning(dupCheck);
@@ -2290,6 +2330,9 @@ export function useStockLogic(currentUser) {
       setBoletoError('Falha ao processar o boleto. Você pode preencher os dados manualmente.');
     } finally {
       setBoletoLoading(false);
+      if (e.target) {
+        e.target.value = '';
+      }
     }
   };
 
@@ -2400,6 +2443,7 @@ export function useStockLogic(currentUser) {
           number: xmlData.number,
           accessKey: xmlData.accessKey || '',
           issueDate: xmlData.issueDate,
+          entryDate: xmlData.entryDate || getLocalDateString(),
           supplierId: supplierMapping.id,
           supplierName: supplierMapping.name,
           supplierCnpj: supplierMapping.cnpj,
@@ -2530,6 +2574,7 @@ export function useStockLogic(currentUser) {
         number: xmlData.number,
         accessKey: xmlData.accessKey,
         issueDate: xmlData.issueDate,
+        entryDate: xmlData.entryDate || getLocalDateString(),
         supplierId: supplierMapping.id,
         supplierName: supplierMapping.name,
         supplierCnpj: supplierMapping.cnpj,
