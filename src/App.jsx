@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { authService } from './firebase';
 import Login from './components/Login';
 import Navbar from './components/Navbar';
-import Dashboard from './components/Dashboard';
-import UploadData from './components/UploadData';
-import AdminPanel from './components/AdminPanel';
+import QualityPanel from './components/QualityPanel';
 import ModuleSelector from './components/ModuleSelector';
 import ReceptionPanel from './components/ReceptionPanel';
 import ClinicalPanel from './components/ClinicalPanel';
@@ -250,26 +248,17 @@ export default function App() {
         return <ErrorBoundary><SesmtDashboard currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'medical':
         return <ErrorBoundary><MedicalPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} onBack={() => setCurrentModule('selector')} /></ErrorBoundary>;
+      case 'quality':
       default:
-        return renderQualityPage();
-    }
-  };
-
-  const renderQualityPage = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return <Dashboard currentUser={user} />;
-      case 'upload':
-        return <UploadData currentUser={user} />;
-      case 'admin':
-        // Guard for Admin Panel
-        if (user.role === 'admin') {
-          return <AdminPanel currentUser={user} />;
-        }
-        setCurrentPage('dashboard');
-        return <Dashboard currentUser={user} />;
-      default:
-        return <Dashboard currentUser={user} />;
+        return (
+          <ErrorBoundary>
+            <QualityPanel 
+              currentUser={user} 
+              isReportsOpen={isReportsOpen} 
+              setIsReportsOpen={setIsReportsOpen} 
+            />
+          </ErrorBoundary>
+        );
     }
   };
 

@@ -55,15 +55,7 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
     }
   };
 
-  // Dynamic navigation items based on the active portal
   const navItems = [];
-  if (currentModule === 'quality') {
-    navItems.push({ id: 'dashboard', label: 'Dashboard', icon: BarChart3 });
-    navItems.push({ id: 'upload', label: 'Lançar Dados', icon: FileText });
-    if (user && user.role === 'admin') {
-      navItems.push({ id: 'admin', label: 'Painel Admin', icon: Users });
-    }
-  }
 
   const navigateTo = (pageId) => {
     setCurrentPage(pageId);
@@ -79,7 +71,7 @@ export default function Navbar({ user, currentPage, setCurrentPage, currentModul
     <nav style={styles.nav}>
       <div style={styles.navContainer}>
         {/* Brand Logo */}
-        <div style={styles.brand} onClick={() => currentModule === 'quality' ? navigateTo('dashboard') : handleBackToSelector()}>
+        <div style={styles.brand} onClick={handleBackToSelector}>
           {tenantSettings.logo ? (
             <img src={tenantSettings.logo} alt="Logo" style={styles.brandLogoImg} />
           ) : null}

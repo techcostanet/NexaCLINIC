@@ -522,9 +522,9 @@ export default function AdminPanel({ currentUser }) {
 
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
-        <h1>Painel de Controle e Governança</h1>
-        <p>Gerencie profissionais (RBAC), metas dos indicadores e parâmetros de infraestrutura da clínica.</p>
+      <div style={{ marginBottom: '1.25rem' }}>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Governança</h2>
+        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Gerencie permissões de acesso, metas de indicadores e infraestrutura.</p>
       </div>
 
       {message.text && (
@@ -547,14 +547,14 @@ export default function AdminPanel({ currentUser }) {
           style={{ ...styles.tabButton, ...(activeTab === 'indicators' ? styles.tabButtonActive : {}) }}
         >
           <BarChart3 size={18} />
-          <span>Indicadores e Metas</span>
+          <span>Indicadores</span>
         </button>
         <button
           onClick={() => setActiveTab('parameters')}
           style={{ ...styles.tabButton, ...(activeTab === 'parameters' ? styles.tabButtonActive : {}) }}
         >
           <Settings size={18} />
-          <span>Parâmetros da Clínica</span>
+          <span>Parâmetros</span>
         </button>
       </div>
 
@@ -564,11 +564,11 @@ export default function AdminPanel({ currentUser }) {
           <div className="card" style={{ gridColumn: 'span 1' }}>
             <h2 className="card-title">
               <UserPlus size={20} color="var(--primary-color)" />
-              {editingUser ? 'Editar Profissional' : 'Novo Profissional'}
+              {editingUser ? 'Editar' : 'Novo'}
             </h2>
             <form onSubmit={handleSaveUser}>
               <div className="form-group">
-                <label htmlFor="user-name">Nome Completo</label>
+                <label htmlFor="user-name">Nome</label>
                 <input
                   id="user-name"
                   type="text"
@@ -582,7 +582,7 @@ export default function AdminPanel({ currentUser }) {
               </div>
 
               <div className="form-group">
-                <label htmlFor="user-email">E-mail Corporativo</label>
+                <label htmlFor="user-email">E-mail</label>
                 <input
                   id="user-email"
                   type="email"
@@ -596,7 +596,7 @@ export default function AdminPanel({ currentUser }) {
               </div>
 
               <div className="form-group">
-                <label>Perfil de Acesso</label>
+                <label>Perfil</label>
                 <div style={styles.radioGroup}>
                   <label style={styles.radioLabel}>
                     <input
@@ -606,7 +606,7 @@ export default function AdminPanel({ currentUser }) {
                       onChange={() => handleRoleChange('doctor')}
                       disabled={actionLoading}
                     />
-                    <span>Médico / Corpo Clínico</span>
+                    <span>Médico</span>
                   </label>
                   <label style={styles.radioLabel}>
                     <input
@@ -616,7 +616,7 @@ export default function AdminPanel({ currentUser }) {
                       onChange={() => handleRoleChange('professional')}
                       disabled={actionLoading}
                     />
-                    <span>Profissional Comum</span>
+                    <span>Geral</span>
                   </label>
                   <label style={styles.radioLabel}>
                     <input
@@ -626,7 +626,7 @@ export default function AdminPanel({ currentUser }) {
                       onChange={() => handleRoleChange('rh')}
                       disabled={actionLoading}
                     />
-                    <span>Recursos Humanos (RH)</span>
+                    <span>RH</span>
                   </label>
                   <label style={styles.radioLabel}>
                     <input
@@ -636,7 +636,7 @@ export default function AdminPanel({ currentUser }) {
                       onChange={() => handleRoleChange('sesmt')}
                       disabled={actionLoading}
                     />
-                    <span>SESMT & Segurança</span>
+                    <span>SESMT</span>
                   </label>
                   <label style={styles.radioLabel}>
                     <input
@@ -646,14 +646,14 @@ export default function AdminPanel({ currentUser }) {
                       onChange={() => handleRoleChange('admin')}
                       disabled={actionLoading}
                     />
-                    <span>Administrador</span>
+                    <span>Admin</span>
                   </label>
                 </div>
               </div>
 
               {newRole === 'professional' && (
                 <div className="form-group">
-                  <label>Setores Autorizados</label>
+                  <label>Setores</label>
                   <div style={styles.checkboxList}>
                     {sectors.map((sec) => (
                       <label key={sec.id} className="form-checkbox" style={styles.checkboxItem}>
@@ -687,7 +687,7 @@ export default function AdminPanel({ currentUser }) {
               )}
 
               <div className="form-group">
-                <label htmlFor="user-unit">Filial Principal *</label>
+                <label htmlFor="user-unit">Unidade</label>
                 <select
                   id="user-unit"
                   className="form-control"
@@ -703,15 +703,15 @@ export default function AdminPanel({ currentUser }) {
                   }}
                   disabled={actionLoading}
                 >
-                  <option value="betim">🏢 Unidade Betim - MG</option>
-                  <option value="taguatinga">🏢 Unidade Taguatinga - DF</option>
-                  <option value="all">🌐 Todas as Unidades (Acesso Global)</option>
+                  <option value="betim">🏢 Betim</option>
+                  <option value="taguatinga">🏢 Taguatinga</option>
+                  <option value="all">🌐 Todas</option>
                 </select>
               </div>
 
               {editingUser && (
                 <div className="form-group">
-                  <label htmlFor="user-status">Status da Conta</label>
+                  <label htmlFor="user-status">Status</label>
                   <select
                     id="user-status"
                     className="form-control"
@@ -720,7 +720,7 @@ export default function AdminPanel({ currentUser }) {
                     disabled={actionLoading}
                   >
                     <option value="active">Ativo</option>
-                    <option value="inactive">Inativo (Bloquear Acesso)</option>
+                    <option value="inactive">Inativo</option>
                   </select>
                 </div>
               )}
@@ -751,7 +751,7 @@ export default function AdminPanel({ currentUser }) {
                   style={{ flex: 2 }}
                 >
                   <Check size={16} />
-                  <span>{editingUser ? 'Atualizar Dados' : 'Cadastrar Profissional'}</span>
+                  <span>{editingUser ? 'Atualizar' : 'Cadastrar'}</span>
                 </button>
               </div>
             </form>
@@ -760,16 +760,16 @@ export default function AdminPanel({ currentUser }) {
           <div className="card" style={{ gridColumn: 'span 2' }}>
             <h2 className="card-title">
               <Users size={20} color="var(--primary-color)" />
-              Profissionais Cadastrados
+              Profissionais
             </h2>
             <div className="table-container">
               <table>
                 <thead>
                   <tr>
-                    <th>Nome / E-mail</th>
-                    <th>Filial</th>
+                    <th>Profissional</th>
+                    <th>Unidade</th>
                     <th>Perfil</th>
-                    <th>Setores Liberados</th>
+                    <th>Setores</th>
                     <th>Status</th>
                     <th style={{ textAlign: 'right' }}>Ações</th>
                   </tr>
@@ -806,7 +806,7 @@ export default function AdminPanel({ currentUser }) {
                           className={`badge ${u.role === 'admin' ? 'badge-admin' : u.role === 'rh' ? 'badge-rh' : u.role === 'sesmt' ? 'badge-sesmt' : 'badge-prof'}`}
                           style={u.role === 'rh' ? { backgroundColor: '#fce7f3', color: '#9d174d', fontWeight: '600' } : u.role === 'sesmt' ? { backgroundColor: '#dcfce7', color: '#166534', fontWeight: '600' } : {}}
                         >
-                          {u.role === 'admin' ? 'Admin' : u.role === 'rh' ? 'Recursos Humanos' : u.role === 'sesmt' ? 'SESMT & Segurança' : 'Profissional'}
+                          {u.role === 'admin' ? 'Admin' : u.role === 'rh' ? 'RH' : u.role === 'sesmt' ? 'SESMT' : 'Geral'}
                         </span>
                       </td>
                       <td>
@@ -892,11 +892,11 @@ export default function AdminPanel({ currentUser }) {
           <div className="card" style={{ gridColumn: 'span 1' }}>
             <h2 className="card-title">
               <BarChart3 size={20} color="var(--primary-color)" />
-              {editingIndicator ? 'Editar Indicador' : 'Novo Indicador Clínico'}
+              {editingIndicator ? 'Editar' : 'Novo'}
             </h2>
             <form onSubmit={handleSaveIndicator}>
               <div className="form-group">
-                <label htmlFor="ind-name">Nome do Indicador</label>
+                <label htmlFor="ind-name">Nome</label>
                 <input
                   id="ind-name"
                   type="text"
@@ -910,7 +910,7 @@ export default function AdminPanel({ currentUser }) {
               </div>
 
               <div className="form-group">
-                <label htmlFor="ind-desc">Descrição / Fórmula</label>
+                <label htmlFor="ind-desc">Fórmula</label>
                 <textarea
                   id="ind-desc"
                   className="form-control"
@@ -925,7 +925,7 @@ export default function AdminPanel({ currentUser }) {
 
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                 <div className="form-group" style={{ flex: 1.2 }}>
-                  <label htmlFor="ind-sector">Setor Vinculado</label>
+                  <label htmlFor="ind-sector">Setor</label>
                   <select
                     id="ind-sector"
                     className="form-control"
@@ -957,7 +957,7 @@ export default function AdminPanel({ currentUser }) {
               </div>
 
               <div className="form-group">
-                <label htmlFor="ind-target">Meta Estipulada</label>
+                <label htmlFor="ind-target">Meta</label>
                 <input
                   id="ind-target"
                   type="text"
@@ -989,7 +989,7 @@ export default function AdminPanel({ currentUser }) {
                   style={{ flex: 1.5 }}
                 >
                   <Check size={16} />
-                  <span>{editingIndicator ? 'Atualizar Meta' : 'Criar Indicador'}</span>
+                  <span>{editingIndicator ? 'Atualizar' : 'Criar'}</span>
                 </button>
               </div>
             </form>
@@ -998,7 +998,7 @@ export default function AdminPanel({ currentUser }) {
           <div className="card" style={{ gridColumn: 'span 2' }}>
             <h2 className="card-title">
               <BarChart3 size={20} color="var(--primary-color)" />
-              Indicadores Configurados
+              Indicadores
             </h2>
             <div className="table-container">
               <table>
@@ -1091,21 +1091,21 @@ export default function AdminPanel({ currentUser }) {
               style={{ ...styles.subTabButton, ...(activeParamSubTab === 'rooms' ? styles.subTabButtonActive : {}) }}
             >
               <Home size={14} />
-              <span>Salões (Salas)</span>
+              <span>Salões</span>
             </button>
             <button
               onClick={() => setActiveParamSubTab('accessTypes')}
               style={{ ...styles.subTabButton, ...(activeParamSubTab === 'accessTypes' ? styles.subTabButtonActive : {}) }}
             >
               <Activity size={14} />
-              <span>Acessos Vasculares</span>
+              <span>Acessos</span>
             </button>
             <button
               onClick={() => setActiveParamSubTab('dialysisFrequencies')}
               style={{ ...styles.subTabButton, ...(activeParamSubTab === 'dialysisFrequencies' ? styles.subTabButtonActive : {}) }}
             >
               <Calendar size={14} />
-              <span>Escalas de Diálise</span>
+              <span>Escalas</span>
             </button>
           </div>
 
@@ -1115,11 +1115,11 @@ export default function AdminPanel({ currentUser }) {
               <div className="card" style={{ gridColumn: 'span 1' }}>
                 <h2 className="card-title">
                   <Folder size={18} color="var(--primary-color)" />
-                  {editingSector ? 'Editar Setor' : 'Novo Setor Hospitalar'}
+                  {editingSector ? 'Editar' : 'Novo'}
                 </h2>
                 <form onSubmit={handleSaveSector}>
                   <div className="form-group">
-                    <label htmlFor="sector-name">Nome do Setor</label>
+                    <label htmlFor="sector-name">Nome</label>
                     <input
                       id="sector-name"
                       type="text"
@@ -1156,14 +1156,14 @@ export default function AdminPanel({ currentUser }) {
                     )}
                     <button type="submit" className="btn btn-primary" disabled={actionLoading}>
                       <Check size={14} />
-                      <span>{editingSector ? 'Atualizar' : 'Salvar Setor'}</span>
+                      <span>{editingSector ? 'Atualizar' : 'Salvar'}</span>
                     </button>
                   </div>
                 </form>
               </div>
 
               <div className="card" style={{ gridColumn: 'span 2' }}>
-                <h2 className="card-title">Setores Ativos</h2>
+                <h2 className="card-title">Setores</h2>
                 <div className="table-container">
                   <table>
                     <thead>
@@ -1212,11 +1212,11 @@ export default function AdminPanel({ currentUser }) {
               <div className="card" style={{ gridColumn: 'span 1' }}>
                 <h2 className="card-title">
                   <Calendar size={18} color="var(--primary-color)" />
-                  {editingShift ? 'Editar Turno' : 'Novo Turno de Diálise'}
+                  {editingShift ? 'Editar' : 'Novo'}
                 </h2>
                 <form onSubmit={handleSaveShift}>
                   <div className="form-group">
-                    <label htmlFor="shift-name">Identificação do Turno</label>
+                    <label htmlFor="shift-name">Turno</label>
                     <input
                       id="shift-name"
                       type="text"
@@ -1241,14 +1241,14 @@ export default function AdminPanel({ currentUser }) {
                     )}
                     <button type="submit" className="btn btn-primary" disabled={actionLoading}>
                       <Check size={14} />
-                      <span>{editingShift ? 'Atualizar' : 'Salvar Turno'}</span>
+                      <span>{editingShift ? 'Atualizar' : 'Salvar'}</span>
                     </button>
                   </div>
                 </form>
               </div>
 
               <div className="card" style={{ gridColumn: 'span 2' }}>
-                <h2 className="card-title">Turnos Ativos</h2>
+                <h2 className="card-title">Turnos</h2>
                 <div className="table-container">
                   <table>
                     <thead>
@@ -1295,11 +1295,11 @@ export default function AdminPanel({ currentUser }) {
               <div className="card" style={{ gridColumn: 'span 1' }}>
                 <h2 className="card-title">
                   <Home size={18} color="var(--primary-color)" />
-                  {editingRoom ? 'Editar Salão' : 'Novo Salão de Hemodiálise'}
+                  {editingRoom ? 'Editar' : 'Novo'}
                 </h2>
                 <form onSubmit={handleSaveRoom}>
                   <div className="form-group">
-                    <label htmlFor="room-name">Identificação do Salão</label>
+                    <label htmlFor="room-name">Salão</label>
                     <input
                       id="room-name"
                       type="text"
@@ -1324,19 +1324,19 @@ export default function AdminPanel({ currentUser }) {
                     )}
                     <button type="submit" className="btn btn-primary" disabled={actionLoading}>
                       <Check size={14} />
-                      <span>{editingRoom ? 'Atualizar' : 'Salvar Salão'}</span>
+                      <span>{editingRoom ? 'Atualizar' : 'Salvar'}</span>
                     </button>
                   </div>
                 </form>
               </div>
 
               <div className="card" style={{ gridColumn: 'span 2' }}>
-                <h2 className="card-title">Salões Ativos</h2>
+                <h2 className="card-title">Salões</h2>
                 <div className="table-container">
                   <table>
                     <thead>
                       <tr>
-                        <th>Salão / Sala</th>
+                        <th>Salão</th>
                         <th style={{ textAlign: 'right' }}>Ações</th>
                       </tr>
                     </thead>
@@ -1378,11 +1378,11 @@ export default function AdminPanel({ currentUser }) {
               <div className="card" style={{ gridColumn: 'span 1' }}>
                 <h2 className="card-title">
                   <Activity size={18} color="var(--primary-color)" />
-                  {editingAccess ? 'Editar Acesso' : 'Novo Acesso Vascular'}
+                  {editingAccess ? 'Editar' : 'Novo'}
                 </h2>
                 <form onSubmit={handleSaveAccessType}>
                   <div className="form-group">
-                    <label htmlFor="access-name">Nome do Acesso</label>
+                    <label htmlFor="access-name">Nome</label>
                     <input
                       id="access-name"
                       type="text"
@@ -1407,19 +1407,19 @@ export default function AdminPanel({ currentUser }) {
                     )}
                     <button type="submit" className="btn btn-primary" disabled={actionLoading}>
                       <Check size={14} />
-                      <span>{editingAccess ? 'Atualizar' : 'Salvar Acesso'}</span>
+                      <span>{editingAccess ? 'Atualizar' : 'Salvar'}</span>
                     </button>
                   </div>
                 </form>
               </div>
 
               <div className="card" style={{ gridColumn: 'span 2' }}>
-                <h2 className="card-title">Acessos Cadastrados</h2>
+                <h2 className="card-title">Acessos</h2>
                 <div className="table-container">
                   <table>
                     <thead>
                       <tr>
-                        <th>Acesso Vascular</th>
+                        <th>Acesso</th>
                         <th style={{ textAlign: 'right' }}>Ações</th>
                       </tr>
                     </thead>
@@ -1461,11 +1461,11 @@ export default function AdminPanel({ currentUser }) {
               <div className="card" style={{ gridColumn: 'span 1' }}>
                 <h2 className="card-title">
                   <Calendar size={18} color="var(--primary-color)" />
-                  {editingDialysisFrequency ? 'Editar Escala' : 'Nova Escala de Diálise'}
+                  {editingDialysisFrequency ? 'Editar' : 'Nova'}
                 </h2>
                 <form onSubmit={handleSaveDialysisFrequency}>
                   <div className="form-group">
-                    <label htmlFor="frequency-name">Nome da Escala</label>
+                    <label htmlFor="frequency-name">Nome</label>
                     <input
                       id="frequency-name"
                       type="text"
@@ -1490,19 +1490,19 @@ export default function AdminPanel({ currentUser }) {
                     )}
                     <button type="submit" className="btn btn-primary" disabled={actionLoading}>
                       <Check size={14} />
-                      <span>{editingDialysisFrequency ? 'Atualizar' : 'Salvar Escala'}</span>
+                      <span>{editingDialysisFrequency ? 'Atualizar' : 'Salvar'}</span>
                     </button>
                   </div>
                 </form>
               </div>
 
               <div className="card" style={{ gridColumn: 'span 2' }}>
-                <h2 className="card-title">Escalas Cadastradas</h2>
+                <h2 className="card-title">Escalas</h2>
                 <div className="table-container">
                   <table>
                     <thead>
                       <tr>
-                        <th>Escala de Diálise</th>
+                        <th>Escala</th>
                         <th style={{ textAlign: 'right' }}>Ações</th>
                       </tr>
                     </thead>

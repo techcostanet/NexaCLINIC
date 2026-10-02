@@ -268,13 +268,8 @@ export default function UploadData({ currentUser }) {
 
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
-        <h1>Lançamento de Indicadores</h1>
-        <p>Insira dados manuais mensais ou suba uma planilha consolidada de indicadores.</p>
-      </div>
-
       {message.text && (
-        <div className={`alert alert-${message.type}`} style={{ marginBottom: '1.5rem' }}>
+        <div className={`alert alert-${message.type}`} style={{ marginBottom: '1.25rem' }}>
           <span>{message.text}</span>
         </div>
       )}
@@ -285,15 +280,15 @@ export default function UploadData({ currentUser }) {
           onClick={() => setActiveTab('manual')}
           style={{ ...styles.tabButton, ...(activeTab === 'manual' ? styles.tabButtonActive : {}) }}
         >
-          <Keyboard size={18} />
-          <span>Digitação Manual</span>
+          <Keyboard size={16} />
+          <span>Manual</span>
         </button>
         <button
           onClick={() => setActiveTab('spreadsheet')}
           style={{ ...styles.tabButton, ...(activeTab === 'spreadsheet' ? styles.tabButtonActive : {}) }}
         >
-          <UploadCloud size={18} />
-          <span>Importar Planilha (CSV)</span>
+          <UploadCloud size={16} />
+          <span>Planilha</span>
         </button>
       </div>
 
@@ -305,7 +300,7 @@ export default function UploadData({ currentUser }) {
             <div>
               <h2 className="card-title">
                 <Keyboard size={20} color="var(--primary-color)" />
-                Formulário de Digitação
+                Digitação
               </h2>
               
               {sectors.length === 0 ? (
@@ -316,7 +311,7 @@ export default function UploadData({ currentUser }) {
                 <form onSubmit={handleSaveManual}>
                   {/* Select Sector */}
                   <div className="form-group">
-                    <label htmlFor="manual-sector-select">Setor Hospitalar</label>
+                    <label htmlFor="manual-sector-select">Setor</label>
                     <select
                       id="manual-sector-select"
                       className="form-control"
@@ -332,7 +327,7 @@ export default function UploadData({ currentUser }) {
 
                   {/* Select Indicator */}
                   <div className="form-group">
-                    <label htmlFor="manual-indicator-select">Indicador Clínico</label>
+                    <label htmlFor="manual-indicator-select">Indicador</label>
                     {filteredIndicators.length === 0 ? (
                       <div style={styles.noIndicatorsHint}>
                         Nenhum indicador cadastrado para este setor. Crie um no painel administrativo primeiro.
@@ -357,7 +352,7 @@ export default function UploadData({ currentUser }) {
                   {/* Value and Period Grid */}
                   <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                     <div className="form-group" style={{ flex: 1 }}>
-                      <label htmlFor="manual-val-input">Valor Medido</label>
+                      <label htmlFor="manual-val-input">Valor</label>
                       <input
                         id="manual-val-input"
                         type="text"
@@ -370,7 +365,7 @@ export default function UploadData({ currentUser }) {
                       />
                     </div>
                     <div className="form-group" style={{ flex: 1 }}>
-                      <label htmlFor="manual-period-input">Mês/Ano Referência</label>
+                      <label htmlFor="manual-period-input">Período</label>
                       <input
                         id="manual-period-input"
                         type="month"
@@ -390,7 +385,7 @@ export default function UploadData({ currentUser }) {
                     disabled={saving || filteredIndicators.length === 0}
                   >
                     <Save size={16} />
-                    <span>{saving ? 'Gravando dados...' : 'Salvar Registro no Banco'}</span>
+                    <span>{saving ? 'Gravando...' : 'Salvar'}</span>
                   </button>
                 </form>
               )}
@@ -400,7 +395,7 @@ export default function UploadData({ currentUser }) {
             <div>
               <h2 className="card-title">
                 <UploadCloud size={20} color="var(--primary-color)" />
-                Carregar Planilha CSV
+                Importação
               </h2>
 
               <div

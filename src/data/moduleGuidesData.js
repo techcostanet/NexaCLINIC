@@ -1322,13 +1322,111 @@ export const MODULE_GUIDES = {
     subtitle: 'Nex-Ai.INDEX — Indicadores & Governança',
     color: '#3b82f6',
     recursos: [
-      { title: 'Indicadores Hospitalares', desc: 'Métricas assistenciais, Kt/V, taxas de infecção e metas de qualidade.' }
+      {
+        title: 'Navegação em Abas Integradas',
+        desc: 'Acesso rápido e limpo entre Dashboard Executivo, Lançamento de Dados, Painel Admin e Central de Relatórios diretamente no módulo.'
+      },
+      {
+        title: 'Cards KPI Executivos Interativos',
+        desc: 'Métricas de Conformidade Global, Total de Indicadores, Indicadores Conformes, Desvios da Meta, Registrados no Período e Setores Ativos, com filtragem instantânea ao clicar em qualquer card.'
+      },
+      {
+        title: 'Painel de Desempenho por Setor',
+        desc: 'Visão comparativa de todos os setores hospitalares com taxa de conformidade percentual, contagem de conformes/desvios e filtro direto com 1 clique.'
+      },
+      {
+        title: 'Painel de Desvios Críticos',
+        desc: 'Lista em tempo real dos indicadores que não atingiram a meta no período selecionado, facilitando planos de ação imediatos da equipe de qualidade.'
+      },
+      {
+        title: 'Gráficos Consolidados Recharts',
+        desc: 'Visualização gerencial com gráfico de barras horizontais de conformidade por setor e gráfico em rosca de status das metas com paleta visual sofisticada.'
+      },
+      {
+        title: 'Modos de Visualização nos Indicadores',
+        desc: 'Alternância instantânea entre gráfico de linha de tendência, gráfico de barras, gráfico em degrau (step) e tabela cronológica de valores.'
+      },
+      {
+        title: 'Análise Completa (Deep Dive Modal)',
+        desc: 'Modal com diagnóstico de conformidade, histórico completo de medições, linha de referência de meta, variação percentual e impressão timbrada com suporte a paisagem e retrato.'
+      },
+      {
+        title: 'Lançamento Manual e Importação em Lote',
+        desc: 'Formulário ágil de digitação de valores por mês/ano e importador de planilhas CSV/Excel com mapeamento automático de colunas.'
+      },
+      {
+        title: 'Governança & Parâmetros Hospitalares',
+        desc: 'Aba administrativa para cadastro de profissionais (RBAC), criação e edição de indicadores, ajuste de metas e configuração de setores, turnos, salões e acessos vasculares.'
+      }
     ],
     tutorial: [
-      { title: 'Consulta de Indicadores', steps: ['Selecione o mês de referência no dashboard para visualizar as metas.'] }
+      {
+        title: 'Como Filtrar o Dashboard Usando os Cards do Topo',
+        steps: [
+          'No topo do Dashboard, observe os cards de métricas executivas.',
+          'Clique no card "Conformes" para exibir apenas os indicadores que atingiram a meta.',
+          'Clique no card "Desvios" para isolar os indicadores que necessitam de intervenção corretiva.',
+          'Clique no card "Registrados" para verificar quais indicadores possuem dados lançados no período.',
+          'Para retornar à visualização completa, clique no card "Total" ou no botão "Limpar Filtro".'
+        ]
+      },
+      {
+        title: 'Como Analisar o Desempenho de um Setor Específico',
+        steps: [
+          'No painel "Desempenho por Setor", localize o setor desejado (ex: Hemodiálise, SESMT, Enfermagem).',
+          'Clique no cartão do setor para filtrar todos os indicadores do dashboard para aquela especialidade.',
+          'Você também pode utilizar o seletor suspenso "Setor" ou a barra de pesquisa rápida para localizar indicadores pelo nome ou fórmula.'
+        ]
+      },
+      {
+        title: 'Como Abrir a Análise Detalhada (Deep Dive) de um Indicador',
+        steps: [
+          'No card do indicador desejado, clique no botão "Análise Completa" no canto inferior direito.',
+          'O modal exibirá o gráfico de evolução histórica com a linha de meta destacada em vermelho, a taxa média de cumprimento e a tabela de todas as medições.',
+          'Para gerar uma via física ou PDF para auditoria, clique em "Imprimir" ou "Paisagem".'
+        ]
+      },
+      {
+        title: 'Como Lançar Dados Manuais de um Indicador',
+        steps: [
+          'Acesse a aba "Lançamento" no topo do módulo BI.',
+          'Mantenha a opção "Manual" selecionada.',
+          'Escolha o Setor e o Indicador correspondente.',
+          'Informe o Valor apurado e selecione o Período (mês/ano).',
+          'Clique em "Salvar". O indicador no Dashboard será atualizado instantaneamente.'
+        ]
+      },
+      {
+        title: 'Como Cadastrar ou Ajustar a Meta de um Indicador no Painel Admin',
+        steps: [
+          'Acesse a aba "Admin" no topo do módulo BI.',
+          'Clique na sub-aba "Indicadores".',
+          'Para criar um novo, preencha Nome, Fórmula, Setor, Unidade e Meta, e clique em "Criar".',
+          'Para editar uma meta existente, localize o indicador na tabela à direita e clique no ícone de lápis (Editar).'
+        ]
+      }
     ],
     duvidas: [
-      { pergunta: 'Manual em finalização', resposta: 'Guias de BI em elaboração.' }
+      {
+        pergunta: 'Como o sistema identifica se a meta foi atingida quando valores menores são melhores?',
+        resposta: 'O Nex-Ai.INDEX conta com lógica de inteligência clínica automatizada (isLowerBetter). Indicadores de desfecho negativo como infecções, mortalidade, glosas, reações transfusionais, internações e acidentes exigem valor igual ou inferior à meta (≤). Indicadores positivos como Kt/V, dias sem acidentes e satisfação exigem valor igual ou superior à meta (≥).'
+      },
+      {
+        pergunta: 'Posso visualizar os indicadores de todos os setores simultaneamente?',
+        resposta: 'Sim! Por padrão o seletor de setor vem marcado como "Todos os Setores (Geral)", permitindo que a diretoria e a coordenação de qualidade tenham uma visão 360º de todas as 100 métricas da instituição em um só painel.'
+      },
+      {
+        pergunta: 'Como os indicadores do SESMT são alimentados no BI?',
+        resposta: 'Os indicadores do SESMT (Conformidade no Descarte de Resíduos, Conformidade de EPI e Manutenção de Extintores/Hidrantes) são alimentados automaticamente a partir dos checklists diários e vistorias realizadas no módulo SESMT, sem necessidade de digitação manual.'
+      },
+      {
+        pergunta: 'Quem tem acesso à aba Admin do módulo de Qualidade?',
+        resposta: 'A aba Admin é restrita a usuários com perfil de Administrador ou Gestor de Qualidade autorizado. Usuários com perfis operacionais ou setoriais visualizam apenas as abas de Dashboard e Lançamento dos setores autorizados em seu perfil RBAC.'
+      },
+      {
+        pergunta: 'O que representa o período selecionado no topo do painel?',
+        resposta: 'O filtro de período permite escolher "Mês Atual", "30 Dias", "Mês Anterior" ou "Todos os Períodos". Ao alterar o período, todos os cards KPI, gráficos e tabelas recalculam a conformidade considerando a última medição válida de cada indicador dentro da faixa temporal.'
+      }
     ]
   },
 

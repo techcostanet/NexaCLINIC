@@ -6,6 +6,21 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.6',
+      date: '02/10/2026',
+      title: 'Nex-Ai CLINIC — Redesenho Completo do Módulo BI, Abas Integradas, Dashboard Interativo com Cards Clicáveis, Deep Dive e Auditoria Clínica de Metas (.INDEX / .BI)',
+      description: 'Modernização profunda e redesenho arquitetural do Módulo BI (Gestão da Qualidade & BI / Nex-Ai.INDEX). Migração dos botões legados da barra global para abas de navegação internas padronizadas (Dashboard, Lançamento, Admin e Relatórios); novo Dashboard executivo e 100% interativo com 6 cards KPI de topo clicáveis que filtram instantaneamente os indicadores conformes, desvios e registrados; novos painéis de Desempenho por Setor (com filtro direto no cartão) e Desvios Críticos; gráficos analíticos Recharts de ranking por setor e rosca de conformidade; visualização multiformato de indicadores (Linha, Barras, Degrau e Tabela); modal Deep Dive com histórico, linha de meta e impressão timbrada; auditoria clínica completa de metas eliminando falsos alertas (como dias sem acidentes e reações transfusionais); e aplicação rígida da diretriz de 1 termo/palavra nos rótulos de interface.',
+      changes: [
+        { type: 'Abas Integradas no Módulo', text: 'Navegação por abas (Dashboard, Lançamento, Admin, Relatórios) sob o ModuleHeader padronizado (.INDEX), eliminando botões dispersos na navbar global.' },
+        { type: 'Cards KPI Clicáveis', text: 'Cards de Conformidade, Total, Conformes, Desvios, Registrados e Setores com contadores em tempo real e capacidade de filtrar o painel inteiro ao clicar.' },
+        { type: 'Desempenho por Setor & Desvios', text: 'Painéis com cards comparativos por setor hospitalar com progresso percentual e lista executiva de indicadores prioritários fora da meta.' },
+        { type: 'Gráficos Consolidados Recharts', text: 'Gráfico em barras horizontais de conformidade setorial e gráfico em rosca de status das metas com paleta visual sofisticada.' },
+        { type: 'Modal Deep Dive & Impressão', text: 'Análise detalhada por indicador com evolução temporal, linha de meta, diagnóstico comparativo e impressão timbrada nos formatos Retrato e Paisagem.' },
+        { type: 'Auditoria Clínica de Metas', text: 'Refinamento rigoroso das regras isLowerBetter corrigindo indicadores clínicos críticos e segurança do trabalho (dias sem acidentes).' },
+        { type: 'UI/UX & Termo Único', text: 'Rótulos concisos de 1 termo/palavra em AdminPanel e UploadData e atualização integral do manual em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v5.0.5',
       date: '02/10/2026',
       title: 'Nex-Ai CLINIC — Auditoria de Descarte de Lixo Infectante, 3 Novos Indicadores no BI, Central de 26 Relatórios e Alertas de Biossegurança (.SESMT, .BI & .ASSIST)',

@@ -1,3 +1,26 @@
+## [v5.0.6] - 02 de Outubro, 2026
+### Nex-Ai CLINIC (.INDEX / .BI) — Redesenho Completo do Módulo BI, Abas Integradas, Dashboard Executivo Interativo com Cards Clicáveis, Análise Deep Dive e Auditoria Clínica de Metas
+- **Modernização e Padronização Oficial de Interface (`QualityPanel.jsx` & `Navbar.jsx`):**
+  - Criação do container oficial do módulo `QualityPanel.jsx` estruturado com o `ModuleHeader` padronizado (`.INDEX` / `Gestão da Qualidade & BI`), gradiente azul 46x46px e navegação em abas limpas e modernas: `Dashboard`, `Lançamento`, `Admin` e `Relatórios`.
+  - Remoção definitiva dos botões legados espalhados no topo da navbar global (`Navbar.jsx`), unificando a arquitetura de navegação do sistema e respeitando a política de cabeçalho limpo.
+- **Dashboard Executivo 100% Interativo com Filtragem por Clique:**
+  - 6 Cards KPI de topo com contadores e taxas calculadas em tempo real: `Conformidade` (% global), `Total` (100 indicadores), `Conformes` (na meta), `Desvios` (abaixo da meta), `Registrados` (com dados no período) e `Setores` (11 setores).
+  - **Cards Clicáveis:** Clicar nos cards `Conformes`, `Desvios` ou `Registrados` filtra instantaneamente a visualização da tela inteira, com badge de filtro ativo e botão de limpeza rápida.
+  - Seletor de período com presets rápidos (`Mês Atual`, `30 Dias`, `Mês Anterior`, `Todos`) e busca textual por indicador ou fórmula.
+  - Opção de visualização institucional unificada `Todos os Setores (Geral)`, eliminando a restrição de visualizar apenas um setor por vez.
+- **Novas Seções Executivas no Dashboard:**
+  - **Desempenho por Setor:** Painel de cartões para cada setor hospitalar (Hemodiálise, SESMT, Enfermagem, Médica, etc.) com taxa de conformidade, barra de progresso colorida e filtragem direta ao clicar no cartão.
+  - **Desvios Críticos:** Painel executivo que isola imediatamente os indicadores em não conformidade para intervenção prioritária da gestão.
+  - **Gráficos Analíticos Recharts:** Gráfico de barras horizontais de conformidade por setor e gráfico em rosca (donut) da distribuição de status das metas.
+  - **Visualização Multiformato nos Indicadores:** Alternância fluida entre gráficos de Linha de Tendência, Gráficos de Barras, Degrau (Step) e Tabela.
+  - **Modal Deep Dive (Análise Completa):** Janela modal com análise histórica detalhada, linha de meta destacada em vermelho, diagnóstico com badges de status, tabela completa de medições e impressão timbrada nos formatos Retrato e Paisagem.
+- **Auditoria Clínica e Regras de Metas (`isLowerBetter`):**
+  - Auditoria profunda nas 100 métricas do sistema: correção de indicadores onde menor valor é melhor (Reações Transfusionais, Internações, Anemia Grave, PTH Elevado, Distúrbios Eletrolíticos de Potássio e Fósforo).
+  - Correção na detecção do indicador "Dias Consecutivos sem Acidentes" para garantir que valores crescentes sejam pontuados positivamente, eliminando falsos alertas.
+- **Governança, Boy Scout Rule e Documentação:**
+  - Aplicação rigorosa da regra de rótulos concisos (1 termo/palavra) em `AdminPanel.jsx` e `UploadData.jsx`, eliminando termos duplos e conectivos (`/`, `&`).
+  - Atualização completa do manual do módulo em `src/data/moduleGuidesData.js` com recursos detalhados, passo a passo e FAQ clínica.
+
 ## [v5.0.5] - 02 de Outubro, 2026
 ### Nex-Ai CLINIC (.SESMT, .BI & .ASSIST) — Auditoria de Descarte de Lixo Infectante (RDC 222 / NR-32), 3 Novos Indicadores no BI, Central de 26 Relatórios e Alertas de Biossegurança
 - **Rotina de Vistoria de Descarte de Lixo Infectante:**
