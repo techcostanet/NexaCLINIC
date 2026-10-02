@@ -49,7 +49,11 @@ export const getIndicators = async () => {
         { id: 'nutri_peso_adequado', name: 'Taxa de Pacientes com Peso Adequado (IMC 18,5 - 24,9)', sectorId: 'nutricao', unit: '%', target: 50.0, description: 'Percentual de pacientes classificados com peso adequado (IMC 18,5 a 24,9).' },
         { id: 'nutri_obesidade', name: 'Taxa de Pacientes com Obesidade (IMC ≥ 30)', sectorId: 'nutricao', unit: '%', target: 15.0, description: 'Percentual de pacientes classificados com obesidade (IMC ≥ 30).' },
         { id: 'controle_gpid', name: 'Controle de Peso Interdialítico (GPID)', sectorId: 'nutricao', unit: '%', target: 70.0, description: 'Percentual de pacientes com ganho de peso interdialítico adequado (≤ 5% do peso seco).' },
-        { id: 'controle_albumina', name: 'Adequação de Albumina Sérica', sectorId: 'nutricao', unit: '%', target: 70.0, description: 'Percentual de pacientes com nível de Albumina sérica adequado (> 3.0 g/dL).' }
+        { id: 'controle_albumina', name: 'Adequação de Albumina Sérica', sectorId: 'nutricao', unit: '%', target: 70.0, description: 'Percentual de pacientes com nível de Albumina sérica adequado (> 3.0 g/dL).' },
+        // SESMT - Lixo Infectante (PDF)
+        { id: 'sesmt_descarte_infectante_conformidade', name: 'Conformidade em Lixo Infectante', sectorId: 'sesmt', unit: '%', target: 95.0, description: 'Percentual de vistorias em conformidade com o descarte de resíduos infectantes (RDC 222 e NR-32).' },
+        { id: 'sesmt_descarte_infectante_nao_conformidade', name: 'Não Conformidade em Lixo Infectante', sectorId: 'sesmt', unit: '%', target: 5.0, description: 'Percentual de vistorias com desvios na segregação ou descarte de resíduos infectantes.' },
+        { id: 'sesmt_vistorias_residuos_total', name: 'Vistorias de Resíduos Realizadas', sectorId: 'sesmt', unit: 'un', target: 60, description: 'Volume total de auditorias de descarte de resíduos infectantes no mês.' }
       ];
       defaults.forEach(ind => {
         batch.set(doc(db, 'indicators', ind.id), ind);
@@ -58,7 +62,21 @@ export const getIndicators = async () => {
       return defaults;
     }
 
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (!list.some(i => i.id === 'sesmt_descarte_infectante_conformidade')) {
+      const { setDoc, doc } = await import('firebase/firestore');
+      const wasteDefaults = [
+        { id: 'sesmt_descarte_infectante_conformidade', name: 'Conformidade em Lixo Infectante', sectorId: 'sesmt', unit: '%', target: 95.0, description: 'Percentual de vistorias em conformidade com o descarte de resíduos infectantes (RDC 222 e NR-32).' },
+        { id: 'sesmt_descarte_infectante_nao_conformidade', name: 'Não Conformidade em Lixo Infectante', sectorId: 'sesmt', unit: '%', target: 5.0, description: 'Percentual de vistorias com desvios na segregação ou descarte de resíduos infectantes.' },
+        { id: 'sesmt_vistorias_residuos_total', name: 'Vistorias de Resíduos Realizadas', sectorId: 'sesmt', unit: 'un', target: 60, description: 'Volume total de auditorias de descarte de resíduos infectantes no mês.' }
+      ];
+      for (const wd of wasteDefaults) {
+        setDoc(doc(db, 'indicators', wd.id), wd, { merge: true }).catch(() => {});
+        list.push(wd);
+      }
+    }
+
+    return list;
   };
 
 export const createIndicator = async (indicatorData) => {
@@ -251,7 +269,34 @@ export const getIndicatorData = async (allowedSectors, isAll = false) => {
       return defaults;
     }
     
-    return snap.docs.map(doc => doc.data());
+    const list = snap.docs.map(doc => doc.data());
+    if (list.length > 0 && !list.some(d => d.indicatorId === 'sesmt_descarte_infectante_conformidade')) {
+      const wasteData = [
+        { indicatorId: 'sesmt_descarte_infectante_conformidade', sectorId: 'sesmt', value: 28.57, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_descarte_infectante_nao_conformidade', sectorId: 'sesmt', value: 71.43, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_vistorias_residuos_total', sectorId: 'sesmt', value: 56, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        { indicatorId: 'sesmt_descarte_infectante_conformidade', sectorId: 'sesmt', value: 28.12, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_descarte_infectante_nao_conformidade', sectorId: 'sesmt', value: 71.88, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_vistorias_residuos_total', sectorId: 'sesmt', value: 64, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        { indicatorId: 'sesmt_descarte_infectante_conformidade', sectorId: 'sesmt', value: 27.63, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_descarte_infectante_nao_conformidade', sectorId: 'sesmt', value: 72.37, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_vistorias_residuos_total', sectorId: 'sesmt', value: 76, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        { indicatorId: 'sesmt_descarte_infectante_conformidade', sectorId: 'sesmt', value: 32.50, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_descarte_infectante_nao_conformidade', sectorId: 'sesmt', value: 67.50, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_vistorias_residuos_total', sectorId: 'sesmt', value: 80, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() }
+      ];
+      import('firebase/firestore').then(({ setDoc, doc }) => {
+        wasteData.forEach(d => {
+          setDoc(doc(db, 'indicator_data', `${d.indicatorId}_${d.period}`), d, { merge: true }).catch(() => {});
+        });
+      }).catch(() => {});
+      list.push(...wasteData);
+    }
+    
+    return list;
   };
 
 export const saveSingleIndicatorRecord = async (record, uploaderUid) => {

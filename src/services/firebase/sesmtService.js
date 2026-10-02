@@ -304,11 +304,11 @@ export const seedDefaultEquipmentIfEmpty = async () => {
             { code: 'EXT-14', type: 'AP (Água Pressurizada)', sector: 'Recepção Principal', capacity: '10 L' },
             { code: 'EXT-15', type: 'PQS (Pó Químico Seco)', sector: 'Recepção Principal', capacity: '4 kg' },
             { code: 'EXT-16', type: 'AP (Água Pressurizada)', sector: 'Corredor Central', capacity: '10 L' },
-            { code: 'EXT-17', type: 'PQS (Pó Químico Seco)', sector: 'Farmácia / Almoxarifado', capacity: '4 kg' },
-            { code: 'EXT-18', type: 'CO2', sector: 'CPD / Servidores', capacity: '6 kg' },
+            { code: 'EXT-17', type: 'PQS (Pó Químico Seco)', sector: 'Farmácia', capacity: '4 kg' },
+            { code: 'EXT-18', type: 'CO2', sector: 'Servidores', capacity: '6 kg' },
             { code: 'EXT-19', type: 'CO2', sector: 'Sala de Máquinas', capacity: '6 kg' },
-            { code: 'EXT-20', type: 'AP (Água Pressurizada)', sector: 'DML / Limpeza', capacity: '10 L' },
-            { code: 'EXT-21', type: 'PQS (Pó Químico Seco)', sector: 'Copa / Refeitório', capacity: '4 kg' }
+            { code: 'EXT-20', type: 'AP (Água Pressurizada)', sector: 'Limpeza', capacity: '10 L' },
+            { code: 'EXT-21', type: 'PQS (Pó Químico Seco)', sector: 'Copa', capacity: '4 kg' }
         ];
 
         const defaultHydrants = [
@@ -316,7 +316,7 @@ export const seedDefaultEquipmentIfEmpty = async () => {
             { code: 'HID-02', type: 'Hidrante de Parede', sector: 'Corredor Bloco Cirúrgico', capacity: 'Mangueira 30m' },
             { code: 'HID-03', type: 'Hidrante de Parede', sector: 'Hall da Recepção', capacity: 'Mangueira 30m' },
             { code: 'HID-04', type: 'Hidrante de Parede', sector: 'Corredor Reuso', capacity: 'Mangueira 30m' },
-            { code: 'HID-05', type: 'Hidrante Externo', sector: 'Acesso Externo / Estacionamento', capacity: 'Mangueira 30m' },
+            { code: 'HID-05', type: 'Hidrante Externo', sector: 'Estacionamento', capacity: 'Mangueira 30m' },
             { code: 'HID-06', type: 'Hidrante de Parede', sector: 'Sala de Máquinas', capacity: 'Mangueira 30m' }
         ];
 
@@ -355,4 +355,139 @@ export const seedDefaultEquipmentIfEmpty = async () => {
         console.error('Erro ao popular equipamentos padrão =', e);
     }
 };
+
+// ----------------------------------------------------
+// VISTORIAS DE DESCARTE DE RESÍDUOS INFECTANTES (PGRSS / RDC 222)
+// ----------------------------------------------------
+
+export const getWasteInspections = async () => {
+    if (USE_MOCK && mockFirestore.getWasteInspections) return mockFirestore.getWasteInspections();
+    try {
+        const { getFirestore, collection, getDocs, orderBy, query } = await import('firebase/firestore');
+        const db = getFirestore(app);
+        const q = query(collection(db, 'sesmt_waste_inspections'), orderBy('date', 'desc'));
+        const snap = await getDocs(q);
+        
+        if (snap.empty && mockFirestore.getWasteInspections) {
+            const seeded = await mockFirestore.getWasteInspections();
+            if (seeded && seeded.length > 0) return seeded;
+        }
+
+        return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+        console.error('Erro Firestore getWasteInspections, usando fallback:', e);
+        if (mockFirestore.getWasteInspections) {
+            return mockFirestore.getWasteInspections();
+        }
+        return [];
+    }
+};
+
+export const saveWasteInspection = async (item) => {
+    if (USE_MOCK && mockFirestore.saveWasteInspection) {
+        return mockFirestore.saveWasteInspection(item);
+    }
+    try {
+        const { getFirestore, collection, addDoc, doc, updateDoc, getDocs, query, where } = await import('firebase/firestore');
+        const db = getFirestore(app);
+        const dataToSave = { ...item };
+        let savedResult;
+
+        if (dataToSave.id) {
+            const id = dataToSave.id;
+            delete dataToSave.id;
+            const docRef = doc(db, 'sesmt_waste_inspections', id);
+            await updateDoc(docRef, dataToSave);
+            savedResult = { id, ...dataToSave };
+        } else {
+            delete dataToSave.id;
+            const docRef = await addDoc(collection(db, 'sesmt_waste_inspections'), {
+                ...dataToSave,
+                createdAt: new Date().toISOString()
+            });
+            savedResult = { id: docRef.id, ...dataToSave };
+        }
+
+        // Também sincroniza com mockFirestore para manter cache local atualizado
+        if (mockFirestore.saveWasteInspection) {
+            mockFirestore.saveWasteInspection(savedResult).catch(() => {});
+        }
+
+        // Recalcular indicadores de BI para o período (mês YYYY-MM)
+        const period = (savedResult.date || new Date().toISOString()).substring(0, 7);
+        try {
+            const qMonth = query(collection(db, 'sesmt_waste_inspections'));
+            const snapMonth = await getDocs(qMonth);
+            const monthDocs = snapMonth.docs
+                .map(d => d.data())
+                .filter(d => (d.date || '').startsWith(period));
+
+            const total = monthDocs.length;
+            if (total > 0) {
+                const conformes = monthDocs.filter(d => d.status === 'CONFORME').length;
+                const naoConformes = total - conformes;
+                const percConforme = Number(((conformes / total) * 100).toFixed(2));
+                const percNaoConforme = Number(((naoConformes / total) * 100).toFixed(2));
+
+                const { saveSingleIndicatorRecord } = await import('./clinicalService');
+                await Promise.all([
+                    saveSingleIndicatorRecord({ indicatorId: 'sesmt_descarte_infectante_conformidade', sectorId: 'sesmt', value: percConforme, period }, savedResult.auditor),
+                    saveSingleIndicatorRecord({ indicatorId: 'sesmt_descarte_infectante_nao_conformidade', sectorId: 'sesmt', value: percNaoConforme, period }, savedResult.auditor),
+                    saveSingleIndicatorRecord({ indicatorId: 'sesmt_vistorias_residuos_total', sectorId: 'sesmt', value: total, period }, savedResult.auditor)
+                ]);
+            }
+        } catch (indErr) {
+            console.warn('Erro ao atualizar indicadores de BI após salvar vistoria:', indErr);
+        }
+
+        // SM-016: Disparo de Alerta no Feed Assistencial (.ASSIST) se Não Conforme
+        if (item.notifyAssist && item.status === 'NAO_CONFORME') {
+            try {
+                const { createAssistPost } = await import('./assistService');
+                await createAssistPost({
+                    title: `Alerta SESMT: Descarte Irregular em ${item.sector}`,
+                    content: `Detectada não conformidade no descarte de resíduos infectantes durante vistoria técnica no setor ${item.sector} (${item.shift || 'Geral'}).\n` +
+                             `Desvios apontados: ${(item.deviations || []).join(', ') || 'Segregação inadequada'}.\n` +
+                             `Ação imediata recomendada: ${item.immediateAction || 'Adequação imediata conforme RDC 222/2018 e NR-32'}.`,
+                    category: 'alert',
+                    priority: 'high',
+                    author: item.auditor || 'SESMT Segurança',
+                    room: item.sector,
+                    shift: item.shift || 'Geral',
+                    unitId: item.unitId || 'betim'
+                });
+            } catch (assistErr) {
+                console.warn('Erro ao enviar comunicado de alerta no .ASSIST:', assistErr);
+            }
+        }
+
+        return savedResult;
+    } catch (e) {
+        console.error('Erro Firestore saveWasteInspection, gravando no mock local:', e);
+        if (mockFirestore.saveWasteInspection) {
+            return mockFirestore.saveWasteInspection(item);
+        }
+        throw e;
+    }
+};
+
+export const deleteWasteInspection = async (id) => {
+    if (USE_MOCK && mockFirestore.deleteWasteInspection) return mockFirestore.deleteWasteInspection(id);
+    try {
+        const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+        const db = getFirestore(app);
+        await deleteDoc(doc(db, 'sesmt_waste_inspections', id));
+        if (mockFirestore.deleteWasteInspection) {
+            mockFirestore.deleteWasteInspection(id).catch(() => {});
+        }
+        return true;
+    } catch (e) {
+        console.error('Erro Firestore deleteWasteInspection:', e);
+        if (mockFirestore.deleteWasteInspection) {
+            return mockFirestore.deleteWasteInspection(id);
+        }
+        throw e;
+    }
+};
+
 

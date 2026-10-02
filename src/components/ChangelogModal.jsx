@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.5',
+      date: '02/10/2026',
+      title: 'Nex-Ai CLINIC — Auditoria de Descarte de Lixo Infectante, 3 Novos Indicadores no BI, Central de 26 Relatórios e Alertas de Biossegurança (.SESMT, .BI & .ASSIST)',
+      description: 'Implementação completa da rotina de auditoria de segregação hospitalar e descarte de lixo infectante baseada nas normas RDC 222 (Anvisa) e NR-32 (MTE), inspirada nos laudos analíticos da unidade DialiZe Betim-MG (Abril e Junho/2026). Inclusão de 3 novos indicadores estratégicos no Módulo BI (totalizando 18 indicadores no setor SESMT) com metas e histórico real dos períodos auditados; expansão da Central Analítica para 26 relatórios regulamentares com a criação do Relatório 26 ("Descarte de Lixo Infectante por Local"); nova aba e formulário de vistoria em campo com checklist de 6 itens técnicos e assinatura digital touch; dashboard com seção executiva de resíduos, tabela comparativa com percentuais e gráfico de barras agrupadas; e duas melhorias proativas de biossegurança implementadas: Alerta Crítico visual no painel para salas com desvio ≥ 50% (SM-015) e Notificação Automática no Mural Clínico da Enfermagem (.ASSIST) para correção imediata das equipes de salão (SM-016).',
+      changes: [
+        { type: '3 Indicadores no BI', text: 'Adicionados os indicadores de biossegurança: Conformidade de Descarte (meta ≥95%), Taxa de Desvios (meta ≤5%, isLowerBetter) e Total de Vistorias, alimentados em tempo real com histórico fiel aos dados do PDF.' },
+        { type: 'Vistoria de Resíduos', text: 'Novo formulário com checklist de 6 itens regulamentares (saco leitoso, lixeira com pedal íntegro, limite 2/3, rótulo biológico, ausência de perfurocortantes indevidos e uso de EPI) e assinatura touch.' },
+        { type: 'Relatório 26 do SESMT', text: 'Criação do relatório "26. Descarte de Lixo Infectante por Local" com demonstrativo por setor (D.P, Salão 1, Salão 2, Salão 3 e Total Geral) e exportações em Excel, PDF e Impressão.' },
+        { type: 'Melhoria SM-015', text: 'Banner de alerta crítico de biossegurança no painel quando um setor registra desvios ≥ 50% com recomendação de intervenção.' },
+        { type: 'Melhoria SM-016', text: 'Publicação automática de comunicado no Mural da Enfermagem (.ASSIST) ao apontar desvio em vistoria de campo.' },
+        { type: 'UI/UX & Termo Único', text: 'Rótulos rigorosamente padronizados em termo único conforme diretrizes e atualização integral dos manuais em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v5.0.2',
       date: '02/10/2026',
       title: 'Nex-Ai CLINIC — Central de 25 Relatórios do SESMT, Dashboard com 12 Cards e 15 Indicadores no Módulo BI (.SESMT & .BI)',

@@ -1,3 +1,30 @@
+## [v5.0.5] - 02 de Outubro, 2026
+### Nex-Ai CLINIC (.SESMT, .BI & .ASSIST) — Auditoria de Descarte de Lixo Infectante (RDC 222 / NR-32), 3 Novos Indicadores no BI, Central de 26 Relatórios e Alertas de Biossegurança
+- **Rotina de Vistoria de Descarte de Lixo Infectante:**
+  - Criação da rotina especializada de auditoria sanitária e de biossegurança de resíduos infectantes em `DailyWasteChecklist.jsx` e `sesmtService.js`.
+  - Formulário com checklist de 6 itens técnicos regulamentares: Saco branco leitoso apropriado, Lixeira com tampa e pedal íntegro, Limite de 2/3 de capacidade respeitado, Identificação visível de resíduo infectante, Separação estrita de perfurocortantes e Uso obrigatório de EPIs.
+  - Suporte a múltiplos setores clínicos (D.P, Salão 1, Salão 2, Salão 3, Bloco Cirúrgico, etc.), turnos e coleta de assinatura digital touch em campo.
+- **Integração em Tempo Real com Módulo BI (18 Indicadores Oficiais):**
+  - Adicionados 3 novos indicadores estratégicos de biossegurança na base do BI:
+    - `sesmt_descarte_infectante_conformidade`: Taxa de Conformidade no Descarte de Resíduos Infectantes (Meta: ≥ 95.0%).
+    - `sesmt_descarte_infectante_nao_conformidade`: Taxa de Não Conformidade no Descarte (Meta: ≤ 5.0%, com cálculo inteligente `isLowerBetter`).
+    - `sesmt_vistorias_residuos_total`: Total de Vistorias de Resíduos Realizadas no Mês (Meta: 60 vistorias).
+  - Carga histórica dos dados reais de auditoria do PDF para a clínica DialiZe Betim-MG (Abril/26: 56 vistorias, 28.57% conf, 71.43% NC; Junho/26: 76 vistorias, 27.63% conf, 72.37% NC).
+  - Recálculo automático dos indicadores do BI a cada novo checklist de descarte salvo no módulo SESMT.
+- **Painel Executivo de Resíduos no Dashboard do SESMT:**
+  - Banners destacados de Conformidade e Não Conformidade idênticos ao layout executivo dos laudos de auditoria.
+  - Tabela comparativa com quantitativos e percentuais por local (D.P, Salão 1, Salão 2, Salão 3 e Total Geral).
+  - Gráfico de barras agrupadas comparando Conforme x Não Conforme por sala.
+- **Melhorias Proativas de Biossegurança Aprovadas e Implementadas:**
+  - **SM-015:** Alerta Crítico visual destacado no painel para setores que apresentam taxa de não conformidade ≥ 50%.
+  - **SM-016:** Publicação e notificação automática de comunicado de biossegurança no Mural Clínico da Enfermagem (.ASSIST) sempre que uma vistoria com desvios for registrada.
+- **Central de 26 Relatórios do SESMT:**
+  - Inclusão do relatório regulamentar **"26. Descarte de Lixo Infectante por Local"** com exportação completa em Excel (.xlsx), PDF timbrado e Impressão direta.
+- **Documentação e Padrões de Interface:**
+  - Atualização completa do manual do SESMT em `src/data/moduleGuidesData.js` com novos recursos, tutoriais de campo e FAQ.
+  - Registro de SM-015 e SM-016 como Aprovadas / Implementadas em `SUGESTOES_MELHORIAS.md`.
+  - Rigorosa aplicação da diretriz de 1 termo/palavra e Boy Scout Rule nos rótulos de interface.
+
 ## [v5.0.2] - 02 de Outubro, 2026
 ### Nex-Ai CLINIC (.SESMT & .BI) — Central de 25 Relatórios do SESMT, Dashboard com 12 Cards e 15 Indicadores no Módulo BI
 - **Central Analítica de Relatórios do SESMT (25 Relatórios Oficiais):**

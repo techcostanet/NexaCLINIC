@@ -14,7 +14,7 @@ import {
   Printer
 } from 'lucide-react';
 
-export default function SesmtHistory({ epiData = [], copaData = [], extinguisherData = [], hydrantData = [], onRefresh }) {
+export default function SesmtHistory({ epiData = [], copaData = [], wasteData = [], extinguisherData = [], hydrantData = [], onRefresh }) {
   const [selectedType, setSelectedType] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -34,6 +34,16 @@ export default function SesmtHistory({ epiData = [], copaData = [], extinguisher
 
   // Normalizar registros para listagem unificada
   const normalizedRecords = [
+    ...wasteData.map(item => ({
+      ...item,
+      recordType: 'WASTE',
+      typeLabel: 'Vistoria Resíduos',
+      displayDate: item.date || '',
+      displayTime: item.time || '',
+      displaySector: item.sector || '-',
+      displayShift: item.shift || '-',
+      responsible: item.auditor || '-'
+    })),
     ...epiData.map(item => ({
       ...item,
       recordType: 'EPI',
@@ -111,6 +121,8 @@ export default function SesmtHistory({ epiData = [], copaData = [], extinguisher
         await dbService.deleteEpiInspection(record.id);
       } else if (record.recordType === 'COPA') {
         await dbService.deleteCopaInspection(record.id);
+      } else if (record.recordType === 'WASTE') {
+        await dbService.deleteWasteInspection(record.id);
       } else if (record.recordType === 'EXTINGUISHER') {
         await dbService.deleteFireExtinguisherInspection(record.id);
       } else if (record.recordType === 'HYDRANT') {
@@ -127,6 +139,8 @@ export default function SesmtHistory({ epiData = [], copaData = [], extinguisher
 
   const getTypeBadgeStyle = (type) => {
     switch (type) {
+      case 'WASTE':
+        return { backgroundColor: '#ecfdf5', color: '#059669', borderColor: '#a7f3d0' };
       case 'EPI':
         return { backgroundColor: '#ecfeff', color: '#0891b2', borderColor: '#a5f3fc' };
       case 'COPA':
@@ -341,6 +355,12 @@ export default function SesmtHistory({ epiData = [], copaData = [], extinguisher
             onClick={() => setSelectedType('COPA')}
           >
             Copa ({copaData.length})
+          </button>
+          <button 
+            style={{ ...styles.typeTab, ...(selectedType === 'WASTE' ? styles.typeTabActive : {}) }}
+            onClick={() => setSelectedType('WASTE')}
+          >
+            Resíduos ({wasteData.length})
           </button>
           <button 
             style={{ ...styles.typeTab, ...(selectedType === 'EXTINGUISHER' ? styles.typeTabActive : {}) }}
@@ -866,6 +886,58 @@ export default function SesmtHistory({ epiData = [], copaData = [], extinguisher
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* Conteúdo de Resíduos Infectantes (PGRSS / RDC 222) */}
+              {selectedItem.recordType === 'WASTE' && (
+                <div style={{ marginTop: '1.5rem' }}>
+                  <h4 style={styles.sectionTitle}>Vistoria de Resíduos Infectantes (PGRSS / RDC 222)</h4>
+                  <div style={{ 
+                    padding: '1.25rem', 
+                    borderRadius: '8px', 
+                    backgroundColor: selectedItem.status === 'CONFORME' ? '#ecfdf5' : '#fef2f2',
+                    border: `1px solid ${selectedItem.status === 'CONFORME' ? '#a7f3d0' : '#fecaca'}`,
+                    marginBottom: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '1rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      {selectedItem.status === 'CONFORME' ? (
+                        <Check size={24} color="#10b981" />
+                      ) : (
+                        <AlertTriangle size={24} color="#ef4444" />
+                      )}
+                      <div>
+                        <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: selectedItem.status === 'CONFORME' ? '#065f46' : '#991b1b' }}>Resultado</span>
+                        <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: selectedItem.status === 'CONFORME' ? '#065f46' : '#991b1b' }}>
+                          {selectedItem.status === 'CONFORME' ? 'Conforme (Aprovado)' : 'Não Conforme (Desvios Detectados)'}
+                        </h4>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Local: <strong>{selectedItem.sector}</strong> | Turno: <strong>{selectedItem.shift}</strong></span>
+                  </div>
+
+                  {selectedItem.deviations && selectedItem.deviations.length > 0 && (
+                    <div style={{ marginBottom: '1.25rem' }}>
+                      <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#991b1b', marginBottom: '0.5rem' }}>Desvios Apontados:</h5>
+                      <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#334155', fontSize: '0.85rem' }}>
+                        {selectedItem.deviations.map((dev, idx) => (
+                          <li key={idx} style={{ marginBottom: '0.25rem' }}>{dev}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {selectedItem.immediateAction && (
+                    <div style={{ padding: '0.85rem', borderRadius: '6px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', marginBottom: '1.25rem' }}>
+                      <strong style={{ fontSize: '0.8rem', color: '#92400e', display: 'block', marginBottom: '0.25rem' }}>Ação Imediata Adotada:</strong>
+                      <span style={{ fontSize: '0.85rem', color: '#78350f' }}>{selectedItem.immediateAction}</span>
+                    </div>
+                  )}
                 </div>
               )}
 

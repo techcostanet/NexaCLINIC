@@ -359,7 +359,11 @@ export default function Dashboard({ currentUser }) {
            term.includes('vencido') ||
            term.includes('desvio') ||
            term.includes('reincidencia') ||
-           term.includes('reincidência');
+           term.includes('reincidência') ||
+           term.includes('não conforme') ||
+           term.includes('nao_conforme') ||
+           term.includes('não conformidade') ||
+           term.includes('nao_conformidade');
   };
 
   // Filter indicators and data

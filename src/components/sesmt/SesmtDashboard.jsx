@@ -20,11 +20,14 @@ import {
   Thermometer,
   AlertOctagon,
   UserCheck,
-  CheckCheck
+  CheckCheck,
+  Trash2,
+  ArrowRight
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import DailyEPIChecklist from './DailyEPIChecklist';
 import DailyCopaChecklist from './DailyCopaChecklist';
+import DailyWasteChecklist from './DailyWasteChecklist';
 import WeeklyFireExtinguisherForm from './WeeklyFireExtinguisherForm';
 import WeeklyFireHydrantForm from './WeeklyFireHydrantForm';
 import SesmtHistory from './SesmtHistory';
@@ -37,6 +40,10 @@ const CATEGORY_COLORS = ['#10b981', '#d97706', '#f97316', '#0284c7'];
 
 const SECTOR_OPTIONS = [
   'TODOS',
+  'D.P',
+  'Salão 1',
+  'Salão 2',
+  'Salão 3',
   'Salão Hemodiálise 1', 
   'Salão Hemodiálise 2', 
   'Salão Hemodiálise 3', 
@@ -59,6 +66,7 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
   const [activeTab, setActiveTab] = useState('dashboard');
   const [epiData, setEpiData] = useState([]);
   const [copaData, setCopaData] = useState([]);
+  const [wasteData, setWasteData] = useState([]);
   const [extinguisherData, setExtinguisherData] = useState([]);
   const [hydrantData, setHydrantData] = useState([]);
   const [equipmentData, setEquipmentData] = useState([]);
@@ -79,12 +87,13 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [epis, extinguishers, hydrants, equipment, copas] = await Promise.all([
+      const [epis, extinguishers, hydrants, equipment, copas, wastes] = await Promise.all([
         dbService.getEpiInspections(),
         dbService.getFireExtinguisherInspections(),
         dbService.getFireHydrantInspections(),
         dbService.getEquipment(),
-        dbService.getCopaInspections()
+        dbService.getCopaInspections(),
+        dbService.getWasteInspections()
       ]);
       
       setEpiData(epis || []);
@@ -92,6 +101,7 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
       setHydrantData(hydrants || []);
       setEquipmentData(equipment || []);
       setCopaData(copas || []);
+      setWasteData(wastes || []);
     } catch (err) {
       console.error('Failed to fetch SESMT data', err);
     } finally {
@@ -195,6 +205,115 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
   // CÁLCULO DOS 12 INDICADORES EXECUTIVOS DO SESMT
   // ==========================================
 
+  // Vistorias de Resíduos Infectantes filtradas
+  const filteredWasteData = useMemo(() => {
+    return wasteData.filter(item => {
+      if (!isDateInPeriod(item.date)) return false;
+      if (selectedSector !== 'TODOS') {
+        const sec = (item.sector || '').toLowerCase();
+        const sel = selectedSector.toLowerCase();
+        const matchExact = sec === sel;
+        const matchDP = (sec === 'd.p' || sec.includes('peritoneal')) && (sel === 'd.p' || sel.includes('peritoneal'));
+        const matchS1 = (sec === 'salão 1' || sec.includes('1')) && (sel === 'salão 1' || sel.includes('1'));
+        const matchS2 = (sec === 'salão 2' || sec.includes('2')) && (sel === 'salão 2' || sel.includes('2'));
+        const matchS3 = (sec === 'salão 3' || sec.includes('3')) && (sel === 'salão 3' || sel.includes('3'));
+        if (!matchExact && !matchDP && !matchS1 && !matchS2 && !matchS3) return false;
+      }
+      if (selectedShift !== 'TODOS' && item.shift !== selectedShift) return false;
+      return true;
+    });
+  }, [wasteData, periodPreset, customStartDate, customEndDate, selectedSector, selectedShift]);
+
+  // Cálculos de Resíduos Infectantes
+  const wasteTotal = filteredWasteData.length;
+  const wasteConform = filteredWasteData.filter(i => i.status === 'CONFORME').length;
+  const wasteNotConform = wasteTotal - wasteConform;
+  const wasteComplianceRate = wasteTotal > 0 ? Number(((wasteConform / wasteTotal) * 100).toFixed(2)) : 100;
+  const wasteNotComplianceRate = wasteTotal > 0 ? Number(((wasteNotConform / wasteTotal) * 100).toFixed(2)) : 0;
+
+  // Setores de Alto Risco de Não Conformidade (SM-015)
+  const highRiskWasteSectors = useMemo(() => {
+    const stats = {};
+    filteredWasteData.forEach(item => {
+      const s = item.sector || 'Geral';
+      if (!stats[s]) stats[s] = { total: 0, nc: 0 };
+      stats[s].total++;
+      if (item.status === 'NAO_CONFORME') stats[s].nc++;
+    });
+    return Object.entries(stats)
+      .map(([sec, data]) => ({
+        sector: sec,
+        total: data.total,
+        nc: data.nc,
+        rate: data.total > 0 ? Math.round((data.nc / data.total) * 100) : 0
+      }))
+      .filter(s => s.total >= 3 && s.rate >= 50)
+      .sort((a, b) => b.rate - a.rate);
+  }, [filteredWasteData]);
+
+  // Estatística Estratificada por Local (Conforme x Não Conforme - Modelo PDF)
+  const wasteStatsBySector = useMemo(() => {
+    const mainSectors = ['D.P', 'Salão 1', 'Salão 2', 'Salão 3'];
+    const sectorMap = {};
+    mainSectors.forEach(s => {
+      sectorMap[s] = { name: s, conform: 0, notConform: 0, total: 0 };
+    });
+
+    filteredWasteData.forEach(item => {
+      let secName = item.sector || 'Outros';
+      const sLower = secName.toLowerCase();
+      if (sLower === 'd.p' || sLower.includes('peritoneal')) secName = 'D.P';
+      else if (sLower.includes('1')) secName = 'Salão 1';
+      else if (sLower.includes('2')) secName = 'Salão 2';
+      else if (sLower.includes('3')) secName = 'Salão 3';
+
+      if (!sectorMap[secName]) {
+        sectorMap[secName] = { name: secName, conform: 0, notConform: 0, total: 0 };
+      }
+      sectorMap[secName].total++;
+      if (item.status === 'CONFORME') sectorMap[secName].conform++;
+      else sectorMap[secName].notConform++;
+    });
+
+    const rows = Object.values(sectorMap).map(s => {
+      const percConform = s.total > 0 ? Number(((s.conform / s.total) * 100).toFixed(2)) : 0;
+      const percNotConform = s.total > 0 ? Number(((s.notConform / s.total) * 100).toFixed(2)) : 0;
+      return {
+        ...s,
+        percConform,
+        percNotConform,
+        'Conforme': s.conform,
+        'Não Conforme': s.notConform
+      };
+    });
+
+    return rows;
+  }, [filteredWasteData]);
+
+  const wasteStatsWithTotal = useMemo(() => {
+    const list = [...wasteStatsBySector];
+    const totalConform = list.reduce((acc, s) => acc + s.conform, 0);
+    const totalNotConform = list.reduce((acc, s) => acc + s.notConform, 0);
+    const grandTotal = totalConform + totalNotConform;
+    const totalRateConform = grandTotal > 0 ? Number(((totalConform / grandTotal) * 100).toFixed(2)) : 0;
+    const totalRateNotConform = grandTotal > 0 ? Number(((totalNotConform / grandTotal) * 100).toFixed(2)) : 0;
+
+    return [
+      ...list,
+      {
+        name: 'Total Geral',
+        conform: totalConform,
+        notConform: totalNotConform,
+        total: grandTotal,
+        percConform: totalRateConform,
+        percNotConform: totalRateNotConform,
+        'Conforme': totalConform,
+        'Não Conforme': totalNotConform,
+        isTotal: true
+      }
+    ];
+  }, [wasteStatsBySector]);
+
   // 1. Taxa de Conformidade Geral de EPI
   let epiTotalEval = 0;
   let epiConformEval = 0;
@@ -218,7 +337,7 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
   const complianceRate = epiTotalEval > 0 ? Math.round((epiConformEval / epiTotalEval) * 100) : 100;
 
   // 2. Total Geral de Formulários e Inspeções
-  const totalInspectionsCount = filteredEpiData.length + filteredCopaData.length + filteredExtData.length + filteredHydData.length;
+  const totalInspectionsCount = filteredEpiData.length + filteredCopaData.length + filteredExtData.length + filteredHydData.length + filteredWasteData.length;
 
   // 3, 4, 5. Status de Validade dos Extintores (Monitoramento dinâmico do cadastro ativo)
   let extValid = 0;
@@ -406,6 +525,12 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
           onClick={() => setActiveTab('epi')}
         >
           <CheckCircle2 size={16} /> EPI
+        </button>
+        <button 
+          style={{ ...styles.tabButton, ...(activeTab === 'residuos' ? styles.tabActive : {}) }}
+          onClick={() => setActiveTab('residuos')}
+        >
+          <Trash2 size={16} /> Resíduos
         </button>
         <button 
           style={{ ...styles.tabButton, ...(activeTab === 'copa' ? styles.tabActive : {}) }}
@@ -677,6 +802,165 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
             </div>
           </div>
 
+          {/* ==================================================== */}
+          {/* SEÇÃO EXECUTIVA: DESCARTE DE RESÍDUOS INFECTANTES (PDF) */}
+          {/* ==================================================== */}
+          <div style={styles.wasteSectionCard}>
+            <div style={styles.wasteSectionHeader}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <Trash2 size={20} color="#059669" />
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: '#0f172a' }}>
+                    Descarte de Lixo Infectante
+                  </h3>
+                </div>
+                <p style={{ margin: '3px 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+                  Auditoria de segregação hospitalar e conformidade de biossegurança (RDC 222 / NR-32)
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <button
+                  onClick={() => setActiveTab('residuos')}
+                  style={styles.wasteNewInspectionBtn}
+                  title="Registrar nova vistoria"
+                >
+                  <Trash2 size={15} />
+                  <span>Nova Vistoria</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Banners Executivos Principais (Layout dos Slides do PDF) */}
+            <div style={styles.wasteKpiBanners}>
+              <div style={styles.wasteBannerConform}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <CheckCircle2 size={22} color="#059669" />
+                  <span style={styles.wasteBannerLabel}>Conforme</span>
+                </div>
+                <div style={styles.wasteBannerValueConform}>
+                  {wasteComplianceRate}%
+                </div>
+                <span style={styles.wasteBannerSub}>
+                  {wasteConform} de {wasteTotal} vistorias no período
+                </span>
+              </div>
+
+              <div style={styles.wasteBannerNotConform}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <AlertTriangle size={22} color="#dc2626" />
+                  <span style={styles.wasteBannerLabelNC}>Não Conforme</span>
+                </div>
+                <div style={styles.wasteBannerValueNC}>
+                  {wasteNotComplianceRate}%
+                </div>
+                <span style={styles.wasteBannerSubNC}>
+                  {wasteNotConform} desvios apontados no período
+                </span>
+              </div>
+            </div>
+
+            {/* SM-015: Alerta Crítico para Setores com > 50% de Não Conformidade */}
+            {highRiskWasteSectors.length > 0 && (
+              <div style={styles.wasteCriticalAlert}>
+                <AlertOctagon size={20} color="#b91c1c" />
+                <div style={{ flex: 1 }}>
+                  <strong style={{ color: '#991b1b', fontSize: '0.85rem', display: 'block' }}>
+                    Alerta Crítico de Biossegurança: Desvios elevados detectados!
+                  </strong>
+                  <span style={{ fontSize: '0.8rem', color: '#7f1d1d' }}>
+                    {highRiskWasteSectors.map(s => `${s.sector}: ${s.rate}% não conforme (${s.nc}/${s.total})`).join(' • ')}.
+                    Recomenda-se reciclagem técnica imediata da equipe e checagem de lixeiras/pedais.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Tabela Comparativa e Gráfico de Barras Agrupadas (Fiel ao PDF) */}
+            <div style={styles.wasteAnalysisGrid}>
+              {/* Tabela do PDF */}
+              <div style={{ overflowX: 'auto' }}>
+                <table style={styles.wasteTable}>
+                  <thead>
+                    <tr style={styles.wasteTableHeaderTop}>
+                      <th rowSpan={2} style={styles.wasteThMain}>Local</th>
+                      <th colSpan={3} style={{ ...styles.wasteThMain, textAlign: 'center', borderBottom: '1px solid #cbd5e1' }}>Qnt. Vistorias</th>
+                      <th colSpan={2} style={{ ...styles.wasteThMain, textAlign: 'center', borderBottom: '1px solid #cbd5e1' }}>% Período</th>
+                    </tr>
+                    <tr style={styles.wasteTableHeaderSub}>
+                      <th style={styles.wasteThSub}>Conforme</th>
+                      <th style={styles.wasteThSub}>Não Conforme</th>
+                      <th style={styles.wasteThSub}>Total</th>
+                      <th style={styles.wasteThSub}>Conforme</th>
+                      <th style={styles.wasteThSub}>Não Conforme</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {wasteStatsWithTotal.map((row, idx) => (
+                      <tr 
+                        key={row.name} 
+                        style={{
+                          ...styles.wasteTableRow,
+                          backgroundColor: row.isTotal ? '#f8fafc' : (idx % 2 === 0 ? '#ffffff' : '#fcfcfd'),
+                          fontWeight: row.isTotal ? '800' : '500'
+                        }}
+                      >
+                        <td style={{ ...styles.wasteTd, fontWeight: row.isTotal ? '800' : '600', color: row.isTotal ? '#0f172a' : '#334155' }}>
+                          {row.name}
+                        </td>
+                        <td style={{ ...styles.wasteTd, textAlign: 'center', color: '#059669', fontWeight: '700' }}>
+                          {row.conform}
+                        </td>
+                        <td style={{ ...styles.wasteTd, textAlign: 'center', color: row.notConform > 0 ? '#dc2626' : '#64748b', fontWeight: '700' }}>
+                          {row.notConform}
+                        </td>
+                        <td style={{ ...styles.wasteTd, textAlign: 'center', fontWeight: '700' }}>
+                          {row.total}
+                        </td>
+                        <td style={{ ...styles.wasteTd, textAlign: 'center', color: '#059669', fontWeight: '700' }}>
+                          {row.percConform.toFixed(2)}%
+                        </td>
+                        <td style={{ ...styles.wasteTd, textAlign: 'center', color: row.percNotConform > 5 ? '#dc2626' : '#64748b', fontWeight: '700' }}>
+                          {row.percNotConform.toFixed(2)}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Gráfico de Barras Agrupadas (Fiel ao PDF) */}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '700', color: '#334155' }}>
+                    Descarte de Lixo Infectante por Local
+                  </h4>
+                  <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#059669', fontWeight: '700' }}>
+                      <span style={{ width: '10px', height: '10px', backgroundColor: '#10b981', borderRadius: '2px' }} /> Conforme
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#ea580c', fontWeight: '700' }}>
+                      <span style={{ width: '10px', height: '10px', backgroundColor: '#ea580c', borderRadius: '2px' }} /> Não Conforme
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ height: '220px', width: '100%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={wasteStatsWithTotal} margin={{ top: 15, right: 10, left: -15, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fontWeight: 600 }} />
+                      <YAxis tick={{ fontSize: 10 }} />
+                      <Tooltip formatter={(val, name) => [`${val} vistoria(s)`, name]} />
+                      <Bar dataKey="Conforme" fill="#10b981" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="Não Conforme" fill="#ea580c" radius={[3, 3, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Seção de Gráficos e Análise de Risco */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
             {/* Gráfico 1: Inconformidades por Setor */}
@@ -815,6 +1099,7 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
       )}
 
       {/* Abas de Formulários e Histórico */}
+      {activeTab === 'residuos' && <DailyWasteChecklist onSuccess={fetchData} existingInspections={wasteData} />}
       {activeTab === 'epi' && <DailyEPIChecklist onSuccess={fetchData} />}
       {activeTab === 'copa' && <DailyCopaChecklist onSuccess={fetchData} />}
       {activeTab === 'extintores' && <WeeklyFireExtinguisherForm onSuccess={fetchData} />}
@@ -823,18 +1108,20 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
         <SesmtHistory 
           epiData={epiData} 
           copaData={copaData}
+          wasteData={wasteData}
           extinguisherData={extinguisherData} 
           hydrantData={hydrantData} 
           onRefresh={fetchData} 
         />
       )}
 
-      {/* Central de 25 Relatórios Especializados do SESMT */}
+      {/* Central de Relatórios Especializados do SESMT */}
       <SesmtReportsModal
         isOpen={showReportsModal}
         onClose={() => setShowReportsModal(false)}
         epiData={epiData}
         copaData={copaData}
+        wasteData={wasteData}
         extinguisherData={extinguisherData}
         hydrantData={hydrantData}
         equipmentData={equipmentData}
@@ -1048,5 +1335,154 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     textAlign: 'center'
+  },
+  wasteSectionCard: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #cbd5e1',
+    borderRadius: '12px',
+    padding: '1.25rem',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.04)',
+    marginBottom: '1.25rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem'
+  },
+  wasteSectionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.75rem',
+    borderBottom: '1px solid #f1f5f9',
+    paddingBottom: '0.85rem'
+  },
+  wasteNewInspectionBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.45rem 0.85rem',
+    backgroundColor: '#059669',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '0.82rem',
+    fontWeight: '700',
+    cursor: 'pointer',
+    transition: 'all 0.15s',
+    boxShadow: '0 1px 2px rgba(5,150,105,0.2)'
+  },
+  wasteKpiBanners: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '1rem'
+  },
+  wasteBannerConform: {
+    backgroundColor: '#f0fdf4',
+    border: '1px solid #bbf7d0',
+    borderLeft: '5px solid #059669',
+    borderRadius: '10px',
+    padding: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem'
+  },
+  wasteBannerLabel: {
+    fontSize: '0.8rem',
+    fontWeight: '800',
+    color: '#059669',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em'
+  },
+  wasteBannerValueConform: {
+    fontSize: '2rem',
+    fontWeight: '900',
+    color: '#065f46',
+    margin: '0.2rem 0'
+  },
+  wasteBannerSub: {
+    fontSize: '0.75rem',
+    color: '#047857',
+    fontWeight: '600'
+  },
+  wasteBannerNotConform: {
+    backgroundColor: '#fef2f2',
+    border: '1px solid #fecaca',
+    borderLeft: '5px solid #dc2626',
+    borderRadius: '10px',
+    padding: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem'
+  },
+  wasteBannerLabelNC: {
+    fontSize: '0.8rem',
+    fontWeight: '800',
+    color: '#dc2626',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em'
+  },
+  wasteBannerValueNC: {
+    fontSize: '2rem',
+    fontWeight: '900',
+    color: '#991b1b',
+    margin: '0.2rem 0'
+  },
+  wasteBannerSubNC: {
+    fontSize: '0.75rem',
+    color: '#b91c1c',
+    fontWeight: '600'
+  },
+  wasteCriticalAlert: {
+    backgroundColor: '#fef2f2',
+    border: '1px solid #f87171',
+    borderRadius: '8px',
+    padding: '0.85rem 1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem'
+  },
+  wasteAnalysisGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+    gap: '1.25rem',
+    alignItems: 'start'
+  },
+  wasteTable: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontSize: '0.82rem',
+    backgroundColor: '#ffffff',
+    border: '1px solid #cbd5e1',
+    borderRadius: '8px',
+    overflow: 'hidden'
+  },
+  wasteTableHeaderTop: {
+    backgroundColor: '#f1f5f9',
+    color: '#1e293b'
+  },
+  wasteTableHeaderSub: {
+    backgroundColor: '#f8fafc',
+    color: '#475569'
+  },
+  wasteThMain: {
+    padding: '0.6rem 0.75rem',
+    fontWeight: '700',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.78rem'
+  },
+  wasteThSub: {
+    padding: '0.5rem 0.6rem',
+    fontWeight: '600',
+    border: '1px solid #cbd5e1',
+    textAlign: 'center',
+    fontSize: '0.75rem'
+  },
+  wasteTableRow: {
+    transition: 'background-color 0.15s'
+  },
+  wasteTd: {
+    padding: '0.55rem 0.75rem',
+    border: '1px solid #e2e8f0',
+    fontSize: '0.8rem'
   }
 };

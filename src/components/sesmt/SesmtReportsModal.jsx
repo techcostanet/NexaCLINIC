@@ -3,7 +3,8 @@ import {
   X, FileText, Download, FileSpreadsheet, Calendar, 
   ShieldCheck, Activity, Printer, CheckCircle2, AlertTriangle, 
   Clock, Flame, Droplet, Coffee, Shield, Search, Layers,
-  Thermometer, UserCheck, AlertOctagon, CheckCheck, RefreshCw
+  Thermometer, UserCheck, AlertOctagon, CheckCheck, RefreshCw,
+  Trash2
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -15,6 +16,7 @@ export default function SesmtReportsModal({
   onClose,
   epiData = [],
   copaData = [],
+  wasteData = [],
   extinguisherData = [],
   hydrantData = [],
   equipmentData = [],
@@ -327,6 +329,20 @@ export default function SesmtReportsModal({
       badge: 'Ativos',
       badgeColor: '#0891b2',
       icon: FileText
+    },
+
+    // ----------------------------------------------------
+    // ASSUNTO 6: RESÍDUOS & BIOSSEGURANÇA (RDC 222 / NR-32)
+    // ----------------------------------------------------
+    {
+      id: 'SESMT_RESIDUOS_DESCARTE_INFECTANTE',
+      section: 'RESIDUOS',
+      num: 26,
+      title: '26. Descarte de Lixo Infectante por Local',
+      desc: 'Demonstrativo estatístico e analítico de vistorias de descarte com quantitativo e percentual por setor.',
+      badge: 'Resíduos',
+      badgeColor: '#059669',
+      icon: Trash2
     }
   ];
 
@@ -408,6 +424,13 @@ export default function SesmtReportsModal({
 
     const filteredExtInspections = extinguisherData.filter(i => isDateInPeriod(i.date));
     const filteredHydInspections = hydrantData.filter(i => isDateInPeriod(i.date));
+
+    const filteredWastes = wasteData.filter(i => {
+      if (!isDateInPeriod(i.date)) return false;
+      if (sectorFilter !== 'TODOS' && i.sector !== sectorFilter) return false;
+      if (shiftFilter !== 'TODOS' && i.shift !== shiftFilter) return false;
+      return true;
+    });
 
     const activeExtinguishers = equipmentData.filter(e => (e.category || 'EXTINGUISHER') === 'EXTINGUISHER');
     const activeHydrants = equipmentData.filter(e => e.category === 'HYDRANT');
@@ -1381,12 +1404,92 @@ export default function SesmtReportsModal({
         break;
       }
 
+      // 26. Descarte de Lixo Infectante por Local (RDC 222 / NR-32)
+      case 'SESMT_RESIDUOS_DESCARTE_INFECTANTE': {
+        cols = [
+          { header: 'Local', key: 'location' },
+          { header: 'Conforme', key: 'conformCount' },
+          { header: 'Desvios', key: 'notConformCount' },
+          { header: 'Total', key: 'totalCount' },
+          { header: '% Conforme', key: 'percConform' },
+          { header: '% Desvio', key: 'percNotConform' },
+          { header: 'Status', key: 'status' }
+        ];
+
+        // Mapear por setores padrão conforme documento: D.P, Salão 1, Salão 2, Salão 3
+        const sectorsMap = {};
+        const defaultSectors = ['D.P', 'Salão 1', 'Salão 2', 'Salão 3'];
+        defaultSectors.forEach(s => {
+          sectorsMap[s] = { conform: 0, notConform: 0, total: 0 };
+        });
+
+        filteredWastes.forEach(w => {
+          const loc = w.sector || 'Geral';
+          if (!sectorsMap[loc]) {
+            sectorsMap[loc] = { conform: 0, notConform: 0, total: 0 };
+          }
+          if (w.isConform || w.status === 'CONFORME') {
+            sectorsMap[loc].conform++;
+          } else {
+            sectorsMap[loc].notConform++;
+          }
+          sectorsMap[loc].total++;
+        });
+
+        let totalConf = 0;
+        let totalNC = 0;
+        let totalGeral = 0;
+
+        data = Object.entries(sectorsMap).map(([locName, counts]) => {
+          const c = counts.conform;
+          const nc = counts.notConform;
+          const tot = counts.total;
+          totalConf += c;
+          totalNC += nc;
+          totalGeral += tot;
+
+          const pC = tot > 0 ? ((c / tot) * 100).toFixed(2) : '0.00';
+          const pNC = tot > 0 ? ((nc / tot) * 100).toFixed(2) : '0.00';
+          const status = tot === 0 ? 'Sem Vistorias' : parseFloat(pNC) >= 50 ? 'Crítico (Alto Risco)' : parseFloat(pNC) > 5 ? 'Atenção' : 'Conforme';
+
+          return {
+            location: locName,
+            conformCount: c,
+            notConformCount: nc,
+            totalCount: tot,
+            percConform: `${pC}%`,
+            percNotConform: `${pNC}%`,
+            status
+          };
+        });
+
+        // Adiciona linha de Total Geral
+        const generalPC = totalGeral > 0 ? ((totalConf / totalGeral) * 100).toFixed(2) : '0.00';
+        const generalPNC = totalGeral > 0 ? ((totalNC / totalGeral) * 100).toFixed(2) : '0.00';
+        data.push({
+          location: 'TOTAL GERAL',
+          conformCount: totalConf,
+          notConformCount: totalNC,
+          totalCount: totalGeral,
+          percConform: `${generalPC}%`,
+          percNotConform: `${generalPNC}%`,
+          status: parseFloat(generalPNC) > 5 ? 'Não Conforme (>5%)' : 'Conforme (Meta ≤5%)'
+        });
+
+        kpis = [
+          { label: 'Vistorias', value: totalGeral, color: '#0891b2' },
+          { label: 'Conformidade', value: `${generalPC}%`, color: '#059669' },
+          { label: 'Desvios', value: `${generalPNC}%`, color: parseFloat(generalPNC) > 5 ? '#dc2626' : '#10b981' }
+        ];
+        break;
+      }
+
       default:
         break;
     }
 
     return { reportData: data, reportColumns: cols, reportKpis: kpis, currentReportMeta: meta };
-  }, [selectedReport, epiData, copaData, extinguisherData, hydrantData, equipmentData, periodPreset, customStartDate, customEndDate, sectorFilter, shiftFilter]);
+  }, [selectedReport, epiData, copaData, wasteData, extinguisherData, hydrantData, equipmentData, periodPreset, customStartDate, customEndDate, sectorFilter, shiftFilter]);
 
   // Exportação para Planilha Excel (.xlsx)
   const handleExportExcel = () => {
@@ -1465,7 +1568,7 @@ export default function SesmtReportsModal({
             <div>
               <h2 style={styles.title}>Central de Relatórios SESMT</h2>
               <p style={styles.subtitle}>
-                25 relatórios regulamentares (EPI, Extintores, Hidrantes, Copa e Ativos) em conformidade com as NRs 06, 23 e 32
+                26 relatórios regulamentares (EPI, Extintores, Hidrantes, Copa, Resíduos e Ativos) em conformidade com as NRs 06, 23 e 32
               </p>
             </div>
           </div>
@@ -1477,11 +1580,12 @@ export default function SesmtReportsModal({
         {/* Abas Superiores de Assuntos (Categorias) */}
         <div style={styles.categoryTabs}>
           {[
-            { id: 'ALL', label: 'Todos (25)' },
+            { id: 'ALL', label: 'Todos (26)' },
             { id: 'EPI', label: 'EPI (5)' },
             { id: 'EXTINTORES', label: 'Extintores (5)' },
             { id: 'HIDRANTES', label: 'Hidrantes (5)' },
             { id: 'COPA', label: 'Copa (5)' },
+            { id: 'RESIDUOS', label: 'Resíduos (1)' },
             { id: 'ATIVOS', label: 'Ativos (5)' }
           ].map(tab => (
             <button

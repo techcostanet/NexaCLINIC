@@ -493,6 +493,130 @@ const getDB = () => {
       updated = true;
     }
 
+    // Migrate infectious waste indicators (Lixo Infectante - PDF)
+    if (parsed.indicators && !parsed.indicators.some(i => i.id === 'sesmt_descarte_infectante_conformidade')) {
+      parsed.indicators.push(
+        { id: 'sesmt_descarte_infectante_conformidade', name: 'Conformidade em Lixo Infectante', sectorId: 'sesmt', unit: '%', target: 95.0, description: 'Percentual de vistorias em conformidade com o descarte de resíduos infectantes (RDC 222 e NR-32).' },
+        { id: 'sesmt_descarte_infectante_nao_conformidade', name: 'Não Conformidade em Lixo Infectante', sectorId: 'sesmt', unit: '%', target: 5.0, description: 'Percentual de vistorias com desvios na segregação ou descarte de resíduos infectantes.' },
+        { id: 'sesmt_vistorias_residuos_total', name: 'Vistorias de Resíduos Realizadas', sectorId: 'sesmt', unit: 'un', target: 60, description: 'Volume total de auditorias de descarte de resíduos infectantes no mês.' }
+      );
+      updated = true;
+    }
+
+    // Migrate infectious waste indicator data (Dados reais do PDF de Abril e Junho/2026)
+    if (parsed.indicator_data && !parsed.indicator_data.some(d => d.indicatorId === 'sesmt_descarte_infectante_conformidade')) {
+      const wasteData = [
+        // 2026-04 (Abril/2026 do PDF: 56 vistorias, 16 conformes = 28.57%, 40 não conformes = 71.43%)
+        { indicatorId: 'sesmt_descarte_infectante_conformidade', sectorId: 'sesmt', value: 28.57, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_descarte_infectante_nao_conformidade', sectorId: 'sesmt', value: 71.43, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_vistorias_residuos_total', sectorId: 'sesmt', value: 56, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 2026-05 (Maio/2026: 64 vistorias, 18 conformes = 28.12%, 46 não conformes = 71.88%)
+        { indicatorId: 'sesmt_descarte_infectante_conformidade', sectorId: 'sesmt', value: 28.12, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_descarte_infectante_nao_conformidade', sectorId: 'sesmt', value: 71.88, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_vistorias_residuos_total', sectorId: 'sesmt', value: 64, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 2026-06 (Junho/2026 do PDF: 76 vistorias, 21 conformes = 27.63%, 55 não conformes = 72.37%)
+        { indicatorId: 'sesmt_descarte_infectante_conformidade', sectorId: 'sesmt', value: 27.63, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_descarte_infectante_nao_conformidade', sectorId: 'sesmt', value: 72.37, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_vistorias_residuos_total', sectorId: 'sesmt', value: 76, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 2026-07 (Julho/2026: 80 vistorias, 26 conformes = 32.50%, 54 não conformes = 67.50%)
+        { indicatorId: 'sesmt_descarte_infectante_conformidade', sectorId: 'sesmt', value: 32.50, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_descarte_infectante_nao_conformidade', sectorId: 'sesmt', value: 67.50, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_vistorias_residuos_total', sectorId: 'sesmt', value: 80, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() }
+      ];
+      parsed.indicator_data.push(...wasteData);
+      updated = true;
+    }
+
+    // Migrate initial sesmt_waste_inspections (Vistorias detalhadas do PDF por local)
+    if (!parsed.sesmt_waste_inspections || parsed.sesmt_waste_inspections.length === 0) {
+      const initialWasteInspections = [];
+      const createSeedWaste = (date, shift, sector, status, deviations = [], action = '') => ({
+        id: 'waste_' + Math.random().toString(36).substr(2, 9),
+        date,
+        time: shift.includes('Manhã') ? '09:30' : (shift.includes('Tarde') ? '14:45' : '19:15'),
+        shift,
+        sector,
+        status, // 'CONFORME' | 'NAO_CONFORME'
+        deviations,
+        immediateAction: action || (status === 'NAO_CONFORME' ? 'Orientada a equipe do salão e solicitada adequação imediata' : ''),
+        auditor: 'Enf. Juliana Silveira (RT)',
+        unitId: 'betim',
+        createdAt: `${date}T10:00:00.000Z`
+      });
+
+      // JUNHO/2026 (76 vistorias)
+      // D.P: 14 Conforme, 5 Não Conforme
+      for (let i = 1; i <= 14; i++) {
+        const d = String(Math.min(i * 2, 28)).padStart(2, '0');
+        initialWasteInspections.push(createSeedWaste(`2026-06-${d}`, i % 2 === 0 ? '1º Turno (Manhã)' : '2º Turno (Tarde)', 'D.P', 'CONFORME'));
+      }
+      for (let i = 1; i <= 5; i++) {
+        const d = String(i * 5).padStart(2, '0');
+        initialWasteInspections.push(createSeedWaste(`2026-06-${d}`, '2º Turno (Tarde)', 'D.P', 'NAO_CONFORME', ['Capacidade acima de 2/3'], 'Substituição imediata do saco plástico branco'));
+      }
+
+      // SALÃO 1: 5 Conforme, 14 Não Conforme
+      for (let i = 1; i <= 5; i++) {
+        const d = String(i * 5).padStart(2, '0');
+        initialWasteInspections.push(createSeedWaste(`2026-06-${d}`, '1º Turno (Manhã)', 'Salão 1', 'CONFORME'));
+      }
+      for (let i = 1; i <= 14; i++) {
+        const d = String(Math.min(i * 2, 29)).padStart(2, '0');
+        initialWasteInspections.push(createSeedWaste(`2026-06-${d}`, i % 3 === 0 ? '3º Turno (Noite)' : (i % 2 === 0 ? '2º Turno (Tarde)' : '1º Turno (Manhã)'), 'Salão 1', 'NAO_CONFORME', ['Lixeira com pedal inoperante', 'Tampa aberta'], 'Manutenção do pedal acionada e equipe advertida'));
+      }
+
+      // SALÃO 2: 2 Conforme, 17 Não Conforme
+      for (let i = 1; i <= 2; i++) {
+        initialWasteInspections.push(createSeedWaste(`2026-06-1${i}`, '1º Turno (Manhã)', 'Salão 2', 'CONFORME'));
+      }
+      for (let i = 1; i <= 17; i++) {
+        const d = String(Math.min(i + 3, 29)).padStart(2, '0');
+        initialWasteInspections.push(createSeedWaste(`2026-06-${d}`, i % 2 === 0 ? '2º Turno (Tarde)' : '1º Turno (Manhã)', 'Salão 2', 'NAO_CONFORME', ['Linhas com sangue fora da lixeira', 'Capacidade acima de 2/3'], 'Limpeza imediata do piso e descarte correto das linhas'));
+      }
+
+      // SALÃO 3: 0 Conforme, 19 Não Conforme
+      for (let i = 1; i <= 19; i++) {
+        const d = String(Math.min(i + 1, 29)).padStart(2, '0');
+        initialWasteInspections.push(createSeedWaste(`2026-06-${d}`, i % 3 === 0 ? '3º Turno (Noite)' : (i % 2 === 0 ? '2º Turno (Tarde)' : '1º Turno (Manhã)'), 'Salão 3', 'NAO_CONFORME', ['Saco branco sem identificação de risco', 'Lixeira transbordando'], 'Esvaziamento urgente, colocação de novo saco regulamentar e reciclagem convocada'));
+      }
+
+      // ABRIL/2026 (56 vistorias)
+      // D.P: 7 Conforme, 7 Não Conforme
+      for (let i = 1; i <= 7; i++) {
+        const d = String(i * 3).padStart(2, '0');
+        initialWasteInspections.push(createSeedWaste(`2026-04-${d}`, '1º Turno (Manhã)', 'D.P', 'CONFORME'));
+        initialWasteInspections.push(createSeedWaste(`2026-04-${d}`, '2º Turno (Tarde)', 'D.P', 'NAO_CONFORME', ['Pedal duro'], 'Ajuste mecânico de mola'));
+      }
+
+      // SALÃO 1: 5 Conforme, 9 Não Conforme
+      for (let i = 1; i <= 5; i++) {
+        initialWasteInspections.push(createSeedWaste(`2026-04-${String(i * 4).padStart(2, '0')}`, '1º Turno (Manhã)', 'Salão 1', 'CONFORME'));
+      }
+      for (let i = 1; i <= 9; i++) {
+        initialWasteInspections.push(createSeedWaste(`2026-04-${String(i * 3).padStart(2, '0')}`, '2º Turno (Tarde)', 'Salão 1', 'NAO_CONFORME', ['Tampa entreaberta'], 'Orientação'));
+      }
+
+      // SALÃO 2: 1 Conforme, 13 Não Conforme
+      initialWasteInspections.push(createSeedWaste('2026-04-10', '1º Turno (Manhã)', 'Salão 2', 'CONFORME'));
+      for (let i = 1; i <= 13; i++) {
+        initialWasteInspections.push(createSeedWaste(`2026-04-${String(i * 2).padStart(2, '0')}`, '2º Turno (Tarde)', 'Salão 2', 'NAO_CONFORME', ['Capacidade acima de 2/3'], 'Troca de saco'));
+      }
+
+      // SALÃO 3: 3 Conforme, 11 Não Conforme
+      for (let i = 1; i <= 3; i++) {
+        initialWasteInspections.push(createSeedWaste(`2026-04-${String(i * 8).padStart(2, '0')}`, '1º Turno (Manhã)', 'Salão 3', 'CONFORME'));
+      }
+      for (let i = 1; i <= 11; i++) {
+        initialWasteInspections.push(createSeedWaste(`2026-04-${String(i * 2 + 1).padStart(2, '0')}`, '1º Turno (Manhã)', 'Salão 3', 'NAO_CONFORME', ['Saco inadequado', 'Pedal inoperante'], 'Substituição de lixeira'));
+      }
+
+      parsed.sesmt_waste_inspections = initialWasteInspections;
+      updated = true;
+    }
+
     // Migrate users: remove fictitious @clinica.com users and ensure real users exist
     if (parsed.users) {
       const initialCount = parsed.users.length;
@@ -5905,6 +6029,112 @@ export const mockFirestore = {
       setDB(db);
       return newBlock;
     }
+  },
+
+  // SESMT Waste Inspections (Lixo Infectante)
+  getWasteInspections: async (unitId = null) => {
+    const db = getDB();
+    let list = db.sesmt_waste_inspections || [];
+    if (unitId && unitId !== 'all') {
+      list = list.filter(item => !item.unitId || item.unitId === unitId);
+    }
+    return list.sort((a, b) => new Date(b.date + 'T' + (b.time || '00:00')) - new Date(a.date + 'T' + (a.time || '00:00')));
+  },
+
+  saveWasteInspection: async (inspectionData) => {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const db = getDB();
+    if (!db.sesmt_waste_inspections) db.sesmt_waste_inspections = [];
+
+    let savedItem;
+    if (inspectionData.id) {
+      const idx = db.sesmt_waste_inspections.findIndex(i => i.id === inspectionData.id);
+      if (idx > -1) {
+        db.sesmt_waste_inspections[idx] = { ...db.sesmt_waste_inspections[idx], ...inspectionData, updatedAt: new Date().toISOString() };
+        savedItem = db.sesmt_waste_inspections[idx];
+      } else {
+        savedItem = { ...inspectionData, updatedAt: new Date().toISOString() };
+        db.sesmt_waste_inspections.push(savedItem);
+      }
+    } else {
+      savedItem = {
+        id: 'waste_' + Math.random().toString(36).substr(2, 9),
+        ...inspectionData,
+        createdAt: new Date().toISOString()
+      };
+      db.sesmt_waste_inspections.push(savedItem);
+    }
+
+    // Auto-update BI monthly indicators for this month
+    const period = (savedItem.date || new Date().toISOString()).substring(0, 7);
+    const monthInspections = db.sesmt_waste_inspections.filter(i => (i.date || '').startsWith(period));
+    const total = monthInspections.length;
+    if (total > 0) {
+      const conformes = monthInspections.filter(i => i.status === 'CONFORME').length;
+      const naoConformes = total - conformes;
+      const percConforme = Number(((conformes / total) * 100).toFixed(2));
+      const percNaoConforme = Number(((naoConformes / total) * 100).toFixed(2));
+
+      if (!db.indicator_data) db.indicator_data = [];
+
+      const updateOrAddIndData = (indId, val) => {
+        const existingIdx = db.indicator_data.findIndex(d => d.indicatorId === indId && d.period === period);
+        const dataPoint = {
+          indicatorId: indId,
+          sectorId: 'sesmt',
+          value: val,
+          period,
+          uploadedBy: savedItem.auditor || 'sesmt-auditor',
+          uploadedAt: new Date().toISOString()
+        };
+        if (existingIdx > -1) {
+          db.indicator_data[existingIdx] = dataPoint;
+        } else {
+          db.indicator_data.push(dataPoint);
+        }
+      };
+
+      updateOrAddIndData('sesmt_descarte_infectante_conformidade', percConforme);
+      updateOrAddIndData('sesmt_descarte_infectante_nao_conformidade', percNaoConforme);
+      updateOrAddIndData('sesmt_vistorias_residuos_total', total);
+    }
+
+    setDB(db);
+    return savedItem;
+  },
+
+  deleteWasteInspection: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 150));
+    const db = getDB();
+    if (!db.sesmt_waste_inspections) return true;
+    const item = db.sesmt_waste_inspections.find(i => i.id === id);
+    db.sesmt_waste_inspections = db.sesmt_waste_inspections.filter(i => i.id !== id);
+
+    if (item && item.date) {
+      const period = item.date.substring(0, 7);
+      const monthInspections = db.sesmt_waste_inspections.filter(i => (i.date || '').startsWith(period));
+      const total = monthInspections.length;
+      if (total > 0) {
+        const conformes = monthInspections.filter(i => i.status === 'CONFORME').length;
+        const naoConformes = total - conformes;
+        const percConforme = Number(((conformes / total) * 100).toFixed(2));
+        const percNaoConforme = Number(((naoConformes / total) * 100).toFixed(2));
+
+        const updateOrAddIndData = (indId, val) => {
+          const existingIdx = db.indicator_data.findIndex(d => d.indicatorId === indId && d.period === period);
+          if (existingIdx > -1) {
+            db.indicator_data[existingIdx].value = val;
+          }
+        };
+
+        updateOrAddIndData('sesmt_descarte_infectante_conformidade', percConforme);
+        updateOrAddIndData('sesmt_descarte_infectante_nao_conformidade', percNaoConforme);
+        updateOrAddIndData('sesmt_vistorias_residuos_total', total);
+      }
+    }
+
+    setDB(db);
+    return true;
   }
 };
 

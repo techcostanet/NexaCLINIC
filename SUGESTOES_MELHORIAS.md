@@ -237,3 +237,34 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Benefício Operacional:** Prevenção proativa contra multas e não conformidades em vistorias do Corpo de Bombeiros (AVCB) ou Vigilância Sanitária.
 - **Arquivos Envolvidos:** `src/services/firebase/sesmtService.js`, `functions/index.js`.
 - **Complexidade:** Média.
+
+---
+
+### [SM-015] Alerta Crítico Visual no Painel para Setores com Desvio de Biossegurança ≥ 50%
+- **Data:** 02/10/2026
+- **Módulo:** `.SESMT` (Segurança do Trabalho) / `.INDEX` (Qualidade & BI)
+- **Título:** Alerta Crítico de Biossegurança por Sala/Setor com Alta Taxa de Não Conformidade no Descarte
+- **Status:** `Aprovada / Implementada`
+- **Origem / Contexto:** Auditoria de descarte de resíduos infectantes (RDC 222/NR-32) que identificou setores (ex: Salão 2 e Salão 3) com taxa de não conformidade entre 89% e 100% nas vistorias de campo.
+- **Descrição Técnica:**
+  - Implementação de monitoramento dinâmico em `SesmtDashboard.jsx` e `DailyWasteChecklist.jsx`.
+  - Quando a taxa de não conformidade no setor atinge ou supera 50% no período, o painel renderiza automaticamente banner de Alerta Crítico em vermelho com destaque do percentual e orientação de reciclagem técnica imediata.
+- **Benefício Operacional:** Visibilidade instantânea para o gestor hospitalar e técnico de segurança sobre as áreas que demandam intervenção e treinamento emergencial.
+- **Arquivos Envolvidos:** `src/components/sesmt/SesmtDashboard.jsx`, `src/components/sesmt/DailyWasteChecklist.jsx`.
+- **Complexidade:** Baixa.
+
+---
+
+### [SM-016] Notificação Automática no Mural Clínico da Enfermagem (.ASSIST) em Vistorias com Desvio
+- **Data:** 02/10/2026
+- **Módulo:** `.SESMT` (Segurança do Trabalho) / `.ASSIST` (Mural Clínico de Enfermagem)
+- **Título:** Comunicação Direta entre Segurança do Trabalho e Equipe Assistencial em Auditorias de Resíduos
+- **Status:** `Aprovada / Implementada`
+- **Origem / Contexto:** Frequente descontinuidade de comunicação entre as rondas do SESMT e os profissionais de enfermagem que operam as máquinas de diálise nas salas.
+- **Descrição Técnica:**
+  - Ao salvar uma vistoria de resíduos infectantes com apontamento de Não Conformidade (NC), o serviço `sesmtService.js` dispara a criação de um comunicado automático no Mural Clínico da Enfermagem (`clinicalNotices`).
+  - O comunicado categoriza o setor, turno e itens descumpridos com badge de Alerta de Biossegurança, notificando a enfermagem de plantão para correção de condutas e substituição de lixeiras defeituosas.
+- **Benefício Operacional:** Ação corretiva em tempo real no próprio turno de trabalho, prevenindo riscos biológicos e quebrando ciclos de reincidência.
+- **Arquivos Envolvidos:** `src/services/firebase/sesmtService.js`, `src/components/sesmt/DailyWasteChecklist.jsx`.
+- **Complexidade:** Média.
+
