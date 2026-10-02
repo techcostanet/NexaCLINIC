@@ -4,6 +4,7 @@ import { useUnit } from '../contexts/UnitContext';
 import UnitSelector from './common/UnitSelector';
 import { BarChart3, Calendar, Filter, CheckCircle, AlertCircle, HelpCircle, ShieldAlert, Printer, FileText } from 'lucide-react';
 import AtaPsicologiaModal from './AtaPsicologiaModal';
+import SesmtReportsModal from './sesmt/SesmtReportsModal';
 
 // A premium SVG Sparkline and Trend chart component
 function DynamicChart({ history, target, unit, lowerIsBetter, chartType = 'line' }) {
@@ -246,6 +247,7 @@ export default function Dashboard({ currentUser }) {
   const [availablePeriods, setAvailablePeriods] = useState([]);
   const [chartTypes, setChartTypes] = useState({});
   const [showAtaModal, setShowAtaModal] = useState(false);
+  const [showSesmtReportsModal, setShowSesmtReportsModal] = useState(false);
 
   // Filtragem de Dados pela Unidade Ativa
   const currentIndicatorData = useMemo(() => filterByActiveUnit(indicatorData), [indicatorData, activeUnitId]);
@@ -349,7 +351,15 @@ export default function Dashboard({ currentUser }) {
            term.includes('mortalidade') || 
            term.includes('glosa') || 
            term.includes('custo') ||
-           term.includes('evitado');
+           term.includes('evitado') ||
+           term.includes('acidente') ||
+           term.includes('perfuro') ||
+           term.includes('tempo_resolucao') ||
+           term.includes('tempo de resolução') ||
+           term.includes('vencido') ||
+           term.includes('desvio') ||
+           term.includes('reincidencia') ||
+           term.includes('reincidência');
   };
 
   // Filter indicators and data
@@ -480,6 +490,19 @@ export default function Dashboard({ currentUser }) {
                   >
                     <FileText size={18} />
                     Gerar Ata Mensal
+                  </button>
+                </div>
+              )}
+
+              {selectedSector === 'sesmt' && (
+                <div className="form-group" style={{ marginBottom: 0, display: 'flex', alignItems: 'flex-end' }}>
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={() => setShowSesmtReportsModal(true)}
+                    style={{ height: '38px', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#0284c7', borderColor: '#0284c7' }}
+                  >
+                    <FileText size={18} />
+                    Relatórios
                   </button>
                 </div>
               )}
@@ -662,6 +685,12 @@ export default function Dashboard({ currentUser }) {
           onClose={() => setShowAtaModal(false)} 
           selectedPeriod={selectedPeriod}
           currentUser={currentUser}
+        />
+      )}
+      {showSesmtReportsModal && (
+        <SesmtReportsModal 
+          isOpen={showSesmtReportsModal}
+          onClose={() => setShowSesmtReportsModal(false)} 
         />
       )}
     </div>

@@ -1,0 +1,11 @@
+{
+  "rewrites": [
+    { "source": "/api/((?!cron/).*)", "destination": "/api/index" }
+  ],
+  "crons": [
+    { "path": "/api/cron/diario", "schedule": "0 10 * * *" },
+    { "path": "/api/cron/alerta-limite-email", "schedule": "10 10 * * *" },
+    { "path": "/api/cron/semanal", "schedule": "59 23 * * 6" },
+    { "path": "/api/cron/mensal", "schedule": "59 23 30 * *" }
+  ]
+}

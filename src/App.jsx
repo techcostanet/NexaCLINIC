@@ -247,7 +247,7 @@ export default function App() {
       case 'apac':
         return <ErrorBoundary><ApacBillingPanel currentUser={user} /></ErrorBoundary>;
       case 'sesmt':
-        return <ErrorBoundary><SesmtDashboard currentUser={user} /></ErrorBoundary>;
+        return <ErrorBoundary><SesmtDashboard currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'medical':
         return <ErrorBoundary><MedicalPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} onBack={() => setCurrentModule('selector')} /></ErrorBoundary>;
       default:

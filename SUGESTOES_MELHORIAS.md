@@ -127,7 +127,7 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
   - Após a alteração bem-sucedida, desmarcar a flag para `false` e atualizar `passwordUpdatedAt`.
 - **Benefício Operacional:** Garante que senhas padrão iniciais (ex.: `123456` ou senhas provisórias repassadas por WhatsApp/e-mail) sejam obrigatoriamente substituídas por senhas particulares de conhecimento exclusivo do colaborador, eliminando riscos de vazamento de senhas compartilhadas.
 - **Arquivos Envolvidos:** `src/utils/passwordPolicy.js`, `src/components/common/ChangePasswordModal.jsx`, `src/services/firebase/authService.js`, `src/components/ConfigPanel.jsx`, `src/components/ModuleSelector.jsx`, `src/components/Navbar.jsx`.
-- **Complexidade:** Baixa.
+- **Complexidade:** Média.
 
 ---
 
@@ -145,4 +145,95 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Arquivos Envolvidos:** `src/utils/passwordPolicy.js`, `src/components/ConfigPanel.jsx`, `src/services/firebase/authService.js`, `src/components/ModuleSelector.jsx`, `src/components/Navbar.jsx`.
 - **Complexidade:** Média.
 
+---
 
+### [SM-009] Importação e Sincronização Direta de Pacientes do Nex-Ai CLINIC para o Módulo .REUSE
+- **Data:** 02/10/2026
+- **Módulo:** `.REUSE` (Reuso de Dialisadores)
+- **Título:** Importação e Vínculo com a Base Central de Pacientes da Clínica
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Durante a análise do sistema legado ReusoPro, observou-se que o cadastro de pacientes era isolado. No Nex-Ai CLINIC já existe a base unificada de pacientes (`patientService`).
+- **Descrição Técnica:**
+  - Adicionar botão "Importar do Cadastro" na listagem de pacientes do `.REUSE`.
+  - Autocomplete buscando na coleção `patients`, preenchendo automaticamente Nome, Peso, Data de Nascimento e Nome da Mãe.
+  - Manter chave estrangeira `patientRefId` para sincronização bidirecional de dados vitais.
+- **Benefício Operacional:** Elimina retrabalho de digitação e evita inconsistências cadastrais entre a Recepção/Prontuário e a sala de Reuso.
+- **Arquivos Envolvidos:** `src/components/reuse/ReusePatientsTab.jsx`, `src/services/firebase/reuseService.js`.
+- **Complexidade:** Média.
+
+---
+
+### [SM-010] Leitor de Código de Barras / QR Code na Bancada de Reuso
+- **Data:** 02/10/2026
+- **Módulo:** `.REUSE` (Reuso de Dialisadores)
+- **Título:** Escaneamento de Dialisador para Abertura Imediata da Ficha de Presença e Descarte
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Identificada durante o mapeamento do fluxo físico de identificação de dialisadores na sala de reuso.
+- **Descrição Técnica:**
+  - Incorporar nas etiquetas térmicas um Código de Barras Code-128 ou QR Code com o ID único do paciente/capilar.
+  - No Painel do Reuso, permitir foco automático em campo de escaneamento rápido (compatível com leitor USB/Bluetooth).
+  - Ao bipar o capilar na bancada de lavagem, o sistema abre diretamente o modal com as opções de confirmar uso ou registrar descarte.
+- **Benefício Operacional:** Agilidade extrema no reprocessamento e garantia de 100% de precisão sem risco de selecionar o paciente errado na lista.
+- **Arquivos Envolvidos:** `src/components/reuse/ReusePanel.jsx`, `src/components/reuse/ReuseLabelsTab.jsx`, `src/utils/reuseLabels.js`.
+- **Complexidade:** Média.
+
+---
+
+### [SM-011] Exportação Gerencial de Trocas e Descartes em Planilha Excel (XLSX)
+- **Data:** 02/10/2026
+- **Módulo:** `.REUSE` (Reuso de Dialisadores)
+- **Título:** Exportação de Dados de Trocas e Descarte Precoce em Formato Excel Nativo
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** O sistema ReusoPro original fornecia relatórios apenas em PDF. No Nex-Ai CLINIC, a biblioteca `xlsx` já está disponível para relatórios gerenciais e de auditoria.
+- **Descrição Técnica:**
+  - Na aba `Trocas` e `Relatórios` do módulo `.REUSE`, adicionar botão "Exportar Excel".
+  - Gerar planilha contendo colunas: Paciente, Salão, Turno, Capilar Anterior, Capilar Novo, Usos Atingidos, Motivo, Justificativa, Operador e Data/Hora.
+- **Benefício Operacional:** Facilidade para a gestão da qualidade e nefrologistas realizarem cruzamentos analíticos em planilhas externas.
+- **Arquivos Envolvidos:** `src/components/reuse/ReuseSwapsTab.jsx`, `src/components/reuse/ReuseReportsTab.jsx`.
+- **Complexidade:** Baixa.
+
+---
+
+### [SM-012] Gráfico Histórico de Aproveitamento Mensal de Capilares com Recharts
+- **Data:** 02/10/2026
+- **Módulo:** `.REUSE` (Reuso de Dialisadores)
+- **Título:** Gráfico Evolutivo de Linhas e Barras de Aproveitamento (%) por Salão
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** O ReusoPro original utilizava barras de progresso horizontais básicas em CSS. Como o Nex-Ai CLINIC possui o `recharts` instalado e padronizado, é possível apresentar análises temporais ricas.
+- **Descrição Técnica:**
+  - Na aba `Aproveitamento`, implementar gráfico com Recharts (`LineChart` ou `BarChart`) exibindo a curva média de aproveitamento nos últimos 6 meses.
+  - Segmentação visual comparando Salão 1, Salão 2 e Salão 3 com a meta regulamentar (ex.: linha de referência em 85%).
+- **Benefício Operacional:** Visão estratégica para a coordenação clínica identificar rapidamente salões ou turnos com pico anômalo de descartes por coagulação ou ruptura.
+- **Arquivos Envolvidos:** `src/components/reuse/ReuseYieldTab.jsx`.
+- **Complexidade:** Média.
+
+---
+
+### [SM-013] QR Code em Extintores e Hidrantes para Abertura Imediata de Inspeção em Campo
+- **Data:** 02/10/2026
+- **Módulo:** `.SESMT` (Segurança do Trabalho)
+- **Título:** Etiquetas com QR Code nos Equipamentos de Incêndio para Escaneamento e Check-in Móvel
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Durante a expansão dos checklists móveis e auditoria dos 25 relatórios do SESMT, observou-se que a equipe de segurança de campo precisa navegar e selecionar manualmente cada equipamento na lista durante a ronda física.
+- **Descrição Técnica:**
+  - Gerar etiquetas adesivas com QR Code contendo o identificador do equipamento (ex: `sesmt://extintor/EXT-001`).
+  - Adicionar botão com ícone de câmera/leitor QR Code no cabeçalho do módulo SESMT móvel.
+  - Ao ler o código com a câmera do celular/tablet, o sistema abre diretamente o modal ou cartão de conferência semanal do extintor/hidrante correspondente.
+- **Benefício Operacional:** Elimina tempo de busca e digitação em rondas extensas, garantindo que o técnico está fisicamente presente diante do equipamento conferido.
+- **Arquivos Envolvidos:** `src/components/sesmt/EquipmentTab.jsx`, `src/components/sesmt/ExtinguishersChecklistTab.jsx`.
+- **Complexidade:** Média.
+
+---
+
+### [SM-014] Notificação Automática por E-mail de Extintores e Ensaios com Carga a Vencer
+- **Data:** 02/10/2026
+- **Módulo:** `.SESMT` (Segurança do Trabalho) / `.CONFIG` (E-mails)
+- **Título:** Alerta Preventivo Automatizado de Vencimento de Cargas de Extintores e Ensaios Hidrostáticos
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** O módulo agora conta com cards de vencimento e relatórios de previsão orçamentária, mas a checagem depende de o técnico abrir o painel.
+- **Descrição Técnica:**
+  - Integrar rotina diária no backend/cloud que verifica extintores e hidrantes com vencimento em 30, 15 e 7 dias.
+  - Enviar e-mail formatado via `processMailQueue` para os técnicos de segurança e encarregados da manutenção predial com a lista de equipamentos que exigem recarga ou reteste.
+- **Benefício Operacional:** Prevenção proativa contra multas e não conformidades em vistorias do Corpo de Bombeiros (AVCB) ou Vigilância Sanitária.
+- **Arquivos Envolvidos:** `src/services/firebase/sesmtService.js`, `functions/index.js`.
+- **Complexidade:** Média.

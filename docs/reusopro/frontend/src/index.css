@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+:root {
+  --cor-fundo: #0a0a0a;
+  --cor-fundo-elevado: #131313;
+  --cor-superficie: #1a1a1a;
+  --cor-borda: #2a2a2a;
+
+  --cor-verde-agua: #2dd4bf;
+  --cor-verde-agua-escuro: #0f766e;
+  --cor-verde-agua-claro: #5eead4;
+  --cor-verde-agua-suave: rgba(45, 212, 191, 0.12);
+
+  --cor-amarelo: #facc15;
+  --cor-amarelo-suave: rgba(250, 204, 21, 0.12);
+
+  --cor-vermelho: #ef4444;
+  --cor-vermelho-suave: rgba(239, 68, 68, 0.14);
+
+  --cor-texto-primario: #f5f5f5;
+  --cor-texto-secundario: #a3a3a3;
+  --cor-texto-terciario: #6b6b6b;
+
+  --fonte-display: 'Inter', system-ui, sans-serif;
+  --fonte-mono: 'JetBrains Mono', monospace;
+}
+
+/* Light theme: enabled via [data-theme="light"] on <html> (see useTema.js) */
+:root[data-theme='light'] {
+  --cor-fundo: #f7f7f5;
+  --cor-fundo-elevado: #ffffff;
+  --cor-superficie: #f0f0ee;
+  --cor-borda: #e0e0dc;
+
+  --cor-verde-agua: #0d9488;
+  --cor-verde-agua-escuro: #0f766e;
+  --cor-verde-agua-claro: #0f766e;
+  --cor-verde-agua-suave: rgba(13, 148, 136, 0.1);
+
+  --cor-amarelo: #a16207;
+  --cor-amarelo-suave: rgba(161, 98, 7, 0.1);
+
+  --cor-vermelho: #dc2626;
+  --cor-vermelho-suave: rgba(220, 38, 38, 0.1);
+
+  --cor-texto-primario: #18181b;
+  --cor-texto-secundario: #52525b;
+  --cor-texto-terciario: #8b8b93;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--cor-fundo);
+  color: var(--cor-texto-primario);
+  font-family: var(--fonte-display);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--cor-verde-agua);
+  color: #0a0a0a;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cor-fundo);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--cor-borda);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cor-verde-agua-escuro);
+}
+
+.fonte-mono {
+  font-family: var(--fonte-mono);
+}
+
+/* Visible keyboard focus */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--cor-verde-agua);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

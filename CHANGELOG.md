@@ -1,3 +1,27 @@
+## [v5.0.2] - 02 de Outubro, 2026
+### Nex-Ai CLINIC (.SESMT & .BI) — Central de 25 Relatórios do SESMT, Dashboard com 12 Cards e 15 Indicadores no Módulo BI
+- **Central Analítica de Relatórios do SESMT (25 Relatórios Oficiais):**
+  - Implementação da central analítica de relatórios do SESMT contendo **5 relatórios especializados para cada um dos 5 assuntos** do módulo (25 relatórios no total):
+    - **EPI (5)**: 1. Censo de Conformidade Diária de EPIs; 2. Auditoria de Itens Críticos de EPI; 3. Desvios e Não Conformidades por Setor; 4. Aderência de EPI por Turno; 5. Rastreabilidade de Vistos e Responsáveis.
+    - **Extintores (5)**: 6. Censo Cadastral e Localização de Extintores; 7. Cronograma de Vencimento de Cargas; 8. Histórico de Testes Hidrostáticos; 9. Auditoria de Inspeções Semanais; 10. Extintores Inoperantes e em Manutenção.
+    - **Hidrantes (5)**: 11. Inventário Físico dos Abrigos de Hidrantes; 12. Inspeção Semanal de Integridade dos Abrigos; 13. Censo de Mangueiras e Esguichos; 14. Cronograma de Teste Hidrostático de Mangueiras; 15. Ocorrências e Desvios em Hidrantes.
+    - **Copa (5)**: 16. Checklist Sanitário Diário da Copa; 17. Controle Térmico de Geladeiras e Equipamentos; 18. Controle de Validades e Manipulação (PVPS); 19. Boas Práticas dos Manipuladores; 20. Higienização de Ambientes e Descarte.
+    - **Ativos & Gestão Estratégica (5)**: 21. Inventário Geral de Ativos de Segurança; 22. Mapa de Distribuição Setorial de Ativos; 23. Previsão Orçamentária de Recargas e Ensaios; 24. Painel Geral de Não Conformidades Críticas; 25. Auditoria de Conformidade com NRs (06, 23, 32).
+  - Suporte completo a exportação em **Excel (.xlsx)** via biblioteca `xlsx`, **PDF timbrado A4** via `jspdf-autotable` e **Impressão direta** formatada para pranchetas e auditorias sanitárias.
+  - Filtros dinâmicos cruzados por período (início e fim), setor e turno operacional.
+  - Acionamento direto pelo botão **Relatórios** no topo do módulo SESMT (`ModuleHeader`) e pelo seletor de relatórios global da navbar.
+- **Dashboard Estratégica do SESMT com 12 Cards e Gráficos:**
+  - 12 KPI cards com rótulos concisos de termo único: `Conformidade` (% EPI), `Inspeções` (checklists), `Extintores` (cargas regulares), `A Vencer` (60 dias), `Vencidos` (recarga urgente), `Hidrantes` (% integridade), `Copa` (% sanitária), `Conservação` (% térmico/higiene), `Desvios` (não conformidades), `EPI Crítico` (% máscara/óculos/adornos), `Inventário` (total de ativos), `Setores` (setores auditados).
+  - Gráfico analítico de "Aderência por Categoria" e ranking visual dos "Top 5 Desvios Mais Frequentes".
+- **Integração de 15 Indicadores Oficiais no Módulo BI:**
+  - Cadastrado o setor `sesmt` no banco de dados com 15 indicadores estratégicos regulamentares com metas vinculadas a NR-06, NR-23 e NR-32.
+  - Série histórica de 7 meses (Janeiro a Julho/2026) com suporte a gráficos de Linha, Área, Colunas e Tabela.
+  - Lógica inteligente de cálculo de conformidade (`isLowerBetter`) para desvios, tempo de resolução e taxas de acidentes.
+  - Botão de atalho contextual "Relatórios" integrado na barra de filtros do BI quando o setor SESMT está selecionado.
+- **Padrões de UI e Documentação:**
+  - Manual do SESMT atualizado com recursos, tutoriais passo a passo e FAQ em `src/data/moduleGuidesData.js`.
+  - Rótulos rigorosamente padronizados em termo único conforme diretrizes do sistema.
+
 ## [v5.0.1] - 01 de Outubro, 2026
 ### Nex-Ai CLINIC — Modo Noturno com 2 Níveis e Virada de Versão Major (v5.0.1)
 - **Modo Noturno com 2 Níveis Especializados (Ergonomia & Conforto Visual):**

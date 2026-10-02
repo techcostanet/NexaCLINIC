@@ -2906,6 +2906,18 @@ export const MODULE_GUIDES = {
     color: '#0891b2',
     recursos: [
       {
+        title: 'Central de 25 Relatórios do SESMT (5 por Assunto)',
+        desc: 'Central analítica integrada com 25 relatórios especializados (5 para EPI, 5 para Extintores, 5 para Hidrantes, 5 para Copa e 5 para Ativos/Gestão Estratégica), equipada com exportação em Excel (.xlsx), PDF timbrado e Impressão direta com filtros dinâmicos de período, setor e turno.'
+      },
+      {
+        title: 'Dashboard Estratégica com 12 Cards de Indicadores',
+        desc: 'Painel em tempo real com 12 KPIs de alta densidade: Conformidade (% EPI), Inspeções (total de checklists), Extintores (cargas regulares), A Vencer (60 dias), Vencidos (crítico), Hidrantes (% integridade), Copa (% sanitária), Conservação (% térmico/higiene), Desvios (não conformidades), EPI Crítico (% máscara/óculos/adornos), Inventário (total de ativos) e Setores auditados, além de gráficos de aderência e Top 5 desvios.'
+      },
+      {
+        title: 'Integração Completa com o Módulo BI (15 Indicadores)',
+        desc: 'Alimentação contínua de 15 indicadores oficiais com metas regulamentares (NR-06, NR-23 e NR-32) no Módulo BI, permitindo comparativo mês a mês, gráficos de evolução histórica, metas dinâmicas e atalho direto para relatórios.'
+      },
+      {
         title: 'Inspeção Diária de EPI e Segurança (11 Itens)',
         desc: 'Checklist completo nos setores clínicos baseado na norma oficial com verificação de uso adequado de EPI, higienização das mãos, descarte de resíduos, conservação de EPI, limpeza dos ralos, adornos, cílios, bancadas, identificação química, fichas FDS e unhas.'
       },
@@ -2938,7 +2950,7 @@ export const MODULE_GUIDES = {
         desc: 'Geração direta e impressão formatada idêntica ao modelo físico de prancheta das planilhas oficiais, pronta para auditorias da Vigilância Sanitária e fiscalização.'
       },
       {
-        title: 'Gestão de Equipamentos',
+        title: 'Gestão de Equipamentos & Ativos',
         desc: 'Cadastro e controle de extintores e hidrantes com alertas de validade de carga, recarga e teste hidrostático de 5 anos.'
       },
       {
@@ -2947,6 +2959,34 @@ export const MODULE_GUIDES = {
       }
     ],
     tutorial: [
+      {
+        title: 'Como Acessar e Exportar os 25 Relatórios do SESMT',
+        steps: [
+          'No topo do módulo SESMT, clique no botão "Relatórios" (ou use o atalho Relatórios no Módulo BI ao filtrar o setor SESMT).',
+          'Alterne entre as 5 abas temáticas de relatórios: "EPI", "Extintores", "Hidrantes", "Copa" ou "Ativos".',
+          'Cada aba apresenta 5 relatórios dedicados. Clique sobre o relatório desejado para carregar a prévia e a tabela.',
+          'Utilize os filtros de Período (Início e Fim), Setor e Turno para calibrar a amostragem.',
+          'Clique em "Excel" para baixar a planilha (.xlsx), "PDF" para gerar o documento timbrado A4 ou "Imprimir" para impressão direta.'
+        ]
+      },
+      {
+        title: 'Como Monitorar os 12 Cards e Gráficos da Dashboard do SESMT',
+        steps: [
+          'Acesse o módulo SESMT e selecione a aba "Painel".',
+          'Ajuste o filtro de período (ex: Últimos 7 dias, 30 dias ou 90 dias) e o setor para atualizar os indicadores instantaneamente.',
+          'Examine os 12 cards em destaque: Conformidade, Inspeções, Extintores, A Vencer, Vencidos, Hidrantes, Copa, Conservação, Desvios, EPI Crítico, Inventário e Setores.',
+          'Consulte o gráfico de "Aderência por Categoria" e o ranking dos "Top 5 Desvios Mais Frequentes" para direcionar treinamentos de conscientização.'
+        ]
+      },
+      {
+        title: 'Como Consultar Indicadores do SESMT no Módulo de BI',
+        steps: [
+          'Acesse o Módulo BI (Painel Principal) no menu de módulos.',
+          'No filtro "Setor", selecione a opção "SESMT - Segurança do Trabalho".',
+          'O painel apresentará automaticamente os 15 indicadores regulamentares cadastrados (NR-06, NR-23, NR-32).',
+          'Alterne entre as visualizações de Linha, Área, Colunas ou Tabela em cada cartão de indicador para analisar a evolução mensal e o cumprimento de metas.'
+        ]
+      },
       {
         title: 'Como Realizar o Checklist Diário de EPI (Setores Clínicos)',
         steps: [
@@ -2975,17 +3015,6 @@ export const MODULE_GUIDES = {
         ]
       },
       {
-        title: 'Como Realizar uma Inspeção de Campo pelo Celular ou Tablet',
-        steps: [
-          'Acesse o módulo SESMT no seu smartphone ou tablet através do navegador do aparelho.',
-          'Selecione a aba desejada: "Extintores", "Hidrantes", "EPI" ou "Copa".',
-          'O sistema entrará automaticamente no modo "Cartões", apresentando cada critério com botões de toque grandes e fáceis de acionar com o dedo ou caneta.',
-          'Em itens irregulares, toque no botão "NC" e descreva a pendência no campo de observação.',
-          'Colete a assinatura na caixa de assinatura digital tocando e desenhando com o dedo na tela.',
-          'Toque em "Salvar" para registrar os dados no sistema em tempo real.'
-        ]
-      },
-      {
         title: 'Como Cadastrar ou Editar Extintores e Hidrantes',
         steps: [
           'Acesse a aba "Equipamentos" no topo do módulo SESMT.',
@@ -2997,6 +3026,18 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Quais são os 25 relatórios disponíveis no módulo SESMT?',
+        resposta: 'A Central de Relatórios possui 5 relatórios para cada assunto: EPI (Censo Geral, Itens Críticos, Desvios por Setor, Aderência por Turno, Rastreabilidade de Vistos); Extintores (Censo Cadastral, Cronograma de Vencimento de Cargas, Histórico de Testes Hidrostáticos, Auditoria Semanal, Extintores Inoperantes); Hidrantes (Inventário de Abrigos, Integridade dos Abrigos, Censo de Mangueiras/Esguichos, Cronograma de Ensaio Hidrostático, Ocorrências e Desvios); Copa (Checklist Sanitário, Controle Térmico, Validades/PVPS, Boas Práticas, Higienização/Descarte); Ativos & Gestão Estratégica (Inventário Geral, Distribuição Setorial, Previsão Orçamentária de Recargas, Painel de Desvios Críticos, Auditoria NR-06/23/32).'
+      },
+      {
+        pergunta: 'Como os relatórios do SESMT podem ser exportados?',
+        resposta: 'Todos os 25 relatórios contam com exportação nativa em planilha Excel (.xlsx), documento PDF timbrado formatado em folha A4 e botão de Impressão direta do navegador com layout otimizado.'
+      },
+      {
+        pergunta: 'Como os indicadores do SESMT são integrados ao Módulo BI?',
+        resposta: 'O módulo SESMT é cadastrado como um setor hospitalar oficial no BI com 15 indicadores parametrizados conforme as Normas Regulamentadoras (NR-06, NR-23 e NR-32), incluindo taxas de conformidade, tempos médios de resolução, acidentes de trabalho e auditorias mensais.'
+      },
       {
         pergunta: 'Os checklists da Copa e de EPI atendem aos requisitos das auditorias sanitárias?',
         resposta: 'Sim. Os formulários foram desenhados com base estrita nas planilhas e matrizes de fiscalização (Saude.xlsx e Copa.xlsx), registrando data, hora, turno, setor, responsáveis e assinatura digital comprovada.'

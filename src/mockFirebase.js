@@ -107,6 +107,16 @@ const getDB = () => {
       updated = true;
     }
 
+    // Migrate SESMT sector
+    if (parsed.sectors && !parsed.sectors.some(s => s.id === 'sesmt')) {
+      parsed.sectors.push({
+        id: 'sesmt',
+        name: 'SESMT',
+        description: 'Segurança do Trabalho, Proteção Contra Incêndios e Biossegurança Hospitalar (NRs 06, 23, 32).'
+      });
+      updated = true;
+    }
+
     // Migrate psychology indicators
     if (parsed.indicators && !parsed.indicators.some(i => i.sectorId === 'psicologia')) {
       parsed.indicators.push(
@@ -319,6 +329,170 @@ const getDB = () => {
       updated = true;
     }
 
+    // Migrate SESMT indicators
+    if (parsed.indicators && !parsed.indicators.some(i => i.sectorId === 'sesmt')) {
+      parsed.indicators.push(
+        { id: 'sesmt_taxa_conformidade_epi', name: 'Taxa de Conformidade no Uso de EPI', sectorId: 'sesmt', unit: '%', target: 95.0, description: 'Percentual de avaliações em conformidade nos checklists diários de EPI (NR-06 e NR-32).' },
+        { id: 'sesmt_adesao_mascara_oculos', name: 'Adesão a EPIs de Barreira Facial', sectorId: 'sesmt', unit: '%', target: 98.0, description: 'Uso efetivo de máscara N95/cirúrgica e óculos de proteção/face shield em procedimentos (NR-32).' },
+        { id: 'sesmt_conformidade_extintores', name: 'Índice de Regularidade dos Extintores', sectorId: 'sesmt', unit: '%', target: 100.0, description: 'Percentual de extintores ativos com carga dentro do prazo de validade anual (NR-23).' },
+        { id: 'sesmt_cobertura_inspecao_extintor', name: 'Cobertura Semanal de Extintores', sectorId: 'sesmt', unit: '%', target: 90.0, description: 'Percentual de extintores vistoriados semanalmente quanto a manômetro, lacre e acesso desobstruído.' },
+        { id: 'sesmt_conformidade_hidrantes', name: 'Conformidade Operacional de Hidrantes', sectorId: 'sesmt', unit: '%', target: 100.0, description: 'Integridade de abrigos, mangueiras aduchadas, válvulas sem vazamento e esguicho regulável (NBR 13714).' },
+        { id: 'sesmt_conformidade_copa', name: 'Boas Práticas Sanitárias na Copa', sectorId: 'sesmt', unit: '%', target: 95.0, description: 'Conformidade dos requisitos de higiene, higienização de mãos e manipulação de alimentos (RDC 216).' },
+        { id: 'sesmt_conformidade_termica_copa', name: 'Conformidade Térmica das Geladeiras', sectorId: 'sesmt', unit: '%', target: 98.0, description: 'Aferições de temperatura dos refrigeradores da copa dentro da faixa segura (2°C a 8°C).' },
+        { id: 'sesmt_tempo_resolucao_nc', name: 'Tempo Médio de Resolução de Não Conformidades', sectorId: 'sesmt', unit: 'dias', target: 5.0, description: 'Tempo médio decorrido entre o apontamento de um desvio no SESMT e a sua ação corretiva concluída.' },
+        { id: 'sesmt_taxa_acidentes_perfuro', name: 'Acidentes com Material Perfurocortante', sectorId: 'sesmt', unit: 'un', target: 0.0, description: 'Ocorrências mensais de acidentes com agulhas ou perfurocortantes com colaboradores (NR-32).' },
+        { id: 'sesmt_dias_sem_acidentes', name: 'Dias Consecutivos sem Acidentes com Afastamento', sectorId: 'sesmt', unit: 'dias', target: 180, description: 'Contagem cumulativa de dias de operação hospitalar sem acidentes de trabalho com perda de tempo.' },
+        { id: 'sesmt_cobertura_treinamento_nr32', name: 'Cobertura de Treinamento em NR-32', sectorId: 'sesmt', unit: '%', target: 90.0, description: 'Percentual de colaboradores assistenciais com capacitação periódica em biossegurança e riscos químicos.' },
+        { id: 'sesmt_aderencia_descarte_residuos', name: 'Conformidade no Descarte de Resíduos', sectorId: 'sesmt', unit: '%', target: 95.0, description: 'Segregação correta de resíduos biológicos/infectantes em sacos brancos e lixeira acionada por pedal.' },
+        { id: 'sesmt_extintores_vencidos', name: 'Extintores com Carga Vencida', sectorId: 'sesmt', unit: 'un', target: 0, description: 'Quantidade de cilindros com data de validade de carga expirada demandando recarga urgente.' },
+        { id: 'sesmt_inspecoes_realizadas', name: 'Inspeções de Segurança no Mês', sectorId: 'sesmt', unit: 'un', target: 30, description: 'Volume total de vistorias técnicas registradas no período (EPI, Copa, Extintores e Hidrantes).' },
+        { id: 'sesmt_taxa_reincidencia_nc', name: 'Taxa de Reincidência de Não Conformidades', sectorId: 'sesmt', unit: '%', target: 5.0, description: 'Percentual de desvios reincidentes no mesmo setor em vistorias subsequentes.' }
+      );
+      updated = true;
+    }
+
+    // Migrate SESMT indicator data
+    if (parsed.indicator_data && !parsed.indicator_data.some(d => d.sectorId === 'sesmt')) {
+      const sesmtData = [
+        // 1. sesmt_taxa_conformidade_epi
+        { indicatorId: 'sesmt_taxa_conformidade_epi', sectorId: 'sesmt', value: 96.4, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_conformidade_epi', sectorId: 'sesmt', value: 95.8, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_conformidade_epi', sectorId: 'sesmt', value: 97.2, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_conformidade_epi', sectorId: 'sesmt', value: 96.0, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_conformidade_epi', sectorId: 'sesmt', value: 97.5, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_conformidade_epi', sectorId: 'sesmt', value: 98.1, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_conformidade_epi', sectorId: 'sesmt', value: 98.4, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 2. sesmt_adesao_mascara_oculos
+        { indicatorId: 'sesmt_adesao_mascara_oculos', sectorId: 'sesmt', value: 98.5, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_adesao_mascara_oculos', sectorId: 'sesmt', value: 98.0, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_adesao_mascara_oculos', sectorId: 'sesmt', value: 99.1, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_adesao_mascara_oculos', sectorId: 'sesmt', value: 97.8, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_adesao_mascara_oculos', sectorId: 'sesmt', value: 98.9, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_adesao_mascara_oculos', sectorId: 'sesmt', value: 99.4, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_adesao_mascara_oculos', sectorId: 'sesmt', value: 99.5, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 3. sesmt_conformidade_extintores
+        { indicatorId: 'sesmt_conformidade_extintores', sectorId: 'sesmt', value: 95.2, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_extintores', sectorId: 'sesmt', value: 100.0, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_extintores', sectorId: 'sesmt', value: 100.0, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_extintores', sectorId: 'sesmt', value: 95.2, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_extintores', sectorId: 'sesmt', value: 100.0, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_extintores', sectorId: 'sesmt', value: 100.0, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_extintores', sectorId: 'sesmt', value: 100.0, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 4. sesmt_cobertura_inspecao_extintor
+        { indicatorId: 'sesmt_cobertura_inspecao_extintor', sectorId: 'sesmt', value: 92.0, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_cobertura_inspecao_extintor', sectorId: 'sesmt', value: 94.5, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_cobertura_inspecao_extintor', sectorId: 'sesmt', value: 95.0, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_cobertura_inspecao_extintor', sectorId: 'sesmt', value: 91.0, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_cobertura_inspecao_extintor', sectorId: 'sesmt', value: 96.0, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_cobertura_inspecao_extintor', sectorId: 'sesmt', value: 98.0, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_cobertura_inspecao_extintor', sectorId: 'sesmt', value: 98.5, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 5. sesmt_conformidade_hidrantes
+        { indicatorId: 'sesmt_conformidade_hidrantes', sectorId: 'sesmt', value: 100.0, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_hidrantes', sectorId: 'sesmt', value: 100.0, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_hidrantes', sectorId: 'sesmt', value: 100.0, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_hidrantes', sectorId: 'sesmt', value: 100.0, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_hidrantes', sectorId: 'sesmt', value: 100.0, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_hidrantes', sectorId: 'sesmt', value: 100.0, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_hidrantes', sectorId: 'sesmt', value: 100.0, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 6. sesmt_conformidade_copa
+        { indicatorId: 'sesmt_conformidade_copa', sectorId: 'sesmt', value: 95.0, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_copa', sectorId: 'sesmt', value: 96.2, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_copa', sectorId: 'sesmt', value: 94.8, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_copa', sectorId: 'sesmt', value: 97.0, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_copa', sectorId: 'sesmt', value: 96.8, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_copa', sectorId: 'sesmt', value: 98.2, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_copa', sectorId: 'sesmt', value: 98.5, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 7. sesmt_conformidade_termica_copa
+        { indicatorId: 'sesmt_conformidade_termica_copa', sectorId: 'sesmt', value: 98.0, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_termica_copa', sectorId: 'sesmt', value: 99.0, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_termica_copa', sectorId: 'sesmt', value: 97.5, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_termica_copa', sectorId: 'sesmt', value: 100.0, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_termica_copa', sectorId: 'sesmt', value: 98.8, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_termica_copa', sectorId: 'sesmt', value: 100.0, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_conformidade_termica_copa', sectorId: 'sesmt', value: 100.0, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 8. sesmt_tempo_resolucao_nc
+        { indicatorId: 'sesmt_tempo_resolucao_nc', sectorId: 'sesmt', value: 4.2, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_tempo_resolucao_nc', sectorId: 'sesmt', value: 3.8, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_tempo_resolucao_nc', sectorId: 'sesmt', value: 4.5, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_tempo_resolucao_nc', sectorId: 'sesmt', value: 3.2, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_tempo_resolucao_nc', sectorId: 'sesmt', value: 2.8, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_tempo_resolucao_nc', sectorId: 'sesmt', value: 2.4, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_tempo_resolucao_nc', sectorId: 'sesmt', value: 2.1, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 9. sesmt_taxa_acidentes_perfuro
+        { indicatorId: 'sesmt_taxa_acidentes_perfuro', sectorId: 'sesmt', value: 0, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_acidentes_perfuro', sectorId: 'sesmt', value: 0, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_acidentes_perfuro', sectorId: 'sesmt', value: 1, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_acidentes_perfuro', sectorId: 'sesmt', value: 0, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_acidentes_perfuro', sectorId: 'sesmt', value: 0, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_acidentes_perfuro', sectorId: 'sesmt', value: 0, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_acidentes_perfuro', sectorId: 'sesmt', value: 0, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 10. sesmt_dias_sem_acidentes
+        { indicatorId: 'sesmt_dias_sem_acidentes', sectorId: 'sesmt', value: 240, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_dias_sem_acidentes', sectorId: 'sesmt', value: 270, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_dias_sem_acidentes', sectorId: 'sesmt', value: 30, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_dias_sem_acidentes', sectorId: 'sesmt', value: 60, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_dias_sem_acidentes', sectorId: 'sesmt', value: 91, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_dias_sem_acidentes', sectorId: 'sesmt', value: 121, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_dias_sem_acidentes', sectorId: 'sesmt', value: 152, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 11. sesmt_cobertura_treinamento_nr32
+        { indicatorId: 'sesmt_cobertura_treinamento_nr32', sectorId: 'sesmt', value: 88.0, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_cobertura_treinamento_nr32', sectorId: 'sesmt', value: 91.5, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_cobertura_treinamento_nr32', sectorId: 'sesmt', value: 93.0, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_cobertura_treinamento_nr32', sectorId: 'sesmt', value: 90.0, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_cobertura_treinamento_nr32', sectorId: 'sesmt', value: 94.2, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_cobertura_treinamento_nr32', sectorId: 'sesmt', value: 95.8, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_cobertura_treinamento_nr32', sectorId: 'sesmt', value: 96.5, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 12. sesmt_aderencia_descarte_residuos
+        { indicatorId: 'sesmt_aderencia_descarte_residuos', sectorId: 'sesmt', value: 96.0, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_aderencia_descarte_residuos', sectorId: 'sesmt', value: 95.5, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_aderencia_descarte_residuos', sectorId: 'sesmt', value: 97.0, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_aderencia_descarte_residuos', sectorId: 'sesmt', value: 96.2, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_aderencia_descarte_residuos', sectorId: 'sesmt', value: 98.0, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_aderencia_descarte_residuos', sectorId: 'sesmt', value: 98.5, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_aderencia_descarte_residuos', sectorId: 'sesmt', value: 99.0, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 13. sesmt_extintores_vencidos
+        { indicatorId: 'sesmt_extintores_vencidos', sectorId: 'sesmt', value: 1, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_extintores_vencidos', sectorId: 'sesmt', value: 0, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_extintores_vencidos', sectorId: 'sesmt', value: 0, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_extintores_vencidos', sectorId: 'sesmt', value: 1, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_extintores_vencidos', sectorId: 'sesmt', value: 0, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_extintores_vencidos', sectorId: 'sesmt', value: 0, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_extintores_vencidos', sectorId: 'sesmt', value: 0, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 14. sesmt_inspecoes_realizadas
+        { indicatorId: 'sesmt_inspecoes_realizadas', sectorId: 'sesmt', value: 34, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_inspecoes_realizadas', sectorId: 'sesmt', value: 32, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_inspecoes_realizadas', sectorId: 'sesmt', value: 38, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_inspecoes_realizadas', sectorId: 'sesmt', value: 35, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_inspecoes_realizadas', sectorId: 'sesmt', value: 40, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_inspecoes_realizadas', sectorId: 'sesmt', value: 42, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_inspecoes_realizadas', sectorId: 'sesmt', value: 45, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+
+        // 15. sesmt_taxa_reincidencia_nc
+        { indicatorId: 'sesmt_taxa_reincidencia_nc', sectorId: 'sesmt', value: 6.2, period: '2026-01', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_reincidencia_nc', sectorId: 'sesmt', value: 5.1, period: '2026-02', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_reincidencia_nc', sectorId: 'sesmt', value: 4.8, period: '2026-03', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_reincidencia_nc', sectorId: 'sesmt', value: 4.0, period: '2026-04', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_reincidencia_nc', sectorId: 'sesmt', value: 3.5, period: '2026-05', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_reincidencia_nc', sectorId: 'sesmt', value: 2.8, period: '2026-06', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'sesmt_taxa_reincidencia_nc', sectorId: 'sesmt', value: 2.1, period: '2026-07', uploadedBy: 'admin-uid', uploadedAt: new Date().toISOString() }
+      ];
+      parsed.indicator_data = [...parsed.indicator_data, ...sesmtData];
+      updated = true;
+    }
+
     // Migrate users: remove fictitious @clinica.com users and ensure real users exist
     if (parsed.users) {
       const initialCount = parsed.users.length;
@@ -331,7 +505,7 @@ const getDB = () => {
           email: 'contato@techcosta.net',
           name: 'Administrador TechCosta',
           role: 'admin',
-          allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras'],
+          allowedSectors: ['enfermagem', 'medica', 'qualidade', 'faturamento', 'psicologia', 'nutricao', 'rh', 'recepcao', 'estoque', 'compras', 'sesmt'],
           status: 'active'
         },
         {

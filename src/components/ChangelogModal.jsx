@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.2',
+      date: '02/10/2026',
+      title: 'Nex-Ai CLINIC — Central de 25 Relatórios do SESMT, Dashboard com 12 Cards e 15 Indicadores no Módulo BI (.SESMT & .BI)',
+      description: 'Expansão profunda de inteligência e governança de Segurança e Saúde no Trabalho: lançamento da Central Analítica do SESMT com 25 relatórios especializados (5 para EPI, 5 para Extintores, 5 para Hidrantes, 5 para Copa e 5 para Ativos/Gestão Estratégica) com exportação nativa em Excel (.xlsx), PDF timbrado e Impressão direta; nova Dashboard estratégica do SESMT equipada com 12 cards em tempo real com rótulos concisos de termo único, gráficos de aderência por categoria e Top 5 desvios; e integração completa de 15 indicadores regulamentares oficiais do SESMT (NR-06, NR-23 e NR-32) no Módulo BI com série histórica e atalho direto de relatórios.',
+      changes: [
+        { type: '25 Relatórios Oficiais', text: 'Central analítica com 5 relatórios para cada assunto do SESMT (EPI, Extintores, Hidrantes, Copa e Ativos) com exportação em Excel (.xlsx), PDF e Impressão.' },
+        { type: 'Dashboard com 12 Cards', text: 'Painel com 12 KPIs de alta densidade (Conformidade, Inspeções, Extintores, A Vencer, Vencidos, Hidrantes, Copa, Conservação, Desvios, EPI Crítico, Inventário, Setores).' },
+        { type: '15 Indicadores no BI', text: 'Integração de 15 indicadores com metas regulamentares no Módulo BI com histórico mensal e atalho direto aos relatórios.' },
+        { type: 'UI/UX & Termo Único', text: 'Rótulos 100% concisos de 1 palavra nos botões, filtros e cabeçalhos em conformidade com as diretrizes do sistema.' },
+        { type: 'Manuais Atualizados', text: 'Documentação do SESMT atualizada em moduleGuidesData.js com recursos, tutoriais de relatórios/BI e perguntas frequentes.' }
+      ]
+    },
+    {
       version: 'v5.0.1',
       date: '01/10/2026',
       title: 'Nex-Ai CLINIC — Modo Noturno com 2 Níveis e Versão Major v5.0.1 (GLOBAL & VISUAL)',
