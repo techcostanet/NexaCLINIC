@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -38,16 +38,19 @@ import {
   Target,
   Search,
   Activity,
-  Copy
+  Copy,
+  Boxes,
+  Package
 } from 'lucide-react';
 
 import { dbService } from '../firebase';
 import { parseBoletoPdf, parseBoletoImage, cleanDigitableLine } from '../utils/boletoParser';
+import { parseOfxContent, parseCsvStatement, matchStatementWithTitles } from '../utils/ofxParser';
 import FinanceReportsModal from './FinanceReportsModal';
 import CnabExportModal from './CnabExportModal';
 import import2026Data from '../data/import_2026.json';
 import { useUnit } from '../contexts/UnitContext';
-import UnitSelector from './common/UnitSelector';
+import ModuleHeader from './common/ModuleHeader';
 
 export const EXPENSE_CATEGORIES = [
   'Material Médico-Hospitalar (MatMed)',
@@ -148,8 +151,13 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
   const [partialItem, setPartialItem] = useState(null);
   const [partialAmountPaid, setPartialAmountPaid] = useState('');
-  const [partialPaymentDate, setPartialPaymentDate] = useState(new Date().toISOString().substring(0, 10));
   const [showImportBetimModal, setShowImportBetimModal] = useState(false);
+
+  // Melhoria 1 & 2: OFX Parser e Sincronização Estoque -> Financeiro
+  const ofxFileInputRef = useRef(null);
+  const [isProcessingOfx, setIsProcessingOfx] = useState(false);
+  const [isSyncingStock, setIsSyncingStock] = useState(false);
+  const [ofxSummaryModal, setOfxSummaryModal] = useState(null);
 
 
   // Custom Dashboard Layout for Financial Operator
@@ -165,7 +173,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     { id: 'cash_flow_bar', name: '📊 Fluxo de Caixa (Entradas vs Saídas)', size: 'medium', visible: true },
     { id: 'cost_distribution', name: '🍰 Distribuição de Despesas por Categoria', size: 'medium', visible: true },
     { id: 'ebitda', name: '📈 EBITDA Realizado (Visão Executiva)', size: 'small', visible: false },
-    { id: 'apac_glosa', name: '📋 Glosa de Convênios & APACs', size: 'small', visible: true }
+    { id: 'apac_glosa', name: '📋 Glosas e APACs', size: 'small', visible: true }
   ];
 
   const [dashboardLayout, setDashboardLayout] = useState(() => {
@@ -600,6 +608,160 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       } catch (err) {
         console.error(err);
       }
+    }
+  };
+
+  // Melhoria 2: Sincronização Automática Estoque -> Financeiro
+  const handleSyncStockInvoices = async () => {
+    setIsSyncingStock(true);
+    try {
+      const res = await dbService.syncStockInvoicesToPayables();
+      await loadData();
+      const count = res?.createdCount || 0;
+      setCopiedToast(count > 0 
+        ? `${count} nota(s) fiscal(is) do estoque integradas ao Contas a Pagar!` 
+        : 'Todas as notas fiscais do estoque já estão sincronizadas!');
+      setTimeout(() => setCopiedToast(''), 4000);
+    } catch (err) {
+      console.error('Erro ao sincronizar notas do estoque:', err);
+      alert('Erro ao sincronizar notas fiscais do estoque.');
+    } finally {
+      setIsSyncingStock(false);
+    }
+  };
+
+  // Melhoria 1: Leitura Real de Extrato OFX/CSV e Auto-Matching
+  const handleOfxFileSelected = async (e) => {
+    const file = e.target?.files?.[0];
+    if (!file) return;
+
+    setIsProcessingOfx(true);
+    try {
+      const fileText = await file.text();
+      const isCsv = file.name.toLowerCase().endsWith('.csv');
+      const parsed = isCsv 
+        ? { transactions: parseCsvStatement(fileText), bankName: 'Extrato Bancário' } 
+        : parseOfxContent(fileText);
+
+      if (!parsed.transactions || parsed.transactions.length === 0) {
+        alert('Nenhuma transação financeira foi identificada no arquivo.');
+        return;
+      }
+
+      let matchedCount = 0;
+      const processedList = [];
+
+      for (const trn of parsed.transactions) {
+        const matchRes = matchStatementWithTitles(trn, payableList, receivableList);
+        const enrichedTrn = {
+          ...trn,
+          matchedTitleId: matchRes.matchedTitle?.id || null,
+          matchedTitleDesc: matchRes.matchedTitle?.description || matchRes.matchedTitle?.supplier || matchRes.matchedTitle?.client || '',
+          matchedTitleAmount: matchRes.matchedTitle?.amount || 0,
+          matchedTitleDueDate: matchRes.matchedTitle?.dueDate || '',
+          matchConfidence: matchRes.confidence,
+          matchReason: matchRes.reason,
+          note: matchRes.hasMatch ? `Match sugerido: ${matchRes.reason}` : trn.note
+        };
+
+        if (matchRes.hasMatch) matchedCount++;
+
+        if (dbService.saveBankStatement) {
+          await dbService.saveBankStatement(enrichedTrn);
+        }
+        processedList.push(enrichedTrn);
+      }
+
+      await loadData();
+
+      setOfxSummaryModal({
+        fileName: file.name,
+        bankName: parsed.bankName || 'Banco Integrado',
+        totalTransactions: processedList.length,
+        matchedCount,
+        transactions: processedList
+      });
+    } catch (err) {
+      console.error('Erro ao processar extrato bancário:', err);
+      alert('Erro ao ler arquivo de extrato: ' + err.message);
+    } finally {
+      setIsProcessingOfx(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleAutoReconcileAllMatches = async () => {
+    if (!ofxSummaryModal?.transactions) return;
+    const toReconcile = ofxSummaryModal.transactions.filter(t => t.matchedTitleId && t.status !== 'Conciliado');
+    
+    let doneCount = 0;
+    for (const stmt of toReconcile) {
+      try {
+        if (stmt.type === 'Débito' && dbService.saveAccountsPayable) {
+          await dbService.saveAccountsPayable({
+            id: stmt.matchedTitleId,
+            status: 'Pago',
+            paymentDate: stmt.date
+          });
+        } else if (stmt.type === 'Crédito' && dbService.saveAccountsReceivable) {
+          await dbService.saveAccountsReceivable({
+            id: stmt.matchedTitleId,
+            status: 'Pago',
+            receivedDate: stmt.date
+          });
+        }
+
+        if (dbService.saveBankStatement) {
+          await dbService.saveBankStatement({
+            ...stmt,
+            status: 'Conciliado',
+            note: `Conciliado com ${stmt.matchedTitleDesc}`
+          });
+        }
+        doneCount++;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    await loadData();
+    setOfxSummaryModal(null);
+    setCopiedToast(`${doneCount} título(s) baixados e conciliados automaticamente!`);
+    setTimeout(() => setCopiedToast(''), 4000);
+  };
+
+  const handleReconcileWithMatch = async (stmt) => {
+    try {
+      if (stmt.matchedTitleId) {
+        if (stmt.type === 'Débito' && dbService.saveAccountsPayable) {
+          await dbService.saveAccountsPayable({
+            id: stmt.matchedTitleId,
+            status: 'Pago',
+            paymentDate: stmt.date
+          });
+        } else if (stmt.type === 'Crédito' && dbService.saveAccountsReceivable) {
+          await dbService.saveAccountsReceivable({
+            id: stmt.matchedTitleId,
+            status: 'Pago',
+            receivedDate: stmt.date
+          });
+        }
+      }
+
+      if (dbService.saveBankStatement) {
+        await dbService.saveBankStatement({
+          ...stmt,
+          status: 'Conciliado',
+          note: stmt.matchedTitleDesc ? `Conciliado com ${stmt.matchedTitleDesc}` : 'Conciliado pelo operador'
+        });
+      }
+
+      await loadData();
+      setCopiedToast('Lançamento conciliado e título baixado no financeiro!');
+      setTimeout(() => setCopiedToast(''), 3000);
+    } catch (err) {
+      console.error('Erro ao conciliar:', err);
+      alert('Erro ao realizar conciliação.');
     }
   };
 
@@ -1128,71 +1290,193 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
   return (
     <div style={styles.container}>
+      {/* Cabeçalho Oficial do Módulo */}
+      <ModuleHeader
+        icon={DollarSign}
+        title=".FINANCE"
+        subtitle="Gestão financeira integrada, fluxo de caixa, conciliação bancária, DRE e controle orçamentário."
+        gradient="linear-gradient(135deg, #10b981, #059669)"
+        dotColor="#10b981"
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowCnabModal(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.55rem 0.95rem',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-card, #ffffff)',
+                border: '1px solid var(--border-color, #e2e8f0)',
+                color: 'var(--text-primary, #0f172a)',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                boxShadow: 'var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05))'
+              }}
+              title="Exportação de Remessa CNAB 240 Sicoob"
+            >
+              <FileSpreadsheet size={16} color="#10b981" />
+              <span>CNAB</span>
+            </button>
 
+            <button
+              type="button"
+              onClick={() => setIsReportsOpen && setIsReportsOpen(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.55rem 0.95rem',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-card, #ffffff)',
+                border: '1px solid var(--border-color, #e2e8f0)',
+                color: 'var(--text-primary, #0f172a)',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                boxShadow: 'var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05))'
+              }}
+              title="Relatórios Financeiros Oficiais"
+            >
+              <FileText size={16} color="#0284c7" />
+              <span>Relatórios</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={loadData}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '38px',
+                height: '38px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-card, #ffffff)',
+                border: '1px solid var(--border-color, #e2e8f0)',
+                color: 'var(--text-secondary, #64748b)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                boxShadow: 'var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05))'
+              }}
+              title="Atualizar dados"
+            >
+              <RefreshCw size={16} />
+            </button>
+          </>
+        }
+      />
 
       {/* Navigation tabs */}
       <div style={styles.tabsHeader}>
-        <div style={{ ...styles.tabs, flexWrap: 'wrap' }}>
+        <div style={styles.tabs}>
           <button 
             onClick={() => setActiveTab('dashboard')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'dashboard' ? styles.tabBtnActive : {}) }}
           >
-            Dashboard
+            <BarChart2 size={16} />
+            <span>Dashboard</span>
           </button>
           <button 
             onClick={() => setActiveTab('payable')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'payable' ? styles.tabBtnActive : {}) }}
           >
-            Contas a Pagar ({currentPayableList.length})
+            <TrendingDown size={16} />
+            <span>Pagar</span>
+            <span style={{
+              fontSize: '0.72rem',
+              padding: '0.1rem 0.45rem',
+              borderRadius: '10px',
+              backgroundColor: activeTab === 'payable' ? '#10b981' : 'var(--surface-muted, #e2e8f0)',
+              color: activeTab === 'payable' ? '#ffffff' : 'var(--text-secondary, #64748b)',
+              fontWeight: '700'
+            }}>
+              {currentPayableList.length}
+            </span>
           </button>
           <button 
             onClick={() => setActiveTab('receivable')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'receivable' ? styles.tabBtnActive : {}) }}
           >
-            Contas a Receber ({currentReceivableList.length})
+            <TrendingUp size={16} />
+            <span>Receber</span>
+            <span style={{
+              fontSize: '0.72rem',
+              padding: '0.1rem 0.45rem',
+              borderRadius: '10px',
+              backgroundColor: activeTab === 'receivable' ? '#10b981' : 'var(--surface-muted, #e2e8f0)',
+              color: activeTab === 'receivable' ? '#ffffff' : 'var(--text-secondary, #64748b)',
+              fontWeight: '700'
+            }}>
+              {currentReceivableList.length}
+            </span>
           </button>
           <button 
             onClick={() => setActiveTab('budget')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'budget' ? styles.tabBtnActive : {}), borderBottom: activeTab === 'budget' ? '3px solid #10b981' : 'none' }}
+            style={{ ...styles.tabBtn, ...(activeTab === 'budget' ? styles.tabBtnActive : {}) }}
           >
-            🎯 Orçamento X Realizado
+            <Target size={16} />
+            <span>Orçamento</span>
           </button>
           <button 
             onClick={() => setActiveTab('cashflow_projection')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'cashflow_projection' ? styles.tabBtnActive : {}), borderBottom: activeTab === 'cashflow_projection' ? '3px solid #f59e0b' : 'none' }}
+            style={{ ...styles.tabBtn, ...(activeTab === 'cashflow_projection' ? styles.tabBtnActive : {}) }}
           >
-            📈 Saldo Fluxo (Projeção)
+            <Activity size={16} />
+            <span>Projeção</span>
           </button>
           <button 
             onClick={() => setActiveTab('agreements')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'agreements' ? styles.tabBtnActive : {}) }}
           >
-            🤝 Acordos & Renegociações ({currentAgreementsList.length})
+            <ShieldCheck size={16} />
+            <span>Acordos</span>
+            <span style={{
+              fontSize: '0.72rem',
+              padding: '0.1rem 0.45rem',
+              borderRadius: '10px',
+              backgroundColor: activeTab === 'agreements' ? '#10b981' : 'var(--surface-muted, #e2e8f0)',
+              color: activeTab === 'agreements' ? '#ffffff' : 'var(--text-secondary, #64748b)',
+              fontWeight: '700'
+            }}>
+              {currentAgreementsList.length}
+            </span>
           </button>
           <button 
             onClick={() => setActiveTab('installments')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'installments' ? styles.tabBtnActive : {}) }}
           >
-            Dívidas Longo Prazo ({currentDebtsList.length})
+            <Building2 size={16} />
+            <span>Dívidas</span>
+            <span style={{
+              fontSize: '0.72rem',
+              padding: '0.1rem 0.45rem',
+              borderRadius: '10px',
+              backgroundColor: activeTab === 'installments' ? '#10b981' : 'var(--surface-muted, #e2e8f0)',
+              color: activeTab === 'installments' ? '#ffffff' : 'var(--text-secondary, #64748b)',
+              fontWeight: '700'
+            }}>
+              {currentDebtsList.length}
+            </span>
           </button>
           <button 
             onClick={() => setActiveTab('reconciliation')} 
             style={{ ...styles.tabBtn, ...(activeTab === 'reconciliation' ? styles.tabBtnActive : {}) }}
           >
-            Conciliação Bancária
+            <CheckCircle2 size={16} />
+            <span>Conciliação</span>
           </button>
           <button 
             onClick={() => setActiveTab('dre')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'dre' ? styles.tabBtnActive : {}), borderBottom: activeTab === 'dre' ? '3px solid #8b5cf6' : 'none' }}
+            style={{ ...styles.tabBtn, ...(activeTab === 'dre' ? styles.tabBtnActive : {}) }}
           >
-            📊 DRE Gerencial
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <UnitSelector compact showLabel={false} />
-          <button onClick={loadData} style={styles.refreshBtn} title="Atualizar dados">
-            <RefreshCw size={15} />
+            <FileSpreadsheet size={16} />
+            <span>DRE</span>
           </button>
         </div>
       </div>
@@ -1583,7 +1867,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
                     {card.id === 'cost_distribution' && (
                       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <h3 style={styles.sectionTitle}>Distribuição de Custos / Despesas</h3>
+                        <h3 style={styles.sectionTitle}>Distribuição de Despesas</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                           {Object.entries(categories).map(([cat, val]) => {
                             const perc = ((val / (totalPayables || 1)) * 100).toFixed(1);
@@ -1958,11 +2242,11 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                       </div>
                       <table style={styles.table}>
                         <thead>
-                          <tr style={{ backgroundColor: '#f8fafc' }}>
-                            <th style={styles.th}>Cliente / Convênio</th>
+                          <tr style={{ backgroundColor: 'var(--surface-muted, #f8fafc)' }}>
+                            <th style={styles.th}>Cliente</th>
                             <th style={styles.th}>Categoria</th>
-                            <th style={styles.th}>Nº Guia/Doc</th>
-                            <th style={styles.th}>Valor (R$)</th>
+                            <th style={styles.th}>Documento</th>
+                            <th style={styles.th}>Valor</th>
                             <th style={styles.th}>Status</th>
                           </tr>
                         </thead>
@@ -2177,6 +2461,28 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               >
                 <FileSpreadsheet size={15} />
                 <span>Remessa</span>
+              </button>
+              <button 
+                type="button"
+                onClick={handleSyncStockInvoices}
+                disabled={isSyncingStock}
+                style={{
+                  ...styles.btnSecondary,
+                  backgroundColor: 'rgba(16,185,129,0.08)',
+                  color: '#059669',
+                  border: '1px solid rgba(16,185,129,0.25)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  fontWeight: '700',
+                  padding: '0.45rem 0.75rem',
+                  borderRadius: '6px',
+                  cursor: isSyncingStock ? 'not-allowed' : 'pointer'
+                }}
+                title="Sincronizar notas fiscais cadastradas no estoque diretamente no Contas a Pagar"
+              >
+                <Boxes size={15} />
+                <span>{isSyncingStock ? 'Sincronizando...' : 'Sincronizar Estoque'}</span>
               </button>
               <button 
                 onClick={() => {
@@ -2531,6 +2837,10 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                             <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: '700' }}>
                               🛒 Compras
                             </span>
+                          ) : (!isCompact && (p.origin === 'stock_invoice' || p.invoiceId)) ? (
+                            <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: 'rgba(16,185,129,0.1)', color: '#059669', fontWeight: '700', border: '1px solid rgba(16,185,129,0.25)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              <Boxes size={10} /> Estoque
+                            </span>
                           ) : (!isCompact && p.invoiceNumber) ? (
                             <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#f1f5f9', color: '#475569', fontWeight: '700' }}>
                               NF #{p.invoiceNumber}
@@ -2778,7 +3088,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
               <div style={styles.formGrid}>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Cliente / Fonte Pagadora</label>
+                  <label style={styles.label}>Cliente</label>
                   <input 
                     type="text" 
                     value={editingReceivable ? editingReceivable.client : newReceivable.client} 
@@ -2791,7 +3101,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Valor (R$)</label>
+                  <label style={styles.label}>Valor</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -2805,7 +3115,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Data de Vencimento</label>
+                  <label style={styles.label}>Vencimento</label>
                   <input 
                     type="date" 
                     value={editingReceivable ? editingReceivable.dueDate : newReceivable.dueDate} 
@@ -2834,7 +3144,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Nº Guia / Lote / Documento</label>
+                  <label style={styles.label}>Documento</label>
                   <input 
                     type="text" 
                     value={editingReceivable ? (editingReceivable.invoiceNumber || '') : newReceivable.invoiceNumber} 
@@ -2847,7 +3157,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Meio / Forma de Recebimento</label>
+                  <label style={styles.label}>Recebimento</label>
                   <select 
                     value={editingReceivable ? (editingReceivable.paymentMethod || 'PIX') : newReceivable.paymentMethod} 
                     onChange={e => {
@@ -2857,15 +3167,15 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                     style={styles.input}
                   >
                     <option value="PIX">PIX</option>
-                    <option value="Boleto Bancário">Boleto Bancário</option>
+                    <option value="Boleto Bancário">Boleto</option>
                     <option value="Cartão de Crédito">Cartão de Crédito</option>
                     <option value="Cartão de Débito">Cartão de Débito</option>
-                    <option value="Transferência (TED/DOC)">Transferência (TED/DOC)</option>
-                    <option value="Dinheiro">Dinheiro / Espécie</option>
+                    <option value="Transferência">Transferência (TED)</option>
+                    <option value="Dinheiro">Dinheiro</option>
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Banco / Conta Crédito</label>
+                  <label style={styles.label}>Banco</label>
                   <select 
                     value={editingReceivable ? (editingReceivable.bankAccount || 'Itaú Unibanco (PJ)') : newReceivable.bankAccount} 
                     onChange={e => {
@@ -2874,16 +3184,16 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                     }} 
                     style={styles.input}
                   >
-                    <option value="Itaú Unibanco (PJ)">Itaú Unibanco (PJ)</option>
+                    <option value="Itaú Unibanco (PJ)">Itaú Unibanco</option>
                     <option value="Banco do Brasil">Banco do Brasil</option>
                     <option value="Bradesco">Bradesco</option>
                     <option value="Caixa Econômica">Caixa Econômica</option>
-                    <option value="Stone">Stone Pagamentos</option>
+                    <option value="Stone">Stone</option>
                     <option value="Outro">Outro</option>
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Filial / Unidade</label>
+                  <label style={styles.label}>Unidade</label>
                   <select 
                     value={editingReceivable ? (editingReceivable.unitId || 'betim') : (newReceivable.unitId || (activeUnitId === 'all' ? 'betim' : activeUnitId))} 
                     onChange={e => {
@@ -3022,7 +3332,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         <div style={styles.tabContent}>
           <div style={styles.actionsBar}>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Contratos de Dívidas & Financiamentos</h3>
+              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Contratos de Dívidas</h3>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 Ao cadastrar um parcelamento, o sistema gera automaticamente os lançamentos mês a mês no Contas a Pagar.
               </span>
@@ -3030,17 +3340,17 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
             <button onClick={() => setShowAddDebt(!showAddDebt)} style={styles.btnPrimary}>
               <Plus size={14} />
-              <span>Novo Parcelamento / Dívida</span>
+              <span>Novo Parcelamento</span>
             </button>
           </div>
 
           {/* Add New Debt / Installment Form */}
           {showAddDebt && (
             <form onSubmit={handleSaveDebt} style={styles.formContainer}>
-              <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-primary)' }}>Novo Parcelamento de Dívida / Contrato</h4>
+              <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-primary)' }}>Novo Parcelamento</h4>
               <div style={styles.formGrid}>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Credor / Banco / Fornecedor</label>
+                  <label style={styles.label}>Credor</label>
                   <input 
                     type="text" 
                     value={newDebt.creditor} 
@@ -3051,7 +3361,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>CNPJ do Credor (Opcional)</label>
+                  <label style={styles.label}>CNPJ</label>
                   <input 
                     type="text" 
                     value={newDebt.cnpj} 
@@ -3061,7 +3371,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Valor Total da Dívida (R$)</label>
+                  <label style={styles.label}>Total</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -3080,7 +3390,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Nº de Parcelas</label>
+                  <label style={styles.label}>Parcelas</label>
                   <input 
                     type="number" 
                     min="1"
@@ -3100,7 +3410,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Valor Parcela Mensal (R$)</label>
+                  <label style={styles.label}>Parcela</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -3111,7 +3421,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Vencimento 1ª Parcela</label>
+                  <label style={styles.label}>Vencimento</label>
                   <input 
                     type="date" 
                     value={newDebt.firstDueDate} 
@@ -3127,14 +3437,14 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                     onChange={e => setNewDebt({...newDebt, category: e.target.value})} 
                     style={styles.input}
                   >
-                    <option value="Equipamento">Equipamento / Máquinas</option>
-                    <option value="Serviço/Utilidades">Empréstimo / Financiamento</option>
-                    <option value="Insumo Clínico">Insumo Clínico Parcelado</option>
+                    <option value="Equipamento">Equipamento</option>
+                    <option value="Serviço/Utilidades">Financiamento</option>
+                    <option value="Insumo Clínico">Insumo Clínico</option>
                     <option value="Outros">Outras Dívidas</option>
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Observações / Contrato</label>
+                  <label style={styles.label}>Observações</label>
                   <input 
                     type="text" 
                     value={newDebt.notes} 
@@ -3146,7 +3456,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
                 <button type="button" onClick={() => setShowAddDebt(false)} style={styles.btnSecondary}>Cancelar</button>
-                <button type="submit" style={styles.btnSave}>Gerar Dívida & Parcelas</button>
+                <button type="submit" style={styles.btnSave}>Gerar Parcelamento</button>
               </div>
             </form>
           )}
@@ -3306,10 +3616,22 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button onClick={() => setShowAddManualStatement(!showAddManualStatement)} style={styles.btnPrimary}>
-                <Plus size={14} /> Novo Lançamento Manual
+                <Plus size={14} /> Novo Lançamento
               </button>
-              <button onClick={() => alert('Simulação de Leitura de Extrato OFX/CSV concluída com sucesso!')} style={styles.btnSecondary}>
-                <Upload size={14} /> Importar OFX / CSV
+              <input 
+                type="file" 
+                ref={ofxFileInputRef} 
+                accept=".ofx,.csv,.txt" 
+                onChange={handleOfxFileSelected} 
+                style={{ display: 'none' }} 
+              />
+              <button 
+                onClick={() => ofxFileInputRef.current?.click()} 
+                disabled={isProcessingOfx} 
+                style={styles.btnSecondary}
+                title="Ler extrato bancário real nos formatos OFX ou CSV"
+              >
+                <Upload size={14} /> {isProcessingOfx ? 'Lendo...' : 'Importar Extrato'}
               </button>
             </div>
           </div>
@@ -3318,7 +3640,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
           {showAddManualStatement && (
             <form onSubmit={handleSaveManualStatement} style={{ ...styles.formContainer, border: '2px solid #3b82f6', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>🏦 Novo Lançamento Manual no Extrato Bancário</h4>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>Novo Lançamento</h4>
                 <button type="button" onClick={() => setShowAddManualStatement(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
                   <X size={18} />
                 </button>
@@ -3326,7 +3648,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
               <div style={styles.formGrid}>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Data da Movimentação</label>
+                  <label style={styles.label}>Data</label>
                   <input 
                     type="date" 
                     value={newManualStatement.date} 
@@ -3336,7 +3658,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Banco / Conta</label>
+                  <label style={styles.label}>Banco</label>
                   <input 
                     type="text" 
                     value={newManualStatement.bankName} 
@@ -3347,7 +3669,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Descrição / Histórico</label>
+                  <label style={styles.label}>Descrição</label>
                   <input 
                     type="text" 
                     value={newManualStatement.description} 
@@ -3358,18 +3680,18 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   />
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Tipo de Movimentação</label>
+                  <label style={styles.label}>Tipo</label>
                   <select 
                     value={newManualStatement.type} 
                     onChange={e => setNewManualStatement({ ...newManualStatement, type: e.target.value })}
                     style={styles.input}
                   >
-                    <option value="Débito">Débito (Saída / Tarifa)</option>
-                    <option value="Crédito">Crédito (Entrada / Rendimento)</option>
+                    <option value="Débito">Débito</option>
+                    <option value="Crédito">Crédito</option>
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Valor (R$)</label>
+                  <label style={styles.label}>Valor</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -3442,18 +3764,39 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                         </span>
                       </td>
                       <td style={{ ...styles.td, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        {stmt.note || 'Lançamento conferido e aprovado pelo operador.'}
+                        {stmt.matchedTitleId ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span style={{ color: '#059669', fontWeight: '700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <CheckCircle2 size={12} /> {stmt.matchedTitleDesc}
+                            </span>
+                            <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                              {stmt.matchReason || stmt.note}
+                            </span>
+                          </div>
+                        ) : (
+                          stmt.note || 'Lançamento conferido pelo operador.'
+                        )}
                       </td>
                       <td style={styles.td}>
                         <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
                           {!isConciled ? (
-                            <button 
-                              onClick={() => handleQuickReconcile(stmt)} 
-                              style={{ ...styles.actionBtnCheck, backgroundColor: '#10b981', color: '#ffffff', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
-                              title="Criar lançamento automático no Financeiro e Conciliar"
-                            >
-                              <Check size={12} /> Conciliar 1-Clique
-                            </button>
+                            stmt.matchedTitleId ? (
+                              <button 
+                                onClick={() => handleReconcileWithMatch(stmt)} 
+                                style={{ ...styles.actionBtnCheck, backgroundColor: '#059669', color: '#ffffff', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '3px', fontWeight: '700' }}
+                                title={`Baixar título "${stmt.matchedTitleDesc}" e conciliar lançamento`}
+                              >
+                                <Check size={12} /> Conciliar
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={() => handleQuickReconcile(stmt)} 
+                                style={{ ...styles.actionBtnCheck, backgroundColor: '#10b981', color: '#ffffff', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                                title="Criar lançamento automático no Financeiro e Conciliar"
+                              >
+                                <Check size={12} /> Conciliar
+                              </button>
+                            )
                           ) : (
                             <button 
                               onClick={() => handleUnreconcileStatement(stmt)}
@@ -3463,7 +3806,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                               Desfazer
                             </button>
                           )}
-                          <button onClick={() => handleDeleteStatement(stmt.id)} style={styles.actionBtnDelete} title="Excluir Item do Extrato">
+                          <button onClick={() => handleDeleteStatement(stmt.id)} style={styles.actionBtnDelete} title="Excluir">
                             <Trash2 size={14} />
                           </button>
                         </div>
@@ -3561,14 +3904,14 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               <table style={styles.table}>
                 <thead>
                   <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                    <th style={{ ...styles.th, color: '#f8fafc', width: '45%' }}>Estrutura de Contas da DRE Gerencial</th>
-                    <th style={{ ...styles.th, color: '#f8fafc' }}>Valor Realizado (R$)</th>
-                    <th style={{ ...styles.th, color: '#f8fafc' }}>% s/ Receita Líquida</th>
-                    <th style={{ ...styles.th, color: '#f8fafc' }}>Análise Vertical & Diagnóstico</th>
+                    <th style={{ ...styles.th, color: '#f8fafc', width: '45%' }}>Estrutura</th>
+                    <th style={{ ...styles.th, color: '#f8fafc' }}>Realizado</th>
+                    <th style={{ ...styles.th, color: '#f8fafc' }}>% Receita</th>
+                    <th style={{ ...styles.th, color: '#f8fafc' }}>Análise</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr style={{ ...styles.tr, backgroundColor: '#f8fafc', fontWeight: '800' }}>
+                  <tr style={{ ...styles.tr, backgroundColor: 'var(--surface-muted, #f8fafc)', fontWeight: '800' }}>
                     <td style={{ ...styles.td, fontSize: '0.95rem', color: '#0f172a' }}>(+) RECEITA BRUTA OPERACIONAL</td>
                     <td style={{ ...styles.td, fontWeight: '800', color: '#2563eb' }}>
                       R$ {receitaBruta.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -3743,7 +4086,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
             <button onClick={() => setShowAddBudget(true)} style={styles.btnPrimary}>
               <Plus size={14} />
-              <span>Configurar Meta Orçamentária</span>
+              <span>Nova Meta</span>
             </button>
           </div>
 
@@ -3751,7 +4094,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
           {showAddBudget && (
             <form onSubmit={handleSaveBudgetPlan} style={{ ...styles.formContainer, border: '2px solid #10b981' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>🎯 Configurar Meta Orçamentária (Unidade {selectedUnit})</h4>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>Nova Meta ({selectedUnit})</h4>
                 <button type="button" onClick={() => setShowAddBudget(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
                   <X size={18} />
                 </button>
@@ -3772,7 +4115,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 </div>
 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Valor Orçado / Meta (R$)</label>
+                  <label style={styles.label}>Orçado</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -3785,7 +4128,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 </div>
 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Mês / Ano Competência</label>
+                  <label style={styles.label}>Competência</label>
                   <input 
                     type="number" 
                     value={newBudget.month} 
@@ -3815,7 +4158,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
                 <button type="button" onClick={() => setShowAddBudget(false)} style={styles.btnSecondary}>Cancelar</button>
-                <button type="submit" style={styles.btnSave}>Salvar Meta Orçamentária</button>
+                <button type="submit" style={styles.btnSave}>Salvar Meta</button>
               </div>
             </form>
           )}
@@ -3824,7 +4167,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
           <div style={styles.tableWrapper}>
             <table style={styles.table}>
               <thead>
-                <tr style={{ backgroundColor: '#f8fafc' }}>
+                <tr style={{ backgroundColor: 'var(--surface-muted, #f8fafc)' }}>
                   {renderSortableHeader('Centro de Custo', 'code', budgetSort, setBudgetSort)}
                   {renderSortableHeader('Macroárea', 'parentName', budgetSort, setBudgetSort)}
                   {renderSortableHeader('Orçado', 'planned', budgetSort, setBudgetSort)}
@@ -4043,7 +4386,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 style={styles.btnSecondary}
               >
                 <Sliders size={14} />
-                <span>Ajustar Saldo Inicial de Caixa</span>
+                <span>Ajustar Saldo Inicial</span>
               </button>
             </div>
 
@@ -4051,14 +4394,14 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             {showEditCashBalance && (
               <form onSubmit={handleSaveInitialCashBalance} style={{ ...styles.formContainer, border: '2px solid #3b82f6', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>💵 Ajustar Saldo Inicial de Caixa da Clínica</h4>
+                  <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>Ajustar Saldo Inicial</h4>
                   <button type="button" onClick={() => setShowEditCashBalance(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
                     <X size={18} />
                   </button>
                 </div>
 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Valor do Saldo Inicial em Caixa (R$)</label>
+                  <label style={styles.label}>Saldo Inicial</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -4072,7 +4415,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
                   <button type="button" onClick={() => setShowEditCashBalance(false)} style={styles.btnSecondary}>Cancelar</button>
-                  <button type="submit" style={styles.btnSave}>Salvar Saldo Inicial</button>
+                  <button type="submit" style={styles.btnSave}>Salvar Saldo</button>
                 </div>
               </form>
             )}
@@ -4081,7 +4424,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <div style={styles.tableWrapper}>
               <table style={styles.table}>
                 <thead>
-                  <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                  <tr style={{ backgroundColor: 'var(--surface-muted, #0f172a)', color: 'var(--text-primary, #ffffff)' }}>
                     {renderSortableHeader('Competência', 'monthIndex', projectionSort, setProjectionSort)}
                     {renderSortableHeader('Situação', 'status', projectionSort, setProjectionSort)}
                     {renderSortableHeader('Devido', 'devido', projectionSort, setProjectionSort)}
@@ -4152,7 +4495,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
           {showAddAgreement && (
             <form onSubmit={handleSaveAgreement} style={{ ...styles.formContainer, border: '2px solid #8b5cf6', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>Novo Acordo de Renegociação</h4>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>Novo Acordo</h4>
                 <button type="button" onClick={() => setShowAddAgreement(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
                   <X size={18} />
                 </button>
@@ -4160,7 +4503,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
               <div style={styles.formGrid}>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Fornecedor / Credor</label>
+                  <label style={styles.label}>Fornecedor</label>
                   <input 
                     type="text" 
                     value={newAgreement.supplier} 
@@ -4172,7 +4515,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 </div>
 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Valor Total Renegociado (R$)</label>
+                  <label style={styles.label}>Total</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -4185,7 +4528,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 </div>
 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Quantidade de Parcelas</label>
+                  <label style={styles.label}>Parcelas</label>
                   <input 
                     type="number" 
                     value={newAgreement.installmentCount} 
@@ -4197,7 +4540,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 </div>
 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Data da 1ª Parcela</label>
+                  <label style={styles.label}>Vencimento</label>
                   <input 
                     type="date" 
                     value={newAgreement.firstDueDate} 
@@ -4222,7 +4565,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 </div>
 
                 <div style={{ ...styles.inputGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>Observações / Condições Comerciais</label>
+                  <label style={styles.label}>Observações</label>
                   <input 
                     type="text" 
                     value={newAgreement.notes} 
@@ -4316,27 +4659,27 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
       {/* Partial Payment Modal */}
       {partialItem && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '1.5rem', width: '90%', maxWidth: '480px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', pb: '0.75rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a', fontWeight: '800' }}>
-                💵 Registrar Baixa / Quitação Parcial
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
+          <div style={{ backgroundColor: 'var(--bg-card, #ffffff)', borderRadius: '12px', padding: '1.5rem', width: '90%', maxWidth: '480px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', border: '1px solid var(--border-color, #e2e8f0)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color, #e2e8f0)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary, #0f172a)', fontWeight: '800' }}>
+                Baixa Parcial
               </h3>
-              <button onClick={() => setPartialItem(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+              <button onClick={() => setPartialItem(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ marginBottom: '1rem', backgroundColor: '#f8fafc', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '0.85rem', color: '#334155' }}>Fornecedor: <strong>{partialItem.supplier}</strong></div>
-              <div style={{ fontSize: '0.85rem', color: '#334155' }}>NF: <strong>{partialItem.invoiceNumber || '-'}</strong></div>
-              <div style={{ fontSize: '0.85rem', color: '#334155' }}>Valor Total Devido: <strong>R$ {(parseFloat(partialItem.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>
+            <div style={{ marginBottom: '1rem', backgroundColor: 'var(--surface-muted, #f8fafc)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color, #e2e8f0)' }}>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #334155)' }}>Fornecedor: <strong>{partialItem.supplier}</strong></div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #334155)' }}>NF: <strong>{partialItem.invoiceNumber || '-'}</strong></div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #334155)' }}>Valor Total Devido: <strong>R$ {(parseFloat(partialItem.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>
               <div style={{ fontSize: '0.85rem', color: '#059669' }}>Já Pago Anteriormente: <strong>R$ {(parseFloat(partialItem.amountPaid) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>
             </div>
 
             <form onSubmit={handleConfirmPartialPayment}>
               <div style={styles.inputGroup}>
-                <label style={styles.label}>Data do Pagamento</label>
+                <label style={styles.label}>Data</label>
                 <input 
                   type="date" 
                   value={partialPaymentDate} 
@@ -4346,7 +4689,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 />
               </div>
               <div style={styles.inputGroup}>
-                <label style={styles.label}>Valor Pago (R$)</label>
+                <label style={styles.label}>Valor</label>
                 <input 
                   type="number" 
                   step="0.01" 
@@ -4362,7 +4705,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   setPartialItem(null);
                   setPartialPaymentDate(new Date().toISOString().substring(0, 10));
                 }} style={styles.btnSecondary}>Cancelar</button>
-                <button type="submit" style={styles.btnSave}>Confirmar Pagamento</button>
+                <button type="submit" style={styles.btnSave}>Confirmar</button>
               </div>
             </form>
           </div>
@@ -4372,26 +4715,26 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       {/* Import Betim Spreadsheet Modal */}
       {showImportBetimModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '14px', padding: '1.75rem', width: '90%', maxWidth: '600px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+          <div style={{ backgroundColor: 'var(--bg-card, #ffffff)', borderRadius: '14px', padding: '1.75rem', width: '90%', maxWidth: '600px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid var(--border-color, #e2e8f0)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color, #e2e8f0)', paddingBottom: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <FileSpreadsheet size={22} color="#059669" />
-                <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#0f172a', fontWeight: '800' }}>
-                  Importar Planilha Contas a Pagar Betim - 2026
+                <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--text-primary, #0f172a)', fontWeight: '800' }}>
+                  Importar Planilha Betim
                 </h3>
               </div>
-              <button onClick={() => setShowImportBetimModal(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+              <button onClick={() => setShowImportBetimModal(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={20} />
               </button>
             </div>
 
-            <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: '1.5' }}>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475569)', lineHeight: '1.5' }}>
               O sistema identificou o arquivo do fluxo de caixa de <strong>Betim (2026)</strong>. Todos os 32 lançamentos (CEMIG, VFB Brasil, Farmarin, FGTS, PIS, Martins Costa, Copasa, DCTFWeb, Folha e Vantive) serão sincronizados e categorizados por Centro de Custos.
             </p>
 
-            <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.85rem', marginBottom: '1.25rem' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#166534', marginBottom: '0.3rem' }}>Resumo da Estrutura a Importar:</div>
-              <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.78rem', color: '#15803d' }}>
+            <div style={{ backgroundColor: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '8px', padding: '0.85rem', marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#10b981', marginBottom: '0.3rem' }}>Resumo da Estrutura a Importar:</div>
+              <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                 <li>Mapeamento automático de Mês de Competência (Jun/25 a Ago/26)</li>
                 <li>Vincular Centros de Custo: Insumos (1.1), Equipamentos (1.2), Energia/Água (2.1), RH/Folha (3.1), Impostos (3.2)</li>
                 <li>Preservar número das parcelas (ex: 02/14, 4-6) e pagamentos parciais executados</li>
@@ -4401,8 +4744,112 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
               <button onClick={() => setShowImportBetimModal(false)} style={styles.btnSecondary}>Cancelar</button>
               <button onClick={handleImportBetimData} style={styles.btnPrimary}>
-                <CheckCircle2 size={16} /> Confirmar Importação Betim
+                <CheckCircle2 size={16} /> Confirmar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* OFX / CSV Statement Import Summary Modal */}
+      {ofxSummaryModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
+          <div style={{ backgroundColor: 'var(--bg-card, #ffffff)', borderRadius: '16px', padding: '1.75rem', width: '92%', maxWidth: '850px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid var(--border-color, #e2e8f0)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color, #e2e8f0)', paddingBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--text-primary, #0f172a)', fontWeight: '800' }}>
+                    Extrato Bancário
+                  </h3>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {ofxSummaryModal.bankName} • {ofxSummaryModal.fileName}
+                  </span>
+                </div>
+              </div>
+              <button onClick={() => setOfxSummaryModal(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Quick Metrics Bar */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--surface-muted, #f8fafc)', border: '1px solid var(--border-color, #e2e8f0)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase' }}>Total de Lançamentos</span>
+                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)' }}>{ofxSummaryModal.totalTransactions}</div>
+              </div>
+              <div style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: '700', textTransform: 'uppercase' }}>Matches Encontrados</span>
+                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#059669' }}>{ofxSummaryModal.matchedCount}</div>
+              </div>
+              <div style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--surface-muted, #f8fafc)', border: '1px solid var(--border-color, #e2e8f0)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase' }}>Status de Importação</span>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#10b981', marginTop: '0.2rem' }}>Salvo no Extrato</div>
+              </div>
+            </div>
+
+            {/* Transactions Preview Table */}
+            <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--border-color, #e2e8f0)', borderRadius: '8px', marginBottom: '1rem', minHeight: '180px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ position: 'sticky', top: 0, backgroundColor: 'var(--surface-muted, #f8fafc)', zIndex: 1 }}>
+                    <th style={{ ...styles.th, padding: '0.5rem 0.75rem' }}>Data</th>
+                    <th style={{ ...styles.th, padding: '0.5rem 0.75rem' }}>Descrição</th>
+                    <th style={{ ...styles.th, padding: '0.5rem 0.75rem' }}>Tipo</th>
+                    <th style={{ ...styles.th, padding: '0.5rem 0.75rem' }}>Valor</th>
+                    <th style={{ ...styles.th, padding: '0.5rem 0.75rem' }}>Correspondência</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ofxSummaryModal.transactions.map((t, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid var(--border-color, #f1f5f9)', fontSize: '0.8rem' }}>
+                      <td style={{ padding: '0.5rem 0.75rem', whiteSpace: 'nowrap' }}>{t.date.split('-').reverse().join('/')}</td>
+                      <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600' }}>{t.description}</td>
+                      <td style={{ padding: '0.5rem 0.75rem' }}>
+                        <span style={{
+                          backgroundColor: t.type === 'Crédito' ? '#d1fae5' : '#fee2e2',
+                          color: t.type === 'Crédito' ? '#065f46' : '#991b1b',
+                          padding: '0.15rem 0.4rem',
+                          borderRadius: '4px',
+                          fontWeight: '700',
+                          fontSize: '0.72rem'
+                        }}>
+                          {t.type}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: t.type === 'Crédito' ? '#10b981' : '#ef4444', whiteSpace: 'nowrap' }}>
+                        {t.type === 'Crédito' ? '+' : '-'} R$ {Math.abs(t.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: '0.5rem 0.75rem' }}>
+                        {t.matchedTitleId ? (
+                          <span style={{ color: '#059669', fontWeight: '700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <CheckCircle2 size={13} /> {t.matchedTitleDesc}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Sem título correspondente</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer Buttons */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button onClick={() => setOfxSummaryModal(null)} style={styles.btnSecondary}>
+                Fechar
+              </button>
+              {ofxSummaryModal.matchedCount > 0 && (
+                <button 
+                  onClick={handleAutoReconcileAllMatches} 
+                  style={{ ...styles.btnPrimary, backgroundColor: '#059669', borderColor: '#059669' }}
+                >
+                  <CheckCircle2 size={16} /> Conciliar ({ofxSummaryModal.matchedCount})
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -4537,45 +4984,53 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   );
 }
 
-
 const styles = {
   container: {
-    padding: '1.5rem',
-    backgroundColor: '#f8fafc',
-    minHeight: '80vh',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem',
   },
   tabsHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottom: '1px solid #e2e8f0',
-    marginBottom: '1.5rem',
+    borderBottom: '1px solid var(--border-color, #e2e8f0)',
+    marginBottom: '0.5rem',
+    overflowX: 'auto',
+    gap: '0.5rem',
   },
   tabs: {
     display: 'flex',
-    gap: '0.25rem',
+    gap: '0.35rem',
+    flexWrap: 'wrap',
   },
   tabBtn: {
-    padding: '0.75rem 1.25rem',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.65rem 1rem',
     backgroundColor: 'transparent',
     border: 'none',
     borderBottom: '2px solid transparent',
-    fontSize: '0.9rem',
+    fontSize: '0.85rem',
     fontWeight: '600',
-    color: '#64748b',
+    color: 'var(--text-secondary, #64748b)',
     cursor: 'pointer',
-    transition: 'all 0.2s',
+    transition: 'all 0.2s ease',
+    whiteSpace: 'nowrap',
+    borderRadius: '6px 6px 0 0',
   },
   tabBtnActive: {
     color: '#10b981',
     borderBottom: '2px solid #10b981',
+    backgroundColor: 'rgba(16, 185, 129, 0.05)',
   },
   refreshBtn: {
     padding: '0.5rem',
     borderRadius: '8px',
-    backgroundColor: '#fff',
-    border: '1px solid #e2e8f0',
-    color: '#64748b',
+    backgroundColor: 'var(--bg-card, #fff)',
+    border: '1px solid var(--border-color, #e2e8f0)',
+    color: 'var(--text-secondary, #64748b)',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
@@ -4588,11 +5043,11 @@ const styles = {
     marginBottom: '1.5rem',
   },
   kpiCard: {
-    backgroundColor: '#fff',
-    border: '1px solid #e2e8f0',
+    backgroundColor: 'var(--bg-card, #ffffff)',
+    border: '1px solid var(--border-color, #e2e8f0)',
     borderRadius: '12px',
     padding: '1.25rem',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+    boxShadow: 'var(--shadow-sm, 0 1px 3px 0 rgba(0, 0, 0, 0.05))',
   },
   kpiHeader: {
     display: 'flex',
@@ -4602,20 +5057,20 @@ const styles = {
   },
   kpiLabel: {
     fontSize: '0.775rem',
-    color: '#64748b',
+    color: 'var(--text-secondary, #64748b)',
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   kpiValue: {
     fontSize: '1.5rem',
     fontWeight: '700',
-    color: '#0f172a',
+    color: 'var(--text-primary, #0f172a)',
     display: 'block',
     margin: '0.25rem 0',
   },
   kpiFooter: {
     fontSize: '0.75rem',
-    color: '#94a3b8',
+    color: 'var(--text-muted, #94a3b8)',
   },
   dashboardSplit: {
     display: 'grid',
@@ -4624,16 +5079,16 @@ const styles = {
     marginTop: '1rem',
   },
   dashboardSection: {
-    backgroundColor: '#fff',
-    border: '1px solid #e2e8f0',
+    backgroundColor: 'var(--bg-card, #ffffff)',
+    border: '1px solid var(--border-color, #e2e8f0)',
     borderRadius: '12px',
     padding: '1.5rem',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+    boxShadow: 'var(--shadow-sm, 0 1px 3px 0 rgba(0, 0, 0, 0.05))',
   },
   sectionTitle: {
     fontSize: '1rem',
     fontWeight: '700',
-    color: '#0f172a',
+    color: 'var(--text-primary, #0f172a)',
     marginBottom: '1.25rem',
   },
   chartBarWrapper: {
@@ -4643,12 +5098,12 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     fontSize: '0.85rem',
-    color: '#475569',
+    color: 'var(--text-secondary, #475569)',
     marginBottom: '0.5rem',
   },
   progressBarBg: {
     height: '10px',
-    backgroundColor: '#e2e8f0',
+    backgroundColor: 'var(--border-color, #e2e8f0)',
     borderRadius: '5px',
     overflow: 'hidden',
     marginBottom: '0.25rem',
@@ -4659,7 +5114,7 @@ const styles = {
   },
   barPercentage: {
     fontSize: '0.75rem',
-    color: '#94a3b8',
+    color: 'var(--text-muted, #94a3b8)',
   },
   costItem: {
     marginBottom: '0.75rem',
@@ -4668,7 +5123,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     fontSize: '0.8rem',
-    color: '#475569',
+    color: 'var(--text-secondary, #475569)',
     marginBottom: '0.25rem',
   },
   costCatName: {
@@ -4676,11 +5131,11 @@ const styles = {
   },
   costPerc: {
     fontWeight: '700',
-    color: '#64748b',
+    color: 'var(--text-secondary, #64748b)',
   },
   costBarBg: {
     height: '6px',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'var(--surface-muted, #f1f5f9)',
     borderRadius: '3px',
     overflow: 'hidden',
     marginBottom: '0.25rem',
@@ -4691,14 +5146,14 @@ const styles = {
   },
   costValue: {
     fontSize: '0.75rem',
-    color: '#94a3b8',
+    color: 'var(--text-muted, #94a3b8)',
   },
   tabContent: {
-    backgroundColor: '#fff',
-    border: '1px solid #e2e8f0',
+    backgroundColor: 'var(--bg-card, #ffffff)',
+    border: '1px solid var(--border-color, #e2e8f0)',
     borderRadius: '12px',
     padding: '1.25rem',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+    boxShadow: 'var(--shadow-sm, 0 1px 3px 0 rgba(0, 0, 0, 0.05))',
   },
   actionsBar: {
     display: 'flex',
@@ -4716,15 +5171,17 @@ const styles = {
   filterBadge: {
     padding: '0.35rem 0.75rem',
     borderRadius: '16px',
-    backgroundColor: '#f1f5f9',
-    border: 'none',
+    backgroundColor: 'var(--surface-muted, #f1f5f9)',
+    border: '1px solid var(--border-color, #e2e8f0)',
     fontSize: '0.8rem',
     fontWeight: '600',
-    color: '#475569',
+    color: 'var(--text-secondary, #475569)',
     cursor: 'pointer',
+    transition: 'all 0.15s ease',
   },
   filterBadgeActive: {
     backgroundColor: '#10b981',
+    borderColor: '#10b981',
     color: '#fff',
   },
   xmlBtn: {
@@ -4752,15 +5209,16 @@ const styles = {
     fontSize: '0.825rem',
     fontWeight: '600',
     cursor: 'pointer',
+    transition: 'all 0.15s ease',
   },
   tableWrapper: {
     overflowX: 'auto',
     overflowY: 'auto',
     maxHeight: 'calc(100vh - 270px)',
-    border: '1px solid var(--border-color)',
-    borderRadius: '8px',
+    border: '1px solid var(--border-color, #e2e8f0)',
+    borderRadius: '10px',
     position: 'relative',
-    backgroundColor: 'var(--bg-card)',
+    backgroundColor: 'var(--bg-card, #ffffff)',
   },
   table: {
     width: '100%',
@@ -4769,31 +5227,31 @@ const styles = {
   th: {
     position: 'sticky',
     top: 0,
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'var(--surface-muted, #f8fafc)',
     zIndex: 2,
     textAlign: 'left',
     padding: '0.75rem 1rem',
-    borderBottom: '1px solid #e2e8f0',
-    color: '#475569',
-    fontSize: '0.8rem',
+    borderBottom: '1px solid var(--border-color, #e2e8f0)',
+    color: 'var(--text-secondary, #475569)',
+    fontSize: '0.78rem',
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
     whiteSpace: 'nowrap',
   },
   tr: {
-    borderBottom: '1px solid #f1f5f9',
+    borderBottom: '1px solid var(--border-color, #f1f5f9)',
     transition: 'background-color 0.2s',
   },
   td: {
     padding: '0.75rem 1rem',
     fontSize: '0.85rem',
-    color: '#0f172a',
+    color: 'var(--text-primary, #0f172a)',
     verticalAlign: 'middle',
   },
   subtext: {
     fontSize: '0.75rem',
-    color: '#94a3b8',
+    color: 'var(--text-muted, #94a3b8)',
     marginTop: '0.15rem',
   },
   statusBadge: {
@@ -4822,9 +5280,9 @@ const styles = {
     cursor: 'pointer',
   },
   formContainer: {
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
+    backgroundColor: 'var(--surface-muted, #f8fafc)',
+    border: '1px solid var(--border-color, #e2e8f0)',
+    borderRadius: '10px',
     padding: '1.25rem',
     marginBottom: '1.25rem',
   },
@@ -4841,22 +5299,23 @@ const styles = {
   label: {
     fontSize: '0.75rem',
     fontWeight: '700',
-    color: '#475569',
+    color: 'var(--text-secondary, #475569)',
   },
   input: {
     padding: '0.45rem',
     borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    backgroundColor: '#fff',
+    border: '1px solid var(--border-color, #cbd5e1)',
+    backgroundColor: 'var(--bg-card, #ffffff)',
+    color: 'var(--text-primary, #0f172a)',
     fontSize: '0.825rem',
     outline: 'none',
   },
   btnSecondary: {
     padding: '0.45rem 1rem',
     borderRadius: '6px',
-    backgroundColor: '#e2e8f0',
-    border: 'none',
-    color: '#475569',
+    backgroundColor: 'var(--surface-muted, #e2e8f0)',
+    border: '1px solid var(--border-color, #cbd5e1)',
+    color: 'var(--text-secondary, #475569)',
     fontSize: '0.825rem',
     fontWeight: '600',
     cursor: 'pointer',
@@ -4881,5 +5340,25 @@ const styles = {
     color: '#92400e',
     fontSize: '0.825rem',
     marginBottom: '1.25rem',
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backdropFilter: 'blur(4px)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  modalCard: {
+    backgroundColor: 'var(--bg-card, #ffffff)',
+    borderRadius: '16px',
+    border: '1px solid var(--border-color, #e2e8f0)',
+    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
+    overflow: 'hidden',
   }
 };

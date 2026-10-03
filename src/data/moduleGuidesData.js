@@ -29,8 +29,12 @@ export const MODULE_GUIDES = {
         desc: 'Controle de renegociações e contratos com fornecedores, gerando parcelas automáticas vinculadas ao contas a pagar.'
       },
       {
-        title: 'Conciliação Bancária',
-        desc: 'Importação e conferência de extratos bancários com batimento de lançamentos em 1 clique.'
+        title: 'Conciliação Bancária OFX / CSV',
+        desc: 'Importação direta de arquivos de extrato bancário oficial (.OFX e .CSV) com leitura de bancos como Sicoob, Itaú, BB, Santander e Bradesco, e auto-matching inteligente de títulos.'
+      },
+      {
+        title: 'Integração Estoque & Compras',
+        desc: 'Geração automática de contas a pagar a partir de notas fiscais de entrada (NF-e/NFS-e) do almoxarifado/farmácia com botão de sincronização retroativa.'
       },
       {
         title: 'DRE Gerencial',
@@ -54,6 +58,24 @@ export const MODULE_GUIDES = {
       }
     ],
     tutorial: [
+      {
+        title: 'Como Importar Extrato Bancário (OFX / CSV) e Conciliar',
+        steps: [
+          'Acesse a aba "Conciliação" no painel financeiro.',
+          'Clique no botão "Importar" e selecione o arquivo .OFX ou .CSV baixado do seu Internet Banking (Sicoob, Itaú, BB, Caixa, etc.).',
+          'O sistema analisará os lançamentos e fará o cruzamento inteligente com as contas a pagar e receber da clínica.',
+          'No modal de resumo, confira as correspondências encontradas e clique em "Conciliar" para baixar os títulos e conciliar o extrato em lote com 1 clique.',
+          'Para itens avulsos ou não correspondidos, utilize os botões rápidos na tabela para conciliar individualmente.'
+        ]
+      },
+      {
+        title: 'Como Sincronizar Notas Fiscais do Estoque no Contas a Pagar',
+        steps: [
+          'Ao lançar uma nota fiscal de entrada no Almoxarifado ou Farmácia (.STOCK), as parcelas a pagar já são geradas de forma 100% automática no Financeiro.',
+          'Para importar títulos de notas antigas ou retroativas, acesse a aba "Contas a Pagar" e clique no botão "Sincronizar Estoque".',
+          'O sistema auditará todas as notas fiscais cadastradas e criará os títulos pendentes com tag identificadora "Estoque" sem gerar duplicidades.'
+        ]
+      },
       {
         title: 'Como Lançar uma Conta a Pagar',
         steps: [
@@ -120,6 +142,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como funciona a importação de arquivos de extrato OFX?',
+        resposta: 'O módulo .FINANCE lê os arquivos padrão OFX 1.x e 2.x emitidos por bancos brasileiros. O algoritmo analisa os lançamentos bancários, calcula similaridade de valor e data com as contas cadastradas e oferece correspondências automáticas para baixa imediata com 1 clique.'
+      },
+      {
+        pergunta: 'As notas fiscais do Almoxarifado criam contas a pagar automaticamente?',
+        resposta: 'Sim! Toda vez que uma NF-e ou NFS-e é cadastrada no Almoxarifado ou Farmácia, o sistema cria imediatamente os títulos de parcelas correspondentes no Contas a Pagar com a data de vencimento, fornecedor e categoria de insumo.'
+      },
       {
         pergunta: 'Como funciona o Modo Noturno com 2 níveis do sistema?',
         resposta: 'O sistema disponibiliza 3 experiências visuais completas: o Modo Claro (padrão diurno hospitalar), o Modo Noturno Suave (Nível 1, com fundo grafite e ardósia que reduz a fadiga ocular em salas de plantão com pouca luz) e o Modo Noturno OLED (Nível 2, com preto absoluto que proporciona máxima nitidez e economia energética em monitores e tablets OLED).'

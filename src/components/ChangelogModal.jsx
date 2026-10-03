@@ -6,6 +6,21 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.8',
+      date: '03/10/2026',
+      title: 'Nex-Ai CLINIC — Identidade Visual Oficial (.FINANCE), Leitor de Extrato OFX/CSV com Auto-Matching e Integração Automática com Estoque (.STOCK & .FINANCE)',
+      description: 'Padronização visual e arquitetural completa do Módulo Financeiro (Nex-Ai.FINANCE) para seguir com 100% de fidelidade a identidade dos módulos do sistema (.STOCK, .RECEPTION, .ASSIST): adoção do ModuleHeader padronizado com gradiente esmeralda 46x46px, eliminação de duplicações do seletor de unidade, remoção de margens e paddings redundantes no container raiz, compatibilidade total com o Modo Noturno em 2 níveis e aplicação estrita da regra de 1 termo/palavra em rótulos, botões e tabelas. Implementação de duas grandes melhorias estratégicas: 1) Leitor Real de Extratos Bancários OFX e CSV com algoritmo inteligente de correspondência (auto-matching) e conciliação em lote com 1 clique (SM-017); e 2) Integração 100% automática entre Estoque e Contas a Pagar, gerando títulos e parcelas a partir de notas fiscais de entrada (NF-e/NFS-e) com botão de sincronização retroativa (SM-018).',
+      changes: [
+        { type: 'Identidade Visual (.FINANCE)', text: 'ModuleHeader esmeralda oficial (.FINANCE), abas com ícones vetoriais modernos, harmonização de cores para Dark Slate e OLED, e eliminação de duplicações.' },
+        { type: 'Leitor OFX / CSV (SM-017)', text: 'Parser nativo de extratos bancários (Sicoob, Itaú, BB, Santander, Bradesco) com algoritmo de correspondência fonética, temporal e de valor.' },
+        { type: 'Conciliação em 1 Clique', text: 'Modal de conferência com métricas de correspondências e botão para baixar títulos e conciliar extrato em lote instantaneamente.' },
+        { type: 'Integração Estoque (SM-018)', text: 'Geração automática de contas a pagar ao cadastrar notas de insumos/medicamentos no almoxarifado, com botão "Sincronizar Estoque".' },
+        { type: 'Rastreabilidade de Notas', text: 'Badge identificador "Estoque" em títulos gerados a partir de NF-e e vínculo bidirecional entre módulos.' },
+        { type: 'Termo Único & Boy Scout Rule', text: 'Varredura e remoção completa de rótulos com barras ("/") ou conectivos em formulários, tabelas e modais financeiros.' },
+        { type: 'Manual do Módulo Atualizado', text: 'Documentação completa de recursos, tutoriais de importação de extrato e FAQ em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v5.0.6',
       date: '02/10/2026',
       title: 'Nex-Ai CLINIC — Redesenho Completo do Módulo BI, Abas Integradas, Dashboard Interativo com Cards Clicáveis, Deep Dive e Auditoria Clínica de Metas (.INDEX / .BI)',

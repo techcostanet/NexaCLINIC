@@ -4852,6 +4852,41 @@ export const mockFirestore = {
       }
     }
 
+    // Auto-create Contas a Pagar in accounts_payable
+    if (!db.accounts_payable) db.accounts_payable = [];
+    const finalTotal = parseFloat(invoiceData.totalValue || invoiceData.totalAmount) || 0;
+    const instList = (invoiceData.installments && invoiceData.installments.length > 0)
+      ? invoiceData.installments
+      : [{ installmentNumber: '1/1', dueDate: invoiceData.issueDate || localToday, amount: finalTotal }];
+
+    for (const inst of instList) {
+      const instAmount = parseFloat(inst.amount) || finalTotal || 0;
+      if (instAmount > 0) {
+        const defaultDueDate = new Date();
+        defaultDueDate.setDate(defaultDueDate.getDate() + 30);
+        const finalDueDate = inst.dueDate || defaultDueDate.toISOString().substring(0, 10);
+
+        db.accounts_payable.push({
+          id: 'pay-' + Math.random().toString(36).substr(2, 9),
+          supplier: invoiceData.supplierName || invoiceData.supplier || 'Fornecedor NF-e',
+          cnpj: invoiceData.supplierCnpj || invoiceData.cnpj || '00.000.000/0001-00',
+          description: `Entrada ${isService ? 'NFS-e' : 'NF-e'} Nº ${invoiceData.number}${inst.installmentNumber ? ` (Parc. ${inst.installmentNumber})` : ''}`,
+          amount: instAmount,
+          dueDate: finalDueDate,
+          category: isService ? 'Serviço/Utilidades' : 'Insumo Clínico',
+          invoiceNumber: invoiceData.number,
+          accessKey: invoiceData.accessKey || '',
+          documentType: isService ? 'NFS-e' : 'NF-e',
+          status: 'Pendente',
+          unitId: invoiceData.unitId || 'betim',
+          unit: invoiceData.unit || 'Betim',
+          invoiceId: newInvoice.id,
+          origin: 'stock_invoice',
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+
     db.purchase_invoices.push(newInvoice);
     setDB(db);
     return newInvoice;
@@ -4862,9 +4897,63 @@ export const mockFirestore = {
     const db = getDB();
     if (db.purchase_invoices) {
       db.purchase_invoices = db.purchase_invoices.filter(inv => inv.id !== id);
-      setDB(db);
     }
+    if (db.accounts_payable) {
+      db.accounts_payable = db.accounts_payable.filter(p => p.invoiceId !== id || p.status !== 'Pendente');
+    }
+    setDB(db);
     return { success: true };
+  },
+
+  syncStockInvoicesToPayables: async () => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const db = getDB();
+    if (!db.purchase_invoices) db.purchase_invoices = [];
+    if (!db.accounts_payable) db.accounts_payable = [];
+
+    let createdCount = 0;
+    for (const inv of db.purchase_invoices) {
+      if (!inv.number) continue;
+      const total = parseFloat(inv.totalValue || inv.totalAmount) || 0;
+      if (total <= 0) continue;
+
+      const exists = db.accounts_payable.some(p => 
+        String(p.invoiceNumber) === String(inv.number) ||
+        (p.invoiceId && p.invoiceId === inv.id) ||
+        (p.accessKey && inv.accessKey && p.accessKey === inv.accessKey)
+      );
+
+      if (!exists) {
+        const instList = (inv.installments && inv.installments.length > 0)
+          ? inv.installments
+          : [{ installmentNumber: '1/1', dueDate: inv.issueDate || inv.entryDate || new Date().toISOString().substring(0, 10), amount: total }];
+
+        for (const inst of instList) {
+          const instVal = parseFloat(inst.amount) || total;
+          db.accounts_payable.push({
+            id: 'pay-' + Math.random().toString(36).substr(2, 9),
+            supplier: inv.supplierName || inv.supplier || 'Fornecedor Importado',
+            cnpj: inv.supplierCnpj || inv.cnpj || '00.000.000/0001-00',
+            description: `Entrada ${inv.invoiceType === 'service' ? 'NFS-e' : 'NF-e'} Nº ${inv.number}${inst.installmentNumber ? ` (Parc. ${inst.installmentNumber})` : ''}`,
+            amount: instVal,
+            dueDate: inst.dueDate || inv.entryDate || new Date().toISOString().substring(0, 10),
+            category: inv.invoiceType === 'service' ? 'Serviço/Utilidades' : 'Insumo Clínico',
+            invoiceNumber: inv.number,
+            accessKey: inv.accessKey || '',
+            documentType: inv.invoiceType === 'service' ? 'NFS-e' : 'NF-e',
+            status: 'Pendente',
+            unitId: inv.unitId || 'betim',
+            unit: inv.unit || 'Betim',
+            invoiceId: inv.id,
+            origin: 'stock_invoice',
+            createdAt: new Date().toISOString()
+          });
+          createdCount++;
+        }
+      }
+    }
+    setDB(db);
+    return { createdCount };
   },
 
   updatePurchaseInvoice: async (id, updateData) => {

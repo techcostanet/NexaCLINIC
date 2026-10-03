@@ -205,7 +205,7 @@ export const getPurchaseInvoices = async () => {
 
 export const createPurchaseInvoice = async (invoiceData) => {
     if (USE_MOCK) return mockFirestore.createPurchaseInvoice(invoiceData);
-    const { getFirestore, collection, doc, writeBatch, getDoc, updateDoc } = await import('firebase/firestore');
+    const { getFirestore, collection, doc, writeBatch, getDoc, updateDoc, addDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
     const batch = writeBatch(db);
     
@@ -266,13 +266,66 @@ export const createPurchaseInvoice = async (invoiceData) => {
       }
     }
 
+    // Geração Automática no Contas a Pagar (Integração Estoque -> Financeiro)
+    try {
+      const finalTotal = parseFloat(invoiceData.totalValue || invoiceData.totalAmount) || 0;
+      const instList = (invoiceData.installments && invoiceData.installments.length > 0)
+        ? invoiceData.installments
+        : [{ installmentNumber: '1/1', dueDate: invoiceData.issueDate || entryDate, amount: finalTotal }];
+
+      for (const inst of instList) {
+        const instAmount = parseFloat(inst.amount) || finalTotal || 0;
+        if (instAmount > 0) {
+          const defaultDueDate = new Date();
+          defaultDueDate.setDate(defaultDueDate.getDate() + 30);
+          const finalDueDate = inst.dueDate || defaultDueDate.toISOString().substring(0, 10);
+
+          await addDoc(collection(db, 'accounts_payable'), {
+            supplier: invoiceData.supplierName || invoiceData.supplier || 'Fornecedor NF-e',
+            cnpj: invoiceData.supplierCnpj || invoiceData.cnpj || '00.000.000/0001-00',
+            description: `Entrada ${isService ? 'NFS-e' : 'NF-e'} Nº ${invoiceData.number}${inst.installmentNumber ? ` (Parc. ${inst.installmentNumber})` : ''}`,
+            amount: instAmount,
+            dueDate: finalDueDate,
+            category: isService ? 'Serviço/Utilidades' : 'Insumo Clínico',
+            invoiceNumber: invoiceData.number,
+            accessKey: invoiceData.accessKey || '',
+            documentType: isService ? 'NFS-e' : 'NF-e',
+            status: 'Pendente',
+            unitId: targetUnitId,
+            unit: targetUnit,
+            invoiceId: invoiceRef.id,
+            origin: 'stock_invoice',
+            boletoUrl: inst.boletoUrl || invoiceData.boletoUrl || '',
+            digitableLine: inst.digitableLine || invoiceData.digitableLine || '',
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
+    } catch (payErr) {
+      console.error('Erro ao gerar contas a pagar automático para a NF:', payErr);
+    }
+
     return invoiceRecord;
   };
 
 export const deletePurchaseInvoice = async (id) => {
     if (USE_MOCK) return mockFirestore.deletePurchaseInvoice(id);
-    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const { getFirestore, doc, deleteDoc, collection, query, where, getDocs } = await import('firebase/firestore');
     const db = getFirestore(app);
+    
+    // 1. Remove títulos vinculados no Contas a Pagar se ainda estiverem pendentes
+    try {
+      const q = query(collection(db, 'accounts_payable'), where('invoiceId', '==', id));
+      const paySnaps = await getDocs(q);
+      for (const payDoc of paySnaps.docs) {
+        if (payDoc.data().status === 'Pendente') {
+          await deleteDoc(doc(db, 'accounts_payable', payDoc.id));
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao limpar contas a pagar vinculadas:', e);
+    }
+
     await deleteDoc(doc(db, 'purchase_invoices', id));
     return { success: true };
   };
@@ -283,6 +336,67 @@ export const updatePurchaseInvoice = async (id, updateData) => {
     const db = getFirestore(app);
     await updateDoc(doc(db, 'purchase_invoices', id), updateData);
     return { id, ...updateData };
+  };
+
+/**
+ * Sincroniza todas as notas fiscais do estoque com o Contas a Pagar do Financeiro
+ */
+export const syncStockInvoicesToPayables = async () => {
+    if (USE_MOCK) return mockFirestore.syncStockInvoicesToPayables ? mockFirestore.syncStockInvoicesToPayables() : { created: 0 };
+    try {
+      const invoices = await getPurchaseInvoices();
+      const payables = await getAccountsPayable();
+      const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+      const db = getFirestore(app);
+
+      let createdCount = 0;
+
+      for (const inv of invoices) {
+        if (!inv.number) continue;
+        const total = parseFloat(inv.totalValue || inv.totalAmount) || 0;
+        if (total <= 0) continue;
+
+        // Verifica se já existem lançamentos para este número de NF
+        const exists = payables.some(p => 
+          String(p.invoiceNumber) === String(inv.number) ||
+          (p.invoiceId && p.invoiceId === inv.id) ||
+          (p.accessKey && inv.accessKey && p.accessKey === inv.accessKey)
+        );
+
+        if (!exists) {
+          const instList = (inv.installments && inv.installments.length > 0)
+            ? inv.installments
+            : [{ installmentNumber: '1/1', dueDate: inv.issueDate || inv.entryDate || new Date().toISOString().substring(0, 10), amount: total }];
+
+          for (const inst of instList) {
+            const instVal = parseFloat(inst.amount) || total;
+            await addDoc(collection(db, 'accounts_payable'), {
+              supplier: inv.supplierName || inv.supplier || 'Fornecedor Importado',
+              cnpj: inv.supplierCnpj || inv.cnpj || '00.000.000/0001-00',
+              description: `Entrada ${inv.invoiceType === 'service' ? 'NFS-e' : 'NF-e'} Nº ${inv.number}${inst.installmentNumber ? ` (Parc. ${inst.installmentNumber})` : ''}`,
+              amount: instVal,
+              dueDate: inst.dueDate || inv.entryDate || new Date().toISOString().substring(0, 10),
+              category: inv.invoiceType === 'service' ? 'Serviço/Utilidades' : 'Insumo Clínico',
+              invoiceNumber: inv.number,
+              accessKey: inv.accessKey || '',
+              documentType: inv.invoiceType === 'service' ? 'NFS-e' : 'NF-e',
+              status: 'Pendente',
+              unitId: inv.unitId || 'betim',
+              unit: inv.unit || 'Betim',
+              invoiceId: inv.id,
+              origin: 'stock_invoice',
+              createdAt: new Date().toISOString()
+            });
+            createdCount++;
+          }
+        }
+      }
+
+      return { createdCount };
+    } catch (err) {
+      console.error('Erro ao sincronizar notas do estoque:', err);
+      throw err;
+    }
   };
 
 export const getXmlImports = async () => {

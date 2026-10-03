@@ -1,3 +1,24 @@
+## [v5.0.8] - 03 de Outubro, 2026
+### Nex-Ai CLINIC (.FINANCE & .STOCK) — Identidade Visual Oficial (.FINANCE), Leitor de Extrato OFX/CSV com Auto-Matching e Integração Automática com Estoque
+- **Padronização Visual Completa do Módulo Financeiro (`FinancePanel.jsx` & `FinanceReportsModal.jsx`):**
+  - Implementação do `ModuleHeader` padronizado oficial (`.FINANCE` / `Controladoria & Caixa`), com ícone em gradiente esmeralda (46x46px), cantos arredondados (12px) e identificação pontuada.
+  - Eliminação de duplicações do `UnitSelector` dentro do módulo (preservando o seletor único na Navbar superior).
+  - Remoção de margens e paddings fixos excedentes no container raiz, alinhando com as diretrizes do design system.
+  - Harmonização de todo o painel, abas, tabelas, modais e formulários para suporte completo ao Modo Noturno nos 2 níveis (Dark Slate e Pitch Black OLED) via variáveis CSS (`var(--bg-card)`, `var(--border-color)`, `var(--surface-muted)`).
+  - Rigorosa aplicação da regra de rótulos concisos (1 palavra / termo único), eliminando termos duplos com barras (`/`) e conectivos (`&`).
+- **Leitor de Extrato Bancário OFX e CSV com Auto-Matching Inteligente (SM-017):**
+  - Criação do utilitário `src/utils/ofxParser.js` para parsing de extratos bancários nos padrões OFX 1.x (SGML) e 2.x (XML) emitidos por bancos brasileiros (Sicoob, Itaú, Banco do Brasil, Santander, Caixa, Bradesco, Inter).
+  - Algoritmo de correspondência inteligente que compara valor, proximidade temporal (janela de até 5 dias) e similaridade descritiva com os títulos de contas a pagar e receber da clínica.
+  - Modal de conferência interativo com métricas de transações e botão de conciliação em lote com 1 clique (`handleAutoReconcileAllMatches`).
+  - Diagnóstico visual com link do título correspondente e botão direto de baixa e conciliação na tabela.
+- **Integração Automática entre Estoque e Contas a Pagar (SM-018):**
+  - Ao lançar uma nota fiscal de insumos, materiais médicos ou medicamentos no almoxarifado/farmácia (.STOCK), as parcelas correspondentes são geradas de forma 100% automática no Contas a Pagar (`accounts_payable`).
+  - Criação da função de sincronização retroativa (`syncStockInvoicesToPayables`) com botão dedicado "Sincronizar Estoque" na barra de ações.
+  - Badge visual de rastreabilidade `📦 Estoque` nas linhas de títulos do Contas a Pagar.
+- **Backlog de Melhorias e Documentação:**
+  - Registro das melhorias SM-017 e SM-018 como `Aprovada / Implementada` e das melhorias SM-019, SM-020 e SM-021 como `Pendente` em `SUGESTOES_MELHORIAS.md`.
+  - Atualização completa do manual do módulo financeiro em `src/data/moduleGuidesData.js` com novos recursos, passo a passo e FAQ.
+
 ## [v5.0.6] - 02 de Outubro, 2026
 ### Nex-Ai CLINIC (.INDEX / .BI) — Redesenho Completo do Módulo BI, Abas Integradas, Dashboard Executivo Interativo com Cards Clicáveis, Análise Deep Dive e Auditoria Clínica de Metas
 - **Modernização e Padronização Oficial de Interface (`QualityPanel.jsx` & `Navbar.jsx`):**

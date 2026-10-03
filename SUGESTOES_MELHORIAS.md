@@ -268,3 +268,81 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Arquivos Envolvidos:** `src/services/firebase/sesmtService.js`, `src/components/sesmt/DailyWasteChecklist.jsx`.
 - **Complexidade:** Média.
 
+---
+
+### [SM-017] Conciliação Bancária com Leitura Automática de Extrato OFX/CSV e Auto-Matching
+- **Data:** 03/10/2026
+- **Módulo:** `.FINANCE` (Financeiro & Tesouraria)
+- **Título:** Leitor Real de Extratos Bancários (OFX/CSV) com Algoritmo de Auto-Matching de Títulos
+- **Status:** `Aprovada / Implementada`
+- **Origem / Contexto:** A conciliação anterior dependia de digitação manual de cada transação bancária ou planilhas estáticas, tornando a rotina de conferência da tesouraria lenta e sujeita a erros operacionais.
+- **Descrição Técnica:**
+  - Utilitário dedicado `src/utils/ofxParser.js` para parsing de extratos bancários nos padrões SGML e XML (Sicoob, Itaú, Banco do Brasil, Santander, Caixa, Bradesco, Inter).
+  - Algoritmo de correspondência inteligente que compara valor monetário, proximidade de data (janela de até 5 dias) e similaridade fonética/textual de fornecedor e cliente.
+  - Interface no `FinancePanel.jsx` com modal de resumo (`ofxSummaryModal`), métricas de correspondência e botão de conciliação em lote com 1 clique (`handleAutoReconcileAllMatches`).
+  - Na tabela de conciliação, exibição de diagnóstico visual com link do título encontrado e botão de baixa instantânea.
+- **Benefício Operacional:** Redução de até 90% do tempo despendido pela tesouraria na conferência bancária diária, eliminando erros de digitação e assegurando saldo real idêntico ao do extrato oficial.
+- **Arquivos Envolvidos:** `src/utils/ofxParser.js`, `src/components/FinancePanel.jsx`.
+- **Complexidade:** Média.
+
+---
+
+### [SM-018] Integração Automática entre Estoque/Compras e Contas a Pagar
+- **Data:** 03/10/2026
+- **Módulo:** `.STOCK` (Estoque & Compras) / `.FINANCE` (Contas a Pagar)
+- **Título:** Lançamento Automático de Títulos a Pagar no Financeiro na Entrada de Notas Fiscais (NF-e/NFS-e)
+- **Status:** `Aprovada / Implementada`
+- **Origem / Contexto:** Quando a equipe do Almoxarifado/Farmácia dava entrada em notas fiscais de dialisadores, medicamentos ou serviços, o setor financeiro precisava recadastrar manualmente as duplicatas e boletos no módulo `.FINANCE`.
+- **Descrição Técnica:**
+  - Atualização dos serviços `createPurchaseInvoice` e `deletePurchaseInvoice` em `financialService.js` e `mockFirebase.js`.
+  - Ao salvar uma nota fiscal no estoque, o sistema gera automaticamente os títulos de parcelas correspondentes em `accounts_payable` com fornecedor, CNPJ, valor, data de vencimento, categoria de insumo e vínculo com o ID da nota.
+  - Implementação da função `syncStockInvoicesToPayables` e inclusão do botão "Sincronizar Estoque" na barra de ações do Contas a Pagar para importar retroativamente notas já existentes.
+  - Exibição de badge de rastreabilidade `📦 Estoque` nas linhas de títulos do Contas a Pagar.
+- **Benefício Operacional:** Eliminação completa da duplicidade de trabalho entre almoxarifado e financeiro, prevenindo esquecimento de vencimentos e multas por atraso de pagamento a fornecedores críticos de diálise.
+- **Arquivos Envolvidos:** `src/services/firebase/financialService.js`, `src/mockFirebase.js`, `src/components/FinancePanel.jsx`.
+- **Complexidade:** Média.
+
+---
+
+### [SM-019] Break-even Operacional de Sessão de Diálise por Turno e Máquina
+- **Data:** 03/10/2026
+- **Módulo:** `.FINANCE` (Custos & Controladoria)
+- **Título:** Cálculo Dinâmico de Ponto de Equilíbrio (Break-Even) por Sessão, Turno e Máquina de Hemodiálise
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Proposta durante o refinamento dos indicadores de custos fixos e variáveis da clínica.
+- **Descrição Técnica:**
+  - Algoritmo que cruza os custos fixos (energia, água de osmose, aluguel, equipe clínica) e variáveis (linhas, capilares, heparina, concentrados) com a tabela de remuneração SUS e convênios privados.
+  - Renderizar no painel de DRE Gerencial o número exato de sessões mensais necessárias para atingir o ponto de equilíbrio operacional por turno (1º, 2º e 3º turnos).
+- **Benefício Operacional:** Permite ao gestor identificar quais turnos operam com margem positiva e apoia decisões de expansão de capacidade instalada ou realocação de pacientes.
+- **Arquivos Envolvidos:** `src/components/FinancePanel.jsx`, `src/services/firebase/financialService.js`.
+- **Complexidade:** Alta.
+
+---
+
+### [SM-020] Régua de Alertas Automáticos de Vencimento e DDA Bancário
+- **Data:** 03/10/2026
+- **Módulo:** `.FINANCE` (Contas a Pagar & Tesouraria)
+- **Título:** Notificações Preventivas de Boletos a Vencer e Captura via DDA
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Proposta levantada para evitar juros e encargos por atraso em contas de consumo e fornecedores médicos.
+- **Descrição Técnica:**
+  - Job automático para envio de alertas por e-mail e push notification no início da manhã com a lista de compromissos financeiros que vencem no dia e nos próximos 3 dias.
+  - Estrutura para conferência de boletos registrados no CNPJ da clínica (DDA) via integração bancária.
+- **Benefício Operacional:** Segurança financeira, mitigando custos desnecessários com juros e protestos cartorários.
+- **Arquivos Envolvidos:** `src/services/firebase/financialService.js`, `functions/index.js`.
+- **Complexidade:** Média.
+
+---
+
+### [SM-021] Dossiê Executivo Mensal Consolidado e Burn-Rate em 1 Clique
+- **Data:** 03/10/2026
+- **Módulo:** `.FINANCE` (DRE & BI Gerencial)
+- **Título:** Geração de Dossiê Executivo em PDF e Apresentação para Reuniões de Diretoria
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Proposta identificada para otimizar o fechamento contábil mensal e a prestação de contas aos sócios e investidores.
+- **Descrição Técnica:**
+  - Geração de relatório PDF consolidado de alta fidelidade contendo DRE Sintético, Quebra de Custos por Centro de Custo, Projeção de Fluxo de Caixa para 6 meses, Taxa de Queima (Burn-Rate) e Capital de Giro Disponível.
+- **Benefício Operacional:** Eliminação de horas de trabalho preparando apresentações manuais em PowerPoint para a reunião de diretoria clínica.
+- **Arquivos Envolvidos:** `src/components/FinanceReportsModal.jsx`, `src/utils/pdfExport.js`.
+- **Complexidade:** Média.
+

@@ -31,20 +31,20 @@ export default function FinanceReportsModal({
   const [reportColumns, setReportColumns] = useState([]);
 
   const REPORTS = [
-    { id: 'EXTRATO_GERAL', name: '1. Extrato de Mov. Gerais', icon: FileText },
-    { id: 'CONTAS_PAGAR', name: '2. Contas a Pagar por Período', icon: TrendingDown },
+    { id: 'EXTRATO_GERAL', name: '1. Extrato Geral', icon: FileText },
+    { id: 'CONTAS_PAGAR', name: '2. Contas a Pagar', icon: TrendingDown },
     { id: 'CONTAS_RECEBER', name: '3. Contas a Receber', icon: TrendingUp },
-    { id: 'INADIMPLENCIA', name: '4. Inadimplência (Atrasados)', icon: FileText },
-    { id: 'DESPESAS_CC', name: '5. Despesas por C. Custo', icon: FilePieChart },
+    { id: 'INADIMPLENCIA', name: '4. Inadimplência', icon: FileText },
+    { id: 'DESPESAS_CC', name: '5. Despesas por Centro de Custo', icon: FilePieChart },
     { id: 'RECEITAS_CAT', name: '6. Receitas por Categoria', icon: FilePieChart },
-    { id: 'DRE', name: '7. DRE Simplificado', icon: FileSpreadsheet },
-    { id: 'FLUXO_CAIXA_DIARIO', name: '8. Fluxo de Caixa Diário', icon: Calendar },
-    { id: 'PREVISAO_CAIXA', name: '9. Previsão de Fluxo (30/60/90)', icon: Calendar },
+    { id: 'DRE', name: '7. DRE Gerencial', icon: FileSpreadsheet },
+    { id: 'FLUXO_CAIXA_DIARIO', name: '8. Fluxo Diário', icon: Calendar },
+    { id: 'PREVISAO_CAIXA', name: '9. Projeção de Fluxo', icon: Calendar },
     { id: 'TITULOS_PAGOS', name: '10. Histórico de Pagamentos', icon: CheckCircle2 },
-    { id: 'FIXO_VARIAVEL', name: '11. Despesas Fixas vs Variáveis', icon: FilePieChart },
-    { id: 'MEIO_PAGAMENTO', name: '12. Entradas por Meio de Pgto.', icon: DollarSign },
+    { id: 'FIXO_VARIAVEL', name: '11. Fixas e Variáveis', icon: FilePieChart },
+    { id: 'MEIO_PAGAMENTO', name: '12. Entradas por Pagamento', icon: DollarSign },
     { id: 'TOP_FORNECEDORES', name: '13. Despesas por Fornecedor', icon: TrendingDown },
-    { id: 'FATURAMENTO_FILIAL', name: '14. Faturamento por Filial', icon: TrendingUp },
+    { id: 'FATURAMENTO_FILIAL', name: '14. Faturamento por Unidade', icon: TrendingUp },
     { id: 'AUDITORIA', name: '15. Auditoria de Lançamentos', icon: FileText }
   ];
 
@@ -414,10 +414,10 @@ export default function FinanceReportsModal({
         {/* Header */}
         <div style={styles.header}>
           <div>
-            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem', color: '#0f172a' }}>
+            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem', color: 'var(--text-primary, #0f172a)' }}>
               <FileText size={22} color="#10b981" /> Central de Relatórios Financeiros
             </h2>
-            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-secondary, #64748b)' }}>
               Selecione, filtre e exporte análises detalhadas do financeiro.
             </p>
           </div>
@@ -429,7 +429,7 @@ export default function FinanceReportsModal({
         <div style={styles.body}>
           {/* Sidebar */}
           <div style={styles.sidebar}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Relatórios Disponíveis</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-muted, #94a3b8)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Relatórios Disponíveis</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', overflowY: 'auto', maxHeight: 'calc(100vh - 200px)', paddingRight: '0.5rem' }}>
               {REPORTS.map(r => {
                 const isSelected = selectedReport === r.id;
@@ -438,7 +438,12 @@ export default function FinanceReportsModal({
                   <button 
                     key={r.id} 
                     onClick={() => setSelectedReport(r.id)}
-                    style={{ ...styles.reportBtn, backgroundColor: isSelected ? '#ecfdf5' : 'transparent', color: isSelected ? '#047857' : '#475569', borderLeft: isSelected ? '3px solid #10b981' : '3px solid transparent' }}
+                    style={{ 
+                      ...styles.reportBtn, 
+                      backgroundColor: isSelected ? 'rgba(16,185,129,0.12)' : 'transparent', 
+                      color: isSelected ? '#10b981' : 'var(--text-secondary, #475569)', 
+                      borderLeft: isSelected ? '3px solid #10b981' : '3px solid transparent' 
+                    }}
                   >
                     <Icon size={16} />
                     <span style={{ fontSize: '0.85rem', fontWeight: isSelected ? '700' : '500', textAlign: 'left' }}>{r.name}</span>
@@ -452,13 +457,13 @@ export default function FinanceReportsModal({
           <div style={styles.main}>
             {/* Filters */}
             <div style={styles.filtersBar}>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={styles.filterGroup}>
-                  <label style={styles.label}>Data Inicial</label>
+                  <label style={styles.label}>Início</label>
                   <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={styles.input} />
                 </div>
                 <div style={styles.filterGroup}>
-                  <label style={styles.label}>Data Final</label>
+                  <label style={styles.label}>Fim</label>
                   <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={styles.input} />
                 </div>
                 <div style={styles.filterGroup}>
@@ -483,7 +488,7 @@ export default function FinanceReportsModal({
 
             {/* Table View */}
             <div style={styles.tableContainer}>
-              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', color: '#334155' }}>Pré-visualização: {getReportName()}</h3>
+              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', color: 'var(--text-primary, #334155)' }}>Pré-visualização: {getReportName()}</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
@@ -494,7 +499,7 @@ export default function FinanceReportsModal({
                 </thead>
                 <tbody>
                   {reportData.length > 0 ? reportData.map((row, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <tr key={i} style={{ borderBottom: '1px solid var(--border-color, #f1f5f9)' }}>
                       {reportColumns.map(col => {
                         let val = row[col.key];
                         if (col.format === 'currency') {
@@ -508,7 +513,7 @@ export default function FinanceReportsModal({
                     </tr>
                   )) : (
                     <tr>
-                      <td colSpan={reportColumns.length || 1} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                      <td colSpan={reportColumns.length || 1} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted, #94a3b8)' }}>
                         Nenhum registro encontrado para estes filtros.
                       </td>
                     </tr>
@@ -531,22 +536,23 @@ const styles = {
     zIndex: 99999, padding: '2rem'
   },
   modal: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--bg-card, #ffffff)',
     borderRadius: '16px',
     width: '100%', maxWidth: '1400px',
     height: '100%', maxHeight: '90vh',
     display: 'flex', flexDirection: 'column',
     boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+    border: '1px solid var(--border-color, #e2e8f0)',
     overflow: 'hidden'
   },
   header: {
     padding: '1.25rem 1.5rem',
-    borderBottom: '1px solid #e2e8f0',
+    borderBottom: '1px solid var(--border-color, #e2e8f0)',
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: '#f8fafc'
+    backgroundColor: 'var(--surface-muted, #f8fafc)'
   },
   closeBtn: {
-    background: 'none', border: 'none', cursor: 'pointer', color: '#64748b',
+    background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted, #64748b)',
     padding: '0.5rem', borderRadius: '8px'
   },
   body: {
@@ -554,8 +560,8 @@ const styles = {
   },
   sidebar: {
     width: '280px',
-    borderRight: '1px solid #e2e8f0',
-    backgroundColor: '#f8fafc',
+    borderRight: '1px solid var(--border-color, #e2e8f0)',
+    backgroundColor: 'var(--surface-muted, #f8fafc)',
     padding: '1rem',
     display: 'flex', flexDirection: 'column'
   },
@@ -567,22 +573,23 @@ const styles = {
   },
   main: {
     flex: 1, display: 'flex', flexDirection: 'column',
-    backgroundColor: '#ffffff'
+    backgroundColor: 'var(--bg-card, #ffffff)'
   },
   filtersBar: {
     padding: '1.25rem 1.5rem',
-    borderBottom: '1px solid #e2e8f0',
+    borderBottom: '1px solid var(--border-color, #e2e8f0)',
     display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem'
   },
   filterGroup: {
     display: 'flex', flexDirection: 'column', gap: '0.25rem'
   },
   label: {
-    fontSize: '0.75rem', fontWeight: '700', color: '#475569', textTransform: 'uppercase'
+    fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary, #475569)', textTransform: 'uppercase'
   },
   input: {
-    padding: '0.45rem 0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1',
-    fontSize: '0.85rem', color: '#0f172a', outline: 'none'
+    padding: '0.45rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border-color, #cbd5e1)',
+    backgroundColor: 'var(--bg-card, #ffffff)',
+    fontSize: '0.85rem', color: 'var(--text-primary, #0f172a)', outline: 'none'
   },
   exportPdfBtn: {
     display: 'flex', alignItems: 'center', gap: '0.5rem',
@@ -598,10 +605,10 @@ const styles = {
     padding: '1.5rem', flex: 1, overflowY: 'auto'
   },
   th: {
-    textAlign: 'left', padding: '0.75rem 1rem', borderBottom: '2px solid #e2e8f0',
-    color: '#475569', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase'
+    textAlign: 'left', padding: '0.75rem 1rem', borderBottom: '2px solid var(--border-color, #e2e8f0)',
+    color: 'var(--text-secondary, #475569)', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase'
   },
   td: {
-    padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#0f172a', verticalAlign: 'middle'
+    padding: '0.75rem 1rem', fontSize: '0.85rem', color: 'var(--text-primary, #0f172a)', verticalAlign: 'middle'
   }
 };
