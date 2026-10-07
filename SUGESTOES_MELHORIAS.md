@@ -346,3 +346,34 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Arquivos Envolvidos:** `src/components/FinanceReportsModal.jsx`, `src/utils/pdfExport.js`.
 - **Complexidade:** Média.
 
+---
+
+### [SM-022] Disparo Automatizado de Link de Anamnese por WhatsApp Cloud API na Admissão
+- **Data:** 07/10/2026
+- **Módulo:** `.MULTI` (Serviço Social) / `.RECEPTION` (Recepção)
+- **Título:** Envio Automático de Mensagem WhatsApp com Link da Anamnese Social no Momento da Admissão do Paciente
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Proposta identificada durante o lançamento da Anamnese Social pública no módulo .MULTI.
+- **Descrição Técnica:**
+  - Integrar com a API oficial do WhatsApp (Meta Cloud API / Twilio) ou Webhook de mensageria da clínica.
+  - Ao realizar o cadastro de um novo paciente renal na Recepção (`.RECEPTION`) ou agendar sua primeira sessão de hemodiálise, disparar automaticamente uma mensagem de boas-vindas com o link personalizado da anamnese social (`?anamnese_social={patientId}`).
+- **Benefício Operacional:** Reduz a necessidade de envio manual um a um pela assistente social ou recepcionista, aumentando a taxa de preenchimento antecipado antes mesmo da primeira sessão.
+- **Arquivos Envolvidos:** `src/components/multi/MultiSocialTab.jsx`, `src/services/firebase/multiService.js`, `functions/index.js`.
+- **Complexidade:** Média.
+
+---
+
+### [SM-023] Alerta de Vulnerabilidade Social no Mural da Enfermagem (.ASSIST) e Prontuário Médico
+- **Data:** 07/10/2026
+- **Módulo:** `.MULTI` (Equipe Multidisciplinar) / `.ASSIST` (Assistencial & Enfermagem)
+- **Título:** Sinalização de Pacientes com Risco Social Grave (Transporte ou Insegurança Alimentar) no Mural do Salão de Diálise
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Proposta levantada para promover cuidado integrado interdisciplinar quando o paciente relata risco de interrupção do tratamento ou fome.
+- **Descrição Técnica:**
+  - Conectar os alertas calculados em `calcularAlertasVulnerabilidade` ao painel de enfermagem (`AssistPanel.jsx`) e ao prontuário médico.
+  - Exibir um badge discreto e acolhedor (ex.: `"Suporte Social Ativo"`) ao lado do nome do paciente na chamada de poltrona, orientando a equipe a reforçar o lanche intradialítico ou contatar o serviço social se o paciente faltar.
+- **Benefício Operacional:** Prevenção ativa de abandono do tratamento dialítico e desnutrição grave em pacientes de alta vulnerabilidade.
+- **Arquivos Envolvidos:** `src/components/AssistPanel.jsx`, `src/components/multi/SocialAnamneseForm.jsx`, `src/services/firebase/multiService.js`.
+- **Complexidade:** Baixa.
+
+
