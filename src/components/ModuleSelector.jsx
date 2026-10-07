@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, 
   Settings, ShoppingCart, Calendar, ClipboardList, FileText, Wrench, ShieldCheck,
-  LayoutGrid, List, LayoutList, Columns, ArrowRight, Search, Megaphone, Stethoscope, KeyRound, Clock, RefreshCw
+  LayoutGrid, List, LayoutList, Columns, ArrowRight, Search, Megaphone, Stethoscope, KeyRound, Clock, RefreshCw, HeartHandshake
 } from 'lucide-react';
 import { authService, dbService } from '../firebase';
 import UnitSelector from './common/UnitSelector';
@@ -198,6 +198,15 @@ export default function ModuleSelector({ user, onSelectModule }) {
       icon: RefreshCw,
       color: '#06b6d4', // cyan-500
       allowedRoles: ['admin', 'nursing', 'nurse_tech', 'professional', 'clinical', 'doctor']
+    },
+    {
+      id: 'multi',
+      title: 'Equipe Multidisciplinar',
+      subtitle: 'Nex-Ai.MULTI — Multiprofissional',
+      description: 'Atendimentos integrados de Serviço Social, Psicologia e Nutrição, anamneses e prontuário multiprofissional.',
+      icon: HeartHandshake,
+      color: '#7c3aed', // violet-600
+      allowedRoles: ['admin', 'professional', 'clinical', 'social_service', 'psychology', 'nutrition', 'nursing', 'doctor']
     }
   ];
 

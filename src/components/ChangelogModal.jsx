@@ -6,6 +6,21 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.11',
+      date: '07/10/2026',
+      title: 'Nex-Ai CLINIC — Lançamento do Módulo .MULTI (Equipe Multidisciplinar) e Anamnese Social Completa (Google Forms)',
+      description: 'Lançamento do módulo oficial Nex-Ai.MULTI para a Equipe Multidisciplinar (Serviço Social, Psicologia e Nutrição). Integração total da Anamnese Social oficial com 31 perguntas clínicas extraídas do formulário Google Forms da clínica para pacientes renais. Disponibilização em duas versões integradas ao motor central de pacientes: 1) Versão Paciente para envio por link público via WhatsApp ou totem/tablet, com interface acolhedora em 5 etapas e tela de confirmação oficial; e 2) Versão Editável do Serviço Social para preenchimento ou edição irrestrita de qualquer resposta pela assistente social a qualquer momento. Inclui cálculo em tempo real de alertas de vulnerabilidade social (Sem Renda, Insegurança Alimentar, Transporte, Risco de Continuidade e Rede de Apoio), abas de Psicologia e Nutrição com cálculo de IMC/peso seco, painel analítico com gráficos Recharts e exportação nativa em Excel (.xlsx).',
+      changes: [
+        { type: 'Módulo .MULTI Oficial', text: 'Módulo integrado para Serviço Social, Psicologia e Nutrição com ModuleHeader oficial e identidade visual violeta.' },
+        { type: 'Anamnese Social (31 Questões)', text: 'Formulário completo com as 31 perguntas do Google Forms cobrindo dados clínicos, diálise, família, moradia, saneamento, renda, BPC, transporte e segurança alimentar.' },
+        { type: 'Versão Paciente & WhatsApp', text: 'Link público exclusivo e responsivo para envio via WhatsApp ou totem, permitindo que o paciente responda sem necessidade de login hospitalar.' },
+        { type: 'Versão Editável do Serviço Social', text: 'Ficha clínica técnica para a assistente social consultar, preencher e alterar livremente qualquer campo a qualquer tempo.' },
+        { type: 'Alertas de Vulnerabilidade', text: 'Motor preditivo que cruza indicadores sociais e emite alertas visuais para casos de insegurança alimentar, falta de renda e risco no transporte.' },
+        { type: 'Psicologia & Nutrição', text: 'Abas dedicadas para evoluções psicológicas e acompanhamento nutricional com peso seco e IMC integrados ao motor de pacientes.' },
+        { type: 'Painel & Exportação Excel', text: 'Dashboard executivo com KPIs, gráficos Recharts e exportação em formato de planilha Excel (.xlsx).' }
+      ]
+    },
+    {
       version: 'v5.0.9',
       date: '07/10/2026',
       title: 'Nex-Ai CLINIC — Lançamento do Módulo .REUSE (Reuso de Dialisadores) e Melhorias Aprovadas (.REUSE)',

@@ -20,6 +20,8 @@ import SesmtDashboard from './components/sesmt/SesmtDashboard';
 import AssistPanel from './components/AssistPanel';
 import MedicalPanel from './components/MedicalPanel';
 import ReusePanel from './components/reuse/ReusePanel';
+import MultiPanel from './components/multi/MultiPanel';
+import SocialAnamnesePublicPortal from './components/multi/SocialAnamnesePublicPortal';
 import SupplierQuotePortal from './components/purchasing/SupplierQuotePortal';
 import MachineTicketPortal from './components/maintenance/MachineTicketPortal';
 import TvCallPanel from './components/tv/TvCallPanel';
@@ -49,6 +51,7 @@ export default function App() {
     (pathname.startsWith('/treinamento/') ? pathname.split('/')[2] : null);
   const certificateId = urlParams.get('certificado') || urlParams.get('cert') || 
     (pathname.startsWith('/certificado/') ? pathname.split('/')[2] : null);
+  const socialAnamneseParam = urlParams.get('anamnese_social') || urlParams.get('social_form');
 
   // Detecção flexível e universal do Painel da TV (suporta /tv, /tv/betim, hash #tv ou query ?painel_tv=1)
   const isTvPath = pathname === '/tv' || pathname.startsWith('/tv/') || pathname.includes('painel_tv') || pathname.includes('painel-tv') || pathname.includes('chamada_tv');
@@ -192,6 +195,20 @@ export default function App() {
     );
   }
 
+  // Se o link acessado for do formulário de Anamnese Social enviado ao paciente
+  if (socialAnamneseParam) {
+    return (
+      <ErrorBoundary>
+        <SocialAnamnesePublicPortal 
+          patientId={socialAnamneseParam} 
+          onExitPortal={() => {
+            window.location.href = window.location.origin;
+          }} 
+        />
+      </ErrorBoundary>
+    );
+  }
+
   if (loading) {
     return (
       <div style={styles.loadingContainer}>
@@ -251,6 +268,8 @@ export default function App() {
         return <ErrorBoundary><MedicalPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} onBack={() => setCurrentModule('selector')} /></ErrorBoundary>;
       case 'reuse':
         return <ErrorBoundary><ReusePanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
+      case 'multi':
+        return <ErrorBoundary><MultiPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'quality':
       default:
         return (

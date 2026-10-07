@@ -19,6 +19,7 @@ import * as tvTipsFunctions from './services/firebase/tvTipsService';
 import * as surgeriesFunctions from './services/firebase/surgeriesService';
 import * as procedureFunctions from './services/firebase/procedureService';
 import * as reuseFunctions from './services/firebase/reuseService';
+import * as multiFunctions from './services/firebase/multiService';
 
 // Standard exports for the rest of the application
 export const authService = {
@@ -27,6 +28,10 @@ export const authService = {
 
 export const storageService = {
   ...storageFunctions
+};
+
+export const multiService = {
+  ...multiFunctions
 };
 
 export const dbService = {
@@ -43,6 +48,7 @@ export const dbService = {
   ...surgeriesFunctions,
   ...procedureFunctions,
   ...reuseFunctions,
+  ...multiFunctions,
   ...medicalFunctions,
   ...dialysisScheduleFunctions,
   ...storageFunctions,

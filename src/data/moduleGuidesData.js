@@ -3274,6 +3274,117 @@ export const MODULE_GUIDES = {
         resposta: 'A taxa de aproveitamento mede o percentual de vida útil que os capilares trocados alcançaram antes de sair de circulação em relação aos 20 usos possíveis. Uma taxa de 85% ou superior indica excelente controle de heparinização e baixo índice de descarte precoce.'
       }
     ]
+  },
+  multi: {
+    id: 'multi',
+    name: 'Equipe Multidisciplinar',
+    subtitle: 'Nex-Ai.MULTI — Serviço Social, Psicologia & Nutrição',
+    color: '#8b5cf6',
+    recursos: [
+      {
+        title: 'Anamnese Social Completa (31 Questões)',
+        desc: 'Formulário oficial do Serviço Social para pacientes renais contendo 31 perguntas abrangendo identificação, diálise, moradia, saneamento, renda, BPC/INSS, transporte municipal e segurança alimentar.'
+      },
+      {
+        title: 'Link Público para Paciente (WhatsApp)',
+        desc: 'Geração instantânea de link exclusivo para envio ao paciente por WhatsApp ou preenchimento em totem/tablet na clínica com interface acolhedora por etapas e confirmação oficial.'
+      },
+      {
+        title: 'Versão Editável do Serviço Social',
+        desc: 'Visão clínica completa que permite à assistente social preencher diretamente ou editar/complementar qualquer resposta dada pelo paciente a qualquer momento.'
+      },
+      {
+        title: 'Cálculo de Alertas de Vulnerabilidade',
+        desc: 'Identificação preditiva automática de riscos sociais graves: Sem Renda Familiar, Insegurança Alimentar, Dificuldade no Transporte, Risco de Continuidade e Ausência de Rede de Apoio.'
+      },
+      {
+        title: 'Evoluções de Psicologia',
+        desc: 'Registro clínico de atendimentos, suporte emocional, adaptação ao tratamento dialítico, avaliação de humor e adesão ao tratamento.'
+      },
+      {
+        title: 'Avaliação Nutricional Renal',
+        desc: 'Acompanhamento de peso seco, cálculo automático de IMC, controle de fósforo/potássio, ingestão proteico-calórica e orientação de ganho de peso interdialítico.'
+      },
+      {
+        title: 'Painel Integrado de Vulnerabilidade',
+        desc: 'Visão consolidada com indicadores-chave (KPIs), gráficos de moradia e benefícios, e lista prioritária de pacientes em alta vulnerabilidade social.'
+      },
+      {
+        title: 'Exportação em Excel (.xlsx)',
+        desc: 'Download em formato de planilha nativa das anamneses sociais, histórico de vulnerabilidades e atendimentos da equipe multidisciplinar.'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Gerar Link de Anamnese Social para Enviar ao Paciente',
+        steps: [
+          'Acesse o módulo ".MULTI" e clique na aba "Social".',
+          'Na tabela de anamneses ou no botão "+ Anamnese", localize o paciente desejado.',
+          'Clique no botão "Enviar" (ícone do WhatsApp/compartilhamento) na coluna de ações.',
+          'No modal de compartilhamento, clique em "Abrir WhatsApp" para disparar a mensagem pré-formatada ou em "Copiar Link" para colar onde preferir.',
+          'O paciente acessará uma interface limpa, acolhedora e responsiva para responder em 5 etapas no celular.'
+        ]
+      },
+      {
+        title: 'Como Preencher ou Editar a Anamnese na Versão do Serviço Social',
+        steps: [
+          'Na aba "Social", clique no botão "+ Anamnese" para criar um novo registro ou clique no ícone "Editar" em uma anamnese existente.',
+          'Selecione o paciente do cadastro central da clínica no seletor do topo.',
+          'Navegue pelas abas temáticas ("Diálise", "Civil", "Habitação", "Benefícios", "Transporte", "Social") e preencha ou altere os campos livremente.',
+          'Observe no topo os alertas de vulnerabilidade recalculados dinamicamente em tempo real.',
+          'Clique em "Salvar" para gravar no banco de dados com histórico de última alteração.'
+        ]
+      },
+      {
+        title: 'Como Registrar Atendimento em Psicologia',
+        steps: [
+          'No módulo ".MULTI", acesse a aba "Psicologia".',
+          'Clique no botão "+ Atendimento".',
+          'Selecione o paciente, informe a data, tipo de sessão (Acolhimento, Consulta, Apoio Familiar), humor e observações clínicas.',
+          'Clique em "Salvar" para registrar a evolução no prontuário multidisciplinar.'
+        ]
+      },
+      {
+        title: 'Como Realizar Avaliação em Nutrição Renal',
+        steps: [
+          'No módulo ".MULTI", acesse a aba "Nutrição".',
+          'Clique no botão "+ Avaliação".',
+          'Selecione o paciente e insira o peso atual e altura para cálculo automático do IMC.',
+          'Informe o peso seco meta, conformidade de fósforo/potássio e o plano dietético renal.',
+          'Clique em "Salvar" para arquivar a consulta.'
+        ]
+      },
+      {
+        title: 'Como Exportar Relatórios em Excel (.xlsx)',
+        steps: [
+          'No cabeçalho do módulo ".MULTI", clique no botão "Relatórios" ou no botão "Exportar" na aba Social.',
+          'Selecione a opção desejada de exportação em planilha (.xlsx).',
+          'O arquivo será gerado e baixado instantaneamente no seu navegador.'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'O paciente precisa fazer login para responder o formulário de anamnese?',
+        resposta: 'Não. O link gerado para o paciente é público e seguro, permitindo que ele ou seu acompanhante responda confortavelmente pelo celular através do WhatsApp ou tablet na recepção da clínica sem necessidade de senha.'
+      },
+      {
+        pergunta: 'Como a versão editável do Serviço Social se diferencia da versão do paciente?',
+        resposta: 'A versão do paciente é segmentada em 5 etapas com botões grandes, design acolhedor e linguagem guiada. Já a versão do Serviço Social é uma ficha clínica completa com navegação por abas técnicas, cálculo visual de alertas de vulnerabilidade, busca no motor de pacientes e capacidade de alterar qualquer dado a qualquer momento.'
+      },
+      {
+        pergunta: 'Como os alertas de vulnerabilidade social são calculados?',
+        resposta: 'O motor social cruza as respostas de renda, emprego, dependência de BPC/Bolsa Família, moradia, saneamento básico, tipo de transporte para diálise e declaração de insegurança alimentar, emitindo badges visuais e categorizando a vulnerabilidade em Baixa, Média ou Alta.'
+      },
+      {
+        pergunta: 'O módulo está integrado ao cadastro central de pacientes da clínica?',
+        resposta: 'Sim. O seletor de paciente busca diretamente na base central de pacientes do Nex-Ai CLINIC, preenchendo automaticamente nome, CPF, data de nascimento, telefone, endereço e turno de diálise.'
+      },
+      {
+        pergunta: 'A Psicologia e a Nutrição possuem áreas próprias no módulo?',
+        resposta: 'Sim. O módulo .MULTI possui abas dedicadas para Psicologia e Nutrição, permitindo registrar evoluções, calcular IMC/peso seco e gerenciar o cuidado multidisciplinar de forma integrada ao mesmo paciente.'
+      }
+    ]
   }
 };
 

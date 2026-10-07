@@ -1,3 +1,47 @@
+## [v5.0.11] - 07 de Outubro, 2026
+### Nex-Ai CLINIC (.MULTI) — Lançamento do Módulo da Equipe Multidisciplinar e Anamnese Social Completa (Google Forms)
+- **Lançamento do Módulo Oficial .MULTI (Equipe Multidisciplinar):**
+  - Módulo integrado para Serviço Social, Psicologia e Nutrição com `ModuleHeader` padronizado (`.MULTI`), ícone em gradiente violeta e navegação limpa por abas concisas (`Social`, `Painel`, `Psicologia`, `Nutrição`).
+  - Totalmente integrado ao motor central de pacientes da clínica (`patientService`), puxando automaticamente nome, CPF, nascimento, telefone, endereço e turno de diálise.
+- **Anamnese Social Oficial do Paciente Renal (Leitura Fiel do Google Forms):**
+  - Transposição integral das 31 questões do formulário oficial com todas as opções de múltipla escolha e textos descritivos originais:
+    - Identificação e contato (Nome, Celular/WhatsApp, Telefone de Recado).
+    - Regime de diálise (Turno 1º/2º/3º/4º, Dias Seg/Qua/Sex ou Ter/Qui/Sáb, Sala 1 a 6, Modalidade HD/DP, Início do Tratamento).
+    - Estado civil, moradia (própria, alugada, cedida, financiada, invasão) e pessoas no domicílio.
+    - Saneamento básico (Água tratada, Rede de esgoto, Coleta de lixo, Iluminação pública).
+    - Escolaridade e situação profissional (Aposentado, Afastado, Desempregado, Autônomo, Assalariado).
+    - Renda familiar mensal e benefícios sociais (BPC/LOAS, Bolsa Família, Auxílio-Doença, Pensão).
+    - Meio de transporte para a clínica (Ambulância SUS, Carro próprio, Aplicativo, Ônibus) e dificuldades com o transporte do município.
+    - Segurança alimentar e recebimento de cesta básica.
+    - Risco de continuidade do tratamento por dificuldades financeiras ou logísticas.
+    - Solicitação expressa de contato com o Serviço Social e mensagem final de acolhimento.
+- **Duas Versões Complementares da Anamnese Social:**
+  - **1) Versão Paciente (Link Público / WhatsApp / Kiosk):**
+    - Rota pública sem exigência de autenticação hospitalar (`?anamnese_social=ID` ou `novo`).
+    - Navegação guiada em 5 etapas acolhedoras (Identificação, Tratamento, Moradia, Renda & Benefícios, Transporte & Bem-estar).
+    - Botões grandes e touch-friendly otimizados para celulares e tablets de recepção.
+    - Modal com gerador de mensagem personalizada e link direto para envio via WhatsApp em 1 clique.
+  - **2) Versão Editável do Serviço Social (Prontuário Multidisciplinar):**
+    - Ficha clínica técnica para a assistente social consultar, preencher e alterar qualquer resposta do paciente a qualquer tempo.
+    - Organizada em 6 abas dinâmicas com salvamento e registro de data da última alteração.
+    - Impressão formatada em PDF/Papel A4 com cabeçalho timbrado da clínica.
+- **Cálculo em Tempo Real de Alertas de Vulnerabilidade Social:**
+  - Motor preditivo que analisa cruzamento de dados e gera alertas visuais e categorização (Baixa, Média, Alta):
+    - Alerta: Sem Renda Familiar Declarada.
+    - Alerta: Insegurança Alimentar / Demanda de Cesta Básica.
+    - Alerta: Dificuldade com Transporte Municipal / Ambulância.
+    - Alerta: Risco de Abandono ou Interrupção do Tratamento.
+    - Alerta: Ausência de Rede de Apoio Domiciliar.
+- **Áreas Dedicadas de Psicologia e Nutrição Renal:**
+  - **Psicologia:** Registro de atendimentos e evoluções (Acolhimento, Consulta, Apoio Familiar), humor e queixas emocionais vinculadas ao paciente central.
+  - **Nutrição Renal:** Acompanhamento de peso seco, cálculo automatizado de IMC em tempo real, monitoramento de fósforo/potássio e metas dietéticas.
+- **Painel Analítico & Exportação em Planilha Excel (.xlsx):**
+  - Dashboard integrado com KPIs executivos, gráficos Recharts de distribuição de moradia e benefícios sociais, e fila prioritária de vulnerabilidade.
+  - Botão de exportação nativa em Excel (.xlsx) com planilha formatada de todos os registros sociais e multidisciplinares.
+- **UI/UX & Governança:**
+  - Rótulos rigorosamente concisos de 1 termo/palavra em conformidade com as regras do projeto.
+  - Manual oficial devidamente atualizado em `src/data/moduleGuidesData.js`.
+
 ## [v5.0.9] - 07 de Outubro, 2026
 ### Nex-Ai CLINIC (.REUSE) — Lançamento do Módulo de Reuso de Dialisadores e Melhorias Aprovadas
 - **Lançamento do Módulo Oficial .REUSE (RDC 11/2014):**
