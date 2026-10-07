@@ -6,6 +6,21 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.9',
+      date: '07/10/2026',
+      title: 'Nex-Ai CLINIC — Lançamento do Módulo .REUSE (Reuso de Dialisadores) e Melhorias Aprovadas (.REUSE)',
+      description: 'Lançamento do módulo oficial Nex-Ai.REUSE para gestão regulamentar e rastreabilidade total do reprocessamento de dialisadores (capilares) de hemodiálise (RDC 11/2014): controle do ciclo de 0 a 20 usos com trava de segurança de novas presenças; leitor de código de barras/QR Code de bancada com foco automático (SM-010); sincronização em 1 clique com a base unificada de pacientes da clínica e dimensionamento algorítmico do capilar por faixa de peso (SM-009); registro completo de trocas e descartes precoces com exportação nativa em planilha Excel (.xlsx) (SM-011); painel de aproveitamento com gráfico histórico do Recharts comparando salões com a meta de 85% (SM-012); impressão de etiquetas térmicas Zebra ZPL e HTML (102x44mm); mapa espacial de leitos por box e turno; e central de 5 relatórios regulamentares.',
+      changes: [
+        { type: 'Módulo .REUSE Oficial', text: 'Gestão completa do ciclo de reprocessamento de dialisadores de 0 a 20 utilizações com trava estrita e faixas visuais de alerta (Normal, Atenção e Crítico).' },
+        { type: 'Leitor de Bancada [SM-010]', text: 'Campo de escaneamento rápido de Código de Barras e QR Code com foco automático na sala de lavagem para identificação imediata.' },
+        { type: 'Sincronização Clínica [SM-009]', text: 'Importação em 1 clique da base geral de pacientes e dimensionamento inteligente de capilar por peso (B16H a B22H).' },
+        { type: 'Exportação Excel [SM-011]', text: 'Exportação gerencial em planilha Excel (.xlsx) de trocas, descartes, censo e relatórios regulamentares.' },
+        { type: 'Gráfico Recharts [SM-012]', text: 'Painel analítico de aproveitamento com série temporal mensal comparativa dos Salões 1, 2 e 3 e linha de meta (85%).' },
+        { type: 'Etiquetas & Mapa', text: 'Geração de etiquetas térmicas (102x44mm) em ZPL e HTML com QR Code e mapa de leitos em 8 boxes por 4 posições.' },
+        { type: 'Manuais & Diretrizes', text: 'Manual oficial cadastrado em moduleGuidesData.js e catálogo de melhorias atualizado com aprovação de SM-009 a SM-012.' }
+      ]
+    },
+    {
       version: 'v5.0.8',
       date: '03/10/2026',
       title: 'Nex-Ai CLINIC — Identidade Visual Oficial (.FINANCE), Leitor de Extrato OFX/CSV com Auto-Matching e Integração Automática com Estoque (.STOCK & .FINANCE)',

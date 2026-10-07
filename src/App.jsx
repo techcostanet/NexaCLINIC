@@ -19,6 +19,7 @@ import MaintenancePanel from './components/MaintenancePanel';
 import SesmtDashboard from './components/sesmt/SesmtDashboard';
 import AssistPanel from './components/AssistPanel';
 import MedicalPanel from './components/MedicalPanel';
+import ReusePanel from './components/reuse/ReusePanel';
 import SupplierQuotePortal from './components/purchasing/SupplierQuotePortal';
 import MachineTicketPortal from './components/maintenance/MachineTicketPortal';
 import TvCallPanel from './components/tv/TvCallPanel';
@@ -248,6 +249,8 @@ export default function App() {
         return <ErrorBoundary><SesmtDashboard currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'medical':
         return <ErrorBoundary><MedicalPanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} onBack={() => setCurrentModule('selector')} /></ErrorBoundary>;
+      case 'reuse':
+        return <ErrorBoundary><ReusePanel currentUser={user} isReportsOpen={isReportsOpen} setIsReportsOpen={setIsReportsOpen} /></ErrorBoundary>;
       case 'quality':
       default:
         return (

@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   BarChart3, Users, LayoutDashboard, LogOut, HeartPulse, Package, DollarSign, 
   Settings, ShoppingCart, Calendar, ClipboardList, FileText, Wrench, ShieldCheck,
-  LayoutGrid, List, LayoutList, Columns, ArrowRight, Search, Megaphone, Stethoscope, KeyRound, Clock
+  LayoutGrid, List, LayoutList, Columns, ArrowRight, Search, Megaphone, Stethoscope, KeyRound, Clock, RefreshCw
 } from 'lucide-react';
 import { authService, dbService } from '../firebase';
 import UnitSelector from './common/UnitSelector';
@@ -189,6 +189,15 @@ export default function ModuleSelector({ user, onSelectModule }) {
       icon: ShieldCheck,
       color: '#059669', // emerald-600
       allowedRoles: ['admin', 'rh', 'technician', 'sesmt']
+    },
+    {
+      id: 'reuse',
+      title: 'Reuso de Dialisadores',
+      subtitle: 'Nex-Ai.REUSE — Capilares',
+      description: 'Reprocessamento regulamentar de dialisadores, contagem de ciclos (0 a 20), etiquetas térmicas e mapa de boxes.',
+      icon: RefreshCw,
+      color: '#06b6d4', // cyan-500
+      allowedRoles: ['admin', 'nursing', 'nurse_tech', 'professional', 'clinical', 'doctor']
     }
   ];
 

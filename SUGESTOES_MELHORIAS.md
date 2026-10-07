@@ -151,7 +151,7 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Data:** 02/10/2026
 - **Módulo:** `.REUSE` (Reuso de Dialisadores)
 - **Título:** Importação e Vínculo com a Base Central de Pacientes da Clínica
-- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Status:** `Aprovada / Implementada`
 - **Origem / Contexto:** Durante a análise do sistema legado ReusoPro, observou-se que o cadastro de pacientes era isolado. No Nex-Ai CLINIC já existe a base unificada de pacientes (`patientService`).
 - **Descrição Técnica:**
   - Adicionar botão "Importar do Cadastro" na listagem de pacientes do `.REUSE`.
@@ -167,7 +167,7 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Data:** 02/10/2026
 - **Módulo:** `.REUSE` (Reuso de Dialisadores)
 - **Título:** Escaneamento de Dialisador para Abertura Imediata da Ficha de Presença e Descarte
-- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Status:** `Aprovada / Implementada`
 - **Origem / Contexto:** Identificada durante o mapeamento do fluxo físico de identificação de dialisadores na sala de reuso.
 - **Descrição Técnica:**
   - Incorporar nas etiquetas térmicas um Código de Barras Code-128 ou QR Code com o ID único do paciente/capilar.
@@ -183,7 +183,7 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Data:** 02/10/2026
 - **Módulo:** `.REUSE` (Reuso de Dialisadores)
 - **Título:** Exportação de Dados de Trocas e Descarte Precoce em Formato Excel Nativo
-- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Status:** `Aprovada / Implementada`
 - **Origem / Contexto:** O sistema ReusoPro original fornecia relatórios apenas em PDF. No Nex-Ai CLINIC, a biblioteca `xlsx` já está disponível para relatórios gerenciais e de auditoria.
 - **Descrição Técnica:**
   - Na aba `Trocas` e `Relatórios` do módulo `.REUSE`, adicionar botão "Exportar Excel".
@@ -198,7 +198,7 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Data:** 02/10/2026
 - **Módulo:** `.REUSE` (Reuso de Dialisadores)
 - **Título:** Gráfico Evolutivo de Linhas e Barras de Aproveitamento (%) por Salão
-- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Status:** `Aprovada / Implementada`
 - **Origem / Contexto:** O ReusoPro original utilizava barras de progresso horizontais básicas em CSS. Como o Nex-Ai CLINIC possui o `recharts` instalado e padronizado, é possível apresentar análises temporais ricas.
 - **Descrição Técnica:**
   - Na aba `Aproveitamento`, implementar gráfico com Recharts (`LineChart` ou `BarChart`) exibindo a curva média de aproveitamento nos últimos 6 meses.

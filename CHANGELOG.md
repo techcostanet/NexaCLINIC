@@ -1,3 +1,32 @@
+## [v5.0.9] - 07 de Outubro, 2026
+### Nex-Ai CLINIC (.REUSE) — Lançamento do Módulo de Reuso de Dialisadores e Melhorias Aprovadas
+- **Lançamento do Módulo Oficial .REUSE (RDC 11/2014):**
+  - Módulo completo de governança e rastreabilidade do ciclo de reprocessamento de dialisadores (capilares) de hemodiálise.
+  - Controle estrito do ciclo de 0 a 20 utilizações com faixas visuais de status (Normal até 17, Atenção em 18-19 e Crítico em 20).
+  - Trava de segurança que bloqueia presenças em dialisadores no limite regulamentar de 20 usos, exigindo troca obrigatória.
+  - Presenças e faltas operadas por exceção (+1 e -1) com registro rastreável de operador e turno.
+- **Melhorias Aprovadas Implementadas:**
+  - **[SM-010] Leitor de Código de Barras / QR Code na Bancada:**
+    - Campo de escaneamento rápido no topo do painel com foco automático, permitindo que o técnico bipe o dialisador na bancada de lavagem via leitor USB ou Bluetooth para localização imediata do paciente e registro de presença ou troca.
+    - Geração de Código de Barras Code-128 e QR Code individual nas etiquetas térmicas ZPL e HTML.
+  - **[SM-009] Sincronização Direta com a Base Geral da Clínica:**
+    - Botão "Importar" na aba de pacientes que sincroniza em 1 clique os pacientes cadastrados na recepção/prontuário central (`patientService`).
+    - Dimensionamento automático do modelo de capilar pelo peso do paciente (>100kg B22H, >90kg B21H, >80kg B20H, >60kg B18H, <=60kg B16H), com suporte a fixação manual por exceção clínica médica.
+  - **[SM-011] Exportação em Planilha Excel (.xlsx):**
+    - Botão de exportação nativa em formato Excel (.xlsx) na aba de trocas e na central de relatórios, gerando planilhas com histórico de ciclos, motivos, descartes e operadores para auditorias sanitárias.
+  - **[SM-012] Gráfico Histórico de Aproveitamento Mensal com Recharts:**
+    - Gráfico analítico de linhas e barras com histórico evolutivo dos últimos 6 meses, comparando os Salões 1, 2 e 3 com a meta regulamentar clínica de 85%.
+    - Indicador de descarte precoce agrupado por tipo de complicação (Coagulação de Fibras, Baixa Prime, Rupturas, Vazamentos).
+- **Impressão de Etiquetas Térmicas & Mapa Físico:**
+  - Emissão de etiquetas térmicas (102x44mm) com QR Code individual, dados de filiação, sorologias padrão e volume de prime (PI e PF calculado em 80%).
+  - Suporte duplo a comandos nativos Zebra ZPL (203 DPI) e impressão formatada pelo diálogo do navegador (HTML).
+  - Mapa visual de poltronas e leitos em 8 boxes por 4 posições por salão e turno.
+  - Central de 5 relatórios oficiais com impressão A4 e exportação em planilha.
+- **Padrões de UI/UX & Governança:**
+  - Cabeçalho padronizado com `ModuleHeader` oficial (`.REUSE`), ícone com gradiente cyan/teal e subtítulo conciso.
+  - Rótulos estritamente concisos de 1 termo em abas, botões, tabelas e filtros em conformidade com as regras do sistema.
+  - Manual oficial devidamente registrado em `src/data/moduleGuidesData.js` e backlog `SUGESTOES_MELHORIAS.md` atualizado com aprovação de SM-009 a SM-012.
+
 ## [v5.0.8] - 03 de Outubro, 2026
 ### Nex-Ai CLINIC (.FINANCE & .STOCK) — Identidade Visual Oficial (.FINANCE), Leitor de Extrato OFX/CSV com Auto-Matching e Integração Automática com Estoque
 - **Padronização Visual Completa do Módulo Financeiro (`FinancePanel.jsx` & `FinanceReportsModal.jsx`):**

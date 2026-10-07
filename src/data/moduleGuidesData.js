@@ -3134,7 +3134,148 @@ export const MODULE_GUIDES = {
         resposta: 'No topo de cada formulário e na aba de histórico existe um seletor visual com os botões "Cartões" e "Tabela". Em telas menores (celulares e tablets), o sistema já abre automaticamente no modo Cartões para facilitar a operação portátil.'
       }
     ]
+  },
+  reuse: {
+    id: 'reuse',
+    name: 'Reuso de Dialisadores',
+    subtitle: 'Nex-Ai.REUSE — Reprocessamento & Capilares',
+    color: '#06b6d4',
+    recursos: [
+      {
+        title: 'Contador de Ciclos (0 a 20)',
+        desc: 'Controle de reprocessamento com teto rígido de 20 utilizações regulamentares (RDC 11/2014) e faixas visuais de alerta (Normal até 17, Atenção em 18-19 e Crítico em 20).'
+      },
+      {
+        title: 'Presença e Falta por Exceção',
+        desc: 'Incremento automático de +1 por presença e estorno de -1 por falta, com trava de segurança que bloqueia presenças quando o limite de 20 utilizações for atingido.'
+      },
+      {
+        title: 'Leitor de Código de Barras / QR Code de Bancada',
+        desc: 'Campo de escaneamento rápido com foco automático na sala de reuso para localização imediata do capilar ao bipar leitor USB ou Bluetooth.'
+      },
+      {
+        title: 'Sincronização Direta de Pacientes da Clínica',
+        desc: 'Botão de importação em 1 clique que busca os pacientes cadastrados na base central da clínica e dimensiona automaticamente o modelo de capilar pelo peso.'
+      },
+      {
+        title: 'Dimensionamento de Capilar por Peso',
+        desc: 'Cálculo algorítmico do modelo ideal de alta permeabilidade (>100kg B22H, >90kg B21H, >80kg B20H, >60kg B18H e <=60kg B16H) com opção de fixação manual por exceção médica.'
+      },
+      {
+        title: 'Cálculo de Volume Prime (Residual)',
+        desc: 'Determinação automática do Prime Final aceitável (PF = PI * 0,80), garantindo conformidade com a perda máxima de 20% do volume capilar inicial.'
+      },
+      {
+        title: 'Gestão de Trocas e Descarte Precoce',
+        desc: 'Registro completo de trocas com seleção entre limite de 20 usos ou descarte precoce por complicação (Coagulação, Ruptura, Baixa Prime, etc.), com lote e operador.'
+      },
+      {
+        title: 'Impressão de Etiquetas Térmicas (Zebra ZPL & HTML)',
+        desc: 'Geração de etiquetas térmicas padronizadas (102x44mm) com QR Code individual, dados de filiação, sorologias fixas e primeiro uso para impressoras Zebra ou convencionais.'
+      },
+      {
+        title: 'Exportação em Planilha Excel (.xlsx)',
+        desc: 'Exportação nativa de dados de trocas, descartes, censo e aproveitamento em formato Excel (.xlsx) com layout pronto para auditorias sanitárias.'
+      },
+      {
+        title: 'Gráfico Histórico de Aproveitamento com Recharts',
+        desc: 'Painel analítico com curva histórica mensal dos últimos 6 meses comparando o aproveitamento dos Salões 1, 2 e 3 com a meta regulamentar de 85%.'
+      },
+      {
+        title: 'Mapa Físico de Boxes e Poltronas',
+        desc: 'Visualização espacial da clínica em 8 boxes por 4 posições por salão e turno, com indicação visual de status e pacientes alocados.'
+      },
+      {
+        title: 'Central de 5 Relatórios Regulamentares',
+        desc: 'Central especializada com Censo de Dialisadores, Limite e Atenção, Histórico de Trocas, Aproveitamento por Salão e Rastreabilidade de Lotes.'
+      }
+    ],
+    tutorial: [
+      {
+        title: 'Como Registrar Presença ou Falta Diária',
+        steps: [
+          'Acesse o módulo .REUSE e abra a aba "Painel".',
+          'Utilize os filtros de Salão e Turno ou a barra de busca para localizar o paciente.',
+          'Clique no botão "Presença" para computar +1 uso no dialisador do paciente.',
+          'Caso o paciente tenha faltado, clique em "Falta" para estornar -1 no contador.',
+          'Se o capilar já estiver com 20 usos, o botão de presença estará travado, exigindo a troca prévia.'
+        ]
+      },
+      {
+        title: 'Como Bipar o Dialisador na Bancada de Reuso',
+        steps: [
+          'Na bancada de lavagem, posicione o cursor no campo "Escanear Código de Barras / QR Code".',
+          'Aponte o leitor de código de barras ou câmera para o QR Code / Barcode impresso na etiqueta do capilar.',
+          'O sistema localizará instantaneamente o paciente na lista e destacará suas informações em tela.',
+          'Confirme a presença ou abra a rotina de troca diretamente pelo cartão do paciente.'
+        ]
+      },
+      {
+        title: 'Como Realizar a Troca de um Capilar',
+        steps: [
+          'No cartão ou linha do paciente, clique no botão "Trocar".',
+          'Selecione se a troca é por "Limite 20 Usos" ou "Descarte Precoce".',
+          'Se for descarte precoce, selecione a justificativa clínica (ex: Coagulação de Fibras, Baixa Prime, Ruptura).',
+          'Confira o modelo do novo capilar e informe o número do lote (opcional).',
+          'Clique em "Confirmar" para zerar o contador do paciente e gravar o histórico de troca.'
+        ]
+      },
+      {
+        title: 'Como Importar Pacientes da Base da Clínica',
+        steps: [
+          'Na aba "Pacientes", clique no botão "Importar" no topo direito.',
+          'O sistema buscará os pacientes da unidade ativa na base central e importará os novos cadastros.',
+          'Os capilares serão calculados automaticamente conforme a faixa de peso de cada paciente.',
+          'Uma mensagem confirmará a quantidade exata de pacientes sincronizados.'
+        ]
+      },
+      {
+        title: 'Como Imprimir Etiquetas Térmicas com QR Code',
+        steps: [
+          'Acesse a aba "Etiquetas".',
+          'Defina o Prime Inicial padrão (ex: 115 mL) — o Prime Final será calculado automaticamente em 92 mL.',
+          'Selecione os pacientes desejados ou clique em "Marcar Todos".',
+          'Clique em "Imprimir" para enviar para a impressora pelo diálogo do navegador ou "ZPL" para copiar os comandos Zebra.'
+        ]
+      },
+      {
+        title: 'Como Exportar Relatórios em Excel (.xlsx)',
+        steps: [
+          'Acesse a aba "Trocas" ou clique no botão "Relatórios" no cabeçalho do módulo.',
+          'Selecione o relatório ou aplique os filtros de salão e turno desejados.',
+          'Clique no botão "Exportar" ou "Excel (.xlsx)".',
+          'A planilha formatada será baixada imediatamente no seu computador.'
+        ]
+      }
+    ],
+    duvidas: [
+      {
+        pergunta: 'Qual o limite máximo regulamentar de utilizações de um dialisador?',
+        resposta: 'Conforme a RDC 11/2014 da ANVISA, cada dialisador de hemodiálise pode ser reutilizado até o limite estrito de 20 vezes, desde que preserve seu volume residual capilar (Prime) em pelo menos 80% do valor inicial e passe no teste de integridade.'
+      },
+      {
+        pergunta: 'O que acontece quando o dialisador atinge 20 usos?',
+        resposta: 'O sistema sinaliza o paciente com badge vermelho "Crítico" e bloqueia rigidamente o botão de presença. Para dar continuidade às sessões do paciente, o operador deve obrigatoriamente registrar a troca do capilar no botão "Trocar".'
+      },
+      {
+        pergunta: 'Como o modelo do capilar é calculado a partir do peso?',
+        resposta: 'O sistema utiliza a regra padrão de alta permeabilidade: acima de 100 kg utiliza B22H; entre 90 e 100 kg utiliza B21H; entre 80 e 90 kg utiliza B20H; entre 60 e 80 kg utiliza B18H; e até 60 kg utiliza B16H. Se houver prescrição médica específica, o operador pode marcar a opção "Exceção Clínica" para fixar o modelo manualmente.'
+      },
+      {
+        pergunta: 'O que significa a fórmula de Prime Final (PF)?',
+        resposta: 'O Prime Inicial (PI) é o volume interno das fibras capilares medido antes do primeiro uso. O Prime Final (PF) é o volume mínimo tolerável (PF = PI * 0,80). Se o volume residual cair abaixo de 80%, o capilar deve ser descartado precocemente por "Baixa Prime / BP".'
+      },
+      {
+        pergunta: 'Posso usar impressoras térmicas Zebra ZD220 / ZD230?',
+        resposta: 'Sim. O sistema gera código nativo ZPL (Zebra Programming Language) de 203 DPI para bobinas de 102x44mm, incluindo código de barras Code-128 e QR Code, além de oferecer o modo HTML responsivo para impressoras laser ou jato de tinta.'
+      },
+      {
+        pergunta: 'Como é calculada a taxa de aproveitamento no painel?',
+        resposta: 'A taxa de aproveitamento mede o percentual de vida útil que os capilares trocados alcançaram antes de sair de circulação em relação aos 20 usos possíveis. Uma taxa de 85% ou superior indica excelente controle de heparinização e baixo índice de descarte precoce.'
+      }
+    ]
   }
 };
+
 
 
