@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.13',
+      date: '08/10/2026',
+      title: 'Nex-Ai CLINIC — Central de Conflitos de Salão Clicável no .MED, Resolução em 1 Clique e Correção de Honorários do 3º Turno',
+      description: 'Aprimoramento abrangente no módulo Nex-Ai.MED: transformação do card de alerta de conflitos em botão interativo de alta visibilidade; desenvolvimento do modal oficial MedicalConflictsModal com visualização analítica lado a lado das sobreposições de nefrologistas no mesmo turno; botões diretos de ação rápida para Editar, Desescalar em 1 clique e Localizar na matriz semanal; validação preventiva em tempo real no formulário de escala evitando alocações conflitantes antes de salvar; e correção crítica no cálculo de honorários do 3º Turno/Noturno garantindo a remuneração de R$ 825,00 na produção médica.',
+      changes: [
+        { type: 'Card Interativo Clicável', text: 'Botão destacado no cabeçalho da escala com contagem de conflitos e tag "Ver" para abertura imediata do raio-x de sobreposições.' },
+        { type: 'Modal de Conflitos Oficial', text: 'Visualização comparativa dos salões afetados por médico, data e turno com KPIs de impacto e layout responsivo.' },
+        { type: 'Resolução em 1 Clique', text: 'Ações diretas de Editar plantão, Desescalar salão excedente e Localizar a ocorrência com realce visual na matriz.' },
+        { type: 'Alerta Preventivo no Form', text: 'Banner em tempo real dentro do modal de escala avisando instantaneamente se o nefrologista já atua em outro salão no mesmo turno.' },
+        { type: 'Correção de Honorários (3º T)', text: 'Resolução automática da taxa de plantão noturno (R$ 825,00) para o 3º Turno na apuração de produção médica.' },
+        { type: 'Manual do Módulo Atualizado', text: 'Documentação dos novos fluxos de auditoria e resolução de conflitos atualizada em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v5.0.11',
       date: '07/10/2026',
       title: 'Nex-Ai CLINIC — Lançamento do Módulo .MULTI (Equipe Multidisciplinar) e Anamnese Social Completa (Google Forms)',

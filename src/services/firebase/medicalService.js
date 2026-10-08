@@ -116,6 +116,9 @@ export const FALLBACK_DOCTORS = [
 export const DEFAULT_MEDICAL_SETTINGS = {
   shiftFee: 726.0,
   shiftFees: {
+    '1º Turno': 726.0,
+    '2º Turno': 726.0,
+    '3º Turno': 825.0,
     'Manhã': 726.0,
     'Tarde': 726.0,
     'Noite': 825.0

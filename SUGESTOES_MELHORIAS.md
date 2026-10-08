@@ -376,4 +376,23 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Arquivos Envolvidos:** `src/components/AssistPanel.jsx`, `src/components/multi/SocialAnamneseForm.jsx`, `src/services/firebase/multiService.js`.
 - **Complexidade:** Baixa.
 
+---
+
+### [SM-024] Sugestão Inteligente de Médicos Disponíveis para Resolução de Conflitos na Escala
+- **Data:** 08/10/2026
+- **Módulo:** `.MED` (Gestão Médica & Escalas)
+- **Título:** Sugestão Automática de Médicos Disponíveis (Sem Conflito) ao Editar ou Resolver Plantões Sobrepostos
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Identificada durante o desenvolvimento do `MedicalConflictsModal` e da resolução rápida de conflitos de plantão no módulo .MED.
+- **Descrição Técnica:**
+  - No formulário de alocação de plantão (`showAddModal`) e na resolução de conflitos, analisar a escala da data e turno selecionados.
+  - Ordenar e categorizar a lista do dropdown `<select>` de médicos em dois grupos visuais:
+    1. `Médicos Disponíveis (Sem Plantão no Turno)` (sinalizados com ícone ou prefixo verde).
+    2. `Médicos Ocupados / Em Outro Salão` (desabilitados ou sinalizados com badge de aviso).
+  - Incluir atalho de 1 toque: "Sugerir Médico Livre".
+- **Benefício Operacional:** Redução drástica do tempo gasto pela coordenação médica para reatribuir plantões e zerar conflitos, evitando tentativas de escalação em médicos que já estão ocupados em outros salões.
+- **Arquivos Envolvidos:** `src/components/medical/MedicalScheduleTab.jsx`, `src/components/medical/MedicalConflictsModal.jsx`.
+- **Complexidade:** Baixa.
+
+
 

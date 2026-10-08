@@ -43,7 +43,10 @@ export default function MedicalProductionTab({
       );
       const shiftsCount = docShifts.length;
       const shiftsTotal = docShifts.reduce((acc, s) => {
-        const fee = shiftFees[s.shift] || (s.shift === 'Noite' ? 825.0 : (settings.shiftFee || 726.0));
+        const fee = shiftFees[s.shift] || 
+          ((s.shift === '3º Turno' || s.shift === 'Noite') ? (shiftFees['3º Turno'] || shiftFees['Noite'] || 825.0) : 
+          ((s.shift === '2º Turno' || s.shift === 'Tarde') ? (shiftFees['2º Turno'] || shiftFees['Tarde'] || 726.0) : 
+          (shiftFees['1º Turno'] || shiftFees['Manhã'] || settings.shiftFee || 726.0)));
         return acc + fee;
       }, 0);
 

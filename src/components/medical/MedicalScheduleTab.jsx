@@ -8,6 +8,7 @@ import {
 import { dbService } from '../../firebase';
 import { FALLBACK_DOCTORS } from '../../services/firebase/medicalService';
 import { formatDoctorDisplayName, sortDoctorsByName } from '../../utils/doctorFormatters';
+import MedicalConflictsModal from './MedicalConflictsModal';
 
 export default function MedicalScheduleTab({
   schedules = [],
@@ -29,6 +30,8 @@ export default function MedicalScheduleTab({
   const [selectedShift, setSelectedShift] = useState('Todos');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [showConflictsModal, setShowConflictsModal] = useState(false);
+  const [highlightDate, setHighlightDate] = useState(null);
 
   // Escala Recorrente por Dias da Semana
   const [scheduleMode, setScheduleMode] = useState('single'); // 'single' | 'recurring'
@@ -210,29 +213,94 @@ export default function MedicalScheduleTab({
   };
 
   // Detecção Inteligente de Conflitos (Médico escalado no mesmo turno e data em salões distintos)
-  const doctorConflicts = useMemo(() => {
+  const conflictGroups = useMemo(() => {
     const map = {};
     schedules.forEach(s => {
-      if (s.doctorId && s.date && s.shift) {
-        const key = `${s.date}_${s.shift}_${s.doctorId}`;
-        if (!map[key]) map[key] = [];
-        map[key].push(s);
+      if (!s || !s.date || !s.shift) return;
+      if (s.status === 'Cancelado' || s.checkinStatus === 'Cancelado') return;
+      if (!s.doctorId && !s.doctorName) return;
+
+      const normName = formatDoctorDisplayName(s.doctorName || '').toLowerCase().trim();
+      const docKey = normName || (s.doctorId ? String(s.doctorId).toLowerCase().trim() : '');
+      if (!docKey) return;
+
+      const groupKey = `${s.date}_${s.shift}_${docKey}`;
+      if (!map[groupKey]) {
+        map[groupKey] = {
+          key: groupKey,
+          date: s.date,
+          shift: s.shift,
+          doctorId: s.doctorId,
+          doctorName: formatDoctorDisplayName(s.doctorName || 'Médico'),
+          doctorCrm: s.doctorCrm || '',
+          items: []
+        };
       }
+      map[groupKey].items.push(s);
     });
-    const conflicts = {};
-    Object.entries(map).forEach(([k, list]) => {
-      if (list.length > 1) {
-        list.forEach(item => {
-          conflicts[item.id] = list;
-        });
-      }
-    });
-    return conflicts;
+
+    return Object.values(map)
+      .filter(g => g.items.length > 1)
+      .sort((a, b) => a.date.localeCompare(b.date));
   }, [schedules]);
 
+  const doctorConflicts = useMemo(() => {
+    const map = {};
+    conflictGroups.forEach(group => {
+      group.items.forEach(item => {
+        if (item.id) map[item.id] = group.items;
+        let secKey = item.sector;
+        if (secKey && secKey.includes('Peritoneal')) secKey = 'DP';
+        map[`${item.date}_${secKey}_${item.shift}`] = group.items;
+      });
+    });
+    return map;
+  }, [conflictGroups]);
+
   const conflictCount = useMemo(() => {
-    return Object.keys(doctorConflicts).length;
-  }, [doctorConflicts]);
+    return conflictGroups.length;
+  }, [conflictGroups]);
+
+  const totalConflictingShifts = useMemo(() => {
+    return conflictGroups.reduce((acc, g) => acc + g.items.length, 0);
+  }, [conflictGroups]);
+
+  // Alerta em tempo real de conflito durante edição / criação de plantão
+  const currentFormConflict = useMemo(() => {
+    if (!showAddModal || !formData.date || !formData.shift || !formData.doctorId) return null;
+    const selectedDoc = availableDoctors.find(d => (d.id === formData.doctorId || d.uid === formData.doctorId));
+    const targetNorm = formatDoctorDisplayName(selectedDoc?.name || '').toLowerCase().trim();
+
+    return schedules.find(s => {
+      if (!s || s.date !== formData.date || s.shift !== formData.shift) return false;
+      if (editingItem && s.id === editingItem.id) return false;
+      if (s.status === 'Cancelado' || s.checkinStatus === 'Cancelado') return false;
+
+      const sNorm = formatDoctorDisplayName(s.doctorName || '').toLowerCase().trim();
+      const isSameDoc = (s.doctorId && s.doctorId === formData.doctorId) || (targetNorm && sNorm && targetNorm === sNorm);
+      if (!isSameDoc) return false;
+
+      return true;
+    });
+  }, [showAddModal, formData.date, formData.shift, formData.sector, formData.doctorId, availableDoctors, schedules, editingItem]);
+
+  const handleLocateFromConflict = (item) => {
+    setViewMode('matriz');
+    setSelectedSector('Todos');
+    setSelectedShift('Todos');
+    if (item.date && monthWeeks.length > 0) {
+      const wIdx = monthWeeks.findIndex(w => w.some(d => d.dateStr === item.date));
+      if (wIdx >= 0) {
+        setSelectedWeekIndex(wIdx);
+      } else {
+        setSelectedWeekIndex('todas');
+      }
+    }
+    setHighlightDate(item.date);
+    setTimeout(() => {
+      setHighlightDate(null);
+    }, 4500);
+  };
 
   // Datas calculadas para a escala recorrente
   const recurringDates = useMemo(() => {
@@ -658,10 +726,41 @@ export default function MedicalScheduleTab({
           )}
 
           {conflictCount > 0 && (
-            <div style={{ ...styles.alertBadge, backgroundColor: '#fef2f2', color: '#b91c1c', borderColor: '#fca5a5' }} title="Médicos escalados em mais de um salão simultaneamente no mesmo turno">
-              <AlertTriangle size={14} />
-              <span>{conflictCount} Conflitos de Salão</span>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowConflictsModal(true)}
+              style={{
+                ...styles.alertBadge,
+                backgroundColor: '#fef2f2',
+                color: '#b91c1c',
+                borderColor: '#fca5a5',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                border: '1px solid #fca5a5',
+                padding: '0.35rem 0.75rem',
+                borderRadius: '6px',
+                transition: 'all 0.15s ease'
+              }}
+              title="Clique para visualizar o detalhamento e resolver os conflitos de salão"
+            >
+              <AlertTriangle size={15} color="#b91c1c" />
+              <span style={{ fontWeight: '800' }}>
+                {conflictCount} {conflictCount === 1 ? 'Conflito' : 'Conflitos'} de Salão
+              </span>
+              <span style={{
+                fontSize: '0.68rem',
+                fontWeight: '800',
+                backgroundColor: '#fee2e2',
+                color: '#991b1b',
+                padding: '0.1rem 0.4rem',
+                borderRadius: '4px',
+                border: '1px solid #fca5a5'
+              }}>
+                Ver
+              </span>
+            </button>
           )}
 
           <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
@@ -827,7 +926,8 @@ export default function MedicalScheduleTab({
                                 const swapInfo = swapLookup[lookupKey];
                                 const isSwap = item?.isSwap || item?.checkinStatus === 'Substituído' || !!swapInfo;
                                 const isUncovered = !item || !item.doctorId;
-                                const hasConflict = item && !!doctorConflicts[item.id];
+                                const hasConflict = item && (!!doctorConflicts[item.id] || !!doctorConflicts[lookupKey]);
+                                const isHighlighted = day.dateStr && day.dateStr === highlightDate;
 
                                 return (
                                   <td 
@@ -841,7 +941,8 @@ export default function MedicalScheduleTab({
                                           ? { backgroundColor: '#fef2f2', border: '1px solid #f87171' } 
                                           : isSwap 
                                             ? styles.matrixCellSwap 
-                                            : styles.matrixCellRegular)
+                                            : styles.matrixCellRegular),
+                                      ...(isHighlighted ? { outline: '2px solid #ef4444', outlineOffset: '-2px', backgroundColor: hasConflict ? '#fee2e2' : '#f0f9ff' } : {})
                                     }}
                                     title={
                                       isUncovered 
@@ -1410,10 +1511,55 @@ export default function MedicalScheduleTab({
                     onChange={e => setFormData({ ...formData, notes: e.target.value })}
                   />
                 </div>
+
+                {/* Alerta de Conflito em Tempo Real no Formulário */}
+                {currentFormConflict && (
+                  <div style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fecdd3',
+                    borderRadius: '8px',
+                    padding: '0.65rem 0.85rem',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '0.55rem'
+                  }}>
+                    <AlertTriangle size={18} color="#b91c1c" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div style={{ fontSize: '0.8rem', color: '#991b1b', lineHeight: '1.35' }}>
+                      <strong>Alerta de Conflito de Salão!</strong>
+                      <p style={{ margin: '0.2rem 0 0 0' }}>
+                        Este médico já possui plantão escalado no <strong>{currentFormConflict.sector}</strong> nesta mesma data ({currentFormConflict.date}) e turno ({currentFormConflict.shift}).
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Rodapé Fixo com Botões (Nunca desaparece da tela) */}
               <div style={styles.modalFooter}>
+                {editingItem && onDeleteSchedule && (
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      if (window.confirm(`Deseja realmente desescalar este médico do ${editingItem.sector}?`)) {
+                        onDeleteSchedule(editingItem.id);
+                        setShowAddModal(false);
+                      }
+                    }} 
+                    style={{
+                      ...styles.cancelBtn,
+                      backgroundColor: '#fee2e2',
+                      borderColor: '#fca5a5',
+                      color: '#b91c1c',
+                      marginRight: 'auto',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem'
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    <span>Desescalar</span>
+                  </button>
+                )}
                 <button 
                   type="button" 
                   onClick={() => setShowAddModal(false)} 
@@ -1707,6 +1853,17 @@ export default function MedicalScheduleTab({
           </div>
         </div>
       )}
+
+      {/* Modal de Detalhamento e Resolução de Conflitos de Salão */}
+      <MedicalConflictsModal
+        isOpen={showConflictsModal}
+        onClose={() => setShowConflictsModal(false)}
+        conflictGroups={conflictGroups}
+        onEditSchedule={handleOpenEdit}
+        onDeleteSchedule={onDeleteSchedule}
+        onLocateDate={handleLocateFromConflict}
+        selectedMonth={selectedMonth}
+      />
 
       {/* Estilos CSS Inline para Impressão e Layout */}
       <style>{`

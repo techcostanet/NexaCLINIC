@@ -1913,8 +1913,12 @@ export const MODULE_GUIDES = {
         desc: 'Replicação ágil da grade de plantões do mês anterior para o mês vigente, com mapeamento automático por dia da semana (1ª Seg ➔ 1ª Seg), seleção de setores, substituição em massa de nefrologistas e detecção de conflitos.'
       },
       {
-        title: 'Detecção Ativa de Conflitos de Salão',
-        desc: 'Alerta visual em tempo real na matriz e cabeçalho indicando quando um mesmo nefrologista foi escalado simultaneamente em salões distintos na mesma data e turno.'
+        title: 'Central de Conflitos & Resolução em 1 Clique',
+        desc: 'Card interativo no cabeçalho com contagem precisa de sobreposições de salão no mesmo turno. Ao clicar no card, abre o modal de Conflitos com comparativo dos salões envolvidos e botões diretos para editar, desescalar ou localizar na matriz.'
+      },
+      {
+        title: 'Alerta Preventivo de Conflito no Formulário',
+        desc: 'Validação instantânea durante a montagem da escala: se o nefrologista selecionado já possuir plantão em outro salão na mesma data e turno, um banner de alerta vermelho é emitido imediatamente antes de salvar.'
       },
       {
         title: 'Central de Relatórios Médicos',
@@ -2020,6 +2024,17 @@ export const MODULE_GUIDES = {
           'Filtre pelo Mês de competência, Médico ou Status desejado.',
           'Clique em "PDF" para baixar o documento institucional com cabeçalho oficial ou "Excel" para gerar a planilha analítica.'
         ]
+      },
+      {
+        title: 'Como Visualizar e Resolver Conflitos de Salão',
+        steps: [
+          'Na aba "Escala", se houver nefrologistas com plantões simultâneos em múltiplos salões no mesmo turno, a faixa de cobertura exibirá o botão em destaque vermelho "Conflitos de Salão" com a tag "Ver".',
+          'Clique sobre o card de conflito para abrir o modal dedicado "Conflitos".',
+          'Examine a lista comparativa com o nome do médico, CRM, data, turno e os salões sobrepostos lado a lado.',
+          'Utilize o botão "Editar" para abrir o plantão específico e alterar o médico ou salão.',
+          'Ou clique em "Desescalar" para desocupar imediatamente o salão excedente com 1 clique e confirmação rápida.',
+          'Você também pode clicar em "Localizar" para fechar o modal e visualizar a data correspondente destacada na matriz semanal da escala.'
+        ]
       }
     ],
     duvidas: [
@@ -2049,7 +2064,7 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'Como o sistema alerta caso um médico seja escalado em dois salões ao mesmo tempo?',
-        resposta: 'O sistema realiza checagem cruzada de horários e datas: se um nefrologista for escalado no mesmo turno em salões diferentes, a célula na matriz ganha destaque em vermelho com selo "Conflito" e o cabeçalho exibe o número de conflitos pendentes.'
+        resposta: 'O sistema realiza checagem cruzada em tempo real: se um nefrologista for escalado no mesmo turno em salões diferentes, a célula na matriz ganha destaque em vermelho com selo "Conflito" e o cabeçalho exibe o botão clicável "Conflitos de Salão". Clicando nele, o coordenador acessa a lista analítica com raio-x dos salões sobrepostos e pode resolver o conflito via edição ou desescalada em 1 clique.'
       },
       {
         pergunta: 'Como as consultas da agenda médica entram na produção do profissional?',
