@@ -26,18 +26,17 @@ function matchPatientInText(text, patientsList = []) {
   const normalizedInput = normalizeText(text);
   let bestMatch = null;
   let highestScore = 0;
+  let longestMatchedNameLen = 0;
 
   for (const patient of patientsList) {
     if (!patient.name) continue;
     const normalizedPatName = normalizeText(patient.name);
     const patParts = normalizedPatName.split(' ').filter(p => p.length > 2);
 
-    // 1. Match exato do nome completo
-    if (normalizedInput.includes(normalizedPatName)) {
-      return { matchedPatient: patient, confidence: 1.0, matchType: 'exact_full_name' };
-    }
+    // Pacientes válidos devem ter ao menos nome e sobrenome (mínimo 2 partes válidas de >2 letras)
+    if (patParts.length < 2 || normalizedPatName.length < 6) continue;
 
-    // 2. Match por CPF (se citado no texto)
+    // 1. Match por CPF (se citado no texto) - prioridade máxima
     if (patient.cpf) {
       const cleanCpf = patient.cpf.replace(/\D/g, '');
       const cleanInputDigits = text.replace(/\D/g, '');
@@ -46,15 +45,28 @@ function matchPatientInText(text, patientsList = []) {
       }
     }
 
+    // 2. Match exato do nome completo (prioriza o nome mais longo/específico)
+    if (normalizedInput.includes(normalizedPatName)) {
+      const score = 1.0;
+      if (score > highestScore || (score === highestScore && normalizedPatName.length > longestMatchedNameLen)) {
+        highestScore = score;
+        longestMatchedNameLen = normalizedPatName.length;
+        bestMatch = { matchedPatient: patient, confidence: score, matchType: 'exact_full_name' };
+      }
+      continue;
+    }
+
     // 3. Match por Primeiro e Último Nome
     if (patParts.length >= 2) {
       const firstAndLast = `${patParts[0]} ${patParts[patParts.length - 1]}`;
       if (normalizedInput.includes(firstAndLast)) {
-        const score = 0.92;
-        if (score > highestScore) {
+        const score = 0.90;
+        if (score > highestScore || (score === highestScore && firstAndLast.length > longestMatchedNameLen)) {
           highestScore = score;
+          longestMatchedNameLen = firstAndLast.length;
           bestMatch = { matchedPatient: patient, confidence: score, matchType: 'first_last_name' };
         }
+        continue;
       }
     }
 
@@ -128,20 +140,107 @@ function classifyEmailContent(subject = '', body = '') {
 }
 
 /**
+ * Decodifica entidades HTML como &nbsp;, &quot;, &#39;, &amp;, etc.
+ */
+function decodeHtmlEntities(str) {
+  if (!str) return '';
+  let res = String(str);
+  for (let pass = 0; pass < 2; pass++) {
+    const prev = res;
+    res = res
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/&quot;/gi, '"')
+      .replace(/&apos;/gi, "'")
+      .replace(/&#39;/gi, "'")
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&bull;/gi, '•')
+      .replace(/&ndash;/gi, '–')
+      .replace(/&mdash;/gi, '—')
+      .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(Number(dec)))
+      .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    if (res === prev) break;
+  }
+  return res;
+}
+
+/**
+ * Converte marcação HTML em texto simples mantendo a estrutura de parágrafos
+ */
+function cleanHtmlToText(raw) {
+  if (!raw) return '';
+  let text = String(raw);
+
+  // Se contiver tags HTML
+  if (/<[a-z!][\s\S]*>/i.test(text)) {
+    text = text.replace(/<!--[\s\S]*?-->/g, '');
+    text = text.replace(/<style[\s\S]*?<\/style>/gi, '');
+    text = text.replace(/<script[\s\S]*?<\/script>/gi, '');
+    text = text.replace(/<head[\s\S]*?<\/head>/gi, '');
+    text = text.replace(/<img[\s\S]*?>/gi, '');
+
+    text = text.replace(/<br\s*[\/]?>/gi, '\n');
+    text = text.replace(/<\/(p|div|tr|li|h[1-6]|table|blockquote|signature)>/gi, '\n');
+    text = text.replace(/<(p|div|tr|li|h[1-6]|table|blockquote|signature)[^>]*>/gi, '\n');
+
+    text = text.replace(/<[^>]+>/gi, ' ');
+  }
+
+  text = decodeHtmlEntities(text);
+  text = text.replace(/\u00a0/g, ' ');
+
+  return text;
+}
+
+/**
  * Remove assinaturas e cabeçalhos desnecessários do texto
  */
 function cleanEmailBody(rawBody = '') {
   if (!rawBody) return '';
-  const lines = rawBody.split('\n');
-  const cleaned = lines.filter(line => {
-    const trimmed = line.trim();
-    if (!trimmed) return true;
-    if (trimmed.startsWith('>') || trimmed.startsWith('De:') || trimmed.startsWith('Enviado em:') || trimmed.startsWith('Para:') || trimmed.startsWith('Assunto:')) return false;
-    if (trimmed.toLowerCase().startsWith('atenciosamente') || trimmed.toLowerCase().startsWith('cordialmente') || trimmed.toLowerCase().startsWith('obrigado')) return false;
-    if (trimmed.toLowerCase().includes('enviado do meu iphone') || trimmed.toLowerCase().includes('enviado pelo outlook')) return false;
-    return true;
-  });
-  return cleaned.join('\n').trim();
+  const convertedText = cleanHtmlToText(rawBody);
+  const rawLines = convertedText.split('\n');
+  const cleanedLines = [];
+
+  for (const line of rawLines) {
+    const trimmed = line.replace(/\s+/g, ' ').trim();
+    if (!trimmed) {
+      if (cleanedLines.length > 0 && cleanedLines[cleanedLines.length - 1] !== '') {
+        cleanedLines.push('');
+      }
+      continue;
+    }
+
+    const lower = trimmed.toLowerCase();
+    if (lower.startsWith('>') || lower.startsWith('de:') || lower.startsWith('enviado em:') || lower.startsWith('para:') || lower.startsWith('assunto:')) {
+      continue;
+    }
+    if (
+      lower === 'atenciosamente' || lower === 'atenciosamente,' || 
+      lower === 'cordialmente' || lower === 'cordialmente,' || 
+      lower === 'obrigado' || lower === 'obrigada' ||
+      lower.startsWith('att,') || lower.startsWith('att:') || lower === 'att' ||
+      lower === 'at.te,' || lower === 'at.te'
+    ) {
+      continue;
+    }
+    if (
+      lower.includes('enviado do meu iphone') || 
+      lower.includes('enviado pelo outlook') || 
+      lower.includes('enviado do meu galaxy') || 
+      lower.includes('enviado pelo mail do windows') ||
+      lower.includes('gentileza acusar recebimento')
+    ) {
+      continue;
+    }
+    if (/^[-=_*]{3,}$/.test(trimmed)) {
+      continue;
+    }
+
+    cleanedLines.push(trimmed);
+  }
+
+  return cleanedLines.join('\n').trim();
 }
 
 /**
@@ -222,9 +321,9 @@ async function syncTitanEmailsToFirestore(db) {
 
         try {
           const parsed = await simpleParser(msg.source);
-          const rawSubject = parsed.subject || msg.envelope?.subject || 'Comunicado Assistencial';
-          const rawBody = parsed.text || parsed.html || '';
-          const cleanedText = cleanEmailBody(rawBody);
+          const rawSubject = cleanHtmlToText(parsed.subject || msg.envelope?.subject || 'Comunicado Assistencial').trim();
+          const candidateBody = (parsed.text && !/<[a-z!][\s\S]*>/i.test(parsed.text)) ? parsed.text : (parsed.html || parsed.text || '');
+          const cleanedText = cleanEmailBody(candidateBody);
 
           const fromAddress = parsed.from?.text || (msg.envelope?.from ? msg.envelope.from.map(f => f.name || f.address).join(', ') : 'Equipe Assistencial');
           const authorName = parsed.from?.value?.[0]?.name || fromAddress.split('<')[0].replace(/"/g, '').trim() || 'Equipe Assistencial';
@@ -295,5 +394,7 @@ module.exports = {
   normalizeText,
   matchPatientInText,
   classifyEmailContent,
-  cleanEmailBody
+  cleanEmailBody,
+  cleanHtmlToText,
+  decodeHtmlEntities
 };

@@ -88,27 +88,37 @@ def decode_mime_words(s):
 def clean_html_to_text(html_text):
     if not html_text:
         return ""
-    text = re.sub(r'<style[\s\S]*?</style>', '', html_text, flags=re.IGNORECASE)
+    text = re.sub(r'<!--[\s\S]*?-->', '', html_text)
+    text = re.sub(r'<style[\s\S]*?</style>', '', text, flags=re.IGNORECASE)
     text = re.sub(r'<script[\s\S]*?</script>', '', text, flags=re.IGNORECASE)
-    text = re.sub(r'<(div|p|br|tr|li)[^>]*>', '\n', text, flags=re.IGNORECASE)
-    text = re.sub(r'<[^>]+>', '', text)
+    text = re.sub(r'<head[\s\S]*?</head>', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'<img[\s\S]*?>', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</(p|div|tr|li|h[1-6]|table|blockquote|signature)>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'<(p|div|tr|li|h[1-6]|table|blockquote|signature)[^>]*>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'<[^>]+>', ' ', text)
     text = unescape(text)
-    lines = [line.strip() for line in text.split('\n') if line.strip()]
+    text = text.replace('\xa0', ' ')
+    lines = [re.sub(r'\s+', ' ', line).strip() for line in text.split('\n')]
     
     filtered = []
     for line in lines:
+        if not line:
+            if filtered and filtered[-1] != '':
+                filtered.append('')
+            continue
         lower = line.lower()
-        if lower.startswith('atenciosamente') or lower.startswith('cordialmente') or lower.startswith('obrigado'):
+        if lower.startswith('>') or lower.startswith('de:') or lower.startswith('enviado em:') or lower.startswith('para:') or lower.startswith('assunto:'):
             continue
-        if 'enfermeir' in lower and len(line) < 35:
+        if lower in ('atenciosamente', 'atenciosamente,', 'cordialmente', 'cordialmente,', 'obrigado', 'obrigada') or lower.startswith(('att,', 'att:', 'att', 'at.te,', 'at.te')):
             continue
-        if 'dialize - betim' in lower or 'dialize - contagem' in lower:
+        if 'enviado do meu' in lower or 'enviado pelo outlook' in lower or 'enviado pelo mail do windows' in lower or 'gentileza acusar recebimento' in lower:
             continue
-        if '----------------' in line:
+        if re.match(r'^[-=_*]{3,}$', line):
             continue
         filtered.append(line)
 
-    return "\n".join(filtered)
+    return "\n".join(filtered).strip()
 
 def decode_payload_part(part):
     charset = part.get_content_charset() or 'utf-8'
@@ -144,7 +154,9 @@ def get_body(msg):
             text_content = raw
 
     if text_content and len(text_content.strip()) > 10:
-        return text_content.strip()
+        if re.search(r'<[a-z!][\s\S]*>', text_content, re.IGNORECASE):
+            return clean_html_to_text(text_content)
+        return clean_html_to_text(text_content) if '<' in text_content else text_content.strip()
     elif html_content:
         return clean_html_to_text(html_content)
     return text_content or ""

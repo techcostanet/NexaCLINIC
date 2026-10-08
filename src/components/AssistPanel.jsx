@@ -11,6 +11,7 @@ import AssistSurgeriesTab from './assist/AssistSurgeriesTab';
 import AssistReportsModal from './assist/AssistReportsModal';
 import ModuleHeader from './common/ModuleHeader';
 import { useUnit } from '../contexts/UnitContext';
+import { cleanEmailBody } from '../utils/cleanEmailContent';
 
 const isSamePosts = (a, b) => {
   if (!a || !b || a.length !== b.length) return false;
@@ -427,7 +428,7 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
     setPatientSearchTerm(post.patientName ? post.patientName.toUpperCase() : '');
     setPostForm({
       title: post.title || '',
-      message: post.message || '',
+      message: cleanEmailBody(post.message) || post.message || '',
       category: post.category || 'Geral',
       urgency: post.urgency || 'Informativo',
       patientId: post.patientId || '',
@@ -567,7 +568,7 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
               </td>
               <td style="padding: 8px; border: 1px solid #cbd5e1; vertical-align: top; font-size: 11px; line-height: 1.4;">
                 ${p.title && p.title !== p.patientName && !p.title.startsWith(p.category + ' -') ? '<strong>' + p.title + '</strong><br/>' : ''}
-                ${(p.message || '').replace(/\n/g, '<br/>')}
+                ${(cleanEmailBody(p.message) || p.message || '').replace(/\n/g, '<br/>')}
                 ${p.attachmentUrl ? '<br/><span style="font-size: 10px; color: #0284c7; font-weight: 600;">📎 Anexo: ' + (p.attachmentName || 'Documento / Laudo') + '</span>' : ''}
               </td>
               <td style="padding: 8px; border: 1px solid #cbd5e1; vertical-align: top; font-size: 10px; white-space: nowrap;">
@@ -1193,7 +1194,7 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
                         )}
 
                         <span style={styles.compactMessageText}>
-                          {post.message}
+                          {cleanEmailBody(post.message) || post.message}
                         </span>
                       </div>
 
@@ -1312,7 +1313,7 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
                       {post.title && post.title !== post.patientName && !post.title.startsWith(`${post.category} -`) && (
                         <h4 style={styles.postTitle}>{post.title}</h4>
                       )}
-                                            <p style={styles.postMessage}>{post.message}</p>
+                                            <p style={styles.postMessage}>{cleanEmailBody(post.message) || post.message}</p>
 
                       {/* Anexo Clínico (Item 3) */}
                       {post.attachmentUrl && (

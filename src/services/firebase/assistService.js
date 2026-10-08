@@ -26,18 +26,17 @@ export const matchPatientInText = (text, patientsList = []) => {
   const normalizedInput = normalizeText(text);
   let bestMatch = null;
   let highestScore = 0;
+  let longestMatchedNameLen = 0;
 
   for (const patient of patientsList) {
     if (!patient.name) continue;
     const normalizedPatName = normalizeText(patient.name);
     const patParts = normalizedPatName.split(' ').filter(p => p.length > 2);
 
-    // 1. Match exato do nome completo
-    if (normalizedInput.includes(normalizedPatName)) {
-      return { matchedPatient: patient, confidence: 1.0, matchType: 'exact_full_name' };
-    }
+    // Pacientes válidos devem ter ao menos nome e sobrenome (mínimo 2 partes válidas de >2 letras)
+    if (patParts.length < 2 || normalizedPatName.length < 6) continue;
 
-    // 2. Match por CPF (se citado no texto)
+    // 1. Match por CPF (se citado no texto) - prioridade máxima
     if (patient.cpf) {
       const cleanCpf = patient.cpf.replace(/\D/g, '');
       const cleanInputDigits = text.replace(/\D/g, '');
@@ -46,15 +45,28 @@ export const matchPatientInText = (text, patientsList = []) => {
       }
     }
 
+    // 2. Match exato do nome completo (prioriza o nome mais longo/específico)
+    if (normalizedInput.includes(normalizedPatName)) {
+      const score = 1.0;
+      if (score > highestScore || (score === highestScore && normalizedPatName.length > longestMatchedNameLen)) {
+        highestScore = score;
+        longestMatchedNameLen = normalizedPatName.length;
+        bestMatch = { matchedPatient: patient, confidence: score, matchType: 'exact_full_name' };
+      }
+      continue;
+    }
+
     // 3. Match por Primeiro e Último Nome
     if (patParts.length >= 2) {
       const firstAndLast = `${patParts[0]} ${patParts[patParts.length - 1]}`;
       if (normalizedInput.includes(firstAndLast)) {
-        const score = 0.92;
-        if (score > highestScore) {
+        const score = 0.90;
+        if (score > highestScore || (score === highestScore && firstAndLast.length > longestMatchedNameLen)) {
           highestScore = score;
+          longestMatchedNameLen = firstAndLast.length;
           bestMatch = { matchedPatient: patient, confidence: score, matchType: 'first_last_name' };
         }
+        continue;
       }
     }
 
@@ -126,24 +138,28 @@ export const classifyEmailContent = (subject = '', body = '') => {
   return { category, urgency };
 };
 
-/**
- * Limpa o corpo do e-mail removendo saudações, assinaturas e cabeçalhos
- */
-export const cleanEmailBody = (rawBody = '') => {
-  if (!rawBody) return '';
-  let lines = rawBody.split('\n');
-  
-  // Remove linhas típicas de assinaturas e cabeçalhos de encaminhamento
-  const cleaned = lines.filter(line => {
-    const trimmed = line.trim();
-    if (!trimmed) return true;
-    if (trimmed.startsWith('>') || trimmed.startsWith('De:') || trimmed.startsWith('Enviado em:') || trimmed.startsWith('Para:') || trimmed.startsWith('Assunto:')) return false;
-    if (trimmed.toLowerCase().startsWith('atenciosamente') || trimmed.toLowerCase().startsWith('cordialmente') || trimmed.toLowerCase().startsWith('obrigado')) return false;
-    if (trimmed.toLowerCase().includes('enviado do meu iphone') || trimmed.toLowerCase().includes('enviado pelo outlook')) return false;
-    return true;
-  });
+import { cleanEmailBody, cleanHtmlToText, decodeHtmlEntities } from '../../utils/cleanEmailContent';
 
-  return cleaned.join('\n').trim();
+export { cleanEmailBody, cleanHtmlToText, decodeHtmlEntities };
+
+/**
+ * Sanitiza um post para garantir que o texto esteja limpo de marcação HTML e entidades
+ */
+export const sanitizeAssistPost = (post) => {
+  if (!post) return post;
+  const rawMsg = post.message || '';
+  const rawTitle = post.title || '';
+  const cleanMsg = (/<[a-z!][\s\S]*>/i.test(rawMsg) || rawMsg.includes('&nbsp;') || rawMsg.includes('&quot;'))
+    ? cleanEmailBody(rawMsg)
+    : rawMsg;
+  const cleanTitle = (/<[a-z!][\s\S]*>/i.test(rawTitle) || rawTitle.includes('&nbsp;') || rawTitle.includes('&quot;'))
+    ? cleanHtmlToText(rawTitle).trim()
+    : rawTitle;
+  return {
+    ...post,
+    title: cleanTitle,
+    message: cleanMsg
+  };
 };
 
 /**
@@ -152,18 +168,19 @@ export const cleanEmailBody = (rawBody = '') => {
 export const parseIncomingEmail = (emailData, patientsList = []) => {
   const { from = 'Equipe Assistencial', subject = '', body = '', date = new Date().toISOString() } = emailData;
   
+  const cleanedSubject = cleanHtmlToText(subject).trim();
   const cleanedBody = cleanEmailBody(body);
-  const { matchedPatient, confidence, matchType } = matchPatientInText(`${subject} ${cleanedBody}`, patientsList);
-  const { category, urgency } = classifyEmailContent(subject, cleanedBody);
+  const { matchedPatient, confidence, matchType } = matchPatientInText(`${cleanedSubject} ${cleanedBody}`, patientsList);
+  const { category, urgency } = classifyEmailContent(cleanedSubject, cleanedBody);
 
   const isLinked = matchedPatient && confidence >= 0.75;
 
   return {
     source: 'email',
     originalFrom: from,
-    originalSubject: subject,
+    originalSubject: cleanedSubject,
     rawText: cleanedBody,
-    title: subject || `Comunicado Assistencial - ${category}`,
+    title: cleanedSubject || `Comunicado Assistencial - ${category}`,
     message: cleanedBody,
     category,
     urgency,
@@ -189,25 +206,28 @@ export const autoLinkAssistPosts = (posts = [], patientsList = []) => {
   if (!patientsList || !Array.isArray(patientsList) || patientsList.length === 0) return posts;
 
   return posts.map(post => {
-    // Se o comunicado já possui paciente vinculado, mantém sem alterar
-    if (post.patientId && post.status === 'published') return post;
+    // Garante que o post está com a mensagem higienizada
+    const cleanPost = sanitizeAssistPost(post);
 
-    const searchBlob = `${post.title || ''} ${post.message || ''} ${post.patientName || ''} ${post.originalSubject || ''}`;
+    // Se o comunicado já possui paciente vinculado, mantém sem alterar
+    if (cleanPost.patientId && cleanPost.status === 'published') return cleanPost;
+
+    const searchBlob = `${cleanPost.title || ''} ${cleanPost.message || ''} ${cleanPost.patientName || ''} ${cleanPost.originalSubject || ''}`;
     const { matchedPatient, confidence, matchType } = matchPatientInText(searchBlob, patientsList);
 
     if (matchedPatient && confidence >= 0.70) {
       return {
-        ...post,
+        ...cleanPost,
         patientId: matchedPatient.id,
         patientName: matchedPatient.name,
-        room: matchedPatient.room || post.room || 'Geral',
-        shift: matchedPatient.shift || post.shift || 'Geral',
+        room: matchedPatient.room || cleanPost.room || 'Geral',
+        shift: matchedPatient.shift || cleanPost.shift || 'Geral',
         matchConfidence: confidence,
         matchType: matchType,
         status: 'published'
       };
     }
-    return post;
+    return cleanPost;
   });
 };
 
@@ -216,7 +236,8 @@ export const autoLinkAssistPosts = (posts = [], patientsList = []) => {
  */
 export const getAssistPosts = async () => {
   if (USE_MOCK) {
-    return mockFirestore.getAssistPosts ? mockFirestore.getAssistPosts() : [];
+    const raw = mockFirestore.getAssistPosts ? await mockFirestore.getAssistPosts() : [];
+    return raw.map(sanitizeAssistPost);
   }
   const { getFirestore, collection, getDocs } = await import('firebase/firestore');
   const db = getFirestore(app);
@@ -227,12 +248,15 @@ export const getAssistPosts = async () => {
       return [];
     }
 
-    const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const items = snap.docs.map(doc => sanitizeAssistPost({ id: doc.id, ...doc.data() }));
     items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     return items;
   } catch (err) {
     console.warn('Falha na busca remota de assist_posts, utilizando fallback local:', err);
-    if (mockFirestore.getAssistPosts) return mockFirestore.getAssistPosts();
+    if (mockFirestore.getAssistPosts) {
+      const raw = await mockFirestore.getAssistPosts();
+      return raw.map(sanitizeAssistPost);
+    }
     return [];
   }
 };
@@ -243,7 +267,7 @@ export const getAssistPosts = async () => {
 export const subscribeToAssistPosts = (callback) => {
   if (USE_MOCK) {
     if (mockFirestore.getAssistPosts) {
-      mockFirestore.getAssistPosts().then(callback);
+      mockFirestore.getAssistPosts().then(posts => callback(posts.map(sanitizeAssistPost)));
     }
     return () => {};
   }
@@ -260,7 +284,7 @@ export const subscribeToAssistPosts = (callback) => {
       activeUnsubscribe = onSnapshot(colRef, (snap) => {
         if (isCancelled) return;
         if (!snap.empty) {
-          const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          const items = snap.docs.map(d => sanitizeAssistPost({ id: d.id, ...d.data() }));
           items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
           callback(items);
         } else {

@@ -1,3 +1,19 @@
+## [v5.0.16] - 08 de Outubro, 2026
+### Nex-Ai CLINIC (.ASSIST) — Higienização Definitiva de Comunicados de E-mail (HTML/MIME) e Desambiguação Rigorosa de Pacientes
+- **Decodificação e Limpeza Abrangente de Mensagens de E-mail:**
+  - Criação do utilitário `src/utils/cleanEmailContent.js` para conversão de e-mails em HTML bruto (tags inline, `<style>`, `<script>`, `<signature>`, atributos de estilo e imagens de assinatura) em texto clínico limpo, legível e estruturado com quebras de parágrafo naturais.
+  - Decodificação completa de entidades HTML (`&nbsp;`, `&quot;`, `&amp;`, `&#39;`, caracteres numéricos e Unicode).
+  - Remoção automática de assinaturas eletrônicas residuais e rodapés de dispositivos móveis e clientes de e-mail (Titan, Flockmail, Outlook, iPhone, Galaxy).
+- **Proteção em Camadas (Cloud Function, Serviço Firestore e Interface UI):**
+  - **Backend Nuvem (`functions/assistSync.js`):** Sincronizador IMAP autônomo atualizado com extração e decodificação prévia antes da persistência no Firestore.
+  - **Serviço de Dados (`src/services/firebase/assistService.js`):** Sanitização nativa ao consultar (`getAssistPosts`) ou escutar via `onSnapshot` a coleção `assist_posts`.
+  - **Interface do Mural (`src/components/AssistPanel.jsx`):** Renderização blindada no modo card, modo compacto, modal de edição e impressão do espelho de turno em A4.
+- **Desambiguação Rigorosa de Pacientes no Motor Fuzzy Match:**
+  - Restrição para impedir correspondência falsa de pacientes com nomes de uma única palavra/sobrenome isolado (ex: "SANTOS", "GONCALVES", "COSTA"), exigindo pelo menos duas partes de nome e comprimento mínimo de 6 caracteres.
+  - Priorização do match mais específico e longo, corrigindo automaticamente vínculos como `EMILSON BARRETO GONCALVES` e `LEONORA FERREIRA DOS SANTOS`.
+- **Higienização Completa da Base Histórica:**
+  - Varredura e higienização de 100% dos comunicados existentes no Firestore `assist_posts` e atualização do backup local `src/data/synced_assist_emails.json`.
+
 ## [v5.0.15] - 08 de Outubro, 2026
 ### Nex-Ai CLINIC (.ASSIST) — Ingestão Autônoma de E-mails na Nuvem (Cloud Scheduler) e Encaminhamento Automático de Comunicados (Cloud Trigger)
 - **Ingestão de E-mails 100% na Nuvem (Firebase Cloud Scheduler):**

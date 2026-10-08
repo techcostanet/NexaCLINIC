@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.16',
+      date: '08/10/2026',
+      title: 'Nex-Ai CLINIC (.ASSIST) — Higienização Definitiva de Comunicados de E-mail (HTML/MIME) e Desambiguação Rigorosa de Pacientes',
+      description: 'Correção estrutural na ingestão e exibição de comunicados do Mural Assistencial (.ASSIST): decodificação e conversão integral de e-mails em HTML bruto para texto clínico limpo, legível e organizado com quebras de parágrafo naturais; eliminação de tags inline, atributos CSS e entidades codificadas (&nbsp;, &quot;, &#39;); proteção em três camadas (Cloud Function assistSync.js, serviço assistService.js e componente de exibição AssistPanel.jsx); aprimoramento no motor de vinculação inteligente (fuzzy match) impedindo correspondências falsas por sobrenomes isolados (ex: SANTOS, GONCALVES) e priorizando nomes completos com precisão absoluta (ex: Emilson Barreto Gonçalves e Leonora Ferreira dos Santos); e higienização retroativa de 100% dos comunicados existentes no Firestore assist_posts e no backup local.',
+      changes: [
+        { type: 'Conversão HTML Limpa', text: 'Utilitário de decodificação completa que elimina tags inline, entidades codificadas e ruídos de e-mails (Titan, Outlook, webmail).' },
+        { type: 'Proteção em 3 Camadas', text: 'Higienização preventiva na Cloud Function IMAP, no listener onSnapshot do Firestore e na renderização dos cards e prancheta A4.' },
+        { type: 'Vínculo Preciso de Pacientes', text: 'Regra estrita no motor fuzzy match exigindo nomes válidos (>= 2 partes), evitando falsos vínculos com sobrenomes comuns isolados.' },
+        { type: 'Higienização da Base', text: 'Varredura e sanitização completa de todos os comunicados históricos no Firestore e atualização do backup local.' },
+        { type: 'Edição & Impressão Seguras', text: 'Modal de edição e espelho de turno em A4 carregam o texto clínico 100% higienizado sem blocos de código.' }
+      ]
+    },
+    {
       version: 'v5.0.15',
       date: '08/10/2026',
       title: 'Nex-Ai CLINIC (.ASSIST) — Ingestão Autônoma de E-mails na Nuvem (Cloud Scheduler) e Encaminhamento Automático de Comunicados (Cloud Trigger)',

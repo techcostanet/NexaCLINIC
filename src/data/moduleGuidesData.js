@@ -912,6 +912,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Encaminhamento Automático de Comunicados por E-mail (Cloud Trigger)',
         desc: 'Disparo resiliente em segundo plano pelo Firebase para os destinatários cadastrados em Configurações a cada nova publicação direta ou agendamento cirúrgico no Mural.'
+      },
+      {
+        title: 'Higienização e Decodificação de E-mails Clínicos (HTML/MIME)',
+        desc: 'Motor avançado de decodificação que converte e-mails em HTML bruto para texto clínico estruturado e legível, removendo tags inline, estilos CSS, códigos codificados (&nbsp;, &quot;) e rodapés de aplicativos, além de desambiguar nomes de pacientes com precisão estrita.'
       }
     ],
     tutorial: [
@@ -1016,6 +1020,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Por que alguns e-mails importados apareciam com códigos HTML e como isso foi resolvido?',
+        resposta: 'E-mails enviados por clientes de webmail (como Titan, Outlook ou celular) utilizam formatação interna com tags HTML e entidades (&nbsp;). O sistema implementa um conversor inteligente em 3 camadas que limpa essas marcações e converte a mensagem em texto puro legível, preservando as quebras de linha e dados clínicos.'
+      },
       {
         pergunta: 'A importação de e-mails para o Mural precisa de algum computador ligado?',
         resposta: 'Não. A sincronização executa de forma 100% autônoma na nuvem do Google Cloud / Firebase (Cloud Scheduler a cada 5 minutos), lendo a caixa integracao@dialize.com.br mesmo com todos os computadores da clínica desligados.'
