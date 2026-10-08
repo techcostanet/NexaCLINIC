@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.15',
+      date: '08/10/2026',
+      title: 'Nex-Ai CLINIC (.ASSIST) — Ingestão Autônoma de E-mails na Nuvem (Cloud Scheduler) e Encaminhamento Automático de Comunicados (Cloud Trigger)',
+      description: 'Evolução na infraestrutura do módulo Nex-Ai.ASSIST com soluções 100% nativas em nuvem no Firebase: substituição de scripts locais por uma Cloud Function agendada autônoma (syncAssistEmailsScheduled) no Cloud Scheduler a cada 5 minutos para monitorar e importar e-mails da caixa integracao@dialize.com.br (Titan IMAP); inteligência clínica para classificação automática de urgência/categoria e vínculo inteligente com pacientes; implementação do Firestore Trigger onAssistPostCreated para encaminhar automaticamente comunicados publicados diretamente no mural por e-mail aos destinatários configurados; e alerta preventivo no painel de configurações para campos vazios.',
+      changes: [
+        { type: 'Ingestão 100% Nuvem', text: 'Cloud Function agendada a cada 5 minutos no Cloud Scheduler para sincronização contínua de e-mails IMAP do Titan sem depender de máquina local.' },
+        { type: 'Classificação Clínica', text: 'Algoritmo de parsing com categorização de urgência e correspondência automática (fuzzy match) de pacientes no Firestore.' },
+        { type: 'Cloud Trigger de E-mail', text: 'Gatilho reativo onAssistPostCreated que dispara e-mails institucionais estilizados em HTML sempre que um novo post é criado no mural.' },
+        { type: 'Alerta Preventivo NexaCONFIG', text: 'Aviso visual âmbar no painel de E-mail caso o encaminhamento do mural esteja ativado sem e-mail de destino preenchido.' },
+        { type: 'Manual do Módulo Atualizado', text: 'Diretrizes de operação e FAQ da automação em nuvem atualizadas em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v5.0.13',
       date: '08/10/2026',
       title: 'Nex-Ai CLINIC — Central de Conflitos de Salão Clicável no .MED, Resolução em 1 Clique e Correção de Honorários do 3º Turno',

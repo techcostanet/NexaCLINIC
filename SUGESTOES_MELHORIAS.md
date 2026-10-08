@@ -394,5 +394,36 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Arquivos Envolvidos:** `src/components/medical/MedicalScheduleTab.jsx`, `src/components/medical/MedicalConflictsModal.jsx`.
 - **Complexidade:** Baixa.
 
+---
+
+### [SM-025] Seletor Rápido de Destinatários por Grupo/Setor no NexaCONFIG
+- **Data:** 08/10/2026
+- **Módulo:** `.CONFIG` (Configurações Gerais & T.I.) / `.ASSIST` (Mural Assistencial)
+- **Título:** Seletor Automático de E-mails de Destino por Categoria de Usuários no NexaCONFIG
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Proposta levantada durante a estruturação da automação em nuvem do encaminhamento de comunicados do Mural (.ASSIST).
+- **Descrição Técnica:**
+  - Permitir que no NexaCONFIG o gestor selecione opções em bloco para destinatários do mural (ex.: `[x] Toda a Enfermagem`, `[x] Médicos Plantonistas`, `[x] Coordenação Clínica`).
+  - O sistema compõe dinamicamente os e-mails dos usuários ativos desses perfis, sem exigir digitação manual de listas de e-mails.
+- **Benefício Operacional:** Reduz manutenção manual e garante que novos profissionais contratados recebam os avisos automaticamente.
+- **Arquivos Envolvidos:** `src/components/config/EmailConfigTab.jsx`, `src/services/firebase/systemService.js`.
+- **Complexidade:** Média.
+
+---
+
+### [SM-026] Botão de Sincronização de E-mails Sob Demanda no Cabeçalho do Mural
+- **Data:** 08/10/2026
+- **Módulo:** `.ASSIST` (Mural Assistencial & Enfermagem)
+- **Título:** Botão Manual de Verificação Instantânea de E-mails do Mural na Nuvem
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Proposta levantada durante o planejamento da Cloud Function agendada a cada 5 minutos para o mural.
+- **Descrição Técnica:**
+  - Adicionar no cabeçalho do mural um botão de ação com ícone de atualização: "Sincronizar".
+  - Ao clicar, chama endpoint Callable no Firebase Functions para disparar uma varredura IMAP imediata na caixa postal sem precisar aguardar os 5 minutos do Cloud Scheduler.
+- **Benefício Operacional:** Agilidade para a equipe de enfermagem em situações de emergência quando um e-mail de alta hospitalar ou vaga acabou de ser recebido.
+- **Arquivos Envolvidos:** `src/components/AssistPanel.jsx`, `functions/index.js`.
+- **Complexidade:** Baixa.
+
+
 
 

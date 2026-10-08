@@ -423,6 +423,27 @@ export default function EmailSettingsTab({
               </span>
             </div>
 
+            {/* Alerta de Destinatário Pendente */}
+            {emailSettings.muralForwardingEnabled && !emailSettings.muralRecipientEmail && (
+              <div style={{
+                marginBottom: '0.75rem',
+                padding: '0.65rem 0.75rem',
+                borderRadius: '8px',
+                backgroundColor: '#fffbeb',
+                border: '1px solid #fde68a',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.75rem',
+                color: '#92400e'
+              }}>
+                <AlertCircle size={15} color="#d97706" style={{ flexShrink: 0 }} />
+                <span>
+                  <strong>Atenção:</strong> O encaminhamento está ativado, mas o destinatário está vazio. Informe um e-mail acima para os envios funcionarem.
+                </span>
+              </div>
+            )}
+
             {/* Feedback do Teste do Mural */}
             {muralTestResult && (
               <div style={{

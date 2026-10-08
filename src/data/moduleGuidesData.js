@@ -906,8 +906,12 @@ export const MODULE_GUIDES = {
         desc: 'Escalas de hemodiálise, pontos de diálise e comunicados do mural 100% segregados pela filial ativa, com visualização zerada para novas unidades em fase de implantação.'
       },
       {
-        title: 'Ingestão Automática de E-mails Clínicos (Titan IMAP)',
-        desc: 'Leitura contínua dos comunicados recebidos na caixa oficial integracao@dialize.com.br, com inteligência para categorização clínica imediata e auto-vínculo de pacientes.'
+        title: 'Ingestão Automática de E-mails Clínicos na Nuvem (Titan IMAP)',
+        desc: 'Leitura contínua na nuvem (Cloud Scheduler a cada 5 minutos) dos comunicados recebidos em integracao@dialize.com.br, com inteligência para categorização clínica imediata e auto-vínculo de pacientes.'
+      },
+      {
+        title: 'Encaminhamento Automático de Comunicados por E-mail (Cloud Trigger)',
+        desc: 'Disparo resiliente em segundo plano pelo Firebase para os destinatários cadastrados em Configurações a cada nova publicação direta ou agendamento cirúrgico no Mural.'
       }
     ],
     tutorial: [
@@ -995,14 +999,31 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Funciona a Ingestão de E-mails do Titan no Mural',
         steps: [
-          'Os comunicados enviados para o e-mail corporativo integracao@dialize.com.br são monitorados em segundo plano pelo robô de ingestão.',
+          'Os comunicados enviados para o e-mail corporativo integracao@dialize.com.br são monitorados continuamente na nuvem a cada 5 minutos pelo Cloud Scheduler do Firebase.',
           'O sistema higieniza o conteúdo, detecta automaticamente o nome do paciente, salão, turno e categoriza a urgência clínica.',
           'A publicação entra diretamente no Mural com a indicação de origem Titan e fica disponível em tempo real para a equipe assistencial.',
           'Caso deseje pausar ou reativar esse recebimento, o gestor pode alternar o status diretamente em Configurações > E-mail.'
         ]
+      },
+      {
+        title: 'Como Configurar o Encaminhamento de Comunicados por E-mail',
+        steps: [
+          'Acesse o módulo Nex-Ai.CONFIG e abra a aba E-mail.',
+          'Localize a seção "Mural Assistencial (.ASSIST)" e ative a opção "Encaminhar Comunicados".',
+          'No campo "Destinatário", informe o endereço de e-mail (ou múltiplos separados por vírgula) que deve receber as cópias.',
+          'Utilize o botão "Testar" para validar a entrega imediata e clique em "Salvar". Cada novo post publicado no mural será disparado automaticamente na nuvem.'
+        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'A importação de e-mails para o Mural precisa de algum computador ligado?',
+        resposta: 'Não. A sincronização executa de forma 100% autônoma na nuvem do Google Cloud / Firebase (Cloud Scheduler a cada 5 minutos), lendo a caixa integracao@dialize.com.br mesmo com todos os computadores da clínica desligados.'
+      },
+      {
+        pergunta: 'Por que os comunicados criados no mural não estavam sendo enviados por e-mail?',
+        resposta: 'Para os comunicados serem enviados, o campo "Destinatário" em Nex-Ai.CONFIG > E-mail precisa conter ao menos um endereço de e-mail válido. Se o campo estiver em branco, o sistema mantém os comunicados apenas no feed visual.'
+      },
       {
         pergunta: 'Como desativo ou ativo a importação automática de e-mails para o Mural?',
         resposta: 'O controle fica centralizado no módulo Nex-Ai.CONFIG, na aba E-mail. Basta alternar o botão "Importar E-mails" para Ativo ou Inativo e clicar em Salvar.'

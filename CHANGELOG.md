@@ -1,3 +1,21 @@
+## [v5.0.15] - 08 de Outubro, 2026
+### Nex-Ai CLINIC (.ASSIST) — Ingestão Autônoma de E-mails na Nuvem (Cloud Scheduler) e Encaminhamento Automático de Comunicados (Cloud Trigger)
+- **Ingestão de E-mails 100% na Nuvem (Firebase Cloud Scheduler):**
+  - Substituição definitiva da dependência de scripts locais por Cloud Function agendada autônoma (`syncAssistEmailsScheduled`), executando a cada 5 minutos diretamente nos servidores do Google Cloud / Firebase.
+  - Conexão segura IMAP com o servidor Titan (`imap.titan.email:993`) na conta oficial `integracao@dialize.com.br`, processamento de novos e-mails não lidos, higienização de texto, classificação clínica inteligente (Urgência e Categoria) e vínculo fuzzy match com pacientes da clínica.
+  - Gravação automática e idempotente na coleção `assist_posts` com controle de UID no Firestore.
+- **Encaminhamento de Comunicados por E-mail 100% na Nuvem (Firestore Trigger):**
+  - Criação da Cloud Function reativa `onAssistPostCreated`: ao cadastrar um novo comunicado diretamente no Mural ou via agendamento cirúrgico, o Firebase detecta o evento e dispara automaticamente cópia formatada por e-mail para os destinatários cadastrados em `settings/email`.
+  - Template de e-mail institucional estilizado em HTML com categoria em destaque, urgência clínica, dados do paciente, salão, turno e corpo da mensagem.
+  - Bloqueio inteligente contra loops infinitos (ignora mensagens com origem de e-mail).
+- **Refinamento na Interface de Configuração (`EmailSettingsTab`):**
+  - Inclusão de banner de alerta preventivo âmbar caso o gestor ative o encaminhamento de comunicados do mural sem preencher o e-mail de destino.
+  - Manutenção do padrão estrito de rótulos concisos de 1 palavra.
+- **Documentação e Manuais Atualizados:**
+  - Registro de novos recursos de ingestão em nuvem, tutorial de configuração e FAQ no guia do módulo `.ASSIST` em `src/data/moduleGuidesData.js`.
+- **Gestão de Sugestões de Melhorias:**
+  - Registro formal no backlog (`SUGESTOES_MELHORIAS.md`) das sugestões `SM-025` (seletor de destinatários por grupo) e `SM-026` (sincronização sob demanda).
+
 ## [v5.0.13] - 08 de Outubro, 2026
 ### Nex-Ai CLINIC (.MED) — Central de Conflitos de Salão Clicável, Resolução em 1 Clique e Correção de Honorários do 3º Turno
 - **Card Interativo e Clicável de Conflitos no Cabeçalho:**
