@@ -1,3 +1,18 @@
+## [v5.0.21] - 13 de Outubro, 2026
+### Nex-Ai CLINIC (.RH) — Leitura Rigorosa de Holerites, Isolamento de Rubricas e Vínculo Inteligente por Proximidade Fonética/Ortográfica
+- **Isolamento Cadastral e Proteção no PDF (`payslipPdfParser.js`):**
+  - Resolução da captura incorreta de linhas da tabela de verbas/eventos ("Código Descrição...") como identificador de colaborador, eliminando a ocorrência de rubricas como `"NORMAIS 30,00"` na coluna de colaborador.
+  - Implementação de lista de termos proibidos (blacklist) e verificação de integridade cadastral para impedir categoricamente que termos operacionais de folha sejam atribuídos como nome.
+  - Leitura avançada de bases de cálculo com salto inteligente sobre mensagens de declaração e rodapés de assinatura.
+- **Motor de Vínculo por Proximidade Fonética e Ortográfica (Fuzzy Matching):**
+  - Implementação de algoritmo multicamada de cruzamento: matrícula numérica (sem zeros à esquerda), nome completo normalizado, nome compacto sem espaços, primeiro e último nome com interseção de tokens, e índice de similaridade ponderado (Levenshtein + Coeficiente de Dice + Jaccard de Tokens >= 68%).
+  - Suporte ao padrão de nomenclatura de arquivos do Alterdata (ex: `370-09-2026-M-5-SUILAJULIANARODRIGUESNOGUEIRA...`), viabilizando correspondência direta de 100% mesmo quando os PDFs apresentarem formatações atípicas.
+- **Aprimoramento de Interface e Troca Rápida (`PayslipsTab.jsx` e `PayslipImportModal.jsx`):**
+  - A coluna Colaborador exibe com destaque o nome oficial do colaborador cadastrado na clínica, com legenda sutil de confiança e grafia original lida do contracheque.
+  - A coluna CPF agora exibe o CPF oficial com seletor inline para alterar ou atribuir o colaborador em 1 clique.
+- **Exportador Youk Manager (`youkExcelGenerator.js`):**
+  - Priorização rigorosa dos dados cadastrais consolidados e CPF do colaborador vinculado na matriz de 79 colunas do arquivo oficial do Youk.
+
 ## [v5.0.20] - 13 de Outubro, 2026
 ### Nex-Ai CLINIC (.RH) — Aba Dedicada de Folha, Suporte a Pacotes ZIP de até 10MB e Correção Estrutural de Renderização
 - **Correção Estrutural do Erro de Renderização (React Error #310):**

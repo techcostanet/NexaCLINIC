@@ -189,7 +189,7 @@ export const MODULE_GUIDES = {
     recursos: [
       {
         title: 'Leitor Inteligente de Folha & Exportador Youk Manager',
-        desc: 'Processamento em lote de arquivos compactados (.ZIP) contendo os contracheques individuais em PDF. Extração posicional automática de empresa, competência, funcionário, matrícula, rubricas detalhadas (proventos e descontos), bases e valor líquido, com cruzamento inteligente de CPF e geração da planilha oficial com 79 colunas no layout ReciboPgAlterdata_Youk_9.0.'
+        desc: 'Processamento em lote de arquivos compactados (.ZIP) contendo os contracheques individuais em PDF. Extração posicional automática com isolamento estrito de dados cadastrais (evitando captura indevida de rubricas), cruzamento em cascata inteligente por matrícula, nome exato, nome compacto do arquivo e proximidade fonética/ortográfica (fuzzy matching), permitindo vinculação automática instantânea do colaborador e geração da planilha oficial com 79 colunas no layout ReciboPgAlterdata_Youk_9.0.'
       },
       {
         title: 'Mural de Aniversariantes & Felicitações WhatsApp',

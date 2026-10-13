@@ -125,8 +125,7 @@ export function buildYoukSpreadsheetRows(payslips) {
     const ano = String(ps.year || new Date().getFullYear());
     const tipoRecibo = ps.receiptType || 'Demonstrativo de Pagamento';
     const cnpj = ps.companyCnpj || '58.476.786/0001-06';
-    const razaoSocial = ps.companyName || 'DIALIZE BETIM SOLUCOES MEDICAS LTDA';
-    const nomeTrabalhador = ps.employeeName || emp.name || '';
+    const nomeTrabalhador = emp.name || ps.employeeName || '';
     const cpf = emp.cpf || ps.cpf || '';
     const celular = emp.phone || '';
     const email = emp.email || '';

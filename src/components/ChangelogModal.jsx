@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.21',
+      date: '13/10/2026',
+      title: 'Nex-Ai CLINIC (.RH) — Leitura Rigorosa de Holerites, Isolamento de Rubricas e Vínculo Inteligente por Proximidade Fonética/Ortográfica',
+      description: 'Aprimoramento crítico no motor de extração de contracheques (PDF e ZIP) e no cruzamento com a base de colaboradores do módulo Nex-Ai.HR: resolução da captura acidental do cabeçalho da tabela de verbas que sobrescrevia nomes e códigos de colaboradores com descrições de rubricas ("NORMAIS 30,00"); implementação de lista de exclusão ativa (blacklist de termos de folha) e captura estrita do bloco cadastral; leitura de contingência do nome a partir da nomenclatura dos arquivos do Alterdata; e implantação de um novo algoritmo de correspondência em cascata com busca por proximidade fonética e ortográfica (Fuzzy Matching combinando Matrícula, Nome Normalizado, Nome Compacto sem espaços, Interseção de Tokens e Similaridade Levenshtein/Dice ponderada), garantindo reconhecimento e vinculação automática com altíssima precisão.',
+      changes: [
+        { type: 'Isolamento Cadastral no PDF', text: 'Correção da delimitação posicional da linha do funcionário, impedindo que eventos como "DIAS NORMAIS" sobrescrevam o nome.' },
+        { type: 'Vínculo por Proximidade', text: 'Motor de correspondência em cascata com Fuzzy Matching inteligente (Levenshtein + Dice + Tokens) para nomes com pequenas variações.' },
+        { type: 'Leitura via Arquivo', text: 'Identificação automática da matrícula e nome a partir do padrão de arquivo do Alterdata (ex: 370-09-2026-M-5-NOME).' },
+        { type: 'Interface & Troca Rápida', text: 'Exibição do nome oficial do colaborador na tabela com subtítulo do percentual de confiança e seletor rápido de ajuste na coluna CPF.' },
+        { type: 'Planilha Youk Aprimorada', text: 'Garantia de exportação priorizando os dados cadastrais oficiais e CPF validados do colaborador vinculado.' }
+      ]
+    },
+    {
       version: 'v5.0.20',
       date: '13/10/2026',
       title: 'Nex-Ai CLINIC (.RH) — Aba Dedicada de Folha, Suporte a Pacotes ZIP de até 10MB e Correção Estrutural de Renderização',

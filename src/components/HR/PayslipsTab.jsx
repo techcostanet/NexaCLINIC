@@ -171,8 +171,8 @@ export default function PayslipsTab({ employees = [], currentUser }) {
   const filteredItems = useMemo(() => {
     if (!batchResult || !batchResult.items) return [];
     return batchResult.items.filter(it => {
-      const empName = (it.employeeName || it.matchedEmployee?.name || '').toLowerCase();
-      const code = String(it.employeeCode || '').toLowerCase();
+      const empName = (it.matchedEmployee?.name || it.employeeName || '').toLowerCase();
+      const code = String(it.matchedEmployee?.registration || it.employeeCode || '').toLowerCase();
       const cpf = String(it.matchedEmployee?.cpf || it.cpf || '').toLowerCase();
       const term = searchTerm.toLowerCase();
 
@@ -480,38 +480,55 @@ export default function PayslipsTab({ employees = [], currentUser }) {
                         <tr key={item.id} style={styles.tr}>
                           <td style={styles.td}>
                             <div style={{ fontWeight: 600, color: '#0f172a' }}>
-                              {item.employeeName}
+                              {item.matchedEmployee?.name || item.employeeName || 'Colaborador não identificado'}
                             </div>
+                            {item.matchedEmployee && item.employeeName && item.matchedEmployee.name !== item.employeeName && (
+                              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                                Holerite: {item.employeeName} {item.matchConfidence ? `(${item.matchConfidence}%)` : ''}
+                              </div>
+                            )}
+                            {!item.matchedEmployee && item.employeeName && (
+                              <div style={{ fontSize: '0.7rem', color: '#dc2626', fontWeight: 500 }}>
+                                Lido no PDF: {item.employeeName} (Pendente de vínculo)
+                              </div>
+                            )}
                             <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                              {item.role || 'Cargo não informado'}
+                              {item.matchedEmployee?.role || item.role || 'Cargo não informado'}
                             </div>
                           </td>
 
                           <td style={styles.td}>
                             <span style={styles.badgeCode}>
-                              {item.employeeCode || '-'}
+                              {item.matchedEmployee?.registration || item.employeeCode || '-'}
                             </span>
                           </td>
 
                           <td style={styles.td}>
-                            {item.matchedEmployee?.cpf || item.cpf ? (
-                              <span style={{ fontWeight: 600, color: '#0f172a' }}>
-                                {item.matchedEmployee?.cpf || item.cpf}
-                              </span>
-                            ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              {item.matchedEmployee?.cpf || item.cpf ? (
+                                <span style={{ fontWeight: 600, color: '#0f172a' }}>
+                                  {item.matchedEmployee?.cpf || item.cpf}
+                                </span>
+                              ) : null}
                               <select
-                                style={styles.selectLink}
+                                style={{
+                                  ...styles.selectLink,
+                                  border: (item.matchedEmployee?.cpf || item.cpf) ? '1px solid #cbd5e1' : '1px solid #f59e0b',
+                                  backgroundColor: (item.matchedEmployee?.cpf || item.cpf) ? '#f8fafc' : '#fffbeb',
+                                  color: (item.matchedEmployee?.cpf || item.cpf) ? '#475569' : '#92400e',
+                                  fontSize: '0.72rem'
+                                }}
                                 value={item.matchedEmployee?.id || ''}
                                 onChange={(e) => handleManualLink(item.id, e.target.value)}
                               >
-                                <option value="">Vincular CPF...</option>
+                                <option value="">{item.matchedEmployee ? 'Trocar colaborador...' : 'Vincular colaborador...'}</option>
                                 {employees.map(e => (
                                   <option key={e.id} value={e.id}>
                                     {e.name} ({e.cpf || 'sem CPF'})
                                   </option>
                                 ))}
                               </select>
-                            )}
+                            </div>
                           </td>
 
                           <td style={styles.td}>
@@ -569,10 +586,10 @@ export default function PayslipsTab({ employees = [], currentUser }) {
             <div style={styles.subModalHeader}>
               <div>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                  {selectedPayslip.employeeName}
+                  {selectedPayslip.matchedEmployee?.name || selectedPayslip.employeeName}
                 </h3>
                 <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0 0' }}>
-                  Matrícula: {selectedPayslip.employeeCode} • {selectedPayslip.role} • Admissão: {selectedPayslip.admissionDate || '-'}
+                  Matrícula: {selectedPayslip.matchedEmployee?.registration || selectedPayslip.employeeCode || '-'} • {selectedPayslip.matchedEmployee?.role || selectedPayslip.role || 'Cargo não informado'} • Admissão: {selectedPayslip.matchedEmployee?.admissionDate || selectedPayslip.admissionDate || '-'}
                 </p>
               </div>
               <button 

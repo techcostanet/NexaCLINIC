@@ -119,14 +119,122 @@ export function groupItemsIntoLines(items) {
   return lines;
 }
 
+// Lista de termos que identificam rubricas, seções ou verbas e NUNCA devem ser aceitos como nome de colaborador
+const INVALID_NAME_TERMS = [
+  'NORMAIS', 'HORAS', 'DIAS', 'SALARIO', 'SALÁRIO', 'VENCIMENTOS', 'DESCONTOS', 
+  'LIQUIDO', 'LÍQUIDO', 'DEMONSTRATIVO', 'FOLHA', 'RECIBO', 'PAGAMENTO', 
+  'ASSINATURA', 'INSS', 'I.N.S.S', 'FGTS', 'F.G.T.S', 'IRRF', 'INSALUBRIDADE', 
+  'ALIMENTACAO', 'ALIMENTAÇÃO', 'TRANSPORTE', 'EMPRESTIMO', 'EMPRÉSTIMO', 
+  'VALE', 'PISO', 'EXTRAS', 'REFLEXO', 'DSR', 'TROCO', 'BASE', 'MENSAL', 'MENSALISTA',
+  'COMPLEMENTO', 'CARGO', 'FUNCAO', 'FUNÇÃO'
+];
+
+export function isValidEmployeeName(name) {
+  if (!name || typeof name !== 'string') return false;
+  const clean = name.trim().toUpperCase();
+  if (clean.length < 3) return false;
+  // Deve conter ao menos uma palavra com 3 letras
+  if (!/[A-ZÀ-ÿ]{3,}/.test(clean)) return false;
+  // Não pode conter termos de eventos ou verbas
+  for (const term of INVALID_NAME_TERMS) {
+    if (clean.includes(term)) return false;
+  }
+  return true;
+}
+
+// Remove conectivos e preposições comuns em nomes em português (DE, DA, DO, DOS, DAS, E)
+export function getNameTokens(normalizedStr) {
+  const stopwords = new Set(['DE', 'DA', 'DO', 'DOS', 'DAS', 'E']);
+  return (normalizedStr || '')
+    .split(' ')
+    .filter(t => t.length > 0 && !stopwords.has(t));
+}
+
+// Coeficiente de Dice / Bigramas para similaridade textual
+export function diceCoefficient(str1, str2) {
+  const s1 = (str1 || '').replace(/\s+/g, '');
+  const s2 = (str2 || '').replace(/\s+/g, '');
+  if (s1 === s2) return 1.0;
+  if (s1.length < 2 || s2.length < 2) return 0.0;
+
+  const getBigrams = (str) => {
+    const bigrams = new Map();
+    for (let i = 0; i < str.length - 1; i++) {
+      const bg = str.slice(i, i + 2);
+      bigrams.set(bg, (bigrams.get(bg) || 0) + 1);
+    }
+    return bigrams;
+  };
+
+  const bg1 = getBigrams(s1);
+  const bg2 = getBigrams(s2);
+  let intersection = 0;
+
+  for (const [bg, count] of bg1.entries()) {
+    if (bg2.has(bg)) {
+      intersection += Math.min(count, bg2.get(bg));
+    }
+  }
+
+  const total = (s1.length - 1) + (s2.length - 1);
+  return total > 0 ? (2.0 * intersection) / total : 0;
+}
+
+// Distância de Levenshtein
+export function levenshteinDistance(a, b) {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+
+  const d = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) d[i][0] = i;
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return d[m][n];
+}
+
+// Similaridade combinada de nomes (Levenshtein + Dice + Token Jaccard)
+export function nameSimilarity(str1, str2) {
+  const n1 = normalizeName(str1);
+  const n2 = normalizeName(str2);
+  if (!n1 || !n2) return 0;
+  if (n1 === n2) return 1.0;
+
+  const c1 = n1.replace(/\s+/g, '');
+  const c2 = n2.replace(/\s+/g, '');
+  if (c1 === c2) return 1.0;
+
+  const dice = diceCoefficient(c1, c2);
+  const maxLen = Math.max(c1.length, c2.length);
+  const levDist = levenshteinDistance(c1, c2);
+  const levScore = maxLen > 0 ? (1.0 - levDist / maxLen) : 0;
+
+  const tokens1 = getNameTokens(n1);
+  const tokens2 = getNameTokens(n2);
+  const set2 = new Set(tokens2);
+  const common = tokens1.filter(t => set2.has(t)).length;
+  const tokenJaccard = common / (new Set([...tokens1, ...tokens2]).size || 1);
+
+  return (levScore * 0.4) + (dice * 0.3) + (tokenJaccard * 0.3);
+}
+
 /**
  * Analisa e extrai dados de um único PDF de contracheque
  */
 export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
   const items = await extractPdfTextItems(arrayBuffer);
   const lines = groupItemsIntoLines(items);
-
-  const fullText = lines.map(line => line.map(it => it.str).join(' ')).join('\n');
 
   // Metadados iniciais
   const payslip = {
@@ -158,17 +266,35 @@ export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
     rawLines: lines
   };
 
-  // 1. Tentar extrair do nome do arquivo (ex: 370-09-2026-M-5-SUILAJULIANARODRIGUESNOGUEIRA-Recibo de Pagamento.pdf)
+  // 1. Tentar extrair do nome do arquivo
+  let filenameEmployeeName = '';
+  let filenameEmployeeCode = '';
+
   if (fileName) {
-    const fnMatch = fileName.match(/(\d+)-(\d{2})-(\d{4})-[A-Z]+-(\d+)-([A-Za-z0-9_]+)/i);
+    // Padrão Alterdata: 370-09-2026-M-5-SUILAJULIANARODRIGUESNOGUEIRA-Recibo de Pagamento.pdf
+    const fnMatch = fileName.match(/(\d+)-(\d{2})-(\d{4})-[A-Za-z]+-(\d+)-([A-Za-z0-9_]+)/i);
     if (fnMatch) {
       payslip.month = fnMatch[2];
       payslip.year = fnMatch[3];
-      payslip.employeeCode = fnMatch[4];
+      filenameEmployeeCode = fnMatch[4];
+      filenameEmployeeName = fnMatch[5].replace(/_/g, ' ').trim();
+    } else {
+      // Outros padrões comuns: "5 - SUILA JULIANA RODRIGUES NOGUEIRA.pdf" ou "005 - SUILA JULIANA.pdf"
+      const altMatch1 = fileName.match(/^(\d+)[\s_-]+([A-Za-zÀ-ÿ\s]+?)(?:[-_.]|$)/);
+      if (altMatch1) {
+        filenameEmployeeCode = altMatch1[1];
+        filenameEmployeeName = altMatch1[2].trim();
+      } else {
+        const cleanFn = fileName.replace(/\.pdf$/i, '').replace(/[-_]/g, ' ').trim();
+        if (/[A-Za-zÀ-ÿ]{3,}/.test(cleanFn) && isValidEmployeeName(cleanFn)) {
+          filenameEmployeeName = cleanFn;
+        }
+      }
     }
+    if (filenameEmployeeCode) payslip.employeeCode = filenameEmployeeCode;
   }
 
-  // 2. Pre-calcular limites da tabela de verbas
+  // 2. Pre-calcular limites verticais da tabela de verbas/rubricas
   let headerY = null;
   let footerY = null;
   for (const l of lines) {
@@ -188,7 +314,7 @@ export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
     const line = lines[i];
     const lineStr = line.map(it => it.str).join(' ');
 
-    // Razão Social da Empresa (normalmente primeira linha ou linha de topo)
+    // Razão Social da Empresa
     if (lineStr.includes('DIALIZE') || lineStr.includes('SOLUCOES MEDICAS') || (i === 0 && lineStr.length > 5)) {
       payslip.companyName = lineStr;
     }
@@ -219,22 +345,39 @@ export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
     }
 
     // Identificação do Funcionário (Linha de Código, Nome, CBO, Depto, Filial)
-    // No PDF: [Código (x~23)] [Nome (x~51)] [CBO (x~366)] [Depto (x~443)] [Filial (x~492)]
-    const hasNomeFuncionarioLabel = lineStr.includes('Nome do Funcionário') || lineStr.includes('Código');
-    if (hasNomeFuncionarioLabel && i + 1 < lines.length) {
+    // Estritamente ignora tabela de verbas e linha de assinatura
+    const isEmployeeHeaderLine = (
+      (lineStr.includes('Nome do Funcionário') || lineStr.includes('Nome do Empregado') || lineStr.includes('Nome do Colaborador')) &&
+      !lineStr.includes('Assinatura') &&
+      !lineStr.includes('Vencimentos') &&
+      !lineStr.includes('Descrição') &&
+      !lineStr.includes('Referência')
+    );
+
+    if (isEmployeeHeaderLine && i + 1 < lines.length && !payslip.employeeName) {
       const nextLine = lines[i + 1];
-      // Verifica se a próxima linha possui código numérico no início e texto
       const firstItem = nextLine[0];
       if (firstItem && /^\d+$/.test(firstItem.str) && firstItem.x < 50) {
         payslip.employeeCode = firstItem.str;
-        // Pega os itens de nome (entre x > 40 e x < 350)
-        const nameItems = nextLine.filter(it => it.x >= 40 && it.x < 350);
+        // Pega os itens de nome (entre x >= 35 e x < 360)
+        const nameItems = nextLine.filter(it => it.x >= 35 && it.x < 360);
         if (nameItems.length > 0) {
-          payslip.employeeName = nameItems.map(it => it.str).join(' ');
+          const candidateName = nameItems.map(it => it.str).join(' ').trim();
+          if (isValidEmployeeName(candidateName)) {
+            payslip.employeeName = candidateName;
+          }
         }
         // CBO
         const cboItem = nextLine.find(it => it.x >= 350 && it.x < 420 && /^\d+$/.test(it.str));
         if (cboItem) payslip.cbo = cboItem.str;
+      }
+    }
+
+    // Formato inline ("Nome: ...", "Funcionário: ...")
+    if (!payslip.employeeName && (lineStr.includes('Nome:') || lineStr.includes('Funcionário:') || lineStr.includes('Empregado:'))) {
+      const inlineMatch = lineStr.match(/(?:Nome|Funcionário|Empregado):\s*([A-Za-zÀ-ÿ\s]+)/i);
+      if (inlineMatch && isValidEmployeeName(inlineMatch[1])) {
+        payslip.employeeName = inlineMatch[1].trim();
       }
     }
 
@@ -247,19 +390,22 @@ export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
       // O cargo fica nos itens da esquerda (x < 350)
       const roleItems = line.filter(it => it.x < 350 && !it.str.includes('Admissão'));
       if (roleItems.length > 0 && !payslip.role) {
-        payslip.role = roleItems.map(it => it.str).join(' ');
+        payslip.role = roleItems.map(it => it.str).join(' ').trim();
       }
     }
 
-
     // Extração das Rubricas / Verbas estritamente dentro do limite vertical da tabela
     const firstIt = line[0];
-    const isWithinTableBounds = headerY && footerY ? (firstIt.y < headerY && firstIt.y > footerY) : true;
+    const isWithinTableBounds = headerY && footerY ? (firstIt.y < headerY && firstIt.y > footerY) : false;
 
     if (isWithinTableBounds && firstIt && /^\d{1,5}$/.test(firstIt.str) && firstIt.x < 35) {
-      // Ignora se for a linha do próprio funcionário (que fica acima do cabeçalho da tabela)
       const lineStrFull = line.map(it => it.str).join(' ');
-      if (!lineStrFull.includes(payslip.employeeName) && !lineStrFull.includes('Código') && !lineStrFull.includes('Admissão')) {
+      if (
+        (!payslip.employeeName || !lineStrFull.includes(payslip.employeeName)) &&
+        !lineStrFull.includes('Código') &&
+        !lineStrFull.includes('Admissão') &&
+        !lineStrFull.includes('Assinatura')
+      ) {
         const code = firstIt.str;
         const descItems = line.filter(it => it.x >= 35 && it.x < 300);
         const refItem = line.find(it => it.x >= 300 && it.x < 360);
@@ -284,7 +430,6 @@ export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
     }
 
     // Totais de Vencimentos e Descontos
-    // Ex: "Total de Vencimentos" e "Total de Descontos"
     if (lineStr.includes('Total de Vencimentos') || lineStr.includes('Total de Descontos')) {
       if (i + 1 < lines.length) {
         const nextLine = lines[i + 1];
@@ -309,32 +454,50 @@ export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
 
     // Linha de Bases (Salário Base, Sal. Contr. INSS, Base Cálc. FGTS, F.G.T.S do Mês, Base Cálc. IRRF, Faixa IRRF)
     if (lineStr.includes('Salário Base') || lineStr.includes('Sal. Contr. INSS') || lineStr.includes('Base Cálc. FGTS')) {
-      if (i + 1 < lines.length) {
-        const nextLine = lines[i + 1];
-        // x ~ 26: Salário Base
-        const baseSalItem = nextLine.find(it => it.x < 80);
+      // Localiza a linha logo abaixo que de fato contém os valores monetários (salta texto de declaração se houver)
+      let baseLine = null;
+      for (let k = i + 1; k < Math.min(i + 4, lines.length); k++) {
+        if (lines[k].some(it => /^\d{1,3}(?:\.\d{3})*,\d{2}$/.test(it.str))) {
+          baseLine = lines[k];
+          break;
+        }
+      }
+
+      if (baseLine) {
+        const baseSalItem = baseLine.find(it => it.x < 80);
         if (baseSalItem) payslip.baseSalary = parseCurrencyBR(baseSalItem.str);
 
-        // x ~ 116: Sal. Contr. INSS
-        const inssItem = nextLine.find(it => it.x >= 80 && it.x < 180);
+        const inssItem = baseLine.find(it => it.x >= 80 && it.x < 180);
         if (inssItem) payslip.baseInss = parseCurrencyBR(inssItem.str);
 
-        // x ~ 206: Base FGTS
-        const fgtsItem = nextLine.find(it => it.x >= 180 && it.x < 280);
+        const fgtsItem = baseLine.find(it => it.x >= 180 && it.x < 280);
         if (fgtsItem) payslip.baseFgts = parseCurrencyBR(fgtsItem.str);
 
-        // x ~ 301: FGTS do Mês
-        const fgtsMonthItem = nextLine.find(it => it.x >= 280 && it.x < 360);
+        const fgtsMonthItem = baseLine.find(it => it.x >= 280 && it.x < 360);
         if (fgtsMonthItem) payslip.fgtsValue = parseCurrencyBR(fgtsMonthItem.str);
 
-        // x ~ 384: Base IRRF
-        const irrfItem = nextLine.find(it => it.x >= 360 && it.x < 440);
+        const irrfItem = baseLine.find(it => it.x >= 360 && it.x < 440);
         if (irrfItem) payslip.baseIrrf = parseCurrencyBR(irrfItem.str);
 
-        // x ~ 467: Faixa IRRF
-        const irrfRateItem = nextLine.find(it => it.x >= 440 && it.x < 520);
+        const irrfRateItem = baseLine.find(it => it.x >= 440 && it.x < 520);
         if (irrfRateItem) payslip.irrfRate = parseCurrencyBR(irrfRateItem.str);
       }
+    }
+  }
+
+  // Fallbacks: caso o nome ou código não tenham sido lidos do PDF, usa o nome do arquivo
+  if (!payslip.employeeName && filenameEmployeeName && isValidEmployeeName(filenameEmployeeName)) {
+    payslip.employeeName = filenameEmployeeName;
+  }
+  if (!payslip.employeeCode && filenameEmployeeCode) {
+    payslip.employeeCode = filenameEmployeeCode;
+  }
+
+  // Backup para salário base caso zerado mas tenha DIAS NORMAIS
+  if (!payslip.baseSalary && payslip.events.length > 0) {
+    const normalDays = payslip.events.find(e => e.description.includes('NORMAIS') || e.description.includes('SALARIO'));
+    if (normalDays && normalDays.earnings > 0) {
+      payslip.baseSalary = normalDays.earnings;
     }
   }
 
@@ -354,44 +517,113 @@ export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
 
 /**
  * Cruza o holerite lido com a base de colaboradores do Nexa CLINIC
+ * Utiliza cascata inteligente de correspondência (Matrícula, Nome Exato, Nome Compacto, 
+ * Token Overlap e Similaridade Fuzzy por Proximidade).
  */
 export function matchEmployee(payslip, employeesList = []) {
   if (!employeesList || employeesList.length === 0) {
-    return { isMatched: false, employee: null };
+    return { isMatched: false, employee: null, confidence: 0, matchMethod: null };
   }
 
   const pCode = payslip.employeeCode ? String(payslip.employeeCode).trim() : '';
-  const pNameNorm = normalizeName(payslip.employeeName);
+  const pCodeNum = pCode ? parseInt(pCode, 10) : null;
+  const pName = payslip.employeeName || '';
+  const pNorm = normalizeName(pName);
+  const pCompact = pNorm.replace(/\s+/g, '');
+  const pTokens = getNameTokens(pNorm);
 
-  // 1. Tentar por Matrícula / Registration
+  // 1. Tentar por Matrícula / Registration (exata ou comparação numérica sem zeros à esquerda)
   if (pCode) {
     const byCode = employeesList.find(emp => {
       const empReg = emp.registration || emp.code || emp.matricula;
-      return empReg && String(empReg).trim() === pCode;
+      if (!empReg) return false;
+      const cleanReg = String(empReg).trim();
+      if (cleanReg === pCode) return true;
+      if (pCodeNum !== null && !isNaN(pCodeNum)) {
+        const empRegNum = parseInt(cleanReg, 10);
+        return !isNaN(empRegNum) && empRegNum === pCodeNum;
+      }
+      return false;
     });
-    if (byCode) return { isMatched: true, employee: byCode, matchMethod: 'registration' };
-  }
-
-  // 2. Tentar por Nome Completo Normalizado
-  if (pNameNorm) {
-    const byExactName = employeesList.find(emp => normalizeName(emp.name) === pNameNorm);
-    if (byExactName) return { isMatched: true, employee: byExactName, matchMethod: 'name' };
-
-    // 3. Tentar por Primeiro + Último Nome
-    const pTokens = pNameNorm.split(' ');
-    if (pTokens.length >= 2) {
-      const pFirst = pTokens[0];
-      const pLast = pTokens[pTokens.length - 1];
-      const byFuzzy = employeesList.find(emp => {
-        const empNorm = normalizeName(emp.name);
-        const eTokens = empNorm.split(' ');
-        return eTokens.length >= 2 && eTokens[0] === pFirst && eTokens[eTokens.length - 1] === pLast;
-      });
-      if (byFuzzy) return { isMatched: true, employee: byFuzzy, matchMethod: 'fuzzy' };
+    if (byCode) {
+      return { isMatched: true, employee: byCode, confidence: 100, matchMethod: 'matricula' };
     }
   }
 
-  return { isMatched: false, employee: null, matchMethod: null };
+  // 2. Tentar por Nome Completo Normalizado Exato
+  if (pNorm) {
+    const byExact = employeesList.find(emp => normalizeName(emp.name) === pNorm);
+    if (byExact) {
+      return { isMatched: true, employee: byExact, confidence: 100, matchMethod: 'nome_exato' };
+    }
+
+    // 3. Tentar por Nome Compacto (sem espaços, para nomes concatenados em arquivos como SUILAJULIANARODRIGUESNOGUEIRA)
+    const byCompact = employeesList.find(emp => {
+      const eNorm = normalizeName(emp.name);
+      return eNorm.replace(/\s+/g, '') === pCompact;
+    });
+    if (byCompact) {
+      return { isMatched: true, employee: byCompact, confidence: 99, matchMethod: 'nome_compacto' };
+    }
+
+    // 4. Tentar por Primeiro + Último Nome e Interseção de Tokens
+    if (pTokens.length >= 2) {
+      const byTokens = employeesList.find(emp => {
+        const eTokens = getNameTokens(normalizeName(emp.name));
+        if (eTokens.length < 2) return false;
+        // Primeiro nome e último nome coincidem
+        return eTokens[0] === pTokens[0] && eTokens[eTokens.length - 1] === pTokens[pTokens.length - 1];
+      });
+      if (byTokens) {
+        return { isMatched: true, employee: byTokens, confidence: 95, matchMethod: 'primeiro_e_ultimo_nome' };
+      }
+    }
+  }
+
+  // 5. Tentar por Proximidade e Similaridade Máxima (Fuzzy Matching com limiar de 68%)
+  if (pNorm && pNorm.length >= 3) {
+    let bestMatch = null;
+    let highestScore = 0;
+
+    for (const emp of employeesList) {
+      const eNorm = normalizeName(emp.name);
+      if (!eNorm) continue;
+
+      const score = nameSimilarity(pNorm, eNorm);
+      if (score > highestScore) {
+        highestScore = score;
+        bestMatch = emp;
+      }
+    }
+
+    if (bestMatch && highestScore >= 0.68) {
+      return {
+        isMatched: true,
+        employee: bestMatch,
+        confidence: Math.round(highestScore * 100),
+        matchMethod: 'fuzzy_proximidade'
+      };
+    }
+  }
+
+  // 6. Tentativa adicional via nome do arquivo caso o PDF tenha lido texto diferente
+  if (payslip.fileName) {
+    const fnMatch = payslip.fileName.match(/(\d+)-(\d{2})-(\d{4})-[A-Za-z]+-(\d+)-([A-Za-z0-9_]+)/i);
+    const rawFnName = fnMatch ? fnMatch[5] : '';
+    if (rawFnName) {
+      const fnNorm = normalizeName(rawFnName);
+      const fnCompact = fnNorm.replace(/\s+/g, '');
+      const byFn = employeesList.find(emp => {
+        const eNorm = normalizeName(emp.name);
+        return eNorm.replace(/\s+/g, '') === fnCompact;
+      });
+      if (byFn) {
+        return { isMatched: true, employee: byFn, confidence: 95, matchMethod: 'arquivo_nome' };
+      }
+    }
+  }
+
+  return { isMatched: false, employee: null, confidence: 0, matchMethod: null };
 }
 
 /**
@@ -437,6 +669,7 @@ export async function parsePayslipsBatch(fileOrFiles, employeesList = [], onProg
           id: 'ps-' + (idx + 1),
           isMatched: matchRes.isMatched,
           matchedEmployee: matchRes.employee,
+          matchConfidence: matchRes.confidence || 0,
           matchMethod: matchRes.matchMethod
         });
       } catch (err) {
@@ -464,6 +697,7 @@ export async function parsePayslipsBatch(fileOrFiles, employeesList = [], onProg
           id: 'ps-' + (idx + 1),
           isMatched: matchRes.isMatched,
           matchedEmployee: matchRes.employee,
+          matchConfidence: matchRes.confidence || 0,
           matchMethod: matchRes.matchMethod
         });
       } catch (err) {

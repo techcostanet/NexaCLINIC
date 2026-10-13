@@ -424,6 +424,23 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Arquivos Envolvidos:** `src/components/AssistPanel.jsx`, `functions/index.js`.
 - **Complexidade:** Baixa.
 
+---
+
+### [SM-027] Auto-cadastro Pré-preenchido de Colaboradores não Localizados a partir do Holerite
+- **Data:** 13/10/2026
+- **Módulo:** `.HR` (Recursos Humanos & Gestão de Pessoas)
+- **Título:** Botão de Auto-cadastro com Dados Pré-preenchidos do Holerite para Funcionários Novos sem Vínculo
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Identificada durante o aprimoramento da importação em lote de holerites Alterdata/Youk Manager quando contracheques de novos admitidos são importados antes do cadastro no sistema.
+- **Descrição Técnica:**
+  - Na tabela de conferência de holerites (`PayslipsTab.jsx`), para linhas em que o colaborador permanecer não vinculado (status "Pendente"), disponibilizar um botão de ação rápida: `+ Cadastrar`.
+  - Ao clicar, abrir o modal de cadastro de colaborador (`showEmpModal`) com campos automaticamente preenchidos a partir dos dados extraídos do PDF: Nome Completo, Matrícula/Código, Cargo, CBO, Data de Admissão e Salário Base.
+  - Ao salvar o cadastro, vincular imediatamente o novo colaborador ao holerite correspondente e atualizar o status para "Pronto".
+- **Benefício Operacional:** Elimina retrabalho de digitação manual pela equipe de RH ao admitir novos funcionários, garantindo integridade cadastral imediata.
+- **Arquivos Envolvidos:** `src/components/HR/PayslipsTab.jsx`, `src/components/HRPanel.jsx`, `src/services/firebase/hrService.ts`.
+- **Complexidade:** Baixa.
+
+
 
 
 
