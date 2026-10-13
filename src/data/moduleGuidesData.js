@@ -188,6 +188,10 @@ export const MODULE_GUIDES = {
     color: '#ec4899',
     recursos: [
       {
+        title: 'Leitor Inteligente de Folha & Exportador Youk Manager',
+        desc: 'Processamento em lote de arquivos compactados (.ZIP) contendo os contracheques individuais em PDF. Extração posicional automática de empresa, competência, funcionário, matrícula, rubricas detalhadas (proventos e descontos), bases e valor líquido, com cruzamento inteligente de CPF e geração da planilha oficial com 79 colunas no layout ReciboPgAlterdata_Youk_9.0.'
+      },
+      {
         title: 'Mural de Aniversariantes & Felicitações WhatsApp',
         desc: 'Card sem limite fixo com rolagem suave, destaque para aniversariantes do dia ("Hoje!"), botão de envio de parabéns direto no WhatsApp e modal "Mural de Aniversariantes" com filtros, exportação e impressão de cartaz A4 para murais físicos.'
       },
@@ -261,6 +265,17 @@ export const MODULE_GUIDES = {
       }
     ],
     tutorial: [
+      {
+        title: 'Como Importar a Folha em PDF e Exportar para o Youk Manager',
+        steps: [
+          'No topo do módulo de RH ou na aba Funcionários, clique no botão "Folha".',
+          'Arraste o arquivo .ZIP recebido da contabilidade (contendo os PDFs individuais de contracheque) ou selecione arquivos PDF diretamente na área de upload.',
+          'O Nexa CLINIC processará cada contracheque na memória do navegador em poucos segundos, exibindo o total de holerites, vinculados e valor líquido.',
+          'Confira a tabela de colaboradores. Caso algum funcionário não seja vinculado automaticamente, selecione seu nome no campo "Vincular CPF".',
+          'Clique no botão "Ver" em qualquer linha para inspecionar todas as verbas, bases e totais do holerite extraído.',
+          'Clique em "Exportar" para baixar a planilha XLSX pronta no formato exigido pelo Youk Manager e registrar o lote no histórico de exportações.'
+        ]
+      },
       {
         title: 'Como Utilizar o Mural de Aniversariantes & Felicitar via WhatsApp',
         steps: [
@@ -377,6 +392,14 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'O sistema Youk precisa dos arquivos PDF ou apenas da planilha Excel gerada?',
+        resposta: 'O Youk Manager exige apenas a planilha Excel (.xlsx) oficial de 79 colunas para holerites mensais, recibos de férias e 13º salário. Ao importar o arquivo gerado pelo Nexa CLINIC, o próprio Youk constrói a visualização digital do contracheque no aplicativo para o colaborador assinar.'
+      },
+      {
+        pergunta: 'Como o Nexa CLINIC localiza o CPF do colaborador se o PDF da contabilidade não tem CPF impresso?',
+        resposta: 'O leitor extrai o Código/Matrícula e o Nome do funcionário do PDF e cruza em tempo real com a base de colaboradores do Nexa CLINIC, preenchendo o CPF, data de nascimento e endereço na planilha do Youk automaticamente.'
+      },
       {
         pergunta: 'Os 15 treinamentos de nefrologia já vêm com questões pré e pós-teste prontas?',
         resposta: 'Sim. Cada um dos 15 treinamentos possui rigorosamente 5 perguntas de pré-teste (diagnóstico) e 5 perguntas de pós-teste (avaliação de fixação) com justificativas clínicas detalhadas e cálculo automático do ganho de eficácia (+%).'

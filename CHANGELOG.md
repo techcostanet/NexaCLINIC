@@ -1,3 +1,27 @@
+## [v5.0.18] - 13 de Outubro, 2026
+### Nex-Ai CLINIC (.RH) — Leitor Inteligente de Folha em Lote (.ZIP/PDF), Geração Oficial Youk Manager e Matrícula de Colaboradores
+- **Motor de Leitura Posicional de Contracheques em PDF e Arquivos ZIP (`payslipPdfParser.js`):**
+  - Descompactação e processamento em lote diretamente no navegador com a biblioteca `jszip` e `pdfjs-dist`, garantindo 100% de privacidade sem tráfego de dados sensíveis para servidores externos.
+  - Extração automatizada e robusta de metadados da empresa (Razão Social, CNPJ), competência (mês/ano), dados do trabalhador (código, matrícula, nome, cargo, CBO, admissão) e bases de cálculo (Salário Base, Base INSS, Base FGTS, FGTS do Mês, Base IRRF).
+  - Mapeamento dinâmico linha a linha de todas as rubricas detalhadas (proventos, descontos, referências, códigos e descrições).
+  - Extração e validação do valor líquido e conferência matemática dos totais.
+- **Gerador Oficial da Planilha Youk Manager (`youkExcelGenerator.js`):**
+  - Criação de planilha Excel (`.xlsx`) homologada no padrão estrito de 79 colunas do leiaute Alterdata `ReciboPgAlterdata_Youk_9.0`.
+  - Estruturação multi-linha por colaborador (uma linha para cada verba/evento) pronta para importação direta no Youk Manager para assinatura digital do funcionário no celular.
+- **Cruzamento Inteligente com Base de Colaboradores Nexa CLINIC:**
+  - Vínculo automático por matrícula/código e correspondência de nome normalizado para injeção automática de CPF, data de nascimento, endereço e dados bancários.
+  - Mecanismo visual de vinculação manual em 1 clique para casos de grafias divergentes.
+- **Interface Integrada no Módulo RH (`PayslipImportModal.jsx`):**
+  - Dropzone com arrastar e soltar de arquivos `.zip` ou múltiplos `.pdf`.
+  - Barra de progresso com feedback em tempo real da leitura.
+  - Cards de KPI: total de holerites, vinculados, pendências e valor líquido total.
+  - Tabela analítica com filtros, busca instantânea e modal de conferência rápida de verbas por colaborador.
+  - Aba de histórico de lotes processados com registro em auditoria interna.
+- **Campo Matrícula nos Colaboradores:**
+  - Inclusão do campo Matrícula no formulário de colaboradores e persistência no banco de dados para garantir vínculo direto e inequívoco por código numérico da folha.
+- **Documentação e Manuais Atualizados:**
+  - Registro de novos recursos, tutorial completo passo a passo e FAQ de dúvidas frequentes em `src/data/moduleGuidesData.js`.
+
 ## [v5.0.16] - 08 de Outubro, 2026
 ### Nex-Ai CLINIC (.ASSIST) — Higienização Definitiva de Comunicados de E-mail (HTML/MIME) e Desambiguação Rigorosa de Pacientes
 - **Decodificação e Limpeza Abrangente de Mensagens de E-mail:**

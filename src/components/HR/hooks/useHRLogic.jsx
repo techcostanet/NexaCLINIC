@@ -83,6 +83,7 @@ export function useHRLogic(currentUser) {
   // Employee Form State
   const [empForm, setEmpForm] = useState({
     name: '',
+    registration: '',
     gender: 'Feminino',
     birthDate: '',
     cpf: '',
@@ -297,6 +298,7 @@ export function useHRLogic(currentUser) {
     setEmpActiveTab('pessoais');
     setEmpForm({
       name: '',
+      registration: '',
       gender: 'Feminino',
       birthDate: '',
       cpf: '',
@@ -335,6 +337,7 @@ export function useHRLogic(currentUser) {
     setEmpActiveTab('pessoais');
     setEmpForm({
       name: emp.name || '',
+      registration: emp.registration || emp.code || emp.matricula || '',
       gender: emp.gender || 'Feminino',
       birthDate: emp.birthDate || '',
       cpf: emp.cpf || '',

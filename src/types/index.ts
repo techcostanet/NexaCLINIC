@@ -46,6 +46,7 @@ export interface Employee {
   departmentId?: string;
   sector?: string;
   phone?: string;
+  registration?: string;
   status: 'active' | 'inactive' | 'on_leave';
   admissionDate: string;
 }

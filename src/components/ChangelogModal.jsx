@@ -19,6 +19,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
       ]
     },
     {
+      version: 'v5.0.18',
+      date: '13/10/2026',
+      title: 'Nex-Ai CLINIC (.RH) — Leitor Inteligente de Folha em Lote (.ZIP/PDF), Geração Oficial Youk Manager e Matrícula de Colaboradores',
+      description: 'Implementação do motor autônomo de processamento de folha de pagamento no módulo Nex-Ai.HR: leitor posicional inteligente capaz de abrir arquivos .ZIP e múltiplos PDFs de contracheques diretamente na memória do navegador; extração precisa de dados da clínica, competência, funcionário, matrícula e todas as rubricas detalhadas de proventos e descontos, bases e valor líquido; cruzamento automático com a base de colaboradores do Nexa CLINIC para enriquecimento com CPF, dados bancários e endereço; gerador oficial da planilha Excel (.xlsx) de 79 colunas homologada no layout Alterdata/Youk Manager (ReciboPgAlterdata_Youk_9.0) para visualização e assinatura digital do funcionário no aplicativo Youk; adição do campo Matrícula no cadastro de colaboradores e histórico de lotes processados no sistema.',
+      changes: [
+        { type: 'Leitor em Lote (.ZIP/PDF)', text: 'Descompactação e leitura posicional de múltiplos contracheques em segundos sem envio para servidores externos.' },
+        { type: 'Geração Oficial Youk Manager', text: 'Planilha Excel de 79 colunas no layout ReciboPgAlterdata_Youk_9.0 pronta para importação direta no Youk.' },
+        { type: 'Vínculo Inteligente com CPF', text: 'Cruzamento automático por matrícula e nome com os colaboradores do Nexa CLINIC para injeção de CPF e dados cadastrais.' },
+        { type: 'Campo Matrícula nos Colaboradores', text: 'Novo campo Matrícula no formulário e visualização de colaboradores para correspondência exata de folha.' },
+        { type: 'Histórico de Lotes & Auditoria', text: 'Aba de histórico e registro de auditoria salvando competência, total líquido e operador responsável.' },
+        { type: 'Manual do Módulo Atualizado', text: 'Instruções operacionais e FAQ da integração com Youk Manager documentadas em moduleGuidesData.js.' }
+      ]
+    },
+    {
       version: 'v5.0.15',
       date: '08/10/2026',
       title: 'Nex-Ai CLINIC (.ASSIST) — Ingestão Autônoma de E-mails na Nuvem (Cloud Scheduler) e Encaminhamento Automático de Comunicados (Cloud Trigger)',

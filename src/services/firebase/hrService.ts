@@ -602,5 +602,31 @@ export const validateEmployeeCpf = async (rawCpf: string): Promise<{ found: bool
   return { found: false };
 };
 
+export const getPayrollBatches = async (): Promise<any[]> => {
+  try {
+    const local = localStorage.getItem('nexa_payroll_batches');
+    if (local) {
+      return JSON.parse(local);
+    }
+  } catch (_) {}
+  return [];
+};
+
+export const createPayrollBatch = async (batchData: any): Promise<any> => {
+  const newBatch = {
+    id: 'batch-' + Math.random().toString(36).substr(2, 9),
+    createdAt: new Date().toISOString(),
+    ...batchData
+  };
+  try {
+    const list = await getPayrollBatches();
+    list.unshift(newBatch);
+    localStorage.setItem('nexa_payroll_batches', JSON.stringify(list));
+  } catch (e) {
+    console.warn('Erro ao salvar lote de folha:', e);
+  }
+  return newBatch;
+};
+
 
 

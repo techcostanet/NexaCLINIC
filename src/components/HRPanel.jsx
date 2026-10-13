@@ -7,12 +7,13 @@ import {
   Gift, Bus, ArrowUp, ArrowDown, ArrowUpDown, Move, Settings, Save, 
   RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Trophy, Printer, Clock,
   AlignJustify, Table, LayoutGrid, Phone, Mail, ExternalLink, Stethoscope, Activity, FileCheck,
-  GraduationCap, Car, Sparkles, MessageCircle
+  GraduationCap, Car, Sparkles, MessageCircle, FileSpreadsheet
 } from 'lucide-react';
 
 import { useHRLogic, DEFAULT_DASHBOARD_LAYOUT } from './HR/hooks/useHRLogic';
 import AwardReportModal from './HR/AwardReportModal';
 import BirthdayMuralModal from './HR/BirthdayMuralModal';
+import PayslipImportModal from './HR/PayslipImportModal';
 import HRReportsModal from './HRReportsModal';
 import TrainingsTab from './HR/TrainingsTab';
 import { STANDARD_ROLES, STANDARD_SECTORS, normalizeSingleWord, normalizeSectorName } from '../data/hrConstants';
@@ -229,6 +230,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
   // View Mode: 'compact' (Padrão) | 'normal' | 'cards'
   const [employeeViewMode, setEmployeeViewMode] = useState('compact');
   const [showBirthdayMuralModal, setShowBirthdayMuralModal] = useState(false);
+  const [isPayslipModalOpen, setIsPayslipModalOpen] = useState(false);
 
   return (
     <div style={styles.container}>
@@ -240,14 +242,30 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
         gradient="linear-gradient(135deg, #6366f1, #4f46e5)"
         dotColor="#6366f1"
         actions={
-          <button 
-            type="button"
-            onClick={handleOpenEmpAdd}
-            style={styles.primaryHeroBtn}
-          >
-            <UserPlus size={16} />
-            <span>Colaborador</span>
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <button 
+              type="button"
+              onClick={() => setIsPayslipModalOpen(true)}
+              style={{
+                ...styles.primaryHeroBtn,
+                backgroundColor: '#059669',
+                borderColor: '#059669',
+                boxShadow: '0 2px 6px rgba(5, 150, 105, 0.3)'
+              }}
+              title="Importar contracheques e exportar Youk"
+            >
+              <FileSpreadsheet size={16} />
+              <span>Folha</span>
+            </button>
+            <button 
+              type="button"
+              onClick={handleOpenEmpAdd}
+              style={styles.primaryHeroBtn}
+            >
+              <UserPlus size={16} />
+              <span>Colaborador</span>
+            </button>
+          </div>
         }
       />
 
@@ -1613,9 +1631,19 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                     </div>
                   </div>
 
-                  <button onClick={handleOpenEmpAdd} style={styles.addBtn}>
-                    <Plus size={16} /> Novo Funcionário
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <button 
+                      type="button"
+                      onClick={() => setIsPayslipModalOpen(true)} 
+                      style={{ ...styles.addBtn, backgroundColor: '#059669', borderColor: '#059669' }}
+                      title="Importar contracheques e exportar Youk"
+                    >
+                      <FileSpreadsheet size={16} /> Folha
+                    </button>
+                    <button onClick={handleOpenEmpAdd} style={styles.addBtn}>
+                      <Plus size={16} /> Colaborador
+                    </button>
+                  </div>
                 </div>
 
                 {/* 1. VIEW MODE: COMPACTA (PADRÃO) */}
@@ -2467,6 +2495,10 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                       <div className="form-group">
                         <label>Nome *</label>
                         <input type="text" className="form-control" required value={empForm.name} onChange={e => setEmpForm({ ...empForm, name: e.target.value })} />
+                      </div>
+                      <div className="form-group">
+                        <label>Matrícula</label>
+                        <input type="text" className="form-control" placeholder="Ex: 5" value={empForm.registration || ''} onChange={e => setEmpForm({ ...empForm, registration: e.target.value })} />
                       </div>
                       <div className="form-group">
                         <label>CPF *</label>
@@ -3517,6 +3549,14 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
         employees={employees}
         sectors={sectors}
         onOpenEmployee={handleOpenEmpByName}
+      />
+
+      {/* Payslip / Youk Import Modal */}
+      <PayslipImportModal
+        isOpen={isPayslipModalOpen}
+        onClose={() => setIsPayslipModalOpen(false)}
+        employees={employees}
+        currentUser={currentUser}
       />
 
       {/* 15 HR Reports Modal */}

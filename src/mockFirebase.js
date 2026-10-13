@@ -5170,6 +5170,25 @@ export const mockFirestore = {
     return newLog;
   },
 
+  // Payroll Batches (Histórico de Lotes de Folha / Youk)
+  getPayrollBatches: async () => {
+    const db = getDB();
+    return db.payroll_batches || [];
+  },
+
+  createPayrollBatch: async (batchData) => {
+    const db = getDB();
+    if (!db.payroll_batches) db.payroll_batches = [];
+    const newBatch = {
+      id: 'batch-' + Math.random().toString(36).substr(2, 9),
+      createdAt: new Date().toISOString(),
+      ...batchData
+    };
+    db.payroll_batches.unshift(newBatch);
+    setDB(db);
+    return newBatch;
+  },
+
   // Financial management
   getCostCenters: async () => {
     const db = getDB();
