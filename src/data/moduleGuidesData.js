@@ -266,14 +266,14 @@ export const MODULE_GUIDES = {
     ],
     tutorial: [
       {
-        title: 'Como Importar a Folha em PDF e Exportar para o Youk Manager',
+        title: 'Como Processar a Folha em ZIP/PDF e Exportar para o Youk Manager',
         steps: [
-          'No topo do módulo de RH ou na aba Funcionários, clique no botão "Folha".',
-          'Arraste o arquivo .ZIP recebido da contabilidade (contendo os PDFs individuais de contracheque) ou selecione arquivos PDF diretamente na área de upload.',
-          'O Nexa CLINIC processará cada contracheque na memória do navegador em poucos segundos, exibindo o total de holerites, vinculados e valor líquido.',
-          'Confira a tabela de colaboradores. Caso algum funcionário não seja vinculado automaticamente, selecione seu nome no campo "Vincular CPF".',
+          'No módulo de RH (.HR), clique diretamente na aba "Folha" na barra de navegação.',
+          'Arraste o arquivo .ZIP recebido da contabilidade (pacotes de até 10MB contendo os PDFs individuais de contracheque) ou selecione arquivos PDF diretamente na área de upload.',
+          'O Nexa CLINIC processará cada contracheque na memória com barra de progresso em tempo real, exibindo o total de holerites, vinculados e valor líquido.',
+          'Confira a tabela de conferência. Caso algum funcionário não seja vinculado automaticamente, selecione seu nome no campo "Vincular CPF".',
           'Clique no botão "Ver" em qualquer linha para inspecionar todas as verbas, bases e totais do holerite extraído.',
-          'Clique em "Exportar" para baixar a planilha XLSX pronta no formato exigido pelo Youk Manager e registrar o lote no histórico de exportações.'
+          'Clique em "Exportar" para baixar a planilha XLSX pronta no formato com 79 colunas exigido pelo Youk Manager e registrar o lote no histórico de exportações.'
         ]
       },
       {

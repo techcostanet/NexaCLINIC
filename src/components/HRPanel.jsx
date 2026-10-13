@@ -13,7 +13,7 @@ import {
 import { useHRLogic, DEFAULT_DASHBOARD_LAYOUT } from './HR/hooks/useHRLogic';
 import AwardReportModal from './HR/AwardReportModal';
 import BirthdayMuralModal from './HR/BirthdayMuralModal';
-import PayslipImportModal from './HR/PayslipImportModal';
+import PayslipsTab from './HR/PayslipsTab';
 import HRReportsModal from './HRReportsModal';
 import TrainingsTab from './HR/TrainingsTab';
 import { STANDARD_ROLES, STANDARD_SECTORS, normalizeSingleWord, normalizeSectorName } from '../data/hrConstants';
@@ -230,7 +230,6 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
   // View Mode: 'compact' (Padrão) | 'normal' | 'cards'
   const [employeeViewMode, setEmployeeViewMode] = useState('compact');
   const [showBirthdayMuralModal, setShowBirthdayMuralModal] = useState(false);
-  const [isPayslipModalOpen, setIsPayslipModalOpen] = useState(false);
 
   return (
     <div style={styles.container}>
@@ -243,20 +242,6 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
         dotColor="#6366f1"
         actions={
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <button 
-              type="button"
-              onClick={() => setIsPayslipModalOpen(true)}
-              style={{
-                ...styles.primaryHeroBtn,
-                backgroundColor: '#059669',
-                borderColor: '#059669',
-                boxShadow: '0 2px 6px rgba(5, 150, 105, 0.3)'
-              }}
-              title="Importar contracheques e exportar Youk"
-            >
-              <FileSpreadsheet size={16} />
-              <span>Folha</span>
-            </button>
             <button 
               type="button"
               onClick={handleOpenEmpAdd}
@@ -276,6 +261,9 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
         </button>
         <button onClick={() => setActiveTab('employees')} style={{ ...styles.tabBtn, ...(activeTab === 'employees' ? styles.tabBtnActive : {}) }}>
           <Users size={16} /> Funcionários ({employees.filter(e => e.status !== 'Inativo').length})
+        </button>
+        <button onClick={() => setActiveTab('payroll')} style={{ ...styles.tabBtn, ...(activeTab === 'payroll' ? styles.tabBtnActive : {}) }}>
+          <FileSpreadsheet size={16} /> Folha
         </button>
         <button onClick={() => setActiveTab('exams')} style={{ ...styles.tabBtn, ...(activeTab === 'exams' ? styles.tabBtnActive : {}) }}>
           <Stethoscope size={16} /> Exames
@@ -1632,14 +1620,6 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
                   </div>
 
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <button 
-                      type="button"
-                      onClick={() => setIsPayslipModalOpen(true)} 
-                      style={{ ...styles.addBtn, backgroundColor: '#059669', borderColor: '#059669' }}
-                      title="Importar contracheques e exportar Youk"
-                    >
-                      <FileSpreadsheet size={16} /> Folha
-                    </button>
                     <button onClick={handleOpenEmpAdd} style={styles.addBtn}>
                       <Plus size={16} /> Colaborador
                     </button>
@@ -2399,6 +2379,11 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
               </div>
             );
           })()}
+
+          {/* TAB: Folha de Pagamento / Youk */}
+          {activeTab === 'payroll' && (
+            <PayslipsTab employees={employees} currentUser={currentUser} />
+          )}
 
           {/* TAB: Treinamentos */}
           {activeTab === 'trainings' && (
@@ -3551,13 +3536,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
         onOpenEmployee={handleOpenEmpByName}
       />
 
-      {/* Payslip / Youk Import Modal */}
-      <PayslipImportModal
-        isOpen={isPayslipModalOpen}
-        onClose={() => setIsPayslipModalOpen(false)}
-        employees={employees}
-        currentUser={currentUser}
-      />
+
 
       {/* 15 HR Reports Modal */}
       {isReportsOpen && (

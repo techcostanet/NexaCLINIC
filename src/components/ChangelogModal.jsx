@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.20',
+      date: '13/10/2026',
+      title: 'Nex-Ai CLINIC (.RH) — Aba Dedicada de Folha, Suporte a Pacotes ZIP de até 10MB e Correção Estrutural de Renderização',
+      description: 'Evolução na experiência de uso e confiabilidade do processamento de folha de pagamento no módulo Nex-Ai.HR: resolução definitiva do erro de ciclo de renderização do React (React error #310) garantindo consistência total dos hooks; migração do fluxo operacional de modal para uma aba oficial dedicada de primeiro nível ("Folha"), eliminando a sobrecarga de botões soltos na tela e adotando navegação limpa com sub-abas de Importação e Histórico; e otimização intensiva do leitor de arquivos compactados (.ZIP de até 10MB) com desalocação de memória pós-página, processamento assíncrono fluido com barra de progresso em tempo real e tratamento de exceções por arquivo sem travamento do lote.',
+      changes: [
+        { type: 'Aba Oficial de Folha', text: 'Navegação principal do módulo .HR agora conta com a aba Folha, reduzindo botões na tela e unificando a rotina.' },
+        { type: 'Suporte a ZIPs de 10MB', text: 'Otimização com desalocação contínua de memória e pacing não-bloqueante para dezenas a centenas de PDFs.' },
+        { type: 'Correção React #310', text: 'Eliminação da condição de ordem de hooks, garantindo estabilidade e carregamento sem erros.' },
+        { type: 'Sub-abas e Filtros', text: 'Alternância ágil entre a área de importação ativa e o histórico de exportações com dados auditados.' },
+        { type: 'Rótulos de 1 Palavra', text: 'Adoção rigorosa do padrão de rótulo único e direto em todos os botões, cabeçalhos e badges da tela.' }
+      ]
+    },
+    {
       version: 'v5.0.16',
       date: '08/10/2026',
       title: 'Nex-Ai CLINIC (.ASSIST) — Higienização Definitiva de Comunicados de E-mail (HTML/MIME) e Desambiguação Rigorosa de Pacientes',

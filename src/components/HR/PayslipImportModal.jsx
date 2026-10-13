@@ -47,8 +47,6 @@ export default function PayslipImportModal({
     }
   };
 
-  if (!isOpen) return null;
-
   // Processar arquivos (arrastados ou selecionados)
   const handleFiles = async (files) => {
     if (!files || files.length === 0) return;
@@ -178,6 +176,8 @@ export default function PayslipImportModal({
       return true;
     });
   }, [batchResult, searchTerm, statusFilter]);
+
+  if (!isOpen) return null;
 
   return (
     <div style={styles.overlay}>

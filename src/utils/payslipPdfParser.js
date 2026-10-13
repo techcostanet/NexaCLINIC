@@ -53,21 +53,29 @@ export async function extractPdfTextItems(arrayBuffer) {
   const pdf = await loadingTask.promise;
   const allItems = [];
 
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const textContent = await page.getTextContent();
-    const items = (textContent.items || [])
-      .map(it => ({
-        str: (it.str || '').trim(),
-        x: Math.round(it.transform[4]),
-        y: Math.round(it.transform[5]),
-        w: Math.round(it.width || 0),
-        h: Math.round(it.height || 0),
-        page: pageNum
-      }))
-      .filter(it => it.str.length > 0);
+  try {
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const items = (textContent.items || [])
+        .map(it => ({
+          str: (it.str || '').trim(),
+          x: Math.round(it.transform[4]),
+          y: Math.round(it.transform[5]),
+          w: Math.round(it.width || 0),
+          h: Math.round(it.height || 0),
+          page: pageNum
+        }))
+        .filter(it => it.str.length > 0);
 
-    allItems.push(...items);
+      allItems.push(...items);
+    }
+  } finally {
+    try {
+      if (pdf && typeof pdf.destroy === 'function') {
+        await pdf.destroy();
+      }
+    } catch (_) {}
   }
 
   return allItems;
@@ -387,10 +395,17 @@ export function matchEmployee(payslip, employeesList = []) {
 }
 
 /**
- * Processa um arquivo ZIP ou lista de arquivos PDF
+ * Processa um arquivo ZIP ou lista de arquivos PDF (suporta pacotes de até 25MB e centenas de PDFs)
  */
 export async function parsePayslipsBatch(fileOrFiles, employeesList = [], onProgress = () => {}) {
   const payslips = [];
+  const errors = [];
+
+  // Validação de tamanho máximo (limite generoso de 25MB)
+  const MAX_BYTES = 25 * 1024 * 1024;
+  if (fileOrFiles instanceof File && fileOrFiles.size > MAX_BYTES) {
+    throw new Error(`Arquivo excede o limite suportado de 25MB (tamanho atual: ${(fileOrFiles.size / (1024 * 1024)).toFixed(1)}MB).`);
+  }
 
   // Se for um único arquivo ZIP
   if (fileOrFiles instanceof File && (fileOrFiles.name.endsWith('.zip') || fileOrFiles.type.includes('zip'))) {
@@ -407,9 +422,14 @@ export async function parsePayslipsBatch(fileOrFiles, employeesList = [], onProg
     const total = pdfEntries.length;
     for (let idx = 0; idx < total; idx++) {
       const entry = pdfEntries[idx];
-      onProgress({ current: idx + 1, total, fileName: entry.name });
-      const arrayBuffer = await entry.async('arraybuffer');
+      const percent = total > 0 ? Math.round(((idx + 1) / total) * 100) : 100;
+      onProgress({ current: idx + 1, total, fileName: entry.name, percent });
+
+      // Respira o event loop para atualizar a interface
+      await new Promise(r => setTimeout(r, 6));
+
       try {
+        const arrayBuffer = await entry.async('arraybuffer');
         const parsed = await parseSinglePayslipPdf(arrayBuffer, entry.name);
         const matchRes = matchEmployee(parsed, employeesList);
         payslips.push({
@@ -420,7 +440,8 @@ export async function parsePayslipsBatch(fileOrFiles, employeesList = [], onProg
           matchMethod: matchRes.matchMethod
         });
       } catch (err) {
-        console.error(`Erro ao processar ${entry.name}:`, err);
+        console.warn(`Erro ao processar PDF ${entry.name}:`, err);
+        errors.push({ fileName: entry.name, error: err.message || 'Erro de leitura' });
       }
     }
   } else {
@@ -429,9 +450,13 @@ export async function parsePayslipsBatch(fileOrFiles, employeesList = [], onProg
     const total = files.length;
     for (let idx = 0; idx < total; idx++) {
       const file = files[idx];
-      onProgress({ current: idx + 1, total, fileName: file.name });
-      const arrayBuffer = await file.arrayBuffer();
+      const percent = total > 0 ? Math.round(((idx + 1) / total) * 100) : 100;
+      onProgress({ current: idx + 1, total, fileName: file.name, percent });
+
+      await new Promise(r => setTimeout(r, 6));
+
       try {
+        const arrayBuffer = await file.arrayBuffer();
         const parsed = await parseSinglePayslipPdf(arrayBuffer, file.name);
         const matchRes = matchEmployee(parsed, employeesList);
         payslips.push({
@@ -442,7 +467,8 @@ export async function parsePayslipsBatch(fileOrFiles, employeesList = [], onProg
           matchMethod: matchRes.matchMethod
         });
       } catch (err) {
-        console.error(`Erro ao processar ${file.name}:`, err);
+        console.warn(`Erro ao processar ${file.name}:`, err);
+        errors.push({ fileName: file.name, error: err.message || 'Erro de leitura' });
       }
     }
   }
@@ -462,7 +488,9 @@ export async function parsePayslipsBatch(fileOrFiles, employeesList = [], onProg
       unmatchedCount,
       totalEarnings,
       totalDiscounts,
-      totalNet
+      totalNet,
+      errorsCount: errors.length,
+      errors
     },
     items: payslips
   };

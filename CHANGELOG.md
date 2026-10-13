@@ -1,3 +1,17 @@
+## [v5.0.20] - 13 de Outubro, 2026
+### Nex-Ai CLINIC (.RH) — Aba Dedicada de Folha, Suporte a Pacotes ZIP de até 10MB e Correção Estrutural de Renderização
+- **Correção Estrutural do Erro de Renderização (React Error #310):**
+  - Eliminação definitiva da divergência de ordem de hooks do React (`Rendered more hooks than during previous render`) com alinhamento incondicional de todos os hooks no topo dos componentes.
+- **Processamento Otimizado para Pacotes ZIP de até 10MB:**
+  - Otimização do motor `payslipPdfParser.js` com desalocação forçada de memória em cada página lida (`pdf.destroy()`), evitando esgotamento de memória (RAM) no navegador ao descompactar e analisar centenas de contracheques.
+  - Pacing não-bloqueante no loop de leitura com respiração do event loop (`setTimeout`) e barra de progresso em tempo real com porcentagem visual.
+  - Tratamento resiliente de falhas por arquivo, impedindo que um PDF corrompido interrompa a extração do lote completo.
+- **Migração do Fluxo de Folha para Aba Oficial (`PayslipsTab.jsx`):**
+  - Transformação do botão "Folha" em uma aba de primeiro nível na navegação principal do módulo de RH (`activeTab === 'payroll'`), reduzindo a poluição visual de botões soltos em cabeçalhos e barras de ferramentas.
+  - Sub-abas integradas para "Importar" e "Histórico", com área de dropzone expansiva, filtros analíticos, tabela de conferência, vinculação manual de CPF e submodal de verbas.
+- **Padrão Rigoroso de Rótulos Concisos (1 Palavra):**
+  - Rótulos estritamente objetivos em botões, abas, filtros e colunas (`Folha`, `Exportar`, `Importar`, `Histórico`, `Colaborador`, `Matrícula`, `CPF`, `Proventos`, `Descontos`, `Líquido`, `Status`, `Ações`, `Ver`, `Limpar`).
+
 ## [v5.0.18] - 13 de Outubro, 2026
 ### Nex-Ai CLINIC (.RH) — Leitor Inteligente de Folha em Lote (.ZIP/PDF), Geração Oficial Youk Manager e Matrícula de Colaboradores
 - **Motor de Leitura Posicional de Contracheques em PDF e Arquivos ZIP (`payslipPdfParser.js`):**
