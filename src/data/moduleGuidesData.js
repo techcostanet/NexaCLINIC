@@ -188,8 +188,8 @@ export const MODULE_GUIDES = {
     color: '#ec4899',
     recursos: [
       {
-        title: 'Leitor Inteligente de Folha & Exportador Youk Manager',
-        desc: 'Processamento em lote de arquivos compactados (.ZIP) contendo os contracheques individuais em PDF. Extração posicional automática com isolamento estrito de dados cadastrais (evitando captura indevida de rubricas), cruzamento em cascata inteligente por matrícula, nome exato, nome compacto do arquivo e proximidade fonética/ortográfica (fuzzy matching), permitindo vinculação automática instantânea do colaborador e geração da planilha oficial com 79 colunas no layout ReciboPgAlterdata_Youk_9.0.'
+        title: 'Leitor Inteligente de Folha, Exportador Youk & PDF Unificado',
+        desc: 'Processamento em lote de arquivos compactados (.ZIP) contendo os contracheques individuais em PDF. Extração posicional automática com isolamento estrito de dados cadastrais, cruzamento inteligente de colaboradores com enriquecimento de CPF, e geração de 3 formatos oficiais: PDF Unificado de Contracheques (1 página por colaborador pronta para o Youk Manager e assinatura do trabalhador), PDF de Relatório Tabular Consolidado (paisagem) e Planilha Excel homologada de 79 colunas (ReciboPgAlterdata_Youk_9.0).'
       },
       {
         title: 'Mural de Aniversariantes & Felicitações WhatsApp',
@@ -266,14 +266,14 @@ export const MODULE_GUIDES = {
     ],
     tutorial: [
       {
-        title: 'Como Processar a Folha em ZIP/PDF e Exportar para o Youk Manager',
+        title: 'Como Processar a Folha em ZIP/PDF e Exportar para Youk ou PDF Unificado',
         steps: [
           'No módulo de RH (.HR), clique diretamente na aba "Folha" na barra de navegação.',
           'Arraste o arquivo .ZIP recebido da contabilidade (pacotes de até 10MB contendo os PDFs individuais de contracheque) ou selecione arquivos PDF diretamente na área de upload.',
           'O Nexa CLINIC processará cada contracheque na memória com barra de progresso em tempo real, exibindo o total de holerites, vinculados e valor líquido.',
-          'Confira a tabela de conferência. Caso algum funcionário não seja vinculado automaticamente, selecione seu nome no seletor de vínculo (listado rigorosamente em ordem alfabética A-Z com CPF para localização imediata).',
+          'Confira a tabela de conferência. Caso algum funcionário não seja vinculado automaticamente, selecione seu nome no seletor de vínculo com busca rápida (autocomplete sem corte) para associar instantaneamente.',
           'Clique no botão "Ver" em qualquer linha para inspecionar todas as verbas, bases e totais do holerite extraído.',
-          'Clique em "Exportar" para baixar a planilha XLSX pronta no padrão oficial de 79 colunas do Youk Manager (ReciboPgAlterdata_Youk_9.0) com resolução automática de Razão Social e formatação monetária, registrando o lote no histórico auditado.'
+          'Escolha o formato de exportação desejado: "Recibos" para baixar o PDF unificado com 1 contracheque por página oficial e CPF enriquecido (ideal para o Youk Manager e assinatura digital), "Relatório" para baixar o demonstrativo tabular executivo em PDF (paisagem), ou "Planilha" para baixar o arquivo Excel de 79 colunas no leiaute homologado Youk (ReciboPgAlterdata_Youk_9.0).'
         ]
       },
       {
@@ -394,11 +394,11 @@ export const MODULE_GUIDES = {
     duvidas: [
       {
         pergunta: 'O sistema Youk precisa dos arquivos PDF ou apenas da planilha Excel gerada?',
-        resposta: 'O Youk Manager exige apenas a planilha Excel (.xlsx) oficial de 79 colunas para holerites mensais, recibos de férias e 13º salário. Ao importar o arquivo gerado pelo Nexa CLINIC, o próprio Youk constrói a visualização digital do contracheque no aplicativo para o colaborador assinar.'
+        resposta: 'O Youk Manager suporta duas formas de importação: via planilha Excel (.xlsx de 79 colunas no layout ReciboPgAlterdata_Youk_9.0) e via upload direto de arquivo PDF unificado de contracheques na tela de envio de documentos ("Enviar" -> "Adicionar"). Como muitas empresas encontram a tela do Youk configurada para aceitar exclusivamente arquivos PDF, o Nexa CLINIC oferece o botão "Recibos", que consolida todos os contracheques em um único PDF oficial de alta qualidade com o CPF enriquecido de cada funcionário, permitindo o upload imediato no Youk.'
       },
       {
         pergunta: 'Como o Nexa CLINIC localiza o CPF do colaborador se o PDF da contabilidade não tem CPF impresso?',
-        resposta: 'O leitor extrai o Código/Matrícula e o Nome do funcionário do PDF e cruza em tempo real com a base de colaboradores do Nexa CLINIC, preenchendo o CPF, data de nascimento e endereço na planilha do Youk automaticamente.'
+        resposta: 'O leitor extrai o Código/Matrícula e o Nome do funcionário do PDF e cruza em tempo real com a base de colaboradores do Nexa CLINIC, preenchendo o CPF, data de nascimento e endereço na planilha do Youk e no PDF unificado de contracheques automaticamente.'
       },
       {
         pergunta: 'Os 15 treinamentos de nefrologia já vêm com questões pré e pós-teste prontas?',

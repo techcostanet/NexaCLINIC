@@ -1,3 +1,16 @@
+## [v5.0.24] - 14 de Outubro, 2026
+### Nex-Ai CLINIC (.RH) — Geração de PDF Unificado de Contracheques, Relatório Tabular em PDF e Exportação Youk Aprimorada
+- **Geração de PDF Unificado de Contracheques (`payslipPdfGenerator.js`):**
+  - Implementação do motor gerador de PDF oficial de recibos de pagamento (`exportUnifiedPayslipsPdf`), formatando 1 página A4 por colaborador.
+  - Cabeçalho hospitalar com Razão Social, CNPJ, Filial e Competência; identificação cadastral completa enriquecida com o CPF validado do colaborador (essencial para o Youk Manager e assinatura digital no app); grade de rubricas/verbas detalhadas; subtotais de vencimentos e descontos; caixa de destaque para o valor líquido; bases legais (Salário Base, INSS, FGTS, IRRF); e canhoto de declaração com campo de assinatura do funcionário.
+- **Relatório Tabular Consolidado em PDF (`payslipPdfGenerator.js`):**
+  - Geração de relatório executivo da folha em formato A4 Paisagem (`exportTabularPayrollPdf`) com cartões de indicadores (total de holerites, proventos, descontos e líquido) e tabela zebrada com paginação automática.
+- **Atualização da Barra de Ações da Folha (`PayslipsTab.jsx` e `PayslipImportModal.jsx`):**
+  - Substituição do botão único por botões diretos e concisos seguindo o padrão de 1 palavra: "Recibos" (PDF unificado), "Relatório" (PDF tabular) e "Planilha" (XLSX Youk de 79 colunas).
+  - Alerta preventivo aprimorado para bloquear ou confirmar exportação caso existam colaboradores pendentes de CPF.
+- **Documentação e Manual do Módulo Atualizados (`moduleGuidesData.js`):**
+  - Esclarecimento detalhado no FAQ e no tutorial da folha sobre o suporte a upload de PDFs no Youk Manager e o novo fluxo de geração de contracheques consolidados.
+
 ## [v5.0.22] - 13 de Outubro, 2026
 ### Nex-Ai CLINIC (.RH) — Busca com Autocomplete no Vínculo, Alerta Preventivo de CPF e Correção Youk
 - **Componente SearchableEmployeeSelect & Autocomplete (`SearchableEmployeeSelect.jsx`):**

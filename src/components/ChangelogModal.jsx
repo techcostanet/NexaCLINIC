@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.24',
+      date: '14/10/2026',
+      title: 'Nex-Ai CLINIC (.RH) — PDF Unificado de Contracheques, Relatório Tabular e Exportador Youk',
+      description: 'Expansão dos formatos de exportação da folha no módulo Nex-Ai.HR: motor de geração de PDF unificado de contracheques (1 página A4 por colaborador com dados oficiais, CPF enriquecido, verbas, bases e campo de assinatura pronto para upload no Youk Manager); relatório executivo tabular da folha em PDF paisagem com KPIs consolidados; e botões de ação concisos ("Recibos", "Relatório" e "Planilha").',
+      changes: [
+        { type: 'Recibos em PDF Unificado', text: 'Documento PDF consolidado com 1 contracheque por página, layout oficial e CPF integrado para o Youk Manager.' },
+        { type: 'Relatório Tabular em PDF', text: 'Demonstrativo executivo da folha em A4 paisagem com KPIs de proventos, descontos, líquidos e paginação.' },
+        { type: 'Ações Diretas na Folha', text: 'Botões objetivos de exportação ("Recibos", "Relatório" e "Planilha") seguindo o padrão rigoroso de termo único.' },
+        { type: 'Manual do RH Atualizado', text: 'Esclarecimento no tutorial e FAQ sobre o upload de PDFs no Youk Manager e orientações de assinatura.' }
+      ]
+    },
+    {
       version: 'v5.0.22',
       date: '13/10/2026',
       title: 'Nex-Ai CLINIC (.RH) — Busca com Autocomplete no Vínculo, Alerta Preventivo de CPF e Correção Youk',

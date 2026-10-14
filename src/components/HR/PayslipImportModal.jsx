@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   X, UploadCloud, FileSpreadsheet, Download, CheckCircle2, 
-  AlertTriangle, Search, Eye, RefreshCw, Clock
+  AlertTriangle, Search, Eye, RefreshCw, Clock, FileText, Printer
 } from 'lucide-react';
 import { parsePayslipsBatch } from '../../utils/payslipPdfParser';
 import { exportYoukExcelFile, formatCurrencyBR } from '../../utils/youkExcelGenerator';
+import { exportUnifiedPayslipsPdf, exportTabularPayrollPdf } from '../../utils/payslipPdfGenerator';
 import { dbService } from '../../firebase';
 import SearchableEmployeeSelect from './SearchableEmployeeSelect';
 
@@ -28,9 +29,10 @@ export default function PayslipImportModal({
   const [historyBatches, setHistoryBatches] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  // Alerta Preventivo de CPF pendente na exportação Youk
+  // Alerta Preventivo de CPF pendente na exportação Youk / PDF
   const [warningModalOpen, setWarningModalOpen] = useState(false);
   const [warningModalData, setWarningModalData] = useState({ pendingCount: 0, totalCount: 0 });
+  const [pendingExportType, setPendingExportType] = useState('pdf_payslips');
 
   // Colaboradores ordenados alfabeticamente para o seletor de vínculo
   const sortedEmployees = useMemo(() => {
@@ -124,11 +126,12 @@ export default function PayslipImportModal({
   };
 
   // Disparar exportação ou exibir alerta preventivo de CPF pendente
-  const handleExportClick = () => {
+  const handleExportClick = (type = 'pdf_payslips') => {
     if (!batchResult || !batchResult.items || batchResult.items.length === 0) return;
 
     const pendingItems = batchResult.items.filter(it => !it.matchedEmployee?.cpf && !it.cpf);
     if (pendingItems.length > 0) {
+      setPendingExportType(type);
       setWarningModalData({
         pendingCount: pendingItems.length,
         totalCount: batchResult.items.length
@@ -137,21 +140,34 @@ export default function PayslipImportModal({
       return;
     }
 
-    executeExport();
+    executeExport(type);
   };
 
   // Execução direta do download e registro no banco
-  const executeExport = async () => {
+  const executeExport = async (type = pendingExportType) => {
     setWarningModalOpen(false);
     if (!batchResult || !batchResult.items || batchResult.items.length === 0) return;
 
     try {
       const sample = batchResult.items[0];
-      const mes = sample?.month || '09';
-      const ano = sample?.year || '2026';
-      const fileName = `ReciboPg_Youk_${mes}_${ano}.xlsx`;
+      const mes = String(sample?.month || '09').padStart(2, '0');
+      const ano = String(sample?.year || new Date().getFullYear());
+      let fileName = '';
+      let actionLabel = '';
 
-      exportYoukExcelFile(batchResult.items, fileName);
+      if (type === 'pdf_payslips') {
+        fileName = `Recibos_Folha_${mes}_${ano}.pdf`;
+        actionLabel = 'Recibos (PDF)';
+        exportUnifiedPayslipsPdf(batchResult.items, fileName);
+      } else if (type === 'pdf_report') {
+        fileName = `Relatorio_Folha_${mes}_${ano}.pdf`;
+        actionLabel = 'Relatório (PDF)';
+        exportTabularPayrollPdf(batchResult.items, batchResult.summary, fileName);
+      } else {
+        fileName = `ReciboPg_Youk_${mes}_${ano}.xlsx`;
+        actionLabel = 'Planilha (XLSX)';
+        exportYoukExcelFile(batchResult.items, fileName);
+      }
 
       // Gravar histórico de lote no banco
       const operatorName = currentUser?.name || currentUser?.email || 'Operador RH';
@@ -176,15 +192,15 @@ export default function PayslipImportModal({
       if (dbService.createAuditLog) {
         await dbService.createAuditLog({
           operator: operatorName,
-          action: 'Exportação Youk',
-          details: `Exportada planilha da competência ${mes}/${ano} com ${batchResult.items.length} holerites.`
+          action: `Exportação ${actionLabel}`,
+          details: `Exportado arquivo ${fileName} da competência ${mes}/${ano} com ${batchResult.items.length} holerites.`
         });
       }
 
       alert(`Arquivo ${fileName} exportado com sucesso! Lote gravado no histórico.`);
     } catch (err) {
-      console.error('Erro na exportação para Youk:', err);
-      alert('Erro ao gerar planilha do Youk: ' + err.message);
+      console.error('Erro na exportação:', err);
+      alert('Erro ao gerar arquivo da folha: ' + err.message);
     }
   };
 
@@ -448,7 +464,7 @@ export default function PayslipImportModal({
                       </button>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <button 
                         type="button" 
                         style={styles.btnSecondary}
@@ -459,11 +475,32 @@ export default function PayslipImportModal({
 
                       <button 
                         type="button" 
-                        style={styles.btnPrimary}
-                        onClick={handleExportClick}
+                        style={styles.btnSecondary}
+                        onClick={() => handleExportClick('pdf_report')}
+                        title="Baixar relatório tabular da folha em PDF"
                       >
-                        <Download size={16} />
-                        Exportar
+                        <Printer size={16} />
+                        Relatório
+                      </button>
+
+                      <button 
+                        type="button" 
+                        style={styles.btnSecondary}
+                        onClick={() => handleExportClick('excel')}
+                        title="Baixar planilha oficial Youk de 79 colunas (.xlsx)"
+                      >
+                        <FileSpreadsheet size={16} />
+                        Planilha
+                      </button>
+
+                      <button 
+                        type="button" 
+                        style={styles.btnPrimary}
+                        onClick={() => handleExportClick('pdf_payslips')}
+                        title="Baixar PDF unificado com 1 contracheque por página (pronto para Youk Manager e funcionários)"
+                      >
+                        <FileText size={16} />
+                        Recibos
                       </button>
                     </div>
                   </div>
@@ -755,7 +792,7 @@ export default function PayslipImportModal({
                   A plataforma Youk Manager exige o CPF cadastrado para validar o funcionário e viabilizar a assinatura digital no celular.
                 </div>
                 <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>
-                  Deseja exportar a planilha mesmo com CPFs pendentes ou prefere vincular os colaboradores antes?
+                  Deseja exportar o arquivo mesmo com CPFs pendentes ou prefere vincular os colaboradores antes?
                 </p>
               </div>
 
@@ -782,7 +819,7 @@ export default function PayslipImportModal({
                     ...styles.btnPrimary,
                     backgroundColor: '#d97706'
                   }}
-                  onClick={executeExport}
+                  onClick={() => executeExport(pendingExportType)}
                 >
                   Exportar
                 </button>
