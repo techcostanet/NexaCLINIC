@@ -125,6 +125,7 @@ export function buildYoukSpreadsheetRows(payslips) {
     const ano = String(ps.year || new Date().getFullYear());
     const tipoRecibo = ps.receiptType || 'Demonstrativo de Pagamento';
     const cnpj = ps.companyCnpj || '58.476.786/0001-06';
+    const razaoSocial = ps.companyName || ps.companySocialReason || emp.companyName || 'DIALIZE BETIM SOLUCOES MEDICAS LTDA';
     const nomeTrabalhador = emp.name || ps.employeeName || '';
     const cpf = emp.cpf || ps.cpf || '';
     const celular = emp.phone || '';
@@ -164,7 +165,7 @@ export function buildYoukSpreadsheetRows(payslips) {
 
     // Bases e Totais
     const valorBaseFgts = ps.baseFgts || 0;
-    const inssVerba = ps.events.find(ev => ev.code === '998' || ev.description.includes('INSS'));
+    const inssVerba = Array.isArray(ps.events) ? ps.events.find(ev => ev && (ev.code === '998' || (ev.description && ev.description.includes('INSS')))) : null;
     const valorInss = inssVerba ? inssVerba.discounts : 0;
     const valorBaseInss = ps.baseInss || 0;
     const valorFgts = ps.fgtsValue || 0;
@@ -247,22 +248,22 @@ export function buildYoukSpreadsheetRows(payslips) {
         '',                               // 60: TOMADOR_SERVICO
         'CLT',                            // 61: REGIME_JURIDICO
         '',                               // 62: CLASSE_NIVEL
-        valorBaseFgts,                    // 63: VALOR_BASE_FGTS
-        valorInss,                        // 64: VALOR_INSS
-        valorBaseInss,                    // 65: VALOR_BASE_INSS
-        valorFgts,                        // 66: VALOR_FGTS
-        baseIrrf,                         // 67: BASE_IRRF
-        emp.dependents?.length || 0,      // 68: QTD_DEPENDENTES_IRRF
-        0,                                // 69: QTD_DEPENDENTES_SALARIO_FAMILIA
-        String(ev.code || '').trim(),     // 70: CODIGO_VERBA
-        String(ev.description || '').trim(), // 71: DESCRICAO_VERBA
-        '0',                              // 72: PERCENTUAL_VERBA
-        ev.reference || 0,                // 73: QUANTIDADE_REFERENCIA
+        formatCurrencyBR(valorBaseFgts),                    // 63: VALOR_BASE_FGTS
+        formatCurrencyBR(valorInss),                        // 64: VALOR_INSS
+        formatCurrencyBR(valorBaseInss),                    // 65: VALOR_BASE_INSS
+        formatCurrencyBR(valorFgts),                        // 66: VALOR_FGTS
+        formatCurrencyBR(baseIrrf),                         // 67: BASE_IRRF
+        emp.dependents?.length || 0,                        // 68: QTD_DEPENDENTES_IRRF
+        0,                                                  // 69: QTD_DEPENDENTES_SALARIO_FAMILIA
+        String(ev.code || '').trim(),                       // 70: CODIGO_VERBA
+        String(ev.description || '').trim(),                // 71: DESCRICAO_VERBA
+        '0',                                                // 72: PERCENTUAL_VERBA
+        ev.reference || 0,                                  // 73: QUANTIDADE_REFERENCIA
         ev.earnings ? formatCurrencyBR(ev.earnings) : '0,00', // 74: VALOR_PROVENTOS
         ev.discounts ? formatCurrencyBR(ev.discounts) : '0,00', // 75: VALOR_DESCONTOS
-        totalVencimentos,                 // 76: VALOR_TOTAL_VERBA_PROVENTOS
-        totalDescontos,                   // 77: VALOR_TOTAL_VERBA_DESCONTOS
-        valorLiquido                      // 78: VALOR_LIQUIDO
+        formatCurrencyBR(totalVencimentos),                 // 76: VALOR_TOTAL_VERBA_PROVENTOS
+        formatCurrencyBR(totalDescontos),                   // 77: VALOR_TOTAL_VERBA_DESCONTOS
+        formatCurrencyBR(valorLiquido)                      // 78: VALOR_LIQUIDO
       ];
 
       rows.push(row);

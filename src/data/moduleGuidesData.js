@@ -271,9 +271,9 @@ export const MODULE_GUIDES = {
           'No módulo de RH (.HR), clique diretamente na aba "Folha" na barra de navegação.',
           'Arraste o arquivo .ZIP recebido da contabilidade (pacotes de até 10MB contendo os PDFs individuais de contracheque) ou selecione arquivos PDF diretamente na área de upload.',
           'O Nexa CLINIC processará cada contracheque na memória com barra de progresso em tempo real, exibindo o total de holerites, vinculados e valor líquido.',
-          'Confira a tabela de conferência. Caso algum funcionário não seja vinculado automaticamente, selecione seu nome no campo "Vincular CPF".',
+          'Confira a tabela de conferência. Caso algum funcionário não seja vinculado automaticamente, selecione seu nome no seletor de vínculo (listado rigorosamente em ordem alfabética A-Z com CPF para localização imediata).',
           'Clique no botão "Ver" em qualquer linha para inspecionar todas as verbas, bases e totais do holerite extraído.',
-          'Clique em "Exportar" para baixar a planilha XLSX pronta no formato com 79 colunas exigido pelo Youk Manager e registrar o lote no histórico de exportações.'
+          'Clique em "Exportar" para baixar a planilha XLSX pronta no padrão oficial de 79 colunas do Youk Manager (ReciboPgAlterdata_Youk_9.0) com resolução automática de Razão Social e formatação monetária, registrando o lote no histórico auditado.'
         ]
       },
       {

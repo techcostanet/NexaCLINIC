@@ -6,6 +6,7 @@ import {
 import { parsePayslipsBatch } from '../../utils/payslipPdfParser';
 import { exportYoukExcelFile, formatCurrencyBR } from '../../utils/youkExcelGenerator';
 import { dbService } from '../../firebase';
+import SearchableEmployeeSelect from './SearchableEmployeeSelect';
 
 export default function PayslipImportModal({ 
   isOpen, 
@@ -26,6 +27,17 @@ export default function PayslipImportModal({
   // Histórico de Lotes
   const [historyBatches, setHistoryBatches] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // Alerta Preventivo de CPF pendente na exportação Youk
+  const [warningModalOpen, setWarningModalOpen] = useState(false);
+  const [warningModalData, setWarningModalData] = useState({ pendingCount: 0, totalCount: 0 });
+
+  // Colaboradores ordenados alfabeticamente para o seletor de vínculo
+  const sortedEmployees = useMemo(() => {
+    return [...employees].sort((a, b) => 
+      (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' })
+    );
+  }, [employees]);
 
   useEffect(() => {
     if (isOpen) {
@@ -111,8 +123,26 @@ export default function PayslipImportModal({
     });
   };
 
-  // Exportar para o Youk
-  const handleExport = async () => {
+  // Disparar exportação ou exibir alerta preventivo de CPF pendente
+  const handleExportClick = () => {
+    if (!batchResult || !batchResult.items || batchResult.items.length === 0) return;
+
+    const pendingItems = batchResult.items.filter(it => !it.matchedEmployee?.cpf && !it.cpf);
+    if (pendingItems.length > 0) {
+      setWarningModalData({
+        pendingCount: pendingItems.length,
+        totalCount: batchResult.items.length
+      });
+      setWarningModalOpen(true);
+      return;
+    }
+
+    executeExport();
+  };
+
+  // Execução direta do download e registro no banco
+  const executeExport = async () => {
+    setWarningModalOpen(false);
     if (!batchResult || !batchResult.items || batchResult.items.length === 0) return;
 
     try {
@@ -150,6 +180,8 @@ export default function PayslipImportModal({
           details: `Exportada planilha da competência ${mes}/${ano} com ${batchResult.items.length} holerites.`
         });
       }
+
+      alert(`Arquivo ${fileName} exportado com sucesso! Lote gravado no histórico.`);
     } catch (err) {
       console.error('Erro na exportação para Youk:', err);
       alert('Erro ao gerar planilha do Youk: ' + err.message);
@@ -428,7 +460,7 @@ export default function PayslipImportModal({
                       <button 
                         type="button" 
                         style={styles.btnPrimary}
-                        onClick={handleExport}
+                        onClick={handleExportClick}
                       >
                         <Download size={16} />
                         Exportar
@@ -484,30 +516,19 @@ export default function PayslipImportModal({
                               </td>
 
                               <td style={styles.td}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '150px' }}>
                                   {item.matchedEmployee?.cpf || item.cpf ? (
                                     <span style={{ fontWeight: 600, color: '#0f172a' }}>
                                       {item.matchedEmployee?.cpf || item.cpf}
                                     </span>
                                   ) : null}
-                                  <select
-                                    style={{
-                                      ...styles.selectLink,
-                                      border: (item.matchedEmployee?.cpf || item.cpf) ? '1px solid #cbd5e1' : '1px solid #f59e0b',
-                                      backgroundColor: (item.matchedEmployee?.cpf || item.cpf) ? '#f8fafc' : '#fffbeb',
-                                      color: (item.matchedEmployee?.cpf || item.cpf) ? '#475569' : '#92400e',
-                                      fontSize: '0.72rem'
-                                    }}
+                                  <SearchableEmployeeSelect
                                     value={item.matchedEmployee?.id || ''}
-                                    onChange={(e) => handleManualLink(item.id, e.target.value)}
-                                  >
-                                    <option value="">{item.matchedEmployee ? 'Trocar colaborador...' : 'Vincular colaborador...'}</option>
-                                    {employees.map(e => (
-                                      <option key={e.id} value={e.id}>
-                                        {e.name} ({e.cpf || 'sem CPF'})
-                                      </option>
-                                    ))}
-                                  </select>
+                                    employees={sortedEmployees}
+                                    onChange={(selectedEmpId) => handleManualLink(item.id, selectedEmpId)}
+                                    hasCpf={!!(item.matchedEmployee?.cpf || item.cpf)}
+                                    placeholder={item.matchedEmployee ? 'Trocar...' : 'Vincular...'}
+                                  />
                                 </div>
                               </td>
 
@@ -675,6 +696,95 @@ export default function PayslipImportModal({
                   onClick={() => setSelectedPayslip(null)}
                 >
                   Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Alerta: Holerites sem CPF */}
+        {warningModalOpen && (
+          <div style={styles.subModalOverlay}>
+            <div style={{ ...styles.subModal, maxWidth: '440px' }}>
+              <div style={{ ...styles.subModalHeader, borderBottom: '1px solid #fed7aa', backgroundColor: '#fffbeb' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    backgroundColor: '#fef3c7',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#d97706',
+                    flexShrink: 0
+                  }}>
+                    <AlertTriangle size={20} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#92400e', margin: 0 }}>
+                      Alerta
+                    </h3>
+                    <span style={{ fontSize: '0.75rem', color: '#b45309' }}>
+                      {warningModalData.pendingCount} de {warningModalData.totalCount} holerites sem CPF
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  style={styles.closeBtn}
+                  onClick={() => setWarningModalOpen(false)}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={{ ...styles.subModalBody, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', lineHeight: 1.5 }}>
+                  Foram identificados <strong>{warningModalData.pendingCount} contracheque(s)</strong> sem CPF preenchido ou com vínculo pendente.
+                </p>
+                <div style={{
+                  padding: '0.75rem',
+                  backgroundColor: '#fffbeb',
+                  border: '1px solid #fef3c7',
+                  borderRadius: '8px',
+                  fontSize: '0.78rem',
+                  color: '#92400e',
+                  lineHeight: 1.4
+                }}>
+                  A plataforma Youk Manager exige o CPF cadastrado para validar o funcionário e viabilizar a assinatura digital no celular.
+                </div>
+                <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>
+                  Deseja exportar a planilha mesmo com CPFs pendentes ou prefere vincular os colaboradores antes?
+                </p>
+              </div>
+
+              <div style={{
+                padding: '0.75rem 1.25rem',
+                borderTop: '1px solid #f1f5f9',
+                backgroundColor: '#f8fafc',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '0.5rem',
+                borderBottomLeftRadius: '12px',
+                borderBottomRightRadius: '12px'
+              }}>
+                <button
+                  type="button"
+                  style={styles.btnSecondary}
+                  onClick={() => setWarningModalOpen(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    ...styles.btnPrimary,
+                    backgroundColor: '#d97706'
+                  }}
+                  onClick={executeExport}
+                >
+                  Exportar
                 </button>
               </div>
             </div>

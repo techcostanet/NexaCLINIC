@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.22',
+      date: '13/10/2026',
+      title: 'Nex-Ai CLINIC (.RH) — Busca com Autocomplete no Vínculo, Alerta Preventivo de CPF e Correção Youk',
+      description: 'Evolução e robustez na rotina de folha de pagamento do módulo Nex-Ai.HR: componente SearchableEmployeeSelect com busca textual instantânea e portal flutuante sem cortes para localização e vinculação de colaboradores em segundos; alerta preventivo antes do download da planilha do Youk Manager impedindo a exportação desavisada com CPFs em branco; resolução do erro de tempo de execução ("razaoSocial is not defined") durante a exportação para o Youk (ReciboPgAlterdata_Youk_9.0); e padronização monetária estrita em todas as colunas.',
+      changes: [
+        { type: 'Busca & Autocomplete', text: 'Seletor rápido com digitação em tempo real por nome, CPF ou matrícula e ordenação alfabética (A-Z).' },
+        { type: 'Alerta Preventivo de CPF', text: 'Aviso proativo ao clicar em Exportar identificando quantos holerites ainda estão pendentes de CPF.' },
+        { type: 'Correção de Exportação Youk', text: 'Eliminação da falha "razaoSocial is not defined" com extração da clínica e fallbacks consistentes.' },
+        { type: 'Formatação de Bases e Totais', text: 'Padronização dos campos monetários da planilha para o formato monetário oficial exigido pelo Youk.' }
+      ]
+    },
+    {
       version: 'v5.0.21',
       date: '13/10/2026',
       title: 'Nex-Ai CLINIC (.RH) — Leitura Rigorosa de Holerites, Isolamento de Rubricas e Vínculo Inteligente por Proximidade Fonética/Ortográfica',

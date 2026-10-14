@@ -440,6 +440,35 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Arquivos Envolvidos:** `src/components/HR/PayslipsTab.jsx`, `src/components/HRPanel.jsx`, `src/services/firebase/hrService.ts`.
 - **Complexidade:** Baixa.
 
+---
+
+### [SM-028] Alerta Preventivo de Holerites sem CPF antes da Exportação Youk
+- **Data:** 13/10/2026
+- **Módulo:** `.HR` (Recursos Humanos & Gestão de Pessoas)
+- **Título:** Alerta Preventivo de Holerites Pendentes de CPF antes do Download da Planilha Youk
+- **Status:** `Aprovada / Implementada`
+- **Origem / Contexto:** Ao clicar em Exportar na aba Folha, caso ainda existam colaboradores sem vínculo ou sem CPF cadastrado, o arquivo Excel é gerado com a coluna CPF vazia para esses registros, o que causa rejeição na validação interna do aplicativo Youk Manager.
+- **Descrição Técnica:**
+  - No botão "Exportar" em `PayslipsTab.jsx`, verificar a quantidade de itens cujo CPF final está vazio (`!item.matchedEmployee?.cpf && !item.cpf`).
+  - Se houver pendências, exibir um modal de confirmação ou banner amarelo de aviso: *"Existem X holerites sem CPF vinculado. Deseja exportar mesmo assim ou concluir a vinculação antes?"*.
+- **Benefício Operacional:** Evita retrabalho de envio ao suporte do Youk e rejeição de lotes de folha de pagamento na homologação.
+- **Arquivos Envolvidos:** `src/components/HR/PayslipsTab.jsx`.
+- **Complexidade:** Baixa.
+
+---
+
+### [SM-029] Filtro com Busca Textual Rápida no Seletor de Vínculo de Colaboradores
+- **Data:** 13/10/2026
+- **Módulo:** `.HR` (Recursos Humanos & Gestão de Pessoas)
+- **Título:** Campo com Busca Rápida / Autocomplete no Seletor de Colaboradores da Folha
+- **Status:** `Aprovada / Implementada`
+- **Origem / Contexto:** A ordenação alfabética implementada organiza o dropdown `<select>`, mas em clínicas com mais de 100 a 200 colaboradores a rolagem do select tradicional pode exigir tempo de navegação.
+- **Descrição Técnica:**
+  - Substituir o `<select>` nativo ou adicionar um componente de dropdown pesquisável (Combobox / Autocomplete) com digitação em tempo real (ex.: digitando "Mari" já filtra Mariana, Marisa, etc.).
+- **Benefício Operacional:** Localização e vinculação manual instantânea em menos de 2 segundos para qualquer colaborador.
+- **Arquivos Envolvidos:** `src/components/HR/PayslipsTab.jsx`, `src/components/HR/PayslipImportModal.jsx`.
+- **Complexidade:** Baixa.
+
 
 
 

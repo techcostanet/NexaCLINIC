@@ -1,3 +1,16 @@
+## [v5.0.22] - 13 de Outubro, 2026
+### Nex-Ai CLINIC (.RH) — Busca com Autocomplete no Vínculo, Alerta Preventivo de CPF e Correção Youk
+- **Componente SearchableEmployeeSelect & Autocomplete (`SearchableEmployeeSelect.jsx`):**
+  - Implementação de seletor rápido com digitação em tempo real por nome, CPF ou matrícula e ordenação alfabética (A-Z).
+  - Renderização via Portal (`createPortal`) com posicionamento flutuante imune ao overflow/recorte de tabelas, permitindo localizar e vincular colaboradores em menos de 2 segundos.
+- **Alerta Preventivo de Holerites sem CPF (`PayslipsTab.jsx` e `PayslipImportModal.jsx`):**
+  - Verificação prévia no momento do clique em "Exportar" com modal de alerta exibindo a contagem exata de contracheques sem CPF vinculado (`warningModalOpen`).
+  - Prevenção ativa de exportações incompletas que seriam rejeitadas pelo aplicativo Youk Manager, com opções de cancelar para vincular ou exportar com confirmação.
+- **Correção da Exportação da Planilha do Youk (`youkExcelGenerator.js`):**
+  - Resolução definitiva da exceção `razaoSocial is not defined` ocorrida ao clicar em exportar a planilha homologada do Youk Manager.
+  - Implementação de fallback inteligente para a Razão Social da empresa (`ps.companyName`, `ps.companySocialReason`, `emp.companyName` ou padrão da clínica).
+  - Padronização de todas as colunas monetárias de bases e totais (Base FGTS, INSS, Base INSS, FGTS, IRRF, Proventos, Descontos e Líquido) com formatação monetária brasileira oficial (`formatCurrencyBR`).
+
 ## [v5.0.21] - 13 de Outubro, 2026
 ### Nex-Ai CLINIC (.RH) — Leitura Rigorosa de Holerites, Isolamento de Rubricas e Vínculo Inteligente por Proximidade Fonética/Ortográfica
 - **Isolamento Cadastral e Proteção no PDF (`payslipPdfParser.js`):**
