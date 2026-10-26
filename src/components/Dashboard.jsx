@@ -60,6 +60,7 @@ export const isLowerBetter = (indicatorId, name) => {
          term.includes('hospitalizacao') || term.includes('hospitalização') ||
          term.includes('crise') || term.includes('ansiedade') || term.includes('depressao') ||
          term.includes('depressão') || term.includes('risco') ||
+         term.includes('dor') || term.includes('fraqueza') || term.includes('incapacidade') || term.includes('deficit') ||
          term.includes('reacao_transfusional') || term.includes('reação transfusional') ||
          term.includes('reacoes_transfusionais') || term.includes('reações transfusionais') ||
          term.includes('anemia grave') || term.includes('hb_grave') ||

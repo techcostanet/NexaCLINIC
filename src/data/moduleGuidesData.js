@@ -3345,7 +3345,7 @@ export const MODULE_GUIDES = {
   multi: {
     id: 'multi',
     name: 'Equipe Multidisciplinar',
-    subtitle: 'Nex-Ai.MULTI — Serviço Social, Psicologia & Nutrição',
+    subtitle: 'Nex-Ai.MULTI — Cuidado Multiprofissional Integrado',
     color: '#8b5cf6',
     recursos: [
       {
@@ -3365,6 +3365,18 @@ export const MODULE_GUIDES = {
         desc: 'Identificação preditiva automática de riscos sociais graves: Sem Renda Familiar, Insegurança Alimentar, Dificuldade no Transporte, Risco de Continuidade e Ausência de Rede de Apoio.'
       },
       {
+        title: 'Controle Clínico de Fisioterapia',
+        desc: 'Registro completo de acompanhamento fisioterapêutico por paciente e mês: sessões realizadas, estado geral (bom/regular), aderência ao plano motor, queixas de dor, déficit de mobilidade, fraqueza muscular e incapacidade funcional.'
+      },
+      {
+        title: 'Painel Analítico de Fisioterapia e Gráficos BI',
+        desc: 'Métricas executivas em tempo real com gráficos de distribuição de demandas (espontânea vs busca ativa), evolução mensal de sessões e pizza de aderência do paciente.'
+      },
+      {
+        title: 'Vínculo Inteligente com Cadastro de Pacientes',
+        desc: 'Integração direta com o motor de busca global de pacientes do sistema, associando prontuário, turno e salão automaticamente a cada ficha fisioterapêutica.'
+      },
+      {
         title: 'Evoluções de Psicologia',
         desc: 'Registro clínico de atendimentos, suporte emocional, adaptação ao tratamento dialítico, avaliação de humor e adesão ao tratamento.'
       },
@@ -3378,10 +3390,29 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Exportação em Excel (.xlsx)',
-        desc: 'Download em formato de planilha nativa das anamneses sociais, histórico de vulnerabilidades e atendimentos da equipe multidisciplinar.'
+        desc: 'Download em formato de planilha nativa das anamneses sociais, histórico de vulnerabilidades, controles de fisioterapia e atendimentos da equipe multidisciplinar.'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Registrar Atendimento e Indicadores de Fisioterapia',
+        steps: [
+          'No módulo ".MULTI", acesse a aba "Fisioterapia".',
+          'Utilize os seletores de mês no topo para navegar entre Outubro, Setembro, Agosto, Julho, Junho ou visualizar o histórico completo.',
+          'Clique no botão "+ Sessão" para abrir o modal de lançamento.',
+          'Digite o nome do paciente no campo com motor de busca integrado e selecione o registro desejado.',
+          'Informe o total de sessões realizadas no mês, turno, salão, estado do paciente (Bom ou Regular), aderência, queixas (Dor, Mobilidade, Fraqueza, Incapacidade) e tipo de demanda.',
+          'Clique em "Salvar" para registrar a ficha e atualizar em tempo real os indicadores no módulo BI.'
+        ]
+      },
+      {
+        title: 'Como Analisar Indicadores de Fisioterapia no Módulo BI',
+        steps: [
+          'Acesse o módulo de Inteligência / BI (.BI) ou Painel de Indicadores da Qualidade.',
+          'Filtre pelo setor "Fisioterapia".',
+          'Visualize as metas e séries históricas de taxa de aderência, prevalência de dor, déficit motor e sessões realizadas ao longo de todos os meses apurados.'
+        ]
+      },
       {
         title: 'Como Gerar Link de Anamnese Social para Enviar ao Paciente',
         steps: [
@@ -3424,13 +3455,21 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Exportar Relatórios em Excel (.xlsx)',
         steps: [
-          'No cabeçalho do módulo ".MULTI", clique no botão "Relatórios" ou no botão "Exportar" na aba Social.',
+          'No cabeçalho do módulo ".MULTI", clique no botão "Relatórios" ou no botão "Exportar" na aba Social ou Fisioterapia.',
           'Selecione a opção desejada de exportação em planilha (.xlsx).',
           'O arquivo será gerado e baixado instantaneamente no seu navegador.'
         ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como os dados da planilha de Fisioterapia foram importados?',
+        resposta: 'Todos os registros dos meses de Junho, Julho, Agosto, Setembro e Outubro foram migrados com 100% dos pacientes atrelados aos respectivos cadastros centrais da clínica através do motor de busca, calculando automaticamente os indicadores mensais.'
+      },
+      {
+        pergunta: 'Os indicadores de Fisioterapia alimentam o módulo BI automaticamente?',
+        resposta: 'Sim. Os dados registrados na aba Fisioterapia alimentam tanto os gráficos internos da especialidade quanto o painel executivo de indicadores de BI do setor Fisioterapia.'
+      },
       {
         pergunta: 'O paciente precisa fazer login para responder o formulário de anamnese?',
         resposta: 'Não. O link gerado para o paciente é público e seguro, permitindo que ele ou seu acompanhante responda confortavelmente pelo celular através do WhatsApp ou tablet na recepção da clínica sem necessidade de senha.'
@@ -3448,8 +3487,8 @@ export const MODULE_GUIDES = {
         resposta: 'Sim. O seletor de paciente busca diretamente na base central de pacientes do Nex-Ai CLINIC, preenchendo automaticamente nome, CPF, data de nascimento, telefone, endereço e turno de diálise.'
       },
       {
-        pergunta: 'A Psicologia e a Nutrição possuem áreas próprias no módulo?',
-        resposta: 'Sim. O módulo .MULTI possui abas dedicadas para Psicologia e Nutrição, permitindo registrar evoluções, calcular IMC/peso seco e gerenciar o cuidado multidisciplinar de forma integrada ao mesmo paciente.'
+        pergunta: 'A Psicologia, a Nutrição e a Fisioterapia possuem áreas próprias no módulo?',
+        resposta: 'Sim. O módulo .MULTI possui abas dedicadas para Fisioterapia, Psicologia e Nutrição, permitindo registrar evoluções, calcular indicadores e gerenciar o cuidado multidisciplinar de forma integrada ao mesmo paciente.'
       }
     ]
   }

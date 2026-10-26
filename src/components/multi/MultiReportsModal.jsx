@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { X, FileText, Download, Printer, CheckCircle2, HeartHandshake } from 'lucide-react';
+import { X, FileText, Download, Printer, CheckCircle2, HeartHandshake, Activity } from 'lucide-react';
 import { 
-  getSocialAnamneses, exportSocialAnamnesesToExcel 
+  getSocialAnamneses, exportSocialAnamnesesToExcel,
+  getPhysiotherapyRecords, exportPhysiotherapyToExcel
 } from '../../services/firebase/multiService';
 
 export default function MultiReportsModal({ isOpen, onClose, unitId = 'betim' }) {
   const [selectedReport, setSelectedReport] = useState('1');
   const [anamneses, setAnamneses] = useState([]);
+  const [fisioRecords, setFisioRecords] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,8 +20,12 @@ export default function MultiReportsModal({ isOpen, onClose, unitId = 'betim' })
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await getSocialAnamneses(unitId);
-      setAnamneses(data || []);
+      const [dataSocial, dataFisio] = await Promise.all([
+        getSocialAnamneses(unitId),
+        getPhysiotherapyRecords(unitId)
+      ]);
+      setAnamneses(dataSocial || []);
+      setFisioRecords(dataFisio || []);
     } catch (e) {
       console.warn('Erro ao carregar dados:', e);
     } finally {
@@ -30,6 +36,11 @@ export default function MultiReportsModal({ isOpen, onClose, unitId = 'betim' })
   if (!isOpen) return null;
 
   const handleExportExcel = () => {
+    if (selectedReport === '4') {
+      exportPhysiotherapyToExcel(fisioRecords, `Relatorio_Fisioterapia_${unitId}.xlsx`);
+      return;
+    }
+
     let filtered = anamneses;
     if (selectedReport === '2') {
       filtered = anamneses.filter(a => a.dificuldadeAlimentos === 'Sim' || a.dificuldadeAlimentos === 'Às vezes' || a.rendaFamiliar?.includes('não possui'));
@@ -54,7 +65,7 @@ export default function MultiReportsModal({ isOpen, onClose, unitId = 'betim' })
             </div>
             <div>
               <h3 style={styles.title}>Relatórios Multiprofissionais</h3>
-              <p style={styles.subtitle}>Serviço Social, Psicologia & Nutrição</p>
+              <p style={styles.subtitle}>Cuidado Multiprofissional Integrado</p>
             </div>
           </div>
           <button type="button" onClick={onClose} style={styles.btnClose}>
@@ -65,7 +76,7 @@ export default function MultiReportsModal({ isOpen, onClose, unitId = 'betim' })
         {/* CONTEÚDO */}
         <div style={styles.body}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <label style={styles.label}>Selecione o Relatório:</label>
+            <label style={styles.label}>Relatório:</label>
             <div style={styles.reportOption} onClick={() => setSelectedReport('1')}>
               <input type="radio" checked={selectedReport === '1'} onChange={() => setSelectedReport('1')} />
               <div>
@@ -101,6 +112,18 @@ export default function MultiReportsModal({ isOpen, onClose, unitId = 'betim' })
                 </div>
               </div>
             </div>
+
+            <div style={styles.reportOption} onClick={() => setSelectedReport('4')}>
+              <input type="radio" checked={selectedReport === '4'} onChange={() => setSelectedReport('4')} />
+              <div>
+                <div style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                  4. Controle Clínico de Fisioterapia
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  Aderência, sessões, dor, fraqueza, mobilidade e demandas por mês
+                </div>
+              </div>
+            </div>
           </div>
 
           <div style={styles.previewBox}>
@@ -108,7 +131,11 @@ export default function MultiReportsModal({ isOpen, onClose, unitId = 'betim' })
               Registros no Período Atual:
             </div>
             <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#7c3aed', marginTop: '0.25rem' }}>
-              {loading ? '...' : `${anamneses.length} pacientes cadastrados`}
+              {loading 
+                ? '...' 
+                : selectedReport === '4'
+                  ? `${fisioRecords.length} sessões de fisioterapia registradas`
+                  : `${anamneses.length} pacientes cadastrados`}
             </div>
           </div>
         </div>
@@ -123,7 +150,7 @@ export default function MultiReportsModal({ isOpen, onClose, unitId = 'betim' })
               <Printer size={15} /> Imprimir
             </button>
             <button type="button" onClick={handleExportExcel} style={styles.btnPrimary}>
-              <Download size={15} /> Exportar Excel
+              <Download size={15} /> Exportar
             </button>
           </div>
         </div>

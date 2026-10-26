@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   HeartHandshake, Brain, Apple, AlertTriangle, Users, 
-  TrendingUp, CheckCircle2, ShieldAlert, Home, Bus, DollarSign 
+  TrendingUp, CheckCircle2, ShieldAlert, Home, Bus, DollarSign, Activity 
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { 
-  getSocialAnamneses, getPsychologyRecords, getNutritionRecords 
+  getSocialAnamneses, getPsychologyRecords, getNutritionRecords, getPhysiotherapyRecords 
 } from '../../services/firebase/multiService';
 import { calcularAlertasVulnerabilidade } from '../../utils/socialAnamnesisQuestions';
 
@@ -15,6 +15,7 @@ export default function MultiDashboardTab({ unitId = 'betim', onSelectTab }) {
   const [socialList, setSocialList] = useState([]);
   const [psyList, setPsyList] = useState([]);
   const [nutriList, setNutriList] = useState([]);
+  const [fisioList, setFisioList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,14 +25,16 @@ export default function MultiDashboardTab({ unitId = 'betim', onSelectTab }) {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [soc, psy, nut] = await Promise.all([
+      const [soc, psy, nut, fis] = await Promise.all([
         getSocialAnamneses(unitId),
         getPsychologyRecords(unitId),
-        getNutritionRecords(unitId)
+        getNutritionRecords(unitId),
+        getPhysiotherapyRecords(unitId)
       ]);
       setSocialList(soc || []);
       setPsyList(psy || []);
       setNutriList(nut || []);
+      setFisioList(fis || []);
     } catch (e) {
       console.warn('Erro ao carregar dados do dashboard multi:', e);
     } finally {
@@ -104,6 +107,17 @@ export default function MultiDashboardTab({ unitId = 'betim', onSelectTab }) {
           </div>
         </div>
 
+        <div style={styles.kpiCard} onClick={() => onSelectTab && onSelectTab('fisioterapia')}>
+          <div style={{ ...styles.kpiIcon, backgroundColor: '#fef3c7', color: '#d97706' }}>
+            <Activity size={22} />
+          </div>
+          <div>
+            <div style={styles.kpiVal}>{fisioList.length}</div>
+            <div style={styles.kpiLabel}>Fisioterapia</div>
+            <div style={styles.kpiSub}>Sessões e indicadores</div>
+          </div>
+        </div>
+
         <div style={styles.kpiCard}>
           <div style={{ ...styles.kpiIcon, backgroundColor: '#fee2e2', color: '#dc2626' }}>
             <ShieldAlert size={22} />
@@ -135,7 +149,7 @@ export default function MultiDashboardTab({ unitId = 'betim', onSelectTab }) {
         </div>
 
         <div style={styles.chartCard}>
-          <h3 style={styles.chartTitle}>Benefícios Sociais & Previdência</h3>
+          <h3 style={styles.chartTitle}>Benefícios Previdenciários</h3>
           <p style={styles.chartSubtitle}>Acesso a auxílios (BPC, aposentadoria, bolsa família)</p>
           <div style={{ height: '240px', marginTop: '1rem' }}>
             <ResponsiveContainer width="100%" height="100%">

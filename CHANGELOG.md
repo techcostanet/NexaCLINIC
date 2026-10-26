@@ -1,3 +1,27 @@
+## [v5.0.25] - 25 de Outubro, 2026
+### Nex-Ai CLINIC (.MULTI & .BI) — Controle Clínico de Fisioterapia, Indicadores BI e Vínculo Inteligente com Pacientes
+- **Aba Oficial de Fisioterapia no Módulo Multidisciplinar (`MultiPhysiotherapyTab.jsx` e `MultiPanel.jsx`):**
+  - Criação da aba dedicada "Fisioterapia" com ícone oficial `Activity` integrada ao módulo `.MULTI`.
+  - Navegação temporal ágil por botões mensais (Outubro, Setembro, Agosto, Julho, Junho ou histórico consolidado).
+  - 6 Cartões de KPIs estratégicos de primeira linha: Pacientes Avaliados, Total de Sessões Executadas, Taxa de Aderência, Estado Geral Bom, Prevalência de Dor e Fraqueza Muscular.
+  - 3 Gráficos analíticos interativos via Recharts: Demandas de Atendimento (Demanda Espontânea vs Busca Ativa), Linha de Tendência Mensal de Sessões e Pizza de Aderência do Paciente.
+  - Modal dinâmico para lançamento e edição de sessões de fisioterapia, com busca preditiva de pacientes, checkboxes ergonômicos e validação ágil de campos.
+  - Tabela detalhada de atendimentos com identificação de turno, salão, estado, queixas sintomáticas e ações imediatas.
+- **Vínculo 100% Preciso com o Cadastro Central de Pacientes (`initialPhysiotherapyData.json`):**
+  - Ingestão integral da planilha `Quadro de Indicadores SETEMBRO.xlsx` (787 atendimentos em 5 abas mensais cobrindo Junho a Outubro de 2026).
+  - Mapeamento e correspondência de 100% dos 172 pacientes únicos com os cadastros centrais da clínica (`allEnrichedPatients.json`), associando os IDs de prontuário e normalizando grafias.
+  - Integração nativa com o motor de busca global de pacientes (`dbService.searchPatients`), permitindo atrelar e consultar pacientes existentes com autocomplete instantâneo.
+- **Alimentação Automática dos Indicadores no Módulo BI (`mockFirebase.js`, `clinicalService.js` e `Dashboard.jsx`):**
+  - Criação do setor oficial `Fisioterapia` (`fisioterapia`) no catálogo de setores do sistema e nos padrões de RH.
+  - Configuração de 10 indicadores clínicos oficiais de fisioterapia com metas de qualidade: Taxa de Aderência, Estado Geral Bom, Prevalência de Queixa de Dor, Déficit de Mobilidade, Fraqueza Muscular, Incapacidade Funcional, Demanda Espontânea, Busca Ativa, Total de Sessões Executadas e Pacientes em Acompanhamento.
+  - Injeção de 50 pontos de dados históricos consolidados (10 indicadores x 5 meses: `2026-06` a `2026-10`) prontos para consumo no módulo BI (.BI) e no Painel de Indicadores da Qualidade.
+  - Calibração inteligente do indicador de desempenho no Dashboard BI (`isLowerBetter`), reconhecendo queixas clínicas (dor, fraqueza, déficit, incapacidade) onde taxas menores indicam melhor desempenho.
+- **Exportação e Relatórios Multiprofissionais (`MultiReportsModal.jsx` e `multiService.js`):**
+  - Adição da opção "4. Controle Clínico de Fisioterapia" na central de relatórios do módulo com exportação em planilha Excel nativa (.xlsx).
+- **Documentação e Padrões de Interface:**
+  - Atualização completa do manual do módulo `.MULTI` em `moduleGuidesData.js` com recursos, tutorial prático passo a passo e FAQ de Fisioterapia.
+  - Aplicação rigorosa das diretrizes de UI/UX com rótulos concisos de termo único em todos os botões, cabeçalhos e formulários.
+
 ## [v5.0.24] - 14 de Outubro, 2026
 ### Nex-Ai CLINIC (.RH) — Geração de PDF Unificado de Contracheques, Relatório Tabular em PDF e Exportação Youk Aprimorada
 - **Geração de PDF Unificado de Contracheques (`payslipPdfGenerator.js`):**

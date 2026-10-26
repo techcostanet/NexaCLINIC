@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { 
   HeartHandshake, Brain, Apple, LayoutDashboard, FileSpreadsheet,
-  Users, CheckCircle2, AlertCircle
+  Users, CheckCircle2, AlertCircle, Activity
 } from 'lucide-react';
 import ModuleHeader from '../common/ModuleHeader';
 import { useUnit } from '../../contexts/UnitContext';
 import MultiDashboardTab from './MultiDashboardTab';
 import MultiSocialTab from './MultiSocialTab';
+import MultiPhysiotherapyTab from './MultiPhysiotherapyTab';
 import MultiPsychologyTab from './MultiPsychologyTab';
 import MultiNutritionTab from './MultiNutritionTab';
 import MultiReportsModal from './MultiReportsModal';
@@ -26,6 +27,7 @@ export default function MultiPanel({ currentUser, isReportsOpen, setIsReportsOpe
   const abas = [
     { id: 'social', rotulo: 'Social', icone: HeartHandshake },
     { id: 'painel', rotulo: 'Painel', icone: LayoutDashboard },
+    { id: 'fisioterapia', rotulo: 'Fisioterapia', icone: Activity },
     { id: 'psicologia', rotulo: 'Psicologia', icone: Brain },
     { id: 'nutricao', rotulo: 'Nutrição', icone: Apple },
   ];
@@ -41,7 +43,7 @@ export default function MultiPanel({ currentUser, isReportsOpen, setIsReportsOpe
       <ModuleHeader
         icon={HeartHandshake}
         title=".MULTI"
-        subtitle="Serviço Social, Psicologia & Nutrição"
+        subtitle="Cuidado Multiprofissional Integrado"
         gradient="linear-gradient(135deg, #7c3aed, #4f46e5)"
         dotColor="#7c3aed"
         actions={
@@ -147,6 +149,13 @@ export default function MultiPanel({ currentUser, isReportsOpen, setIsReportsOpe
           <MultiDashboardTab
             unitId={activeUnitId}
             onSelectTab={(tab) => setActiveTab(tab)}
+          />
+        )}
+
+        {activeTab === 'fisioterapia' && (
+          <MultiPhysiotherapyTab
+            unitId={activeUnitId}
+            currentUser={currentUser}
           />
         )}
 

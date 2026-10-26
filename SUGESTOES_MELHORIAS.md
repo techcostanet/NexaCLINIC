@@ -469,6 +469,23 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Arquivos Envolvidos:** `src/components/HR/PayslipsTab.jsx`, `src/components/HR/PayslipImportModal.jsx`.
 - **Complexidade:** Baixa.
 
+---
+
+### [SM-030] Importador de Novas Planilhas Mensais de Fisioterapia (.xlsx) via Drag & Drop
+- **Data:** 25/10/2026
+- **Módulo:** `.MULTI` (Multidisciplinar / Fisioterapia)
+- **Título:** Importação em Lote de Planilhas Mensais de Fisioterapia com Vinculação Automática de Pacientes
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** A base histórica de Junho a Outubro de 2026 foi importada com 100% de precisão cadastral. Para meses futuros (ex.: Novembro, Dezembro), caso a equipe de fisioterapia elabore previamente a planilha no modelo do Quadro de Indicadores, seria vantajoso dispor de uma rotina de ingestão direta no próprio módulo para importar o mês em 1 clique sem necessidade de lançar paciente a paciente.
+- **Descrição Técnica:**
+  - Na aba `MultiPhysiotherapyTab.jsx`, adicionar botão de ação `"Importar Planilha"` com dropzone modal.
+  - Ler o arquivo Excel (.xlsx), validar os cabeçalhos de colunas (Tratamentos, Paciente, Gênero, Sessões, Turno, Salão, BOM/REGULAR, Aderente, Sintomas e Demanda) e executar o cruzamento com a base de pacientes via motor de busca / normalização.
+  - Gravar os novos registros e atualizar automaticamente os dados consolidados do setor Fisioterapia no módulo BI.
+- **Benefício Operacional:** Redução expressiva de tempo operacional no fechamento mensal da fisioterapia, viabilizando ingestão de mais de 150 a 200 atendimentos em segundos.
+- **Arquivos Envolvidos:** `src/components/multi/MultiPhysiotherapyTab.jsx`, `src/services/firebase/multiService.js`.
+- **Complexidade:** Média.
+
+
 
 
 

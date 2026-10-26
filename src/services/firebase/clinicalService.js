@@ -53,7 +53,18 @@ export const getIndicators = async () => {
         // SESMT - Lixo Infectante (PDF)
         { id: 'sesmt_descarte_infectante_conformidade', name: 'Conformidade em Lixo Infectante', sectorId: 'sesmt', unit: '%', target: 95.0, description: 'Percentual de vistorias em conformidade com o descarte de resíduos infectantes (RDC 222 e NR-32).' },
         { id: 'sesmt_descarte_infectante_nao_conformidade', name: 'Não Conformidade em Lixo Infectante', sectorId: 'sesmt', unit: '%', target: 5.0, description: 'Percentual de vistorias com desvios na segregação ou descarte de resíduos infectantes.' },
-        { id: 'sesmt_vistorias_residuos_total', name: 'Vistorias de Resíduos Realizadas', sectorId: 'sesmt', unit: 'un', target: 60, description: 'Volume total de auditorias de descarte de resíduos infectantes no mês.' }
+        { id: 'sesmt_vistorias_residuos_total', name: 'Vistorias de Resíduos Realizadas', sectorId: 'sesmt', unit: 'un', target: 60, description: 'Volume total de auditorias de descarte de resíduos infectantes no mês.' },
+        // Fisioterapia
+        { id: 'fisio_taxa_aderencia', name: 'Taxa de Aderência à Fisioterapia', sectorId: 'fisioterapia', unit: '%', target: 80.0, description: 'Percentual de pacientes aderentes ao plano fisioterapêutico.' },
+        { id: 'fisio_estado_bom', name: 'Estado Geral Bom', sectorId: 'fisioterapia', unit: '%', target: 80.0, description: 'Percentual de pacientes que concluíram com estado geral bom.' },
+        { id: 'fisio_prevalencia_dor', name: 'Prevalência de Queixa de Dor', sectorId: 'fisioterapia', unit: '%', target: 20.0, description: 'Percentual de pacientes com dor relatada ou tratada no período.' },
+        { id: 'fisio_deficit_mobilidade', name: 'Déficit de Mobilidade', sectorId: 'fisioterapia', unit: '%', target: 25.0, description: 'Percentual de pacientes com déficit de mobilidade osteomuscular.' },
+        { id: 'fisio_fraqueza_muscular', name: 'Fraqueza Muscular', sectorId: 'fisioterapia', unit: '%', target: 30.0, description: 'Percentual de pacientes com fraqueza muscular identificada.' },
+        { id: 'fisio_incapacidade_funcional', name: 'Incapacidade Funcional', sectorId: 'fisioterapia', unit: '%', target: 15.0, description: 'Percentual de pacientes com incapacidade funcional motora.' },
+        { id: 'fisio_demanda_espontanea', name: 'Demanda Espontânea', sectorId: 'fisioterapia', unit: '%', target: 20.0, description: 'Percentual de atendimentos de fisioterapia por procura espontânea.' },
+        { id: 'fisio_busca_ativa', name: 'Busca Ativa de Fisioterapia', sectorId: 'fisioterapia', unit: '%', target: 80.0, description: 'Percentual de atendimentos realizados via busca ativa.' },
+        { id: 'fisio_total_sessoes', name: 'Total de Sessões Executadas', sectorId: 'fisioterapia', unit: 'sessões', target: 300, description: 'Volume total de sessões fisioterapêuticas no mês.' },
+        { id: 'fisio_pacientes_avaliados', name: 'Pacientes em Acompanhamento', sectorId: 'fisioterapia', unit: 'pacientes', target: 160, description: 'Total de pacientes avaliados pela fisioterapia no mês.' }
       ];
       defaults.forEach(ind => {
         batch.set(doc(db, 'indicators', ind.id), ind);
@@ -73,6 +84,26 @@ export const getIndicators = async () => {
       for (const wd of wasteDefaults) {
         setDoc(doc(db, 'indicators', wd.id), wd, { merge: true }).catch(() => {});
         list.push(wd);
+      }
+    }
+
+    if (!list.some(i => i.id === 'fisio_taxa_aderencia')) {
+      const { setDoc, doc } = await import('firebase/firestore');
+      const fisioDefaults = [
+        { id: 'fisio_taxa_aderencia', name: 'Taxa de Aderência à Fisioterapia', sectorId: 'fisioterapia', unit: '%', target: 80.0, description: 'Percentual de pacientes aderentes ao plano fisioterapêutico.' },
+        { id: 'fisio_estado_bom', name: 'Estado Geral Bom', sectorId: 'fisioterapia', unit: '%', target: 80.0, description: 'Percentual de pacientes que concluíram com estado geral bom.' },
+        { id: 'fisio_prevalencia_dor', name: 'Prevalência de Queixa de Dor', sectorId: 'fisioterapia', unit: '%', target: 20.0, description: 'Percentual de pacientes com dor relatada ou tratada no período.' },
+        { id: 'fisio_deficit_mobilidade', name: 'Déficit de Mobilidade', sectorId: 'fisioterapia', unit: '%', target: 25.0, description: 'Percentual de pacientes com déficit de mobilidade osteomuscular.' },
+        { id: 'fisio_fraqueza_muscular', name: 'Fraqueza Muscular', sectorId: 'fisioterapia', unit: '%', target: 30.0, description: 'Percentual de pacientes com fraqueza muscular identificada.' },
+        { id: 'fisio_incapacidade_funcional', name: 'Incapacidade Funcional', sectorId: 'fisioterapia', unit: '%', target: 15.0, description: 'Percentual de pacientes com incapacidade funcional motora.' },
+        { id: 'fisio_demanda_espontanea', name: 'Demanda Espontânea', sectorId: 'fisioterapia', unit: '%', target: 20.0, description: 'Percentual de atendimentos de fisioterapia por procura espontânea.' },
+        { id: 'fisio_busca_ativa', name: 'Busca Ativa de Fisioterapia', sectorId: 'fisioterapia', unit: '%', target: 80.0, description: 'Percentual de atendimentos realizados via busca ativa.' },
+        { id: 'fisio_total_sessoes', name: 'Total de Sessões Executadas', sectorId: 'fisioterapia', unit: 'sessões', target: 300, description: 'Volume total de sessões fisioterapêuticas no mês.' },
+        { id: 'fisio_pacientes_avaliados', name: 'Pacientes em Acompanhamento', sectorId: 'fisioterapia', unit: 'pacientes', target: 160, description: 'Total de pacientes avaliados pela fisioterapia no mês.' }
+      ];
+      for (const fd of fisioDefaults) {
+        setDoc(doc(db, 'indicators', fd.id), fd, { merge: true }).catch(() => {});
+        list.push(fd);
       }
     }
 

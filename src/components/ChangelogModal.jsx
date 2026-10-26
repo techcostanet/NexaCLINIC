@@ -6,6 +6,20 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.25',
+      date: '25/10/2026',
+      title: 'Nex-Ai CLINIC (.MULTI & .BI) — Controle Clínico de Fisioterapia, Indicadores BI e Vínculo Inteligente com Pacientes',
+      description: 'Implementação completa do ecossistema de Fisioterapia integrado ao módulo Multidisciplinar (.MULTI) e ao módulo de Business Intelligence (.BI): ingestão e estruturação de 100% dos dados históricos de acompanhamento fisioterapêutico (787 atendimentos de Junho a Outubro de 2026) com 172 pacientes vinculados com precisão absoluta ao cadastro central da clínica via motor de busca global; criação da aba Fisioterapia com filtros mensais de navegação ágil, 6 cartões de KPIs estratégicos (Avaliados, Sessões, Aderência, Estado Geral, Prevalência de Dor e Fraqueza Muscular) e 3 gráficos analíticos interativos (Demandas Espontânea vs Busca Ativa, Tendência Mensal de Sessões e Pizza de Aderência); modal completo de lançamento de sessões com motor de busca inteligente de pacientes e campos com padrão rigoroso de rótulo único; exportador oficial de relatórios em Excel (.xlsx); integração de 10 indicadores clínicos oficiais no setor Fisioterapia do módulo BI e no Painel de Indicadores da Qualidade; e atualização abrangente dos manuais operacionais.',
+      changes: [
+        { type: 'Aba Fisioterapia (.MULTI)', text: 'Área dedicada no módulo multidisciplinar com histórico de Junho a Outubro de 2026, KPIs executivos e gráficos analíticos.' },
+        { type: 'Vínculo 100% com Pacientes', text: '787 registros e 172 pacientes da planilha original vinculados diretamente aos IDs centrais da clínica com motor de busca integrado.' },
+        { type: 'Indicadores no Módulo BI', text: '10 novos indicadores de Fisioterapia alimentados com séries históricas mensais, metas e detecção de métricas inversas (dor, fraqueza, déficits).' },
+        { type: 'Lançamento e CRUD Rápido', text: 'Modal com busca em tempo real de pacientes por nome/prontuário, validação de sessões e rótulos de termo único.' },
+        { type: 'Exportação e Relatórios', text: 'Opção de relatório e download em formato Excel nativo (.xlsx) no modal de relatórios multiprofissionais e na aba.' },
+        { type: 'Documentação Oficial', text: 'Recursos, tutoriais de operação e perguntas frequentes de Fisioterapia documentados no guia do módulo.' }
+      ]
+    },
+    {
       version: 'v5.0.24',
       date: '14/10/2026',
       title: 'Nex-Ai CLINIC (.RH) — PDF Unificado de Contracheques, Relatório Tabular e Exportador Youk',

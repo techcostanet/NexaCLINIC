@@ -5,6 +5,7 @@ import initialSuppliers from './data/initialSuppliers.json';
 import initialProducts from './data/initialProducts.json';
 import syncedAssistEmails from './data/synced_assist_emails.json';
 import allEnrichedPatients from './data/allEnrichedPatients.json';
+import initialPhysiotherapyData from './data/initialPhysiotherapyData.json';
 
 const MOCK_STORAGE_KEY = 'sistema_indicadores_mock_db';
 
@@ -114,6 +115,106 @@ const getDB = () => {
         name: 'SESMT',
         description: 'Segurança do Trabalho, Proteção Contra Incêndios e Biossegurança Hospitalar (NRs 06, 23, 32).'
       });
+      updated = true;
+    }
+
+    // Migrate Physiotherapy sector
+    if (parsed.sectors && !parsed.sectors.some(s => s.id === 'fisioterapia')) {
+      parsed.sectors.push({
+        id: 'fisioterapia',
+        name: 'Fisioterapia',
+        description: 'Métricas de acompanhamento fisioterapêutico, mobilidade, dor e funcionalidade motora.'
+      });
+      updated = true;
+    }
+
+    // Migrate Physiotherapy indicators
+    if (parsed.indicators && !parsed.indicators.some(i => i.sectorId === 'fisioterapia')) {
+      parsed.indicators.push(
+        { id: 'fisio_taxa_aderencia', name: 'Taxa de Aderência à Fisioterapia', sectorId: 'fisioterapia', unit: '%', target: 80.0, description: 'Percentual de pacientes que aderem às sessões de fisioterapia no mês.' },
+        { id: 'fisio_estado_bom', name: 'Pacientes em Estado Geral Bom', sectorId: 'fisioterapia', unit: '%', target: 90.0, description: 'Percentual de pacientes avaliados com estado geral funcional bom.' },
+        { id: 'fisio_prevalencia_dor', name: 'Prevalência de Queixa de Dor', sectorId: 'fisioterapia', unit: '%', target: 40.0, description: 'Percentual de pacientes com queixas ou demandas álgicas.' },
+        { id: 'fisio_deficit_mobilidade', name: 'Pacientes com Déficit de Mobilidade', sectorId: 'fisioterapia', unit: '%', target: 12.0, description: 'Percentual de pacientes com comprometimento motor ou restrição de mobilidade.' },
+        { id: 'fisio_fraqueza_muscular', name: 'Prevalência de Fraqueza Muscular', sectorId: 'fisioterapia', unit: '%', target: 15.0, description: 'Percentual de pacientes com fraqueza ou perda de força muscular.' },
+        { id: 'fisio_incapacidade_funcional', name: 'Taxa de Incapacidade Funcional', sectorId: 'fisioterapia', unit: '%', target: 8.0, description: 'Percentual de pacientes com incapacidade funcional motora.' },
+        { id: 'fisio_demanda_espontanea', name: 'Atendimentos por Demanda Espontânea', sectorId: 'fisioterapia', unit: '%', target: 70.0, description: 'Percentual de atendimentos iniciados por solicitação espontânea do paciente.' },
+        { id: 'fisio_busca_ativa', name: 'Atendimentos por Busca Ativa', sectorId: 'fisioterapia', unit: '%', target: 10.0, description: 'Percentual de atendimentos proativos em beira de leito/salão.' },
+        { id: 'fisio_total_sessoes', name: 'Volume Total de Sessões Executadas', sectorId: 'fisioterapia', unit: 'sessões', target: 150, description: 'Número total de sessões fisioterapêuticas realizadas no mês.' },
+        { id: 'fisio_pacientes_avaliados', name: 'Total de Pacientes Avaliados', sectorId: 'fisioterapia', unit: 'pacientes', target: 165, description: 'Total de pacientes com acompanhamento fisioterapêutico no período.' }
+      );
+      updated = true;
+    }
+
+    // Migrate Physiotherapy indicator data history (Junho a Outubro)
+    if (parsed.indicator_data && !parsed.indicator_data.some(d => d.sectorId === 'fisioterapia')) {
+      const fisioPoints = [
+        // 2026-06
+        { indicatorId: 'fisio_taxa_aderencia', sectorId: 'fisioterapia', value: 62.7, period: '2026-06', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_estado_bom', sectorId: 'fisioterapia', value: 92.8, period: '2026-06', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_prevalencia_dor', sectorId: 'fisioterapia', value: 45.8, period: '2026-06', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_deficit_mobilidade', sectorId: 'fisioterapia', value: 9.0, period: '2026-06', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_fraqueza_muscular', sectorId: 'fisioterapia', value: 12.7, period: '2026-06', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_incapacidade_funcional', sectorId: 'fisioterapia', value: 4.8, period: '2026-06', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_demanda_espontanea', sectorId: 'fisioterapia', value: 63.9, period: '2026-06', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_busca_ativa', sectorId: 'fisioterapia', value: 5.4, period: '2026-06', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_total_sessoes', sectorId: 'fisioterapia', value: 157, period: '2026-06', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_pacientes_avaliados', sectorId: 'fisioterapia', value: 166, period: '2026-06', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+
+        // 2026-07
+        { indicatorId: 'fisio_taxa_aderencia', sectorId: 'fisioterapia', value: 62.7, period: '2026-07', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_estado_bom', sectorId: 'fisioterapia', value: 92.8, period: '2026-07', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_prevalencia_dor', sectorId: 'fisioterapia', value: 45.8, period: '2026-07', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_deficit_mobilidade', sectorId: 'fisioterapia', value: 9.0, period: '2026-07', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_fraqueza_muscular', sectorId: 'fisioterapia', value: 12.7, period: '2026-07', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_incapacidade_funcional', sectorId: 'fisioterapia', value: 4.8, period: '2026-07', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_demanda_espontanea', sectorId: 'fisioterapia', value: 63.9, period: '2026-07', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_busca_ativa', sectorId: 'fisioterapia', value: 5.4, period: '2026-07', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_total_sessoes', sectorId: 'fisioterapia', value: 157, period: '2026-07', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_pacientes_avaliados', sectorId: 'fisioterapia', value: 166, period: '2026-07', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+
+        // 2026-08
+        { indicatorId: 'fisio_taxa_aderencia', sectorId: 'fisioterapia', value: 64.4, period: '2026-08', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_estado_bom', sectorId: 'fisioterapia', value: 90.7, period: '2026-08', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_prevalencia_dor', sectorId: 'fisioterapia', value: 48.3, period: '2026-08', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_deficit_mobilidade', sectorId: 'fisioterapia', value: 10.2, period: '2026-08', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_fraqueza_muscular', sectorId: 'fisioterapia', value: 10.2, period: '2026-08', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_incapacidade_funcional', sectorId: 'fisioterapia', value: 5.9, period: '2026-08', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_demanda_espontanea', sectorId: 'fisioterapia', value: 64.4, period: '2026-08', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_busca_ativa', sectorId: 'fisioterapia', value: 7.6, period: '2026-08', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_total_sessoes', sectorId: 'fisioterapia', value: 31, period: '2026-08', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_pacientes_avaliados', sectorId: 'fisioterapia', value: 118, period: '2026-08', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+
+        // 2026-09
+        { indicatorId: 'fisio_taxa_aderencia', sectorId: 'fisioterapia', value: 62.7, period: '2026-09', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_estado_bom', sectorId: 'fisioterapia', value: 92.8, period: '2026-09', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_prevalencia_dor', sectorId: 'fisioterapia', value: 45.8, period: '2026-09', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_deficit_mobilidade', sectorId: 'fisioterapia', value: 9.0, period: '2026-09', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_fraqueza_muscular', sectorId: 'fisioterapia', value: 12.7, period: '2026-09', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_incapacidade_funcional', sectorId: 'fisioterapia', value: 4.8, period: '2026-09', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_demanda_espontanea', sectorId: 'fisioterapia', value: 63.9, period: '2026-09', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_busca_ativa', sectorId: 'fisioterapia', value: 5.4, period: '2026-09', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_total_sessoes', sectorId: 'fisioterapia', value: 157, period: '2026-09', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_pacientes_avaliados', sectorId: 'fisioterapia', value: 166, period: '2026-09', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+
+        // 2026-10
+        { indicatorId: 'fisio_taxa_aderencia', sectorId: 'fisioterapia', value: 63.7, period: '2026-10', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_estado_bom', sectorId: 'fisioterapia', value: 93.0, period: '2026-10', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_prevalencia_dor', sectorId: 'fisioterapia', value: 46.2, period: '2026-10', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_deficit_mobilidade', sectorId: 'fisioterapia', value: 8.8, period: '2026-10', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_fraqueza_muscular', sectorId: 'fisioterapia', value: 12.3, period: '2026-10', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_incapacidade_funcional', sectorId: 'fisioterapia', value: 4.7, period: '2026-10', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_demanda_espontanea', sectorId: 'fisioterapia', value: 62.0, period: '2026-10', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_busca_ativa', sectorId: 'fisioterapia', value: 5.3, period: '2026-10', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_total_sessoes', sectorId: 'fisioterapia', value: 165, period: '2026-10', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() },
+        { indicatorId: 'fisio_pacientes_avaliados', sectorId: 'fisioterapia', value: 171, period: '2026-10', uploadedBy: 'camila-fisio', uploadedAt: new Date().toISOString() }
+      ];
+      parsed.indicator_data.push(...fisioPoints);
+      updated = true;
+    }
+
+    // Migrate Physiotherapy patient records
+    if (!parsed.physiotherapy_records || parsed.physiotherapy_records.length < 500) {
+      parsed.physiotherapy_records = initialPhysiotherapyData || [];
       updated = true;
     }
 
@@ -3013,6 +3114,7 @@ export const mockFirestore = {
       { id: 'farmacia', name: 'Farmácia', description: 'Farmácia Hospitalar' },
       { id: 'faturamento', name: 'Faturamento', description: 'Faturamento e APACs' },
       { id: 'financeiro', name: 'Financeiro', description: 'Financeiro e Controladoria' },
+      { id: 'fisioterapia', name: 'Fisioterapia', description: 'Fisioterapia e Reabilitação Motora' },
       { id: 'hemodialise', name: 'Hemodiálise', description: 'Salões de Hemodiálise' },
       { id: 'higienizacao', name: 'Higienização', description: 'Higienização e Limpeza' },
       { id: 'manutencao', name: 'Manutenção', description: 'Manutenção e Engenharia Clínica' },
@@ -6243,6 +6345,48 @@ export const mockFirestore = {
 
     setDB(db);
     return true;
+  },
+
+  getPhysiotherapyRecords: async (unitId = null, period = null) => {
+    const db = getDB();
+    let list = db.physiotherapy_records || initialPhysiotherapyData || [];
+    if (unitId && unitId !== 'all') {
+      list = list.filter(r => !r.unitId || r.unitId === unitId);
+    }
+    if (period && period !== 'all') {
+      list = list.filter(r => r.period === period);
+    }
+    return list;
+  },
+
+  savePhysiotherapyRecord: async (recordData, currentUser = null) => {
+    await new Promise(res => setTimeout(res, 200));
+    const db = getDB();
+    if (!db.physiotherapy_records) db.physiotherapy_records = [...(initialPhysiotherapyData || [])];
+    const id = recordData.id || `fisio-${recordData.period || 'current'}-${Date.now()}`;
+    const newRecord = {
+      ...recordData,
+      id,
+      updatedAt: new Date().toISOString(),
+      updatedBy: currentUser?.name || 'Fisioterapia'
+    };
+    const idx = db.physiotherapy_records.findIndex(r => r.id === id);
+    if (idx >= 0) {
+      db.physiotherapy_records[idx] = newRecord;
+    } else {
+      db.physiotherapy_records.unshift(newRecord);
+    }
+    setDB(db);
+    return newRecord;
+  },
+
+  deletePhysiotherapyRecord: async (id) => {
+    await new Promise(res => setTimeout(res, 200));
+    const db = getDB();
+    if (!db.physiotherapy_records) db.physiotherapy_records = [...(initialPhysiotherapyData || [])];
+    db.physiotherapy_records = db.physiotherapy_records.filter(r => r.id !== id);
+    setDB(db);
+    return { success: true };
   }
 };
 

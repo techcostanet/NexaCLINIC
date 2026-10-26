@@ -4,13 +4,15 @@
 // ============================================================
 
 import { app } from './config';
-import { USE_MOCK } from './mockDb';
+import { USE_MOCK, mockFirestore } from './mockDb';
 import { getPatients as getClinicPatients } from './patientService';
 import * as XLSX from 'xlsx';
+import initialPhysiotherapyData from '../../data/initialPhysiotherapyData.json';
 
 const STORAGE_KEY_SOCIAL = 'nexai_multi_social_anamneses';
 const STORAGE_KEY_PSY = 'nexai_multi_psychology_records';
 const STORAGE_KEY_NUTRI = 'nexai_multi_nutrition_records';
+const STORAGE_KEY_FISIO = 'nexai_multi_physiotherapy_records';
 
 // Base mock inicial realista para resiliência offline e demonstração clínica imediata
 const MOCK_SOCIAL_ANAMNESIS_SEED = [
@@ -381,3 +383,94 @@ export function exportSocialAnamnesesToExcel(list, filename = 'Anamnese_Social_P
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Anamnese Social');
   XLSX.writeFile(workbook, filename);
 }
+
+// -------------------------------------------------------------
+// FISIOTERAPIA (REABILITAÇÃO & MOTRICIDADE)
+// -------------------------------------------------------------
+
+export async function getPhysiotherapyRecords(unitId = null, period = null) {
+  if (USE_MOCK && mockFirestore?.getPhysiotherapyRecords) {
+    return mockFirestore.getPhysiotherapyRecords(unitId, period);
+  }
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_FISIO);
+    let list = raw ? JSON.parse(raw) : (initialPhysiotherapyData || []);
+    if (!raw && initialPhysiotherapyData?.length) {
+      localStorage.setItem(STORAGE_KEY_FISIO, JSON.stringify(initialPhysiotherapyData));
+    }
+    if (unitId && unitId !== 'all') {
+      list = list.filter(x => !x.unitId || x.unitId === unitId);
+    }
+    if (period && period !== 'all') {
+      list = list.filter(x => x.period === period);
+    }
+    return list;
+  } catch (e) {
+    console.warn('Erro ao carregar registros de fisioterapia:', e);
+    return initialPhysiotherapyData || [];
+  }
+}
+
+export async function savePhysiotherapyRecord(data, currentUser = null) {
+  if (USE_MOCK && mockFirestore?.savePhysiotherapyRecord) {
+    return mockFirestore.savePhysiotherapyRecord(data, currentUser);
+  }
+  const now = new Date().toISOString();
+  const id = data.id || `fisio-${data.period || 'current'}-${Date.now()}`;
+  const record = {
+    ...data,
+    id,
+    updatedAt: now,
+    profissionalResponsavel: data.profissionalResponsavel || currentUser?.name || 'CAMILA'
+  };
+  const list = await getPhysiotherapyRecords();
+  const idx = list.findIndex(x => x.id === id);
+  if (idx >= 0) list[idx] = record;
+  else list.unshift(record);
+  localStorage.setItem(STORAGE_KEY_FISIO, JSON.stringify(list));
+  return record;
+}
+
+export async function deletePhysiotherapyRecord(id, currentUser = null) {
+  if (USE_MOCK && mockFirestore?.deletePhysiotherapyRecord) {
+    return mockFirestore.deletePhysiotherapyRecord(id);
+  }
+  const list = await getPhysiotherapyRecords();
+  const filtered = list.filter(x => x.id !== id);
+  localStorage.setItem(STORAGE_KEY_FISIO, JSON.stringify(filtered));
+  return { success: true };
+}
+
+export function exportPhysiotherapyToExcel(list, filename = 'Quadro_Indicadores_Fisioterapia.xlsx') {
+  if (!list || list.length === 0) return;
+
+  const rows = list.map((r, idx) => ({
+    'Nº': r.numero || idx + 1,
+    'Tratamentos': r.tratamento || 'HD',
+    'Paciente': r.patientName || 'NÃO INFORMADO',
+    'Gênero': r.genero || 'M',
+    'Sessões': r.sessoes ?? 0,
+    'Turno': r.turno || '',
+    'Salão': r.salao || '1',
+    'BOM': r.estadoGeral === 'Bom' ? 'X' : '',
+    'REGULAR': r.estadoGeral === 'Regular' ? 'X' : '',
+    'Não aderente': r.aderente === false ? 'X' : '',
+    'Aderente': r.aderente === true ? 'X' : '',
+    'DOR': r.demandas?.dor ? 'X' : '',
+    'MOBILIDADE': r.demandas?.mobilidade ? 'X' : '',
+    'FRAQUEZA': r.demandas?.fraqueza ? 'X' : '',
+    'INCAPACIDADE': r.demandas?.incapacidade ? 'X' : '',
+    'Outros': r.demandas?.outros ? 'X' : '',
+    'Busca ativa': r.buscaAtiva ? 'X' : '',
+    'Demanda espontânea': r.demandaEspontanea ? 'X' : '',
+    'Profissional': r.profissionalResponsavel || 'CAMILA',
+    'Período': r.period || '',
+    'Mês': r.monthName || ''
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Fisioterapia');
+  XLSX.writeFile(workbook, filename);
+}
+
