@@ -1,3 +1,10 @@
+## [v5.0.26] - 25 de Outubro, 2026
+### Nex-Ai CLINIC (.MULTI) — Correção Estrutural de Importação e Estabilidade no Serviço Social
+- **Correção de ReferenceError em MultiSocialTab (`MultiSocialTab.jsx`):**
+  - Inclusão do ícone `AlertCircle` no bloco de importação de `lucide-react`, eliminando o erro de tempo de execução (`ReferenceError: AlertCircle is not defined`) disparado ao renderizar a aba de Serviço Social.
+  - Higienização e remoção de imports residuais sem uso no módulo multidisciplinar.
+  - Varredura com oxlint atestando ausência total de componentes ou tags JSX não declaradas em todo o código-fonte da aplicação.
+
 ## [v5.0.25] - 25 de Outubro, 2026
 ### Nex-Ai CLINIC (.MULTI & .BI) — Controle Clínico de Fisioterapia, Indicadores BI e Vínculo Inteligente com Pacientes
 - **Aba Oficial de Fisioterapia no Módulo Multidisciplinar (`MultiPhysiotherapyTab.jsx` e `MultiPanel.jsx`):**

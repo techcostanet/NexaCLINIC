@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  HeartHandshake, Plus, Search, Filter, Download, Share2, 
-  Edit3, Trash2, Printer, Eye, AlertTriangle, CheckCircle2, 
-  ExternalLink, Phone, MapPin, Bus, DollarSign, Home, UserCheck,
-  Calendar, Copy, Check, QrCode, X
+  HeartHandshake, Plus, Search, Download, Share2, 
+  Edit3, Trash2, AlertTriangle, AlertCircle, Phone, Bus, Copy, X
 } from 'lucide-react';
 import { 
   getSocialAnamneses, deleteSocialAnamnese, exportSocialAnamnesesToExcel 

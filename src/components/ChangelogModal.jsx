@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.26',
+      date: '25/10/2026',
+      title: 'Nex-Ai CLINIC (.MULTI) — Correção Estrutural de Importação e Estabilidade no Serviço Social',
+      description: 'Resolução imediata do erro em tempo de execução (ReferenceError: AlertCircle is not defined) na renderização inicial do módulo Multidisciplinar (.MULTI): inclusão da importação do ícone AlertCircle no componente MultiSocialTab, higienização de imports residuais e validação com oxlint de zero pendências de JSX indefinido em todo o pacote de componentes.',
+      changes: [
+        { type: 'Correção ReferenceError', text: 'Importação de AlertCircle de lucide-react em MultiSocialTab, restabelecendo o carregamento da aba Social sem falhas.' },
+        { type: 'Higienização de Imports', text: 'Remoção de referências não utilizadas e conformidade estrita na compilação do módulo multidisciplinar.' }
+      ]
+    },
+    {
       version: 'v5.0.25',
       date: '25/10/2026',
       title: 'Nex-Ai CLINIC (.MULTI & .BI) — Controle Clínico de Fisioterapia, Indicadores BI e Vínculo Inteligente com Pacientes',

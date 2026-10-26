@@ -276,16 +276,6 @@ export default function MultiPhysiotherapyTab({ unitId = 'betim', currentUser = 
     ];
   }, [periodRecords]);
 
-  // Gráfico: Distribuição por Turno e Salão
-  const turnoSalaoData = useMemo(() => {
-    const map = {};
-    periodRecords.forEach(r => {
-      const turnoKey = r.turno?.includes('1º') ? '1º Turno' : (r.turno?.includes('2º') ? '2º Turno' : (r.turno?.includes('3º') ? '3º Turno' : 'Outro'));
-      map[turnoKey] = (map[turnoKey] || 0) + 1;
-    });
-    return Object.keys(map).map(k => ({ name: k, total: map[k] }));
-  }, [periodRecords]);
-
   // Gráfico: Aderência (Pizza)
   const aderenciaPieData = useMemo(() => {
     const aderentes = periodRecords.filter(r => r.aderente).length;
