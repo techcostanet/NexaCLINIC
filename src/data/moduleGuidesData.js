@@ -1439,6 +1439,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Governança & Parâmetros Hospitalares',
         desc: 'Aba administrativa para cadastro de profissionais (RBAC), criação e edição de indicadores, ajuste de metas e configuração de setores, turnos, salões e acessos vasculares.'
+      },
+      {
+        title: 'Sincronização Dinâmica com Módulo Multidisciplinar',
+        desc: 'Alimentação automatizada em tempo real dos indicadores clínicos de Fisioterapia: os dados preenchidos na aba Fisioterapia do módulo .MULTI geram imediatamente as séries históricas de sessões, aderência, queixas de dor e capacidade funcional no BI sem necessidade de digitação repetida.'
       }
     ],
     tutorial: [
@@ -3468,7 +3472,7 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'Os indicadores de Fisioterapia alimentam o módulo BI automaticamente?',
-        resposta: 'Sim. Os dados registrados na aba Fisioterapia alimentam tanto os gráficos internos da especialidade quanto o painel executivo de indicadores de BI do setor Fisioterapia.'
+        resposta: 'Sim. Os dados registrados na aba Fisioterapia alimentam dinamicamente tanto os gráficos analíticos internos quanto o painel de BI (módulo .BI / .INDEX). Ao cadastrar, editar ou excluir qualquer atendimento na aba Fisioterapia, todos os 10 indicadores clínicos (incluindo o Total de Sessões Executadas, Taxa de Aderência, Prevalência de Dor, Déficit de Mobilidade, Fraqueza Muscular, Incapacidade Funcional, Demanda Espontânea, Busca Ativa e Pacientes em Acompanhamento) são recalculados instantaneamente para a competência correspondente sem necessidade de digitação dupla.'
       },
       {
         pergunta: 'O paciente precisa fazer login para responder o formulário de anamnese?',

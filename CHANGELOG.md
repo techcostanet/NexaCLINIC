@@ -1,3 +1,16 @@
+## [v5.0.27] - 27 de Outubro, 2026
+### Nex-Ai CLINIC (.MULTI & .BI) — Ingestão da Planilha Atualizada de Fisioterapia e Sincronização Dinâmica em Tempo Real com o BI
+- **Ingestão Integral da Planilha Atualizada de Fisioterapia (`Quadro de Indicadores.xlsx`):**
+  - Importação de 592 atendimentos consolidados abrangendo as 5 competências (Junho: 100 sessões, Julho: 100 sessões, Agosto: 128 sessões, Setembro: 154 sessões, Outubro: 183 sessões).
+  - Vínculo direto de 100% dos pacientes com o cadastro mestre da clínica (`allEnrichedPatients.json`), associando prontuários e documentos com precisão.
+- **Confirmação e Calibração do Indicador de Sessões no BI (`Dashboard.jsx` e `clinicalService.js`):**
+  - Confirmação do indicador oficial `fisio_total_sessoes` ("Total de Sessões Executadas"), calibrado na unidade `sessões` e com meta de qualidade mensal ajustada para 180 atendimentos.
+- **Sincronização Dinâmica em Tempo Real entre .MULTI e .BI (`physioIndicatorCalculator.js`, `mockFirebase.js` e `clinicalService.js`):**
+  - Implementação do motor de cálculo instantâneo `computePhysiotherapyIndicators`, eliminando a necessidade de alimentação manual duplicada de indicadores.
+  - Ao salvar, editar ou excluir qualquer ficha de fisioterapia na aba do módulo `.MULTI`, os 10 indicadores clínicos oficiais (Total de Sessões Executadas, Taxa de Aderência, Estado Geral Bom, Prevalência de Dor, Déficit de Mobilidade, Fraqueza Muscular, Incapacidade Funcional, Demanda Espontânea, Busca Ativa e Pacientes em Acompanhamento) são recalculados e sincronizados em tempo real no módulo BI (.BI).
+- **Documentação e Guias Operacionais (`moduleGuidesData.js`):**
+  - Atualização dos manuais dos módulos `.MULTI` e Gestão da Qualidade & BI (`.INDEX`), detalhando o fluxo de alimentação única e atualização transparente no BI.
+
 ## [v5.0.26] - 25 de Outubro, 2026
 ### Nex-Ai CLINIC (.MULTI) — Correção Estrutural de Importação e Estabilidade no Serviço Social
 - **Correção de ReferenceError em MultiSocialTab (`MultiSocialTab.jsx`):**

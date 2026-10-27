@@ -395,7 +395,8 @@ export async function getPhysiotherapyRecords(unitId = null, period = null) {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_FISIO);
     let list = raw ? JSON.parse(raw) : (initialPhysiotherapyData || []);
-    if (!raw && initialPhysiotherapyData?.length) {
+    if (!raw || (Array.isArray(list) && (list.length === 787 || list.length !== (initialPhysiotherapyData?.length || 0)))) {
+      list = initialPhysiotherapyData || [];
       localStorage.setItem(STORAGE_KEY_FISIO, JSON.stringify(initialPhysiotherapyData));
     }
     if (unitId && unitId !== 'all') {

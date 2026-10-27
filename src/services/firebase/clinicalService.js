@@ -1,5 +1,6 @@
 import { app } from './config';
 import { USE_MOCK, mockFirestore } from './mockDb';
+import { computePhysiotherapyIndicators } from './physioIndicatorCalculator';
 
 export const getIndicators = async () => {
     if (USE_MOCK) {
@@ -63,7 +64,7 @@ export const getIndicators = async () => {
         { id: 'fisio_incapacidade_funcional', name: 'Incapacidade Funcional', sectorId: 'fisioterapia', unit: '%', target: 15.0, description: 'Percentual de pacientes com incapacidade funcional motora.' },
         { id: 'fisio_demanda_espontanea', name: 'Demanda Espontânea', sectorId: 'fisioterapia', unit: '%', target: 20.0, description: 'Percentual de atendimentos de fisioterapia por procura espontânea.' },
         { id: 'fisio_busca_ativa', name: 'Busca Ativa de Fisioterapia', sectorId: 'fisioterapia', unit: '%', target: 80.0, description: 'Percentual de atendimentos realizados via busca ativa.' },
-        { id: 'fisio_total_sessoes', name: 'Total de Sessões Executadas', sectorId: 'fisioterapia', unit: 'sessões', target: 300, description: 'Volume total de sessões fisioterapêuticas no mês.' },
+        { id: 'fisio_total_sessoes', name: 'Total de Sessões Executadas', sectorId: 'fisioterapia', unit: 'sessões', target: 180, description: 'Volume total de sessões fisioterapêuticas no mês.' },
         { id: 'fisio_pacientes_avaliados', name: 'Pacientes em Acompanhamento', sectorId: 'fisioterapia', unit: 'pacientes', target: 160, description: 'Total de pacientes avaliados pela fisioterapia no mês.' }
       ];
       defaults.forEach(ind => {
@@ -98,7 +99,7 @@ export const getIndicators = async () => {
         { id: 'fisio_incapacidade_funcional', name: 'Incapacidade Funcional', sectorId: 'fisioterapia', unit: '%', target: 15.0, description: 'Percentual de pacientes com incapacidade funcional motora.' },
         { id: 'fisio_demanda_espontanea', name: 'Demanda Espontânea', sectorId: 'fisioterapia', unit: '%', target: 20.0, description: 'Percentual de atendimentos de fisioterapia por procura espontânea.' },
         { id: 'fisio_busca_ativa', name: 'Busca Ativa de Fisioterapia', sectorId: 'fisioterapia', unit: '%', target: 80.0, description: 'Percentual de atendimentos realizados via busca ativa.' },
-        { id: 'fisio_total_sessoes', name: 'Total de Sessões Executadas', sectorId: 'fisioterapia', unit: 'sessões', target: 300, description: 'Volume total de sessões fisioterapêuticas no mês.' },
+        { id: 'fisio_total_sessoes', name: 'Total de Sessões Executadas', sectorId: 'fisioterapia', unit: 'sessões', target: 180, description: 'Volume total de sessões fisioterapêuticas no mês.' },
         { id: 'fisio_pacientes_avaliados', name: 'Pacientes em Acompanhamento', sectorId: 'fisioterapia', unit: 'pacientes', target: 160, description: 'Total de pacientes avaliados pela fisioterapia no mês.' }
       ];
       for (const fd of fisioDefaults) {
@@ -325,6 +326,22 @@ export const getIndicatorData = async (allowedSectors, isAll = false) => {
         });
       }).catch(() => {});
       list.push(...wasteData);
+    }
+
+    // Sincroniza dinamicamente os indicadores de Fisioterapia a partir dos registros do módulo .MULTI
+    if (isAll || allowedSectors?.includes('fisioterapia')) {
+      try {
+        const { getPhysiotherapyRecords } = await import('./multiService');
+        const fisioRecs = await getPhysiotherapyRecords();
+        if (fisioRecs && fisioRecs.length > 0) {
+          const computedPoints = computePhysiotherapyIndicators(fisioRecs);
+          const filtered = list.filter(d => d.sectorId !== 'fisioterapia');
+          filtered.push(...computedPoints);
+          return filtered;
+        }
+      } catch (err) {
+        console.warn('Erro ao sincronizar indicadores dinâmicos de fisioterapia:', err);
+      }
     }
     
     return list;

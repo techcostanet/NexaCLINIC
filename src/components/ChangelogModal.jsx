@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.27',
+      date: '27/10/2026',
+      title: 'Nex-Ai CLINIC (.MULTI & .BI) — Ingestão da Planilha Atualizada de Fisioterapia e Sincronização Dinâmica em Tempo Real com o BI',
+      description: 'Atualização completa da base de dados de Fisioterapia e sincronização automatizada dos indicadores de Business Intelligence: ingestão integral da nova planilha Quadro de Indicadores.xlsx (592 atendimentos consolidados de Junho a Outubro de 2026) com 100% dos pacientes mapeados e vinculados ao cadastro central da clínica; confirmação e calibração do indicador oficial de quantidade de sessões (fisio_total_sessoes); e implementação do motor de sincronização dinâmica em tempo real, garantindo que o módulo BI (.BI) calcule e exiba automaticamente todos os 10 indicadores clínicos diretamente a partir dos lançamentos realizados na aba Fisioterapia do módulo Multidisciplinar (.MULTI), sem necessidade de digitação dupla ou retrabalho.',
+      changes: [
+        { type: 'Planilha Atualizada', text: '592 atendimentos reais de Junho a Outubro de 2026 importados com sessões executadas (100 em Jun, 100 em Jul, 128 em Ago, 154 em Set, 183 em Out).' },
+        { type: 'Indicador de Sessões no BI', text: 'Confirmação e calibração do indicador "Total de Sessões Executadas" (fisio_total_sessoes) com meta de qualidade e série temporal vinculada.' },
+        { type: 'Sincronização Dinâmica em Tempo Real', text: 'O BI agora busca e calcula instantaneamente os 10 indicadores da Fisioterapia a partir da aba Fisio (.MULTI). Ao lançar, editar ou excluir sessões, o BI reflete na hora.' },
+        { type: 'Vínculo Preciso de Pacientes', text: '100% dos pacientes mapeados com prontuário, CNS e CPF higienizados, integrados ao motor de busca global.' },
+        { type: 'Manuais Atualizados', text: 'Diretrizes de operação sincronizada e tutoriais da Fisioterapia e BI documentados no guia oficial dos módulos.' }
+      ]
+    },
+    {
       version: 'v5.0.26',
       date: '25/10/2026',
       title: 'Nex-Ai CLINIC (.MULTI) — Correção Estrutural de Importação e Estabilidade no Serviço Social',
