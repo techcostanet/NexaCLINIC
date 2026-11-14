@@ -52,7 +52,7 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
   const [selectedRoom, setSelectedRoom] = useState('all');
   const [selectedShift, setSelectedShift] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [datePreset, setDatePreset] = useState('all');
+  const [datePreset, setDatePreset] = useState('30days');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
@@ -286,8 +286,9 @@ export default function AssistPanel({ currentUser, isReportsOpen, setIsReportsOp
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     return currentPosts.filter(post => {
-      if (!post.createdAt) return false;
-      const postDate = new Date(post.createdAt);
+      const rawDate = post.createdAt || post.date;
+      if (!rawDate) return false;
+      const postDate = new Date(rawDate);
       if (isNaN(postDate.getTime())) return true;
 
       if (datePreset === 'today') {

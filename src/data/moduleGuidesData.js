@@ -939,6 +939,14 @@ export const MODULE_GUIDES = {
       {
         title: 'Higienização e Decodificação de E-mails Clínicos (HTML/MIME)',
         desc: 'Motor avançado de decodificação que converte e-mails em HTML bruto para texto clínico estruturado e legível, removendo tags inline, estilos CSS, códigos codificados (&nbsp;, &quot;) e rodapés de aplicativos, além de desambiguar nomes de pacientes com precisão estrita.'
+      },
+      {
+        title: 'Padrão Temporal de 30 Dias no Mural Clínico',
+        desc: 'O Mural Clínico agora inicializa com o filtro de período em 30 dias para todos os usuários por padrão, garantindo foco nos comunicados recentes e mantendo a opção de alternar para Hoje, Ontem, 7 Dias, Mês ou Personalizado.'
+      },
+      {
+        title: 'Cálculo Dinâmico dos Quadros de Cirurgias por Período Ativo',
+        desc: 'Os 5 quadros de indicadores no topo da aba Cirurgias (Agendadas, Fístulas, Cateteres, Urgências e Realizadas) calculam seus totais rigorosamente com base no filtro e período ativo exibido (Semana padrão ao entrar, Mês, Dia ou Tabela).'
       }
     ],
     tutorial: [
@@ -1090,6 +1098,14 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'As alterações na escala e cirurgias são salvas em tempo real?',
         resposta: 'Sim. Qualquer agendamento, remanejamento, alteração de parâmetros ou alocação é sincronizada instantaneamente na base de dados para toda a equipe assistencial.'
+      },
+      {
+        pergunta: 'Qual o período de comunicados exibido por padrão ao abrir o Mural Clínico?',
+        resposta: 'Ao entrar no Mural, o sistema aplica automaticamente o filtro padrão de 30 dias para todos os usuários, exibindo os comunicados mais recentes da clínica. É possível alternar para qualquer outro intervalo a qualquer momento no seletor de período.'
+      },
+      {
+        pergunta: 'Como é calculada a numeração dos quadros de resumo no topo das Cirurgias?',
+        resposta: 'A contagem dos quadros superiores (Agendadas, Fístulas, Cateteres, Urgências e Realizadas) acompanha dinamicamente o filtro e período ativo na visualização (por padrão, a Semana ativa ao entrar no módulo), assim como os filtros de cirurgião, local ou situação.'
       }
     ]
   },

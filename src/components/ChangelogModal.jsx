@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.28',
+      date: '14/11/2026',
+      title: 'Nex-Ai CLINIC (.ASSIST) — Padrão de 30 Dias no Mural e Cálculo Dinâmico dos Quadros de Cirurgias por Período Ativo',
+      description: 'Aprimoramentos de usabilidade e precisão analítica no módulo Assistência (.ASSIST): definição do filtro temporal padrão de 30 dias no Mural Clínico para todos os usuários, trazendo foco imediato nos comunicados recentes da clínica sem perda de histórico; e recalibração dos quadros superiores de indicadores na aba Cirurgias (Agendadas, Fístulas, Cateteres, Urgências e Realizadas) para serem calculados dinamicamente com base no filtro e período ativo exibido na tela (Semana padrão ao entrar no módulo, Mês, Dia ou Tabela), sincronizando com precisão os números do cabeçalho com os agendamentos visíveis.',
+      changes: [
+        { type: 'Mural Clínico', text: 'Padrão inicial de filtro de data configurado para 30 dias para todos os usuários ao entrar no Mural, com suporte ágil para alternar para outros períodos.' },
+        { type: 'Quadros de Cirurgias', text: 'Numeração dos 5 quadros superiores (Agendadas, Fístulas, Cateteres, Urgências e Realizadas) agora baseada estritamente no filtro e período exibido (Semana padrão ao entrar).' },
+        { type: 'Navegação Sincronizada', text: 'Ao avançar ou retroceder semanas, meses ou dias, os quadros atualizam seus totais instantaneamente de acordo com a visualização.' },
+        { type: 'Manuais Atualizados', text: 'Documentação dos novos fluxos e perguntas frequentes atualizadas no guia oficial dos módulos (.ASSIST).' }
+      ]
+    },
+    {
       version: 'v5.0.27',
       date: '27/10/2026',
       title: 'Nex-Ai CLINIC (.MULTI & .BI) — Ingestão da Planilha Atualizada de Fisioterapia e Sincronização Dinâmica em Tempo Real com o BI',

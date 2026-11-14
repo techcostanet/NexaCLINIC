@@ -281,15 +281,32 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
     });
   }, [surgeries, searchTerm, selectedSurgeon, selectedHospital, selectedStatus]);
 
-  // Estatísticas e Métricas KPI no topo
+  // Cirurgias do Período Ativo (baseado no filtro/visão atual: Semana, Mês, Dia ou Tabela)
+  const viewSurgeries = useMemo(() => {
+    if (viewMode === 'week') {
+      const weekDates = new Set(weekDays.map(d => d.isoDate));
+      return filteredSurgeries.filter(s => weekDates.has(s.date));
+    }
+    if (viewMode === 'month') {
+      const monthPrefix = currentDate.slice(0, 7);
+      return filteredSurgeries.filter(s => s.date && s.date.startsWith(monthPrefix));
+    }
+    if (viewMode === 'day') {
+      return filteredSurgeries.filter(s => s.date === currentDate);
+    }
+    // 'compact' (Tabela Geral)
+    return filteredSurgeries;
+  }, [filteredSurgeries, viewMode, weekDays, currentDate]);
+
+  // Estatísticas e Métricas KPI no topo baseadas no filtro do período exibido
   const kpis = useMemo(() => {
-    const total = filteredSurgeries.length;
+    const total = viewSurgeries.length;
     let favCount = 0;
     let catheterCount = 0;
     let urgencyCount = 0;
     let completedCount = 0;
 
-    filteredSurgeries.forEach(s => {
+    viewSurgeries.forEach(s => {
       const proc = (s.procedure || '').toUpperCase();
       const status = (s.status || '').toLowerCase();
       const isUrg = s.isUrgency || status === 'urgência' || (s.patientName || '').toUpperCase().includes('URGENCIA');
@@ -301,7 +318,7 @@ export default function AssistSurgeriesTab({ currentUser, onOpenPostModalWithPat
     });
 
     return { total, favCount, catheterCount, urgencyCount, completedCount };
-  }, [filteredSurgeries]);
+  }, [viewSurgeries]);
 
   // Agrupamento por data
   const surgeriesByDate = useMemo(() => {
@@ -730,7 +747,7 @@ Dúvidas ou imprevistos? Responda a esta mensagem. Desejamos um excelente proced
 
       {/* KPI DASHBOARD CARDS */}
       <div style={styles.kpiGrid}>
-        <div style={styles.kpiCard}>
+        <div style={styles.kpiCard} title="Total de agendamentos no período selecionado">
           <div style={{ ...styles.kpiIconWrapper, backgroundColor: '#eff6ff', color: '#2563eb' }}>
             <CalendarIcon size={22} />
           </div>
@@ -740,7 +757,7 @@ Dúvidas ou imprevistos? Responda a esta mensagem. Desejamos um excelente proced
           </div>
         </div>
 
-        <div style={styles.kpiCard}>
+        <div style={styles.kpiCard} title="Fístulas no período selecionado">
           <div style={{ ...styles.kpiIconWrapper, backgroundColor: '#eef2ff', color: '#4f46e5' }}>
             <Activity size={22} />
           </div>
@@ -750,7 +767,7 @@ Dúvidas ou imprevistos? Responda a esta mensagem. Desejamos um excelente proced
           </div>
         </div>
 
-        <div style={styles.kpiCard}>
+        <div style={styles.kpiCard} title="Cateteres no período selecionado">
           <div style={{ ...styles.kpiIconWrapper, backgroundColor: '#ecfdf5', color: '#059669' }}>
             <Shield size={22} />
           </div>
@@ -760,7 +777,7 @@ Dúvidas ou imprevistos? Responda a esta mensagem. Desejamos um excelente proced
           </div>
         </div>
 
-        <div style={styles.kpiCard}>
+        <div style={styles.kpiCard} title="Urgências no período selecionado">
           <div style={{ ...styles.kpiIconWrapper, backgroundColor: '#fffbeb', color: '#d97706' }}>
             <AlertTriangle size={22} />
           </div>
@@ -772,7 +789,7 @@ Dúvidas ou imprevistos? Responda a esta mensagem. Desejamos um excelente proced
           </div>
         </div>
 
-        <div style={styles.kpiCard}>
+        <div style={styles.kpiCard} title="Procedimentos realizados no período selecionado">
           <div style={{ ...styles.kpiIconWrapper, backgroundColor: '#f0fdf4', color: '#16a34a' }}>
             <CheckCircle2 size={22} />
           </div>

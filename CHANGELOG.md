@@ -1,3 +1,13 @@
+## [v5.0.28] - 14 de Novembro, 2026
+### Nex-Ai CLINIC (.ASSIST) — Padrão de 30 Dias no Mural e Cálculo Dinâmico dos Quadros de Cirurgias por Período Ativo
+- **Padrão de 30 Dias no Mural Clínico (AssistPanel.jsx):**
+  - Configuração do período inicial de comunicados em 30 dias para todos os usuários ao entrar no Mural, mantendo o foco nas ocorrências recentes e permitindo alternância ágil entre períodos.
+- **Cálculo Dinâmico dos Quadros de Cirurgias (AssistSurgeriesTab.jsx):**
+  - Recalibração dos 5 quadros de KPIs superiores (Agendadas, Fístulas, Cateteres, Urgências e Realizadas) para calcular seus totais com base no filtro e período ativo exibido (Semana padrão ao entrar no módulo, Mês, Dia ou Tabela).
+  - Sincronização em tempo real dos números dos quadros ao navegar pelas semanas ou aplicar filtros de cirurgião, local e situação.
+- **Atualização dos Manuais Operacionais (moduleGuidesData.js):**
+  - Inclusão dos recursos e respostas a dúvidas frequentes no manual oficial do módulo Nex-Ai.ASSIST.
+
 ## [v5.0.27] - 27 de Outubro, 2026
 ### Nex-Ai CLINIC (.MULTI & .BI) — Ingestão da Planilha Atualizada de Fisioterapia e Sincronização Dinâmica em Tempo Real com o BI
 - **Ingestão Integral da Planilha Atualizada de Fisioterapia (`Quadro de Indicadores.xlsx`):**
