@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.30',
+      date: '14/11/2026',
+      title: 'Nex-Ai CLINIC (.RECEPTION & .ASSIST) — Importação Massiva de 1.398 Pacientes Hospitalares, Consolidação da Base Mestre para 2.089 Registros e Filtros Nefrológicos Avançados',
+      description: 'Expansão e consolidação definitiva da base central unificada de pacientes do sistema Nex-Ai CLINIC: importação integral de 1.398 novos pacientes nefrológicos ambulatoriais da planilha oficial do Hospital Público Regional de Betim, totalizando 2.089 pacientes cadastrados (617 em hemodiálise ativa, 1.398 em acompanhamento conservador ambulatorial TTO Con., 70 em APD e 4 em CAPD). Todos os 2.089 registros contam com 100% de CPFs validados e formatados, prontuários sequenciais padronizados, endereços completos (logradouro, número, bairro, município e CEP), filiação materna e números de Cartão Nacional de Saúde (CNS), além de 1.957 telefones e contatos de familiares estruturados. O painel de pacientes (.RECEPTION) foi atualizado com filtro dedicado por modalidade de Tratamento, paginação ágil de alta performance para navegação instantânea, exibição limpa para tratamentos ambulatoriais e remoção de duplicidades de cabeçalho conforme as diretrizes de UI.',
+      changes: [
+        { type: 'Importação Hospitalar', text: '1.398 novos pacientes nefrológicos da rede pública importados com prontuários sequenciais, filiação, endereços, CEPs e CNS completos.' },
+        { type: 'Consolidação Cadastral', text: 'Base mestre expandida para 2.089 pacientes com 100% de CPFs válidos e formatados, sem redundâncias ou duplicidades.' },
+        { type: 'Filtro por Tratamento', text: 'Novo seletor de Tratamento no Painel de Pacientes permitindo filtrar com 1 clique por HD, TTO Con. (Conservador), APD, CAPD, DPI e TX-Renal.' },
+        { type: 'Paginação e Performance', text: 'Paginação nativa ultrarrápida (50 pacientes por página) com contadores em tempo real para navegação fluida em grandes volumes.' },
+        { type: 'Diretrizes UI/UX', text: 'Rótulos 100% concisos de 1 termo único, tratamento de células ambulatoriais sem badges vermelhos indevidos e cabeçalho padronizado.' }
+      ]
+    },
+    {
       version: 'v5.0.29',
       date: '14/11/2026',
       title: 'Nex-Ai CLINIC (.RECEPTION & .ASSIST) — Enriquecimento e Atualização Cadastral em Massa com a Base Oficial do Hospital Regional de Betim',

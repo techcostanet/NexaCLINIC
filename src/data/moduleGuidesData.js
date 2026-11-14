@@ -2736,7 +2736,7 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Sincronização e Enriquecimento Cadastral Hospitalar Oficial',
-        desc: 'Integração e atualização contínua da base mestre de pacientes a partir dos dados oficiais do Hospital Regional: enriquecimento com endereços completos (logradouro, número, bairro, cidade, CEP), múltiplos contatos telefônicos estruturados (paciente, cônjuge, filhos, recados), filiação materna e número do Cartão Nacional de Saúde (CNS).'
+        desc: 'Integração e consolidação de 2.089 pacientes a partir dos registros oficiais do Hospital Regional: enriquecimento de dados cadastrais (617 em hemodiálise, 1.398 em acompanhamento conservador ambulatorial, 70 APD e 4 CAPD) com endereços completos (logradouro, número, bairro, cidade, CEP), múltiplos contatos telefônicos estruturados (paciente, cônjuge, filhos, recados), filiação materna e número do Cartão Nacional de Saúde (CNS).'
       },
       {
         title: 'Classificação por Tratamento (9 Modalidades) e Tipo do Paciente',
@@ -2884,8 +2884,8 @@ export const MODULE_GUIDES = {
         resposta: 'O sistema utiliza uma Base Central Unificada (Master Patient Record). Ao salvar qualquer alteração (endereço, telefone, peso seco, alergias ou APAC), os novos dados são propagados instantaneamente para o Prontuário Clínico, Enfermagem, Faturamento APAC, Feed Assistencial e Agenda de Consultas.'
       },
       {
-        pergunta: 'Como os endereços, telefones e contatos de emergência dos pacientes foram enriquecidos?',
-        resposta: 'O sistema cruzou a base mestre com a planilha oficial do Hospital Regional de Betim (Novembro/2026), atualizando com 100% de fidelidade os logradouros, números, bairros, CEPs, contatos telefônicos com grau de parentesco (cônjuges, filhos, irmãos, recados), nomes das mães e números do Cartão Nacional de Saúde (CNS).'
+        pergunta: 'Como os endereços, telefones e novos pacientes foram importados do hospital?',
+        resposta: 'O sistema consolidou a base mestre unificada com a planilha oficial do Hospital Regional de Betim (Novembro/2026), alcançando 2.089 pacientes. Atualizou com 100% de fidelidade os dados cadastrais e CPFs dos pacientes existentes e adicionou 1.398 novos pacientes em acompanhamento nefrológico ambulatorial conservador (TTO Con.), todos com CPFs padronizados, logradouros, bairros, municípios, CEPs, contatos telefônicos com grau de parentesco, nomes de mães e números CNS.'
       }
     ]
   },

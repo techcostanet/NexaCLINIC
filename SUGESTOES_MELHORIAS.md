@@ -485,6 +485,20 @@ O objetivo deste arquivo é manter a memória das ideias para consultas futuras,
 - **Arquivos Envolvidos:** `src/components/multi/MultiPhysiotherapyTab.jsx`, `src/services/firebase/multiService.js`.
 - **Complexidade:** Média.
 
+### [SM-031] Botão de Disparo Rápido WhatsApp na Ficha de Contatos e Acompanhantes
+- **Data:** 14/11/2026
+- **Módulo:** `.RECEPTION` / `.ASSIST` (Cadastro de Pacientes)
+- **Título:** Disparo Rápido de Conversa WhatsApp para Pacientes e Familiares Cadastrados
+- **Status:** `Pendente / Aguardando Decisão Futura`
+- **Origem / Contexto:** Com a consolidação da base de 2.089 pacientes e 1.957 contatos telefônicos (incluindo telefones diretos e celulares de familiares como filhos, cônjuges e irmãos com notas de recado), a recepção e o serviço social frequentemente necessitam contactar acompanhantes para confirmação de presença, transporte ou avisos clínicos.
+- **Descrição Técnica:**
+  - Adicionar ícone de ação direta do WhatsApp ao lado de cada telefone exibido na tabela e na lista detalhada de contatos do modal de pacientes.
+  - Ao clicar, sanitizar os dígitos telefônicos (acrescentando DDI 55) e abrir link `https://wa.me/55...` em nova aba com mensagem inicial amigável da clínica.
+- **Benefício Operacional:** Comunicação imediata em 1 clique com familiares e acompanhantes, eliminando erros de digitação e acelerando convocações do serviço social e recepção.
+- **Arquivos Envolvidos:** `src/components/PatientsPanel.jsx`, `src/components/ReceptionPanel.jsx`.
+- **Complexidade:** Baixa.
+
+
 
 
 

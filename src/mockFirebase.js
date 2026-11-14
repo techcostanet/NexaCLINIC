@@ -29,14 +29,15 @@ const getDB = () => {
       updated = true;
     }
 
-    // Migrate patients & Sync with Official Hospital Database (v5.0.29)
-    if (!parsed.patients_sync_version || parsed.patients_sync_version !== '2026-11-14_v5029') {
+    // Migrate patients & Sync with Official Hospital Database (v5.0.30 - 2,089 consolidated patients)
+    if (!parsed.patients_sync_version || parsed.patients_sync_version !== '2026-11-14_v5030') {
       const defaultPats = getDefaultPatients();
       const defaultMap = new Map(defaultPats.map(p => [p.id, p]));
       if (!parsed.patients || parsed.patients.length === 0) {
         parsed.patients = defaultPats;
       } else {
-        parsed.patients = parsed.patients.map(p => {
+        const existingIds = new Set(parsed.patients.map(p => p.id));
+        const updatedExisting = parsed.patients.map(p => {
           const master = defaultMap.get(p.id);
           if (master) {
             return {
@@ -63,11 +64,14 @@ const getDB = () => {
           }
           return p;
         });
+        const newPatients = defaultPats.filter(p => !existingIds.has(p.id));
+        parsed.patients = [...updatedExisting, ...newPatients];
       }
-      parsed.patients_sync_version = '2026-11-14_v5029';
+      parsed.patients_sync_version = '2026-11-14_v5030';
       updated = true;
-    } else if (!parsed.patients || parsed.patients.length < 650 || !parsed.patients.some(p => p.cns) || !parsed.patients.some(p => p.apacNumber) || !parsed.patients.some(p => p.heparina)) {
+    } else if (!parsed.patients || parsed.patients.length < 2000 || !parsed.patients.some(p => p.cns) || !parsed.patients.some(p => p.apacNumber) || !parsed.patients.some(p => p.heparina)) {
       parsed.patients = getDefaultPatients();
+      parsed.patients_sync_version = '2026-11-14_v5030';
       updated = true;
     }
 

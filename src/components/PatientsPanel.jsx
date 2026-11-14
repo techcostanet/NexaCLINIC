@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../firebase';
 import { Plus, Search, Edit2, Trash2, User, Calendar, ShieldCheck, HeartPulse, X, Check, FileText } from 'lucide-react';
 import { useUnit } from '../contexts/UnitContext';
-import UnitSelector from './common/UnitSelector';
 
 export default function PatientsPanel() {
   const { activeUnitId, filterByActiveUnit } = useUnit();
@@ -21,6 +20,9 @@ export default function PatientsPanel() {
   const [filterRoom, setFilterRoom] = useState('');
   const [filterAccess, setFilterAccess] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterTreatment, setFilterTreatment] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50;
 
   // Modal / Form State
   const [showModal, setShowModal] = useState(false);
@@ -136,7 +138,7 @@ export default function PatientsPanel() {
   const openEditModal = (pat) => {
     setEditingPatient(pat);
     setName(pat.name);
-    setGender(pat.gender);
+    setGender(pat.gender === 'F' || pat.gender === 'Feminino' ? 'F' : 'M');
     setBirthDate(pat.birthDate);
     setChartNumber(pat.chartNumber || '');
     setCpf(pat.cpf || '');
@@ -177,7 +179,7 @@ export default function PatientsPanel() {
     const patientData = {
       ...(editingPatient || {}),
       name,
-      gender,
+      gender: gender === 'F' ? 'Feminino' : 'Masculino',
       birthDate,
       chartNumber,
       cpf,
@@ -275,6 +277,11 @@ export default function PatientsPanel() {
     return list.length > 0 ? list : (patients || []);
   }, [patients, activeUnitId]);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterShift, filterRoom, filterAccess, filterStatus, filterTreatment, activeUnitId]);
+
   // Filtered Patients List
   const filteredPatients = currentPatients.filter((pat) => {
     const term = (searchTerm || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
@@ -289,8 +296,15 @@ export default function PatientsPanel() {
     const matchesRoom = filterRoom ? pat.room === filterRoom : true;
     const matchesAccess = filterAccess ? pat.accessType === filterAccess : true;
     const matchesStatus = filterStatus ? pat.treatmentStatus === filterStatus : true;
-    return matchesName && matchesShift && matchesRoom && matchesAccess && matchesStatus;
+    const matchesTreatment = filterTreatment ? pat.treatmentType === filterTreatment : true;
+    return matchesName && matchesShift && matchesRoom && matchesAccess && matchesStatus && matchesTreatment;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredPatients.length / pageSize));
+  const paginatedPatients = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredPatients.slice(start, start + pageSize);
+  }, [filteredPatients, currentPage, pageSize]);
 
   // Calculate statistics
   const totalCount = currentPatients.length;
@@ -311,7 +325,6 @@ export default function PatientsPanel() {
             <p>Gerencie as fichas clínicas dos pacientes em tratamento de hemodiálise, turnos e salas.</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <UnitSelector compact showLabel={false} />
             <button className="btn btn-primary" onClick={openAddModal}>
               <Plus size={18} />
               <span>Adicionar Paciente</span>
@@ -370,7 +383,7 @@ export default function PatientsPanel() {
         <div style={styles.filterRow}>
           {/* Name/Chart Search */}
           <div className="form-group" style={{ flex: '2 1 220px', marginBottom: 0 }}>
-            <label htmlFor="search-name">Buscar Paciente</label>
+            <label htmlFor="search-name">Busca</label>
             <div style={styles.searchWrapper}>
               <Search size={16} style={styles.searchIcon} />
               <input
@@ -378,7 +391,7 @@ export default function PatientsPanel() {
                 type="text"
                 className="form-control"
                 style={{ paddingLeft: '2.25rem' }}
-                placeholder="Nome, Prontuário ou CPF..."
+                placeholder="Nome, prontuário ou CPF..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -450,6 +463,25 @@ export default function PatientsPanel() {
               ))}
             </select>
           </div>
+
+          {/* Treatment Filter */}
+          <div className="form-group" style={{ flex: '1 1 140px', marginBottom: 0 }}>
+            <label htmlFor="filter-treatment">Tratamento</label>
+            <select
+              id="filter-treatment"
+              className="form-control"
+              value={filterTreatment}
+              onChange={(e) => setFilterTreatment(e.target.value)}
+            >
+              <option value="">Todos</option>
+              <option value="HD">HD</option>
+              <option value="TTO Con.">TTO Con.</option>
+              <option value="APD">APD</option>
+              <option value="CAPD">CAPD</option>
+              <option value="DPI">DPI</option>
+              <option value="TX-Renal">TX-Renal</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -460,124 +492,184 @@ export default function PatientsPanel() {
             Não encontramos pacientes correspondentes aos filtros aplicados.
           </div>
         ) : (
-          <div className="table-container" style={{ border: 'none', borderRadius: 0, boxShadow: 'none' }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Paciente</th>
-                  <th>Idade</th>
-                  <th>Status</th>
-                  <th>Acesso</th>
-                  <th>Turno</th>
-                  <th>Frequência</th>
-                  <th style={{ textAlign: 'right' }}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPatients.map((pat) => (
-                  <tr key={pat.id}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: '600' }}>{pat.name}</span>
-                        {pat.treatmentType && (
-                          <span className="badge" style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary-color)', fontSize: '0.65rem', padding: '1px 4px', textTransform: 'uppercase' }}>
-                            {pat.treatmentType}
-                          </span>
-                        )}
-                        {pat.patientType && (
-                          <span className="badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', fontSize: '0.65rem', padding: '1px 4px' }}>
-                            {pat.patientType}
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
-                        <span>Pront: <strong>{pat.chartNumber || '-'}</strong></span>
-                        {pat.cpf && <span>• CPF: {pat.cpf}</span>}
-                        {pat.phone && <span>• Tel: {pat.phone}</span>}
-                      </div>
-                    </td>
-                    <td>
-                      <div>{calculateAge(pat.birthDate)} anos • {pat.gender === 'M' ? 'M' : 'F'}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        {pat.neighborhood ? `${pat.neighborhood}, ${pat.city || 'Betim'}` : (pat.city && `${pat.city} - ${pat.state || 'MG'}`)}
-                      </div>
-                    </td>
-                    <td>
-                      <span
-                        className="badge"
-                        style={{
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                          ...getStatusBadgeStyle(pat.treatmentStatus)
-                        }}
-                      >
-                        {pat.treatmentStatus || 'Ativo'}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          <>
+            <div className="table-container" style={{ border: 'none', borderRadius: 0, boxShadow: 'none' }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Paciente</th>
+                    <th>Idade</th>
+                    <th>Status</th>
+                    <th>Acesso</th>
+                    <th>Turno</th>
+                    <th>Frequência</th>
+                    <th style={{ textAlign: 'right' }}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedPatients.map((pat) => (
+                    <tr key={pat.id}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: '600' }}>{pat.name}</span>
+                          {pat.treatmentType && (
+                            <span className="badge" style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary-color)', fontSize: '0.65rem', padding: '1px 4px', textTransform: 'uppercase' }}>
+                              {pat.treatmentType}
+                            </span>
+                          )}
+                          {pat.patientType && (
+                            <span className="badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', fontSize: '0.65rem', padding: '1px 4px' }}>
+                              {pat.patientType}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+                          <span>Pront: <strong>{pat.chartNumber || '-'}</strong></span>
+                          {pat.cpf && <span>• CPF: {pat.cpf}</span>}
+                          {pat.phone && <span>• Tel: {pat.phone}</span>}
+                        </div>
+                      </td>
+                      <td>
+                        <div>{calculateAge(pat.birthDate) ? `${calculateAge(pat.birthDate)} anos • ` : ''}{(pat.gender === 'F' || pat.gender === 'Feminino') ? 'F' : 'M'}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          {pat.neighborhood ? `${pat.neighborhood}, ${pat.city || 'Betim'}` : (pat.city && `${pat.city} - ${pat.state || 'MG'}`)}
+                        </div>
+                      </td>
+                      <td>
                         <span
                           className="badge"
                           style={{
-                            backgroundColor: (pat.accessType || '').includes('Fístula') ? 'var(--success-light)' : 'var(--danger-light)',
-                            color: (pat.accessType || '').includes('Fístula') ? 'var(--success-color)' : 'var(--danger-color)',
                             fontSize: '0.75rem',
-                            textTransform: 'none',
-                            letterSpacing: 'normal'
+                            fontWeight: '600',
+                            ...getStatusBadgeStyle(pat.treatmentStatus)
                           }}
                         >
-                          {pat.accessType} {pat.needleSize ? `(Ag.${pat.needleSize})` : ''}
+                          {pat.treatmentStatus || 'Ativo'}
                         </span>
-                        {pat.heparina && (
-                          <span style={{
-                            fontSize: '0.7rem',
-                            fontWeight: '700',
-                            padding: '1px 6px',
-                            borderRadius: '4px',
-                            backgroundColor: '#eff6ff',
-                            color: '#1d4ed8',
-                            border: '1px solid #bfdbfe',
-                            width: 'fit-content'
-                          }}>
-                            💉 {pat.heparina}
-                          </span>
+                      </td>
+                      <td>
+                        {pat.accessType ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                            <span
+                              className="badge"
+                              style={{
+                                backgroundColor: (pat.accessType || '').includes('Fístula') ? 'var(--success-light)' : 'var(--danger-light)',
+                                color: (pat.accessType || '').includes('Fístula') ? 'var(--success-color)' : 'var(--danger-color)',
+                                fontSize: '0.75rem',
+                                textTransform: 'none',
+                                letterSpacing: 'normal'
+                              }}
+                            >
+                              {pat.accessType} {pat.needleSize ? `(Ag.${pat.needleSize})` : ''}
+                            </span>
+                            {pat.heparina && (
+                              <span style={{
+                                fontSize: '0.7rem',
+                                fontWeight: '700',
+                                padding: '1px 6px',
+                                borderRadius: '4px',
+                                backgroundColor: '#eff6ff',
+                                color: '#1d4ed8',
+                                border: '1px solid #bfdbfe',
+                                width: 'fit-content'
+                              }}>
+                                💉 {pat.heparina}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>-</span>
                         )}
-                      </div>
-                    </td>
-                    <td>
-                      <div style={{ fontWeight: '600' }}>{pat.shift}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{pat.room}</div>
-                    </td>
-                    <td>
-                      <div style={{ fontSize: '0.85rem' }}>{pat.dialysisFrequency}</div>
-                      {pat.dryWeight && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Peso Seco: <strong>{pat.dryWeight} kg</strong></div>}
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', gap: '0.375rem' }}>
-                        <button
-                          className="btn btn-secondary"
-                          style={{ padding: '0.375rem', borderRadius: '4px' }}
-                          onClick={() => openEditModal(pat)}
-                          title="Editar cadastro"
-                        >
-                          <Edit2 size={12} />
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          style={{ padding: '0.375rem', borderRadius: '4px', color: 'var(--danger-color)' }}
-                          onClick={() => handleDeletePatient(pat.id, pat.name)}
-                          title="Excluir paciente"
-                          disabled={actionLoading}
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </td>
+                      <td>
+                        {pat.shift ? (
+                          <>
+                            <div style={{ fontWeight: '600' }}>{pat.shift}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{pat.room}</div>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>-</span>
+                        )}
+                      </td>
+                      <td>
+                        {pat.dialysisFrequency ? (
+                          <>
+                            <div style={{ fontSize: '0.85rem' }}>{pat.dialysisFrequency}</div>
+                            {pat.dryWeight && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Peso Seco: <strong>{pat.dryWeight} kg</strong></div>}
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ambulatorial</span>
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', gap: '0.375rem' }}>
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding: '0.375rem', borderRadius: '4px' }}
+                            onClick={() => openEditModal(pat)}
+                            title="Editar cadastro"
+                          >
+                            <Edit2 size={12} />
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding: '0.375rem', borderRadius: '4px', color: 'var(--danger-color)' }}
+                            onClick={() => handleDeletePatient(pat.id, pat.name)}
+                            title="Excluir paciente"
+                            disabled={actionLoading}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            {filteredPatients.length > pageSize && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '0.75rem 1.25rem',
+                borderTop: '1px solid var(--border-color, #e2e8f0)',
+                backgroundColor: 'var(--bg-light, #f8fafc)',
+                fontSize: '0.85rem',
+                flexWrap: 'wrap',
+                gap: '0.5rem'
+              }}>
+                <span style={{ color: 'var(--text-secondary, #64748b)' }}>
+                  Mostrando {Math.min((currentPage - 1) * pageSize + 1, filteredPatients.length)} a {Math.min(currentPage * pageSize, filteredPatients.length)} de {filteredPatients.length} pacientes
+                </span>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem' }}
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  >
+                    Anterior
+                  </button>
+                  <span style={{ fontWeight: '600', padding: '0 0.5rem' }}>
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem' }}
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  >
+                    Próximo
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -600,7 +692,7 @@ export default function PatientsPanel() {
                 {/* Row 1: Name & Chart */}
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   <div className="form-group" style={{ flex: '2 1 300px' }}>
-                    <label htmlFor="pat-form-name">Nome Completo</label>
+                    <label htmlFor="pat-form-name">Nome</label>
                     <input
                       id="pat-form-name"
                       type="text"
@@ -717,7 +809,7 @@ export default function PatientsPanel() {
                       id="pat-form-addr"
                       type="text"
                       className="form-control"
-                      placeholder="Rua / Avenida"
+                      placeholder="Logradouro"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       disabled={actionLoading}
@@ -811,9 +903,11 @@ export default function PatientsPanel() {
                       disabled={actionLoading}
                     >
                       <option value="HD">HD (Hemodiálise)</option>
+                      <option value="TTO Con.">TTO Con. (Conservador)</option>
                       <option value="APD">APD (Diálise Peritoneal Automatizada)</option>
                       <option value="CAPD">CAPD (Diálise Peritoneal Ambulatorial Contínua)</option>
                       <option value="DPI">DPI (Diálise Peritoneal Intermitente)</option>
+                      <option value="TX-Renal">TX-Renal (Transplante)</option>
                     </select>
                   </div>
                 </div>
@@ -849,7 +943,7 @@ export default function PatientsPanel() {
                     </select>
                   </div>
                   <div className="form-group" style={{ flex: 0.8 }}>
-                    <label htmlFor="pat-form-weight">Peso Seco (kg)</label>
+                    <label htmlFor="pat-form-weight">Peso</label>
                     <input
                       id="pat-form-weight"
                       type="text"
