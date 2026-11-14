@@ -1,3 +1,20 @@
+## [v5.0.29] - 14 de Novembro, 2026
+### Nex-Ai CLINIC (.RECEPTION & .ASSIST) — Enriquecimento e Atualização Cadastral em Massa com a Base Oficial do Hospital Regional de Betim
+- **Atualização Massiva da Base Mestre de Pacientes (llEnrichedPatients.json):**
+  - Ingestão da planilha oficial do Hospital Regional de Betim (Novembro/2026), processando 2.020 registros clínicos.
+  - Cruzamento e atualização de 633 pacientes cadastrados no sistema (91,6% de cobertura total da base mestre).
+  - Enriquecimento com 633 endereços residenciais completos (logradouro, número, bairro, município, CEP, complemento e referências).
+  - Extração de 598 telefones primários e contatos com parentesco decodificado (filhos, cônjuges, irmãos e recados estruturados).
+  - Atualização de 633 nomes oficiais de mães e datas de nascimento/idades.
+  - Atualização de 633 números oficiais do Cartão Nacional de Saúde (CNS).
+- **Interface Aprimorada no Cadastro de Pacientes (PatientsPanel.jsx):**
+  - Tabela principal com exibição imediata de telefone de contato e bairro/município.
+  - Modal de edição expandido com campos completos para telefone, CNS, filiação materna, endereço, número, bairro e CEP, seguindo o padrão rigoroso de rótulos de termo único.
+- **Migração Transparente no Navegador (mockFirebase.js):**
+  - Adição de rotina de migração inteligente com chave patients_sync_version em getDB(), propagando a nova base para todos os navegadores locais sem perda de configurações locais de leito/turno.
+- **Manuais e Guias Oficiais Atualizados (moduleGuidesData.js):**
+  - Documentação dos recursos e perguntas frequentes sobre enriquecimento cadastral no manual da Recepção (.RECEPTION).
+
 ## [v5.0.28] - 14 de Novembro, 2026
 ### Nex-Ai CLINIC (.ASSIST) — Padrão de 30 Dias no Mural e Cálculo Dinâmico dos Quadros de Cirurgias por Período Ativo
 - **Padrão de 30 Dias no Mural Clínico (AssistPanel.jsx):**

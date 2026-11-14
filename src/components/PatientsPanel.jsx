@@ -46,6 +46,13 @@ export default function PatientsPanel() {
   const [treatmentType, setTreatmentType] = useState('HD');
   const [heparina, setHeparina] = useState('');
   const [needleSize, setNeedleSize] = useState('16');
+  const [phone, setPhone] = useState('');
+  const [motherName, setMotherName] = useState('');
+  const [address, setAddress] = useState('');
+  const [number, setNumber] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
+  const [cep, setCep] = useState('');
+  const [cns, setCns] = useState('');
 
   useEffect(() => {
     fetchInitialData();
@@ -115,6 +122,13 @@ export default function PatientsPanel() {
     setTreatmentType('HD');
     setHeparina('');
     setNeedleSize('16');
+    setPhone('');
+    setMotherName('');
+    setAddress('');
+    setNumber('');
+    setNeighborhood('');
+    setCep('');
+    setCns('');
     
     setShowModal(true);
   };
@@ -140,6 +154,13 @@ export default function PatientsPanel() {
     setTreatmentType(pat.treatmentType || 'HD');
     setHeparina(pat.heparina || '');
     setNeedleSize(pat.needleSize || '16');
+    setPhone(pat.phone || '');
+    setMotherName(pat.motherName || '');
+    setAddress(pat.address || '');
+    setNumber(pat.number || '');
+    setNeighborhood(pat.neighborhood || '');
+    setCep(pat.cep || '');
+    setCns(pat.cns || '');
     
     setShowModal(true);
   };
@@ -154,11 +175,19 @@ export default function PatientsPanel() {
     const targetUnit = targetUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim';
 
     const patientData = {
+      ...(editingPatient || {}),
       name,
       gender,
       birthDate,
       chartNumber,
       cpf,
+      phone,
+      motherName,
+      address,
+      number,
+      neighborhood,
+      cep,
+      cns,
       admissionDate,
       treatmentStatus,
       dialysisFrequency,
@@ -461,15 +490,16 @@ export default function PatientsPanel() {
                           </span>
                         )}
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                         <span>Pront: <strong>{pat.chartNumber || '-'}</strong></span>
                         {pat.cpf && <span>• CPF: {pat.cpf}</span>}
+                        {pat.phone && <span>• Tel: {pat.phone}</span>}
                       </div>
                     </td>
                     <td>
                       <div>{calculateAge(pat.birthDate)} anos • {pat.gender === 'M' ? 'M' : 'F'}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        {pat.city && `${pat.city} - ${pat.state || 'MG'}`}
+                        {pat.neighborhood ? `${pat.neighborhood}, ${pat.city || 'Betim'}` : (pat.city && `${pat.city} - ${pat.state || 'MG'}`)}
                       </div>
                     </td>
                     <td>
@@ -625,7 +655,7 @@ export default function PatientsPanel() {
                     </select>
                   </div>
                   <div className="form-group" style={{ flex: 1 }}>
-                    <label htmlFor="pat-form-birth">Data de Nascimento</label>
+                    <label htmlFor="pat-form-birth">Nascimento</label>
                     <input
                       id="pat-form-birth"
                       type="date"
@@ -633,6 +663,99 @@ export default function PatientsPanel() {
                       value={birthDate}
                       onChange={(e) => setBirthDate(e.target.value)}
                       required
+                      disabled={actionLoading}
+                    />
+                  </div>
+                </div>
+
+                {/* Contatos & Filiação */}
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  <div className="form-group" style={{ flex: '1 1 180px' }}>
+                    <label htmlFor="pat-form-phone">Telefone</label>
+                    <input
+                      id="pat-form-phone"
+                      type="text"
+                      className="form-control"
+                      placeholder="Ex: (31) 99999-9999"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      disabled={actionLoading}
+                    />
+                  </div>
+                  <div className="form-group" style={{ flex: '1 1 160px' }}>
+                    <label htmlFor="pat-form-cns">CNS</label>
+                    <input
+                      id="pat-form-cns"
+                      type="text"
+                      className="form-control"
+                      placeholder="Cartão SUS (15 dígitos)"
+                      value={cns}
+                      onChange={(e) => setCns(e.target.value)}
+                      disabled={actionLoading}
+                      maxLength={15}
+                    />
+                  </div>
+                  <div className="form-group" style={{ flex: '1.5 1 220px' }}>
+                    <label htmlFor="pat-form-mother">Mãe</label>
+                    <input
+                      id="pat-form-mother"
+                      type="text"
+                      className="form-control"
+                      placeholder="Nome completo da mãe"
+                      value={motherName}
+                      onChange={(e) => setMotherName(e.target.value)}
+                      disabled={actionLoading}
+                    />
+                  </div>
+                </div>
+
+                {/* Endereço Residencial Oficial */}
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  <div className="form-group" style={{ flex: '2 1 220px' }}>
+                    <label htmlFor="pat-form-addr">Endereço</label>
+                    <input
+                      id="pat-form-addr"
+                      type="text"
+                      className="form-control"
+                      placeholder="Rua / Avenida"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      disabled={actionLoading}
+                    />
+                  </div>
+                  <div className="form-group" style={{ flex: '0.6 1 80px' }}>
+                    <label htmlFor="pat-form-num">Número</label>
+                    <input
+                      id="pat-form-num"
+                      type="text"
+                      className="form-control"
+                      placeholder="Nº"
+                      value={number}
+                      onChange={(e) => setNumber(e.target.value)}
+                      disabled={actionLoading}
+                    />
+                  </div>
+                  <div className="form-group" style={{ flex: '1.2 1 140px' }}>
+                    <label htmlFor="pat-form-bairro">Bairro</label>
+                    <input
+                      id="pat-form-bairro"
+                      type="text"
+                      className="form-control"
+                      placeholder="Bairro"
+                      value={neighborhood}
+                      onChange={(e) => setNeighborhood(e.target.value)}
+                      disabled={actionLoading}
+                    />
+                  </div>
+                  <div className="form-group" style={{ flex: '0.8 1 110px' }}>
+                    <label htmlFor="pat-form-cep">CEP</label>
+                    <input
+                      id="pat-form-cep"
+                      type="text"
+                      className="form-control"
+                      placeholder="00000-000"
+                      value={cep}
+                      onChange={(e) => setCep(e.target.value)}
                       disabled={actionLoading}
                     />
                   </div>
@@ -653,7 +776,7 @@ export default function PatientsPanel() {
                     />
                   </div>
                   <div className="form-group" style={{ flex: '0.5 1 80px' }}>
-                    <label htmlFor="pat-form-state">Estado (UF)</label>
+                    <label htmlFor="pat-form-state">Estado</label>
                     <input
                       id="pat-form-state"
                       type="text"
@@ -666,7 +789,7 @@ export default function PatientsPanel() {
                     />
                   </div>
                   <div className="form-group" style={{ flex: '1 1 140px' }}>
-                    <label htmlFor="pat-form-pat-type">Tipo de Paciente</label>
+                    <label htmlFor="pat-form-pat-type">Tipo</label>
                     <select
                       id="pat-form-pat-type"
                       className="form-control"
@@ -679,7 +802,7 @@ export default function PatientsPanel() {
                     </select>
                   </div>
                   <div className="form-group" style={{ flex: '1 1 140px' }}>
-                    <label htmlFor="pat-form-treat-type">Tipo de Tratamento</label>
+                    <label htmlFor="pat-form-treat-type">Tratamento</label>
                     <select
                       id="pat-form-treat-type"
                       className="form-control"
@@ -698,7 +821,7 @@ export default function PatientsPanel() {
                 {/* Row 3: Admission Date, Treatment Status, dry Weight */}
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   <div className="form-group" style={{ flex: 1.2 }}>
-                    <label htmlFor="pat-form-admission">Data de Admissão</label>
+                    <label htmlFor="pat-form-admission">Admissão</label>
                     <input
                       id="pat-form-admission"
                       type="date"
@@ -710,7 +833,7 @@ export default function PatientsPanel() {
                     />
                   </div>
                   <div className="form-group" style={{ flex: 1 }}>
-                    <label htmlFor="pat-form-status">Status Clínico</label>
+                    <label htmlFor="pat-form-status">Status</label>
                     <select
                       id="pat-form-status"
                       className="form-control"

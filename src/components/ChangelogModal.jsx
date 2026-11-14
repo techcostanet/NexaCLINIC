@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.29',
+      date: '14/11/2026',
+      title: 'Nex-Ai CLINIC (.RECEPTION & .ASSIST) — Enriquecimento e Atualização Cadastral em Massa com a Base Oficial do Hospital Regional de Betim',
+      description: 'Atualização e enriquecimento cadastral massivo da base central de pacientes da clínica a partir da planilha oficial do Hospital Público Regional Prefeito Osvaldo Rezende Franco (competência Novembro/2026): cruzamento automatizado em múltiplos estágios (CPF exato, nome canônico, desinfecção de sufixos de enfermagem como CDL/Permcath/AG e correspondência fonética/distância de edição para CPFs legados) resultando na atualização de 633 pacientes (91,6% da base do sistema) com endereços residenciais completos (logradouro, número, bairro, cidade, CEP, complemento), filiação materna oficial, datas de nascimento e idades sincronizadas, telefones e múltiplos contatos de parentesco estruturados (filhos, cônjuges, irmãos, recados) e números do Cartão Nacional de Saúde (CNS). Além disso, o cadastro de pacientes no módulo de Recepção (.RECEPTION) foi aprimorado com novos campos de visualização rápida de telefone e bairro na tabela e formulário modal de edição completo, com migração transparente em tempo real para os navegadores de todos os usuários.',
+      changes: [
+        { type: 'Enriquecimento Cadastral', text: '633 pacientes (91,6% da base mestre) enriquecidos com endereços oficiais, CEPs, números de CNS, nomes de mães e datas de nascimento extraídos da planilha do Hospital Regional.' },
+        { type: 'Contatos Estruturados', text: 'Telefones e contatos de emergência estruturados com parentesco (cônjuge, filhos, irmãos, recados) e preservação do histórico de recados clínicos.' },
+        { type: 'Painel de Pacientes', text: 'Tabela de pacientes com exibição imediata de telefone e bairro, e modal de edição expandido com campos completos de endereço, filiação e CNS.' },
+        { type: 'Sincronização em Tempo Real', text: 'Motor de migração em mockFirebase.js que atualiza automaticamente o cache local de todos os navegadores para a nova base v5.0.29.' },
+        { type: 'Documentação & Manuais', text: 'Recursos cadastrais e dúvidas frequentes documentadas no guia do módulo de Recepção e Base Mestre (.RECEPTION).' }
+      ]
+    },
+    {
       version: 'v5.0.28',
       date: '14/11/2026',
       title: 'Nex-Ai CLINIC (.ASSIST) — Padrão de 30 Dias no Mural e Cálculo Dinâmico dos Quadros de Cirurgias por Período Ativo',

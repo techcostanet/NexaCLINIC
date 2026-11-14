@@ -2735,6 +2735,10 @@ export const MODULE_GUIDES = {
         desc: 'Cadastro único e centralizado de pacientes integrado em tempo real a todos os módulos do sistema (Prontuário Clínico, Enfermagem/Sessões, Alertas Assistenciais, Procedimentos Médicos, Agenda e Faturamento APAC).'
       },
       {
+        title: 'Sincronização e Enriquecimento Cadastral Hospitalar Oficial',
+        desc: 'Integração e atualização contínua da base mestre de pacientes a partir dos dados oficiais do Hospital Regional: enriquecimento com endereços completos (logradouro, número, bairro, cidade, CEP), múltiplos contatos telefônicos estruturados (paciente, cônjuge, filhos, recados), filiação materna e número do Cartão Nacional de Saúde (CNS).'
+      },
+      {
         title: 'Classificação por Tratamento (9 Modalidades) e Tipo do Paciente',
         desc: 'Classificação estruturada por modalidade de tratamento (CAPD, HD, APD, DPI, TTO Con., TX-Renal, Doador, Óbito e Inativos) e tipo de paciente (Crônico, Agudo e Trânsito) tanto no cadastro quanto em seletores de filtros dedicados.'
       },
@@ -2878,6 +2882,10 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Como as alterações feitas no cadastro de pacientes se refletem nos outros módulos?',
         resposta: 'O sistema utiliza uma Base Central Unificada (Master Patient Record). Ao salvar qualquer alteração (endereço, telefone, peso seco, alergias ou APAC), os novos dados são propagados instantaneamente para o Prontuário Clínico, Enfermagem, Faturamento APAC, Feed Assistencial e Agenda de Consultas.'
+      },
+      {
+        pergunta: 'Como os endereços, telefones e contatos de emergência dos pacientes foram enriquecidos?',
+        resposta: 'O sistema cruzou a base mestre com a planilha oficial do Hospital Regional de Betim (Novembro/2026), atualizando com 100% de fidelidade os logradouros, números, bairros, CEPs, contatos telefônicos com grau de parentesco (cônjuges, filhos, irmãos, recados), nomes das mães e números do Cartão Nacional de Saúde (CNS).'
       }
     ]
   },
