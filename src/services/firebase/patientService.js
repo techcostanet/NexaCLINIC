@@ -1,5 +1,32 @@
 import { app } from './config';
 import { USE_MOCK, mockFirestore } from './mockDb';
+import allPatientLabExams from '../../data/allPatientLabExams.json';
+
+const cleanPatientQuery = (str) => {
+  if (!str) return '';
+  let s = String(str);
+  s = s.replace(/\bDN\b\s*[:;=]?\s*.*$/i, '');
+  s = s.replace(/\bAD\b\s*[:;=]?\s*.*$/i, '');
+  s = s.replace(/Admiss[ãa]o\s*.*$/i, '');
+  s = s.replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b.*$/i, '');
+  s = s.replace(/\b(FAV|CDL|CDLLP|PERMCATH|FISTULA|FÍSTULA|CATETER|USO\s*ÚNICO|USO\s*UNICO|UNICO|ÚNICO|ISOLAMENTO|HCV|HIV|AGULHA)\b.*$/i, '');
+  s = s.replace(/\bAG\s*\.?\s*\d+.*$/i, '');
+  s = s.replace(/\bAG\d+.*$/i, '');
+  s = s.replace(/\(.*?\)/g, '');
+  s = s.replace(/\s*-\s*Uso.*$/i, '');
+  s = s.replace(/\s*-\s*$/i, '');
+  s = s.replace(/[.]+$/g, '');
+  return s.trim().replace(/\s+/g, ' ');
+};
+
+const normalizeText = (str) => {
+  if (!str) return '';
+  return String(str)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trim();
+};
 
 export const getPatients = async (unitId = null) => {
     if (USE_MOCK) {
@@ -304,34 +331,55 @@ export const deletePatientMedication = async (id) => {
 
 // Patient Lab Exams
 export const getPatientLabExams = async (patientIdOrName) => {
-  if (USE_MOCK) return mockFirestore.getPatientLabExams(patientIdOrName);
-  try {
-    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-    const db = getFirestore(app);
-    const snap = await getDocs(collection(db, 'patient_lab_exams'));
-    if (snap.empty) {
-      return mockFirestore.getPatientLabExams(patientIdOrName);
-    }
-    const all = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    if (!patientIdOrName) return all.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-
-    const query = String(patientIdOrName).trim();
-    const cleanCpf = query.replace(/\D/g, '');
-    const normQuery = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-    return all.filter(e => {
-      if (e.patientId === query) return true;
-      if (cleanCpf && cleanCpf.length === 11 && e.patientCpf && String(e.patientCpf).replace(/\D/g, '') === cleanCpf) return true;
-      if (e.patientName) {
-        const normName = e.patientName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        if (normName === normQuery || normName.includes(normQuery) || normQuery.includes(normName)) return true;
+  let list = allPatientLabExams || [];
+  if (!USE_MOCK) {
+    try {
+      const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'patient_lab_exams'));
+      if (!snap.empty) {
+        const firestoreExams = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const idMap = new Map();
+        list.forEach(item => idMap.set(item.id, item));
+        firestoreExams.forEach(item => idMap.set(item.id, item));
+        list = Array.from(idMap.values());
       }
-      return false;
-    }).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-  } catch (err) {
-    console.warn('Fallback to mock lab exams:', err);
-    return mockFirestore.getPatientLabExams(patientIdOrName);
+    } catch (err) {
+      console.warn('Fallback to in-memory lab exams:', err);
+    }
   }
+
+  if (!patientIdOrName) {
+    return [...list].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  }
+
+  const query = String(patientIdOrName).trim();
+  const cleanCpf = query.replace(/\D/g, '');
+  const cleanQuery = cleanPatientQuery(query);
+  const normQuery = normalizeText(cleanQuery);
+  const queryTokens = normQuery.split(' ').filter(Boolean);
+
+  return list.filter(e => {
+    // 1. Direct patientId match
+    if (e.patientId && (e.patientId === query || e.patientId.toLowerCase() === normQuery.toLowerCase())) return true;
+    // 2. CPF match
+    if (cleanCpf && cleanCpf.length === 11 && e.patientCpf) {
+      if (String(e.patientCpf).replace(/\D/g, '') === cleanCpf) return true;
+    }
+    // 3. Name match
+    if (e.patientName) {
+      const normName = normalizeText(e.patientName);
+      if (normName === normQuery || normName.includes(normQuery) || normQuery.includes(normName)) return true;
+      // 4. Token overlap (first name + last name)
+      if (queryTokens.length >= 2) {
+        const eTokens = normName.split(' ').filter(Boolean);
+        if (eTokens.length >= 2 && queryTokens[0] === eTokens[0] && queryTokens[queryTokens.length - 1] === eTokens[eTokens.length - 1]) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 };
 
 export const savePatientLabExam = async (examData) => {

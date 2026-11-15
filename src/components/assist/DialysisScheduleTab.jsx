@@ -8,6 +8,32 @@ import {
 } from 'lucide-react';
 import { useUnit } from '../../contexts/UnitContext';
 
+const cleanPatientQuery = (str) => {
+  if (!str) return '';
+  let s = String(str);
+  s = s.replace(/\bDN\b\s*[:;=]?\s*.*$/i, '');
+  s = s.replace(/\bAD\b\s*[:;=]?\s*.*$/i, '');
+  s = s.replace(/Admiss[ãa]o\s*.*$/i, '');
+  s = s.replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b.*$/i, '');
+  s = s.replace(/\b(FAV|CDL|CDLLP|PERMCATH|FISTULA|FÍSTULA|CATETER|USO\s*ÚNICO|USO\s*UNICO|UNICO|ÚNICO|ISOLAMENTO|HCV|HIV|AGULHA)\b.*$/i, '');
+  s = s.replace(/\bAG\s*\.?\s*\d+.*$/i, '');
+  s = s.replace(/\bAG\d+.*$/i, '');
+  s = s.replace(/\(.*?\)/g, '');
+  s = s.replace(/\s*-\s*Uso.*$/i, '');
+  s = s.replace(/\s*-\s*$/i, '');
+  s = s.replace(/[.]+$/g, '');
+  return s.trim().replace(/\s+/g, ' ');
+};
+
+const normalizeText = (str) => {
+  if (!str) return '';
+  return String(str)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trim();
+};
+
 export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPatient }) {
   const { activeUnitId, filterByActiveUnit } = useUnit();
   // Navigation State
@@ -317,8 +343,26 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
     setShowLabsModal(true);
     setLoadingLabs(true);
     try {
-      const pId = patient.patientId || patient.id || patient.name;
-      const exams = await dbService.getPatientLabExams(pId);
+      let pQuery = patient.patientId || patient.id;
+      if (!pQuery && patient.cpf) {
+        const cleanC = String(patient.cpf).replace(/\D/g, '');
+        if (cleanC.length === 11) {
+          const matchByCpf = patients.find(p => String(p.cpf || '').replace(/\D/g, '') === cleanC);
+          if (matchByCpf?.id) pQuery = matchByCpf.id;
+        }
+      }
+      if (!pQuery && patient.name) {
+        const cleanName = cleanPatientQuery(patient.name);
+        const normN = normalizeText(cleanName);
+        const matchByName = patients.find(p => {
+          const normP = normalizeText(p.name);
+          return normP === normN || normP.includes(normN) || normN.includes(normP);
+        });
+        if (matchByName?.id) pQuery = matchByName.id;
+        else pQuery = cleanName || patient.name;
+      }
+
+      const exams = await dbService.getPatientLabExams(pQuery || patient.name);
       setPatientLabsList(exams || []);
       if (exams && exams.length > 0) {
         setSelectedLabsMonth(exams[0].month);
@@ -743,11 +787,10 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                             <button
                               type="button"
                               onClick={() => handleOpenEditPatient(pt, patient)}
-                              style={tabStyles.editParamBtn}
-                              title="Editar acesso vascular e heparina"
+                              style={tabStyles.iconBtnEdit}
+                              title="Editar acesso e heparina"
                             >
-                              <Pencil size={12} style={{ marginRight: '3px' }} />
-                              <span>Editar</span>
+                              <Pencil size={13} />
                             </button>
 
                             <button
@@ -756,11 +799,10 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                                 e.stopPropagation();
                                 handleOpenPatientLabs(patient);
                               }}
-                              style={tabStyles.labsBtn}
-                              title="Consultar exames laboratoriais do paciente"
+                              style={tabStyles.iconBtnLabs}
+                              title="Exames laboratoriais"
                             >
-                              <Activity size={12} style={{ marginRight: '3px' }} />
-                              <span>Exames</span>
+                              <Activity size={13} />
                             </button>
 
                             <button
@@ -774,11 +816,10 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                                 });
                                 setShowReallocateModal(true);
                               }}
-                              style={tabStyles.reallocateBtn}
-                              title="Remanejar ou trocar paciente de leito"
+                              style={tabStyles.iconBtnReallocate}
+                              title="Remanejar leito"
                             >
-                              <ArrowRightLeft size={13} style={{ marginRight: '4px' }} />
-                              <span>Remanejar</span>
+                              <ArrowRightLeft size={13} />
                             </button>
 
                             {onOpenPostModalWithPatient && (
@@ -792,11 +833,10 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                                   point: pt.ponto,
                                   serialNumber: pt.serialNumber
                                 })}
-                                style={tabStyles.postTriggerBtn}
+                                style={tabStyles.iconBtnNotice}
                                 title="Abrir comunicado no mural"
                               >
-                                <AlertTriangle size={13} style={{ marginRight: '4px' }} />
-                                <span>Comunicado</span>
+                                <AlertTriangle size={13} />
                               </button>
                             )}
                           </>
@@ -2281,9 +2321,62 @@ const tabStyles = {
   pointFooter: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
+    gap: '6px',
     paddingTop: '6px',
     borderTop: '1px solid #f1f5f9'
+  },
+  iconBtnEdit: {
+    border: 'none',
+    backgroundColor: '#eff6ff',
+    color: '#2563eb',
+    width: '26px',
+    height: '26px',
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  iconBtnLabs: {
+    border: 'none',
+    backgroundColor: '#ecfeff',
+    color: '#0891b2',
+    width: '26px',
+    height: '26px',
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  iconBtnReallocate: {
+    border: 'none',
+    backgroundColor: '#f1f5f9',
+    color: '#475569',
+    width: '26px',
+    height: '26px',
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  iconBtnNotice: {
+    border: 'none',
+    backgroundColor: '#fff1f2',
+    color: '#e11d48',
+    width: '26px',
+    height: '26px',
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
   },
   allocateBtn: {
     width: '100%',

@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.32',
+      date: '15/11/2026',
+      title: 'Nex-Ai CLINIC (.CLINIC & .ASSIST) — Lista Pronta Imediata de Pacientes no .CLINIC com Cockpit Ativo, Barra de Ações por Ícones na Escala (.ASSIST) e Resolução Resiliente de Exames Laboratoriais',
+      description: 'Refinamentos fundamentais de usabilidade e arquitetura de dados nos módulos .CLINIC e .ASSIST: 1) No módulo .CLINIC, a listagem completa de pacientes da unidade ativa agora é exibida imediatamente na barra lateral com contador em tempo real, seleção automática do primeiro paciente e cockpit 360 ativo na inicialização, eliminando telas em branco e permitindo filtragem instantânea por nome, CPF ou leito; 2) Na escala de hemodiálise (.ASSIST), o rodapé de cada poltrona foi otimizado com botões de ícones elegantes (Editar, Exames, Remanejar, Comunicado) com tooltips informativos, eliminando a poluição visual e quebras de linha nos cards; 3) Resolução arquitetural definitiva para a consulta de exames laboratoriais na escala, com enriquecimento de 2.231 entradas de escala com patientId e CPF, motor de busca com tolerância a anotações de enfermagem e eliminação de escrita excessiva no armazenamento local.',
+      changes: [
+        { type: 'Lista Imediata no .CLINIC', text: 'Ao entrar no prontuário, a lista lateral de pacientes já é exibida pronta com contador, seleção automática do primeiro paciente e cockpit 360 ativo, com filtragem instantânea por nome, CPF ou leito.' },
+        { type: 'Barra de Ações por Ícones (.ASSIST)', text: 'Substituição dos textos nos cards da escala por 4 ícones limpos e compactos (Editar, Exames, Remanejar e Comunicado) com tooltips explicativos e visual leve.' },
+        { type: 'Resolução Resiliente de Exames', text: 'Enriquecimento da escala com IDs e CPFs oficiais e motor de busca com desinfecção de sufixos de enfermagem (FAV, CDL, agulhas), garantindo exibição instantânea do histórico de exames.' },
+        { type: 'Otimização de Armazenamento Local', text: 'Remoção do payload laboratorial de 2.1MB do LocalStorage, evitando esgotamento de cota do navegador (QuotaExceededError) e acelerando o carregamento.' },
+        { type: 'Regras de Segurança Firestore', text: 'Inclusão de regras de leitura e escrita autenticadas para as coleções clínicas no firestore.rules.' }
+      ]
+    },
+    {
       version: 'v5.0.31',
       date: '15/11/2026',
       title: 'Nex-Ai CLINIC (.CLINICAL, .ASSIST & .MULTI) — Integração Completa de Exames Laboratoriais (LIS Hospitalar), Ingestão de 563 Arquivos XML com 2.189 Sessões e Consulta em 1 Clique no Leito e na Nutrição',

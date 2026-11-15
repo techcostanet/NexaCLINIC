@@ -1,3 +1,26 @@
+## [v5.0.32] - 15 de Novembro, 2026
+### Nex-Ai CLINIC (.CLINIC & .ASSIST) — Lista Pronta Imediata de Pacientes no .CLINIC com Cockpit Ativo, Barra de Ações por Ícones na Escala (.ASSIST) e Resolução Resiliente de Exames Laboratoriais
+- **Lista Pronta Imediata no Módulo Clínico (.CLINIC):**
+  - Ao entrar em .CLINIC, a lista lateral de pacientes da unidade ativa já é exibida completamente pronta com contador em tempo real e seleção automática do primeiro paciente.
+  - O Cockpit 360 do paciente renal (dados cadastrais, acesso vascular, heparina, peso seco alvo, última sessão e último exame) é renderizado imediatamente sem estados vazios.
+  - Campo de busca instantânea no topo da lista lateral com botão de limpeza ágil para filtragem em tempo real por nome, CPF, CNS, telefone ou leito/salão.
+  - Sincronização automática da seleção ao trocar de unidade no seletor global ou ao refinar a pesquisa.
+- **Barra de Ações por Ícones nos Cards de Poltronas (.ASSIST):**
+  - Redesenho completo do rodapé dos cards de pacientes na escala de hemodiálise (`DialysisScheduleTab.jsx`).
+  - Substituição dos botões de texto extenso por 4 botões de ícones elegantes, compactos e com tooltips informativos:
+    - ✏️ **Editar** (`Pencil`, fundo azul suave): abre edição rápida de Acesso Vascular, Agulha e Heparina.
+    - 📈 **Exames** (`Activity`, fundo ciano suave): consulta imediata do histórico laboratorial e biomarcadores.
+    - ⇄ **Remanejar** (`ArrowRightLeft`, fundo ardósia suave): remanejamento ou troca de leito/turno.
+    - ⚠️ **Comunicado** (`AlertTriangle`, fundo carmesim suave): publicação rápida de ocorrência no Mural Assistencial.
+  - Eliminação total da poluição visual e quebras de linha nos cards de poltronas dos 3 salões.
+- **Resolução Resiliente e Conexão Integral de Exames Laboratoriais:**
+  - Enriquecimento direto de 2.231 entradas de escala em `initialDialysisSchedule.json` com `patientId` e `cpf` oficiais correspondentes aos pacientes mestres da clínica.
+  - Motor de busca e resolução de exames em múltiplos estágios (`patientService.js` e `mockFirebase.js`), suportando busca direta por ID do paciente, CPF de 11 dígitos, desinfecção de anotações e sufixos de enfermagem (FAV, CDL, Permcath, calibres 15/16/17, datas) e tolerância fonética/tokens de nomes.
+  - 100% dos pacientes da escala agora abrem seu histórico completo de exames dos últimos 4 meses com alertas clínicos sem falhas.
+- **Otimização de Performance e Armazenamento Local:**
+  - Remoção da gravação do payload de 2.1MB de exames laboratoriais no `localStorage`, eliminando o erro de cota excedida (`QuotaExceededError`) nos navegadores e acelerando a inicialização do sistema.
+  - Regras de segurança no `firestore.rules` atualizadas com permissões para as coleções clínicas (`dialysis_schedules`, `prescriptions`, `sessions_logs`, `clinical_notes`, `patient_medications`, `patient_lab_exams`, `patient_apac_records`).
+
 ## [v5.0.31] - 15 de Novembro, 2026
 ### Nex-Ai CLINIC (.CLINICAL, .ASSIST & .MULTI) — Integração Completa de Exames Laboratoriais (LIS Hospitalar), Ingestão de 563 Arquivos XML com 2.189 Sessões e Consulta em 1 Clique no Leito e na Nutrição
 - **Ingestão Massiva do LIS Hospitalar (docs/EXAMES/):**

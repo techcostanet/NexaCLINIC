@@ -45,6 +45,15 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
+    // Dialysis Schedules, Prescriptions, Clinical Notes, Patient Medications, Lab Exams & APAC
+    match /dialysis_schedules/{id} { allow read, write: if isAuthenticated(); }
+    match /prescriptions/{id} { allow read, write: if isAuthenticated(); }
+    match /sessions_logs/{id} { allow read, write: if isAuthenticated(); }
+    match /clinical_notes/{id} { allow read, write: if isAuthenticated(); }
+    match /patient_medications/{id} { allow read, write: if isAuthenticated(); }
+    match /patient_lab_exams/{id} { allow read, write: if isAuthenticated(); }
+    match /patient_apac_records/{id} { allow read, write: if isAuthenticated(); }
+
     // Indicator Values / Data Collection Rules
     match /indicator_data/{dataId} {
       // Admins have access to everything.

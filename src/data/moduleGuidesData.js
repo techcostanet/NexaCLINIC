@@ -947,6 +947,14 @@ export const MODULE_GUIDES = {
       {
         title: 'Cálculo Dinâmico dos Quadros de Cirurgias por Período Ativo',
         desc: 'Os 5 quadros de indicadores no topo da aba Cirurgias (Agendadas, Fístulas, Cateteres, Urgências e Realizadas) calculam seus totais rigorosamente com base no filtro e período ativo exibido (Semana padrão ao entrar, Mês, Dia ou Tabela).'
+      },
+      {
+        title: 'Barra de Ações Rápidas por Ícones na Escala',
+        desc: 'Os cards de pacientes na escala de hemodiálise contam com barra de ações ágeis por ícones dedicados (Editar Acesso, Exames Laboratoriais, Remanejar Leito e Comunicado no Mural), com tooltips explicativos e design limpo sem sobrecarga visual.'
+      },
+      {
+        title: 'Consulta Direta de Exames Laboratoriais na Escala',
+        desc: 'Acesso imediato ao histórico de exames laboratoriais do paciente clicando no ícone de atividade diretamente na escala de hemodiálise, com resolução automática por prontuário mestre e sem dependência de escrita em armazenamento local.'
       }
     ],
     tutorial: [
@@ -1856,6 +1864,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Exportação de Sumário e Ficha de Trânsito',
         desc: 'Emissão formatada em PDF padrão CFM/SBN para transferências hospitalares e pacientes dialisando em trânsito.'
+      },
+      {
+        title: 'Lista Imediata de Pacientes & Busca Instantânea',
+        desc: 'Ao entrar no módulo .CLINIC, a listagem completa de pacientes da unidade ativa já é exibida pronta na barra lateral com seleção automática do primeiro paciente e cockpit 360 ativo, permitindo filtragem instantânea por nome, CPF ou leito.'
       }
     ],
     tutorial: [

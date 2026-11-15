@@ -13,6 +13,32 @@ const MOCK_STORAGE_KEY = 'sistema_indicadores_mock_db';
 
 const getDefaultPatients = () => allEnrichedPatients;
 
+const cleanPatientQuery = (str) => {
+  if (!str) return '';
+  let s = String(str);
+  s = s.replace(/\bDN\b\s*[:;=]?\s*.*$/i, '');
+  s = s.replace(/\bAD\b\s*[:;=]?\s*.*$/i, '');
+  s = s.replace(/Admiss[ãa]o\s*.*$/i, '');
+  s = s.replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b.*$/i, '');
+  s = s.replace(/\b(FAV|CDL|CDLLP|PERMCATH|FISTULA|FÍSTULA|CATETER|USO\s*ÚNICO|USO\s*UNICO|UNICO|ÚNICO|ISOLAMENTO|HCV|HIV|AGULHA)\b.*$/i, '');
+  s = s.replace(/\bAG\s*\.?\s*\d+.*$/i, '');
+  s = s.replace(/\bAG\d+.*$/i, '');
+  s = s.replace(/\(.*?\)/g, '');
+  s = s.replace(/\s*-\s*Uso.*$/i, '');
+  s = s.replace(/\s*-\s*$/i, '');
+  s = s.replace(/[.]+$/g, '');
+  return s.trim().replace(/\s+/g, ' ');
+};
+
+const normalizeText = (str) => {
+  if (!str) return '';
+  return String(str)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trim();
+};
+
 // Helper to get/set mock database
 const getDB = () => {
   const db = localStorage.getItem(MOCK_STORAGE_KEY);
@@ -76,10 +102,9 @@ const getDB = () => {
       updated = true;
     }
 
-    // Seed and sync patient lab exams from official hospital laboratory XML files (v5.0.31 - 2,189 monthly sessions)
-    if (!parsed.lab_exams_sync_version || parsed.lab_exams_sync_version !== '2026-11-15_v5031' || !parsed.patient_lab_exams || parsed.patient_lab_exams.length < 1000) {
-      parsed.patient_lab_exams = allPatientLabExams;
-      parsed.lab_exams_sync_version = '2026-11-15_v5031';
+    // Purge large 2.1MB lab exams payload from localStorage to avoid QuotaExceededError
+    if (parsed.patient_lab_exams) {
+      delete parsed.patient_lab_exams;
       updated = true;
     }
 
@@ -2814,7 +2839,13 @@ const getDB = () => {
 };
 
 const setDB = (data) => {
-  localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(data));
+  try {
+    const copy = { ...data };
+    if (copy.patient_lab_exams) delete copy.patient_lab_exams;
+    localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(copy));
+  } catch (err) {
+    console.warn('Erro ao salvar no localStorage:', err);
+  }
 };
 
 const recalculateRhIndicators = (db) => {
@@ -3825,21 +3856,34 @@ export const mockFirestore = {
 
   // Patient Lab Exams (Monthly/Quarterly Nephrology Profiles from Official Hospital LIS)
   getPatientLabExams: async (patientIdOrName) => {
-    const db = getDB();
-    const list = db.patient_lab_exams && db.patient_lab_exams.length > 0 ? db.patient_lab_exams : allPatientLabExams;
+    const list = allPatientLabExams || [];
     if (!patientIdOrName) {
       return [...list].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     }
     const query = String(patientIdOrName).trim();
     const cleanCpf = query.replace(/\D/g, '');
-    const normQuery = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const cleanQuery = cleanPatientQuery(query);
+    const normQuery = normalizeText(cleanQuery);
+    const queryTokens = normQuery.split(' ').filter(Boolean);
 
     return list.filter(e => {
-      if (e.patientId === query) return true;
-      if (cleanCpf && cleanCpf.length === 11 && e.patientCpf && String(e.patientCpf).replace(/\D/g, '') === cleanCpf) return true;
+      // 1. Direct patientId match
+      if (e.patientId && (e.patientId === query || e.patientId.toLowerCase() === normQuery.toLowerCase())) return true;
+      // 2. CPF match
+      if (cleanCpf && cleanCpf.length === 11 && e.patientCpf) {
+        if (String(e.patientCpf).replace(/\D/g, '') === cleanCpf) return true;
+      }
+      // 3. Name match
       if (e.patientName) {
-        const normName = e.patientName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const normName = normalizeText(e.patientName);
         if (normName === normQuery || normName.includes(normQuery) || normQuery.includes(normName)) return true;
+        // 4. Token overlap (first name + last name)
+        if (queryTokens.length >= 2) {
+          const eTokens = normName.split(' ').filter(Boolean);
+          if (eTokens.length >= 2 && queryTokens[0] === eTokens[0] && queryTokens[queryTokens.length - 1] === eTokens[eTokens.length - 1]) {
+            return true;
+          }
+        }
       }
       return false;
     }).sort((a, b) => (b.date || '').localeCompare(a.date || ''));

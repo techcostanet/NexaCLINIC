@@ -3,15 +3,19 @@ import { USE_MOCK } from './mockDb';
 import initialDialysisSchedule from '../../data/initialDialysisSchedule.json';
 
 const STORAGE_KEY = 'nexa_dialysis_schedules';
-const SCHEDULE_VERSION = 'v2_heparina_2026';
+const SCHEDULE_VERSION = 'v3_patient_labs_2026';
 const VERSION_KEY = 'nexa_dialysis_schedules_ver';
 
-// Helpers para garantir nomes de pacientes estritamente em caixa alta
+// Helpers para garantir nomes de pacientes estritamente em caixa alta preservando patientId e vínculos
 const uppercasePatient = (p) => {
   if (!p) return null;
   return {
     ...p,
-    name: (p.name || '').trim().toUpperCase()
+    name: (p.name || '').trim().toUpperCase(),
+    patientId: p.patientId || null,
+    cpf: p.cpf || null,
+    officialName: p.officialName || p.name,
+    displayName: p.displayName || p.name
   };
 };
 
@@ -100,7 +104,7 @@ export const getDialysisSchedule = async (salao = 'Salão 01', turno = '1º Turn
 
     if (snap.exists()) {
       const snapData = snap.data();
-      // Enriquecer com heparina da base inicial caso o registro em Firestore seja anterior
+      // Enriquecer com heparina, patientId, cpf e dados oficiais caso o registro em Firestore seja anterior
       const initRoom = initialDialysisSchedule[salao]?.[turno];
       if (initRoom?.points) {
         snapData.points = (snapData.points || []).map(p => {
@@ -110,10 +114,22 @@ export const getDialysisSchedule = async (salao = 'Salão 01', turno = '1º Turn
               if (p[cad]?.mainPatient && initP[cad]?.mainPatient) {
                 if (!p[cad].mainPatient.heparina && initP[cad].mainPatient.heparina) {
                   p[cad].mainPatient.heparina = initP[cad].mainPatient.heparina;
-                  ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'].forEach(d => {
-                    if (p[cad][d]) p[cad][d].heparina = initP[cad].mainPatient.heparina;
-                  });
                 }
+                if (!p[cad].mainPatient.patientId && initP[cad].mainPatient.patientId) {
+                  p[cad].mainPatient.patientId = initP[cad].mainPatient.patientId;
+                  p[cad].mainPatient.cpf = initP[cad].mainPatient.cpf;
+                  p[cad].mainPatient.officialName = initP[cad].mainPatient.officialName;
+                }
+                ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'].forEach(d => {
+                  if (p[cad][d] && initP[cad][d]) {
+                    if (!p[cad][d].heparina && initP[cad][d].heparina) p[cad][d].heparina = initP[cad][d].heparina;
+                    if (!p[cad][d].patientId && initP[cad][d].patientId) {
+                      p[cad][d].patientId = initP[cad][d].patientId;
+                      p[cad][d].cpf = initP[cad][d].cpf;
+                      p[cad][d].officialName = initP[cad][d].officialName;
+                    }
+                  }
+                });
               }
             });
           }
@@ -153,6 +169,39 @@ export const getAllDialysisSchedules = async () => {
     snap.docs.forEach(doc => {
       const data = doc.data();
       if (data.salao && data.turno) {
+        const initRoom = initialDialysisSchedule[data.salao]?.[data.turno];
+        if (initRoom?.points && Array.isArray(data.points)) {
+          data.points = data.points.map(p => {
+            const initP = initRoom.points.find(ip => ip.ponto === p.ponto);
+            if (initP) {
+              ['sqs', 'tqs'].forEach(cad => {
+                if (p[cad]?.mainPatient && initP[cad]?.mainPatient) {
+                  if (!p[cad].mainPatient.patientId && initP[cad].mainPatient.patientId) {
+                    p[cad].mainPatient.patientId = initP[cad].mainPatient.patientId;
+                    p[cad].mainPatient.cpf = initP[cad].mainPatient.cpf;
+                    p[cad].mainPatient.officialName = initP[cad].mainPatient.officialName;
+                  }
+                  if (!p[cad].mainPatient.heparina && initP[cad].mainPatient.heparina) {
+                    p[cad].mainPatient.heparina = initP[cad].mainPatient.heparina;
+                  }
+                  ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'].forEach(d => {
+                    if (p[cad][d] && initP[cad][d]) {
+                      if (!p[cad][d].patientId && initP[cad][d].patientId) {
+                        p[cad][d].patientId = initP[cad][d].patientId;
+                        p[cad][d].cpf = initP[cad][d].cpf;
+                        p[cad][d].officialName = initP[cad][d].officialName;
+                      }
+                      if (!p[cad][d].heparina && initP[cad][d].heparina) {
+                        p[cad][d].heparina = initP[cad][d].heparina;
+                      }
+                    }
+                  });
+                }
+              });
+            }
+            return p;
+          });
+        }
         if (!result[data.salao]) result[data.salao] = {};
         result[data.salao][data.turno] = normalizeScheduleData(data);
       }

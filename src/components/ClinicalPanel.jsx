@@ -529,7 +529,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
         return pName.includes(term) || (termDigits && pCpf.includes(termDigits)) || pRoom.includes(term) || pChair === term;
       });
     }
-    return todayPatients;
+    return todayPatients.length > 0 ? todayPatients : currentPatients;
   }, [currentPatients, todayPatients, searchTerm]);
 
   const filteredSidebarPatients = useMemo(() => {
@@ -553,6 +553,21 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
              pRoom.includes(term);
     });
   }, [currentPatients, searchTerm]);
+
+  // Garante que ao entrar no módulo ou ao filtrar, a lista de pacientes esteja sempre pronta e o primeiro ativo selecionado
+  useEffect(() => {
+    if (filteredSidebarPatients.length > 0) {
+      const exists = filteredSidebarPatients.some(p => p.id === selectedPatientId);
+      if (!exists) {
+        setSelectedPatientId(filteredSidebarPatients[0].id);
+      }
+    } else if (currentPatients.length > 0) {
+      const exists = currentPatients.some(p => p.id === selectedPatientId);
+      if (!exists) {
+        setSelectedPatientId(currentPatients[0].id);
+      }
+    }
+  }, [filteredSidebarPatients, currentPatients, selectedPatientId]);
 
   return (
     <div style={styles.container}>
@@ -1045,24 +1060,31 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
             <div style={styles.selectionLayout}>
               {/* Left Column: Select Patient */}
               <div style={styles.sidebar}>
-                <div style={{ ...styles.sidebarSearch, position: 'relative' }}>
-                  <Search size={16} style={styles.sidebarSearchIcon} />
-                  <input 
-                    type="text" 
-                    placeholder="Filtrar pacientes..." 
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    style={styles.sidebarSearchInput}
-                  />
-                  {searchTerm && (
-                    <button 
-                      type="button"
-                      onClick={() => setSearchTerm('')} 
-                      style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
+                <div style={styles.sidebarHeader}>
+                  <div style={styles.sidebarTitleRow}>
+                    <span style={styles.sidebarTitle}>Pacientes</span>
+                    <span style={styles.sidebarCountBadge}>{filteredSidebarPatients.length}</span>
+                  </div>
+                  <div style={{ ...styles.sidebarSearch, position: 'relative' }}>
+                    <Search size={15} style={styles.sidebarSearchIcon} />
+                    <input 
+                      type="text" 
+                      placeholder="Filtrar por nome, CPF ou leito..." 
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      style={styles.sidebarSearchInput}
+                    />
+                    {searchTerm && (
+                      <button 
+                        type="button"
+                        onClick={() => setSearchTerm('')} 
+                        style={styles.sidebarClearBtn}
+                        title="Limpar pesquisa"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div style={styles.sidebarList}>
                   {filteredSidebarPatients.length === 0 ? (
@@ -1792,7 +1814,7 @@ const styles = {
   },
   selectionLayout: {
     display: 'grid',
-    gridTemplateColumns: '260px 1fr',
+    gridTemplateColumns: '280px 1fr',
     gap: '1.25rem',
     minHeight: '450px',
   },
@@ -1807,24 +1829,64 @@ const styles = {
     height: 'fit-content',
     maxHeight: '800px',
   },
+  sidebarHeader: {
+    padding: '0.85rem 0.95rem 0.75rem',
+    borderBottom: '1px solid var(--border-color)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    backgroundColor: '#faf5ff',
+  },
+  sidebarTitleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sidebarTitle: {
+    fontSize: '0.85rem',
+    fontWeight: '800',
+    color: '#6b21a8',
+    letterSpacing: '-0.01em',
+  },
+  sidebarCountBadge: {
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    padding: '0.15rem 0.5rem',
+    borderRadius: '12px',
+    backgroundColor: '#ede9fe',
+    color: '#7c3aed',
+  },
   sidebarSearch: {
     position: 'relative',
-    padding: '0.75rem',
-    borderBottom: '1px solid var(--border-color)',
     display: 'flex',
     alignItems: 'center',
   },
   sidebarSearchIcon: {
     position: 'absolute',
-    left: '1.25rem',
+    left: '0.75rem',
     color: 'var(--text-muted)',
+    pointerEvents: 'none',
   },
   sidebarSearchInput: {
     width: '100%',
-    padding: '0.45rem 0.45rem 0.45rem 2rem',
-    fontSize: '0.85rem',
+    padding: '0.45rem 1.8rem 0.45rem 2.2rem',
+    fontSize: '0.825rem',
     borderRadius: '6px',
     border: '1px solid var(--border-color)',
+    backgroundColor: '#ffffff',
+  },
+  sidebarClearBtn: {
+    position: 'absolute',
+    right: '0.5rem',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: '#94a3b8',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '2px',
   },
   sidebarList: {
     flexGrow: 1,
