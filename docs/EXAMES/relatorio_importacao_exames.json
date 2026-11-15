@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-11-15T11:54:41.635Z",
+  "totalXmlFiles": 563,
+  "totalSolicitacoes": 2289,
+  "totalMatchedSolicitacoes": 2289,
+  "matchRate": "100.0%",
+  "totalConsolidatedMonthlySessions": 2189,
+  "totalDistinctPatients": 628,
+  "monthsDistribution": {
+    "2026-11": 586,
+    "2026-10": 566,
+    "2026-09": 537,
+    "2026-08": 500
+  },
+  "parametersCoverage": {
+    "potassium": 2160,
+    "sodium": 2174,
+    "calcium": 2184,
+    "phosphorus": 2184,
+    "hemoglobin": 2177,
+    "hematocrit": 2178,
+    "ureaPre": 1940,
+    "ureaPost": 1931,
+    "ktvCalculated": 1903,
+    "albumin": 561,
+    "ferritin": 554,
+    "pth": 535,
+    "transferrinSat": 580,
+    "creatinine": 778,
+    "glucose": 1073,
+    "hba1c": 623,
+    "leukocytes": 558,
+    "platelets": 558
+  }
+}

@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Apple, Plus, Search, Filter, Calendar, User, Save, X, 
-  Scale, Activity, FileText, CheckCircle2 
-} from 'lucide-react';
+import { Apple, Plus, Search, Save, X, Activity } from 'lucide-react';
 import { dbService } from '../../firebase';
 import { getNutritionRecords, saveNutritionRecord } from '../../services/firebase/multiService';
 
@@ -14,6 +11,14 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
   const [showModal, setShowModal] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+
+  // Labs Integration
+  const [patientRecentLabs, setPatientRecentLabs] = useState([]);
+  const [loadingPatientLabs, setLoadingPatientLabs] = useState(false);
+  const [viewLabsPatient, setViewLabsPatient] = useState(null);
+  const [viewLabsList, setViewLabsList] = useState([]);
+  const [showLabsViewer, setShowLabsViewer] = useState(false);
+  const [loadingViewerLabs, setLoadingViewerLabs] = useState(false);
 
   const [formData, setFormData] = useState({
     id: '',
@@ -66,7 +71,7 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
     });
   }, [records, searchTerm]);
 
-  const handleSelectPatient = (p) => {
+  const handleSelectPatient = async (p) => {
     setFormData(prev => ({
       ...prev,
       patientId: p.id,
@@ -75,6 +80,34 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
     }));
     setPatientSearch(p.name || p.nome);
     setShowPatientDropdown(false);
+    setLoadingPatientLabs(true);
+    try {
+      const exams = await dbService.getPatientLabExams(p.id || p.name || p.nome);
+      setPatientRecentLabs(exams || []);
+      if (exams && exams.length > 0) {
+        const latest = exams[0];
+        // Auto-sugestão baseada nos exames reais do laboratório
+        let autoFosf = 'Na Meta (<5.5 mg/dL)';
+        if (latest.phosphorus !== null && latest.phosphorus !== undefined) {
+          if (latest.phosphorus > 7.0) autoFosf = 'Muito Alto (>7.0 mg/dL)';
+          else if (latest.phosphorus > 5.5) autoFosf = 'Elevado (5.5 - 7.0 mg/dL)';
+        }
+        let autoPot = 'Na Meta (3.5-5.5 mEq/L)';
+        if (latest.potassium !== null && latest.potassium !== undefined) {
+          if (latest.potassium > 6.5) autoPot = 'Crítico (>6.5 mEq/L)';
+          else if (latest.potassium > 5.5) autoPot = 'Elevado (5.6 - 6.5 mEq/L)';
+        }
+        setFormData(prev => ({
+          ...prev,
+          controleFosforo: autoFosf,
+          controlePotassio: autoPot
+        }));
+      }
+    } catch (err) {
+      console.warn('Erro ao carregar exames laboratoriais na nutrição:', err);
+    } finally {
+      setLoadingPatientLabs(false);
+    }
   };
 
   const calculateImc = (peso, alt) => {
@@ -164,11 +197,12 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
                 <tr style={styles.trHead}>
                   <th style={styles.th}>Data</th>
                   <th style={styles.th}>Paciente</th>
-                  <th style={styles.th}>Peso Seco</th>
+                  <th style={styles.th}>Peso</th>
                   <th style={styles.th}>IMC</th>
                   <th style={styles.th}>Fósforo</th>
                   <th style={styles.th}>Potássio</th>
-                  <th style={styles.th}>Nutricionista</th>
+                  <th style={styles.th}>Responsável</th>
+                  <th style={styles.th}>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -207,6 +241,41 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
                         {item.responsavel}
                       </div>
                     </td>
+                    <td style={styles.td}>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setViewLabsPatient({ name: item.nomePaciente, patientId: item.patientId });
+                          setShowLabsViewer(true);
+                          setLoadingViewerLabs(true);
+                          try {
+                            const ex = await dbService.getPatientLabExams(item.patientId || item.nomePaciente);
+                            setViewLabsList(ex || []);
+                          } catch (err) {
+                            setViewLabsList([]);
+                          } finally {
+                            setLoadingViewerLabs(false);
+                          }
+                        }}
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid #0891b2',
+                          backgroundColor: '#f0fdfa',
+                          color: '#0891b2',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                        title="Consultar histórico de exames laboratoriais do paciente"
+                      >
+                        <Activity size={12} />
+                        <span>Exames</span>
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -233,7 +302,7 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
 
             <form onSubmit={handleSave} style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ position: 'relative' }}>
-                <label style={styles.label}>Paciente (Base Central da Clínica) *</label>
+                <label style={styles.label}>Paciente *</label>
                 <input
                   type="text"
                   required
@@ -261,9 +330,78 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
                 )}
               </div>
 
+              {/* Card de Exames Laboratoriais Integrados da Clínica */}
+              {loadingPatientLabs ? (
+                <div style={{ padding: '0.75rem', backgroundColor: '#f0fdfa', borderRadius: '8px', border: '1px solid #ccfbf1', fontSize: '0.8rem', color: '#0f766e', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Activity size={14} className="spin" />
+                  <span>Consultando exames laboratoriais do paciente no LIS...</span>
+                </div>
+              ) : patientRecentLabs.length > 0 ? (() => {
+                const latest = patientRecentLabs[0];
+                return (
+                  <div style={{
+                    padding: '0.85rem 1rem',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '10px',
+                    border: '1px solid #e2e8f0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0891b2', fontWeight: '700', fontSize: '0.82rem' }}>
+                        <Activity size={15} />
+                        <span>Laboratório Integrado (Coleta: {latest.date ? latest.date.split('-').reverse().join('/') : '-'})</span>
+                      </div>
+                      <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                        Sugerido do LIS
+                      </span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '6px', marginTop: '2px' }}>
+                      <div style={{ padding: '6px 8px', borderRadius: '6px', backgroundColor: latest.phosphorus > 5.5 ? '#fee2e2' : '#ffffff', border: '1px solid #cbd5e1' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '600' }}>Fósforo</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: '800', color: latest.phosphorus > 5.5 ? '#991b1b' : '#0f172a' }}>
+                          {latest.phosphorus !== null && latest.phosphorus !== undefined ? `${latest.phosphorus} mg/dL` : '-'}
+                        </div>
+                      </div>
+                      <div style={{ padding: '6px 8px', borderRadius: '6px', backgroundColor: latest.potassium > 5.5 ? '#fee2e2' : '#ffffff', border: '1px solid #cbd5e1' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '600' }}>Potássio</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: '800', color: latest.potassium > 5.5 ? '#991b1b' : '#0f172a' }}>
+                          {latest.potassium !== null && latest.potassium !== undefined ? `${latest.potassium} mEq/L` : '-'}
+                        </div>
+                      </div>
+                      <div style={{ padding: '6px 8px', borderRadius: '6px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '600' }}>Cálcio</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: '800', color: '#0f172a' }}>
+                          {latest.calcium !== null && latest.calcium !== undefined ? `${latest.calcium} mg/dL` : '-'}
+                        </div>
+                      </div>
+                      <div style={{ padding: '6px 8px', borderRadius: '6px', backgroundColor: latest.albumin && latest.albumin < 3.8 ? '#fef3c7' : '#ffffff', border: '1px solid #cbd5e1' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '600' }}>Albumina</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: '800', color: latest.albumin && latest.albumin < 3.8 ? '#92400e' : '#0f172a' }}>
+                          {latest.albumin !== null && latest.albumin !== undefined ? `${latest.albumin} g/dL` : '-'}
+                        </div>
+                      </div>
+                      <div style={{ padding: '6px 8px', borderRadius: '6px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '600' }}>Kt/V</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: '800', color: latest.ktv >= 1.20 ? '#166534' : '#b45309' }}>
+                          {latest.ktv !== null && latest.ktv !== undefined ? `${latest.ktv}` : '-'}
+                        </div>
+                      </div>
+                      <div style={{ padding: '6px 8px', borderRadius: '6px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '600' }}>Ureia Pré/Pós</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#334155' }}>
+                          {latest.ureaPre || '-'} / {latest.ureaPost || '-'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })() : null}
+
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
                 <div>
-                  <label style={styles.label}>Peso Seco (kg)</label>
+                  <label style={styles.label}>Peso (kg)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -312,7 +450,7 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={styles.label}>Controle de Fósforo</label>
+                  <label style={styles.label}>Fósforo</label>
                   <select
                     value={formData.controleFosforo}
                     onChange={(e) => setFormData(prev => ({ ...prev, controleFosforo: e.target.value }))}
@@ -324,7 +462,7 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
                   </select>
                 </div>
                 <div>
-                  <label style={styles.label}>Controle de Potássio</label>
+                  <label style={styles.label}>Potássio</label>
                   <select
                     value={formData.controlePotassio}
                     onChange={(e) => setFormData(prev => ({ ...prev, controlePotassio: e.target.value }))}
@@ -338,7 +476,7 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
               </div>
 
               <div>
-                <label style={styles.label}>Conduta Nutricional & Plano Alimentar</label>
+                <label style={styles.label}>Conduta</label>
                 <textarea
                   rows={4}
                   placeholder="Orientações de ingesta hídrica, alimentos ricos em potássio/fósforo, quelantes e dieta renal..."
@@ -349,7 +487,14 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
-                <button type="button" onClick={() => setShowModal(false)} style={styles.btnSecondary}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    setPatientRecentLabs([]);
+                  }}
+                  style={styles.btnSecondary}
+                >
                   Cancelar
                 </button>
                 <button type="submit" style={styles.btnPrimary}>
@@ -357,6 +502,137 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE HISTÓRICO DE EXAMES LABORATORIAIS (CONSULTA RÁPIDA) */}
+      {showLabsViewer && viewLabsPatient && (
+        <div style={styles.overlay} onClick={() => setShowLabsViewer(false)}>
+          <div
+            style={{
+              ...styles.modal,
+              maxWidth: '850px',
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Activity size={22} color="#0891b2" />
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700' }}>
+                    {viewLabsPatient.name ? viewLabsPatient.name.toUpperCase() : 'PACIENTE'}
+                  </h3>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    Histórico Laboratorial dos Últimos Meses
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLabsViewer(false);
+                  setViewLabsPatient(null);
+                  setViewLabsList([]);
+                }}
+                style={styles.btnClose}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: '1.25rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {loadingViewerLabs ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
+                  Carregando exames...
+                </div>
+              ) : viewLabsList.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
+                  Nenhum exame laboratorial registrado para este paciente nos últimos 4 meses.
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid var(--border-color, #e2e8f0)' }}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr style={styles.trHead}>
+                        <th style={styles.th}>Mês</th>
+                        <th style={styles.th}>Data</th>
+                        <th style={styles.th}>Fósforo</th>
+                        <th style={styles.th}>Potássio</th>
+                        <th style={styles.th}>Cálcio</th>
+                        <th style={styles.th}>Albumina</th>
+                        <th style={styles.th}>Kt/V</th>
+                        <th style={styles.th}>Ureia Pré</th>
+                        <th style={styles.th}>Ureia Pós</th>
+                        <th style={styles.th}>Hb</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {viewLabsList.map(row => {
+                        const [y, m] = (row.month || '').split('-');
+                        const monthNames = { '08': 'Agosto', '09': 'Setembro', '10': 'Outubro', '11': 'Novembro' };
+                        const monthLabel = `${monthNames[m] || m}/${y ? y.substring(2) : ''}`;
+                        return (
+                          <tr key={row.id} style={styles.trBody}>
+                            <td style={styles.td}><strong>{monthLabel}</strong></td>
+                            <td style={styles.td}>{row.date ? row.date.split('-').reverse().join('/') : '-'}</td>
+                            <td style={{
+                              ...styles.td,
+                              fontWeight: '700',
+                              color: row.phosphorus > 5.5 ? '#b91c1c' : '#166534'
+                            }}>
+                              {row.phosphorus ? `${row.phosphorus} mg/dL` : '-'}
+                            </td>
+                            <td style={{
+                              ...styles.td,
+                              fontWeight: '700',
+                              color: row.potassium > 5.5 ? '#b91c1c' : row.potassium < 3.5 ? '#b45309' : '#166534'
+                            }}>
+                              {row.potassium ? `${row.potassium} mEq/L` : '-'}
+                            </td>
+                            <td style={styles.td}>{row.calcium ? `${row.calcium} mg/dL` : '-'}</td>
+                            <td style={{
+                              ...styles.td,
+                              fontWeight: '700',
+                              color: row.albumin && row.albumin < 3.8 ? '#b45309' : '#166534'
+                            }}>
+                              {row.albumin ? `${row.albumin} g/dL` : '-'}
+                            </td>
+                            <td style={{
+                              ...styles.td,
+                              fontWeight: '700',
+                              color: row.ktv >= 1.20 ? '#166534' : row.ktv ? '#b45309' : '#64748b'
+                            }}>
+                              {row.ktv || '-'}
+                            </td>
+                            <td style={styles.td}>{row.ureaPre || '-'}</td>
+                            <td style={styles.td}>{row.ureaPost || '-'}</td>
+                            <td style={styles.td}>{row.hemoglobin || '-'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div style={{ padding: '0.85rem 1.25rem', borderTop: '1px solid var(--border-color, #e2e8f0)', display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLabsViewer(false);
+                  setViewLabsPatient(null);
+                  setViewLabsList([]);
+                }}
+                style={styles.btnSecondary}
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       )}

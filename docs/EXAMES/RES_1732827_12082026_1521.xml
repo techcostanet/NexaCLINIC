@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<resultados versao="" versao_smart="" ordem_de_servico="1732827" cnpj_lab="58476786000106">
+	<solicitacao codigo="1732827" codigo_aol="1732827" codigo_lis="286.990" data_solicitacao="03/08/2026 00:00:00" data_realizacao="12/08/2026" paciente="990" nome_paciente="ANTENOR JOSE DOS SANTOS" chave_paciente="" pac_matricula="700501168811058" pac_numcpf="45093415634" pac_nasc="04/02/1955" pac_sexo="M" med_solic_nome="Maria Tereza Alves França" med_solic_crm="77478">
+		<amostras>
+<amostra codigo="" identificacao="" material=""/>		</amostras>
+		<exame cod_tabela="" codigo="000C" nome="CALCIO" dataresultado="03/08/2026 19:52" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="9,7" unidade="mg/dL" conclusao="?" vlr_referencia="Adultos:     8,8 a 11,0 mg/dL"/>
+		</exame>
+		<exame cod_tabela="" codigo="000H" nome="FOSFORO" dataresultado="03/08/2026 19:52" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="3,7" unidade="mg/dL" conclusao="?" vlr_referencia="Adultos:             2,5 a 4,8 mg/dL"/>
+		</exame>
+		<exame cod_tabela="" codigo="000U" nome="POTÁSSIO" dataresultado="04/08/2026 08:52" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="41" metodo="" resultado="4,3" unidade="mEq/L" conclusao="?" vlr_referencia="3,5 a 5,1 mEq/L"/>
+			<resultado amostra="" cod_tabela="" atributo="Frase apoio" linharesultado="42" metodo="" resultado="Exame realizado em parceria com laboratório de apoio DB - CNES: 4057619" unidade="" conclusao="?"/>
+		</exame>
+		<exame cod_tabela="" codigo="0010" nome="TRANSAMINASE GLUTÂMICO PIRÚVICA- TGP" dataresultado="04/08/2026 11:04" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="19" unidade="U/L" conclusao="?" vlr_referencia="IDADE:          MASCULINO(U/L)       FEMININO(U/L)
+1-30 DIAS          20-54                21-54
+1-6 MESES          26-55                26-61
+7-12 MESES         29-59                26-55
+1-3 ANOS           19-59                24-59
+4-11 ANOS          24-49                24-49
+12-15 ANOS         24-59                19-44
+ADULTOS            ATÉ 45               ATÉ 34"/>
+		</exame>
+		<exame cod_tabela="" codigo="0017" nome="UREIA PÓS DIÁLISE" dataresultado="04/08/2026 11:18" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="45" unidade="mg/dL" conclusao="?" vlr_referencia="15 a 40 mg/dL"/>
+		</exame>
+		<exame cod_tabela="" codigo="001H" nome="DOSAGEM DE HEMOGLOBINA" dataresultado="03/08/2026 17:22" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Hemoglobina" linharesultado="1" metodo="" resultado="10,1" unidade="g/dL" conclusao="?" vlr_referencia="Homens: 13,5 a 17,5 g/dL"/>
+		</exame>
+		<exame cod_tabela="" codigo="001O" nome="HEMATOCRITO" dataresultado="03/08/2026 17:22" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="HEMATÓCRITO" linharesultado="1" metodo="" resultado="30,0" unidade="%" conclusao="?" vlr_referencia="Homens   : 39,0 a 50,0 %"/>
+		</exame>
+		<exame cod_tabela="" codigo="0027" nome="UREIA" dataresultado="04/08/2026 11:04" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="131" unidade="mg/dL" conclusao="?" vlr_referencia="Adultos:       15 a 40 mg/dL"/>
+			<resultado amostra="" cod_tabela="" atributo="Condicional" linharesultado="6" metodo="" resultado="OBS: Resultado confirmado em mesma amostra e tecnicamente validado em conformidade com o controle de qualidade." unidade="" conclusao="?"/>
+			<resultado amostra="" cod_tabela="" atributo="OBSERVAÇÃO" linharesultado="999" metodo="" resultado="Resultado confirmado em mesma amostra e tecnicamente validado em conformidade com o controle de qualidade." unidade="" conclusao="?"/>
+		</exame>
+		<exame cod_tabela="" codigo="0329" nome="SÓDIO" dataresultado="04/08/2026 08:52" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="41" metodo="" resultado="143" unidade="mEq/L" conclusao="?" vlr_referencia="Adultos...........: 136 a 145 mEq/L"/>
+			<resultado amostra="" cod_tabela="" atributo="Frase apoio" linharesultado="42" metodo="" resultado="Exame realizado em parceria com laboratório de apoio DB - CNES: 4057619" unidade="" conclusao="?"/>
+		</exame>
+	</solicitacao>
+</resultados>

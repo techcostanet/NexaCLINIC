@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<resultados versao="" versao_smart="" ordem_de_servico="1733354" cnpj_lab="58476786000106">
+	<solicitacao codigo="1733354" codigo_aol="1733354" codigo_lis="287.57" data_solicitacao="04/08/2026 00:00:00" data_realizacao="12/08/2026" paciente="57" nome_paciente="ANTONIO CASSIO ALVES" chave_paciente="" pac_matricula="700909935132192" pac_numcpf="20555024687" pac_nasc="23/10/1950" pac_sexo="M" med_solic_nome="Francielly Helenara Rodrigues Alves" med_solic_crm="66464">
+		<amostras>
+<amostra codigo="" identificacao="" material=""/>		</amostras>
+		<exame cod_tabela="" codigo="000A" nome="CREATININA" dataresultado="05/08/2026 12:30" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="8,09" unidade="mg/dL" conclusao="?" vlr_referencia="Adultos:
+Homens:   0,70 a 1,20 mg/dL
+Mulheres: 0,50 a 1,00 mg/dL"/>
+		</exame>
+		<exame cod_tabela="" codigo="000C" nome="CALCIO" dataresultado="05/08/2026 12:30" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="9,2" unidade="mg/dL" conclusao="?" vlr_referencia="Adultos:     8,8 a 11,0 mg/dL"/>
+		</exame>
+		<exame cod_tabela="" codigo="000H" nome="FOSFORO" dataresultado="05/08/2026 15:19" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="5,6" unidade="mg/dL" conclusao="?" vlr_referencia="Adultos:             2,5 a 4,8 mg/dL"/>
+			<resultado amostra="" cod_tabela="" atributo="Observação" linharesultado="999" metodo="" resultado="Resultado confirmado em mesma amostra e tecnicamente validado em conformidade com o controle de qualidade." unidade="" conclusao="?"/>
+		</exame>
+		<exame cod_tabela="" codigo="000M" nome="GLICEMIA EM JEJUM" dataresultado="05/08/2026 12:30" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="146" unidade="mg/dL" conclusao="?" vlr_referencia="De 65 a 99 mg/dL"/>
+			<resultado amostra="" cod_tabela="" atributo="Condicional" linharesultado="7307" metodo="" resultado="OBS: Resultado confirmado em mesma amostra e tecnicamente validado em conformidade com o controle de qualidade." unidade="" conclusao="?"/>
+		</exame>
+		<exame cod_tabela="" codigo="000U" nome="POTÁSSIO" dataresultado="06/08/2026 09:00" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="41" metodo="" resultado="5,3" unidade="mEq/L" conclusao="?" vlr_referencia="3,5 a 5,1 mEq/L"/>
+			<resultado amostra="" cod_tabela="" atributo="OBSERVAÇÃO" linharesultado="999" metodo="" resultado="Resultado conferido, repetido e liberado, sugere-se a avaliação
+a critério médico." unidade="" conclusao="?"/>
+			<resultado amostra="" cod_tabela="" atributo="Frase apoio" linharesultado="42" metodo="" resultado="Exame realizado em parceria com laboratório de apoio DB - CNES: 4057619" unidade="" conclusao="?"/>
+		</exame>
+		<exame cod_tabela="" codigo="0010" nome="TRANSAMINASE GLUTÂMICO PIRÚVICA- TGP" dataresultado="05/08/2026 15:19" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="16" unidade="U/L" conclusao="?" vlr_referencia="IDADE:          MASCULINO(U/L)       FEMININO(U/L)
+1-30 DIAS          20-54                21-54
+1-6 MESES          26-55                26-61
+7-12 MESES         29-59                26-55
+1-3 ANOS           19-59                24-59
+4-11 ANOS          24-49                24-49
+12-15 ANOS         24-59                19-44
+ADULTOS            ATÉ 45               ATÉ 34"/>
+		</exame>
+		<exame cod_tabela="" codigo="0017" nome="UREIA PÓS DIÁLISE" dataresultado="05/08/2026 15:19" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="1" unidade="mg/dL" conclusao="?" vlr_referencia="15 a 40 mg/dL"/>
+			<resultado amostra="" cod_tabela="" atributo="OBSERVAÇÃO" linharesultado="999" metodo="" resultado="Resultado confirmado em mesma amostra e tecnicamente validado em conformidade com o controle de qualidade." unidade="" conclusao="?"/>
+		</exame>
+		<exame cod_tabela="" codigo="001H" nome="DOSAGEM DE HEMOGLOBINA" dataresultado="04/08/2026 19:46" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Hemoglobina" linharesultado="1" metodo="" resultado="11,0" unidade="g/dL" conclusao="?" vlr_referencia="Homens: 13,5 a 17,5 g/dL"/>
+		</exame>
+		<exame cod_tabela="" codigo="001O" nome="HEMATOCRITO" dataresultado="04/08/2026 19:46" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="HEMATÓCRITO" linharesultado="1" metodo="" resultado="33,1" unidade="%" conclusao="?" vlr_referencia="Homens   : 39,0 a 50,0 %"/>
+		</exame>
+		<exame cod_tabela="" codigo="0027" nome="UREIA" dataresultado="05/08/2026 15:19" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="187" unidade="mg/dL" conclusao="?" vlr_referencia="Adultos:       15 a 40 mg/dL"/>
+			<resultado amostra="" cod_tabela="" atributo="Condicional" linharesultado="6" metodo="" resultado="OBS: Resultado confirmado em mesma amostra e tecnicamente validado em conformidade com o controle de qualidade." unidade="" conclusao="?"/>
+			<resultado amostra="" cod_tabela="" atributo="OBSERVAÇÃO" linharesultado="999" metodo="" resultado="Resultado confirmado em mesma amostra e tecnicamente validado em conformidade com o controle de qualidade." unidade="" conclusao="?"/>
+		</exame>
+		<exame cod_tabela="" codigo="005U" nome="HEMOGLOBINA GLICADA - HBA1C" dataresultado="05/08/2026 09:43" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Hemoglobina Glicada (A1C)" linharesultado="100" metodo="" resultado="5,2" unidade="%" conclusao="?" vlr_referencia="Normal: Menor que 5,7%
+Pré-diabetes: 5,7% a 6,4%
+Diabetes: Maior que 6,4%"/>
+			<resultado amostra="" cod_tabela="" atributo="Glicemia média estimada" linharesultado="101" metodo="" resultado="103" unidade="mg/dL" conclusao="?"/>
+			<resultado amostra="" cod_tabela="" atributo="Complemento valores de referência" linharesultado="103" metodo="" resultado="Meta terapêutica:
+Pacientes DM1 ou DM2 menor que 7,0%
+Idoso Saudável menor que 7,5% 
+Idoso Comprometido menor que 8,5%
+Criança e Adolescente menor que 7,0%
+
+Referência: Diretriz Oficial da Sociedade Brasileira de Diabetes (2024)" unidade="" conclusao="?"/>
+			<resultado amostra="" cod_tabela="" atributo="Notas" linharesultado="102" metodo="" resultado="Notas:
+- O método utilizado nesta dosagem  de glicada  esta  certificado  pelo   NGSP   (National   Glycohemoglobin Standardization Program-USA).
+- O diagnóstico de diabetes mellitus deve ser confirmado pela repetição do teste em outro dia, a menos que haja hiperglicemia inequívoca  com descompensação  metabólica  aguda ou  sintomas clássicos de  diabetes mellitus.  ADA - American  Diabetes  Association. Diabetes  Care,  Vol. 34, hemoglobina S. 1, January  2011.
+- Glicemia Média Estimada é a relação matemática confiável entre A1C e os valores glicêmicos expressa em mg/dL, conforme ADAG.
+
+Atenção para novo layout a partir de 01/11/2025." unidade="" conclusao="?"/>
+		</exame>
+		<exame cod_tabela="" codigo="0329" nome="SÓDIO" dataresultado="06/08/2026 08:15" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="41" metodo="" resultado="134" unidade="mEq/L" conclusao="?" vlr_referencia="Adultos...........: 136 a 145 mEq/L"/>
+			<resultado amostra="" cod_tabela="" atributo="OBSERVAÇÃO" linharesultado="999" metodo="" resultado="Resultado conferido e liberado." unidade="" conclusao="?"/>
+			<resultado amostra="" cod_tabela="" atributo="Frase apoio" linharesultado="42" metodo="" resultado="Exame realizado em parceria com laboratório de apoio DB - CNES: 4057619" unidade="" conclusao="?"/>
+		</exame>
+	</solicitacao>
+</resultados>

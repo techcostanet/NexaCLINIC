@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<resultados versao="" versao_smart="" ordem_de_servico="1730283" cnpj_lab="58476786000106">
+	<solicitacao codigo="1730283" codigo_aol="1730283" codigo_lis="289.1711" data_solicitacao="06/08/2026 00:00:00" data_realizacao="12/08/2026" paciente="1711" nome_paciente="MARIA HELENA FERREIRA DE SOUZA" chave_paciente="" pac_matricula="705000230109050" pac_numcpf="29205603600" pac_nasc="13/08/1955" pac_sexo="F" med_solic_nome="Francielly Helenara Rodrigues Alves" med_solic_crm="66464">
+		<amostras>
+<amostra codigo="" identificacao="" material=""/>		</amostras>
+		<exame cod_tabela="" codigo="000A" nome="CREATININA" dataresultado="06/08/2026 12:57" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="9,44" unidade="mg/dL" conclusao="?" vlr_referencia="Adultos:
+Homens:   0,70 a 1,20 mg/dL
+Mulheres: 0,50 a 1,00 mg/dL"/>
+		</exame>
+		<exame cod_tabela="" codigo="000C" nome="CALCIO" dataresultado="06/08/2026 19:07" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="12,5" unidade="mg/dL" conclusao="?" vlr_referencia="Lactantes:   9,0 a 11,0 mg/dL
+Adultos:     8,8 a 11,0 mg/dL"/>
+			<resultado amostra="" cod_tabela="" atributo="OBSERVAÇÃO" linharesultado="999" metodo="" resultado="Resultado repetido e confirmado em duas amostras diferentes, liberado e validado pelo controle de qualidade." unidade="" conclusao="?"/>
+		</exame>
+		<exame cod_tabela="" codigo="000H" nome="FOSFORO" dataresultado="06/08/2026 19:07" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="1" metodo="" resultado="6,9" unidade="mg/dL" conclusao="?" vlr_referencia="Adultos:             2,5 a 4,8 mg/dL"/>
+			<resultado amostra="" cod_tabela="" atributo="Observação" linharesultado="999" metodo="" resultado="Resultado repetido e confirmado em duas amostras diferentes, liberado e validado pelo controle de qualidade." unidade="" conclusao="?"/>
+		</exame>
+		<exame cod_tabela="" codigo="000U" nome="POTÁSSIO" dataresultado="06/08/2026 09:00" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="41" metodo="" resultado="5,0" unidade="mEq/L" conclusao="?" vlr_referencia="3,5 a 5,1 mEq/L"/>
+			<resultado amostra="" cod_tabela="" atributo="Frase apoio" linharesultado="42" metodo="" resultado="Exame realizado em parceria com laboratório de apoio DB - CNES: 4057619" unidade="" conclusao="?"/>
+		</exame>
+		<exame cod_tabela="" codigo="001H" nome="DOSAGEM DE HEMOGLOBINA" dataresultado="05/08/2026 18:41" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Hemoglobina" linharesultado="1" metodo="" resultado="7,2" unidade="g/dL" conclusao="?" vlr_referencia="Mulheres: 12,0 a 15,5 g/dL"/>
+		</exame>
+		<exame cod_tabela="" codigo="001O" nome="HEMATOCRITO" dataresultado="05/08/2026 18:41" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="HEMATÓCRITO" linharesultado="1" metodo="" resultado="21,8" unidade="%" conclusao="?" vlr_referencia="Mulheres : 35,0 a 45,0 %"/>
+		</exame>
+		<exame cod_tabela="" codigo="0329" nome="SÓDIO" dataresultado="06/08/2026 09:00" observacao="">
+			<resultado amostra="" cod_tabela="" atributo="Resultado" linharesultado="41" metodo="" resultado="143" unidade="mEq/L" conclusao="?" vlr_referencia="Adultos...........: 136 a 145 mEq/L"/>
+			<resultado amostra="" cod_tabela="" atributo="Frase apoio" linharesultado="42" metodo="" resultado="Exame realizado em parceria com laboratório de apoio DB - CNES: 4057619" unidade="" conclusao="?"/>
+		</exame>
+	</solicitacao>
+</resultados>

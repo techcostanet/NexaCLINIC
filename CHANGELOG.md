@@ -1,3 +1,26 @@
+## [v5.0.31] - 15 de Novembro, 2026
+### Nex-Ai CLINIC (.CLINICAL, .ASSIST & .MULTI) — Integração Completa de Exames Laboratoriais (LIS Hospitalar), Ingestão de 563 Arquivos XML com 2.189 Sessões e Consulta em 1 Clique no Leito e na Nutrição
+- **Ingestão Massiva do LIS Hospitalar (docs/EXAMES/):**
+  - Processamento automatizado de 563 arquivos XML do sistema laboratorial hospitalar, extraindo 2.289 pedidos analíticos de exames de Agosto a Novembro de 2026.
+  - 100% de taxa de correspondência de pacientes (2.289 de 2.289), com cruzamento multifatorial (CPF, Prontuário hospitalar e Nome).
+  - Cadastro da paciente pendente `BERENICE HELENA CAMPOS` (`pat-2090`), totalizando 2.090 pacientes no cadastro mestre da clínica.
+  - Geração do banco de dados laboratorial consolidado em `src/data/allPatientLabExams.json` (2.189 sessões mensais em 628 pacientes).
+- **Adequação Dialítica & Biomarcadores Automatizados:**
+  - Cálculo automático de Kt/V Daugirdas de 2ª geração e Taxa de Redução de Ureia (URR) para 1.903 sessões a partir das ureias pré e pós-diálise.
+  - Indicadores metabólicos monitorados: Potássio (2.160), Sódio (2.174), Cálcio (2.184), Fósforo (2.184), Hemoglobina (2.177), Hematócrito (2.178), Albumina (561), Creatinina (778), Ferritina (554), Sat. Transferrina (580), PTH intacto (535), Glicemia (1.073) e Sorologias (HIV, HCV, HBsAg, Anti-HBs).
+- **Atalho 1-Clique na Escala de Hemodiálise (.ASSIST):**
+  - Inclusão do botão "Exames" em cada poltrona/ponto ocupado do Mapa de Hemodiálise (`DialysisScheduleTab.jsx`).
+  - Modal rápido de exames com abas de meses, identificação do médico solicitante/CRM, banner de alertas clínicos críticos (Hipercalemia > 5.5, Hiperfosfatemia > 5.5, Anemia Hb < 10.0, Dose subótima Kt/V < 1.20), grade de 6 cards de KPIs e tabela comparativa dos últimos 4 meses sem sair da escala durante o round.
+- **Integração Laboratorial na Nutrição Renal (.MULTI):**
+  - Consulta automática aos exames recentes do paciente ao selecioná-lo no formulário de Avaliação Nutricional (`MultiNutritionTab.jsx`).
+  - Auto-sugestão do status de controle de Fósforo (`Na Meta`, `Elevado`, `Muito Alto`) e Potássio (`Na Meta`, `Elevado`, `Crítico`) a partir dos dados laboratoriais reais.
+  - Botão "Exames" na tabela de avaliações para consulta rápida do histórico laboratorial do paciente.
+- **Repositório Central no Módulo Clínico (.CLINICAL):**
+  - Aba Exames com semáforo SBN aprimorada com referências para Sódio, Creatinina e Albumina.
+- **Diretrizes de Interface (UI/UX) & Manuais:**
+  - Aplicação rigorosa da regra de rótulos de termo único (1 palavra).
+  - Atualização dos manuais oficiais em `moduleGuidesData.js` e notas de versão em `ChangelogModal.jsx`.
+
 ## [v5.0.30] - 14 de Novembro, 2026
 ### Nex-Ai CLINIC (.RECEPTION & .ASSIST) — Importação Massiva de 1.398 Pacientes Hospitalares, Consolidação da Base Mestre para 2.089 Registros e Filtros Nefrológicos Avançados
 - **Importação Hospitalar:** Importação integral de 1.398 novos pacientes nefrológicos ambulatoriais da planilha oficial do Hospital Público Regional Prefeito Osvaldo Rezende Franco (Betim/MG), expandindo a base mestre unificada para 2.089 pacientes.

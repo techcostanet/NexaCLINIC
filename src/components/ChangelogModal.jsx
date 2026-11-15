@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.31',
+      date: '15/11/2026',
+      title: 'Nex-Ai CLINIC (.CLINICAL, .ASSIST & .MULTI) — Integração Completa de Exames Laboratoriais (LIS Hospitalar), Ingestão de 563 Arquivos XML com 2.189 Sessões e Consulta em 1 Clique no Leito e na Nutrição',
+      description: 'Ingestão massiva e estruturação completa do repositório laboratorial hospitalar da clínica a partir de 563 arquivos XML oficiais (período de Agosto a Novembro de 2026). Todos os 2.289 pedidos laboratoriais foram processados e 100% dos pacientes foram identificados e vinculados à base mestre (incluindo o cadastro da paciente pendente BERENICE HELENA CAMPOS, totalizando 2.090 pacientes no censo mestre). O ecossistema agora consolida 2.189 sessões mensais de nefrologia com cálculo automatizado da dose de diálise Kt/V Daugirdas de 2ª geração e Taxa de Redução de Ureia (URR), biomarcadores eletrolíticos e metabólicos (Potássio, Fósforo, Cálcio, Sódio, Creatinina, Albumina, PTH intacto, Cinética do Ferro com Ferritina e Saturação de Transferrina, Glicemia, HbA1c) e sorologias infecciosas (HIV, HCV, HBsAg, Anti-HBs). A consulta aos exames foi democratizada em 3 pontos estratégicos: 1) Repositório Central no módulo Clínico (.CLINICAL - Aba Exames); 2) Botão de Ação Rápida "Exames" em cada poltrona ocupada do Mapa de Hemodiálise (.ASSIST), permitindo que médicos e enfermeiros consultem a evolução dos últimos 4 meses e alertas críticos de hipercalemia/hiperfosfatemia sem sair da escala durante o round; e 3) Integração direta na Avaliação Nutricional Renal (.MULTI), com exibição imediata dos exames e auto-sugestão do status de controle de fósforo e potássio baseada nos resultados reais do laboratório.',
+      changes: [
+        { type: 'Ingestão LIS Hospitalar', text: 'Processamento de 563 arquivos XML e consolidação de 2.189 sessões laboratoriais de Agosto a Novembro de 2026 com 100% de taxa de correspondência de pacientes.' },
+        { type: 'Cálculo Automático Kt/V & URR', text: 'Cálculo determinístico da adequação dialítica via fórmula de Daugirdas de 2ª geração a partir de Ureia pré e pós-diálise.' },
+        { type: 'Atalho 1-Clique na Escala (.ASSIST)', text: 'Botão "Exames" em todas as poltronas da escala de hemodiálise abrindo modal ergonômico com histórico de 4 meses e alertas clínicos em tempo real.' },
+        { type: 'Integração Nutricional (.MULTI)', text: 'Card de exames laboratoriais na avaliação renal e auto-sugestão de metas de fósforo e potássio baseada nos valores laboratoriais reais.' },
+        { type: 'Conformidade e Diretrizes UI', text: 'Rótulos concisos de termo único, manuais operacionais atualizados e sincronização em tempo real de cache local via mockFirebase.' }
+      ]
+    },
+    {
       version: 'v5.0.30',
       date: '14/11/2026',
       title: 'Nex-Ai CLINIC (.RECEPTION & .ASSIST) — Importação Massiva de 1.398 Pacientes Hospitalares, Consolidação da Base Mestre para 2.089 Registros e Filtros Nefrológicos Avançados',

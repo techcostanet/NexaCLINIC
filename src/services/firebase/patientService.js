@@ -303,13 +303,35 @@ export const deletePatientMedication = async (id) => {
 };
 
 // Patient Lab Exams
-export const getPatientLabExams = async (patientId) => {
-  if (USE_MOCK) return mockFirestore.getPatientLabExams(patientId);
-  const { getFirestore, collection, getDocs } = await import('firebase/firestore');
-  const db = getFirestore(app);
-  const snap = await getDocs(collection(db, 'patient_lab_exams'));
-  const all = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  return all.filter(e => !patientId || e.patientId === patientId).sort((a, b) => b.date.localeCompare(a.date));
+export const getPatientLabExams = async (patientIdOrName) => {
+  if (USE_MOCK) return mockFirestore.getPatientLabExams(patientIdOrName);
+  try {
+    const { getFirestore, collection, getDocs } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    const snap = await getDocs(collection(db, 'patient_lab_exams'));
+    if (snap.empty) {
+      return mockFirestore.getPatientLabExams(patientIdOrName);
+    }
+    const all = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (!patientIdOrName) return all.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    const query = String(patientIdOrName).trim();
+    const cleanCpf = query.replace(/\D/g, '');
+    const normQuery = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    return all.filter(e => {
+      if (e.patientId === query) return true;
+      if (cleanCpf && cleanCpf.length === 11 && e.patientCpf && String(e.patientCpf).replace(/\D/g, '') === cleanCpf) return true;
+      if (e.patientName) {
+        const normName = e.patientName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (normName === normQuery || normName.includes(normQuery) || normQuery.includes(normName)) return true;
+      }
+      return false;
+    }).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  } catch (err) {
+    console.warn('Fallback to mock lab exams:', err);
+    return mockFirestore.getPatientLabExams(patientIdOrName);
+  }
 };
 
 export const savePatientLabExam = async (examData) => {

@@ -4,7 +4,7 @@ import {
   Calendar, Search, AlertTriangle, 
   CheckCircle2, RefreshCw, ArrowRightLeft, ShieldAlert, Cpu, 
   MapPin, Clock, Plus, X, ChevronRight, Wrench,
-  UserMinus, Pencil
+  UserMinus, Pencil, Activity, FlaskConical
 } from 'lucide-react';
 import { useUnit } from '../../contexts/UnitContext';
 
@@ -42,6 +42,13 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
   // Edit Access & Heparin Modal
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [selectedSlotForEdit, setSelectedSlotForEdit] = useState(null);
+
+  // Patient Labs Modal
+  const [showLabsModal, setShowLabsModal] = useState(false);
+  const [selectedPatientForLabs, setSelectedPatientForLabs] = useState(null);
+  const [patientLabsList, setPatientLabsList] = useState([]);
+  const [loadingLabs, setLoadingLabs] = useState(false);
+  const [selectedLabsMonth, setSelectedLabsMonth] = useState(null);
 
   // Auto-detect today's cadence
   useEffect(() => {
@@ -300,6 +307,29 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
       setMessage({ text: 'Erro ao salvar alterações do paciente', type: 'error' });
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  // Handle open patient lab exams
+  const handleOpenPatientLabs = async (patient) => {
+    if (!patient) return;
+    setSelectedPatientForLabs(patient);
+    setShowLabsModal(true);
+    setLoadingLabs(true);
+    try {
+      const pId = patient.patientId || patient.id || patient.name;
+      const exams = await dbService.getPatientLabExams(pId);
+      setPatientLabsList(exams || []);
+      if (exams && exams.length > 0) {
+        setSelectedLabsMonth(exams[0].month);
+      } else {
+        setSelectedLabsMonth(null);
+      }
+    } catch (err) {
+      console.error('Erro ao buscar exames laboratoriais do paciente:', err);
+      setPatientLabsList([]);
+    } finally {
+      setLoadingLabs(false);
     }
   };
 
@@ -718,6 +748,19 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
                             >
                               <Pencil size={12} style={{ marginRight: '3px' }} />
                               <span>Editar</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenPatientLabs(patient);
+                              }}
+                              style={tabStyles.labsBtn}
+                              title="Consultar exames laboratoriais do paciente"
+                            >
+                              <Activity size={12} style={{ marginRight: '3px' }} />
+                              <span>Exames</span>
                             </button>
 
                             <button
@@ -1350,6 +1393,529 @@ export default function DialysisScheduleTab({ currentUser, onOpenPostModalWithPa
           </div>
         </div>
       )}
+
+      {/* Patient Lab Exams Modal */}
+      {showLabsModal && selectedPatientForLabs && (
+        <div style={tabStyles.modalBackdrop} onClick={() => setShowLabsModal(false)}>
+          <div
+            style={{
+              ...tabStyles.modalCard,
+              maxWidth: '920px',
+              maxHeight: '92vh',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={tabStyles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ffffff',
+                  boxShadow: '0 4px 10px rgba(8, 145, 178, 0.3)'
+                }}>
+                  <Activity size={22} />
+                </div>
+                <div>
+                  <h3 style={tabStyles.modalHeading}>
+                    {selectedPatientForLabs.name ? selectedPatientForLabs.name.toUpperCase() : 'PACIENTE'}
+                  </h3>
+                  <span style={tabStyles.modalSubtitle}>
+                    {selectedPatientForLabs.dn ? `DN: ${selectedPatientForLabs.dn}` : ''}
+                    {selectedPatientForLabs.patientCpf ? ` • CPF: ${selectedPatientForLabs.patientCpf}` : ''}
+                    {selectedPatientForLabs.chartNumber ? ` • Prontuário: ${selectedPatientForLabs.chartNumber}` : ''}
+                    {` • ${selectedSalon} • ${selectedShift}`}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLabsModal(false);
+                  setSelectedPatientForLabs(null);
+                  setPatientLabsList([]);
+                }}
+                style={tabStyles.modalCloseBtn}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '1.25rem 1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {loadingLabs ? (
+                <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                  <RefreshCw size={24} className="spin" style={{ marginBottom: '8px', color: '#0891b2' }} />
+                  <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '600' }}>Carregando exames laboratoriais do paciente...</p>
+                </div>
+              ) : patientLabsList.length === 0 ? (
+                <div style={{
+                  padding: '2.5rem',
+                  textAlign: 'center',
+                  backgroundColor: '#f8fafc',
+                  borderRadius: '12px',
+                  border: '1px dashed #cbd5e1'
+                }}>
+                  <FlaskConical size={36} color="#94a3b8" style={{ marginBottom: '8px' }} />
+                  <h4 style={{ margin: 0, color: '#334155', fontSize: '1rem', fontWeight: '700' }}>Nenhum Exame Encontrado</h4>
+                  <p style={{ margin: '6px 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                    Não foram localizados registros laboratoriais para este paciente nos arquivos dos últimos 4 meses.
+                  </p>
+                </div>
+              ) : (() => {
+                const activeExam = patientLabsList.find(e => e.month === selectedLabsMonth) || patientLabsList[0];
+                const k = activeExam?.potassium;
+                const p = activeExam?.phosphorus;
+                const hb = activeExam?.hemoglobin;
+                const ktv = activeExam?.ktv;
+                const ca = activeExam?.calcium;
+                const ht = activeExam?.hematocrit;
+                const alb = activeExam?.albumin;
+                const cr = activeExam?.creatinine;
+                const na = activeExam?.sodium;
+                const fer = activeExam?.ferritin;
+                const sat = activeExam?.transferrinSat;
+                const pth = activeExam?.pth;
+                const pre = activeExam?.ureaPre;
+                const pos = activeExam?.ureaPost;
+                const urr = activeExam?.urr;
+
+                // Alerts
+                const alerts = [];
+                if (k !== null && k !== undefined) {
+                  if (k > 5.5) alerts.push({ text: `Potássio Elevado (${k} mEq/L) - Risco de arritmia`, type: 'danger' });
+                  else if (k < 3.5) alerts.push({ text: `Potássio Baixo (${k} mEq/L) - Hipocalemia`, type: 'warning' });
+                }
+                if (p !== null && p !== undefined && p > 5.5) {
+                  alerts.push({ text: `Fósforo Elevado (${p} mg/dL) - Avaliar quelantes`, type: 'warning' });
+                }
+                if (hb !== null && hb !== undefined && hb < 10.0) {
+                  alerts.push({ text: `Hemoglobina Baixa (${hb} g/dL) - Anemia`, type: 'danger' });
+                }
+                if (ktv !== null && ktv !== undefined && ktv < 1.20) {
+                  alerts.push({ text: `Adequação Subótima (Kt/V ${ktv}) - Meta ≥ 1.20`, type: 'warning' });
+                }
+
+                return (
+                  <>
+                    {/* Month Selector Tabs */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {patientLabsList.map(item => {
+                          const isSel = item.month === activeExam.month;
+                          const [y, m] = (item.month || '').split('-');
+                          const monthNames = { '08': 'Agosto', '09': 'Setembro', '10': 'Outubro', '11': 'Novembro' };
+                          const label = `${monthNames[m] || m}/${y || ''}`;
+                          return (
+                            <button
+                              key={item.month || item.id}
+                              type="button"
+                              onClick={() => setSelectedLabsMonth(item.month)}
+                              style={{
+                                padding: '6px 14px',
+                                borderRadius: '8px',
+                                fontSize: '0.82rem',
+                                fontWeight: isSel ? '700' : '500',
+                                backgroundColor: isSel ? '#0891b2' : '#f1f5f9',
+                                color: isSel ? '#ffffff' : '#475569',
+                                border: isSel ? '1px solid #0891b2' : '1px solid #e2e8f0',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
+                              }}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                        <span>Coleta: <strong>{activeExam.date ? activeExam.date.split('-').reverse().join('/') : '-'}</strong></span>
+                        {activeExam.doctorName && (
+                          <span style={{ marginLeft: '8px' }}>• {activeExam.doctorName} (CRM {activeExam.doctorCrm || '-'})</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Critical Alerts Banner */}
+                    {alerts.length > 0 ? (
+                      <div style={{
+                        padding: '10px 14px',
+                        borderRadius: '10px',
+                        backgroundColor: '#fff1f2',
+                        border: '1px solid #fecdd3',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#be123c', fontWeight: '700', fontSize: '0.83rem' }}>
+                          <AlertTriangle size={15} />
+                          <span>Alertas Clínicos</span>
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '2px' }}>
+                          {alerts.map((al, idx) => (
+                            <span
+                              key={idx}
+                              style={{
+                                fontSize: '0.76rem',
+                                fontWeight: '600',
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                backgroundColor: al.type === 'danger' ? '#ffe4e6' : '#fef3c7',
+                                color: al.type === 'danger' ? '#9f1239' : '#92400e',
+                                border: al.type === 'danger' ? '1px solid #fca5a5' : '1px solid #fde68a'
+                              }}
+                            >
+                              {al.text}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        backgroundColor: '#f0fdf4',
+                        border: '1px solid #bbf7d0',
+                        color: '#166534',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <CheckCircle2 size={14} color="#16a34a" />
+                        <span>Parâmetros de diálise dentro das metas clínicas estabelecidas.</span>
+                      </div>
+                    )}
+
+                    {/* 6 Key Nephrology Metric Cards Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '10px' }}>
+                      {/* Potássio */}
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        backgroundColor: k > 5.5 ? '#fff1f2' : k < 3.5 ? '#fffbeb' : '#f8fafc',
+                        border: `1px solid ${k > 5.5 ? '#fecdd3' : k < 3.5 ? '#fde68a' : '#e2e8f0'}`
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Potássio</span>
+                          <span style={{
+                            fontSize: '0.7rem',
+                            fontWeight: '700',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            backgroundColor: k > 5.5 ? '#ffe4e6' : k < 3.5 ? '#fef3c7' : '#dcfce7',
+                            color: k > 5.5 ? '#9f1239' : k < 3.5 ? '#92400e' : '#166534'
+                          }}>
+                            {k > 5.5 ? 'Elevado' : k < 3.5 ? 'Baixo' : 'Meta'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '1.35rem', fontWeight: '800', color: k > 5.5 ? '#e11d48' : '#0f172a', margin: '4px 0' }}>
+                          K: {k !== null && k !== undefined ? `${k}` : '-'} • Na: {na !== null && na !== undefined ? `${na}` : '-'}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Metas: K 3.5-5.5 • Na 135-145 mEq/L</div>
+                      </div>
+
+                      {/* Fósforo & Cálcio */}
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        backgroundColor: p > 5.5 ? '#fff1f2' : '#f8fafc',
+                        border: `1px solid ${p > 5.5 ? '#fecdd3' : '#e2e8f0'}`
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Fósforo & Cálcio</span>
+                          <span style={{
+                            fontSize: '0.7rem',
+                            fontWeight: '700',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            backgroundColor: p > 5.5 ? '#ffe4e6' : '#dcfce7',
+                            color: p > 5.5 ? '#9f1239' : '#166534'
+                          }}>
+                            {p > 5.5 ? 'Fósforo Alto' : 'Meta'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a', margin: '4px 0' }}>
+                          P: {p !== null && p !== undefined ? `${p} mg/dL` : '-'} • Ca: {ca !== null && ca !== undefined ? `${ca}` : '-'}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Metas: P 3.5-5.5 • Ca 8.5-10.2 mg/dL</div>
+                      </div>
+
+                      {/* Hemoglobina & Hematócrito */}
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        backgroundColor: hb < 10.0 ? '#fff1f2' : '#f8fafc',
+                        border: `1px solid ${hb < 10.0 ? '#fecdd3' : '#e2e8f0'}`
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Hemoglobina</span>
+                          <span style={{
+                            fontSize: '0.7rem',
+                            fontWeight: '700',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            backgroundColor: hb < 10.0 ? '#ffe4e6' : '#dcfce7',
+                            color: hb < 10.0 ? '#9f1239' : '#166534'
+                          }}>
+                            {hb < 10.0 ? 'Anemia' : 'Meta'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a', margin: '4px 0' }}>
+                          Hb: {hb !== null && hb !== undefined ? `${hb} g/dL` : '-'} • Ht: {ht !== null && ht !== undefined ? `${ht}%` : '-'}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Meta: Hb 10.0 a 12.0 g/dL</div>
+                      </div>
+
+                      {/* Adequação de Diálise (Kt/V & URR) */}
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        backgroundColor: ktv < 1.20 ? '#fffbeb' : '#f8fafc',
+                        border: `1px solid ${ktv < 1.20 ? '#fde68a' : '#e2e8f0'}`
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Adequação (Kt/V)</span>
+                          <span style={{
+                            fontSize: '0.7rem',
+                            fontWeight: '700',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            backgroundColor: ktv >= 1.20 ? '#dcfce7' : '#fef3c7',
+                            color: ktv >= 1.20 ? '#166534' : '#92400e'
+                          }}>
+                            {ktv >= 1.20 ? 'Adequado' : 'Subótimo'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a', margin: '4px 0' }}>
+                          Kt/V: {ktv !== null && ktv !== undefined ? `${ktv}` : '-'} • URR: {urr !== null && urr !== undefined ? `${urr}%` : '-'}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                          Ureia Pré: {pre || '-'} • Pós: {pos || '-'} mg/dL (Meta Kt/V ≥ 1.20)
+                        </div>
+                      </div>
+
+                      {/* Albumina & Creatinina */}
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        backgroundColor: alb && alb < 3.8 ? '#fffbeb' : '#f8fafc',
+                        border: `1px solid ${alb && alb < 3.8 ? '#fde68a' : '#e2e8f0'}`
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Albumina & Creatinina</span>
+                          {alb && (
+                            <span style={{
+                              fontSize: '0.7rem',
+                              fontWeight: '700',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              backgroundColor: alb >= 3.8 ? '#dcfce7' : '#fef3c7',
+                              color: alb >= 3.8 ? '#166534' : '#92400e'
+                            }}>
+                              {alb >= 3.8 ? 'Nutrido' : 'Atenção'}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a', margin: '4px 0' }}>
+                          Alb: {alb !== null && alb !== undefined ? `${alb} g/dL` : '-'} • Cr: {cr !== null && cr !== undefined ? `${cr} mg/dL` : '-'}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Meta Albumina: ≥ 3.8 g/dL</div>
+                      </div>
+
+                      {/* Cinética do Ferro & PTH */}
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        backgroundColor: '#f8fafc',
+                        border: '1px solid #e2e8f0'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Cinética do Ferro & PTH</span>
+                          {pth && (
+                            <span style={{
+                              fontSize: '0.7rem',
+                              fontWeight: '700',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              backgroundColor: '#f1f5f9',
+                              color: '#334155'
+                            }}>
+                              PTH
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '1.15rem', fontWeight: '800', color: '#0f172a', margin: '4px 0' }}>
+                          Fer: {fer || '-'} • Sat: {sat ? `${sat}%` : '-'} • PTH: {pth || '-'}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                          Metas: Ferritina 200-800 ng/mL • Sat 20-50%
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sorologias */}
+                    <div style={{
+                      padding: '10px 14px',
+                      borderRadius: '10px',
+                      backgroundColor: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '8px'
+                    }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <ShieldAlert size={14} color="#64748b" />
+                        <span>Sorologias Infecciosas:</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          backgroundColor: activeExam.hiv === 'Não Reagente' ? '#ecfdf5' : '#fee2e2',
+                          color: activeExam.hiv === 'Não Reagente' ? '#047857' : '#991b1b',
+                          fontWeight: '600'
+                        }}>
+                          HIV: {activeExam.hiv || 'Pendente'}
+                        </span>
+                        <span style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          backgroundColor: activeExam.hcv === 'Não Reagente' ? '#ecfdf5' : '#fee2e2',
+                          color: activeExam.hcv === 'Não Reagente' ? '#047857' : '#991b1b',
+                          fontWeight: '600'
+                        }}>
+                          HCV: {activeExam.hcv || 'Pendente'}
+                        </span>
+                        <span style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          backgroundColor: activeExam.hbsag === 'Não Reagente' ? '#ecfdf5' : '#fee2e2',
+                          color: activeExam.hbsag === 'Não Reagente' ? '#047857' : '#991b1b',
+                          fontWeight: '600'
+                        }}>
+                          HBsAg: {activeExam.hbsag || 'Pendente'}
+                        </span>
+                        <span style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          backgroundColor: '#ecfdf5',
+                          color: '#047857',
+                          fontWeight: '600'
+                        }}>
+                          Anti-HBs: {activeExam.antiHbs || 'Pendente'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Comparative Evolution Table (4 Months) */}
+                    <div>
+                      <h4 style={{ margin: '6px 0 8px 0', fontSize: '0.88rem', fontWeight: '700', color: '#1e293b' }}>
+                        Evolução Laboratorial Comparativa (Últimos Meses)
+                      </h4>
+                      <div style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+                          <thead>
+                            <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #cbd5e1' }}>
+                              <th style={{ padding: '8px 10px', fontWeight: '700', color: '#475569' }}>Mês</th>
+                              <th style={{ padding: '8px 10px', fontWeight: '700', color: '#475569' }}>Data</th>
+                              <th style={{ padding: '8px 10px', fontWeight: '700', color: '#475569' }}>Kt/V</th>
+                              <th style={{ padding: '8px 10px', fontWeight: '700', color: '#475569' }}>Potássio</th>
+                              <th style={{ padding: '8px 10px', fontWeight: '700', color: '#475569' }}>Fósforo</th>
+                              <th style={{ padding: '8px 10px', fontWeight: '700', color: '#475569' }}>Cálcio</th>
+                              <th style={{ padding: '8px 10px', fontWeight: '700', color: '#475569' }}>Hb</th>
+                              <th style={{ padding: '8px 10px', fontWeight: '700', color: '#475569' }}>Ht</th>
+                              <th style={{ padding: '8px 10px', fontWeight: '700', color: '#475569' }}>Ureia Pré</th>
+                              <th style={{ padding: '8px 10px', fontWeight: '700', color: '#475569' }}>Ureia Pós</th>
+                              <th style={{ padding: '8px 10px', fontWeight: '700', color: '#475569' }}>Albumina</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {patientLabsList.map(row => {
+                              const [y, m] = (row.month || '').split('-');
+                              const monthNames = { '08': 'Agosto', '09': 'Setembro', '10': 'Outubro', '11': 'Novembro' };
+                              const monthLabel = `${monthNames[m] || m}/${y ? y.substring(2) : ''}`;
+                              return (
+                                <tr key={row.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                  <td style={{ padding: '8px 10px', fontWeight: '700', color: '#0891b2' }}>{monthLabel}</td>
+                                  <td style={{ padding: '8px 10px', color: '#64748b' }}>{row.date ? row.date.split('-').reverse().join('/') : '-'}</td>
+                                  <td style={{
+                                    padding: '8px 10px',
+                                    fontWeight: '700',
+                                    color: row.ktv >= 1.20 ? '#166534' : row.ktv ? '#b45309' : '#64748b'
+                                  }}>
+                                    {row.ktv || '-'}
+                                  </td>
+                                  <td style={{
+                                    padding: '8px 10px',
+                                    fontWeight: '700',
+                                    color: row.potassium > 5.5 ? '#b91c1c' : row.potassium < 3.5 ? '#b45309' : '#166534'
+                                  }}>
+                                    {row.potassium ? `${row.potassium}` : '-'}
+                                  </td>
+                                  <td style={{
+                                    padding: '8px 10px',
+                                    fontWeight: '700',
+                                    color: row.phosphorus > 5.5 ? '#b91c1c' : '#166534'
+                                  }}>
+                                    {row.phosphorus ? `${row.phosphorus}` : '-'}
+                                  </td>
+                                  <td style={{ padding: '8px 10px' }}>{row.calcium || '-'}</td>
+                                  <td style={{
+                                    padding: '8px 10px',
+                                    fontWeight: '700',
+                                    color: row.hemoglobin < 10.0 ? '#b91c1c' : '#166534'
+                                  }}>
+                                    {row.hemoglobin || '-'}
+                                  </td>
+                                  <td style={{ padding: '8px 10px' }}>{row.hematocrit ? `${row.hematocrit}%` : '-'}</td>
+                                  <td style={{ padding: '8px 10px' }}>{row.ureaPre || '-'}</td>
+                                  <td style={{ padding: '8px 10px' }}>{row.ureaPost || '-'}</td>
+                                  <td style={{ padding: '8px 10px' }}>{row.albumin || '-'}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Modal Footer */}
+            <div style={tabStyles.modalFooter}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLabsModal(false);
+                  setSelectedPatientForLabs(null);
+                  setPatientLabsList([]);
+                }}
+                style={tabStyles.cancelBtn}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1961,6 +2527,17 @@ const tabStyles = {
     border: 'none',
     background: 'none',
     color: '#2563eb',
+    fontSize: '0.72rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '2px 4px'
+  },
+  labsBtn: {
+    border: 'none',
+    background: 'none',
+    color: '#0891b2',
     fontSize: '0.72rem',
     fontWeight: '600',
     cursor: 'pointer',

@@ -107,6 +107,22 @@ export default function ClinicalLabExamsTab({
         if (num >= 150 && num <= 600) return { status: 'good', label: 'Alvo DRC (150-600)' };
         if (num > 600) return { status: 'bad', label: 'HPTS Severo (> 600)' };
         return { status: 'warn', label: 'Adinâmica (< 150)' };
+      case 'albumin':
+        if (num >= 3.8) return { status: 'good', label: 'Eunútrido (≥ 3.8)' };
+        if (num < 3.5) return { status: 'bad', label: 'Desnutrição (< 3.5)' };
+        return { status: 'warn', label: 'Atenção (3.5-3.7)' };
+      case 'creatinine':
+        if (num >= 6 && num <= 14) return { status: 'good', label: 'Padrão DRC (6-14)' };
+        if (num < 6) return { status: 'warn', label: 'Baixa massa (< 6)' };
+        return { status: 'bad', label: 'Elevada (> 14)' };
+      case 'sodium':
+        if (num >= 135 && num <= 145) return { status: 'good', label: 'Normal (135-145)' };
+        if (num < 135) return { status: 'bad', label: 'Hiponatremia (< 135)' };
+        return { status: 'warn', label: 'Hipernatremia (> 145)' };
+      case 'glucose':
+        if (num >= 70 && num <= 140) return { status: 'good', label: 'Normal (70-140)' };
+        if (num > 180) return { status: 'bad', label: 'Hiperglicemia (> 180)' };
+        return { status: 'warn', label: 'Elevada (141-180)' };
       default:
         return { status: 'none', label: '-' };
     }
@@ -397,13 +413,15 @@ export default function ClinicalLabExamsTab({
           <thead>
             <tr>
               <th>Mês</th>
-              <th>Hb (g/dL)</th>
+              <th>Hb</th>
               <th>Ferritina</th>
               <th>Sat. Transf.</th>
               <th>Fósforo</th>
               <th>Cálcio</th>
               <th>PTH</th>
               <th>Potássio</th>
+              <th>Sódio</th>
+              <th>Creatinina</th>
               <th>Kt/V</th>
               <th>URR</th>
               <th>Albumina</th>
@@ -413,7 +431,7 @@ export default function ClinicalLabExamsTab({
           <tbody>
             {labExams.length === 0 ? (
               <tr>
-                <td colSpan="12" style={styles.noDataCell}>
+                <td colSpan="14" style={styles.noDataCell}>
                   Nenhum exame laboratorial lançado para este paciente.
                 </td>
               </tr>
@@ -435,9 +453,11 @@ export default function ClinicalLabExamsTab({
                   <td>{renderStatusBadge('calcium', exam.calcium)}</td>
                   <td>{renderStatusBadge('pth', exam.pth)}</td>
                   <td>{renderStatusBadge('potassium', exam.potassium)}</td>
+                  <td>{renderStatusBadge('sodium', exam.sodium)}</td>
+                  <td>{renderStatusBadge('creatinine', exam.creatinine)}</td>
                   <td>{renderStatusBadge('ktv', exam.ktv)}</td>
                   <td>{exam.urr ? `${exam.urr}%` : '-'}</td>
-                  <td>{exam.albumin || '-'}</td>
+                  <td>{renderStatusBadge('albumin', exam.albumin)}</td>
                   <td>
                     <button
                       type="button"

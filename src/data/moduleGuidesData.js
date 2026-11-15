@@ -1638,6 +1638,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Edição Rápida de Parâmetros de Diálise',
         desc: 'Modal ergonômico para edição ágil no card do paciente: Acesso (FAV, Cateter, Permcath, Prótese), Agulhas (15, 16, 17), Dose de Heparina (com atalhos rápidos de 0,5 a 2,5 ml) e Isolamento.'
+      },
+      {
+        title: 'Consulta Rápida de Exames Laboratoriais no Leito',
+        desc: 'Botão "Exames" em cada poltrona/ponto ocupado da escala de diálise com 1 clique, apresentando modal completo com os resultados dos últimos 4 meses, alertas para potássio e fósforo fora da meta, dosagem de adequação Kt/V e evolução comparativa.'
       }
     ],
     tutorial: [
@@ -1830,8 +1834,8 @@ export const MODULE_GUIDES = {
         desc: 'Prescrição completa de parâmetros de máquina (dialisador, fluxo, tempo, heparina, bicarbonato) e fármacos intradialíticos (Eritropoetina, Noripurum) e contínuos com envio para farmácia e salão.'
       },
       {
-        title: 'Painel Laboratorial com Semáforo SBN',
-        desc: 'Histórico mensal de biomarcadores (Hemoglobina, Ferritina, Saturação de Transferrina, Fósforo, Cálcio, PTH, Potássio, Kt/V e URR) com semáforo de metas da Sociedade Brasileira de Nefrologia.'
+        title: 'Painel Laboratorial com Semáforo SBN & Ingestão LIS',
+        desc: 'Repositório completo com 2.189 sessões laboratoriais integradas dos últimos 4 meses (Agosto a Novembro de 2026), cálculo automático de Kt/V Daugirdas e URR, biomarcadores essenciais (Potássio, Fósforo, Cálcio, Sódio, Creatinina, Albumina, PTH, Ferritina, Sorologias) e semáforo clínico das metas SBN.'
       },
       {
         title: 'Acompanhamento Horário de Sessões e Alerta Hemodinâmico',
@@ -3409,8 +3413,8 @@ export const MODULE_GUIDES = {
         desc: 'Registro clínico de atendimentos, suporte emocional, adaptação ao tratamento dialítico, avaliação de humor e adesão ao tratamento.'
       },
       {
-        title: 'Avaliação Nutricional Renal',
-        desc: 'Acompanhamento de peso seco, cálculo automático de IMC, controle de fósforo/potássio, ingestão proteico-calórica e orientação de ganho de peso interdialítico.'
+        title: 'Avaliação Nutricional Renal com Integração Laboratorial',
+        desc: 'Acompanhamento de peso seco, cálculo automático de IMC, controle de fósforo/potássio com sugestão automática a partir dos resultados de exames laboratoriais importados do LIS (2.189 sessões), visualização rápida de histórico de exames e orientação de conduta personalizada.'
       },
       {
         title: 'Painel Integrado de Vulnerabilidade',

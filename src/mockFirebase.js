@@ -5,6 +5,7 @@ import initialSuppliers from './data/initialSuppliers.json';
 import initialProducts from './data/initialProducts.json';
 import syncedAssistEmails from './data/synced_assist_emails.json';
 import allEnrichedPatients from './data/allEnrichedPatients.json';
+import allPatientLabExams from './data/allPatientLabExams.json';
 import initialPhysiotherapyData from './data/initialPhysiotherapyData.json';
 import { computePhysiotherapyIndicators } from './services/firebase/physioIndicatorCalculator';
 
@@ -29,8 +30,8 @@ const getDB = () => {
       updated = true;
     }
 
-    // Migrate patients & Sync with Official Hospital Database (v5.0.30 - 2,089 consolidated patients)
-    if (!parsed.patients_sync_version || parsed.patients_sync_version !== '2026-11-14_v5030') {
+    // Migrate patients & Sync with Official Hospital Database (v5.0.31 - 2,090 consolidated patients)
+    if (!parsed.patients_sync_version || parsed.patients_sync_version !== '2026-11-15_v5031') {
       const defaultPats = getDefaultPatients();
       const defaultMap = new Map(defaultPats.map(p => [p.id, p]));
       if (!parsed.patients || parsed.patients.length === 0) {
@@ -67,11 +68,18 @@ const getDB = () => {
         const newPatients = defaultPats.filter(p => !existingIds.has(p.id));
         parsed.patients = [...updatedExisting, ...newPatients];
       }
-      parsed.patients_sync_version = '2026-11-14_v5030';
+      parsed.patients_sync_version = '2026-11-15_v5031';
       updated = true;
     } else if (!parsed.patients || parsed.patients.length < 2000 || !parsed.patients.some(p => p.cns) || !parsed.patients.some(p => p.apacNumber) || !parsed.patients.some(p => p.heparina)) {
       parsed.patients = getDefaultPatients();
-      parsed.patients_sync_version = '2026-11-14_v5030';
+      parsed.patients_sync_version = '2026-11-15_v5031';
+      updated = true;
+    }
+
+    // Seed and sync patient lab exams from official hospital laboratory XML files (v5.0.31 - 2,189 monthly sessions)
+    if (!parsed.lab_exams_sync_version || parsed.lab_exams_sync_version !== '2026-11-15_v5031' || !parsed.patient_lab_exams || parsed.patient_lab_exams.length < 1000) {
+      parsed.patient_lab_exams = allPatientLabExams;
+      parsed.lab_exams_sync_version = '2026-11-15_v5031';
       updated = true;
     }
 
@@ -3815,83 +3823,26 @@ export const mockFirestore = {
     return { success: true };
   },
 
-  // Patient Lab Exams (Monthly/Quarterly Nephrology Profiles)
-  getPatientLabExams: async (patientId) => {
+  // Patient Lab Exams (Monthly/Quarterly Nephrology Profiles from Official Hospital LIS)
+  getPatientLabExams: async (patientIdOrName) => {
     const db = getDB();
-    if (!db.patient_lab_exams || db.patient_lab_exams.length === 0) {
-      db.patient_lab_exams = [
-        {
-          id: 'lab-1',
-          patientId: patientId || 'pat-1',
-          date: '2026-08-05',
-          month: '2026-08',
-          hemoglobin: 11.4,
-          hematocrit: 34.5,
-          ferritin: 340,
-          transferrinSat: 28,
-          phosphorus: 4.8,
-          calcium: 9.1,
-          pth: 280,
-          potassium: 5.1,
-          ureaPre: 142,
-          ureaPost: 38,
-          ktv: 1.48,
-          urr: 73.2,
-          albumin: 3.9,
-          hiv: 'Não Reagente',
-          hcv: 'Não Reagente',
-          hbsag: 'Não Reagente',
-          antiHbs: 'Reagente (>100 UI/mL)',
-          notes: 'Adequação dialítica excelente (Kt/V 1.48). Anemia compensada com EPO 4.000 UI 3x/sem.'
-        },
-        {
-          id: 'lab-2',
-          patientId: patientId || 'pat-1',
-          date: '2026-07-08',
-          month: '2026-07',
-          hemoglobin: 10.8,
-          hematocrit: 32.8,
-          ferritin: 290,
-          transferrinSat: 24,
-          phosphorus: 5.6,
-          calcium: 8.9,
-          pth: 310,
-          potassium: 5.4,
-          ureaPre: 156,
-          ureaPost: 44,
-          ktv: 1.39,
-          urr: 71.8,
-          albumin: 3.8,
-          hiv: 'Não Reagente',
-          hcv: 'Não Reagente',
-          hbsag: 'Não Reagente',
-          antiHbs: 'Reagente (>100 UI/mL)',
-          notes: 'Fósforo levemente elevado. Ajustada dose de Sevelamer para 2 cp nas principais refeições.'
-        },
-        {
-          id: 'lab-3',
-          patientId: patientId || 'pat-1',
-          date: '2026-06-10',
-          month: '2026-06',
-          hemoglobin: 10.2,
-          hematocrit: 31.0,
-          ferritin: 210,
-          transferrinSat: 19,
-          phosphorus: 5.1,
-          calcium: 9.0,
-          pth: 295,
-          potassium: 5.0,
-          ureaPre: 138,
-          ureaPost: 40,
-          ktv: 1.35,
-          urr: 71.0,
-          albumin: 3.7,
-          notes: 'Iniciado ciclo de reposição de Noripurum 100mg IV semanal por saturação de transferrina < 20%.'
-        }
-      ];
-      setDB(db);
+    const list = db.patient_lab_exams && db.patient_lab_exams.length > 0 ? db.patient_lab_exams : allPatientLabExams;
+    if (!patientIdOrName) {
+      return [...list].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     }
-    return (db.patient_lab_exams || []).filter(e => !patientId || e.patientId === patientId).sort((a, b) => b.date.localeCompare(a.date));
+    const query = String(patientIdOrName).trim();
+    const cleanCpf = query.replace(/\D/g, '');
+    const normQuery = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    return list.filter(e => {
+      if (e.patientId === query) return true;
+      if (cleanCpf && cleanCpf.length === 11 && e.patientCpf && String(e.patientCpf).replace(/\D/g, '') === cleanCpf) return true;
+      if (e.patientName) {
+        const normName = e.patientName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (normName === normQuery || normName.includes(normQuery) || normQuery.includes(normName)) return true;
+      }
+      return false;
+    }).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   },
 
   savePatientLabExam: async (examData) => {
