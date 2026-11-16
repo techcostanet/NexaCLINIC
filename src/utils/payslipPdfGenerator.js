@@ -129,7 +129,7 @@ export function exportUnifiedPayslipsPdf(payslips, customFileName = '', clinicIn
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.setTextColor(100, 116, 139);
-    doc.text('FUNÇÃO / CARGO', marginX + 3, currentY + 12.5);
+    doc.text('CARGO', marginX + 3, currentY + 12.5);
     doc.text('CPF (VALIDAÇÃO YOUK)', marginX + 115, currentY + 12.5);
 
     doc.setFont('helvetica', 'bold');
@@ -164,7 +164,7 @@ export function exportUnifiedPayslipsPdf(payslips, customFileName = '', clinicIn
       startY: currentY,
       margin: { left: marginX, right: marginX },
       tableWidth: contentWidth,
-      head: [['CÓD.', 'DESCRIÇÃO DA VERBA / EVENTO', 'REF.', 'VENCIMENTOS', 'DESCONTOS']],
+      head: [['CÓD.', 'DESCRIÇÃO', 'REF.', 'VENCIMENTOS', 'DESCONTOS']],
       body: tableRows,
       theme: 'plain',
       styles: {
@@ -313,7 +313,7 @@ export function exportUnifiedPayslipsPdf(payslips, customFileName = '', clinicIn
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6.8);
     doc.setTextColor(100, 116, 139);
-    doc.text(`CPF: ${cpf}   •   Assinatura do Funcionário / Youk Manager`, signX + (signW / 2), currentY + 22, { align: 'center' });
+    doc.text(`CPF: ${cpf}   •   Assinatura do Funcionário • Youk Manager`, signX + (signW / 2), currentY + 22, { align: 'center' });
 
     // Rodapé de segurança do sistema
     doc.setFontSize(6.5);
@@ -467,7 +467,7 @@ export function exportTabularPayrollPdf(payslips, summary = {}, customFileName =
     startY: cardY + cardH + 5,
     margin: { left: marginX, right: marginX },
     tableWidth: contentWidth,
-    head: [['MATRÍCULA', 'COLABORADOR', 'CPF', 'CARGO / FUNÇÃO', 'SALÁRIO BASE', 'PROVENTOS', 'DESCONTOS', 'LÍQUIDO', 'STATUS']],
+    head: [['MATRÍCULA', 'COLABORADOR', 'CPF', 'CARGO', 'SALÁRIO BASE', 'PROVENTOS', 'DESCONTOS', 'LÍQUIDO', 'STATUS']],
     body: tableRows,
     theme: 'grid',
     styles: {

@@ -295,12 +295,23 @@ export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
   }
 
   // 2. Pre-calcular limites verticais da tabela de verbas/rubricas
+  // Nos recibos Alterdata com 2 vias por página (via da empresa e via do funcionário),
+  // isolamos a 2ª via (y <= 420) para evitar duplicidade de rubricas e conflitos com o bloco superior.
+  const hasBottomCopy = lines.some(l => {
+    const text = l.map(it => it.str).join(' ');
+    return l[0].y <= 420 && text.includes('Código') && text.includes('Descrição') && text.includes('Vencimentos');
+  });
+
+  const targetLines = hasBottomCopy ? lines.filter(l => l[0].y <= 420) : lines;
+
   let headerY = null;
   let footerY = null;
-  for (const l of lines) {
+  for (const l of targetLines) {
     const text = l.map(it => it.str).join(' ');
     if (text.includes('Código') && text.includes('Descrição') && text.includes('Vencimentos')) {
-      headerY = l[0].y;
+      if (headerY === null || l[0].y > headerY) {
+        headerY = l[0].y;
+      }
     }
     if (text.includes('Total de Vencimentos') || text.includes('Salário Base') || text.includes('Valor Líquido')) {
       if (footerY === null || l[0].y < footerY) {
@@ -394,49 +405,20 @@ export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
       }
     }
 
-    // Extração das Rubricas / Verbas estritamente dentro do limite vertical da tabela
-    const firstIt = line[0];
-    const isWithinTableBounds = headerY && footerY ? (firstIt.y < headerY && firstIt.y > footerY) : false;
-
-    if (isWithinTableBounds && firstIt && /^\d{1,5}$/.test(firstIt.str) && firstIt.x < 35) {
-      const lineStrFull = line.map(it => it.str).join(' ');
-      if (
-        (!payslip.employeeName || !lineStrFull.includes(payslip.employeeName)) &&
-        !lineStrFull.includes('Código') &&
-        !lineStrFull.includes('Admissão') &&
-        !lineStrFull.includes('Assinatura')
-      ) {
-        const code = firstIt.str;
-        const descItems = line.filter(it => it.x >= 35 && it.x < 300);
-        const refItem = line.find(it => it.x >= 300 && it.x < 360);
-        const earnItem = line.find(it => it.x >= 360 && it.x < 440);
-        const discItem = line.find(it => it.x >= 440 && it.x < 530);
-
-        const description = descItems.map(it => it.str).join(' ');
-        const reference = refItem ? refItem.str : '0';
-        const earnings = earnItem ? parseCurrencyBR(earnItem.str) : 0;
-        const discounts = discItem ? parseCurrencyBR(discItem.str) : 0;
-
-        if (description && (earnings > 0 || discounts > 0 || code)) {
-          payslip.events.push({
-            code,
-            description,
-            reference,
-            earnings,
-            discounts
-          });
-        }
-      }
-    }
-
     // Totais de Vencimentos e Descontos
     if (lineStr.includes('Total de Vencimentos') || lineStr.includes('Total de Descontos')) {
       if (i + 1 < lines.length) {
         const nextLine = lines[i + 1];
         const earnVal = nextLine.find(it => it.x >= 360 && it.x < 440);
         const discVal = nextLine.find(it => it.x >= 440 && it.x < 520);
-        if (earnVal) payslip.grossEarnings = parseCurrencyBR(earnVal.str);
-        if (discVal) payslip.totalDiscounts = parseCurrencyBR(discVal.str);
+        if (earnVal) {
+          const val = parseCurrencyBR(earnVal.str);
+          if (val > 0) payslip.grossEarnings = val;
+        }
+        if (discVal) {
+          const val = parseCurrencyBR(discVal.str);
+          if (val > 0) payslip.totalDiscounts = val;
+        }
       }
     }
 
@@ -444,11 +426,15 @@ export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
     if (lineStr.includes('Valor Líquido')) {
       const netValItem = line.find(it => it.x >= 420 && it.x < 520 && /[\d.,]+/.test(it.str));
       if (netValItem) {
-        payslip.netSalary = parseCurrencyBR(netValItem.str);
+        const val = parseCurrencyBR(netValItem.str);
+        if (val > 0) payslip.netSalary = val;
       } else if (i + 1 < lines.length) {
         const nextLine = lines[i + 1];
         const nextNetVal = nextLine.find(it => it.x >= 420 && it.x < 520 && /[\d.,]+/.test(it.str));
-        if (nextNetVal) payslip.netSalary = parseCurrencyBR(nextNetVal.str);
+        if (nextNetVal) {
+          const val = parseCurrencyBR(nextNetVal.str);
+          if (val > 0) payslip.netSalary = val;
+        }
       }
     }
 
@@ -485,6 +471,46 @@ export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
     }
   }
 
+  // 4. Extração das Rubricas / Verbas estritamente dentro da tabela de eventos (sem conflitos com margem de assinatura)
+  for (const line of targetLines) {
+    const firstIt = line[0];
+    const isWithinTableBounds = headerY && footerY ? (firstIt.y < headerY && firstIt.y > footerY) : true;
+
+    if (isWithinTableBounds && firstIt && /^\d{1,5}$/.test(firstIt.str) && firstIt.x < 35) {
+      const lineStrFull = line.map(it => it.str).join(' ');
+      if (
+        (!payslip.employeeName || !lineStrFull.includes(payslip.employeeName)) &&
+        !lineStrFull.includes('Código') &&
+        !lineStrFull.includes('Admissão') &&
+        !lineStrFull.includes('Departamento') &&
+        !lineStrFull.includes('Filial') &&
+        !lineStrFull.includes('CBO')
+      ) {
+        const code = firstIt.str;
+        // Pega os itens de descrição estritamente na faixa horizontal de descrição (evita margem de assinatura à direita)
+        const descItems = line.filter(it => it.x >= 35 && it.x < 300);
+        const refItem = line.find(it => it.x >= 300 && it.x < 360);
+        const earnItem = line.find(it => it.x >= 360 && it.x < 440);
+        const discItem = line.find(it => it.x >= 440 && it.x < 520);
+
+        const description = descItems.map(it => it.str).join(' ');
+        const reference = refItem ? refItem.str : '0';
+        const earnings = earnItem ? parseCurrencyBR(earnItem.str) : 0;
+        const discounts = discItem ? parseCurrencyBR(discItem.str) : 0;
+
+        if (description && (earnings > 0 || discounts > 0 || code)) {
+          payslip.events.push({
+            code,
+            description,
+            reference,
+            earnings,
+            discounts
+          });
+        }
+      }
+    }
+  }
+
   // Fallbacks: caso o nome ou código não tenham sido lidos do PDF, usa o nome do arquivo
   if (!payslip.employeeName && filenameEmployeeName && isValidEmployeeName(filenameEmployeeName)) {
     payslip.employeeName = filenameEmployeeName;
@@ -501,12 +527,15 @@ export async function parseSinglePayslipPdf(arrayBuffer, fileName = '') {
     }
   }
 
-  // Backup para valor líquido e totais caso não tenham sido encontrados por linha específica
-  if (!payslip.grossEarnings && payslip.events.length > 0) {
-    payslip.grossEarnings = payslip.events.reduce((acc, ev) => acc + (ev.earnings || 0), 0);
+  // Validação e recálculo de totais a partir das rubricas caso zerados ou multi-páginas
+  const sumEventsEarnings = Math.round(payslip.events.reduce((acc, ev) => acc + (ev.earnings || 0), 0) * 100) / 100;
+  const sumEventsDiscounts = Math.round(payslip.events.reduce((acc, ev) => acc + (ev.discounts || 0), 0) * 100) / 100;
+
+  if (!payslip.grossEarnings && sumEventsEarnings > 0) {
+    payslip.grossEarnings = sumEventsEarnings;
   }
-  if (!payslip.totalDiscounts && payslip.events.length > 0) {
-    payslip.totalDiscounts = payslip.events.reduce((acc, ev) => acc + (ev.discounts || 0), 0);
+  if (!payslip.totalDiscounts && sumEventsDiscounts > 0) {
+    payslip.totalDiscounts = sumEventsDiscounts;
   }
   if (!payslip.netSalary) {
     payslip.netSalary = Math.round((payslip.grossEarnings - payslip.totalDiscounts) * 100) / 100;

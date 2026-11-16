@@ -299,7 +299,7 @@ export function exportYoukExcelFile(payslips, customFileName = '') {
   worksheet['!cols'] = colWidths;
 
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'ReciboPgAlterdata_Youk_9.0');
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Relatório');
 
   // Nome do arquivo padrão: ReciboPg_Youk_MM_AAAA.xlsx
   const sample = payslips[0] || {};
