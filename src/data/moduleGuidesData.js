@@ -262,6 +262,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Sincronização 1-Clique de Modelos no Firestore',
         desc: 'Botão Sincronizar na barra superior e auto-seed inteligente que carrega e atualiza todos os 16 treinamentos no banco de dados automaticamente.'
+      },
+      {
+        title: 'Apresentações PowerPoint (PPTX) & Suporte a Vídeo YouTube',
+        desc: 'Disponibilização de apresentações de slides profissionais em formato 16:9 (.pptx) com notas completas de orador / roteiro de narração integradas para capacitação presencial ou conversão em vídeo para o YouTube, com botão de download no card do treinamento e no Portal do Colaborador.'
       }
     ],
     tutorial: [
@@ -315,13 +319,23 @@ export const MODULE_GUIDES = {
         ]
       },
       {
-        title: 'Como Sincronizar e Utilizar os 15 Treinamentos de Nefrologia',
+        title: 'Como Sincronizar e Utilizar os 16 Treinamentos de Nefrologia',
         steps: [
           'No módulo de RH, acesse a aba "Treinamentos".',
-          'Clique no botão "Sincronizar" na barra superior para carregar ou atualizar todos os 15 treinamentos oficiais no banco de dados da clínica.',
-          'Localize o curso do setor desejado no Catálogo (ex: FAV para Enfermagem, Tratamento de Água para Manutenção ou Acolhimento para Recepção).',
+          'Clique no botão "Sincronizar" na barra superior para carregar ou atualizar todos os 16 treinamentos oficiais no banco de dados da clínica.',
+          'Localize o curso do setor desejado no Catálogo (ex: Atendimento a Clientes Internos e Externos, FAV para Enfermagem, Tratamento de Água ou Acolhimento na Recepção).',
           'Clique em "Divulgar" para imprimir o cartaz com a logomarca e QR Code para o mural do setor ou copiar o link direto de envio pelo WhatsApp.',
           'Acompanhe as conclusões e notas na aba "Participações" e gere o Dossiê para a Vigilância Sanitária quando necessário.'
+        ]
+      },
+      {
+        title: 'Como Utilizar Apresentações PowerPoint (PPTX) e Integrar Vídeos do YouTube',
+        steps: [
+          'No catálogo de Treinamentos do módulo de RH (.HR), localize o treinamento desejado (ex: "Excelência no Atendimento a Clientes Internos e Externos em Nefrologia").',
+          'Clique no botão "Slides" no card do curso para baixar a apresentação oficial (.pptx) com 16 slides widescreen e notas de orador completas.',
+          'No Microsoft PowerPoint, você pode gravar a narração com base no roteiro das anotações e exportar diretamente para vídeo ("Arquivo > Exportar > Criar Vídeo").',
+          'Ao publicar o vídeo no canal da clínica no YouTube, clique em "Editar" no card do treinamento no Nex-Ai.HR.',
+          'Alterne o tipo de conteúdo para "Vídeo" e cole o link do YouTube no campo "URL do Vídeo". Ao salvar, o player do YouTube será incorporado automaticamente no Portal do Colaborador.'
         ]
       },
       {
@@ -403,6 +417,10 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Os 16 treinamentos de nefrologia já vêm com questões pré e pós-teste prontas?',
         resposta: 'Sim. Cada um dos 16 treinamentos possui rigorosamente 5 perguntas de pré-teste (diagnóstico) e 5 perguntas de pós-teste (avaliação de fixação) com justificativas clínicas detalhadas e cálculo automático do ganho de eficácia (+%).'
+      },
+      {
+        pergunta: 'Como transformar a apresentação de slides (.pptx) em vídeo para o YouTube?',
+        resposta: 'Basta baixar o arquivo PPTX pelo botão "Slides" no catálogo de treinamentos ou no Portal do Colaborador. Abra a apresentação no PowerPoint, consulte as notas de narração do orador em cada slide, grave a locução e clique em "Arquivo > Exportar > Criar Vídeo". Após enviar o vídeo ao canal da clínica no YouTube, cadastre o link no treinamento para que os colaboradores assistam diretamente no sistema.'
       },
       {
         pergunta: 'Como a logomarca da clínica é inserida nos certificados e documentos?',

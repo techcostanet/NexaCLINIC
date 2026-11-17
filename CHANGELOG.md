@@ -1,3 +1,33 @@
+## [v5.0.35] - 17 de Novembro, 2026
+### Nex-Ai CLINIC (.HR) — Apresentação de Slides PPTX Profissional com Roteiro de Narração para o Treinamento de Atendimento em Nefrologia e Integração com YouTube
+- **Apresentação Oficial em PowerPoint (`Treinamento_Atendimento_Clientes_Nefrologia_NexAi.pptx`):**
+  - Criação de apresentação de slides em formato widescreen 16:9 de alta fidelidade visual com a identidade visual da Nex-Ai CLINIC (paleta Navy, Teal e Emerald, badges, cartões e logotipo institucional).
+  - Estruturação completa em 16 slides cobrindo todos os módulos do treinamento institucional de nefrologia:
+    - Slide 1: Capa Oficial e Diretrizes Regulatórias (ANVISA RDC 11/2014, PNH).
+    - Slide 2: Objetivos de Aprendizagem & Competências Desenvolvidas.
+    - Slide 3: A Realidade e Extrema Vulnerabilidade do Paciente Renal Crônico.
+    - Slide 4: Acolhimento a Familiares, Cuidadores Principais e Prevenção do Burnout.
+    - Slide 5: Os 4 Pilares da Experiência Humanizada no Salão de Hemodiálise.
+    - Slide 6: Gestão de Imprevistos e Transparência Imediata em Atrasos de Turno.
+    - Slide 7: Traduzindo o 'Mediquês' para a Linguagem Acessível do Paciente.
+    - Slide 8: O Conceito de Cliente Interno na Clínica de Diálise.
+    - Slide 9: A Corrente Vital de Cooperação entre Setores Clínicos e de Apoio.
+    - Slide 10: O Efeito Dominó: Estudo de Caso Prático de Falhas de Comunicação Intersetorial.
+    - Slide 11: Comunicação Não Violenta (CNV) na Rotina Hospitalar (Fato, Emoção, Necessidade, Pedido).
+    - Slide 12: Passagem de Plantão Estruturada pelo Método SBAR.
+    - Slide 13: Técnicas de Desescalada de Conflitos e Mediação de Crises Emocionais.
+    - Slide 14: Sigilo Profissional Absoluto e Proteção de Dados de Saúde (LGPD).
+    - Slide 15: Cultura Justa de Segurança do Paciente e Notificação ao NSP.
+    - Slide 16: Conclusão, Pós-teste no Portal Mobile e Certificação Digital.
+- **Roteiro de Narração Integral nas Anotações do Orador (Speaker Notes):**
+  - Todos os 16 slides possuem textos detalhados de locução nas notas, permitindo leitura direta para gravação em vídeo ou exportação com áudio no Microsoft PowerPoint ("Arquivo > Exportar > Criar Vídeo") para disponibilização no YouTube.
+- **Disponibilização Ágil no Sistema:**
+  - Botão conciso de 1 palavra "Slides" adicionado aos cards do treinamento no catálogo de Treinamentos (.HR) para download imediato em 1 clique.
+  - Link de download de slides integrado na seção de Material Complementar do Portal do Colaborador.
+  - Suporte contínuo a vídeos do YouTube incorporados via player nativo no portal mobile ao preencher o campo `videoUrl`.
+- **Manuais e Documentação Atualizados:**
+  - Atualização completa do guia do módulo de RH em `moduleGuidesData.js` e notas de release.
+
 ## [v5.0.34] - 17 de Novembro, 2026
 ### Nex-Ai CLINIC (.PURCHASES) — Gestão Completa de Cotações (CRUD), Duplicação Ágil de Rodadas Antigas e Prorrogação/Renovação de Prazo com Desbloqueio B2B
 - **CRUD Completo de Cotações Web (`WebQuotationsTab.jsx` & `purchasingService.ts`):**

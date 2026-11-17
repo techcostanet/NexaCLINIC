@@ -1616,6 +1616,7 @@ Qualquer suspeita de invasão, tela travada ou extravio de documentos físicos c
     minDurationMinutes: 4,
     status: 'Ativo',
     contentType: 'text',
+    documentUrl: '/docs/Treinamento_Atendimento_Clientes_Nefrologia_NexAi.pptx',
     instructorName: 'Comitê de Humanização & Experiência do Paciente',
     instructorRole: 'Recursos Humanos, Humanização Hospitalar & Ouvidoria',
     textContent: `### 1. O Paciente Renal Crônico e seus Familiares como Clientes Externos

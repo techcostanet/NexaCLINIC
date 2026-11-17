@@ -294,6 +294,19 @@ export default function TrainingsTab({ currentUser }) {
                 </div>
 
                 <div style={styles.cardActions}>
+                  {t.documentUrl && (
+                    <a 
+                      href={t.documentUrl} 
+                      download
+                      target="_blank" 
+                      rel="noreferrer"
+                      style={{ ...styles.cardActionBtn, color: '#0891b2', textDecoration: 'none' }}
+                      title={t.documentUrl.toLowerCase().endsWith('.pptx') ? 'Baixar Apresentação de Slides (PPTX)' : 'Abrir Documento Complementar'}
+                    >
+                      <FileText size={15} />
+                      <span>{t.documentUrl.toLowerCase().endsWith('.pptx') ? 'Slides' : 'PDF'}</span>
+                    </a>
+                  )}
                   <button 
                     onClick={() => {
                       setSelectedForQr(t);

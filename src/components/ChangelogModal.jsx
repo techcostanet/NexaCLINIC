@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.35',
+      date: '17/11/2026',
+      title: 'Nex-Ai CLINIC (.HR) — Apresentação de Slides PPTX Profissional com Roteiro de Narração para o Treinamento de Atendimento em Nefrologia e Integração com YouTube',
+      description: 'Geração e disponibilização da apresentação oficial de slides em PowerPoint (.pptx) para o treinamento institucional nº 16 ("Excelência no Atendimento a Clientes Internos e Externos em Nefrologia"): 1) 16 Slides Widescreen (16:9) de Alta Fidelidade: cobrindo integralmente os 6 módulos temáticos (diretrizes ANVISA RDC 11/2014, realidade do paciente renal, acolhimento de familiares e cuidadores, pilares da humanização, comunicação de imprevistos, tradução do vocabulário clínico, conceito e corrente vital do cliente interno, estudo de caso do efeito dominó, CNV e SBAR, desescalada de conflitos, sigilo/LGPD e Cultura Justa); 2) Roteiro de Narração Completo (Anotações do Orador): cada slide contém o texto completo da locução nas anotações, viabilizando leitura fluida ou gravação automatizada para converter a apresentação em vídeo e publicar no YouTube; 3) Botão de Download 1-Clique: botão conciso "Slides" adicionado diretamente no card do treinamento no catálogo do RH e no Portal do Colaborador; 4) Player de Vídeo Integrado: compatibilidade com inserção de URL do YouTube para exibição automática do vídeo no portal mobile.',
+      changes: [
+        { type: 'Apresentação PPTX Oficial', text: 'Arquivo de apresentação com 16 slides widescreen profissionais com a identidade visual da Nex-Ai CLINIC e logo institucional.' },
+        { type: 'Roteiro de Narração nas Anotações', text: 'Cada slide possui texto integral de locução nas notas do orador, pronto para gravação em vídeo ou exportação direta no PowerPoint.' },
+        { type: 'Download Ágil de Slides', text: 'Botão "Slides" inserido nos cards do catálogo de treinamentos (.HR) e na seção de materiais do Portal do Colaborador.' },
+        { type: 'Suporte a Vídeo YouTube', text: 'Player incorporado no Portal do Colaborador ao cadastrar o link do YouTube gerado a partir dos slides.' },
+        { type: 'Conformidade UI/UX & Manuais', text: 'Rótulo estritamente conciso de 1 palavra (Slides), manuais operacionais e documentação atualizados.' }
+      ]
+    },
+    {
       version: 'v5.0.34',
       date: '17/11/2026',
       title: 'Nex-Ai CLINIC (.PURCHASES) — Gestão Completa de Cotações (CRUD), Duplicação Ágil de Rodadas Antigas e Prorrogação/Renovação de Prazo com Desbloqueio B2B',
