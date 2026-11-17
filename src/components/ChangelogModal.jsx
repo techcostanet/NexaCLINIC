@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.33',
+      date: '17/11/2026',
+      title: 'Nex-Ai CLINIC (.HR) — Treinamento Institucional de Atendimento a Clientes Internos e Externos em Clínica de Hemodiálise com Pré e Pós-Teste Clínico e Dossiê VISA',
+      description: 'Implementação do 16º treinamento oficial no módulo de Educação Continuada e Recursos Humanos (.HR): "Excelência no Atendimento a Clientes Internos e Externos em Nefrologia". Desenvolvido sob medida para a realidade de uma clínica de hemodiálise e direcionado para 100% dos colaboradores da instituição (corpo clínico, enfermagem, higienização, farmácia, nutrição, psicologia, serviço social, recepção, faturamento APAC, manutenção e TI). O treinamento estrutura os pacientes renais crônicos e seus familiares/cuidadores como clientes externos prioritários sob a ótica da empatia terapêutica, acolhimento de fragilidades e desescalada emocional, e conceitua com rigor a corrente vital de interdependência entre os clientes internos dos diversos setores clínicos e de apoio. Inclui ementa completa em 6 módulos, 5 perguntas de pré-teste diagnóstico e 5 perguntas de pós-teste avaliativo com gabarito comentado, cálculo automatizado do ganho de eficácia (+%), certificação digital com QR Code e inclusão formal no Dossiê da Vigilância Sanitária.',
+      changes: [
+        { type: 'Treinamento de Atendimento', text: 'Criação do treinamento oficial nº 16 cobrindo empatia ao paciente renal crônico, acolhimento a familiares/cuidadores e corrente vital de cooperação intersetorial.' },
+        { type: 'Ementa Multiprofissional em 6 Módulos', text: 'Conteúdo detalhado sobre rotina dialítica, desescalada de conflitos, Comunicação Não Violenta (CNV), passagem de plantão SBAR, sigilo profissional e LGPD hospitalar.' },
+        { type: 'Avaliação Pré e Pós-Teste', text: '10 questões especializadas (5 diagnósticas de entrada e 5 de fixação pós-conteúdo com justificativas clínicas e cálculo de ganho de eficácia).' },
+        { type: 'Disponibilidade Universal (Setor Geral)', text: 'Habilitação para todos os cargos e setores no Portal do Colaborador, permitindo realização mobile por CPF e emissão imediata de certificado rastreável.' },
+        { type: 'Sincronização e Dossiê VISA', text: 'Auto-seed no Firestore e sincronização em 1 clique na barra do RH, com inclusão automática das presenças e notas no Dossiê da Vigilância Sanitária.' }
+      ]
+    },
+    {
       version: 'v5.0.32',
       date: '15/11/2026',
       title: 'Nex-Ai CLINIC (.CLINIC & .ASSIST) — Lista Pronta Imediata de Pacientes no .CLINIC com Cockpit Ativo, Barra de Ações por Ícones na Escala (.ASSIST) e Resolução Resiliente de Exames Laboratoriais',

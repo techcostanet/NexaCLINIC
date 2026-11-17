@@ -388,7 +388,7 @@ export const getTrainings = async (): Promise<Training[]> => {
     const snap = await getDocs(collection(db, 'hr_trainings'));
     
     if (snap.empty) {
-      // Seed todos os 15 treinamentos clínicos no Firestore
+      // Seed todos os 16 treinamentos clínicos no Firestore
       for (const t of DEFAULT_TRAININGS) {
         const { id, ...data } = t;
         await setDoc(doc(db, 'hr_trainings', id!), {
@@ -399,7 +399,7 @@ export const getTrainings = async (): Promise<Training[]> => {
       return DEFAULT_TRAININGS;
     }
 
-    // Auto-seed: se algum dos 15 treinamentos oficiais ainda não estiver no Firestore, adiciona
+    // Auto-seed: se algum dos 16 treinamentos oficiais ainda não estiver no Firestore, adiciona
     const existingIds = new Set(snap.docs.map(d => d.id));
     const missingDefaults = DEFAULT_TRAININGS.filter(t => t.id && !existingIds.has(t.id));
     if (missingDefaults.length > 0) {

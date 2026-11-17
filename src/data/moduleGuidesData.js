@@ -252,8 +252,8 @@ export const MODULE_GUIDES = {
         desc: 'Relatório oficial consolidado para fiscalizações municipais e auditorias, reunindo ementa do curso, lista de presenças, notas pré e pós-teste, ganho de eficácia e assinaturas de responsabilidade técnica.'
       },
       {
-        title: '15 Treinamentos Especializados em Nefrologia',
-        desc: 'Matriz completa com 15 capacitações clínicas cobrindo todos os setores (Enfermagem FAV/CVC/Emergências/Reuso, Tratamento de Água RDC 11/2014, Engenharia Clínica, Médico Kt/V, Farmácia, Higienização Hepatite B, Nutrição, Psicologia, Recepção, Faturamento APAC, Segurança do Paciente e T.I./LGPD).'
+        title: '16 Treinamentos Especializados em Nefrologia',
+        desc: 'Matriz completa com 16 capacitações clínicas cobrindo todos os setores (Enfermagem FAV/CVC/Emergências/Reuso, Tratamento de Água RDC 11/2014, Engenharia Clínica, Médico Kt/V, Farmácia, Higienização Hepatite B, Nutrição, Psicologia, Recepção, Faturamento APAC, Segurança do Paciente, T.I./LGPD e Atendimento a Clientes Internos e Externos em Nefrologia).'
       },
       {
         title: 'Logomarca Institucional nos Portais & Certificados',
@@ -261,7 +261,7 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Sincronização 1-Clique de Modelos no Firestore',
-        desc: 'Botão Sincronizar na barra superior e auto-seed inteligente que carrega e atualiza todos os 15 treinamentos no banco de dados automaticamente.'
+        desc: 'Botão Sincronizar na barra superior e auto-seed inteligente que carrega e atualiza todos os 16 treinamentos no banco de dados automaticamente.'
       }
     ],
     tutorial: [
@@ -401,8 +401,8 @@ export const MODULE_GUIDES = {
         resposta: 'O leitor extrai o Código/Matrícula e o Nome do funcionário do PDF e cruza em tempo real com a base de colaboradores do Nexa CLINIC, preenchendo o CPF, data de nascimento e endereço na planilha do Youk e no PDF unificado de contracheques automaticamente.'
       },
       {
-        pergunta: 'Os 15 treinamentos de nefrologia já vêm com questões pré e pós-teste prontas?',
-        resposta: 'Sim. Cada um dos 15 treinamentos possui rigorosamente 5 perguntas de pré-teste (diagnóstico) e 5 perguntas de pós-teste (avaliação de fixação) com justificativas clínicas detalhadas e cálculo automático do ganho de eficácia (+%).'
+        pergunta: 'Os 16 treinamentos de nefrologia já vêm com questões pré e pós-teste prontas?',
+        resposta: 'Sim. Cada um dos 16 treinamentos possui rigorosamente 5 perguntas de pré-teste (diagnóstico) e 5 perguntas de pós-teste (avaliação de fixação) com justificativas clínicas detalhadas e cálculo automático do ganho de eficácia (+%).'
       },
       {
         pergunta: 'Como a logomarca da clínica é inserida nos certificados e documentos?',

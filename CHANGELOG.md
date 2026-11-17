@@ -1,3 +1,23 @@
+## [v5.0.33] - 17 de Novembro, 2026
+### Nex-Ai CLINIC (.HR) — Treinamento Institucional de Atendimento a Clientes Internos e Externos em Clínica de Hemodiálise com Pré e Pós-Teste Clínico e Dossiê VISA
+- **16º Treinamento Oficial em Nefrologia e Hemodiálise (`trn-nefro-atendimento`):**
+  - Implementação do programa institucional "Excelência no Atendimento a Clientes Internos e Externos em Nefrologia", configurado para participação de todos os colaboradores da clínica (`sector: 'Geral'`).
+  - Carga horária de 4 horas, validade de reciclagem de 12 meses, nota de corte de 70% e tempo mínimo de leitura de 4 minutos.
+- **Ementa Estruturada em 6 Módulos Especializados:**
+  1. *O Paciente Renal Crônico e seus Familiares como Clientes Externos:* rotina extenuante de hemodiálise (3x/semana, 4h), restrições hídricas e dietéticas, fadiga pós-diálise, *burnout* do cuidador/acompanhante e acolhimento digno desde a recepção.
+  2. *Princípios do Atendimento Externo Humanizado:* empatia terapêutica, comunicação proativa e imediata em casos de atraso de turno, linguagem acessível sem jargões herméticos e respeito às singularidades.
+  3. *Conceito de Clientes Internos na Hemodiálise — A Corrente Vital:* o ciclo de interdependência crítica entre Higienização, Enfermagem, Farmácia, Tratamento de Água/Manutenção, Corpo Clínico, Nutrição, Psicologia, Serviço Social, Faturamento APAC e Recepção/TI.
+  4. *Comunicação Assertiva, CNV e Passagem de Plantão:* aplicação dos 4 pilares da Comunicação Não Violenta (observação sem julgamento, identificação de necessidades, pedidos claros) e técnica SBAR para passagens de plantão e comunicações entre setores.
+  5. *Gestão de Conflitos e Desescalada Emocional:* técnicas de postura corporal, escuta ativa sem interrupção inicial, validação emocional prévia, foco em soluções resolutivas e acionamento oportuno de suporte multidisciplinar.
+  6. *Ética, Sigilo e Privacidade (LGPD e Segurança do Paciente):* sigilo estrito de sorologias e condutas, proibição de postagens em redes sociais, bloqueio de computadores e cultura justa de notificação de falhas de processo.
+- **Avaliações Científicas com 10 Questões Exclusivas:**
+  - 5 perguntas diagnósticas no Pré-teste (`atend-pre-1` a `atend-pre-5`).
+  - 5 perguntas avaliativas no Pós-teste (`atend-post-1` a `atend-post-5`) com justificativas clínicas e cálculo automático de ganho de eficácia (+%).
+- **Integração no Portal do Colaborador, Sincronização Firestore e Dossiê VISA:**
+  - Disponível imediatamente para realização no Portal Mobile por digitação de CPF.
+  - Sincronização em 1 clique na aba de Treinamentos do RH e auto-seed inteligente no Firestore.
+  - Inclusão dos registros, notas e certificados gerados no Dossiê consolidado da Vigilância Sanitária.
+
 ## [v5.0.32] - 15 de Novembro, 2026
 ### Nex-Ai CLINIC (.CLINIC & .ASSIST) — Lista Pronta Imediata de Pacientes no .CLINIC com Cockpit Ativo, Barra de Ações por Ícones na Escala (.ASSIST) e Resolução Resiliente de Exames Laboratoriais
 - **Lista Pronta Imediata no Módulo Clínico (.CLINIC):**

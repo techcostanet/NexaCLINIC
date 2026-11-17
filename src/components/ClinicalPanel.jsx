@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../firebase';
-import { 
-  HeartPulse, ClipboardList, Activity, Plus, Search, Edit2, 
-  Trash2, User, Clock, Check, X, AlertTriangle, MessageSquare, 
-  TrendingUp, Pill, Settings, Thermometer, Megaphone, Sparkles, 
+import {
+  HeartPulse, ClipboardList, Activity, Plus, Search, Edit2,
+  Trash2, User, Clock, Check, X, AlertTriangle, MessageSquare,
+  TrendingUp, Pill, Settings, Thermometer, Megaphone, Sparkles,
   FileText, Calculator, Droplets, ShieldCheck, Printer, CheckCircle2
 } from 'lucide-react';
 
@@ -23,7 +23,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
   const [localReportsOpen, setLocalReportsOpen] = useState(false);
   const isReportsModalOpen = isReportsOpen !== undefined ? isReportsOpen : localReportsOpen;
   const handleSetReportsOpen = setIsReportsOpen || setLocalReportsOpen;
-  const [activeTab, setActiveTab] = useState('prescriptions'); 
+  const [activeTab, setActiveTab] = useState('prescriptions');
   // 'prescriptions' | 'medications' | 'monitoring' | 'evolutions' | 'labexams' | 'apac' | 'calculators' | 'dispensations' | 'timeline'
 
   const [patients, setPatients] = useState([]);
@@ -157,7 +157,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
   const handleOpenPrescForm = () => {
     const activePresc = getPrescriptionForSelected();
     const activePat = getSelectedPatient();
-    
+
     if (activePresc) {
       setPrescForm({
         type: activePresc.type || 'HD',
@@ -545,12 +545,12 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
       const pRoom = (p.room || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
       const pChart = (p.chartNumber || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
       return pName.includes(term) ||
-             (pSocial && pSocial.includes(term)) ||
-             pChart.includes(term) ||
-             (termDigits && pCpf.includes(termDigits)) ||
-             (termDigits && pCns.includes(termDigits)) ||
-             (termDigits && pPhone.includes(termDigits)) ||
-             pRoom.includes(term);
+        (pSocial && pSocial.includes(term)) ||
+        pChart.includes(term) ||
+        (termDigits && pCpf.includes(termDigits)) ||
+        (termDigits && pCns.includes(termDigits)) ||
+        (termDigits && pPhone.includes(termDigits)) ||
+        pRoom.includes(term);
     });
   }, [currentPatients, searchTerm]);
 
@@ -631,7 +631,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
 
       {/* KPI Cards Row (5 Indicadores Nefrológicos) */}
       <div style={styles.kpiRow}>
-        <div 
+        <div
           style={{ ...styles.kpiCard, borderLeft: '4px solid #8b5cf6', cursor: 'pointer' }}
           onClick={() => setActiveTab('prescriptions')}
           title="Ver pacientes cadastrados na unidade"
@@ -646,7 +646,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
           </div>
         </div>
 
-        <div 
+        <div
           style={{ ...styles.kpiCard, borderLeft: '4px solid #10b981', cursor: 'pointer' }}
           onClick={() => setActiveTab('prescriptions')}
           title="Ver prescrições dialíticas vigentes"
@@ -661,7 +661,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
           </div>
         </div>
 
-        <div 
+        <div
           style={{ ...styles.kpiCard, borderLeft: '4px solid #0284c7', cursor: 'pointer' }}
           onClick={() => setActiveTab('monitoring')}
           title="Ver acompanhamento intradialítico de hoje"
@@ -678,7 +678,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
           </div>
         </div>
 
-        <div 
+        <div
           style={{ ...styles.kpiCard, borderLeft: '4px solid #ec4899', cursor: 'pointer' }}
           onClick={() => setActiveTab('evolutions')}
           title="Ver evoluções da equipe multiprofissional"
@@ -693,7 +693,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
           </div>
         </div>
 
-        <div 
+        <div
           style={{ ...styles.kpiCard, borderLeft: '4px solid #f59e0b', cursor: 'pointer' }}
           onClick={() => setActiveTab('medications')}
           title="Ver farmacoterapia e medicamentos"
@@ -713,66 +713,66 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
 
       {/* Main Tabs Navigation (Strict 1-Word Clean Padrão) */}
       <div style={styles.tabsWrapper}>
-        <button 
-          onClick={() => setActiveTab('prescriptions')} 
+        <button
+          onClick={() => setActiveTab('prescriptions')}
           style={{ ...styles.tabBtn, ...(activeTab === 'prescriptions' ? styles.tabBtnActive : {}) }}
         >
           <ClipboardList size={16} /> Prescrição
         </button>
 
-        <button 
-          onClick={() => setActiveTab('medications')} 
+        <button
+          onClick={() => setActiveTab('medications')}
           style={{ ...styles.tabBtn, ...(activeTab === 'medications' ? styles.tabBtnActive : {}) }}
         >
           <Pill size={16} /> Medicamentos ({activeMeds.length})
         </button>
 
-        <button 
-          onClick={() => setActiveTab('monitoring')} 
+        <button
+          onClick={() => setActiveTab('monitoring')}
           style={{ ...styles.tabBtn, ...(activeTab === 'monitoring' ? styles.tabBtnActive : {}) }}
         >
           <Activity size={16} /> Sessões ({sessionsLogs.filter(l => l.date === new Date().toISOString().substring(0, 10)).length}/{todayPatients.length})
         </button>
 
-        <button 
-          onClick={() => setActiveTab('evolutions')} 
+        <button
+          onClick={() => setActiveTab('evolutions')}
           style={{ ...styles.tabBtn, ...(activeTab === 'evolutions' ? styles.tabBtnActive : {}) }}
         >
           <MessageSquare size={16} /> Evoluções
         </button>
 
-        <button 
-          onClick={() => setActiveTab('labexams')} 
+        <button
+          onClick={() => setActiveTab('labexams')}
           style={{ ...styles.tabBtn, ...(activeTab === 'labexams' ? styles.tabBtnActive : {}) }}
         >
           <TrendingUp size={16} /> Exames ({activeLabs.length})
         </button>
 
-        <button 
-          onClick={() => setActiveTab('apac')} 
+        <button
+          onClick={() => setActiveTab('apac')}
           style={{ ...styles.tabBtn, ...(activeTab === 'apac' ? styles.tabBtnActive : {}) }}
         >
           <FileText size={16} /> Laudos
         </button>
 
-        <button 
-          onClick={() => setActiveTab('calculators')} 
+        <button
+          onClick={() => setActiveTab('calculators')}
           style={{ ...styles.tabBtn, ...(activeTab === 'calculators' ? styles.tabBtnActive : {}) }}
         >
           <Calculator size={16} /> Calculadora
         </button>
 
-        <button 
-          onClick={() => setActiveTab('dispensations')} 
+        <button
+          onClick={() => setActiveTab('dispensations')}
           style={{ ...styles.tabBtn, ...(activeTab === 'dispensations' ? styles.tabBtnActive : {}) }}
         >
           <Droplets size={16} /> Insumos ({(patientDispensations || []).filter(d => d.patientId === selectedPatientId).length})
         </button>
 
-        <button 
-          onClick={() => setActiveTab('timeline')} 
-          style={{ 
-            ...styles.tabBtn, 
+        <button
+          onClick={() => setActiveTab('timeline')}
+          style={{
+            ...styles.tabBtn,
             ...(activeTab === 'timeline' ? styles.tabBtnActive : {}),
             backgroundColor: activeTab === 'timeline' ? '#ec4899' : undefined,
             color: activeTab === 'timeline' ? '#fff' : undefined,
@@ -828,7 +828,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
 
                     <div className="form-group">
                       <label>Peso Inicial (kg)</label>
-                      <input 
+                      <input
                         type="number" step="0.1" className="form-control" placeholder="Ex: 66.5"
                         value={preWeight} onChange={e => setPreWeight(e.target.value)}
                       />
@@ -836,7 +836,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
 
                     <div className="form-group">
                       <label>Peso Final (kg)</label>
-                      <input 
+                      <input
                         type="number" step="0.1" className="form-control" placeholder="Ex: 64.0"
                         value={finalWeight} onChange={e => setFinalWeight(e.target.value)}
                       />
@@ -875,44 +875,44 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                             return (
                               <tr key={index}>
                                 <td>
-                                  <input 
+                                  <input
                                     type="text" className="form-control text-center" style={{ width: '60px' }}
                                     value={row.hour} onChange={e => handleHourlyRowChange(index, 'hour', e.target.value)}
                                   />
                                 </td>
                                 <td>
-                                  <input 
+                                  <input
                                     type="text" className="form-control" style={{ width: '90px' }} placeholder="120/80"
                                     value={row.bp} onChange={e => handleHourlyRowChange(index, 'bp', e.target.value)}
                                   />
                                 </td>
                                 <td>
-                                  <input 
+                                  <input
                                     type="number" className="form-control" style={{ width: '70px' }} placeholder="80"
                                     value={row.hr} onChange={e => handleHourlyRowChange(index, 'hr', e.target.value)}
                                   />
                                 </td>
                                 <td>
-                                  <input 
+                                  <input
                                     type="number" className="form-control" style={{ width: '80px' }} placeholder="120"
                                     value={row.venousPressure} onChange={e => handleHourlyRowChange(index, 'venousPressure', e.target.value)}
                                   />
                                 </td>
                                 <td>
-                                  <input 
+                                  <input
                                     type="number" className="form-control" style={{ width: '80px' }} placeholder="-150"
                                     value={row.arterialPressure} onChange={e => handleHourlyRowChange(index, 'arterialPressure', e.target.value)}
                                   />
                                 </td>
                                 <td>
-                                  <input 
+                                  <input
                                     type="number" className="form-control" style={{ width: '85px' }} placeholder="300"
                                     value={row.bloodFlowReal} onChange={e => handleHourlyRowChange(index, 'bloodFlowReal', e.target.value)}
                                   />
                                 </td>
                                 <td>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                    <input 
+                                    <input
                                       type="number" step="0.1" className="form-control" style={{ width: '70px', borderColor: isHighUf ? '#f59e0b' : undefined }} placeholder="0.8"
                                       value={row.ufRate} onChange={e => handleHourlyRowChange(index, 'ufRate', e.target.value)}
                                     />
@@ -920,7 +920,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                                   </div>
                                 </td>
                                 <td>
-                                  <input 
+                                  <input
                                     type="text" className="form-control" placeholder="Sem intercorrências..."
                                     value={row.notes} onChange={e => handleHourlyRowChange(index, 'notes', e.target.value)}
                                   />
@@ -947,9 +947,9 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                     <div style={styles.complicationsGrid}>
                       {['Nenhuma', 'Hipotensão', 'Hipertensão', 'Câimbras', 'Cefaleia', 'Náuseas / Vômitos', 'Calafrios / Febre', 'Dor precordial', 'Problemas com Acesso (fluxo baixo)'].map(comp => (
                         <label key={comp} style={styles.compLabel}>
-                          <input 
-                            type="checkbox" 
-                            checked={complications.includes(comp)} 
+                          <input
+                            type="checkbox"
+                            checked={complications.includes(comp)}
                             onChange={() => toggleComplication(comp)}
                           />
                           <span>{comp}</span>
@@ -961,7 +961,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                   {/* Doctor/Nurse overall comments */}
                   <div className="form-group" style={{ marginTop: '1.5rem' }}>
                     <label>Conduta</label>
-                    <textarea 
+                    <textarea
                       className="form-control" rows="3" placeholder="Insira o resumo do encerramento da diálise, peso final retirado e intercorrências médicas se houver..."
                       value={sessionNotes} onChange={e => setSessionNotes(e.target.value)}
                     />
@@ -980,17 +980,17 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                   <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                     <div style={{ ...styles.sidebarSearch, flex: 1, position: 'relative' }}>
                       <Search size={16} style={styles.sidebarSearchIcon} />
-                      <input 
-                        type="text" 
-                        placeholder="Buscar paciente em sessão por nome, CPF ou poltrona..." 
+                      <input
+                        type="text"
+                        placeholder="Buscar paciente em sessão por nome, CPF ou poltrona..."
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                         style={styles.sidebarSearchInput}
                       />
                       {searchTerm && (
-                        <button 
+                        <button
                           type="button"
-                          onClick={() => setSearchTerm('')} 
+                          onClick={() => setSearchTerm('')}
                           style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
                         >
                           <X size={14} />
@@ -1038,8 +1038,8 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                                 )}
                               </td>
                               <td>
-                                <button 
-                                  onClick={() => handleOpenSessionLog(pat)} 
+                                <button
+                                  onClick={() => handleOpenSessionLog(pat)}
                                   className="btn btn-sm"
                                   style={{ backgroundColor: '#8b5cf6', color: '#fff' }}
                                 >
@@ -1067,17 +1067,17 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                   </div>
                   <div style={{ ...styles.sidebarSearch, position: 'relative' }}>
                     <Search size={15} style={styles.sidebarSearchIcon} />
-                    <input 
-                      type="text" 
-                      placeholder="Filtrar por nome, CPF ou leito..." 
+                    <input
+                      type="text"
+                      placeholder="Filtrar por nome, CPF ou leito..."
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
                       style={styles.sidebarSearchInput}
                     />
                     {searchTerm && (
-                      <button 
+                      <button
                         type="button"
-                        onClick={() => setSearchTerm('')} 
+                        onClick={() => setSearchTerm('')}
                         style={styles.sidebarClearBtn}
                         title="Limpar pesquisa"
                       >
@@ -1095,7 +1095,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                     filteredSidebarPatients.map(p => {
                       const pCount = currentAssistPosts.filter(ap => ap.patientId === p.id).length;
                       return (
-                        <div 
+                        <div
                           key={p.id}
                           onClick={() => setSelectedPatientId(p.id)}
                           style={{
@@ -1126,7 +1126,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                 {activePatient ? (
                   <>
                     {/* Cockpit 360 Header on top of all patient views */}
-                    <ClinicalPatientCockpit 
+                    <ClinicalPatientCockpit
                       patient={activePatient}
                       prescription={activePresc}
                       latestExam={activeLabs[0]}
@@ -1153,7 +1153,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                             <div style={styles.formGrid}>
                               <div className="form-group">
                                 <label>Terapia *</label>
-                                <select 
+                                <select
                                   className="form-control" value={prescForm.type}
                                   onChange={e => setPrescForm({ ...prescForm, type: e.target.value })}
                                 >
@@ -1164,14 +1164,14 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                               </div>
                               <div className="form-group">
                                 <label>Capilar *</label>
-                                <input 
+                                <input
                                   type="text" className="form-control" placeholder="Ex: HF80 (Alto Fluxo)"
                                   value={prescForm.dialyzerModel} onChange={e => setPrescForm({ ...prescForm, dialyzerModel: e.target.value })} required
                                 />
                               </div>
                               <div className="form-group">
                                 <label>Duração *</label>
-                                <select 
+                                <select
                                   className="form-control" value={prescForm.sessionTime}
                                   onChange={e => setPrescForm({ ...prescForm, sessionTime: e.target.value })}
                                 >
@@ -1183,14 +1183,14 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                               </div>
                               <div className="form-group">
                                 <label>Fluxo (QB) *</label>
-                                <input 
+                                <input
                                   type="number" className="form-control" placeholder="300"
                                   value={prescForm.bloodFlow} onChange={e => setPrescForm({ ...prescForm, bloodFlow: e.target.value })} required
                                 />
                               </div>
                               <div className="form-group">
                                 <label>Dialisato (QD) *</label>
-                                <select 
+                                <select
                                   className="form-control" value={prescForm.dialysateFlow}
                                   onChange={e => setPrescForm({ ...prescForm, dialysateFlow: e.target.value })}
                                 >
@@ -1201,7 +1201,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                               </div>
                               <div className="form-group">
                                 <label>Heparinização *</label>
-                                <select 
+                                <select
                                   className="form-control" value={prescForm.heparinType}
                                   onChange={e => setPrescForm({ ...prescForm, heparinType: e.target.value })}
                                 >
@@ -1212,28 +1212,28 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                               </div>
                               <div className="form-group">
                                 <label>Heparina *</label>
-                                <input 
+                                <input
                                   type="text" className="form-control" placeholder="Ex: 5000 UI"
                                   value={prescForm.heparinDose} onChange={e => setPrescForm({ ...prescForm, heparinDose: e.target.value })} required
                                 />
                               </div>
                               <div className="form-group">
                                 <label>Bicarbonato *</label>
-                                <input 
+                                <input
                                   type="text" className="form-control" placeholder="Ex: 32 mEq/L"
                                   value={prescForm.bicarbonate} onChange={e => setPrescForm({ ...prescForm, bicarbonate: e.target.value })} required
                                 />
                               </div>
                               <div className="form-group">
                                 <label>Sódio *</label>
-                                <input 
+                                <input
                                   type="text" className="form-control" placeholder="Ex: 138 mEq/L"
                                   value={prescForm.sodium} onChange={e => setPrescForm({ ...prescForm, sodium: e.target.value })} required
                                 />
                               </div>
                               <div className="form-group">
                                 <label>Peso Seco *</label>
-                                <input 
+                                <input
                                   type="number" step="0.1" className="form-control" placeholder="Ex: 68.5"
                                   value={prescForm.dryWeight} onChange={e => setPrescForm({ ...prescForm, dryWeight: e.target.value })} required
                                 />
@@ -1305,7 +1305,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
 
                     {/* TAB: MEDICATIONS */}
                     {activeTab === 'medications' && (
-                      <ClinicalMedicationsTab 
+                      <ClinicalMedicationsTab
                         patient={activePatient}
                         medications={activeMeds}
                         onSaveMedication={handleSaveMedication}
@@ -1354,7 +1354,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                             <div className="form-group">
                               <label>Especialidade</label>
-                              <select 
+                              <select
                                 className="form-control" value={noteCategory}
                                 onChange={e => setNoteCategory(e.target.value)}
                               >
@@ -1367,7 +1367,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                             </div>
                             <div className="form-group">
                               <label>Profissional</label>
-                              <input 
+                              <input
                                 type="text" className="form-control" value={noteAuthor}
                                 onChange={e => setNoteAuthor(e.target.value)} required
                               />
@@ -1375,7 +1375,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                           </div>
                           <div className="form-group">
                             <label>Evolução *</label>
-                            <textarea 
+                            <textarea
                               className="form-control" rows="4" placeholder="Descreva a evolução do paciente, parâmetros laboratoriais, queixas ou recomendações terapêuticas..."
                               value={noteText} onChange={e => setNoteText(e.target.value)} required
                               style={{ resize: 'vertical' }}
@@ -1440,7 +1440,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
 
                     {/* TAB: LAB EXAMS */}
                     {activeTab === 'labexams' && (
-                      <ClinicalLabExamsTab 
+                      <ClinicalLabExamsTab
                         patient={activePatient}
                         labExams={activeLabs}
                         onSaveLabExam={handleSaveLabExam}
@@ -1451,7 +1451,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
 
                     {/* TAB: APAC RECORDS */}
                     {activeTab === 'apac' && (
-                      <ClinicalApacTab 
+                      <ClinicalApacTab
                         patient={activePatient}
                         prescription={activePresc}
                         latestExam={activeLabs[0]}
@@ -1463,7 +1463,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
 
                     {/* TAB: CALCULATORS */}
                     {activeTab === 'calculators' && (
-                      <ClinicalCalculatorsTab 
+                      <ClinicalCalculatorsTab
                         patient={activePatient}
                         prescription={activePresc}
                         latestExam={activeLabs[0]}
@@ -1481,8 +1481,8 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                         </div>
 
                         {(() => {
-                          const activeDisps = (patientDispensations || []).filter(d => 
-                            d.patientId === activePatient.id || 
+                          const activeDisps = (patientDispensations || []).filter(d =>
+                            d.patientId === activePatient.id ||
                             (d.patientName && activePatient.name && d.patientName.toLowerCase() === activePatient.name.toLowerCase())
                           );
 
@@ -1553,9 +1553,9 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                           <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
                             <div style={{ flex: 1, minWidth: '160px' }}>
                               <label style={{ fontSize: '0.8rem', fontWeight: '600', display: 'block', marginBottom: '0.25rem' }}>Evento</label>
-                              <select 
-                                className="form-control" 
-                                value={quickAssistCategory} 
+                              <select
+                                className="form-control"
+                                value={quickAssistCategory}
                                 onChange={e => {
                                   setQuickAssistCategory(e.target.value);
                                   setQuickAssistUrgency(e.target.value === 'Internação' || e.target.value === 'Intercorrência' || e.target.value === 'Óbito' ? 'Urgente' : 'Informativo');
@@ -1574,9 +1574,9 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                             </div>
                             <div style={{ flex: 1, minWidth: '140px' }}>
                               <label style={{ fontSize: '0.8rem', fontWeight: '600', display: 'block', marginBottom: '0.25rem' }}>Urgência</label>
-                              <select 
-                                className="form-control" 
-                                value={quickAssistUrgency} 
+                              <select
+                                className="form-control"
+                                value={quickAssistUrgency}
                                 onChange={e => setQuickAssistUrgency(e.target.value)}
                               >
                                 <option value="Informativo">ℹ️ Informativo</option>
@@ -1586,9 +1586,9 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
                             </div>
                           </div>
                           <div className="form-group">
-                            <textarea 
-                              rows={3} 
-                              className="form-control" 
+                            <textarea
+                              rows={3}
+                              className="form-control"
                               placeholder={`Descreva a ocorrência sobre ${activePatient.name} (ex: internado no Hospital X, alta confirmada, etc)...`}
                               value={quickAssistText}
                               onChange={e => setQuickAssistText(e.target.value)}
@@ -1656,7 +1656,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
 
       {/* MODAL 1: Exportar Sumário em PDF */}
       {showExportModal && (
-        <ClinicalExportModal 
+        <ClinicalExportModal
           patient={activePatient}
           prescription={activePresc}
           medications={activeMeds}
@@ -1668,7 +1668,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
 
       {/* MODAL 2: Copiloto Clínico IA */}
       {showAiModal && (
-        <ClinicalAiSummaryModal 
+        <ClinicalAiSummaryModal
           patient={activePatient}
           prescription={activePresc}
           medications={activeMeds}
@@ -1687,7 +1687,7 @@ export default function ClinicalPanel({ currentUser, isReportsOpen, setIsReports
       )}
 
       {/* Central de Relatórios Especializados */}
-      <ClinicalReportsModal 
+      <ClinicalReportsModal
         isOpen={isReportsModalOpen}
         onClose={() => handleSetReportsOpen(false)}
         patients={currentPatients}
