@@ -1,3 +1,22 @@
+## [v5.0.34] - 17 de Novembro, 2026
+### Nex-Ai CLINIC (.PURCHASES) — Gestão Completa de Cotações (CRUD), Duplicação Ágil de Rodadas Antigas e Prorrogação/Renovação de Prazo com Desbloqueio B2B
+- **CRUD Completo de Cotações Web (`WebQuotationsTab.jsx` & `purchasingService.ts`):**
+  - **Edição de Cotações:** Modal de edição permitindo alterar título, prazo limite, observações comerciais, cesta de itens (adicionar novos insumos, alterar quantidades e especificações) e fornecedores participantes.
+  - **Exclusão de Cotações:** Exclusão segura no Firestore e no armazenamento local (`localStorage`) com diálogo de confirmação prevenindo exclusões acidentais.
+- **Duplicação Ágil de Cotações Antigas:**
+  - Botão de ação "Duplicar" em cada cotação e no rodapé do comparativo de preços.
+  - Clonagem completa da cesta de insumos e da lista de distribuidores convidados, gerando automaticamente novos tokens criptografados e código sequencial (#COT-YYYY-XXX).
+  - Pré-preenchimento automático do formulário com novo prazo e título sugerido (`[Título] (Cópia)`), permitindo revisão imediata pelo comprador antes da publicação.
+- **Prorrogação e Renovação de Prazo com Reativação Automática:**
+  - Novo modal ergonômico "Prorrogar Prazo" com atalhos de acréscimo rápido (+24h, +2 Dias, +3 Dias, +5 Dias, +7 Dias) e seletor de data e hora (`datetime-local`).
+  - Campo opcional de justificativa/motivo anexado ao histórico de notas da cotação.
+  - Reativação automática no portal B2B público: caso a cotação estivesse com status "Expirada", ao prorrogar o prazo a cotação retorna automaticamente para "Aberta" (ou "Em Análise" caso já possua lances recebidos), desbloqueando imediatamente o acesso dos distribuidores para envio de propostas.
+- **Ações Rápidas no Mapa Comparativo de Preços:**
+  - Atalhos diretos no rodapé do mapa comparativo para "Prorrogar", "Duplicar" e "Editar" sem necessidade de fechar a análise.
+- **Padrões de UI/UX & Manuais:**
+  - Rótulos concisos e diretos com padrão rigoroso de 1 palavra/termo único: `Pedido`, `Comparativo`, `Links`, `Prorrogar`, `Duplicar`, `Editar` e `Excluir`.
+  - Atualização do manual oficial em `moduleGuidesData.js` e histórico de versões em `ChangelogModal.jsx`.
+
 ## [v5.0.33] - 17 de Novembro, 2026
 ### Nex-Ai CLINIC (.HR) — Treinamento Institucional de Atendimento a Clientes Internos e Externos em Clínica de Hemodiálise com Pré e Pós-Teste Clínico e Dossiê VISA
 - **16º Treinamento Oficial em Nefrologia e Hemodiálise (`trn-nefro-atendimento`):**

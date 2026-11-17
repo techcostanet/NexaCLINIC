@@ -306,6 +306,123 @@ export const updateWebQuotation = async (id: string, quoteData: Partial<WebQuota
 };
 
 /**
+ * Exclui cotação web do Firestore e localmente
+ */
+export const deleteWebQuotation = async (id: string): Promise<void> => {
+  if (USE_MOCK) {
+    const list = await getWebQuotations();
+    const filtered = list.filter(q => q.id !== id);
+    localStorage.setItem('nexa_web_quotations', JSON.stringify(filtered));
+    return;
+  }
+
+  try {
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'web_quotations', id));
+  } catch (err) {
+    console.error('Erro ao excluir cotação no Firestore:', err);
+  }
+
+  // Sincroniza localmente
+  const list = await getWebQuotations();
+  const filtered = list.filter(q => q.id !== id);
+  localStorage.setItem('nexa_web_quotations', JSON.stringify(filtered));
+};
+
+/**
+ * Concede mais prazo para a cotação (estende data limite e reativa se expirada)
+ */
+export const extendWebQuotationDeadline = async (
+  id: string,
+  newDeadline: string,
+  extensionNotes?: string
+): Promise<void> => {
+  const quote = await getWebQuotationById(id);
+  const currentStatus = quote?.status;
+
+  // Se a cotação estava Expirada, ao estender o prazo reativa para Aberta ou Em Análise
+  let nextStatus = currentStatus;
+  if (currentStatus === 'Expirada') {
+    const hasResponses = (quote?.suppliers || []).some(s => s.status === 'Respondida');
+    nextStatus = hasResponses ? 'Em Análise' : 'Aberta';
+  }
+
+  const updates: Partial<WebQuotation> = {
+    deadline: newDeadline,
+    status: nextStatus,
+    updatedAt: new Date().toISOString()
+  };
+
+  if (extensionNotes && extensionNotes.trim()) {
+    const formattedDate = new Date(newDeadline).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+    const noteEntry = `[Prazo prorrogado até ${formattedDate}]: ${extensionNotes.trim()}`;
+    updates.notes = quote?.notes ? `${quote.notes}\n${noteEntry}` : noteEntry;
+  }
+
+  await updateWebQuotation(id, updates);
+};
+
+/**
+ * Duplica uma cotação antiga gerando nova rodada limpa
+ */
+export const duplicateWebQuotation = async (
+  sourceQuotation: WebQuotation,
+  newTitle?: string,
+  newDeadline?: string
+): Promise<WebQuotation> => {
+  const all = await getWebQuotations();
+  const newCode = generateQuotationCode(all.length);
+
+  // Clona fornecedores com novos tokens e status Pendente
+  const clonedSuppliers: InvitedSupplier[] = (sourceQuotation.suppliers || []).map(s => ({
+    supplierId: s.supplierId,
+    name: s.name,
+    tradeName: s.tradeName || s.name,
+    cnpj: s.cnpj || '',
+    contactPerson: s.contactPerson || '',
+    phone: s.phone || '',
+    email: s.email || '',
+    token: generateQuoteToken(),
+    status: 'Pendente'
+  }));
+
+  // Clona itens com novos IDs únicos
+  const clonedItems: QuotedItem[] = (sourceQuotation.items || []).map(i => ({
+    id: 'item_' + Date.now() + Math.random().toString(36).substring(2, 6),
+    productId: i.productId,
+    productName: i.productName,
+    quantity: i.quantity || 1,
+    unit: i.unit || 'un',
+    specification: i.specification || '',
+    lastPricePaid: i.lastPricePaid || 0
+  }));
+
+  const defaultDeadline = newDeadline || (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    d.setHours(18, 0, 0, 0);
+    return d.toISOString().slice(0, 16);
+  })();
+
+  const payload: Omit<WebQuotation, 'id'> = {
+    code: newCode,
+    title: newTitle || `${sourceQuotation.title} (Cópia)`,
+    unitId: sourceQuotation.unitId || 'geral',
+    unit: sourceQuotation.unit || 'Geral',
+    buyerName: sourceQuotation.buyerName || 'Comprador Nex-Ai CLINIC',
+    buyerEmail: sourceQuotation.buyerEmail || '',
+    status: 'Aberta',
+    deadline: defaultDeadline,
+    notes: sourceQuotation.notes ? `[Cópia de ${sourceQuotation.code}] ${sourceQuotation.notes}` : `Cópia baseada na cotação ${sourceQuotation.code}`,
+    items: clonedItems,
+    suppliers: clonedSuppliers
+  };
+
+  return createWebQuotation(payload);
+};
+
+/**
  * Salva a proposta comercial do fornecedor (Acesso Público via Portal)
  */
 export const submitSupplierQuote = async (

@@ -2471,6 +2471,14 @@ export const MODULE_GUIDES = {
         desc: 'Criação de rodadas de cotação digital com geração de links exclusivos e tokens criptografados para preenchimento direto pelos fornecedores via celular ou computador.'
       },
       {
+        title: 'CRUD de Cotações & Duplicação',
+        desc: 'Gestão integral com criação, edição de itens/fornecedores/observações, exclusão segura e duplicação em 1 clique de cotações antigas gerando nova rodada com novos tokens exclusivos.'
+      },
+      {
+        title: 'Prorrogação de Prazo & Reativação',
+        desc: 'Concessão ágil de mais prazo aos fornecedores com botões rápidos (+24h, +2d, +3d, +5d, +7d) ou seleção de data/hora, reativando cotações expiradas no portal dos fornecedores.'
+      },
+      {
         title: 'Portal B2B do Fornecedor',
         desc: 'Ambiente público sem atrito para distribuidores digitarem preços unitários, marcas ofertadas, tipo de frete (CIF/FOB), prazos de entrega e anexarem propostas em PDF.'
       },
@@ -2538,6 +2546,16 @@ export const MODULE_GUIDES = {
         ]
       },
       {
+        title: 'Como Duplicar uma Cotação Antiga ou Prorrogar Prazo',
+        steps: [
+          'Na tabela da aba "Cotações", localize a cotação desejada.',
+          'Clique no botão "Prorrogar" para conceder mais prazo aos fornecedores; utilize os atalhos rápidos (+24h a +7d) ou informe a nova data limite para reativar o portal público.',
+          'Clique no botão "Duplicar" para gerar uma nova rodada de cotação com a mesma cesta de insumos e fornecedores, recebendo novos tokens exclusivos e código sequencial.',
+          'Clique no botão "Editar" para alterar itens, quantidades, especificações ou fornecedores da cotação.',
+          'Clique no botão "Excluir" caso precise cancelar e remover a rodada de cotação com confirmação.'
+        ]
+      },
+      {
         title: 'Como Auditar o Histórico de Preços e a Curva ABC',
         steps: [
           'Na aba "Reposição", utilize o filtro "Curva ABC" para visualizar apenas insumos Classe A (alto impacto financeiro), B ou C.',
@@ -2547,6 +2565,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'O que acontece ao prorrogar o prazo de uma cotação expirada?',
+        resposta: 'Ao estender a data limite para um horário futuro, o sistema reativa automaticamente a cotação (mudando o status de "Expirada" para "Aberta" ou "Em Análise") e desbloqueia imediatamente o portal público para que os fornecedores continuem digitando e enviando suas propostas comerciais.'
+      },
       {
         pergunta: 'Como a Ordem de Compra é integrada ao Financeiro?',
         resposta: 'No momento exato em que a cotação é homologada, o sistema cria automaticamente um lançamento de despesa provisória no módulo Financeiro (Contas a Pagar), vinculado à filial correspondente e com a data de vencimento projetada pelo prazo de entrega e pagamento acordado com o fornecedor.'

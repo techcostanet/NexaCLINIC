@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.34',
+      date: '17/11/2026',
+      title: 'Nex-Ai CLINIC (.PURCHASES) — Gestão Completa de Cotações (CRUD), Duplicação Ágil de Rodadas Antigas e Prorrogação/Renovação de Prazo com Desbloqueio B2B',
+      description: 'Expansão profunda da sala de cotações digitais do módulo de Compras e Suprimentos (Nex-Ai.PROCURE / .PURCHASES): 1) CRUD Completo de Cotações: agora o comprador pode criar, visualizar, editar itens/quantidades/fornecedores/observações e excluir cotações de forma segura com confirmação direta; 2) Duplicação Ágil de Cotações: clonagem em 1 clique de cotações antigas preservando a cesta de insumos e distribuidores, gerando novos tokens criptografados exclusivos para os fornecedores e novo código sequencial (#COT-YYYY-XXX); 3) Prorrogação e Renovação de Prazos: modal dedicado com atalhos de acréscimo rápido (+24h, +2d, +3d, +5d, +7d) ou seletor de data/hora, que estende o prazo limite e reativa automaticamente cotações expiradas no portal B2B público do fornecedor.',
+      changes: [
+        { type: 'CRUD Completo', text: 'Adicionados botões de Editar e Excluir nas cotações web, permitindo ajustar pedidos em andamento ou remover rodadas canceladas.' },
+        { type: 'Duplicação de Cotações', text: 'Clonagem em 1 clique de cotações antigas com cópia de insumos e fornecedores, gerando novos tokens de resposta e código sequencial.' },
+        { type: 'Prorrogação de Prazo', text: 'Modal de renovação de prazo com botões rápidos (+24h a +7d) e reativação automática de cotações expiradas no portal dos fornecedores.' },
+        { type: 'Atalhos no Comparativo', text: 'Acesso rápido para prorrogar, duplicar e editar diretamente a partir do rodapé do Mapa Comparativo de Preços.' },
+        { type: 'Diretrizes UI/UX', text: 'Rótulos 100% concisos de 1 termo único (Pedido, Comparativo, Links, Prorrogar, Duplicar, Editar e Excluir) e manuais atualizados.' }
+      ]
+    },
+    {
       version: 'v5.0.33',
       date: '17/11/2026',
       title: 'Nex-Ai CLINIC (.HR) — Treinamento Institucional de Atendimento a Clientes Internos e Externos em Clínica de Hemodiálise com Pré e Pós-Teste Clínico e Dossiê VISA',
