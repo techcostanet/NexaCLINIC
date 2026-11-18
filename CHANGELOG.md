@@ -1,4 +1,4 @@
-## [v5.0.36] - 18 de Novembro, 2026
+## [v5.0.39] - 18 de Novembro, 2026
 ### Nex-Ai CLINIC (.RH) — Resolução Definitiva na Extração de Vale Transporte e Rubricas de Folha (.PDF/.ZIP) e Conformidade Total com Youk Manager
 - **Correção Crítica no Extrator de Contracheques Alterdata (`payslipPdfParser.js`):**
   - Identificada e corrigida a causa raiz da omissão de descontos de Vale Transporte (código 253 e 48) e outras verbas: a checagem textual da linha rejeitava qualquer item que contivesse o termo "Assinatura". Como formulários Alterdata com 8 ou mais eventos alinham verticalmente o último evento na mesma linha da caixa "Assinatura do Funcionário" (posicionada na margem direita em x=556), a linha inteira de verba era indevidamente descartada.

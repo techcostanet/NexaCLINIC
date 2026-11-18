@@ -6,8 +6,7 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-    {
-      version: 'v5.0.36',
+      version: 'v5.0.39',
       date: '18/11/2026',
       title: 'Nex-Ai CLINIC (.RH) — Resolução Definitiva na Extração de Vale Transporte e Rubricas de Folha (.PDF/.ZIP) e Conformidade Total com Youk Manager',
       description: 'Correção crítica e evolução arquitetural no motor de extração de contracheques em lote (.ZIP / .PDF) do módulo Nex-Ai.HR: 1) Resolução da omissão de descontos de Vale Transporte (código 253 e 48) e outras rubricas que coincidiam com a coordenada da linha de assinatura no formulário da Alterdata (remoção do filtro restritivo indevido que descartava o evento ao encontrar "Assinatura do Funcionário" na margem direita); 2) Captura precisa de 100% dos eventos em todos os 130 contracheques da folha (62 rubricas de Vale Transporte capturadas com exatidão, zero divergência entre soma de rubricas e totais dos recibos); 3) Suporte aprimorado a contracheques de múltiplas páginas (recibos com "A TRANSPORTAR" e fechamento na última página); 4) Alinhamento da planilha oficial do Youk Manager (.xlsx) com o modelo homologado (aba "Relatório" e integridade de todas as 79 colunas); 5) Adequação estrita às diretrizes de interface com rótulos de termo único em todos os relatórios e contracheques em PDF.',

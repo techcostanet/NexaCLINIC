@@ -415,10 +415,10 @@ export const MODULE_GUIDES = {
         resposta: 'O leitor extrai o Código/Matrícula e o Nome do funcionário do PDF e cruza em tempo real com a base de colaboradores do Nexa CLINIC, preenchendo o CPF, data de nascimento e endereço na planilha do Youk e no PDF unificado de contracheques automaticamente.'
       },
       {
-      {
         pergunta: 'Como o sistema garante que todos os descontos (como Vale Transporte) sejam incluídos na planilha do Youk?',
         resposta: 'O motor de leitura analisa cada linha da tabela de verbas com posicionamento milimétrico, capturando todas as rubricas de proventos e descontos (como Vale Transporte códigos 253 e 48, INSS, Adicional Noturno e Faltas). O sistema realiza uma conferência matemática de 100%, garantindo que a soma individual de cada evento corresponda exatamente ao Total de Vencimentos, Total de Descontos e Líquido presentes no contracheque oficial antes de gerar a planilha do Youk e os PDFs.'
       },
+      {
         pergunta: 'Os 16 treinamentos de nefrologia já vêm com questões pré e pós-teste prontas?',
         resposta: 'Sim. Cada um dos 16 treinamentos possui rigorosamente 5 perguntas de pré-teste (diagnóstico) e 5 perguntas de pós-teste (avaliação de fixação) com justificativas clínicas detalhadas e cálculo automático do ganho de eficácia (+%).'
       },
