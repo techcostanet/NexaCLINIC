@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  Plus, Search, Building2, Clock, CheckCircle2, AlertTriangle, 
-  ExternalLink, Copy, Send, Check, Eye, Trash2, Award, Printer, 
-  FileText, Truck, DollarSign, Package, ArrowUpDown, ChevronRight,
-  Filter, Layers, X, Calendar, Share2, ChevronDown, CheckSquare,
-  Square, Sparkles, TrendingUp, TrendingDown, BarChart3
+  Plus, Search, Building2, Clock, Copy, Send, Check, Eye, Trash2, Award, 
+  FileText, Package, Filter, X, Share2, ChevronDown, CheckSquare,
+  Square, Sparkles, TrendingDown, BarChart3, Edit2
 } from 'lucide-react';
 import { dbService } from '../../firebase';
 import { generateQuoteToken, generateQuotationCode, generatePurchaseOrderCode } from '../../services/firebase/purchasingService';
@@ -40,8 +38,9 @@ export default function WebQuotationsTab({
   const [itemSplitAwards, setItemSplitAwards] = useState({}); // itemId -> supplierId
   const [actionLoading, setActionLoading] = useState(false);
 
-  // New Quotation Modal State
+  // Quotation Form State (Create / Edit / Duplicate)
   const [showNewModal, setShowNewModal] = useState(false);
+  const [editingQuotationId, setEditingQuotationId] = useState(null);
   const [newQuoteForm, setNewQuoteForm] = useState({
     title: '',
     deadline: '',
@@ -49,6 +48,12 @@ export default function WebQuotationsTab({
     items: [],
     selectedSuppliers: []
   });
+
+  // Extend Deadline Modal State
+  const [showExtendModal, setShowExtendModal] = useState(false);
+  const [quotationToExtend, setQuotationToExtend] = useState(null);
+  const [extendDeadlineDate, setExtendDeadlineDate] = useState('');
+  const [extendNotes, setExtendNotes] = useState('');
 
   // Product Autocomplete & Supplier Search States
   const [productSearchQuery, setProductSearchQuery] = useState('');
@@ -205,6 +210,7 @@ export default function WebQuotationsTab({
 
   // Open New Quotation Modal
   const handleOpenNewModal = () => {
+    setEditingQuotationId(null);
     const nextCode = generateQuotationCode(quotations.length);
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 3);
@@ -237,6 +243,159 @@ export default function WebQuotationsTab({
       }))
     });
     setShowNewModal(true);
+  };
+
+  // Edit Quotation (CRUD - Update)
+  const handleEditQuotation = (q) => {
+    setEditingQuotationId(q.id);
+    setProductSearchQuery('');
+    setIsProductDropdownOpen(false);
+    setSupplierSearchQuery('');
+    setShowCustomItemInput(false);
+    setCustomItemForm({ productName: '', quantity: 1, unit: 'un', specification: '' });
+
+    setNewQuoteForm({
+      code: q.code,
+      title: q.title || '',
+      deadline: q.deadline ? (q.deadline.includes('T') ? q.deadline.slice(0, 16) : q.deadline) : '',
+      notes: q.notes || '',
+      items: (q.items || []).map(i => ({ ...i })),
+      selectedSuppliers: (q.suppliers || []).map(s => ({
+        supplierId: s.supplierId,
+        name: s.name,
+        tradeName: s.tradeName || s.name,
+        cnpj: s.cnpj || '',
+        contactPerson: s.contactPerson || '',
+        phone: s.phone || '',
+        email: s.email || '',
+        token: s.token || generateQuoteToken(),
+        status: s.status || 'Pendente'
+      }))
+    });
+    setShowNewModal(true);
+  };
+
+  // Duplicate Quotation (CRUD - Duplicate)
+  const handleDuplicateQuotation = (q) => {
+    setEditingQuotationId(null);
+    setProductSearchQuery('');
+    setIsProductDropdownOpen(false);
+    setSupplierSearchQuery('');
+    setShowCustomItemInput(false);
+    setCustomItemForm({ productName: '', quantity: 1, unit: 'un', specification: '' });
+
+    const nextCode = generateQuotationCode(quotations.length);
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 3);
+    futureDate.setHours(18, 0, 0, 0);
+    const formattedDeadline = futureDate.toISOString().slice(0, 16);
+
+    const clonedItems = (q.items || []).map(i => ({
+      id: 'item_' + Date.now() + Math.random().toString(36).substring(2, 6),
+      productId: i.productId,
+      productName: i.productName,
+      quantity: i.quantity || 1,
+      unit: i.unit || 'un',
+      specification: i.specification || '',
+      lastPricePaid: i.lastPricePaid || 0
+    }));
+
+    const clonedSuppliers = (q.suppliers || []).map(s => ({
+      supplierId: s.supplierId,
+      name: s.name,
+      tradeName: s.tradeName || s.name,
+      cnpj: s.cnpj || '',
+      contactPerson: s.contactPerson || '',
+      phone: s.phone || '',
+      email: s.email || '',
+      token: generateQuoteToken(),
+      status: 'Pendente'
+    }));
+
+    setNewQuoteForm({
+      code: nextCode,
+      title: `${q.title} (Cópia)`,
+      deadline: formattedDeadline,
+      notes: q.notes ? `[Cópia de ${q.code}] ${q.notes}` : `Cópia baseada na cotação ${q.code}`,
+      items: clonedItems,
+      selectedSuppliers: clonedSuppliers
+    });
+
+    setShowNewModal(true);
+  };
+
+  // Delete Quotation (CRUD - Delete)
+  const handleDeleteQuotation = async (q) => {
+    if (!window.confirm(`Deseja realmente excluir a cotação ${q.code} - "${q.title}"?\nEsta ação removerá a cotação e não poderá ser desfeita.`)) {
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      await dbService.deleteWebQuotation(q.id);
+      await loadQuotations();
+      alert(`Cotação ${q.code} excluída com sucesso.`);
+    } catch (err) {
+      console.error('Erro ao excluir cotação:', err);
+      alert('Erro ao excluir cotação. Tente novamente.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Open Extend Deadline Modal
+  const handleOpenExtendModal = (q) => {
+    setQuotationToExtend(q);
+    setExtendNotes('');
+
+    const baseDate = q.deadline && new Date(q.deadline) > new Date()
+      ? new Date(q.deadline)
+      : new Date();
+
+    baseDate.setDate(baseDate.getDate() + 3);
+    baseDate.setHours(18, 0, 0, 0);
+
+    setExtendDeadlineDate(baseDate.toISOString().slice(0, 16));
+    setShowExtendModal(true);
+  };
+
+  const handleQuickExtendDays = (days) => {
+    const baseDate = quotationToExtend?.deadline && new Date(quotationToExtend.deadline) > new Date()
+      ? new Date(quotationToExtend.deadline)
+      : new Date();
+
+    baseDate.setDate(baseDate.getDate() + days);
+    baseDate.setHours(18, 0, 0, 0);
+    setExtendDeadlineDate(baseDate.toISOString().slice(0, 16));
+  };
+
+  const handleQuickExtendHours = (hours) => {
+    const baseDate = quotationToExtend?.deadline && new Date(quotationToExtend.deadline) > new Date()
+      ? new Date(quotationToExtend.deadline)
+      : new Date();
+
+    baseDate.setHours(baseDate.getHours() + hours);
+    setExtendDeadlineDate(baseDate.toISOString().slice(0, 16));
+  };
+
+  // Save Extended Deadline
+  const handleSaveExtendDeadline = async (e) => {
+    e.preventDefault();
+    if (!quotationToExtend || !extendDeadlineDate) return;
+
+    setActionLoading(true);
+    try {
+      await dbService.extendWebQuotationDeadline(quotationToExtend.id, extendDeadlineDate, extendNotes);
+      setShowExtendModal(false);
+      setQuotationToExtend(null);
+      await loadQuotations();
+      alert(`Prazo da cotação ${quotationToExtend.code} prorrogado com sucesso!`);
+    } catch (err) {
+      console.error('Erro ao prorrogar prazo:', err);
+      alert('Erro ao prorrogar prazo da cotação.');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   // Add Item to Quotation
@@ -406,7 +565,7 @@ export default function WebQuotationsTab({
     }));
   };
 
-  // Save / Publish New Quotation
+  // Save / Publish Quotation (Create or Update)
   const handleSaveQuotation = async (e) => {
     e.preventDefault();
     if (newQuoteForm.items.length === 0) {
@@ -427,23 +586,31 @@ export default function WebQuotationsTab({
         unit: activeUnitId === 'betim' ? 'Betim' : activeUnitId === 'taguatinga' ? 'Taguatinga' : 'Geral',
         buyerName: currentUser?.name || 'Comprador Nex-Ai CLINIC',
         buyerEmail: currentUser?.email || '',
-        status: 'Aberta',
         deadline: newQuoteForm.deadline,
         notes: newQuoteForm.notes,
         items: newQuoteForm.items,
         suppliers: newQuoteForm.selectedSuppliers
       };
 
-      const created = await dbService.createWebQuotation(payload);
-      setShowNewModal(false);
-      await loadQuotations();
+      if (editingQuotationId) {
+        await dbService.updateWebQuotation(editingQuotationId, payload);
+        setShowNewModal(false);
+        setEditingQuotationId(null);
+        await loadQuotations();
+        alert(`Cotação ${payload.code} atualizada com sucesso!`);
+      } else {
+        payload.status = 'Aberta';
+        const created = await dbService.createWebQuotation(payload);
+        setShowNewModal(false);
+        await loadQuotations();
 
-      // Open share modal immediately
-      setSelectedQuotationForShare(created);
-      setShowShareModal(true);
+        // Open share modal immediately
+        setSelectedQuotationForShare(created);
+        setShowShareModal(true);
+      }
     } catch (err) {
       console.error('Erro ao salvar cotação:', err);
-      alert('Erro ao criar cotação. Tente novamente.');
+      alert('Erro ao salvar cotação. Tente novamente.');
     } finally {
       setActionLoading(false);
     }
@@ -954,8 +1121,8 @@ export default function WebQuotationsTab({
                               borderColor: '#bbf7d0'
                             }}
                           >
-                            <FileText size={14} />
-                            <span>Pedido (OC)</span>
+                            <FileText size={13} />
+                            <span>Pedido</span>
                           </button>
                         )}
 
@@ -964,7 +1131,7 @@ export default function WebQuotationsTab({
                           title="Abrir Mapa Comparativo de Preços" 
                           style={styles.actionBtnPrimary}
                         >
-                          <Eye size={14} />
+                          <Eye size={13} />
                           <span>Comparativo</span>
                         </button>
 
@@ -976,8 +1143,59 @@ export default function WebQuotationsTab({
                           title="Ver Links e WhatsApp dos Fornecedores" 
                           style={styles.actionBtnSecondary}
                         >
-                          <Share2 size={14} />
+                          <Share2 size={13} />
                           <span>Links</span>
+                        </button>
+
+                        <button 
+                          onClick={() => handleOpenExtendModal(q)} 
+                          title="Conceder mais prazo aos fornecedores" 
+                          style={{
+                            ...styles.actionBtnSecondary,
+                            color: isDeadlinePassed ? '#dc2626' : '#b45309',
+                            backgroundColor: isDeadlinePassed ? '#fef2f2' : '#fffbeb',
+                            borderColor: isDeadlinePassed ? '#fecaca' : '#fde68a'
+                          }}
+                        >
+                          <Clock size={13} />
+                          <span>Prorrogar</span>
+                        </button>
+
+                        <button 
+                          onClick={() => handleDuplicateQuotation(q)} 
+                          title="Duplicar cotação antiga gerando nova rodada" 
+                          style={{
+                            ...styles.actionBtnSecondary,
+                            color: '#4338ca',
+                            backgroundColor: '#eef2ff',
+                            borderColor: '#c7d2fe'
+                          }}
+                        >
+                          <Copy size={13} />
+                          <span>Duplicar</span>
+                        </button>
+
+                        <button 
+                          onClick={() => handleEditQuotation(q)} 
+                          title="Editar cotação (itens, fornecedores e observações)" 
+                          style={styles.actionBtnSecondary}
+                        >
+                          <Edit2 size={13} />
+                          <span>Editar</span>
+                        </button>
+
+                        <button 
+                          onClick={() => handleDeleteQuotation(q)} 
+                          title="Excluir cotação" 
+                          style={{
+                            ...styles.actionBtnSecondary,
+                            color: '#dc2626',
+                            backgroundColor: '#fff1f2',
+                            borderColor: '#fecdd3'
+                          }}
+                        >
+                          <Trash2 size={13} />
+                          <span>Excluir</span>
                         </button>
                       </div>
                     </td>
@@ -998,8 +1216,10 @@ export default function WebQuotationsTab({
             {/* Cabeçalho Fixo */}
             <div style={styles.modalHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Plus size={20} color="#0284c7" />
-                <h2 style={styles.modalTitle}>Nova Cotação Web (NexaPROCURE)</h2>
+                {editingQuotationId ? <Edit2 size={20} color="#0284c7" /> : <Plus size={20} color="#0284c7" />}
+                <h2 style={styles.modalTitle}>
+                  {editingQuotationId ? `Editar Cotação (${newQuoteForm.code})` : 'Nova Cotação Web (NexaPROCURE)'}
+                </h2>
               </div>
               <button onClick={() => setShowNewModal(false)} style={styles.closeBtn}>×</button>
             </div>
@@ -1453,7 +1673,11 @@ export default function WebQuotationsTab({
                   Cancelar
                 </button>
                 <button type="submit" disabled={actionLoading} style={styles.btnPrimary}>
-                  {actionLoading ? 'Gerando Cotação...' : `Publicar Cotação (${newQuoteForm.items.length} itens • ${newQuoteForm.selectedSuppliers.length} fornecedores)`}
+                  {actionLoading 
+                    ? 'Salvando...' 
+                    : editingQuotationId 
+                      ? `Salvar Cotação (${newQuoteForm.items.length} itens • ${newQuoteForm.selectedSuppliers.length} fornecedores)` 
+                      : `Publicar Cotação (${newQuoteForm.items.length} itens • ${newQuoteForm.selectedSuppliers.length} fornecedores)`}
                 </button>
               </div>
             </form>
@@ -1797,19 +2021,63 @@ export default function WebQuotationsTab({
 
             {/* Homologation Action Bar */}
             <div style={styles.modalFooter}>
-              <button onClick={() => setShowComparisonModal(false)} style={styles.btnSecondary}>
-                Fechar
-              </button>
-              {activeQuotation.status !== 'Homologada' && responses.length > 0 && (
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <button 
-                  onClick={handleHomologateQuotation} 
-                  disabled={actionLoading}
-                  style={styles.btnSuccess}
+                  type="button" 
+                  onClick={() => {
+                    const q = activeQuotation;
+                    setShowComparisonModal(false);
+                    handleOpenExtendModal(q);
+                  }} 
+                  style={styles.btnOutlineSecondary}
+                  title="Conceder mais prazo aos fornecedores"
                 >
-                  <Award size={16} />
-                  <span>{actionLoading ? 'Homologando...' : 'Homologar e Fechar Cotação'}</span>
+                  <Clock size={14} />
+                  <span>Prorrogar</span>
                 </button>
-              )}
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    const q = activeQuotation;
+                    setShowComparisonModal(false);
+                    handleDuplicateQuotation(q);
+                  }} 
+                  style={styles.btnOutlineSecondary}
+                  title="Duplicar cotação gerando nova rodada"
+                >
+                  <Copy size={14} />
+                  <span>Duplicar</span>
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    const q = activeQuotation;
+                    setShowComparisonModal(false);
+                    handleEditQuotation(q);
+                  }} 
+                  style={styles.btnOutlineSecondary}
+                  title="Editar dados da cotação"
+                >
+                  <Edit2 size={14} />
+                  <span>Editar</span>
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <button onClick={() => setShowComparisonModal(false)} style={styles.btnSecondary}>
+                  Fechar
+                </button>
+                {activeQuotation.status !== 'Homologada' && responses.length > 0 && (
+                  <button 
+                    onClick={handleHomologateQuotation} 
+                    disabled={actionLoading}
+                    style={styles.btnSuccess}
+                  >
+                    <Award size={16} />
+                    <span>{actionLoading ? 'Homologando...' : 'Homologar'}</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1836,6 +2104,136 @@ export default function WebQuotationsTab({
           item={selectedItemForPriceHistory}
           quotations={quotations}
         />
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 6: PRORROGAR PRAZO DA COTAÇÃO */}
+      {/* ========================================================================= */}
+      {showExtendModal && quotationToExtend && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContentMedium}>
+            <div style={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Clock size={18} color="#d97706" />
+                <h2 style={styles.modalTitle}>Prorrogar Prazo • {quotationToExtend.code}</h2>
+              </div>
+              <button onClick={() => setShowExtendModal(false)} style={styles.closeBtn}>×</button>
+            </div>
+
+            <form onSubmit={handleSaveExtendDeadline} style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Info Card */}
+                <div style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  padding: '0.85rem 1rem'
+                }}>
+                  <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.25rem' }}>
+                    {quotationToExtend.title}
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <span>Filial: <strong>{quotationToExtend.unit}</strong></span>
+                    <span>•</span>
+                    <span>Itens: <strong>{quotationToExtend.items?.length || 0}</strong></span>
+                    <span>•</span>
+                    <span>Fornecedores: <strong>{quotationToExtend.suppliers?.length || 0}</strong></span>
+                  </div>
+                  <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span style={{ color: '#475569' }}>Prazo Atual:</span>
+                    <strong style={{ color: new Date(quotationToExtend.deadline) < new Date() ? '#dc2626' : '#0369a1' }}>
+                      {new Date(quotationToExtend.deadline).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                    </strong>
+                    {new Date(quotationToExtend.deadline) < new Date() && (
+                      <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '4px', backgroundColor: '#fee2e2', color: '#991b1b', fontWeight: '700' }}>
+                        Expirada
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Add Buttons */}
+                <div>
+                  <label style={{ ...styles.label, marginBottom: '0.4rem', display: 'block' }}>Acréscimo Rápido</label>
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <button 
+                      type="button" 
+                      onClick={() => handleQuickExtendHours(24)} 
+                      style={styles.quickDayBtn}
+                    >
+                      +24h
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => handleQuickExtendDays(2)} 
+                      style={styles.quickDayBtn}
+                    >
+                      +2 Dias
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => handleQuickExtendDays(3)} 
+                      style={styles.quickDayBtn}
+                    >
+                      +3 Dias
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => handleQuickExtendDays(5)} 
+                      style={styles.quickDayBtn}
+                    >
+                      +5 Dias
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => handleQuickExtendDays(7)} 
+                      style={styles.quickDayBtn}
+                    >
+                      +7 Dias
+                    </button>
+                  </div>
+                </div>
+
+                {/* New Deadline Input */}
+                <div className="form-group">
+                  <label style={styles.label}>Novo Prazo Limite *</label>
+                  <input 
+                    type="datetime-local" 
+                    required 
+                    value={extendDeadlineDate} 
+                    onChange={e => setExtendDeadlineDate(e.target.value)} 
+                    style={styles.input} 
+                  />
+                  <span style={{ fontSize: '0.73rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                    Os fornecedores convidados poderão acessar o portal e enviar propostas até este novo horário.
+                  </span>
+                </div>
+
+                {/* Notes Input */}
+                <div className="form-group">
+                  <label style={styles.label}>Motivo da Prorrogação (Opcional)</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: Fornecedores solicitaram mais tempo para composição de frete" 
+                    value={extendNotes} 
+                    onChange={e => setExtendNotes(e.target.value)} 
+                    style={styles.input} 
+                  />
+                </div>
+              </div>
+
+              <div style={styles.modalFooter}>
+                <button type="button" onClick={() => setShowExtendModal(false)} style={styles.btnSecondary}>
+                  Cancelar
+                </button>
+                <button type="submit" disabled={actionLoading} style={{ ...styles.btnPrimary, backgroundColor: '#d97706' }}>
+                  <Clock size={15} />
+                  <span>{actionLoading ? 'Prorrogando...' : 'Confirmar Prorrogação'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
     </div>
@@ -2076,6 +2474,17 @@ const styles = {
     alignItems: 'center',
     gap: '0.35rem',
     cursor: 'pointer'
+  },
+  quickDayBtn: {
+    backgroundColor: '#f1f5f9',
+    color: '#334155',
+    border: '1px solid #cbd5e1',
+    borderRadius: '6px',
+    padding: '0.35rem 0.65rem',
+    fontSize: '0.78rem',
+    fontWeight: '700',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
   },
   deleteIconBtn: {
     border: 'none',

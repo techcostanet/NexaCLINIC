@@ -252,8 +252,8 @@ export const MODULE_GUIDES = {
         desc: 'Relatório oficial consolidado para fiscalizações municipais e auditorias, reunindo ementa do curso, lista de presenças, notas pré e pós-teste, ganho de eficácia e assinaturas de responsabilidade técnica.'
       },
       {
-        title: '15 Treinamentos Especializados em Nefrologia',
-        desc: 'Matriz completa com 15 capacitações clínicas cobrindo todos os setores (Enfermagem FAV/CVC/Emergências/Reuso, Tratamento de Água RDC 11/2014, Engenharia Clínica, Médico Kt/V, Farmácia, Higienização Hepatite B, Nutrição, Psicologia, Recepção, Faturamento APAC, Segurança do Paciente e T.I./LGPD).'
+        title: '16 Treinamentos Especializados em Nefrologia',
+        desc: 'Matriz completa com 16 capacitações clínicas cobrindo todos os setores (Enfermagem FAV/CVC/Emergências/Reuso, Tratamento de Água RDC 11/2014, Engenharia Clínica, Médico Kt/V, Farmácia, Higienização Hepatite B, Nutrição, Psicologia, Recepção, Faturamento APAC, Segurança do Paciente, T.I./LGPD e Atendimento a Clientes Internos e Externos em Nefrologia).'
       },
       {
         title: 'Logomarca Institucional nos Portais & Certificados',
@@ -261,7 +261,11 @@ export const MODULE_GUIDES = {
       },
       {
         title: 'Sincronização 1-Clique de Modelos no Firestore',
-        desc: 'Botão Sincronizar na barra superior e auto-seed inteligente que carrega e atualiza todos os 15 treinamentos no banco de dados automaticamente.'
+        desc: 'Botão Sincronizar na barra superior e auto-seed inteligente que carrega e atualiza todos os 16 treinamentos no banco de dados automaticamente.'
+      },
+      {
+        title: 'Apresentações PowerPoint (PPTX) & Suporte a Vídeo YouTube',
+        desc: 'Disponibilização de apresentações de slides profissionais em formato 16:9 (.pptx) com notas completas de orador / roteiro de narração integradas para capacitação presencial ou conversão em vídeo para o YouTube, com botão de download no card do treinamento e no Portal do Colaborador.'
       }
     ],
     tutorial: [
@@ -315,13 +319,23 @@ export const MODULE_GUIDES = {
         ]
       },
       {
-        title: 'Como Sincronizar e Utilizar os 15 Treinamentos de Nefrologia',
+        title: 'Como Sincronizar e Utilizar os 16 Treinamentos de Nefrologia',
         steps: [
           'No módulo de RH, acesse a aba "Treinamentos".',
-          'Clique no botão "Sincronizar" na barra superior para carregar ou atualizar todos os 15 treinamentos oficiais no banco de dados da clínica.',
-          'Localize o curso do setor desejado no Catálogo (ex: FAV para Enfermagem, Tratamento de Água para Manutenção ou Acolhimento para Recepção).',
+          'Clique no botão "Sincronizar" na barra superior para carregar ou atualizar todos os 16 treinamentos oficiais no banco de dados da clínica.',
+          'Localize o curso do setor desejado no Catálogo (ex: Atendimento a Clientes Internos e Externos, FAV para Enfermagem, Tratamento de Água ou Acolhimento na Recepção).',
           'Clique em "Divulgar" para imprimir o cartaz com a logomarca e QR Code para o mural do setor ou copiar o link direto de envio pelo WhatsApp.',
           'Acompanhe as conclusões e notas na aba "Participações" e gere o Dossiê para a Vigilância Sanitária quando necessário.'
+        ]
+      },
+      {
+        title: 'Como Utilizar Apresentações PowerPoint (PPTX) e Integrar Vídeos do YouTube',
+        steps: [
+          'No catálogo de Treinamentos do módulo de RH (.HR), localize o treinamento desejado (ex: "Excelência no Atendimento a Clientes Internos e Externos em Nefrologia").',
+          'Clique no botão "Slides" no card do curso para baixar a apresentação oficial (.pptx) com 16 slides widescreen e notas de orador completas.',
+          'No Microsoft PowerPoint, você pode gravar a narração com base no roteiro das anotações e exportar diretamente para vídeo ("Arquivo > Exportar > Criar Vídeo").',
+          'Ao publicar o vídeo no canal da clínica no YouTube, clique em "Editar" no card do treinamento no Nex-Ai.HR.',
+          'Alterne o tipo de conteúdo para "Vídeo" e cole o link do YouTube no campo "URL do Vídeo". Ao salvar, o player do YouTube será incorporado automaticamente no Portal do Colaborador.'
         ]
       },
       {
@@ -401,12 +415,17 @@ export const MODULE_GUIDES = {
         resposta: 'O leitor extrai o Código/Matrícula e o Nome do funcionário do PDF e cruza em tempo real com a base de colaboradores do Nexa CLINIC, preenchendo o CPF, data de nascimento e endereço na planilha do Youk e no PDF unificado de contracheques automaticamente.'
       },
       {
+      {
         pergunta: 'Como o sistema garante que todos os descontos (como Vale Transporte) sejam incluídos na planilha do Youk?',
         resposta: 'O motor de leitura analisa cada linha da tabela de verbas com posicionamento milimétrico, capturando todas as rubricas de proventos e descontos (como Vale Transporte códigos 253 e 48, INSS, Adicional Noturno e Faltas). O sistema realiza uma conferência matemática de 100%, garantindo que a soma individual de cada evento corresponda exatamente ao Total de Vencimentos, Total de Descontos e Líquido presentes no contracheque oficial antes de gerar a planilha do Youk e os PDFs.'
       },
+        pergunta: 'Os 16 treinamentos de nefrologia já vêm com questões pré e pós-teste prontas?',
+        resposta: 'Sim. Cada um dos 16 treinamentos possui rigorosamente 5 perguntas de pré-teste (diagnóstico) e 5 perguntas de pós-teste (avaliação de fixação) com justificativas clínicas detalhadas e cálculo automático do ganho de eficácia (+%).'
+      },
       {
-        pergunta: 'Os 15 treinamentos de nefrologia já vêm com questões pré e pós-teste prontas?',
-        resposta: 'Sim. Cada um dos 15 treinamentos possui rigorosamente 5 perguntas de pré-teste (diagnóstico) e 5 perguntas de pós-teste (avaliação de fixação) com justificativas clínicas detalhadas e cálculo automático do ganho de eficácia (+%).'
+        pergunta: 'Como transformar a apresentação de slides (.pptx) em vídeo para o YouTube?',
+        resposta: 'Basta baixar o arquivo PPTX pelo botão "Slides" no catálogo de treinamentos ou no Portal do Colaborador. Abra a apresentação no PowerPoint, consulte as notas de narração do orador em cada slide, grave a locução e clique em "Arquivo > Exportar > Criar Vídeo". Após enviar o vídeo ao canal da clínica no YouTube, cadastre o link no treinamento para que os colaboradores assistam diretamente no sistema.'
+
       },
       {
         pergunta: 'Como a logomarca da clínica é inserida nos certificados e documentos?',
@@ -2475,6 +2494,14 @@ export const MODULE_GUIDES = {
         desc: 'Criação de rodadas de cotação digital com geração de links exclusivos e tokens criptografados para preenchimento direto pelos fornecedores via celular ou computador.'
       },
       {
+        title: 'CRUD de Cotações & Duplicação',
+        desc: 'Gestão integral com criação, edição de itens/fornecedores/observações, exclusão segura e duplicação em 1 clique de cotações antigas gerando nova rodada com novos tokens exclusivos.'
+      },
+      {
+        title: 'Prorrogação de Prazo & Reativação',
+        desc: 'Concessão ágil de mais prazo aos fornecedores com botões rápidos (+24h, +2d, +3d, +5d, +7d) ou seleção de data/hora, reativando cotações expiradas no portal dos fornecedores.'
+      },
+      {
         title: 'Portal B2B do Fornecedor',
         desc: 'Ambiente público sem atrito para distribuidores digitarem preços unitários, marcas ofertadas, tipo de frete (CIF/FOB), prazos de entrega e anexarem propostas em PDF.'
       },
@@ -2542,6 +2569,16 @@ export const MODULE_GUIDES = {
         ]
       },
       {
+        title: 'Como Duplicar uma Cotação Antiga ou Prorrogar Prazo',
+        steps: [
+          'Na tabela da aba "Cotações", localize a cotação desejada.',
+          'Clique no botão "Prorrogar" para conceder mais prazo aos fornecedores; utilize os atalhos rápidos (+24h a +7d) ou informe a nova data limite para reativar o portal público.',
+          'Clique no botão "Duplicar" para gerar uma nova rodada de cotação com a mesma cesta de insumos e fornecedores, recebendo novos tokens exclusivos e código sequencial.',
+          'Clique no botão "Editar" para alterar itens, quantidades, especificações ou fornecedores da cotação.',
+          'Clique no botão "Excluir" caso precise cancelar e remover a rodada de cotação com confirmação.'
+        ]
+      },
+      {
         title: 'Como Auditar o Histórico de Preços e a Curva ABC',
         steps: [
           'Na aba "Reposição", utilize o filtro "Curva ABC" para visualizar apenas insumos Classe A (alto impacto financeiro), B ou C.',
@@ -2551,6 +2588,10 @@ export const MODULE_GUIDES = {
       }
     ],
     duvidas: [
+      {
+        pergunta: 'O que acontece ao prorrogar o prazo de uma cotação expirada?',
+        resposta: 'Ao estender a data limite para um horário futuro, o sistema reativa automaticamente a cotação (mudando o status de "Expirada" para "Aberta" ou "Em Análise") e desbloqueia imediatamente o portal público para que os fornecedores continuem digitando e enviando suas propostas comerciais.'
+      },
       {
         pergunta: 'Como a Ordem de Compra é integrada ao Financeiro?',
         resposta: 'No momento exato em que a cotação é homologada, o sistema cria automaticamente um lançamento de despesa provisória no módulo Financeiro (Contas a Pagar), vinculado à filial correspondente e com a data de vencimento projetada pelo prazo de entrega e pagamento acordado com o fornecedor.'

@@ -1,5 +1,5 @@
 /**
- * Base de Dados Oficial: 15 Treinamentos Especializados em Nefrologia e Hemodiálise
+ * Base de Dados Oficial: 16 Treinamentos Especializados em Nefrologia e Hemodiálise
  * Nex-Ai CLINIC — Educação Continuada e Conformidade Sanitária (ANVISA RDC 11/2014 & NR-32)
  * 
  * Cada treinamento contém:
@@ -1599,6 +1599,190 @@ Qualquer suspeita de invasão, tela travada ou extravio de documentos físicos c
         options: ['Vender computadores usados', 'Atuar como canal de comunicação entre a clínica, os titulares de dados (pacientes/colaboradores) e a Autoridade Nacional de Proteção de Dados (ANPD)', 'Consertar impressoras quebradas', 'Cobrar pacientes inadimplentes'],
         correctIndex: 1,
         explanation: 'O DPO é a autoridade designada pela LGPD para garantir as políticas de conformidade, treinamento e resposta a incidentes.'
+      }
+    ]
+  },
+  // -------------------------------------------------------------------------
+  // 16. INSTITUCIONAL & MULTIPROFISSIONAL: ATENDIMENTO A CLIENTES INTERNOS E EXTERNOS
+  // -------------------------------------------------------------------------
+  {
+    id: 'trn-nefro-atendimento',
+    title: 'Excelência no Atendimento a Clientes Internos e Externos em Nefrologia',
+    description: 'Diretrizes de humanização, empatia e acolhimento ao paciente renal e familiares, e protocolos de comunicação não violenta e cooperação entre setores na hemodiálise.',
+    sector: 'Geral',
+    workloadHours: 4,
+    validityMonths: 12,
+    minPassingScore: 70,
+    minDurationMinutes: 4,
+    status: 'Ativo',
+    contentType: 'text',
+    documentUrl: '/docs/Treinamento_Atendimento_Clientes_Nefrologia_NexAi.pptx',
+    instructorName: 'Comitê de Humanização & Experiência do Paciente',
+    instructorRole: 'Recursos Humanos, Humanização Hospitalar & Ouvidoria',
+    textContent: `### 1. O Paciente Renal Crônico e seus Familiares como Clientes Externos
+O atendimento em uma clínica de hemodiálise difere profundamente de outros serviços de saúde devido ao vínculo contínuo e à extrema vulnerabilidade do paciente renal crônico:
+- **Rotina Extenuante:** O paciente comparece à clínica três vezes por semana, permanecendo de 3 a 4 horas conectado a uma máquina. Esse ciclo ininterrupto gera exaustão física, dores decorrentes da punção repetida, hipotensão intradialítica e fadiga severa no pós-diálise.
+- **Impacto Psicossocial e Restrições Severas:** As restrições rigorosas de ingestão hídrica e dietética (controle de potássio, fósforo e sódio), a perda da função de urinar, a impossibilidade de trabalhar regularmente e a dependência do transporte sanitário geram angústia, luto pela saúde perdida e oscilações emocionais frequentes.
+- **A Família e o Cuidador Principal:** Familiares frequentemente vivenciam o *burnout* do cuidador. Devem ser acolhidos com a mesma empatia dispensada ao paciente, recebendo escuta atenta, linguagem descomplicada e apoio contínuo sobre transporte, horários e benefícios (APAC e medicação de alto custo).
+- **Acolhimento na Recepção e Entrada:** A experiência começa na chegada. Chamar o paciente pelo nome, oferecer apoio ágil com cadeiras de rodas ou andadores e garantir conforto térmico na sala de espera são pilares inegociáveis de dignidade.
+
+### 2. Princípios do Atendimento Externo Humanizado em Nefrologia
+- **Empatia Terapêutica:** Colocar-se no lugar do paciente com dor no braço da fístula, medo de infecção no cateter (CVC) ou ansiedade quanto à fila de transplante renal. Acolher a dor sem minimizar o sofrimento.
+- **Transparência e Comunicação Proativa em Imprevistos:** Diante de qualquer atraso no início do turno (devido à desinfecção de capilares, calibração de máquinas de osmose reversa ou atendimento a intercorrência grave no turno anterior), a equipe deve comunicar a sala de espera imediatamente com clareza e respeito, evitando deixar pacientes e acompanhantes desinformados.
+- **Linguagem Acessível e Clara:** Evitar jargões técnicos herméticos. Em vez de usar termos como "ultrafiltração excessiva", "recirculação de FAV", "clearance de ureia" ou "Kt/V baixo", explicar em termos simples e concretos a relação entre peso seco, remoção de líquidos e bem-estar físico.
+- **Respeito às Singularidades:** Respeitar o nome social de escolha, crenças religiosas, limitações sensoriais (baixa acuidade visual ou auditiva) e o ritmo mais lento de pacientes idosos ou fragilizados.
+
+### 3. Conceito de Clientes Internos na Hemodiálise: A Corrente Vital
+Em uma clínica de diálise, **cliente interno** é todo colega de trabalho ou setor que recebe o resultado, o produto, a informação ou o serviço gerado por outro colaborador. A segurança do paciente depende de uma cadeia de cooperação sem rupturas:
+- **Higienização e Enfermagem:** A equipe de higienização que desinfecta rigorosamente a poltrona, a máquina e o piso entre os turnos entrega o ambiente seguro para a equipe de enfermagem canular a fístula e conectar as linhas.
+- **Farmácia e Assistência:** O setor de farmácia que fraciona com exatidão heparina, eritropoietina, ferro injetável e concentrados polieletrolíticos assegura que a enfermagem execute a prescrição sem atrasos nem riscos de toxicidade.
+- **Tratamento de Água e Corpo Clínico:** Os técnicos da central de tratamento de água que monitoram a condutividade, dureza, cloro e osmose reversa protegem diretamente a vida dos pacientes conectados às poltronas.
+- **Corpo Clínico e Equipe Multiprofissional:** Médicos, nutricionistas, psicólogos e assistentes sociais alimentam condutas e prontuários que orientam o cuidado integral e viabilizam o faturamento de autorizações APAC.
+- **Recepção, TI e Administração:** A manutenção das guias APAC, prontuários, computadores e rede hospitalar garante que nenhuma intercorrência fique sem registro ou pendente de atendimento.
+- **O Impacto do Elo Fraco:** Um atraso de 10 minutos na higienização de poltronas ou na liberação de dialisadores esterilizados reverbera em cascata: atrasa a entrada do paciente, sobrecarrega a equipe de enfermagem, gera filas de transporte e compromete todo o fluxo diário.
+
+### 4. Comunicação Assertiva, CNV e Passagem de Plantão
+- **Comunicação Não Violenta (CNV) na Prática Hospitalar:**
+  1. *Observação Factual:* Relatar fatos concretos sem acusações ou juízos de valor ("O leito 04 não foi higienizado até as 11h20" em vez de "Vocês sempre enrolam para limpar o salão").
+  2. *Identificação de Necessidades:* Expressar a preocupação com o processo ("Precisamos do leito liberado pontualmente para iniciar a diálise do paciente hipercalêmico com segurança").
+  3. *Pedido Claro e Positivo:* Formular pedidos executáveis e específicos ("Poderia priorizar o leito 04 agora para que possamos puncionar a FAV?").
+- **Ferramenta SBAR na Passagem de Plantão e Entrega de Resultados:**
+  - **S (Situação):** O que está ocorrendo no momento.
+  - **B (Breve Histórico):** Contexto clínico ou operacional do paciente/equipamento.
+  - **A (Avaliação):** Minha análise técnica da situação atual.
+  - **R (Recomendação):** Qual conduta ou ação prática estou solicitando e em qual prazo.
+- **Cultura de Feedback Construtivo:** Feedbacks de melhoria devem ser dados sempre em particular, com tom sereno, focados no processo e nunca em ataques de ordem pessoal. Elogios e reconhecimentos por metas e acolhimento devem ser públicos.
+
+### 5. Gestão de Conflitos e Desescalada Emocional
+Situações de tensão são comuns no ambiente dialítico (ansiedade, dor na canulação da fístula, cansaço extremo ou atrasos operacionais):
+- **Postura Corporal e Tom de Voz:** Mantenha postura receptiva (braços abertos, nível de olhar alinhado ao paciente ou familiar), contato visual atencioso e tom de voz calmo e baixo. Reagir com rispidez ou ironia agrava imediatamente a crise.
+- **Escuta Ativa sem Interrupção Imediata:** Permita que o paciente ou familiar desabafe nos primeiros 30 a 45 segundos sem interrompê-lo com justificativas. O sentimento de ser ouvido desativa o mecanismo de defesa agressivo.
+- **Validação Emocional Prévia:** Antes de apresentar a solução técnica, valide a emoção: "Compreendo perfeitamente a sua frustração e o cansaço do Sr. João..." ou "Entendo como essa espera é desgastante para a família...".
+- **Foco na Resolução Compartilhada:** Apresente ações claras: "Vou verificar agora mesmo a situação da máquina com a supervisão e trago uma resposta em cinco minutos".
+- **Acionamento de Apoio Interdisciplinar:** Em conflitos persistentes ou sofrimento emocional agudo, envolva com prontidão a Supervisão de Enfermagem, a Psicologia Hospitalar, o Serviço Social ou a Ouvidoria.
+
+### 6. Ética, Sigilo e Privacidade (LGPD e Segurança do Paciente)
+- **Sigilo Profissional Absoluto:** Diagnósticos nefrológicos, sorologias positivas (HIV, Hepatite B, Hepatite C), complicações de acessos vasculares e situações familiares jamais devem ser comentados em corredores, refeitórios, elevadores ou fora da instituição.
+- **Proteção de Dados Sensíveis (LGPD):** Prontuários físicos devem permanecer guardados nas pastas e estações de enfermagem. Telas de computadores devem ser bloqueadas sempre que o profissional se afastar do posto de trabalho.
+- **Redes Sociais e Aparelhos Pessoais:** É expressamente proibido fotografar, filmar ou expor pacientes, salas de diálise ou telas de prontuário em redes sociais ou aplicativos de mensagens pessoais.
+- **Cultura Justa de Segurança do Paciente:** Erros e incidentes no atendimento ou no fluxo intersetorial devem ser encarados como falhas sistêmicas a serem corrigidas e notificadas ao Núcleo de Segurança do Paciente (NSP), combatendo a cultura de punição individual e priorizando a melhoria contínua da vida.`,
+    preTestQuestions: [
+      {
+        id: 'atend-pre-1',
+        question: 'O que define o conceito de "cliente interno" dentro do ambiente de uma clínica de hemodiálise?',
+        options: [
+          'Apenas os colaboradores que realizam compras de insumos para a instituição',
+          'Qualquer colega ou setor da clínica que recebe o produto, serviço ou informação resultante do trabalho de outro colaborador',
+          'Apenas os médicos nefrologistas e a diretoria executiva da clínica',
+          'Os fornecedores terceirizados de maquinários e dialisadores'
+        ],
+        correctIndex: 1
+      },
+      {
+        id: 'atend-pre-2',
+        question: 'Quando ocorre um imprevisto que atrasa o início do turno de diálise, qual deve ser a conduta primordial da equipe perante os pacientes e acompanhantes?',
+        options: [
+          'Evitar dar explicações para não gerar ainda mais nervosismo na sala de espera',
+          'Comunicar prontamente o ocorrido com clareza e empatia, informando a estimativa de tempo e acolhendo as dúvidas',
+          'Pedir que os familiares aguardem do lado de fora da clínica sem prestar esclarecimentos',
+          'Transferir a responsabilidade para a equipe médica e pedir que procurem a ouvidoria'
+        ],
+        correctIndex: 1
+      },
+      {
+        id: 'atend-pre-3',
+        question: 'Na comunicação entre setores (por exemplo, Farmácia, Higienização e Enfermagem), a prática mais recomendada para evitar erros operacionais e retrabalho é:',
+        options: [
+          'Fazer pedidos apenas verbais e informais durante a correria do corredor',
+          'Utilizar comunicação estruturada, objetiva e checagem de entendimento (fechamento de alça de comunicação)',
+          'Aguardar que o outro setor adivinhe as prioridades do turno',
+          'Apontar publicamente os erros do colega para garantir que não se repitam'
+        ],
+        correctIndex: 1
+      },
+      {
+        id: 'atend-pre-4',
+        question: 'Ao atender um paciente renal crônico ou familiar que se encontra extremamente exaltado na recepção, o primeiro passo deve ser:',
+        options: [
+          'Rebater no mesmo tom de voz para impor respeito e autoridade institucional',
+          'Ouvir com atenção sem interromper de imediato, demonstrando empatia e mantendo a postura serena e receptiva',
+          'Ameaçar suspender a sessão de hemodiálise caso a pessoa não se acalme',
+          'Ignorar a pessoa e continuar digitando no computador'
+        ],
+        correctIndex: 1
+      },
+      {
+        id: 'atend-pre-5',
+        question: 'Em relação ao sigilo das informações e privacidade dos pacientes renais (LGPD e Código de Ética), é correto afirmar que:',
+        options: [
+          'É permitido comentar diagnósticos e sorologias em refeitórios se for apenas entre colegas de trabalho',
+          'As informações de saúde são estritamente confidenciais e jamais devem ser compartilhadas fora do ambiente assistencial formal',
+          'Fotos de pacientes dialisando podem ser postadas livremente em redes sociais desde que sem citar o nome completo',
+          'Qualquer colaborador pode expor dados de prontuário em grupos de mensagens instantâneas'
+        ],
+        correctIndex: 1
+      }
+    ],
+    postTestQuestions: [
+      {
+        id: 'atend-post-1',
+        question: 'O paciente renal crônico em hemodiálise convive com severas limitações físicas, dietéticas e emocionais. Qual atitude demonstra empatia terapêutica na prática diária de qualquer colaborador da clínica?',
+        options: [
+          'Dizer ao paciente que existem outras pessoas em situação muito pior e que ele deve ser grato',
+          'Validar o sofrimento do paciente, escutar ativamente suas queixas e oferecer suporte acolhedor dentro de suas atribuições',
+          'Apressar a entrada do paciente sem cumprimentar para não atrasar a contagem de tempo do turno',
+          'Pedir que o paciente não fale sobre seus medos e sintomas para não sobrecarregar a equipe'
+        ],
+        correctIndex: 1,
+        explanation: 'A empatia terapêutica envolve reconhecer a vulnerabilidade única do doente renal, validando seus sentimentos e oferecendo cuidado digno e humanizado sem minimização do sofrimento.'
+      },
+      {
+        id: 'atend-post-2',
+        question: 'Em uma clínica de hemodiálise, a Higienização libera o leito desinfetado para a Enfermagem, que por sua vez recebe os concentrados da Farmácia. Como a falha em um elo dessa cadeia afeta o resultado final?',
+        options: [
+          'Afeta apenas o setor responsável pelo erro, sem impacto nos demais setores',
+          'Desencadeia atrasos em cascata, eleva o estresse de toda a equipe e compromete a segurança e a pontualidade da assistência ao paciente',
+          'Não gera impacto significativo, pois a máquina de hemodiálise compensa qualquer atraso',
+          'Apenas a gerência financeira sofre impacto com pequenas falhas operacionais'
+        ],
+        correctIndex: 1,
+        explanation: 'Na hemodiálise, os setores operam em estreita interdependência vital. Um atraso na higienização ou na liberação de insumos retarda a entrada do paciente, desorganiza o fluxo de transporte e compromete a qualidade assistencial.'
+      },
+      {
+        id: 'atend-post-3',
+        question: 'Aplicando as técnicas de desescalada de conflito, diante de um familiar angustiado com a demora no término da sessão de diálise, qual deve ser a abordagem profissional correta?',
+        options: [
+          'Responder de costas enquanto preenche o sistema, demonstrando pressa',
+          'Manter contato visual e tom sereno, acolher a angústia explicando que o procedimento exige hemostasia cuidadosa para segurança do paciente, e oferecer previsão realista',
+          'Dizer rispidamente que atrasos fazem parte da rotina e que questionar atrasa ainda mais a equipe',
+          'Chamar imediatamente a segurança sem antes tentar o diálogo empático'
+        ],
+        correctIndex: 1,
+        explanation: 'Acolher a preocupação do familiar com calma e clareza técnica dissipa a agressividade, estabelece confiança e reafirma que todo cuidado visa proteger a integridade do paciente.'
+      },
+      {
+        id: 'atend-post-4',
+        question: 'Para fornecer um feedback construtivo a um colega de outro setor que cometeu uma falha no fluxo operacional, a abordagem mais alinhada à Comunicação Não Violenta (CNV) é:',
+        options: [
+          'Gritar no corredor chamando a atenção de todos para o descuido',
+          'Conversar em particular, apontar o fato específico de forma objetiva, demonstrar o impacto na segurança/processo e propor alinhamento conjunto',
+          'Não falar nada com o colega e enviar uma reclamação anônima à diretoria',
+          'Recusar-se a trabalhar com aquele colega nas próximas escalas'
+        ],
+        correctIndex: 1,
+        explanation: 'A CNV preconiza o diálogo reservado, factual e orientado à cooperação, prevenindo o ressentimento e fortalecendo a cultura de segurança e integração intersetorial.'
+      },
+      {
+        id: 'atend-post-5',
+        question: 'Qual a relação comprovada entre o atendimento humanizado e os desfechos clínicos do paciente em tratamento hemodialítico crônico?',
+        options: [
+          'O atendimento humanizado não tem impacto clínico, apenas reduz reclamações formais na ouvidoria',
+          'O acolhimento empático melhora a adesão ao tratamento dialítico, reduz faltas, diminui o ganho de peso interdialítico perigoso e melhora a qualidade de vida e sobrevida do paciente',
+          'A humanização faz o paciente querer ficar mais tempo na máquina, o que é prejudicial à clínica',
+          'O tratamento técnico frio e impessoal é mais eficiente para o controle de infecções hospitalares'
+        ],
+        correctIndex: 1,
+        explanation: 'Estudos demonstram que pacientes que se sentem acolhidos, respeitados e ouvidos pela equipe apresentam maior adesão às restrições dietéticas e à rotina de diálise, diminuindo complicações cardiovasculares e internações.'
       }
     ]
   }

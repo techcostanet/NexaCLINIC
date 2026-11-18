@@ -1,4 +1,4 @@
-## [v5.0.34] - 16 de Novembro, 2026
+## [v5.0.36] - 18 de Novembro, 2026
 ### Nex-Ai CLINIC (.RH) — Resolução Definitiva na Extração de Vale Transporte e Rubricas de Folha (.PDF/.ZIP) e Conformidade Total com Youk Manager
 - **Correção Crítica no Extrator de Contracheques Alterdata (`payslipPdfParser.js`):**
   - Identificada e corrigida a causa raiz da omissão de descontos de Vale Transporte (código 253 e 48) e outras verbas: a checagem textual da linha rejeitava qualquer item que contivesse o termo "Assinatura". Como formulários Alterdata com 8 ou mais eventos alinham verticalmente o último evento na mesma linha da caixa "Assinatura do Funcionário" (posicionada na margem direita em x=556), a linha inteira de verba era indevidamente descartada.
@@ -15,6 +15,75 @@
   - Geração completa de todas as 79 colunas com integridade total de dados e vínculo direto aos colaboradores cadastrados.
 - **Adequação às Diretrizes de Interface e UI/UX:**
   - Higienização de rótulos duplos em `payslipPdfGenerator.js` (substituição de "FUNÇÃO / CARGO" por "CARGO" e "DESCRIÇÃO DA VERBA / EVENTO" por "DESCRIÇÃO") conforme a regra de ouro de termo único do `.agents/AGENTS.md`.
+
+## [v5.0.35] - 17 de Novembro, 2026
+### Nex-Ai CLINIC (.HR) — Apresentação de Slides PPTX Profissional com Roteiro de Narração para o Treinamento de Atendimento em Nefrologia e Integração com YouTube
+- **Apresentação Oficial em PowerPoint (`Treinamento_Atendimento_Clientes_Nefrologia_NexAi.pptx`):**
+  - Criação de apresentação de slides em formato widescreen 16:9 de alta fidelidade visual com a identidade visual da Nex-Ai CLINIC (paleta Navy, Teal e Emerald, badges, cartões e logotipo institucional).
+  - Estruturação completa em 16 slides cobrindo todos os módulos do treinamento institucional de nefrologia:
+    - Slide 1: Capa Oficial e Diretrizes Regulatórias (ANVISA RDC 11/2014, PNH).
+    - Slide 2: Objetivos de Aprendizagem & Competências Desenvolvidas.
+    - Slide 3: A Realidade e Extrema Vulnerabilidade do Paciente Renal Crônico.
+    - Slide 4: Acolhimento a Familiares, Cuidadores Principais e Prevenção do Burnout.
+    - Slide 5: Os 4 Pilares da Experiência Humanizada no Salão de Hemodiálise.
+    - Slide 6: Gestão de Imprevistos e Transparência Imediata em Atrasos de Turno.
+    - Slide 7: Traduzindo o 'Mediquês' para a Linguagem Acessível do Paciente.
+    - Slide 8: O Conceito de Cliente Interno na Clínica de Diálise.
+    - Slide 9: A Corrente Vital de Cooperação entre Setores Clínicos e de Apoio.
+    - Slide 10: O Efeito Dominó: Estudo de Caso Prático de Falhas de Comunicação Intersetorial.
+    - Slide 11: Comunicação Não Violenta (CNV) na Rotina Hospitalar (Fato, Emoção, Necessidade, Pedido).
+    - Slide 12: Passagem de Plantão Estruturada pelo Método SBAR.
+    - Slide 13: Técnicas de Desescalada de Conflitos e Mediação de Crises Emocionais.
+    - Slide 14: Sigilo Profissional Absoluto e Proteção de Dados de Saúde (LGPD).
+    - Slide 15: Cultura Justa de Segurança do Paciente e Notificação ao NSP.
+    - Slide 16: Conclusão, Pós-teste no Portal Mobile e Certificação Digital.
+- **Roteiro de Narração Integral nas Anotações do Orador (Speaker Notes):**
+  - Todos os 16 slides possuem textos detalhados de locução nas notas, permitindo leitura direta para gravação em vídeo ou exportação com áudio no Microsoft PowerPoint ("Arquivo > Exportar > Criar Vídeo") para disponibilização no YouTube.
+- **Disponibilização Ágil no Sistema:**
+  - Botão conciso de 1 palavra "Slides" adicionado aos cards do treinamento no catálogo de Treinamentos (.HR) para download imediato em 1 clique.
+  - Link de download de slides integrado na seção de Material Complementar do Portal do Colaborador.
+  - Suporte contínuo a vídeos do YouTube incorporados via player nativo no portal mobile ao preencher o campo `videoUrl`.
+- **Manuais e Documentação Atualizados:**
+  - Atualização completa do guia do módulo de RH em `moduleGuidesData.js` e notas de release.
+
+## [v5.0.34] - 17 de Novembro, 2026
+### Nex-Ai CLINIC (.PURCHASES) — Gestão Completa de Cotações (CRUD), Duplicação Ágil de Rodadas Antigas e Prorrogação/Renovação de Prazo com Desbloqueio B2B
+- **CRUD Completo de Cotações Web (`WebQuotationsTab.jsx` & `purchasingService.ts`):**
+  - **Edição de Cotações:** Modal de edição permitindo alterar título, prazo limite, observações comerciais, cesta de itens (adicionar novos insumos, alterar quantidades e especificações) e fornecedores participantes.
+  - **Exclusão de Cotações:** Exclusão segura no Firestore e no armazenamento local (`localStorage`) com diálogo de confirmação prevenindo exclusões acidentais.
+- **Duplicação Ágil de Cotações Antigas:**
+  - Botão de ação "Duplicar" em cada cotação e no rodapé do comparativo de preços.
+  - Clonagem completa da cesta de insumos e da lista de distribuidores convidados, gerando automaticamente novos tokens criptografados e código sequencial (#COT-YYYY-XXX).
+  - Pré-preenchimento automático do formulário com novo prazo e título sugerido (`[Título] (Cópia)`), permitindo revisão imediata pelo comprador antes da publicação.
+- **Prorrogação e Renovação de Prazo com Reativação Automática:**
+  - Novo modal ergonômico "Prorrogar Prazo" com atalhos de acréscimo rápido (+24h, +2 Dias, +3 Dias, +5 Dias, +7 Dias) e seletor de data e hora (`datetime-local`).
+  - Campo opcional de justificativa/motivo anexado ao histórico de notas da cotação.
+  - Reativação automática no portal B2B público: caso a cotação estivesse com status "Expirada", ao prorrogar o prazo a cotação retorna automaticamente para "Aberta" (ou "Em Análise" caso já possua lances recebidos), desbloqueando imediatamente o acesso dos distribuidores para envio de propostas.
+- **Ações Rápidas no Mapa Comparativo de Preços:**
+  - Atalhos diretos no rodapé do mapa comparativo para "Prorrogar", "Duplicar" e "Editar" sem necessidade de fechar a análise.
+- **Padrões de UI/UX & Manuais:**
+  - Rótulos concisos e diretos com padrão rigoroso de 1 palavra/termo único: `Pedido`, `Comparativo`, `Links`, `Prorrogar`, `Duplicar`, `Editar` e `Excluir`.
+  - Atualização do manual oficial em `moduleGuidesData.js` e histórico de versões em `ChangelogModal.jsx`.
+
+## [v5.0.33] - 17 de Novembro, 2026
+### Nex-Ai CLINIC (.HR) — Treinamento Institucional de Atendimento a Clientes Internos e Externos em Clínica de Hemodiálise com Pré e Pós-Teste Clínico e Dossiê VISA
+- **16º Treinamento Oficial em Nefrologia e Hemodiálise (`trn-nefro-atendimento`):**
+  - Implementação do programa institucional "Excelência no Atendimento a Clientes Internos e Externos em Nefrologia", configurado para participação de todos os colaboradores da clínica (`sector: 'Geral'`).
+  - Carga horária de 4 horas, validade de reciclagem de 12 meses, nota de corte de 70% e tempo mínimo de leitura de 4 minutos.
+- **Ementa Estruturada em 6 Módulos Especializados:**
+  1. *O Paciente Renal Crônico e seus Familiares como Clientes Externos:* rotina extenuante de hemodiálise (3x/semana, 4h), restrições hídricas e dietéticas, fadiga pós-diálise, *burnout* do cuidador/acompanhante e acolhimento digno desde a recepção.
+  2. *Princípios do Atendimento Externo Humanizado:* empatia terapêutica, comunicação proativa e imediata em casos de atraso de turno, linguagem acessível sem jargões herméticos e respeito às singularidades.
+  3. *Conceito de Clientes Internos na Hemodiálise — A Corrente Vital:* o ciclo de interdependência crítica entre Higienização, Enfermagem, Farmácia, Tratamento de Água/Manutenção, Corpo Clínico, Nutrição, Psicologia, Serviço Social, Faturamento APAC e Recepção/TI.
+  4. *Comunicação Assertiva, CNV e Passagem de Plantão:* aplicação dos 4 pilares da Comunicação Não Violenta (observação sem julgamento, identificação de necessidades, pedidos claros) e técnica SBAR para passagens de plantão e comunicações entre setores.
+  5. *Gestão de Conflitos e Desescalada Emocional:* técnicas de postura corporal, escuta ativa sem interrupção inicial, validação emocional prévia, foco em soluções resolutivas e acionamento oportuno de suporte multidisciplinar.
+  6. *Ética, Sigilo e Privacidade (LGPD e Segurança do Paciente):* sigilo estrito de sorologias e condutas, proibição de postagens em redes sociais, bloqueio de computadores e cultura justa de notificação de falhas de processo.
+- **Avaliações Científicas com 10 Questões Exclusivas:**
+  - 5 perguntas diagnósticas no Pré-teste (`atend-pre-1` a `atend-pre-5`).
+  - 5 perguntas avaliativas no Pós-teste (`atend-post-1` a `atend-post-5`) com justificativas clínicas e cálculo automático de ganho de eficácia (+%).
+- **Integração no Portal do Colaborador, Sincronização Firestore e Dossiê VISA:**
+  - Disponível imediatamente para realização no Portal Mobile por digitação de CPF.
+  - Sincronização em 1 clique na aba de Treinamentos do RH e auto-seed inteligente no Firestore.
+  - Inclusão dos registros, notas e certificados gerados no Dossiê consolidado da Vigilância Sanitária.
 
 ## [v5.0.32] - 15 de Novembro, 2026
 ### Nex-Ai CLINIC (.CLINIC & .ASSIST) — Lista Pronta Imediata de Pacientes no .CLINIC com Cockpit Ativo, Barra de Ações por Ícones na Escala (.ASSIST) e Resolução Resiliente de Exames Laboratoriais

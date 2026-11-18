@@ -86,7 +86,7 @@ export default function TrainingsTab({ currentUser }) {
   };
 
   const handleSyncTemplates = async () => {
-    if (window.confirm('Deseja sincronizar os 15 treinamentos oficiais de nefrologia no banco de dados?')) {
+    if (window.confirm('Deseja sincronizar os 16 treinamentos oficiais de nefrologia no banco de dados?')) {
       setLoading(true);
       try {
         const res = await syncNephrologyTrainings();
@@ -233,7 +233,7 @@ export default function TrainingsTab({ currentUser }) {
           <button 
             onClick={handleSyncTemplates}
             style={styles.dossierBtn}
-            title="Sincronizar os 15 treinamentos oficiais de nefrologia no banco"
+            title="Sincronizar os 16 treinamentos oficiais de nefrologia no banco"
           >
             <RefreshCw size={15} />
             <span>Sincronizar</span>
@@ -294,6 +294,19 @@ export default function TrainingsTab({ currentUser }) {
                 </div>
 
                 <div style={styles.cardActions}>
+                  {t.documentUrl && (
+                    <a 
+                      href={t.documentUrl} 
+                      download
+                      target="_blank" 
+                      rel="noreferrer"
+                      style={{ ...styles.cardActionBtn, color: '#0891b2', textDecoration: 'none' }}
+                      title={t.documentUrl.toLowerCase().endsWith('.pptx') ? 'Baixar Apresentação de Slides (PPTX)' : 'Abrir Documento Complementar'}
+                    >
+                      <FileText size={15} />
+                      <span>{t.documentUrl.toLowerCase().endsWith('.pptx') ? 'Slides' : 'PDF'}</span>
+                    </a>
+                  )}
                   <button 
                     onClick={() => {
                       setSelectedForQr(t);

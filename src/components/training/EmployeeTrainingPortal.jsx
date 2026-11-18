@@ -507,21 +507,32 @@ export default function EmployeeTrainingPortal({ trainingId, onExitPortal }) {
                 </div>
               )}
 
-              {/* Documento PDF se houver */}
+              {/* Documento PDF ou Apresentação se houver */}
               {training.documentUrl && (
                 <div style={styles.docBox}>
                   <BookOpen size={24} color="#4f46e5" />
                   <div>
-                    <h4 style={{ margin: 0, fontSize: '0.95rem', color: '#1e293b' }}>Material Complementar</h4>
-                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>Acesse a apostila oficial em PDF</p>
+                    <h4 style={{ margin: 0, fontSize: '0.95rem', color: '#1e293b' }}>
+                      {training.documentUrl.toLowerCase().endsWith('.pptx') || training.documentUrl.toLowerCase().endsWith('.ppt')
+                        ? 'Apresentação Oficial'
+                        : 'Material Complementar'}
+                    </h4>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
+                      {training.documentUrl.toLowerCase().endsWith('.pptx') || training.documentUrl.toLowerCase().endsWith('.ppt')
+                        ? 'Slides com anotações e roteiro de narração'
+                        : 'Acesse a apostila oficial em PDF'}
+                    </p>
                   </div>
                   <a 
                     href={training.documentUrl} 
                     target="_blank" 
                     rel="noreferrer"
+                    download={training.documentUrl.toLowerCase().endsWith('.pptx') ? 'Treinamento_Atendimento_Clientes_Nefrologia_NexAi.pptx' : undefined}
                     style={styles.docLink}
                   >
-                    Abrir PDF
+                    {training.documentUrl.toLowerCase().endsWith('.pptx') || training.documentUrl.toLowerCase().endsWith('.ppt')
+                      ? 'Slides'
+                      : 'PDF'}
                   </a>
                 </div>
               )}

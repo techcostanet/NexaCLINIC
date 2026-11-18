@@ -6,8 +6,9 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
-      version: 'v5.0.34',
-      date: '16/11/2026',
+    {
+      version: 'v5.0.36',
+      date: '18/11/2026',
       title: 'Nex-Ai CLINIC (.RH) — Resolução Definitiva na Extração de Vale Transporte e Rubricas de Folha (.PDF/.ZIP) e Conformidade Total com Youk Manager',
       description: 'Correção crítica e evolução arquitetural no motor de extração de contracheques em lote (.ZIP / .PDF) do módulo Nex-Ai.HR: 1) Resolução da omissão de descontos de Vale Transporte (código 253 e 48) e outras rubricas que coincidiam com a coordenada da linha de assinatura no formulário da Alterdata (remoção do filtro restritivo indevido que descartava o evento ao encontrar "Assinatura do Funcionário" na margem direita); 2) Captura precisa de 100% dos eventos em todos os 130 contracheques da folha (62 rubricas de Vale Transporte capturadas com exatidão, zero divergência entre soma de rubricas e totais dos recibos); 3) Suporte aprimorado a contracheques de múltiplas páginas (recibos com "A TRANSPORTAR" e fechamento na última página); 4) Alinhamento da planilha oficial do Youk Manager (.xlsx) com o modelo homologado (aba "Relatório" e integridade de todas as 79 colunas); 5) Adequação estrita às diretrizes de interface com rótulos de termo único em todos os relatórios e contracheques em PDF.',
       changes: [
@@ -16,6 +17,46 @@ export default function ChangelogModal({ isOpen, onClose }) {
         { type: 'Suporte a Multi-Páginas', text: 'Resolução da leitura de contracheques extensos que possuem quebra de página com indicador "A TRANSPORTAR".' },
         { type: 'Conformidade Youk Manager', text: 'Geração da planilha Excel de 79 colunas alinhada com o modelo homologado de referência (nome de aba "Relatório" e formatação precisa).' },
         { type: 'Diretrizes UI/UX Estritas', text: 'Padronização dos cabeçalhos dos geradores de PDF e relatórios para rótulos diretos de termo único conforme AGENTS.md.' }
+      ]
+    },
+    {
+      version: 'v5.0.35',
+      date: '17/11/2026',
+      title: 'Nex-Ai CLINIC (.HR) — Apresentação de Slides PPTX Profissional com Roteiro de Narração para o Treinamento de Atendimento em Nefrologia e Integração com YouTube',
+      description: 'Geração e disponibilização da apresentação oficial de slides em PowerPoint (.pptx) para o treinamento institucional nº 16 ("Excelência no Atendimento a Clientes Internos e Externos em Nefrologia"): 1) 16 Slides Widescreen (16:9) de Alta Fidelidade: cobrindo integralmente os 6 módulos temáticos (diretrizes ANVISA RDC 11/2014, realidade do paciente renal, acolhimento de familiares e cuidadores, pilares da humanização, comunicação de imprevistos, tradução do vocabulário clínico, conceito e corrente vital do cliente interno, estudo de caso do efeito dominó, CNV e SBAR, desescalada de conflitos, sigilo/LGPD e Cultura Justa); 2) Roteiro de Narração Completo (Anotações do Orador): cada slide contém o texto completo da locução nas anotações, viabilizando leitura fluida ou gravação automatizada para converter a apresentação em vídeo e publicar no YouTube; 3) Botão de Download 1-Clique: botão conciso "Slides" adicionado diretamente no card do treinamento no catálogo do RH e no Portal do Colaborador; 4) Player de Vídeo Integrado: compatibilidade com inserção de URL do YouTube para exibição automática do vídeo no portal mobile.',
+      changes: [
+        { type: 'Apresentação PPTX Oficial', text: 'Arquivo de apresentação com 16 slides widescreen profissionais com a identidade visual da Nex-Ai CLINIC e logo institucional.' },
+        { type: 'Roteiro de Narração nas Anotações', text: 'Cada slide possui texto integral de locução nas notas do orador, pronto para gravação em vídeo ou exportação direta no PowerPoint.' },
+        { type: 'Download Ágil de Slides', text: 'Botão "Slides" inserido nos cards do catálogo de treinamentos (.HR) e na seção de materiais do Portal do Colaborador.' },
+        { type: 'Suporte a Vídeo YouTube', text: 'Player incorporado no Portal do Colaborador ao cadastrar o link do YouTube gerado a partir dos slides.' },
+        { type: 'Conformidade UI/UX & Manuais', text: 'Rótulo estritamente conciso de 1 palavra (Slides), manuais operacionais e documentação atualizados.' }
+      ]
+    },
+    {
+      version: 'v5.0.34',
+      date: '17/11/2026',
+      title: 'Nex-Ai CLINIC (.PURCHASES) — Gestão Completa de Cotações (CRUD), Duplicação Ágil de Rodadas Antigas e Prorrogação/Renovação de Prazo com Desbloqueio B2B',
+      description: 'Expansão profunda da sala de cotações digitais do módulo de Compras e Suprimentos (Nex-Ai.PROCURE / .PURCHASES): 1) CRUD Completo de Cotações: agora o comprador pode criar, visualizar, editar itens/quantidades/fornecedores/observações e excluir cotações de forma segura com confirmação direta; 2) Duplicação Ágil de Cotações: clonagem em 1 clique de cotações antigas preservando a cesta de insumos e distribuidores, gerando novos tokens criptografados exclusivos para os fornecedores e novo código sequencial (#COT-YYYY-XXX); 3) Prorrogação e Renovação de Prazos: modal dedicado com atalhos de acréscimo rápido (+24h, +2d, +3d, +5d, +7d) ou seletor de data/hora, que estende o prazo limite e reativa automaticamente cotações expiradas no portal B2B público do fornecedor.',
+      changes: [
+        { type: 'CRUD Completo', text: 'Adicionados botões de Editar e Excluir nas cotações web, permitindo ajustar pedidos em andamento ou remover rodadas canceladas.' },
+        { type: 'Duplicação de Cotações', text: 'Clonagem em 1 clique de cotações antigas com cópia de insumos e fornecedores, gerando novos tokens de resposta e código sequencial.' },
+        { type: 'Prorrogação de Prazo', text: 'Modal de renovação de prazo com botões rápidos (+24h a +7d) e reativação automática de cotações expiradas no portal dos fornecedores.' },
+        { type: 'Atalhos no Comparativo', text: 'Acesso rápido para prorrogar, duplicar e editar diretamente a partir do rodapé do Mapa Comparativo de Preços.' },
+        { type: 'Diretrizes UI/UX', text: 'Rótulos 100% concisos de 1 termo único (Pedido, Comparativo, Links, Prorrogar, Duplicar, Editar e Excluir) e manuais atualizados.' }
+      ]
+    },
+    {
+      version: 'v5.0.33',
+      date: '17/11/2026',
+      title: 'Nex-Ai CLINIC (.HR) — Treinamento Institucional de Atendimento a Clientes Internos e Externos em Clínica de Hemodiálise com Pré e Pós-Teste Clínico e Dossiê VISA',
+      description: 'Implementação do 16º treinamento oficial no módulo de Educação Continuada e Recursos Humanos (.HR): "Excelência no Atendimento a Clientes Internos e Externos em Nefrologia". Desenvolvido sob medida para a realidade de uma clínica de hemodiálise e direcionado para 100% dos colaboradores da instituição (corpo clínico, enfermagem, higienização, farmácia, nutrição, psicologia, serviço social, recepção, faturamento APAC, manutenção e TI). O treinamento estrutura os pacientes renais crônicos e seus familiares/cuidadores como clientes externos prioritários sob a ótica da empatia terapêutica, acolhimento de fragilidades e desescalada emocional, e conceitua com rigor a corrente vital de interdependência entre os clientes internos dos diversos setores clínicos e de apoio. Inclui ementa completa em 6 módulos, 5 perguntas de pré-teste diagnóstico e 5 perguntas de pós-teste avaliativo com gabarito comentado, cálculo automatizado do ganho de eficácia (+%), certificação digital com QR Code e inclusão formal no Dossiê da Vigilância Sanitária.',
+      changes: [
+        { type: 'Treinamento de Atendimento', text: 'Criação do treinamento oficial nº 16 cobrindo empatia ao paciente renal crônico, acolhimento a familiares/cuidadores e corrente vital de cooperação intersetorial.' },
+        { type: 'Ementa Multiprofissional em 6 Módulos', text: 'Conteúdo detalhado sobre rotina dialítica, desescalada de conflitos, Comunicação Não Violenta (CNV), passagem de plantão SBAR, sigilo profissional e LGPD hospitalar.' },
+        { type: 'Avaliação Pré e Pós-Teste', text: '10 questões especializadas (5 diagnósticas de entrada e 5 de fixação pós-conteúdo com justificativas clínicas e cálculo de ganho de eficácia).' },
+        { type: 'Disponibilidade Universal (Setor Geral)', text: 'Habilitação para todos os cargos e setores no Portal do Colaborador, permitindo realização mobile por CPF e emissão imediata de certificado rastreável.' },
+        { type: 'Sincronização e Dossiê VISA', text: 'Auto-seed no Firestore e sincronização em 1 clique na barra do RH, com inclusão automática das presenças e notas no Dossiê da Vigilância Sanitária.' }
+
       ]
     },
     {
