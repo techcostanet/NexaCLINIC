@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.42',
+      date: '19/11/2026',
+      title: 'Nex-Ai CLINIC (.MULTI & .HR) — Migração 100% Cloud para o Banco Oficial (nexa-index) e Sistema Completo de Controle de Marmitas para Funcionários',
+      description: 'Implementação de duas grandes frentes estratégicas de eficiência operacional e independência de infraestrutura: 1) Migração 100% Cloud do Sistema de Sobras: execução de migração integral em lote (batch write) transferindo 1.917 registros de entradas, 1.249 descartes de sobras e 11 produtos alimentícios para as coleções oficiais do Firestore do Nex-Ai CLINIC (food_products, food_entries, food_waste e food_areas), permitindo o desligamento definitivo do projeto externo nexai-food com integridade e segurança de dados 100% preservadas; 2) Sistema de Gestão de Marmitas para Funcionários: implementação ponta a ponta conectando o Portal Público do Colaborador (/marmitas), a sub-aba Marmitas no módulo Multiprofissional (.MULTI > Nutrição) e a aba Marmitas no Recursos Humanos (.HR); 3) Portal Móvel do Colaborador: link público (/marmitas) e QR Code para funcionários solicitarem marmitas de almoço e jantar pelo celular com login de CPF e senha (padrão inicial nos 4 primeiros dígitos do CPF, sem exigência de troca e com ferramenta de reset exclusivo pelo RH); 4) Painel da Nutrição: contadores do dia em tempo real (Almoço, Jantar, Entregues, Custo Fornecedor e Desconto), horários limite de corte configuráveis (09:30 almoço / 15:30 jantar), modalidade de cobrança (Coparticipação fixa subsidiada ou Integral), check-in de retirada na cozinha e exportador pronto para envio ao fornecedor via WhatsApp; 5) Fechamento Mensal no RH: extrato consolidado com total de marmitas por funcionário, cálculo do valor exato a descontar na folha de pagamento, histórico detalhado de datas e exportação em CSV.',
+      changes: [
+        { type: 'Migração 100% Cloud Firestore', text: 'Migração integral e definitiva de 1.917 entradas, 1.249 sobras e 11 produtos para o banco nativo nexa-index, eliminando dependência do nexai-food.' },
+        { type: 'Portal Público de Marmitas', text: 'Página mobile e web (/marmitas) para o colaborador solicitar refeições de almoço e jantar com autenticação por CPF e senha com trava de horário de corte.' },
+        { type: 'Gestão Diária na Nutrição', text: 'Sub-aba Marmitas em .MULTI com contadores em tempo real, check-in de entrega/retirada, parametrização de horários de corte e exportação direta para WhatsApp.' },
+        { type: 'Fechamento Mensal & RH', text: 'Aba Marmitas no módulo .HR com extrato consolidado por colaborador, cálculo de desconto em folha, reset de senhas e exportação em planilha CSV.' },
+        { type: 'Conformidade Rigorosa UI/UX', text: 'Adoção estrita da regra de 1 palavra em todos os novos rótulos, filtros, abas e tabelas (Marmitas, Pedidos, Almoço, Jantar, Entregues, Fornecedor, Desconto, Exportar, Link, Configuração, Resetar, Detalhes).' }
+      ]
+    },
+    {
       version: 'v5.0.40',
       date: '19/11/2026',
       title: 'Nex-Ai CLINIC (.MULTI) — Integração Completa do Sistema NexAi-FOOD na Aba Nutrição: Gestão de Sobras, Entradas, Desperdício, Eficiência de Aproveitamento e Previsão Preditiva com IA',

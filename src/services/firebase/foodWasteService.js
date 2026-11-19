@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from 'firebase/app';
+import { app } from './config';
 import {
   getFirestore,
   collection,
@@ -8,22 +8,16 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 
-// Configuração oficial do projeto Firebase NexAi-FOOD
-const FOOD_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyB8GxQB7iayGlwCPfnqtuLS11YjREK8YLI",
-  authDomain: "nexai-food.firebaseapp.com",
-  projectId: "nexai-food",
-  storageBucket: "nexai-food.firebasestorage.app",
-  messagingSenderId: "704351369612",
-  appId: "1:704351369612:web:fdf626b69d38c601cbfea9",
-  measurementId: "G-CVHNRPYJVX"
-};
-
-// Inicialização segura de Named App para isolar do app DEFAULT da clínica
-const foodApp = getApps().find(a => a.name === 'nexai-food') || initializeApp(FOOD_FIREBASE_CONFIG, 'nexai-food');
-export const foodDb = getFirestore(foodApp);
+// Instância oficial do Firestore do NexAi-CLINIC (100% Cloud em nexa-index)
+export const foodDb = getFirestore(app);
 
 const CACHE_PREFIX = 'controle_sobras_fs_cache';
+
+// Coleções oficiais no Firestore do NexAi-CLINIC
+const COL_PRODUCTS = 'food_products';
+const COL_ENTRIES = 'food_entries';
+const COL_WASTE = 'food_waste';
+const COL_AREAS = 'food_areas';
 
 // Áreas padrão de produção da cozinha / nutrição
 export const DEFAULT_AREAS = [
@@ -52,7 +46,7 @@ function setLocalCache(key, data) {
 }
 
 // ---------------------------------------------------------------------------
-// CACHE EM MEMÓRIA & REALTIME LISTENERS
+// SINCRONIZAÇÃO EM TEMPO REAL & EVENTOS
 // ---------------------------------------------------------------------------
 const activeListeners = {};
 const memoryCache = {};
@@ -119,7 +113,7 @@ async function ensureFoodListener(colName, cacheKey, fallbackData = []) {
 // PRODUTOS ALIMENTÍCIOS
 // ---------------------------------------------------------------------------
 export async function getFoodProducts() {
-  const items = await ensureFoodListener('products', 'products', []);
+  const items = await ensureFoodListener(COL_PRODUCTS, 'products', []);
   return items.map(p => ({
     ...p,
     custo_unitario: Number(p.custo_unitario) || 0,
@@ -138,18 +132,18 @@ export async function createFoodProduct(prodData) {
     criado_em: prodData.criado_em || new Date().toISOString()
   };
 
-  await setDoc(doc(foodDb, 'products', id), item);
+  await setDoc(doc(foodDb, COL_PRODUCTS, id), item);
 
-  const current = memoryCache['products'] || [];
+  const current = memoryCache[COL_PRODUCTS] || [];
   const updated = [...current.filter(p => p.id !== id), item];
-  memoryCache['products'] = updated;
+  memoryCache[COL_PRODUCTS] = updated;
   setLocalCache('products', updated);
   notifySync();
   return item;
 }
 
 export async function updateFoodProduct(id, prodData) {
-  const current = memoryCache['products'] || [];
+  const current = memoryCache[COL_PRODUCTS] || [];
   const existing = current.find(p => p.id === id) || {};
   const item = {
     ...existing,
@@ -160,10 +154,10 @@ export async function updateFoodProduct(id, prodData) {
     atualizado_em: new Date().toISOString()
   };
 
-  await setDoc(doc(foodDb, 'products', id), item, { merge: true });
+  await setDoc(doc(foodDb, COL_PRODUCTS, id), item, { merge: true });
 
   const updated = current.map(p => p.id === id ? item : p);
-  memoryCache['products'] = updated;
+  memoryCache[COL_PRODUCTS] = updated;
   setLocalCache('products', updated);
   notifySync();
   return item;
@@ -177,10 +171,10 @@ export async function toggleFoodProductActive(id) {
 }
 
 export async function deleteFoodProduct(id) {
-  await deleteDoc(doc(foodDb, 'products', id));
-  const current = memoryCache['products'] || [];
+  await deleteDoc(doc(foodDb, COL_PRODUCTS, id));
+  const current = memoryCache[COL_PRODUCTS] || [];
   const updated = current.filter(p => p.id !== id);
-  memoryCache['products'] = updated;
+  memoryCache[COL_PRODUCTS] = updated;
   setLocalCache('products', updated);
   notifySync();
 }
@@ -190,7 +184,7 @@ export async function deleteFoodProduct(id) {
 // ---------------------------------------------------------------------------
 export async function getFoodEntries() {
   const [entries, products] = await Promise.all([
-    ensureFoodListener('entries', 'entries', []),
+    ensureFoodListener(COL_ENTRIES, 'entries', []),
     getFoodProducts()
   ]);
 
@@ -200,7 +194,8 @@ export async function getFoodEntries() {
   return entries.map(e => ({
     ...e,
     quantidade: Number(e.quantidade) || 0,
-    valor_total: Number(e.valor_total) || 0,
+    custo_unitario: Number(e.custo_unitario) || 0,
+    custo_total: Number(e.custo_total) || 0,
     produto: prodMap[e.produto_id] || e.produto || { nome: 'Insumo', unidade: 'un', custo_unitario: 0 }
   })).sort((a, b) => {
     const da = parseLocalDate(a.data_entrada || a.criado_em).getTime();
@@ -215,48 +210,50 @@ export async function createFoodEntry(entryData) {
     id,
     produto_id: entryData.produto_id,
     quantidade: Number(entryData.quantidade) || 0,
-    valor_total: Number(entryData.valor_total) || 0,
+    custo_unitario: Number(entryData.custo_unitario) || 0,
+    custo_total: Number(entryData.custo_total) || 0,
+    observacao: entryData.observacao ? String(entryData.observacao).trim() : '',
     data_entrada: entryData.data_entrada || formatDateInput(new Date()),
-    observacao: entryData.observacao ? String(entryData.observacao).trim() : 'Entrada Registrada',
     criado_em: entryData.criado_em || new Date().toISOString()
   };
 
-  await setDoc(doc(foodDb, 'entries', id), item);
+  await setDoc(doc(foodDb, COL_ENTRIES, id), item);
 
-  const current = memoryCache['entries'] || [];
+  const current = memoryCache[COL_ENTRIES] || [];
   const updated = [item, ...current.filter(e => e.id !== id)];
-  memoryCache['entries'] = updated;
+  memoryCache[COL_ENTRIES] = updated;
   setLocalCache('entries', updated);
   notifySync();
   return item;
 }
 
 export async function updateFoodEntry(id, entryData) {
-  const current = memoryCache['entries'] || [];
+  const current = memoryCache[COL_ENTRIES] || [];
   const existing = current.find(e => e.id === id) || {};
   const item = {
     ...existing,
     ...entryData,
     id,
     quantidade: Number(entryData.quantidade !== undefined ? entryData.quantidade : existing.quantidade) || 0,
-    valor_total: Number(entryData.valor_total !== undefined ? entryData.valor_total : existing.valor_total) || 0,
+    custo_unitario: Number(entryData.custo_unitario !== undefined ? entryData.custo_unitario : existing.custo_unitario) || 0,
+    custo_total: Number(entryData.custo_total !== undefined ? entryData.custo_total : existing.custo_total) || 0,
     atualizado_em: new Date().toISOString()
   };
 
-  await setDoc(doc(foodDb, 'entries', id), item, { merge: true });
+  await setDoc(doc(foodDb, COL_ENTRIES, id), item, { merge: true });
 
   const updated = current.map(e => e.id === id ? item : e);
-  memoryCache['entries'] = updated;
+  memoryCache[COL_ENTRIES] = updated;
   setLocalCache('entries', updated);
   notifySync();
   return item;
 }
 
 export async function deleteFoodEntry(id) {
-  await deleteDoc(doc(foodDb, 'entries', id));
-  const current = memoryCache['entries'] || [];
+  await deleteDoc(doc(foodDb, COL_ENTRIES, id));
+  const current = memoryCache[COL_ENTRIES] || [];
   const updated = current.filter(e => e.id !== id);
-  memoryCache['entries'] = updated;
+  memoryCache[COL_ENTRIES] = updated;
   setLocalCache('entries', updated);
   notifySync();
 }
@@ -266,7 +263,7 @@ export async function deleteFoodEntry(id) {
 // ---------------------------------------------------------------------------
 export async function getFoodWaste() {
   const [waste, products, areas] = await Promise.all([
-    ensureFoodListener('waste', 'waste', []),
+    ensureFoodListener(COL_WASTE, 'waste', []),
     getFoodProducts(),
     getFoodAreas()
   ]);
@@ -303,18 +300,18 @@ export async function createFoodWaste(wasteData) {
     criado_em: wasteData.criado_em || new Date().toISOString()
   };
 
-  await setDoc(doc(foodDb, 'waste', id), item);
+  await setDoc(doc(foodDb, COL_WASTE, id), item);
 
-  const current = memoryCache['waste'] || [];
+  const current = memoryCache[COL_WASTE] || [];
   const updated = [item, ...current.filter(w => w.id !== id)];
-  memoryCache['waste'] = updated;
+  memoryCache[COL_WASTE] = updated;
   setLocalCache('waste', updated);
   notifySync();
   return item;
 }
 
 export async function updateFoodWaste(id, wasteData) {
-  const current = memoryCache['waste'] || [];
+  const current = memoryCache[COL_WASTE] || [];
   const existing = current.find(w => w.id === id) || {};
   const item = {
     ...existing,
@@ -325,20 +322,20 @@ export async function updateFoodWaste(id, wasteData) {
     atualizado_em: new Date().toISOString()
   };
 
-  await setDoc(doc(foodDb, 'waste', id), item, { merge: true });
+  await setDoc(doc(foodDb, COL_WASTE, id), item, { merge: true });
 
   const updated = current.map(w => w.id === id ? item : w);
-  memoryCache['waste'] = updated;
+  memoryCache[COL_WASTE] = updated;
   setLocalCache('waste', updated);
   notifySync();
   return item;
 }
 
 export async function deleteFoodWaste(id) {
-  await deleteDoc(doc(foodDb, 'waste', id));
-  const current = memoryCache['waste'] || [];
+  await deleteDoc(doc(foodDb, COL_WASTE, id));
+  const current = memoryCache[COL_WASTE] || [];
   const updated = current.filter(w => w.id !== id);
-  memoryCache['waste'] = updated;
+  memoryCache[COL_WASTE] = updated;
   setLocalCache('waste', updated);
   notifySync();
 }
@@ -347,11 +344,27 @@ export async function deleteFoodWaste(id) {
 // ÁREAS DA COZINHA
 // ---------------------------------------------------------------------------
 export async function getFoodAreas() {
-  const items = await ensureFoodListener('areas', 'areas', DEFAULT_AREAS);
+  const items = await ensureFoodListener(COL_AREAS, 'areas', DEFAULT_AREAS);
   if (!items || items.length === 0) {
     return DEFAULT_AREAS;
   }
   return items;
+}
+
+export async function createFoodArea(areaData) {
+  const id = areaData.id || `area-${Date.now()}`;
+  const item = {
+    id,
+    nome: String(areaData.nome || '').trim(),
+    criado_em: new Date().toISOString()
+  };
+  await setDoc(doc(foodDb, COL_AREAS, id), item);
+  const current = memoryCache[COL_AREAS] || DEFAULT_AREAS;
+  const updated = [...current.filter(a => a.id !== id), item];
+  memoryCache[COL_AREAS] = updated;
+  setLocalCache('areas', updated);
+  notifySync();
+  return item;
 }
 
 // ---------------------------------------------------------------------------

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Apple, Plus, Search, Save, X, Activity,
-  LayoutDashboard, Trash2, PackagePlus, TrendingUp, Sparkles, Package, Users
+  LayoutDashboard, Trash2, PackagePlus, TrendingUp, Sparkles, Package, Users, Utensils
 } from 'lucide-react';
 import { dbService } from '../../firebase';
 import { getNutritionRecords, saveNutritionRecord } from '../../services/firebase/multiService';
 import FoodDashboard from './food/FoodDashboard';
+import FoodMealsTab from './food/FoodMealsTab';
 import FoodWasteTab from './food/FoodWasteTab';
 import FoodEntriesTab from './food/FoodEntriesTab';
 import FoodAproveitamentoTab from './food/FoodAproveitamentoTab';
@@ -14,10 +15,11 @@ import FoodProductsTab from './food/FoodProductsTab';
 
 export default function MultiNutritionTab({ unitId = 'betim', currentUser = null }) {
   // Sub-abas de Nutrição (Padrão rigoroso de 1 palavra)
-  const [subTab, setSubTab] = useState('painel'); // 'painel' | 'sobras' | 'entradas' | 'aproveitamento' | 'previsao' | 'produtos' | 'pacientes'
+  const [subTab, setSubTab] = useState('painel'); // 'painel' | 'marmitas' | 'sobras' | 'entradas' | 'aproveitamento' | 'previsao' | 'produtos' | 'pacientes'
 
   const subAbas = [
     { id: 'painel', rotulo: 'Painel', icone: LayoutDashboard },
+    { id: 'marmitas', rotulo: 'Marmitas', icone: Utensils },
     { id: 'sobras', rotulo: 'Sobras', icone: Trash2 },
     { id: 'entradas', rotulo: 'Entradas', icone: PackagePlus },
     { id: 'aproveitamento', rotulo: 'Aproveitamento', icone: TrendingUp },
@@ -189,7 +191,10 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
       {/* 1. PAINEL DE SOBRAS & DESPERDÍCIO */}
       {subTab === 'painel' && <FoodDashboard />}
 
-      {/* 2. REGISTRO DE SOBRAS */}
+      {/* 2. CONTROLE DE MARMITAS DE FUNCIONÁRIOS */}
+      {subTab === 'marmitas' && <FoodMealsTab />}
+
+      {/* 3. REGISTRO DE SOBRAS */}
       {subTab === 'sobras' && <FoodWasteTab currentUser={currentUser} />}
 
       {/* 3. ENTRADAS DE ALIMENTOS */}

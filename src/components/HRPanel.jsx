@@ -7,7 +7,7 @@ import {
   Gift, Bus, ArrowUp, ArrowDown, ArrowUpDown, Move, Settings, Save, 
   RotateCcw, ChevronLeft, ChevronRight, Maximize2, Minimize2, Trophy, Printer, Clock,
   AlignJustify, Table, LayoutGrid, Phone, Mail, ExternalLink, Stethoscope, Activity, FileCheck,
-  GraduationCap, Car, Sparkles, MessageCircle, FileSpreadsheet
+  GraduationCap, Car, Sparkles, MessageCircle, FileSpreadsheet, Utensils
 } from 'lucide-react';
 
 import { useHRLogic, DEFAULT_DASHBOARD_LAYOUT } from './HR/hooks/useHRLogic';
@@ -16,6 +16,7 @@ import BirthdayMuralModal from './HR/BirthdayMuralModal';
 import PayslipsTab from './HR/PayslipsTab';
 import HRReportsModal from './HRReportsModal';
 import TrainingsTab from './HR/TrainingsTab';
+import MealDeductionsTab from './HR/MealDeductionsTab';
 import { STANDARD_ROLES, STANDARD_SECTORS, normalizeSingleWord, normalizeSectorName } from '../data/hrConstants';
 import ModuleHeader from './common/ModuleHeader';
 
@@ -286,6 +287,9 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
         </button>
         <button onClick={() => setActiveTab('transport')} style={{ ...styles.tabBtn, ...(activeTab === 'transport' ? styles.tabBtnActive : {}) }}>
           <Bus size={16} /> Vale-Transporte
+        </button>
+        <button onClick={() => setActiveTab('meals')} style={{ ...styles.tabBtn, ...(activeTab === 'meals' ? styles.tabBtnActive : {}) }}>
+          <Utensils size={16} /> Marmitas
         </button>
         <button onClick={() => setActiveTab('audit')} style={{ ...styles.tabBtn, ...(activeTab === 'audit' ? styles.tabBtnActive : {}) }}>
           Auditoria
@@ -2388,6 +2392,11 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
           {/* TAB: Treinamentos */}
           {activeTab === 'trainings' && (
             <TrainingsTab currentUser={currentUser} />
+          )}
+
+          {/* TAB: Marmitas & Descontos em Folha */}
+          {activeTab === 'meals' && (
+            <MealDeductionsTab />
           )}
 
           {/* TAB 4: Audit Logs */}

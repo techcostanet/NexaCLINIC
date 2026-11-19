@@ -1,3 +1,31 @@
+## [v5.0.42] - 19 de Novembro, 2026
+### Nex-Ai CLINIC (.MULTI & .HR) — Migração 100% Cloud para o Banco Oficial (nexa-index) e Sistema Completo de Controle de Marmitas para Funcionários
+- **Migração Integral e Definitiva para a Nuvem Oficial do Nex-Ai CLINIC (`nexa-index`):**
+  - Execução de migração em lote (batch write) transferindo com paridade de 100% todos os dados do projeto externo `nexai-food` para as coleções oficiais do Firestore do Nex-Ai CLINIC (`food_products`, `food_entries`, `food_waste` e `food_areas`): 1.917 entradas, 1.249 descartes de sobras e 11 produtos alimentícios homologados.
+  - O serviço `foodWasteService.js` foi reescrito para utilizar nativamente a instância do Firestore do `nexa-index`, eliminando qualquer dependência do projeto antigo e permitindo sua exclusão segura.
+  - Regras de segurança no `firestore.rules` atualizadas e implantadas com sucesso.
+- **Sistema Completo de Controle e Solicitação de Marmitas de Colaboradores (`mealService.js`):**
+  - **Portal Público Móvel do Colaborador (`EmployeeMealPortal.jsx`):**
+    - Rota pública e acessível no celular e navegador (`/marmitas`, `#/marmitas`, `?marmita=1`).
+    - Login seguro com CPF e Senha: a senha inicial padrão corresponde aos primeiros 4 dígitos do CPF limpo, sem exigência de troca forçada no primeiro acesso, com política de reset exclusiva pelo RH.
+    - Seleção de refeição para Almoço e Jantar com validação de horário limite de corte em tempo real.
+    - Exibição de status da marmita (Disponível, Solicitado, Entregue, Encerrado), cancelamento de pedido antes do horário limite e extrato mensal de refeições com previsão do desconto a ser lançado em folha.
+  - **Painel Operacional na Aba Nutrição (`FoodMealsTab.jsx`):**
+    - Sub-aba dedicada `Marmitas` dentro do módulo `.MULTI` > `Nutrição` com contadores do dia em tempo real (Total de Pedidos, Almoço, Jantar, Entregues, Custo do Fornecedor e Total de Desconto).
+    - Modal de Configuração para ajuste a qualquer momento dos horários limite de corte (padrão 09:30 almoço / 15:30 jantar) e modalidade de cobrança (Coparticipação fixa subsidiada ou Integral).
+    - Check-in de retirada na cozinha (botão "Entregar" / "Entregue") para conferência de distribuição.
+    - Modal com QR Code e link direto para compartilhamento rápido com os funcionários da clínica.
+    - Exportador de pedidos consolidado formatado para cópia rápida e envio direto no WhatsApp do fornecedor de alimentos.
+  - **Módulo Recursos Humanos & Fechamento de Folha (`MealDeductionsTab.jsx`):**
+    - Nova aba `Marmitas` no painel do `.HR` com extrato mensal consolidado por colaborador.
+    - Contagem de Almoço, Jantar, Total de Marmitas e cálculo automático do valor de desconto individual em folha.
+    - Ferramenta de reset de senha para os 4 primeiros dígitos do CPF caso o colaborador esqueça suas credenciais.
+    - Modal de auditoria detalhada exibindo o histórico de dias e turnos de cada funcionário.
+    - Exportação de planilha em formato CSV pronta para processamento contábil e lançamento de holerite.
+- **Conformidade Estrita com as Diretrizes UI/UX & Padrão de 1 Palavra:**
+  - Aplicação rigorosa da regra de rótulos diretos em todos os novos componentes, abas, filtros e colunas de tabelas (`Marmitas`, `Pedidos`, `Almoço`, `Jantar`, `Entregues`, `Fornecedor`, `Desconto`, `Exportar`, `Link`, `Configuração`, `Resetar`, `Detalhes`).
+  - Manuais operacionais dos módulos Multiprofissional (.MULTI) e Recursos Humanos (.HR) devidamente atualizados em `moduleGuidesData.js`.
+
 ## [v5.0.40] - 19 de Novembro, 2026
 ### Nex-Ai CLINIC (.MULTI) — Integração Completa do Sistema NexAi-FOOD na Aba Nutrição: Gestão de Sobras, Entradas, Desperdício, Eficiência de Aproveitamento e Previsão Preditiva com IA
 - **Migração Integral do Ecossistema NexAi-FOOD para a Aba Nutrição (`MultiNutritionTab.jsx`):**

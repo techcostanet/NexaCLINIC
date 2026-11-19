@@ -264,6 +264,10 @@ export const MODULE_GUIDES = {
         desc: 'Botão Sincronizar na barra superior e auto-seed inteligente que carrega e atualiza todos os 16 treinamentos no banco de dados automaticamente.'
       },
       {
+        title: 'Gestão de Marmitas & Desconto em Folha',
+        desc: 'Aba dedicada "Marmitas" no RH com extrato mensal consolidado do consumo de refeições por colaborador (Almoço, Jantar e Total), cálculo automático do valor de desconto em folha, visualização do histórico detalhado de datas de cada funcionário, ferramenta de reset de senha do portal de marmitas e exportação de planilha CSV pronta para a folha.'
+      },
+      {
         title: 'Apresentações PowerPoint (PPTX) & Suporte a Vídeo YouTube',
         desc: 'Disponibilização de apresentações de slides profissionais em formato 16:9 (.pptx) com notas completas de orador / roteiro de narração integradas para capacitação presencial ou conversão em vídeo para o YouTube, com botão de download no card do treinamento e no Portal do Colaborador.'
       }
@@ -403,9 +407,24 @@ export const MODULE_GUIDES = {
           'Verifique as tarifas diárias e os saldos remanescentes informados.',
           'Utilize a Central de Relatórios (Relatório 2) para emitir o demonstrativo de recargas para o financeiro.'
         ]
+      },
+      {
+        title: 'Como Realizar o Fechamento de Marmitas e Desconto em Folha',
+        steps: [
+          'No módulo ".HR", clique na aba "Marmitas".',
+          'Selecione o Mês desejado no topo da tela para carregar todos os pedidos consolidados do período.',
+          'Analise os indicadores de consumo: Total de Marmitas, Colaboradores Atendidos, Total a Descontar em Folha e Custo Fornecedor.',
+          'Clique em "Detalhes" em qualquer funcionário para auditar os dias e turnos exatos em que ele solicitou as refeições.',
+          'Caso um colaborador esqueça a senha de acesso ao portal móvel, clique em "Resetar" para retornar a senha aos 4 primeiros dígitos do CPF.',
+          'Clique no botão "Exportar" para baixar a planilha formatada em CSV pronta para importação na folha de pagamento.'
+        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Como funciona o fechamento mensal e o reset de senhas de marmitas no RH?',
+        resposta: 'Na aba Marmitas do módulo .HR, o gestor de RH visualiza em tempo real o total de marmitas solicitadas por cada colaborador durante o mês e o cálculo exato do valor a descontar na folha. Caso o colaborador não consiga acessar o portal por ter esquecido a senha, o RH clica no botão "Resetar", restabelecendo a senha inicial padrão como sendo os 4 primeiros dígitos do CPF do funcionário.'
+      },
       {
         pergunta: 'O sistema Youk precisa dos arquivos PDF ou apenas da planilha Excel gerada?',
         resposta: 'O Youk Manager suporta duas formas de importação: via planilha Excel (.xlsx de 79 colunas no layout ReciboPgAlterdata_Youk_9.0) e via upload direto de arquivo PDF unificado de contracheques na tela de envio de documentos ("Enviar" -> "Adicionar"). Como muitas empresas encontram a tela do Youk configurada para aceitar exclusivamente arquivos PDF, o Nexa CLINIC oferece o botão "Recibos", que consolida todos os contracheques em um único PDF oficial de alta qualidade com o CPF enriquecido de cada funcionário, permitindo o upload imediato no Youk.'
@@ -3474,8 +3493,12 @@ export const MODULE_GUIDES = {
         desc: 'Acompanhamento de peso seco, cálculo automático de IMC, controle de fósforo/potássio com sugestão automática a partir dos resultados de exames laboratoriais importados do LIS (2.189 sessões), visualização rápida de histórico de exames e orientação de conduta personalizada.'
       },
       {
-        title: 'Gestão Completa de Sobras e Desperdício de Alimentos (NexAi-FOOD)',
-        desc: 'Integração completa do ecossistema NexAi-FOOD dentro da aba Nutrição: Dashboard executivo de perdas financeiras (Hoje, 7 dias, Período e Produtos Ativos), gráficos dinâmicos de histórico (Barras, Linhas, Área por dia ou semana em R$ ou Qtd), Top produtos descartados (Donut, Pizza, Barras) e ranking percentual de descarte.'
+        title: 'Gestão Completa de Sobras e Desperdício de Alimentos (100% Nuvem NexAi-CLINIC)',
+        desc: 'Migração integral e definitiva do ecossistema NexAi-FOOD para as coleções oficiais do Firestore do Nex-Ai CLINIC: Dashboard executivo de perdas financeiras (Hoje, 7 dias, Período e Produtos Ativos), gráficos dinâmicos de histórico (Barras, Linhas, Área por dia ou semana em R$ ou Qtd), Top produtos descartados (Donut, Pizza, Barras) e ranking percentual de descarte, operando de forma autônoma sem dependência de serviços externos.'
+      },
+      {
+        title: 'Controle e Solicitação de Marmitas de Colaboradores',
+        desc: 'Sub-aba "Marmitas" na Nutrição integrada a um Portal Público (/marmitas) para colaboradores pedirem marmita pelo celular via CPF e senha. Inclui contadores em tempo real para Almoço e Jantar, horários de corte configuráveis (09:30 e 15:30), check-in de entrega/retirada, modalidade de cobrança (Coparticipação ou Integral), gerador de QR Code e exportador de lista pronto para WhatsApp do fornecedor.'
       },
       {
         title: 'Registro e Rastreamento de Sobras por Área da Cozinha',
@@ -3607,6 +3630,17 @@ export const MODULE_GUIDES = {
         ]
       },
       {
+        title: 'Como Gerenciar Marmitas e Pedidos de Colaboradores',
+        steps: [
+          'No módulo ".MULTI", acesse a aba "Nutrição" e selecione a sub-aba "Marmitas".',
+          'Acompanhe os contadores do dia em tempo real: Total Pedidos, Almoço, Jantar, Entregues, Custo Fornecedor e Desconto Projetado.',
+          'Clique em "Configuração" para definir o horário limite de corte de pedidos (padrão 09:30 almoço / 15:30 jantar) e o modo de cobrança (Coparticipação ou Integral).',
+          'Clique em "Link" para visualizar o endereço público e o QR Code que os funcionários usam no celular para fazer pedidos (/marmitas).',
+          'Conforme as refeições forem entregues na clínica, clique no botão "Entregar" para dar baixa imediata na tabela.',
+          'Clique em "Exportar" para copiar o texto formatado do pedido consolidado e enviar direto no WhatsApp do fornecedor de alimentos.'
+        ]
+      },
+      {
         title: 'Como Exportar Relatórios em Excel (.xlsx)',
         steps: [
           'No cabeçalho do módulo ".MULTI", clique no botão "Relatórios" ou no botão "Exportar" na aba Social ou Fisioterapia.',
@@ -3645,8 +3679,12 @@ export const MODULE_GUIDES = {
         resposta: 'Sim. O módulo .MULTI possui abas dedicadas para Fisioterapia, Psicologia e Nutrição, permitindo registrar evoluções, calcular indicadores e gerenciar o cuidado multidisciplinar de forma integrada ao mesmo paciente.'
       },
       {
-        pergunta: 'Como os dados do sistema NexAi-FOOD são sincronizados com o Nex-Ai CLINIC?',
-        resposta: 'A aba Nutrição conecta-se diretamente ao banco de dados em nuvem do Firebase Cloud Firestore do projeto NexAi-FOOD através de escuta em tempo real (onSnapshot). Todos os 1.917 registros de entradas, 1.249 descartes de sobras e o catálogo de 11 produtos oficiais da clínica são carregados instantaneamente e qualquer alteração feita no sistema reflete em tempo real.'
+        pergunta: 'Como os dados do sistema de controle de sobras são armazenados no Nex-Ai CLINIC?',
+        resposta: 'Todos os dados históricos do NexAi-FOOD (1.917 registros de entradas, 1.249 sobras e catálogo de 11 produtos) foram totalmente migrados para coleções oficiais no banco de dados Cloud Firestore do Nex-Ai CLINIC (food_products, food_entries, food_waste e food_areas). O sistema opera 100% nativo em nuvem com sincronização em tempo real (onSnapshot), sem depender mais de servidores ou projetos externos.'
+      },
+      {
+        pergunta: 'Como os funcionários solicitam marmitas e como funciona o desconto em folha?',
+        resposta: 'Os funcionários acessam o link público (/marmitas) pelo celular ou computador, digitam o CPF e a senha (inicialmente os 4 primeiros dígitos do CPF). Eles solicitam Almoço ou Jantar até o horário limite estabelecido pela nutrição (09:30 e 15:30). Os pedidos aprovados geram o extrato diário na Nutrição e alimentam automaticamente o fechamento mensal no módulo RH (aba Marmitas), calculando o valor exato a ser descontado na folha de pagamento.'
       },
       {
         pergunta: 'Como funciona o cálculo de Previsão Preditiva com IA para compras de alimentos?',

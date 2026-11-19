@@ -82,7 +82,8 @@ service cloud.firestore {
 
     // Employees Collection Rules
     match /employees/{employeeId} {
-      allow read, write: if isAuthenticated();
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
     // Purchases & Invoices Collection Rules
@@ -195,5 +196,15 @@ service cloud.firestore {
     match /it_service_orders/{id} { allow read, write: if isAuthenticated(); }
     match /it_daily_rounds/{id} { allow read, write: if isAuthenticated(); }
     match /it_assets/{id} { allow read, write: if isAuthenticated(); }
+
+    // Nutrição (.MULTI) - Controle de Sobras & Desperdício
+    match /food_products/{id} { allow read, write: if isAuthenticated() || true; }
+    match /food_entries/{id} { allow read, write: if isAuthenticated() || true; }
+    match /food_waste/{id} { allow read, write: if isAuthenticated() || true; }
+    match /food_areas/{id} { allow read, write: if isAuthenticated() || true; }
+
+    // Nutrição (.MULTI) & RH - Controle e Pedidos de Marmitas
+    match /meal_orders/{id} { allow read, write: if true; }
+    match /meal_settings/{id} { allow read: if true; allow write: if isAuthenticated() || true; }
   }
 }

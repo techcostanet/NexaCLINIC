@@ -27,6 +27,7 @@ import MachineTicketPortal from './components/maintenance/MachineTicketPortal';
 import TvCallPanel from './components/tv/TvCallPanel';
 import EmployeeTrainingPortal from './components/training/EmployeeTrainingPortal';
 import CertificateVerifyPortal from './components/training/CertificateVerifyPortal';
+import EmployeeMealPortal from './components/multi/food/EmployeeMealPortal';
 import { initTheme } from './utils/themeManager';
 import ErrorBoundary from './components/ErrorBoundary';
 import ModuleGuideModal from './components/common/ModuleGuideModal';
@@ -52,6 +53,8 @@ export default function App() {
   const certificateId = urlParams.get('certificado') || urlParams.get('cert') || 
     (pathname.startsWith('/certificado/') ? pathname.split('/')[2] : null);
   const socialAnamneseParam = urlParams.get('anamnese_social') || urlParams.get('social_form');
+  const isMealPortal = pathname === '/marmita' || pathname === '/marmitas' || pathname.startsWith('/marmita') || 
+    hash.includes('marmita') || hash.includes('refeicao') || urlParams.has('marmita') || urlParams.has('refeicao');
 
   // Detecção flexível e universal do Painel da TV (suporta /tv, /tv/betim, hash #tv ou query ?painel_tv=1)
   const isTvPath = pathname === '/tv' || pathname.startsWith('/tv/') || pathname.includes('painel_tv') || pathname.includes('painel-tv') || pathname.includes('chamada_tv');
@@ -201,6 +204,19 @@ export default function App() {
       <ErrorBoundary>
         <SocialAnamnesePublicPortal 
           patientId={socialAnamneseParam} 
+          onExitPortal={() => {
+            window.location.href = window.location.origin;
+          }} 
+        />
+      </ErrorBoundary>
+    );
+  }
+
+  // Se o link acessado for do portal de marmitas / refeições do colaborador
+  if (isMealPortal) {
+    return (
+      <ErrorBoundary>
+        <EmployeeMealPortal 
           onExitPortal={() => {
             window.location.href = window.location.origin;
           }} 
