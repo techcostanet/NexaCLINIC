@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.40',
+      date: '19/11/2026',
+      title: 'Nex-Ai CLINIC (.MULTI) — Integração Completa do Sistema NexAi-FOOD na Aba Nutrição: Gestão de Sobras, Entradas, Desperdício, Eficiência de Aproveitamento e Previsão Preditiva com IA',
+      description: 'Migração e integração integral do ecossistema de gestão de sobras e desperdício de alimentos (NexAi-FOOD) para dentro do módulo Multiprofissional (.MULTI), na aba Nutrição. Conexão nativa e em tempo real com o banco de dados Firebase Cloud Firestore do NexAi-FOOD, carregando instantaneamente 1.917 lotes de entradas, 1.249 descartes de sobras e o catálogo de 11 produtos alimentícios da clínica. A aba Nutrição agora conta com sub-navegação moderna e padronizada em 7 visões completas: 1) Painel: dashboard executivo com 4 KPIs (Hoje, Semana, Período e Ativos), gráfico interativo de histórico de perdas em R$ ou Qtd por dia ou semana, e ranking dos top alimentos descartados com gráficos Donut/Pizza/Barras; 2) Sobras: gestão e rastreamento de perdas por área da cozinha (Cozinha Quente, Saladas, Buffet, Padaria, Bebidas) com recálculo automático de perda financeira e modal completo; 3) Entradas: controle de aquisições de suprimentos alimentares e custos de compras; 4) Aproveitamento: balanço de massa e valor cruzando Entradas vs Sobras para apurar o Consumo Real e percentual de aproveitamento com badges de eficiência; 5) Previsão: algoritmo preditivo de compras com inteligência artificial baseado no histórico de 60 dias, parametrização de dias (7 a 30d) e margem (+5% a +20%), estimativa de investimento e economia projetada com recomendações estratégicas; 6) Produtos: cadastro e manutenção de alimentos, refeições, marmitex e custos unitários; 7) Pacientes: avaliação clínica renal preservada integralmente com integração laboratorial.',
+      changes: [
+        { type: 'Integração NexAi-FOOD', text: 'Migração integral de todas as funcionalidades de controle de sobras e alimentos do NexAi-FOOD para a aba Nutrição no módulo .MULTI.' },
+        { type: 'Sincronização em Tempo Real', text: 'Conexão direta com o Firestore do NexAi-FOOD, integrando 1.917 entradas, 1.249 sobras e 11 produtos com escuta em tempo real (onSnapshot).' },
+        { type: 'Sub-Navegação Ergonômica', text: '7 sub-abas padronizadas estritamente com rótulos de 1 termo único (Painel, Sobras, Entradas, Aproveitamento, Previsão, Produtos e Pacientes).' },
+        { type: 'Previsão Preditiva com IA', text: 'Mecanismo algorítmico que calcula compras ideais para 7 a 30 dias com margem de segurança e recomendações inteligentes de economia.' },
+        { type: 'Preservação Clínica Total', text: 'Manutenção completa da avaliação nutricional clínica de pacientes em hemodiálise, IMC, controle de fósforo/potássio e exames laboratoriais.' }
+      ]
+    },
+    {
       version: 'v5.0.39',
       date: '18/11/2026',
       title: 'Nex-Ai CLINIC (.RH) — Resolução Definitiva na Extração de Vale Transporte e Rubricas de Folha (.PDF/.ZIP) e Conformidade Total com Youk Manager',

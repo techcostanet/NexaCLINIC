@@ -3474,6 +3474,30 @@ export const MODULE_GUIDES = {
         desc: 'Acompanhamento de peso seco, cálculo automático de IMC, controle de fósforo/potássio com sugestão automática a partir dos resultados de exames laboratoriais importados do LIS (2.189 sessões), visualização rápida de histórico de exames e orientação de conduta personalizada.'
       },
       {
+        title: 'Gestão Completa de Sobras e Desperdício de Alimentos (NexAi-FOOD)',
+        desc: 'Integração completa do ecossistema NexAi-FOOD dentro da aba Nutrição: Dashboard executivo de perdas financeiras (Hoje, 7 dias, Período e Produtos Ativos), gráficos dinâmicos de histórico (Barras, Linhas, Área por dia ou semana em R$ ou Qtd), Top produtos descartados (Donut, Pizza, Barras) e ranking percentual de descarte.'
+      },
+      {
+        title: 'Registro e Rastreamento de Sobras por Área da Cozinha',
+        desc: 'Registro diário de descartes e sobras limpas categorizadas por área de produção (Cozinha Quente, Saladas, Buffet, Padaria, Bebidas), cálculo automático de perda financeira com base no custo unitário do alimento e histórico auditável.'
+      },
+      {
+        title: 'Entradas e Aquisições de Alimentos',
+        desc: 'Lançamento de suprimentos e compras de refeições com quantidade recebida, custo de aquisição, valor total, fornecedor/NF e gráfico histórico de recebimento de suprimentos.'
+      },
+      {
+        title: 'Balanço de Aproveitamento e Consumo Real (%)',
+        desc: 'Cruzamento matemático de Entradas vs Sobras calculando o volume e valor consumido real de cada alimento e a taxa de aproveitamento (%), com badges de eficiência (Excelente >=90%, Bom 75-89%, Alerta <75%) e gráficos comparativos de barras agrupadas.'
+      },
+      {
+        title: 'Previsão Preditiva de Compras com Inteligência Artificial',
+        desc: 'Algoritmo preditivo de reposição com seleção de horizonte (7, 14, 21 e 30 dias) e margem de segurança configurável, estimando investimento total, economia projetada ao mitigar descartes históricos e recomendações estratégicas de compra por IA.'
+      },
+      {
+        title: 'Catálogo de Alimentos, Refeições e Custos Unitários',
+        desc: 'Cadastro e manutenção do portfólio de alimentos, marmitex de pacientes e colaboradores, lanches e sopas, unidades de medida (un, kg, g, l, ml, porção), custo unitário em reais e ativação/inativação com 1 clique.'
+      },
+      {
         title: 'Painel Integrado de Vulnerabilidade',
         desc: 'Visão consolidada com indicadores-chave (KPIs), gráficos de moradia e benefícios, e lista prioritária de pacientes em alta vulnerabilidade social.'
       },
@@ -3534,11 +3558,52 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Realizar Avaliação em Nutrição Renal',
         steps: [
-          'No módulo ".MULTI", acesse a aba "Nutrição".',
+          'No módulo ".MULTI", acesse a aba "Nutrição" e selecione a sub-aba "Pacientes".',
           'Clique no botão "+ Avaliação".',
           'Selecione o paciente e insira o peso atual e altura para cálculo automático do IMC.',
           'Informe o peso seco meta, conformidade de fósforo/potássio e o plano dietético renal.',
           'Clique em "Salvar" para arquivar a consulta.'
+        ]
+      },
+      {
+        title: 'Como Registrar Sobras e Desperdício de Alimentos (NexAi-FOOD)',
+        steps: [
+          'Acesse o módulo ".MULTI", clique na aba "Nutrição" e selecione a sub-aba "Sobras".',
+          'Selecione o Mês e Ano desejado para visualizar o gráfico histórico de sobras e a tabela de registros.',
+          'Clique no botão "+ Sobra" para abrir o modal de lançamento.',
+          'Selecione o Alimento descartado no catálogo (ex: Marmitex Paciente, Sopa, Pão doce, etc.).',
+          'Selecione a Área de ocorrência (Cozinha Quente, Saladas, Buffet, Padaria ou Bebidas) e a Data.',
+          'Informe a Quantidade descartada. O sistema calculará o valor financeiro da perda em tempo real.',
+          'Escolha o motivo (Excesso, Validade, Não Consumido, Sobra Limpa, Avaria ou Outros) e clique em "Salvar".'
+        ]
+      },
+      {
+        title: 'Como Lançar Entradas e Compras de Alimentos',
+        steps: [
+          'Na aba "Nutrição", selecione a sub-aba "Entradas".',
+          'Clique no botão "+ Entrada".',
+          'Selecione o Alimento recebido, informe a Quantidade, Data e o Valor Total do lote (sugerido automaticamente pelo custo unitário ou ajustável conforme a nota fiscal).',
+          'Adicione observações de fornecedor ou nota fiscal e clique em "Salvar" para atualizar o estoque financeiro de suprimentos.'
+        ]
+      },
+      {
+        title: 'Como Analisar o Aproveitamento e Eficiência da Produção',
+        steps: [
+          'Na aba "Nutrição", selecione a sub-aba "Aproveitamento".',
+          'Filtre pelo Mês e Ano desejados ou escolha "Todos os Meses".',
+          'Consulte os 4 indicadores executivos: Total Entradas (R$), Total Sobras (R$), Consumo Real (R$) e Aproveitamento Médio (%).',
+          'Analise o gráfico comparativo Entradas x Sobras por período (Barras, Linha ou Área).',
+          'Verifique a tabela detalhada de cada alimento com percentual de aproveitamento e badges de eficiência (Excelente, Bom ou Alerta).'
+        ]
+      },
+      {
+        title: 'Como Utilizar a Previsão Preditiva com IA para Compras de Alimentos',
+        steps: [
+          'Na aba "Nutrição", selecione a sub-aba "Previsão".',
+          'Ajuste o Horizonte de Previsão desejado (7, 14, 21 ou 30 dias) e a Margem de Segurança (+5% a +20%).',
+          'A IA processará o histórico real de consumo e descartes dos últimos 60 dias e exibirá a quantidade sugerida, custo estimado e economia potencial.',
+          'Consulte as recomendações estratégicas personalizadas para cada item (alertas de descarte excessivo, fracionamento de compras ou redução de lote).',
+          'Utilize as caixas de seleção para montar a cesta exata de compras para o setor de suprimentos.'
         ]
       },
       {
@@ -3578,6 +3643,14 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'A Psicologia, a Nutrição e a Fisioterapia possuem áreas próprias no módulo?',
         resposta: 'Sim. O módulo .MULTI possui abas dedicadas para Fisioterapia, Psicologia e Nutrição, permitindo registrar evoluções, calcular indicadores e gerenciar o cuidado multidisciplinar de forma integrada ao mesmo paciente.'
+      },
+      {
+        pergunta: 'Como os dados do sistema NexAi-FOOD são sincronizados com o Nex-Ai CLINIC?',
+        resposta: 'A aba Nutrição conecta-se diretamente ao banco de dados em nuvem do Firebase Cloud Firestore do projeto NexAi-FOOD através de escuta em tempo real (onSnapshot). Todos os 1.917 registros de entradas, 1.249 descartes de sobras e o catálogo de 11 produtos oficiais da clínica são carregados instantaneamente e qualquer alteração feita no sistema reflete em tempo real.'
+      },
+      {
+        pergunta: 'Como funciona o cálculo de Previsão Preditiva com IA para compras de alimentos?',
+        resposta: 'O algoritmo analisa a média diária de consumo real e a taxa de descarte histórico de cada alimento nos últimos 60 dias. Aplicando o horizonte de dias selecionado (ex: 7 ou 14 dias) e a margem de segurança definida, a IA calcula a quantidade exata recomendada para compra, estima o investimento total e projeta a economia financeira gerada ao reduzir excessos de produção e descartes.'
       }
     ]
   }

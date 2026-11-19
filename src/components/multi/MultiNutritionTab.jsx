@@ -1,9 +1,31 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Apple, Plus, Search, Save, X, Activity } from 'lucide-react';
+import { 
+  Apple, Plus, Search, Save, X, Activity,
+  LayoutDashboard, Trash2, PackagePlus, TrendingUp, Sparkles, Package, Users
+} from 'lucide-react';
 import { dbService } from '../../firebase';
 import { getNutritionRecords, saveNutritionRecord } from '../../services/firebase/multiService';
+import FoodDashboard from './food/FoodDashboard';
+import FoodWasteTab from './food/FoodWasteTab';
+import FoodEntriesTab from './food/FoodEntriesTab';
+import FoodAproveitamentoTab from './food/FoodAproveitamentoTab';
+import FoodPredictionTab from './food/FoodPredictionTab';
+import FoodProductsTab from './food/FoodProductsTab';
 
 export default function MultiNutritionTab({ unitId = 'betim', currentUser = null }) {
+  // Sub-abas de Nutrição (Padrão rigoroso de 1 palavra)
+  const [subTab, setSubTab] = useState('painel'); // 'painel' | 'sobras' | 'entradas' | 'aproveitamento' | 'previsao' | 'produtos' | 'pacientes'
+
+  const subAbas = [
+    { id: 'painel', rotulo: 'Painel', icone: LayoutDashboard },
+    { id: 'sobras', rotulo: 'Sobras', icone: Trash2 },
+    { id: 'entradas', rotulo: 'Entradas', icone: PackagePlus },
+    { id: 'aproveitamento', rotulo: 'Aproveitamento', icone: TrendingUp },
+    { id: 'previsao', rotulo: 'Previsão', icone: Sparkles },
+    { id: 'produtos', rotulo: 'Produtos', icone: Package },
+    { id: 'pacientes', rotulo: 'Pacientes', icone: Users },
+  ];
+
   const [records, setRecords] = useState([]);
   const [clinicPatients, setClinicPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -138,8 +160,55 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
 
   return (
     <div style={styles.container}>
-      {/* BARRA DE AÇÕES */}
-      <div style={styles.actionsBar}>
+      {/* NAVEGAÇÃO DE SUB-ABAS DA NUTRIÇÃO (1 PALAVRA) */}
+      <div style={styles.subTabsContainer}>
+        {subAbas.map((tab) => {
+          const Icon = tab.icone;
+          const isActive = subTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setSubTab(tab.id)}
+              style={{
+                ...styles.subTabButton,
+                backgroundColor: isActive ? 'var(--bg-card, #ffffff)' : 'transparent',
+                color: isActive ? '#059669' : 'var(--text-secondary, #64748b)',
+                borderBottom: isActive ? '2px solid #059669' : '2px solid transparent',
+                fontWeight: isActive ? 700 : 500,
+                boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.04)' : 'none'
+              }}
+            >
+              <Icon size={15} />
+              <span>{tab.rotulo}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 1. PAINEL DE SOBRAS & DESPERDÍCIO */}
+      {subTab === 'painel' && <FoodDashboard />}
+
+      {/* 2. REGISTRO DE SOBRAS */}
+      {subTab === 'sobras' && <FoodWasteTab currentUser={currentUser} />}
+
+      {/* 3. ENTRADAS DE ALIMENTOS */}
+      {subTab === 'entradas' && <FoodEntriesTab currentUser={currentUser} />}
+
+      {/* 4. APROVEITAMENTO & CONSUMO REAL */}
+      {subTab === 'aproveitamento' && <FoodAproveitamentoTab />}
+
+      {/* 5. PREVISÃO PREDITIVA COM IA */}
+      {subTab === 'previsao' && <FoodPredictionTab />}
+
+      {/* 6. CATÁLOGO DE PRODUTOS */}
+      {subTab === 'produtos' && <FoodProductsTab currentUser={currentUser} />}
+
+      {/* 7. PACIENTES / AVALIAÇÃO CLÍNICA RENAL */}
+      {subTab === 'pacientes' && (
+        <>
+          {/* BARRA DE AÇÕES */}
+          <div style={styles.actionsBar}>
         <div style={styles.searchBox}>
           <Search size={16} color="var(--text-secondary)" />
           <input
@@ -636,12 +705,36 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
           </div>
         </div>
       )}
+        </>
+      )}
     </div>
   );
 }
 
 const styles = {
   container: { display: 'flex', flexDirection: 'column', gap: '1.25rem' },
+  subTabsContainer: {
+    display: 'flex',
+    gap: '0.35rem',
+    backgroundColor: 'var(--bg-surface, #f8fafc)',
+    padding: '0.35rem',
+    borderRadius: '12px',
+    border: '1px solid var(--border-color, #e2e8f0)',
+    overflowX: 'auto',
+    flexWrap: 'nowrap'
+  },
+  subTabButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.45rem',
+    padding: '0.55rem 0.95rem',
+    borderRadius: '8px',
+    border: 'none',
+    fontSize: '0.825rem',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+    whiteSpace: 'nowrap'
+  },
   actionsBar: {
     display: 'flex',
     justifyContent: 'space-between',

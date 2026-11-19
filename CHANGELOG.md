@@ -1,3 +1,37 @@
+## [v5.0.40] - 19 de Novembro, 2026
+### Nex-Ai CLINIC (.MULTI) — Integração Completa do Sistema NexAi-FOOD na Aba Nutrição: Gestão de Sobras, Entradas, Desperdício, Eficiência de Aproveitamento e Previsão Preditiva com IA
+- **Migração Integral do Ecossistema NexAi-FOOD para a Aba Nutrição (`MultiNutritionTab.jsx`):**
+  - Conexão em tempo real ao banco de dados Firebase Cloud Firestore do projeto `nexai-food` utilizando named app dedicado (`foodWasteService.js`), eliminando conflitos com o banco de dados padrão da clínica.
+  - Carregamento e sincronização em tempo real de 1.917 registros de entradas, 1.249 descartes de sobras e 11 produtos oficiais da clínica com escuta reativa (`onSnapshot`) e cache local de contingência.
+  - Sub-navegação moderna e ergonômica com 7 visões estruturadas estritamente com rótulos de 1 palavra/termo único: `Painel`, `Sobras`, `Entradas`, `Aproveitamento`, `Previsão`, `Produtos` e `Pacientes`.
+- **Painel de Controle e Histórico Interativo de Desperdício (`FoodDashboard.jsx`):**
+  - Filtros de período por Mês e Ano (Jan a Dez, ou Todos os Meses; 2024 a 2026).
+  - 4 StatCards em tempo real: Desperdício Hoje (R$), Desperdício Últimos 7 Dias (R$), Desperdício no Período Selecionado (R$) e Alimentos Ativos (Qtd).
+  - Gráfico de Histórico de Sobras configurável: alternância entre Barras, Linha e Área; métrica em Valor (R$) ou Quantidade física; agrupamento por Dia ou Semana (ou 12 meses consolidados quando selecionado Todos os Meses), com rótulos de dados nos pontos.
+  - Gráfico de Top Alimentos Desperdiçados (Donut, Pizza ou Barras) com tabela lateral de ranking de perdas, valores e percentual relativo.
+- **Gestão de Sobras e Descartes por Área da Cozinha (`FoodWasteTab.jsx`):**
+  - Registro de ocorrências com vinculação à área de produção (Cozinha Quente, Saladas, Buffet, Padaria ou Bebidas).
+  - Recálculo dinâmico do valor financeiro da perda em tempo real com base no custo unitário do alimento cadastrado.
+  - Cards de Total de Perda (R$), Volume Físico e Ocorrências, com gráfico histórico de descarte e tabela com busca e edição/exclusão.
+- **Entradas e Aquisições de Alimentos (`FoodEntriesTab.jsx`):**
+  - Controle de compras e suprimentos alimentícios com data, produto, quantidade, custo unitário e valor total.
+  - Cards de Investimento Total (R$), Volume Recebido e Total de Lotes, com gráfico histórico de recebimento e tabela completa.
+- **Balanço de Aproveitamento & Consumo Real (`FoodAproveitamentoTab.jsx`):**
+  - Cruzamento de Entradas vs Sobras calculando o volume e valor consumido real de cada alimento e a taxa de aproveitamento (%).
+  - Cards de Entradas (R$), Sobras (R$), Consumo Real (R$) e Aproveitamento Médio (%).
+  - Gráfico comparativo de Entradas x Sobras por período (Barras agrupadas, Linha ou Área).
+  - Tabela analítica completa por produto com barras de progresso visual e badges de status de eficiência (Excelente >=90%, Bom 75-89%, Alerta <75%).
+- **Previsão Preditiva de Compras com Inteligência Artificial (`FoodPredictionTab.jsx`):**
+  - Algoritmo que analisa o histórico real de consumo e descartes dos últimos 60 dias.
+  - Controles interativos de horizonte (7, 14, 21 e 30 dias) e margem de segurança (+5% a +20%).
+  - Caixas de seleção para composição de cesta de compras com cálculo instantâneo do Investimento Previsto (R$) e da Economia Projetada (R$).
+  - Recomendações estratégicas da IA para cada alimento (mitigação de descartes, alertas de shelf-life e fracionamento de entregas).
+- **Catálogo de Alimentos e Refeições (`FoodProductsTab.jsx`):**
+  - Cadastro de insumos, marmitex de pacientes e colaboradores, dietas, sopas e lanches com unidades de medida e custos unitários.
+  - Ativação e inativação rápida com botão de energia e contadores de uso em lotes e descartes.
+- **Preservação Integral da Avaliação Nutricional Clínica Renal:**
+  - A rotina clínica dos pacientes em hemodiálise (peso seco, IMC, apetite, ingestão hídrica, controle de fósforo/potássio e histórico laboratorial de exames) foi integralmente mantida na sub-aba `Pacientes`.
+
 ## [v5.0.39] - 18 de Novembro, 2026
 ### Nex-Ai CLINIC (.RH) — Resolução Definitiva na Extração de Vale Transporte e Rubricas de Folha (.PDF/.ZIP) e Conformidade Total com Youk Manager
 - **Correção Crítica no Extrator de Contracheques Alterdata (`payslipPdfParser.js`):**
