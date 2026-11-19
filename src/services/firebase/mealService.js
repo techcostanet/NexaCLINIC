@@ -21,12 +21,11 @@ const ORDERS_COL = 'meal_orders';
 const EMPLOYEES_COL = 'employees';
 
 export const DEFAULT_MEAL_SETTINGS = {
-  lunchCutoff: '09:30',
-  dinnerCutoff: '15:30',
+  lunchCutoff: '09:30',          // Horário limite para pedir para HOJE (padrão 09:30)
+  advanceCutoff: '16:00',        // Horário limite na véspera para reservar AMANHÃ (padrão 16:00)
   chargeMode: 'coparticipation', // 'coparticipation' | 'integral'
   employeeCost: 5.00,
   supplierCost: 18.00,
-  activeMeals: ['almoco', 'jantar'],
   updatedAt: new Date().toISOString()
 };
 
@@ -55,7 +54,7 @@ export async function updateMealSettings(newSettings) {
     ...DEFAULT_MEAL_SETTINGS,
     ...newSettings,
     lunchCutoff: String(newSettings.lunchCutoff || '09:30').trim(),
-    dinnerCutoff: String(newSettings.dinnerCutoff || '15:30').trim(),
+    advanceCutoff: String(newSettings.advanceCutoff || '16:00').trim(),
     chargeMode: newSettings.chargeMode === 'integral' ? 'integral' : 'coparticipation',
     employeeCost: Number(newSettings.employeeCost) || 0,
     supplierCost: Number(newSettings.supplierCost) || 0,
@@ -146,11 +145,11 @@ export async function resetEmployeeMealPassword(employeeId) {
 }
 
 // ---------------------------------------------------------------------------
-// GESTÃO DE PEDIDOS DE MARMITAS
+// GESTÃO DE PEDIDOS E RESERVAS DE MARMITAS (EXCLUSIVO ALMOÇO)
 // ---------------------------------------------------------------------------
 
-// Verifica se o horário atual ultrapassou o horário de corte
-export function isMealCutoffPassed(mealType, cutoffTimeStr) {
+// Verifica se o horário atual ultrapassou o horário limite (HH:mm)
+export function isTimeCutoffPassed(cutoffTimeStr) {
   if (!cutoffTimeStr) return false;
   const now = new Date();
   const [cutHours, cutMinutes] = cutoffTimeStr.split(':').map(v => parseInt(v, 10));
@@ -162,26 +161,35 @@ export function isMealCutoffPassed(mealType, cutoffTimeStr) {
   return currentMinutes > limitMinutes;
 }
 
-export async function createMealOrder({ employee, mealType = 'almoco', targetDate }) {
+export async function createMealOrder({ employee, targetDate }) {
   const settings = await getMealSettings();
   const todayStr = getTodayDateStr();
+  const tomorrowStr = getTomorrowDateStr();
   const orderDate = targetDate || todayStr;
 
-  // Validação de horário limite se o pedido for para hoje
+  if (orderDate < todayStr) {
+    throw new Error('Não é possível solicitar refeições para datas passadas.');
+  }
+
+  // Se o pedido for para hoje, valida o horário de corte do mesmo dia (padrão 09:30)
   if (orderDate === todayStr) {
-    const cutoff = mealType === 'jantar' ? settings.dinnerCutoff : settings.lunchCutoff;
-    if (isMealCutoffPassed(mealType, cutoff)) {
-      const mealLabel = mealType === 'jantar' ? 'Jantar' : 'Almoço';
-      throw new Error(`Horário limite para solicitar ${mealLabel} foi encerrado hoje às ${cutoff}.`);
+    if (isTimeCutoffPassed(settings.lunchCutoff || '09:30')) {
+      throw new Error(`Horário limite para solicitar almoço para hoje encerrou às ${settings.lunchCutoff || '09:30'}.`);
     }
   }
 
-  // Verifica se já existe pedido ativo para o mesmo funcionário, data e tipo de refeição
+  // Se o pedido for reserva para amanhã, valida o horário de corte da véspera (padrão 16:00)
+  if (orderDate === tomorrowStr) {
+    if (isTimeCutoffPassed(settings.advanceCutoff || '16:00')) {
+      throw new Error(`Horário limite para reservar o almoço de amanhã encerrou hoje às ${settings.advanceCutoff || '16:00'}.`);
+    }
+  }
+
+  // Verifica se já existe pedido ativo para o mesmo funcionário na mesma data
   const q = query(
     collection(db, ORDERS_COL),
     where('employeeId', '==', employee.id),
-    where('date', '==', orderDate),
-    where('mealType', '==', mealType)
+    where('date', '==', orderDate)
   );
 
   const existingSnap = await getDocs(q);
@@ -190,8 +198,7 @@ export async function createMealOrder({ employee, mealType = 'almoco', targetDat
     .find(o => o.status !== 'cancelado');
 
   if (activeExisting) {
-    const mealLabel = mealType === 'jantar' ? 'Jantar' : 'Almoço';
-    throw new Error(`Você já possui um pedido de ${mealLabel} registrado para esta data.`);
+    throw new Error(`Você já possui um pedido de almoço registrado para esta data.`);
   }
 
   // Define os valores conforme o modo de cobrança configurado
@@ -209,7 +216,7 @@ export async function createMealOrder({ employee, mealType = 'almoco', targetDat
     sector: employee.sector || 'Geral',
     unitId: employee.unitId || 'all',
     date: orderDate,
-    mealType,
+    mealType: 'almoco',
     status: 'solicitado', // 'solicitado' | 'entregue' | 'cancelado'
     price: supplierCost,
     discountValue,
@@ -235,12 +242,15 @@ export async function cancelMealOrder(orderId, employeeId) {
 
   const settings = await getMealSettings();
   const todayStr = getTodayDateStr();
+  const tomorrowStr = getTomorrowDateStr();
 
   if (order.date === todayStr) {
-    const cutoff = order.mealType === 'jantar' ? settings.dinnerCutoff : settings.lunchCutoff;
-    if (isMealCutoffPassed(order.mealType, cutoff)) {
-      const mealLabel = order.mealType === 'jantar' ? 'Jantar' : 'Almoço';
-      throw new Error(`Cancelamento encerrado para ${mealLabel} após o horário de corte (${cutoff}).`);
+    if (isTimeCutoffPassed(settings.lunchCutoff || '09:30')) {
+      throw new Error(`Cancelamento encerrado para o almoço de hoje após o horário de corte (${settings.lunchCutoff || '09:30'}).`);
+    }
+  } else if (order.date === tomorrowStr) {
+    if (isTimeCutoffPassed(settings.advanceCutoff || '16:00')) {
+      throw new Error(`Cancelamento da reserva de amanhã encerrado após as ${settings.advanceCutoff || '16:00'}.`);
     }
   }
 
@@ -283,7 +293,7 @@ export async function getEmployeeOrders(employeeId) {
     );
     const snap = await getDocs(q);
     const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    return orders.sort((a, b) => new Date(b.requestedAt || b.date).getTime() - new Date(a.requestedAt || a.date).getTime());
+    return orders.sort((a, b) => new Date(b.date || b.requestedAt).getTime() - new Date(a.date || a.requestedAt).getTime());
   } catch (err) {
     console.error('Erro ao buscar pedidos do funcionário:', err);
     return [];
@@ -331,8 +341,6 @@ export async function getMonthlyMealSummary(yearMonthStr) {
           sector: o.sector || 'Geral',
           unitId: o.unitId || 'all',
           totalOrders: 0,
-          totalAlmoco: 0,
-          totalJantar: 0,
           totalDiscount: 0,
           totalCost: 0,
           orders: []
@@ -340,11 +348,6 @@ export async function getMonthlyMealSummary(yearMonthStr) {
       }
 
       map[empId].totalOrders += 1;
-      if (o.mealType === 'jantar') {
-        map[empId].totalJantar += 1;
-      } else {
-        map[empId].totalAlmoco += 1;
-      }
       map[empId].totalDiscount += Number(o.discountValue) || 0;
       map[empId].totalCost += Number(o.price) || 0;
       map[empId].orders.push(o);
@@ -359,6 +362,15 @@ export async function getMonthlyMealSummary(yearMonthStr) {
 
 export function getTodayDateStr() {
   const d = new Date();
+  const year = d.getFullYear();
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function getTomorrowDateStr() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
   const year = d.getFullYear();
   const month = (d.getMonth() + 1).toString().padStart(2, '0');
   const day = d.getDate().toString().padStart(2, '0');

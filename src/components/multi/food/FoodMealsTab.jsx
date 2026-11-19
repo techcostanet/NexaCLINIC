@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Utensils,
   Sun,
-  Moon,
   Clock,
   Settings,
   Share2,
@@ -29,7 +28,8 @@ import {
   updateMealOrderStatus,
   cancelMealOrder,
   deleteMealOrder,
-  getTodayDateStr
+  getTodayDateStr,
+  getTomorrowDateStr
 } from '../../../services/firebase/mealService';
 import { formatCurrency, formatDateBR } from '../../../services/firebase/foodWasteService';
 
@@ -40,7 +40,6 @@ export default function FoodMealsTab() {
   const [settings, setSettings] = useState(null);
 
   // Filtros
-  const [filterMeal, setFilterMeal] = useState('todos'); // 'todos' | 'almoco' | 'jantar'
   const [filterStatus, setFilterStatus] = useState('todos'); // 'todos' | 'solicitado' | 'entregue' | 'cancelado'
   const [search, setSearch] = useState('');
 
@@ -52,7 +51,7 @@ export default function FoodMealsTab() {
   // Form de Configuração
   const [configForm, setConfigForm] = useState({
     lunchCutoff: '09:30',
-    dinnerCutoff: '15:30',
+    advanceCutoff: '16:00',
     chargeMode: 'coparticipation',
     employeeCost: 5.00,
     supplierCost: 18.00
@@ -65,6 +64,8 @@ export default function FoodMealsTab() {
   const [copiedWhatsapp, setCopiedWhatsapp] = useState(false);
 
   const publicMealUrl = `${window.location.origin}/#/marmitas`;
+  const todayStr = getTodayDateStr();
+  const tomorrowStr = getTomorrowDateStr();
 
   // Carrega configurações iniciais
   useEffect(() => {
@@ -72,7 +73,7 @@ export default function FoodMealsTab() {
       setSettings(res);
       setConfigForm({
         lunchCutoff: res.lunchCutoff || '09:30',
-        dinnerCutoff: res.dinnerCutoff || '15:30',
+        advanceCutoff: res.advanceCutoff || '16:00',
         chargeMode: res.chargeMode || 'coparticipation',
         employeeCost: Number(res.employeeCost) || 5.00,
         supplierCost: Number(res.supplierCost) || 18.00
@@ -99,19 +100,15 @@ export default function FoodMealsTab() {
     }
   }, [showLinkModal, publicMealUrl]);
 
-  // Cálculos e Estatísticas do Dia
+  // Estatísticas do Dia Selecionado
   const stats = useMemo(() => {
     const activeOrders = orders.filter(o => o.status !== 'cancelado');
-    const almocoCount = activeOrders.filter(o => o.mealType === 'almoco').length;
-    const jantarCount = activeOrders.filter(o => o.mealType === 'jantar').length;
     const deliveredCount = activeOrders.filter(o => o.status === 'entregue').length;
     const supplierTotal = activeOrders.reduce((sum, o) => sum + (Number(o.price) || 0), 0);
     const discountTotal = activeOrders.reduce((sum, o) => sum + (Number(o.discountValue) || 0), 0);
 
     return {
       total: activeOrders.length,
-      almoco: almocoCount,
-      jantar: jantarCount,
       entregues: deliveredCount,
       fornecedor: supplierTotal,
       desconto: discountTotal
@@ -121,7 +118,6 @@ export default function FoodMealsTab() {
   // Filtro de lista
   const filteredOrders = useMemo(() => {
     return orders.filter(o => {
-      if (filterMeal !== 'todos' && o.mealType !== filterMeal) return false;
       if (filterStatus !== 'todos' && o.status !== filterStatus) return false;
       if (search) {
         const q = search.toLowerCase();
@@ -132,7 +128,7 @@ export default function FoodMealsTab() {
       }
       return true;
     });
-  }, [orders, filterMeal, filterStatus, search]);
+  }, [orders, filterStatus, search]);
 
   // Ações de pedido
   const handleToggleDelivered = async (order) => {
@@ -174,18 +170,14 @@ export default function FoodMealsTab() {
     setTimeout(() => setter(false), 2000);
   };
 
-  // Texto formatado para o Fornecedor
+  // Texto formatado para o Fornecedor (apenas almoço)
   const whatsappText = useMemo(() => {
     const active = orders.filter(o => o.status !== 'cancelado');
-    const almocoList = active.filter(o => o.mealType === 'almoco');
-    const jantarList = active.filter(o => o.mealType === 'jantar');
 
     return `🍱 *PEDIDO DE MARMITAS - NEXA CLINIC*\n` +
-      `📅 *Data:* ${formatDateBR(selectedDate)}\n\n` +
-      `📊 *TOTAL GERAL: ${active.length} marmitas*\n` +
-      `☀️ *Almoço:* ${almocoList.length} marmitas\n` +
-      `🌙 *Jantar:* ${jantarList.length} marmitas\n\n` +
-      `_Gerado automaticamente pelo NexAi CLINIC em ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}._`;
+      `📅 *Data:* ${formatDateBR(selectedDate)} (Almoço)\n` +
+      `📊 *TOTAL: ${active.length} marmitas de almoço*\n\n` +
+      `_Gerado pelo NexAi CLINIC em ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}._`;
   }, [orders, selectedDate]);
 
   return (
@@ -200,15 +192,42 @@ export default function FoodMealsTab() {
             onChange={(e) => setSelectedDate(e.target.value)}
             style={styles.dateInput}
           />
+          {selectedDate === todayStr && (
+            <span style={styles.dateTag}>Hoje</span>
+          )}
+          {selectedDate === tomorrowStr && (
+            <span style={{ ...styles.dateTag, backgroundColor: '#e0f2fe', color: '#0369a1' }}>Amanhã</span>
+          )}
         </div>
 
         <div style={styles.topActions}>
+          <button
+            onClick={() => setSelectedDate(todayStr)}
+            style={{
+              ...styles.quickDateBtn,
+              backgroundColor: selectedDate === todayStr ? '#0284c7' : '#ffffff',
+              color: selectedDate === todayStr ? '#ffffff' : '#334155'
+            }}
+          >
+            Hoje
+          </button>
+          <button
+            onClick={() => setSelectedDate(tomorrowStr)}
+            style={{
+              ...styles.quickDateBtn,
+              backgroundColor: selectedDate === tomorrowStr ? '#0284c7' : '#ffffff',
+              color: selectedDate === tomorrowStr ? '#ffffff' : '#334155'
+            }}
+          >
+            Amanhã
+          </button>
+
           <button
             onClick={() => setShowExportModal(true)}
             style={styles.actionBtnOutline}
             title="Exportar lista para o fornecedor"
           >
-            <Share2 size={16} />
+            <Share2 size={15} />
             Exportar
           </button>
 
@@ -217,7 +236,7 @@ export default function FoodMealsTab() {
             style={styles.actionBtnOutline}
             title="Link e QR Code para colaboradores"
           >
-            <QrCode size={16} />
+            <QrCode size={15} />
             Link
           </button>
 
@@ -226,7 +245,7 @@ export default function FoodMealsTab() {
             style={styles.actionBtnPrimary}
             title="Configurações de horários e valores"
           >
-            <Settings size={16} />
+            <Settings size={15} />
             Configuração
           </button>
         </div>
@@ -236,26 +255,14 @@ export default function FoodMealsTab() {
       <div style={styles.statsGrid}>
         <div style={styles.statCard}>
           <span style={styles.statTitle}>Pedidos</span>
-          <strong style={styles.statNumber}>{stats.total}</strong>
-          <span style={styles.statSub}>refeições solicitadas</span>
-        </div>
-
-        <div style={styles.statCard}>
-          <span style={styles.statTitle}>Almoço</span>
-          <strong style={{ ...styles.statNumber, color: '#d97706' }}>{stats.almoco}</strong>
-          <span style={styles.statSub}>corte às {settings?.lunchCutoff || '09:30'}</span>
-        </div>
-
-        <div style={styles.statCard}>
-          <span style={styles.statTitle}>Jantar</span>
-          <strong style={{ ...styles.statNumber, color: '#7c3aed' }}>{stats.jantar}</strong>
-          <span style={styles.statSub}>corte às {settings?.dinnerCutoff || '15:30'}</span>
+          <strong style={{ ...styles.statNumber, color: '#0284c7' }}>{stats.total}</strong>
+          <span style={styles.statSub}>marmitas de almoço</span>
         </div>
 
         <div style={styles.statCard}>
           <span style={styles.statTitle}>Entregues</span>
           <strong style={{ ...styles.statNumber, color: '#059669' }}>{stats.entregues}</strong>
-          <span style={styles.statSub}>check-in concluído</span>
+          <span style={styles.statSub}>baixa na cozinha</span>
         </div>
 
         <div style={styles.statCard}>
@@ -285,19 +292,6 @@ export default function FoodMealsTab() {
         </div>
 
         <div style={styles.selectWrapper}>
-          <label style={styles.filterLabel}>Refeição</label>
-          <select
-            value={filterMeal}
-            onChange={(e) => setFilterMeal(e.target.value)}
-            style={styles.selectInput}
-          >
-            <option value="todos">Todos</option>
-            <option value="almoco">Almoço</option>
-            <option value="jantar">Jantar</option>
-          </select>
-        </div>
-
-        <div style={styles.selectWrapper}>
           <label style={styles.filterLabel}>Status</label>
           <select
             value={filterStatus}
@@ -317,12 +311,12 @@ export default function FoodMealsTab() {
         {loading ? (
           <div style={styles.loadingBox}>
             <RefreshCw size={24} className="animate-spin" color="#0284c7" />
-            <span>Carregando pedidos de marmitas...</span>
+            <span>Carregando pedidos de almoço...</span>
           </div>
         ) : filteredOrders.length === 0 ? (
           <div style={styles.emptyBox}>
             <Utensils size={36} color="#cbd5e1" style={{ marginBottom: '8px' }} />
-            <p style={{ margin: 0, fontWeight: 600, color: '#64748b' }}>Nenhum pedido registrado para este filtro.</p>
+            <p style={{ margin: 0, fontWeight: 600, color: '#64748b' }}>Nenhum pedido de almoço registrado para este filtro.</p>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -333,7 +327,6 @@ export default function FoodMealsTab() {
                   <th style={styles.th}>Colaborador</th>
                   <th style={styles.th}>CPF</th>
                   <th style={styles.th}>Setor</th>
-                  <th style={styles.th}>Refeição</th>
                   <th style={styles.th}>Status</th>
                   <th style={styles.th}>Desconto</th>
                   <th style={{ ...styles.th, textAlign: 'center' }}>Ações</th>
@@ -353,19 +346,6 @@ export default function FoodMealsTab() {
                       <td style={{ ...styles.td, fontWeight: 600 }}>{order.employeeName}</td>
                       <td style={styles.td}>{order.employeeCpf || '—'}</td>
                       <td style={styles.td}>{order.sector}</td>
-                      <td style={styles.td}>
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '0.8rem',
-                          fontWeight: 700,
-                          color: order.mealType === 'jantar' ? '#7c3aed' : '#d97706'
-                        }}>
-                          {order.mealType === 'jantar' ? <Moon size={14} /> : <Sun size={14} />}
-                          {order.mealType === 'jantar' ? 'Jantar' : 'Almoço'}
-                        </span>
-                      </td>
                       <td style={styles.td}>
                         <span style={{
                           ...styles.statusBadge,
@@ -433,7 +413,7 @@ export default function FoodMealsTab() {
                 <h4 style={styles.sectionHeading}>Horários</h4>
                 <div style={styles.formRow}>
                   <div style={styles.formGroup}>
-                    <label style={styles.inputLabel}>Almoço</label>
+                    <label style={styles.inputLabel}>Corte Hoje</label>
                     <input
                       type="time"
                       value={configForm.lunchCutoff}
@@ -441,19 +421,19 @@ export default function FoodMealsTab() {
                       required
                       style={styles.modalInput}
                     />
-                    <span style={styles.subText}>Horário limite para pedidos</span>
+                    <span style={styles.subText}>Limite para pedir no próprio dia</span>
                   </div>
 
                   <div style={styles.formGroup}>
-                    <label style={styles.inputLabel}>Jantar</label>
+                    <label style={styles.inputLabel}>Corte Véspera</label>
                     <input
                       type="time"
-                      value={configForm.dinnerCutoff}
-                      onChange={(e) => setConfigForm({ ...configForm, dinnerCutoff: e.target.value })}
+                      value={configForm.advanceCutoff}
+                      onChange={(e) => setConfigForm({ ...configForm, advanceCutoff: e.target.value })}
                       required
                       style={styles.modalInput}
                     />
-                    <span style={styles.subText}>Horário limite para pedidos</span>
+                    <span style={styles.subText}>Limite para reservar almoço de amanhã</span>
                   </div>
                 </div>
               </div>
@@ -590,7 +570,7 @@ export default function FoodMealsTab() {
               <textarea
                 readOnly
                 value={whatsappText}
-                rows={8}
+                rows={6}
                 style={styles.exportTextarea}
               />
             </div>
@@ -648,10 +628,27 @@ const styles = {
     fontWeight: 600,
     outline: 'none'
   },
+  dateTag: {
+    padding: '4px 8px',
+    borderRadius: '6px',
+    backgroundColor: '#dcfce7',
+    color: '#166534',
+    fontSize: '0.75rem',
+    fontWeight: 700
+  },
   topActions: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: '8px',
+    flexWrap: 'wrap'
+  },
+  quickDateBtn: {
+    padding: '8px 12px',
+    borderRadius: '8px',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    cursor: 'pointer'
   },
   actionBtnOutline: {
     display: 'flex',
@@ -681,7 +678,7 @@ const styles = {
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
     gap: '12px'
   },
   statCard: {

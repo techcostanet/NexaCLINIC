@@ -3497,8 +3497,8 @@ export const MODULE_GUIDES = {
         desc: 'Migração integral e definitiva do ecossistema NexAi-FOOD para as coleções oficiais do Firestore do Nex-Ai CLINIC: Dashboard executivo de perdas financeiras (Hoje, 7 dias, Período e Produtos Ativos), gráficos dinâmicos de histórico (Barras, Linhas, Área por dia ou semana em R$ ou Qtd), Top produtos descartados (Donut, Pizza, Barras) e ranking percentual de descarte, operando de forma autônoma sem dependência de serviços externos.'
       },
       {
-        title: 'Controle e Solicitação de Marmitas de Colaboradores',
-        desc: 'Sub-aba "Marmitas" na Nutrição integrada a um Portal Público (/marmitas) para colaboradores pedirem marmita pelo celular via CPF e senha. Inclui contadores em tempo real para Almoço e Jantar, horários de corte configuráveis (09:30 e 15:30), check-in de entrega/retirada, modalidade de cobrança (Coparticipação ou Integral), gerador de QR Code e exportador de lista pronto para WhatsApp do fornecedor.'
+        title: 'Controle e Solicitação de Marmitas de Colaboradores (Exclusivo Almoço)',
+        desc: 'Sub-aba "Marmitas" na Nutrição situada imediatamente antes da aba "Pacientes", integrada ao Portal Mobile (/marmitas) que pode ser instalado como App no celular (Android e iPhone). Focado exclusivamente em refeições de almoço, permite ao colaborador pedir no próprio dia (até as 09:30) ou reservar para o dia seguinte até as 16:00 da véspera. Inclui contadores em tempo real, check-in de entrega/retirada, horários configuráveis, modalidade de cobrança (Coparticipação ou Integral), gerador de QR Code e exportador de lista para WhatsApp do fornecedor.'
       },
       {
         title: 'Registro e Rastreamento de Sobras por Área da Cozinha',
@@ -3632,11 +3632,11 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Gerenciar Marmitas e Pedidos de Colaboradores',
         steps: [
-          'No módulo ".MULTI", acesse a aba "Nutrição" e selecione a sub-aba "Marmitas".',
-          'Acompanhe os contadores do dia em tempo real: Total Pedidos, Almoço, Jantar, Entregues, Custo Fornecedor e Desconto Projetado.',
-          'Clique em "Configuração" para definir o horário limite de corte de pedidos (padrão 09:30 almoço / 15:30 jantar) e o modo de cobrança (Coparticipação ou Integral).',
-          'Clique em "Link" para visualizar o endereço público e o QR Code que os funcionários usam no celular para fazer pedidos (/marmitas).',
-          'Conforme as refeições forem entregues na clínica, clique no botão "Entregar" para dar baixa imediata na tabela.',
+          'No módulo ".MULTI", acesse a aba "Nutrição" e selecione a sub-aba "Marmitas" (localizada antes da aba "Pacientes").',
+          'Acompanhe os contadores do dia em tempo real: Total Pedidos, Entregues, Custo Fornecedor e Desconto Projetado (exclusivo para refeições de almoço).',
+          'Clique em "Configuração" para definir os horários limites: Corte Hoje (padrão 09:30 para pedidos no dia) e Corte Véspera (padrão 16:00 para reservas antecipadas do dia seguinte), além do modo de cobrança (Coparticipação ou Integral).',
+          'Clique em "Link" para visualizar o endereço público e o QR Code que os funcionários usam para instalar e pedir pelo celular (/marmitas).',
+          'Conforme as marmitas forem retiradas pelos colaboradores na cozinha, clique no botão "Entregar" para dar baixa imediata na tabela.',
           'Clique em "Exportar" para copiar o texto formatado do pedido consolidado e enviar direto no WhatsApp do fornecedor de alimentos.'
         ]
       },
@@ -3684,7 +3684,7 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'Como os funcionários solicitam marmitas e como funciona o desconto em folha?',
-        resposta: 'Os funcionários acessam o link público (/marmitas) pelo celular ou computador, digitam o CPF e a senha (inicialmente os 4 primeiros dígitos do CPF). Eles solicitam Almoço ou Jantar até o horário limite estabelecido pela nutrição (09:30 e 15:30). Os pedidos aprovados geram o extrato diário na Nutrição e alimentam automaticamente o fechamento mensal no módulo RH (aba Marmitas), calculando o valor exato a ser descontado na folha de pagamento.'
+        resposta: 'Os colaboradores acessam o link (/marmitas) no celular (podendo adicionar como App à tela de início em Android e iPhone), digitam CPF e senha. Eles podem solicitar o almoço para hoje (até as 09:30) ou reservar para o dia seguinte (até as 16:00 da véspera). Os pedidos geram o extrato consolidado diário na Nutrição e alimentam o fechamento mensal no módulo RH (aba Marmitas), calculando o valor exato a ser descontado na folha de pagamento.'
       },
       {
         pergunta: 'Como funciona o cálculo de Previsão Preditiva com IA para compras de alimentos?',

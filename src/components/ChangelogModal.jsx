@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.43',
+      date: '19/11/2026',
+      title: 'Nex-Ai CLINIC (.MULTI & .HR) — Refinamento do Módulo Multiprofissional, Exclusividade de Almoço, Reserva Antecipada de Marmitas e Suporte a App PWA (Android & iOS/iPhone)',
+      description: 'Pacote de ajustes operacionais de alta usabilidade e ergonomia técnica: 1) Reorganização do Módulo .MULTI: a aba "Painel" agora é posicionada como a primeira aba da esquerda, abrindo como visão inicial padrão; 2) Reposicionamento na Nutrição: a aba "Marmitas" foi realocada estrategicamente para antes da aba "Pacientes"; 3) Foco Exclusivo em Almoço: remoção integral de qualquer referência ou controle de jantar, simplificando tabelas, extratos e exportações exclusivamente para o almoço; 4) Reserva Antecipada até 16h da Véspera: colaboradores agora podem pedir para hoje (até 09:30) ou reservar o almoço de amanhã até as 16:00 da véspera, com parâmetros 100% configuráveis pela Nutrição; 5) Suporte Completo a PWA / Instalação como App: suporte total a instalação na tela de início de celulares Android e iPhone (guia interativo do Safari/iOS, manifest.json oficial, meta tags para safe-area insets e atalho de instalação).',
+      changes: [
+        { type: 'Aba Painel como 1ª da Esquerda', text: 'Módulo .MULTI agora inicia na aba Painel como a primeira da esquerda.' },
+        { type: 'Marmitas antes de Pacientes', text: 'Sub-aba Marmitas na Nutrição posicionada imediatamente antes de Pacientes.' },
+        { type: 'Exclusividade de Almoço', text: 'Eliminação de referências a jantar em todo o sistema (Nutrição, RH e portal móvel).' },
+        { type: 'Reserva Antecipada de Véspera (16h)', text: 'Permite ao colaborador solicitar para hoje ou reservar para amanhã até as 16h da véspera com limites configuráveis.' },
+        { type: 'Instalação PWA (Android & iPhone)', text: 'Web App Manifest, suporte a iOS Safari com guia interativo e layout responsivo de alta performance para qualquer dispositivo.' }
+      ]
+    },
+    {
       version: 'v5.0.42',
       date: '19/11/2026',
       title: 'Nex-Ai CLINIC (.MULTI & .HR) — Migração 100% Cloud para o Banco Oficial (nexa-index) e Sistema Completo de Controle de Marmitas para Funcionários',

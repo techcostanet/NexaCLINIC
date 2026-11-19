@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Utensils,
   Sun,
-  Moon,
   Search,
   Calendar,
   KeyRound,
@@ -56,16 +55,12 @@ export default function MealDeductionsTab() {
   // Estatísticas globais do mês
   const stats = useMemo(() => {
     const totalMarmitas = summaryData.reduce((sum, d) => sum + d.totalOrders, 0);
-    const totalAlmoco = summaryData.reduce((sum, d) => sum + d.totalAlmoco, 0);
-    const totalJantar = summaryData.reduce((sum, d) => sum + d.totalJantar, 0);
     const totalDiscount = summaryData.reduce((sum, d) => sum + d.totalDiscount, 0);
     const totalCost = summaryData.reduce((sum, d) => sum + d.totalCost, 0);
 
     return {
       marmitas: totalMarmitas,
       colaboradores: summaryData.length,
-      almoco: totalAlmoco,
-      jantar: totalJantar,
       desconto: totalDiscount,
       fornecedor: totalCost
     };
@@ -103,13 +98,11 @@ export default function MealDeductionsTab() {
   // Exportar relatório em CSV para folha
   const handleExportCsv = () => {
     if (summaryData.length === 0) return;
-    const headers = ['Colaborador', 'CPF', 'Setor', 'Almoço', 'Jantar', 'Total Marmitas', 'Valor Desconto (R$)'];
+    const headers = ['Colaborador', 'CPF', 'Setor', 'Total Marmitas', 'Valor Desconto (R$)'];
     const rows = summaryData.map(d => [
       `"${d.employeeName}"`,
       `"${d.employeeCpf}"`,
       `"${d.sector}"`,
-      d.totalAlmoco,
-      d.totalJantar,
       d.totalOrders,
       d.totalDiscount.toFixed(2)
     ]);
@@ -238,8 +231,6 @@ export default function MealDeductionsTab() {
                   <th style={styles.th}>Colaborador</th>
                   <th style={styles.th}>CPF</th>
                   <th style={styles.th}>Setor</th>
-                  <th style={styles.th}>Almoço</th>
-                  <th style={styles.th}>Jantar</th>
                   <th style={styles.th}>Marmitas</th>
                   <th style={styles.th}>Desconto</th>
                   <th style={{ ...styles.th, textAlign: 'center' }}>Ações</th>
@@ -251,8 +242,6 @@ export default function MealDeductionsTab() {
                     <td style={{ ...styles.td, fontWeight: 600 }}>{item.employeeName}</td>
                     <td style={styles.td}>{item.employeeCpf || '—'}</td>
                     <td style={styles.td}>{item.sector}</td>
-                    <td style={styles.td}>{item.totalAlmoco}</td>
-                    <td style={styles.td}>{item.totalJantar}</td>
                     <td style={{ ...styles.td, fontWeight: 700, color: '#0284c7' }}>
                       {item.totalOrders}
                     </td>
@@ -309,7 +298,6 @@ export default function MealDeductionsTab() {
                   <thead>
                     <tr>
                       <th style={styles.th}>Data</th>
-                      <th style={styles.th}>Refeição</th>
                       <th style={styles.th}>Status</th>
                       <th style={styles.th}>Desconto</th>
                     </tr>
@@ -318,18 +306,6 @@ export default function MealDeductionsTab() {
                     {selectedEmployeeOrders.orders.map(o => (
                       <tr key={o.id} style={styles.tr}>
                         <td style={styles.td}>{formatDateBR(o.date)}</td>
-                        <td style={styles.td}>
-                          <span style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontWeight: 600,
-                            color: o.mealType === 'jantar' ? '#7c3aed' : '#d97706'
-                          }}>
-                            {o.mealType === 'jantar' ? <Moon size={13} /> : <Sun size={13} />}
-                            {o.mealType === 'jantar' ? 'Jantar' : 'Almoço'}
-                          </span>
-                        </td>
                         <td style={styles.td}>
                           <span style={{
                             ...styles.statusBadge,

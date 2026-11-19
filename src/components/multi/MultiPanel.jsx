@@ -14,7 +14,7 @@ import MultiReportsModal from './MultiReportsModal';
 
 export default function MultiPanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const { activeUnitId } = useUnit();
-  const [activeTab, setActiveTab] = useState('social'); // Começa focado no Serviço Social conforme solicitação
+  const [activeTab, setActiveTab] = useState('painel'); // Começa focado no Painel conforme solicitação
   const [reportsModalOpen, setReportsModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -25,8 +25,8 @@ export default function MultiPanel({ currentUser, isReportsOpen, setIsReportsOpe
 
   // Abas com padrão rigoroso de rótulo de 1 palavra / termo único
   const abas = [
-    { id: 'social', rotulo: 'Social', icone: HeartHandshake },
     { id: 'painel', rotulo: 'Painel', icone: LayoutDashboard },
+    { id: 'social', rotulo: 'Social', icone: HeartHandshake },
     { id: 'fisioterapia', rotulo: 'Fisioterapia', icone: Activity },
     { id: 'psicologia', rotulo: 'Psicologia', icone: Brain },
     { id: 'nutricao', rotulo: 'Nutrição', icone: Apple },

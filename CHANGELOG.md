@@ -1,3 +1,20 @@
+## [v5.0.43] - 19 de Novembro, 2026
+### Nex-Ai CLINIC (.MULTI & .HR) — Refinamento do Módulo Multiprofissional, Exclusividade de Almoço, Reserva Antecipada de Marmitas e Suporte a App PWA (Android & iOS/iPhone)
+- **Aba Painel como Primeira da Esquerda no Módulo Multiprofissional (`MultiPanel.jsx`):**
+  - A aba `Painel` foi movida para a primeira posição da esquerda na barra de navegação do módulo `.MULTI` e agora carrega como a tela padrão inicial.
+- **Reposicionamento Estratégico da Aba Marmitas na Nutrição (`MultiNutritionTab.jsx`):**
+  - A sub-aba `Marmitas` foi realocada para antes da aba `Pacientes`, proporcionando uma ordem de trabalho fluida: `Painel`, `Sobras`, `Entradas`, `Aproveitamento`, `Previsão`, `Produtos`, `Marmitas` e `Pacientes`.
+- **Exclusividade de Almoço (Remoção Total de Jantar):**
+  - Remoção de todos os campos, colunas, filtros e textos referentes a jantar em todo o sistema (`mealService.js`, `EmployeeMealPortal.jsx`, `FoodMealsTab.jsx`, `MealDeductionsTab.jsx` e manuais operacionais).
+- **Reserva Antecipada de Almoço até as 16h da Véspera:**
+  - O colaborador agora pode solicitar o almoço para **Hoje** (até as 09:30) ou fazer a **Reserva para Amanhã** até as 16:00 do dia anterior.
+  - Horários limites de corte 100% configuráveis a qualquer momento pela Nutrição (`lunchCutoff` e `advanceCutoff`).
+- **Instalação como Aplicativo (PWA) e Responsividade Mobile Total:**
+  - Arquivo `public/manifest.json` com ícones oficiais e modo `standalone`.
+  - Meta tags para Apple iOS (`apple-mobile-web-app-capable`, `apple-mobile-web-app-title`, safe-area insets).
+  - Guia interativo passo a passo de instalação no Safari para iPhone ("Compartilhar > Adicionar à Tela de Início").
+  - Botão de instalação nativo para navegadores Chrome/Android com captura de evento `beforeinstallprompt`.
+
 ## [v5.0.42] - 19 de Novembro, 2026
 ### Nex-Ai CLINIC (.MULTI & .HR) — Migração 100% Cloud para o Banco Oficial (nexa-index) e Sistema Completo de Controle de Marmitas para Funcionários
 - **Migração Integral e Definitiva para a Nuvem Oficial do Nex-Ai CLINIC (`nexa-index`):**

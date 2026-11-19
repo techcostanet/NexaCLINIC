@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Utensils,
   Sun,
-  Moon,
   CheckCircle2,
   Clock,
   AlertTriangle,
@@ -17,7 +16,12 @@ import {
   DollarSign,
   ArrowRight,
   XCircle,
-  HelpCircle
+  HelpCircle,
+  Smartphone,
+  Share,
+  PlusSquare,
+  ChevronRight,
+  Download
 } from 'lucide-react';
 import {
   getMealSettings,
@@ -25,8 +29,9 @@ import {
   createMealOrder,
   cancelMealOrder,
   getEmployeeOrders,
-  isMealCutoffPassed,
-  getTodayDateStr
+  isTimeCutoffPassed,
+  getTodayDateStr,
+  getTomorrowDateStr
 } from '../../../services/firebase/mealService';
 import { formatCurrency, formatDateBR } from '../../../services/firebase/foodWasteService';
 
@@ -53,6 +58,56 @@ export default function EmployeeMealPortal({ onExitPortal }) {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [actionLoading, setActionLoading] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState(null);
+
+  // Seleção de data do pedido: 'hoje' | 'amanha'
+  const [targetTab, setTargetTab] = useState('hoje');
+
+  // PWA / Instalação no Celular
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isIos, setIsIos] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [showIosInstallModal, setShowIosInstallModal] = useState(false);
+  const [showInstallBanner, setShowInstallBanner] = useState(true);
+
+  useEffect(() => {
+    // Detecta modo Standalone (já instalado como App)
+    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
+    setIsStandalone(isStandaloneMode);
+
+    // Detecta iOS (iPhone / iPad / iPod)
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIosDevice = /iphone|ipad|ipod/.test(userAgent) && !window.MSStream;
+    setIsIos(isIosDevice);
+
+    // Captura evento de instalação PWA do Chrome / Android
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (isIos) {
+      setShowIosInstallModal(true);
+      return;
+    }
+
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setShowInstallBanner(false);
+      }
+      setDeferredPrompt(null);
+    } else {
+      setShowIosInstallModal(true);
+    }
+  };
 
   // Máscara de CPF automática
   const maskCpf = (val) => {
@@ -100,7 +155,6 @@ export default function EmployeeMealPortal({ onExitPortal }) {
     } catch (_) {}
   };
 
-  // Carrega configurações e pedidos do colaborador
   const loadData = async () => {
     if (!session?.id) return;
     setLoadingOrders(true);
@@ -125,29 +179,33 @@ export default function EmployeeMealPortal({ onExitPortal }) {
   }, [session?.id]);
 
   const todayStr = getTodayDateStr();
+  const tomorrowStr = getTomorrowDateStr();
 
-  // Pedidos de hoje por refeição
-  const todayAlmoco = orders.find(o => o.date === todayStr && o.mealType === 'almoco' && o.status !== 'cancelado');
-  const todayJantar = orders.find(o => o.date === todayStr && o.mealType === 'jantar' && o.status !== 'cancelado');
+  // Pedidos ativos
+  const todayOrder = orders.find(o => o.date === todayStr && o.status !== 'cancelado');
+  const tomorrowOrder = orders.find(o => o.date === tomorrowStr && o.status !== 'cancelado');
 
   // Cálculos do mês atual
   const currentYearMonth = todayStr.slice(0, 7);
   const currentMonthOrders = orders.filter(o => o.status !== 'cancelado' && String(o.date || '').startsWith(currentYearMonth));
   const totalMonthDiscount = currentMonthOrders.reduce((sum, o) => sum + (Number(o.discountValue) || 0), 0);
 
-  const handleOrderMeal = async (mealType) => {
+  // Validação de horário de corte
+  const isTodayCutoff = isTimeCutoffPassed(settings?.lunchCutoff || '09:30');
+  const isAdvanceCutoff = isTimeCutoffPassed(settings?.advanceCutoff || '16:00');
+
+  const handleOrderMeal = async (targetDate) => {
     if (!session || !settings) return;
-    setActionLoading(`order_${mealType}`);
+    setActionLoading(`order_${targetDate}`);
     setFeedbackMsg(null);
 
     try {
       await createMealOrder({
         employee: session,
-        mealType,
-        targetDate: todayStr
+        targetDate
       });
-      const mealName = mealType === 'almoco' ? 'Almoço' : 'Jantar';
-      setFeedbackMsg({ type: 'success', text: `Pedido de ${mealName} confirmado com sucesso!` });
+      const dayLabel = targetDate === todayStr ? 'hoje' : 'amanhã';
+      setFeedbackMsg({ type: 'success', text: `Almoço de ${dayLabel} solicitado com sucesso!` });
       await loadData();
     } catch (err) {
       setFeedbackMsg({ type: 'error', text: err.message || 'Erro ao registrar pedido.' });
@@ -156,15 +214,14 @@ export default function EmployeeMealPortal({ onExitPortal }) {
     }
   };
 
-  const handleCancelMeal = async (orderId, mealType) => {
-    if (!window.confirm('Deseja realmente cancelar este pedido de marmita?')) return;
-    setActionLoading(`cancel_${mealType}`);
+  const handleCancelMeal = async (orderId, targetDate) => {
+    if (!window.confirm('Deseja realmente cancelar este pedido de almoço?')) return;
+    setActionLoading(`cancel_${orderId}`);
     setFeedbackMsg(null);
 
     try {
       await cancelMealOrder(orderId, session.id);
-      const mealName = mealType === 'almoco' ? 'Almoço' : 'Jantar';
-      setFeedbackMsg({ type: 'info', text: `Pedido de ${mealName} cancelado.` });
+      setFeedbackMsg({ type: 'info', text: 'Pedido de almoço cancelado.' });
       await loadData();
     } catch (err) {
       setFeedbackMsg({ type: 'error', text: err.message || 'Não foi possível cancelar o pedido.' });
@@ -173,17 +230,32 @@ export default function EmployeeMealPortal({ onExitPortal }) {
     }
   };
 
-  // Se não estiver logado, exibe tela de login
+  // Se não estiver logado, exibe tela de login mobile-first
   if (!session) {
     return (
       <div style={styles.loginContainer}>
+        {/* BANNER DE INSTALAÇÃO NO CELULAR */}
+        {!isStandalone && showInstallBanner && (
+          <div style={styles.topInstallBar}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Smartphone size={18} color="#0284c7" />
+              <span style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: 600 }}>
+                {isIos ? 'Instalar no iPhone' : 'Instalar no Celular'}
+              </span>
+            </div>
+            <button onClick={handleInstallApp} style={styles.installMiniBtn}>
+              Instalar
+            </button>
+          </div>
+        )}
+
         <div style={styles.loginCard}>
           <div style={styles.brandHeader}>
             <div style={styles.brandIcon}>
               <Utensils size={32} color="#fff" />
             </div>
-            <h1 style={styles.brandTitle}>NexAi <span style={{ color: '#0ea5e9' }}>REFEIÇÕES</span></h1>
-            <p style={styles.brandSubtitle}>Solicitação de Marmita para Colaboradores</p>
+            <h1 style={styles.brandTitle}>NexAi <span style={{ color: '#0ea5e9' }}>MARMITAS</span></h1>
+            <p style={styles.brandSubtitle}>Solicitação e Reserva de Almoço</p>
           </div>
 
           <form onSubmit={handleLogin} style={styles.form}>
@@ -205,6 +277,7 @@ export default function EmployeeMealPortal({ onExitPortal }) {
                   placeholder="000.000.000-00"
                   required
                   autoFocus
+                  inputMode="numeric"
                   style={styles.input}
                 />
               </div>
@@ -227,12 +300,12 @@ export default function EmployeeMealPortal({ onExitPortal }) {
                   onClick={() => setShowPassword(!showPassword)}
                   style={styles.showPassBtn}
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               <span style={styles.helpText}>
                 <HelpCircle size={13} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-                Senha inicial: primeiros 4 números do seu CPF. Para resetar, procure o RH.
+                Senha padrão: primeiros 4 dígitos do seu CPF. Para resetar, contate o RH.
               </span>
             </div>
 
@@ -261,16 +334,69 @@ export default function EmployeeMealPortal({ onExitPortal }) {
             </button>
           )}
         </div>
+
+        {/* MODAL DE INSTRUÇÃO PARA IPHONE */}
+        {showIosInstallModal && (
+          <div style={styles.modalOverlay}>
+            <div style={styles.modalCard}>
+              <div style={styles.modalHeader}>
+                <h3 style={styles.modalTitle}>Instalar no iPhone</h3>
+                <button onClick={() => setShowIosInstallModal(false)} style={styles.modalCloseBtn}>×</button>
+              </div>
+              <div style={styles.modalBody}>
+                <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: '#475569' }}>
+                  Para ter o aplicativo direto na tela de início do seu iPhone:
+                </p>
+                <div style={styles.stepItem}>
+                  <div style={styles.stepNum}>1</div>
+                  <div style={{ flex: 1, fontSize: '0.85rem' }}>
+                    No navegador <strong>Safari</strong>, toque no ícone <strong>Compartilhar</strong> (quadrado com seta para cima <Share size={15} style={{ verticalAlign: 'middle' }} />) na barra inferior.
+                  </div>
+                </div>
+                <div style={styles.stepItem}>
+                  <div style={styles.stepNum}>2</div>
+                  <div style={{ flex: 1, fontSize: '0.85rem' }}>
+                    Role as opções para baixo e selecione <strong>"Adicionar à Tela de Início"</strong> (<PlusSquare size={15} style={{ verticalAlign: 'middle' }} />).
+                  </div>
+                </div>
+                <div style={styles.stepItem}>
+                  <div style={styles.stepNum}>3</div>
+                  <div style={{ flex: 1, fontSize: '0.85rem' }}>
+                    Toque em <strong>"Adicionar"</strong> no canto superior direito.
+                  </div>
+                </div>
+              </div>
+              <div style={styles.modalFooter}>
+                <button onClick={() => setShowIosInstallModal(false)} style={styles.btnPrimary}>
+                  Entendido
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
-  // Dashboard do Colaborador Logado
-  const isAlmocoCutoff = isMealCutoffPassed('almoco', settings?.lunchCutoff || '09:30');
-  const isJantarCutoff = isMealCutoffPassed('jantar', settings?.dinnerCutoff || '15:30');
-
+  // DASHBOARD PRINCIPAL DO COLABORADOR
   return (
     <div style={styles.dashboardContainer}>
+      {/* BANNER INSTALAR APP SE NÃO ESTIVER EM MODO APP */}
+      {!isStandalone && showInstallBanner && (
+        <div style={styles.topInstallBar}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Smartphone size={18} color="#0284c7" />
+            <span style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: 600 }}>
+              Instale este portal como aplicativo no seu celular
+            </span>
+          </div>
+          <button onClick={handleInstallApp} style={styles.installMiniBtn}>
+            Instalar
+          </button>
+        </div>
+      )}
+
+      {/* HEADER DA APLICAÇÃO */}
       <header style={styles.header}>
         <div style={styles.headerContent}>
           <div style={styles.headerLeft}>
@@ -278,7 +404,7 @@ export default function EmployeeMealPortal({ onExitPortal }) {
               <Utensils size={20} color="#fff" />
             </div>
             <div>
-              <h2 style={styles.headerTitle}>NexAi Refeições</h2>
+              <h2 style={styles.headerTitle}>NexAi Marmitas</h2>
               <div style={styles.headerUser}>
                 <strong>{session.name}</strong> • <span>{session.sector}</span>
               </div>
@@ -306,52 +432,89 @@ export default function EmployeeMealPortal({ onExitPortal }) {
           }}>
             {feedbackMsg.type === 'success' ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
             <span style={{ flex: 1, fontSize: '0.9rem' }}>{feedbackMsg.text}</span>
-            <button onClick={() => setFeedbackMsg(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+            <button onClick={() => setFeedbackMsg(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}>×</button>
           </div>
         )}
 
-        <div style={styles.dateBanner}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Calendar size={18} color="#0ea5e9" />
-            <span style={{ fontWeight: 600 }}>Data:</span>
-            <span>{formatDateBR(todayStr)}</span>
-          </div>
-          <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
-            {settings?.chargeMode === 'integral' ? (
-              <span>Cobrança: <strong>Integral ({formatCurrency(settings?.supplierCost || 18)})</strong></span>
-            ) : (
-              <span>Coparticipação: <strong>{formatCurrency(settings?.employeeCost || 5)}</strong> por refeição</span>
+        {/* NAVEGAÇÃO DE DIAS: HOJE vs AMANHÃ (RESERVA ANTECIPADA) */}
+        <div style={styles.daySelectorContainer}>
+          <button
+            type="button"
+            onClick={() => setTargetTab('hoje')}
+            style={{
+              ...styles.dayTabBtn,
+              backgroundColor: targetTab === 'hoje' ? '#0284c7' : '#ffffff',
+              color: targetTab === 'hoje' ? '#ffffff' : '#475569',
+              borderColor: targetTab === 'hoje' ? '#0284c7' : '#cbd5e1'
+            }}
+          >
+            <Calendar size={16} />
+            <span>Hoje ({formatDateBR(todayStr)})</span>
+            {todayOrder && (
+              <span style={{
+                ...styles.miniBadge,
+                backgroundColor: targetTab === 'hoje' ? '#ffffff' : '#10b981',
+                color: targetTab === 'hoje' ? '#0284c7' : '#ffffff'
+              }}>
+                ✓
+              </span>
             )}
-          </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTargetTab('amanha')}
+            style={{
+              ...styles.dayTabBtn,
+              backgroundColor: targetTab === 'amanha' ? '#0284c7' : '#ffffff',
+              color: targetTab === 'amanha' ? '#ffffff' : '#475569',
+              borderColor: targetTab === 'amanha' ? '#0284c7' : '#cbd5e1'
+            }}
+          >
+            <Clock size={16} />
+            <span>Amanhã ({formatDateBR(tomorrowStr)})</span>
+            {tomorrowOrder && (
+              <span style={{
+                ...styles.miniBadge,
+                backgroundColor: targetTab === 'amanha' ? '#ffffff' : '#10b981',
+                color: targetTab === 'amanha' ? '#0284c7' : '#ffffff'
+              }}>
+                ✓
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* CARDS DE SOLICITAÇÃO HOJE */}
-        <section style={styles.cardsGrid}>
-          {/* CARD ALMOÇO */}
-          <div style={{
+        {/* CONTEÚDO: PEDIDO DE HOJE */}
+        {targetTab === 'hoje' && (
+          <section style={{
             ...styles.mealCard,
-            borderColor: todayAlmoco ? '#10b981' : '#e2e8f0',
-            backgroundColor: todayAlmoco ? '#f0fdf4' : '#ffffff'
+            borderColor: todayOrder ? '#10b981' : '#e2e8f0',
+            backgroundColor: todayOrder ? '#f0fdf4' : '#ffffff'
           }}>
             <div style={styles.mealCardHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ ...styles.mealIconBox, backgroundColor: '#fef3c7', color: '#d97706' }}>
-                  <Sun size={22} />
+                  <Sun size={24} />
                 </div>
                 <div>
-                  <h3 style={styles.mealTitle}>Almoço</h3>
+                  <h3 style={styles.mealTitle}>Almoço de Hoje</h3>
                   <span style={styles.mealCutoff}>
-                    <Clock size={12} style={{ marginRight: '4px' }} />
-                    Limite: {settings?.lunchCutoff || '09:30'}
+                    <Clock size={13} style={{ marginRight: '4px' }} />
+                    Limite para hoje: até {settings?.lunchCutoff || '09:30'}
                   </span>
                 </div>
               </div>
 
-              {todayAlmoco ? (
-                <span style={{ ...styles.badge, backgroundColor: todayAlmoco.status === 'entregue' ? '#dcfce7' : '#e0f2fe', color: todayAlmoco.status === 'entregue' ? '#166534' : '#0369a1' }}>
-                  {todayAlmoco.status === 'entregue' ? 'Entregue' : 'Solicitado'}
+              {todayOrder ? (
+                <span style={{
+                  ...styles.badge,
+                  backgroundColor: todayOrder.status === 'entregue' ? '#dcfce7' : '#e0f2fe',
+                  color: todayOrder.status === 'entregue' ? '#166534' : '#0369a1'
+                }}>
+                  {todayOrder.status === 'entregue' ? 'Entregue' : 'Solicitado'}
                 </span>
-              ) : isAlmocoCutoff ? (
+              ) : isTodayCutoff ? (
                 <span style={{ ...styles.badge, backgroundColor: '#f1f5f9', color: '#64748b' }}>
                   Encerrado
                 </span>
@@ -363,85 +526,89 @@ export default function EmployeeMealPortal({ onExitPortal }) {
             </div>
 
             <div style={styles.mealCardBody}>
-              {todayAlmoco ? (
+              {todayOrder ? (
                 <div style={styles.confirmedBox}>
                   <CheckCircle2 size={24} color="#10b981" />
                   <div>
-                    <div style={{ fontWeight: 600, color: '#065f46' }}>Marmita Confirmada</div>
+                    <div style={{ fontWeight: 700, color: '#065f46', fontSize: '0.95rem' }}>Almoço Confirmado</div>
                     <div style={{ fontSize: '0.8rem', color: '#047857' }}>
-                      Status: {todayAlmoco.status === 'entregue' ? 'Retirada efetuada' : 'Aguardando entrega na cozinha'}
+                      {todayOrder.status === 'entregue'
+                        ? 'Refeição entregue/retirada na cozinha.'
+                        : 'Aguardando entrega na cozinha no horário de almoço.'}
                     </div>
                   </div>
                 </div>
               ) : (
                 <p style={styles.mealDesc}>
-                  Solicite sua refeição de almoço. O pedido será encaminhado ao fornecedor terceirizado.
+                  Solicite sua marmita de almoço para hoje. O pedido será encaminhado ao fornecedor terceirizado.
                 </p>
               )}
             </div>
 
             <div style={styles.mealCardFooter}>
-              {todayAlmoco ? (
-                todayAlmoco.status !== 'entregue' && !isAlmocoCutoff ? (
+              {todayOrder ? (
+                todayOrder.status !== 'entregue' && !isTodayCutoff ? (
                   <button
-                    onClick={() => handleCancelMeal(todayAlmoco.id, 'almoco')}
-                    disabled={actionLoading === 'cancel_almoco'}
+                    onClick={() => handleCancelMeal(todayOrder.id, todayStr)}
+                    disabled={actionLoading === `cancel_${todayOrder.id}`}
                     style={styles.cancelBtn}
                   >
-                    {actionLoading === 'cancel_almoco' ? 'Cancelando...' : 'Cancelar Marmita'}
+                    {actionLoading === `cancel_${todayOrder.id}` ? 'Cancelando...' : 'Cancelar Almoço'}
                   </button>
                 ) : (
                   <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                    {todayAlmoco.status === 'entregue' ? 'Entregue' : `Horário limite expirado (${settings?.lunchCutoff || '09:30'})`}
+                    {todayOrder.status === 'entregue' ? 'Refeição entregue' : `Horário limite expirado (${settings?.lunchCutoff || '09:30'})`}
                   </span>
                 )
               ) : (
                 <button
-                  onClick={() => handleOrderMeal('almoco')}
-                  disabled={isAlmocoCutoff || actionLoading === 'order_almoco'}
+                  onClick={() => handleOrderMeal(todayStr)}
+                  disabled={isTodayCutoff || actionLoading === `order_${todayStr}`}
                   style={{
                     ...styles.orderBtn,
-                    backgroundColor: isAlmocoCutoff ? '#94a3b8' : '#0284c7',
-                    cursor: isAlmocoCutoff ? 'not-allowed' : 'pointer'
+                    backgroundColor: isTodayCutoff ? '#94a3b8' : '#0284c7',
+                    cursor: isTodayCutoff ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  {actionLoading === 'order_almoco' ? (
+                  {actionLoading === `order_${todayStr}` ? (
                     'Solicitando...'
-                  ) : isAlmocoCutoff ? (
-                    `Encerrado às ${settings?.lunchCutoff || '09:30'}`
+                  ) : isTodayCutoff ? (
+                    `Encerrado hoje às ${settings?.lunchCutoff || '09:30'}`
                   ) : (
-                    'Solicitar Almoço'
+                    'Solicitar Almoço de Hoje'
                   )}
                 </button>
               )}
             </div>
-          </div>
+          </section>
+        )}
 
-          {/* CARD JANTAR */}
-          <div style={{
+        {/* CONTEÚDO: RESERVA DE AMANHÃ */}
+        {targetTab === 'amanha' && (
+          <section style={{
             ...styles.mealCard,
-            borderColor: todayJantar ? '#10b981' : '#e2e8f0',
-            backgroundColor: todayJantar ? '#f0fdf4' : '#ffffff'
+            borderColor: tomorrowOrder ? '#10b981' : '#e2e8f0',
+            backgroundColor: tomorrowOrder ? '#f0fdf4' : '#ffffff'
           }}>
             <div style={styles.mealCardHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ ...styles.mealIconBox, backgroundColor: '#ede9fe', color: '#7c3aed' }}>
-                  <Moon size={22} />
+                <div style={{ ...styles.mealIconBox, backgroundColor: '#e0f2fe', color: '#0284c7' }}>
+                  <Calendar size={24} />
                 </div>
                 <div>
-                  <h3 style={styles.mealTitle}>Jantar</h3>
+                  <h3 style={styles.mealTitle}>Almoço de Amanhã</h3>
                   <span style={styles.mealCutoff}>
-                    <Clock size={12} style={{ marginRight: '4px' }} />
-                    Limite: {settings?.dinnerCutoff || '15:30'}
+                    <Clock size={13} style={{ marginRight: '4px' }} />
+                    Reserva prévia até as {settings?.advanceCutoff || '16:00'} de hoje
                   </span>
                 </div>
               </div>
 
-              {todayJantar ? (
-                <span style={{ ...styles.badge, backgroundColor: todayJantar.status === 'entregue' ? '#dcfce7' : '#e0f2fe', color: todayJantar.status === 'entregue' ? '#166534' : '#0369a1' }}>
-                  {todayJantar.status === 'entregue' ? 'Entregue' : 'Solicitado'}
+              {tomorrowOrder ? (
+                <span style={{ ...styles.badge, backgroundColor: '#dcfce7', color: '#166534' }}>
+                  Reservado
                 </span>
-              ) : isJantarCutoff ? (
+              ) : isAdvanceCutoff ? (
                 <span style={{ ...styles.badge, backgroundColor: '#f1f5f9', color: '#64748b' }}>
                   Encerrado
                 </span>
@@ -453,60 +620,60 @@ export default function EmployeeMealPortal({ onExitPortal }) {
             </div>
 
             <div style={styles.mealCardBody}>
-              {todayJantar ? (
+              {tomorrowOrder ? (
                 <div style={styles.confirmedBox}>
                   <CheckCircle2 size={24} color="#10b981" />
                   <div>
-                    <div style={{ fontWeight: 600, color: '#065f46' }}>Marmita Confirmada</div>
+                    <div style={{ fontWeight: 700, color: '#065f46', fontSize: '0.95rem' }}>Reserva Confirmada</div>
                     <div style={{ fontSize: '0.8rem', color: '#047857' }}>
-                      Status: {todayJantar.status === 'entregue' ? 'Retirada efetuada' : 'Aguardando entrega na cozinha'}
+                      Sua marmita já está garantida no lote de compras de amanhã.
                     </div>
                   </div>
                 </div>
               ) : (
                 <p style={styles.mealDesc}>
-                  Solicite sua refeição de jantar para o turno noturno.
+                  Reserve com antecedência o almoço para amanhã ({formatDateBR(tomorrowStr)}). A cozinha fechará os pedidos do fornecedor às {settings?.advanceCutoff || '16:00'} de hoje.
                 </p>
               )}
             </div>
 
             <div style={styles.mealCardFooter}>
-              {todayJantar ? (
-                todayJantar.status !== 'entregue' && !isJantarCutoff ? (
+              {tomorrowOrder ? (
+                !isAdvanceCutoff ? (
                   <button
-                    onClick={() => handleCancelMeal(todayJantar.id, 'jantar')}
-                    disabled={actionLoading === 'cancel_jantar'}
+                    onClick={() => handleCancelMeal(tomorrowOrder.id, tomorrowStr)}
+                    disabled={actionLoading === `cancel_${tomorrowOrder.id}`}
                     style={styles.cancelBtn}
                   >
-                    {actionLoading === 'cancel_jantar' ? 'Cancelando...' : 'Cancelar Marmita'}
+                    {actionLoading === `cancel_${tomorrowOrder.id}` ? 'Cancelando...' : 'Cancelar Reserva'}
                   </button>
                 ) : (
                   <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                    {todayJantar.status === 'entregue' ? 'Entregue' : `Horário limite expirado (${settings?.dinnerCutoff || '15:30'})`}
+                    Reserva confirmada. Cancelamento encerrado às {settings?.advanceCutoff || '16:00'}.
                   </span>
                 )
               ) : (
                 <button
-                  onClick={() => handleOrderMeal('jantar')}
-                  disabled={isJantarCutoff || actionLoading === 'order_jantar'}
+                  onClick={() => handleOrderMeal(tomorrowStr)}
+                  disabled={isAdvanceCutoff || actionLoading === `order_${tomorrowStr}`}
                   style={{
                     ...styles.orderBtn,
-                    backgroundColor: isJantarCutoff ? '#94a3b8' : '#7c3aed',
-                    cursor: isJantarCutoff ? 'not-allowed' : 'pointer'
+                    backgroundColor: isAdvanceCutoff ? '#94a3b8' : '#059669',
+                    cursor: isAdvanceCutoff ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  {actionLoading === 'order_jantar' ? (
-                    'Solicitando...'
-                  ) : isJantarCutoff ? (
-                    `Encerrado às ${settings?.dinnerCutoff || '15:30'}`
+                  {actionLoading === `order_${tomorrowStr}` ? (
+                    'Reservando...'
+                  ) : isAdvanceCutoff ? (
+                    `Reserva encerrada às ${settings?.advanceCutoff || '16:00'}`
                   ) : (
-                    'Solicitar Jantar'
+                    'Reservar Almoço para Amanhã'
                   )}
                 </button>
               )}
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* RESUMO MENSAL DO COLABORADOR */}
         <section style={styles.summarySection}>
@@ -514,14 +681,14 @@ export default function EmployeeMealPortal({ onExitPortal }) {
             <div style={styles.summaryCard}>
               <span style={styles.summaryLabel}>Marmitas no Mês</span>
               <strong style={styles.summaryValue}>{currentMonthOrders.length}</strong>
-              <span style={styles.summarySub}>refeições solicitadas</span>
+              <span style={styles.summarySub}>almoços solicitados</span>
             </div>
             <div style={styles.summaryCard}>
               <span style={styles.summaryLabel}>Previsão de Desconto</span>
               <strong style={{ ...styles.summaryValue, color: '#dc2626' }}>
                 {formatCurrency(totalMonthDiscount)}
               </strong>
-              <span style={styles.summarySub}>a lançar em folha de pagamento</span>
+              <span style={styles.summarySub}>a lançar em folha</span>
             </div>
           </div>
         </section>
@@ -543,16 +710,12 @@ export default function EmployeeMealPortal({ onExitPortal }) {
               {orders.slice(0, 15).map(o => (
                 <div key={o.id} style={styles.historyItem}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                      ...styles.historyIconBox,
-                      backgroundColor: o.mealType === 'jantar' ? '#ede9fe' : '#fef3c7',
-                      color: o.mealType === 'jantar' ? '#7c3aed' : '#d97706'
-                    }}>
-                      {o.mealType === 'jantar' ? <Moon size={16} /> : <Sun size={16} />}
+                    <div style={styles.historyIconBox}>
+                      <Sun size={16} />
                     </div>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                        {o.mealType === 'jantar' ? 'Jantar' : 'Almoço'} • {formatDateBR(o.date)}
+                        Almoço • {formatDateBR(o.date)}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
                         Solicitado às {new Date(o.requestedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -560,7 +723,7 @@ export default function EmployeeMealPortal({ onExitPortal }) {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
                       {formatCurrency(o.discountValue)}
                     </span>
@@ -578,6 +741,46 @@ export default function EmployeeMealPortal({ onExitPortal }) {
           )}
         </section>
       </main>
+
+      {/* MODAL DE INSTRUÇÃO PARA IPHONE */}
+      {showIosInstallModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>Instalar no iPhone</h3>
+              <button onClick={() => setShowIosInstallModal(false)} style={styles.modalCloseBtn}>×</button>
+            </div>
+            <div style={styles.modalBody}>
+              <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: '#475569' }}>
+                Para ter o aplicativo direto na tela de início do seu iPhone:
+              </p>
+              <div style={styles.stepItem}>
+                <div style={styles.stepNum}>1</div>
+                <div style={{ flex: 1, fontSize: '0.85rem' }}>
+                  No navegador <strong>Safari</strong>, toque no ícone <strong>Compartilhar</strong> (quadrado com seta para cima <Share size={15} style={{ verticalAlign: 'middle' }} />) na barra inferior.
+                </div>
+              </div>
+              <div style={styles.stepItem}>
+                <div style={styles.stepNum}>2</div>
+                <div style={{ flex: 1, fontSize: '0.85rem' }}>
+                  Role as opções para baixo e selecione <strong>"Adicionar à Tela de Início"</strong> (<PlusSquare size={15} style={{ verticalAlign: 'middle' }} />).
+                </div>
+              </div>
+              <div style={styles.stepItem}>
+                <div style={styles.stepNum}>3</div>
+                <div style={{ flex: 1, fontSize: '0.85rem' }}>
+                  Toque em <strong>"Adicionar"</strong> no canto superior direito.
+                </div>
+              </div>
+            </div>
+            <div style={styles.modalFooter}>
+              <button onClick={() => setShowIosInstallModal(false)} style={styles.btnPrimary}>
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -586,23 +789,49 @@ const styles = {
   loginContainer: {
     minHeight: '100vh',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#0f172a',
     padding: '1rem',
-    fontFamily: 'Inter, system-ui, sans-serif'
+    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+    boxSizing: 'border-box'
+  },
+  topInstallBar: {
+    width: '100%',
+    maxWidth: '420px',
+    backgroundColor: '#f0f9ff',
+    border: '1px solid #bae6fd',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '1rem',
+    boxSizing: 'border-box'
+  },
+  installMiniBtn: {
+    padding: '6px 12px',
+    borderRadius: '8px',
+    border: 'none',
+    backgroundColor: '#0284c7',
+    color: '#ffffff',
+    fontWeight: 700,
+    fontSize: '0.75rem',
+    cursor: 'pointer'
   },
   loginCard: {
     backgroundColor: '#ffffff',
-    borderRadius: '16px',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
-    padding: '2.5rem 2rem',
+    borderRadius: '18px',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
+    padding: '2rem 1.5rem',
     maxWidth: '420px',
-    width: '100%'
+    width: '100%',
+    boxSizing: 'border-box'
   },
   brandHeader: {
     textAlign: 'center',
-    marginBottom: '2rem'
+    marginBottom: '1.75rem'
   },
   brandIcon: {
     width: '56px',
@@ -612,11 +841,11 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 12px',
+    margin: '0 auto 10px',
     boxShadow: '0 4px 12px rgba(2, 132, 199, 0.35)'
   },
   brandTitle: {
-    fontSize: '1.5rem',
+    fontSize: '1.45rem',
     fontWeight: 800,
     color: '#0f172a',
     margin: 0,
@@ -630,7 +859,7 @@ const styles = {
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem'
+    gap: '1.15rem'
   },
   alertError: {
     display: 'flex',
@@ -646,7 +875,7 @@ const styles = {
   formGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px'
+    gap: '5px'
   },
   label: {
     fontSize: '0.85rem',
@@ -665,22 +894,22 @@ const styles = {
   },
   input: {
     width: '100%',
+    minHeight: '44px',
     padding: '10px 12px 10px 38px',
-    borderRadius: '8px',
+    borderRadius: '10px',
     border: '1px solid #cbd5e1',
-    fontSize: '0.95rem',
+    fontSize: '1rem',
     outline: 'none',
-    transition: 'border-color 0.2s',
     boxSizing: 'border-box'
   },
   showPassBtn: {
     position: 'absolute',
-    right: '10px',
+    right: '8px',
     background: 'none',
     border: 'none',
     color: '#64748b',
     cursor: 'pointer',
-    padding: '4px'
+    padding: '6px'
   },
   helpText: {
     fontSize: '0.75rem',
@@ -692,8 +921,9 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: '48px',
     padding: '12px',
-    borderRadius: '8px',
+    borderRadius: '10px',
     border: 'none',
     background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
     color: '#fff',
@@ -701,7 +931,7 @@ const styles = {
     fontSize: '1rem',
     cursor: 'pointer',
     boxShadow: '0 4px 10px rgba(2, 132, 199, 0.3)',
-    marginTop: '0.5rem'
+    marginTop: '0.25rem'
   },
   exitBtn: {
     width: '100%',
@@ -719,18 +949,19 @@ const styles = {
   dashboardContainer: {
     minHeight: '100vh',
     backgroundColor: '#f8fafc',
-    fontFamily: 'Inter, system-ui, sans-serif'
+    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+    paddingBottom: 'env(safe-area-inset-bottom, 2rem)'
   },
   header: {
     backgroundColor: '#ffffff',
     borderBottom: '1px solid #e2e8f0',
-    padding: '0.75rem 1.25rem',
+    padding: '0.75rem 1rem',
     position: 'sticky',
     top: 0,
     zIndex: 20
   },
   headerContent: {
-    maxWidth: '900px',
+    maxWidth: '700px',
     margin: '0 auto',
     display: 'flex',
     alignItems: 'center',
@@ -739,7 +970,7 @@ const styles = {
   headerLeft: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px'
+    gap: '10px'
   },
   smallBrandIcon: {
     width: '38px',
@@ -752,12 +983,12 @@ const styles = {
   },
   headerTitle: {
     margin: 0,
-    fontSize: '1.05rem',
-    fontWeight: 700,
+    fontSize: '1rem',
+    fontWeight: 800,
     color: '#0f172a'
   },
   headerUser: {
-    fontSize: '0.8rem',
+    fontSize: '0.75rem',
     color: '#64748b'
   },
   headerRight: {
@@ -776,7 +1007,7 @@ const styles = {
   logoutBtn: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
+    gap: '4px',
     padding: '8px 12px',
     borderRadius: '8px',
     border: '1px solid #fee2e2',
@@ -787,9 +1018,9 @@ const styles = {
     cursor: 'pointer'
   },
   mainContent: {
-    maxWidth: '900px',
+    maxWidth: '700px',
     margin: '0 auto',
-    padding: '1.5rem 1rem 3rem',
+    padding: '1.25rem 1rem 3rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '1.25rem'
@@ -798,52 +1029,62 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
-    padding: '12px 16px',
-    borderRadius: '8px',
+    padding: '12px 14px',
+    borderRadius: '10px',
     border: '1px solid'
   },
-  dateBanner: {
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    padding: '12px 18px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
+  daySelectorContainer: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
     gap: '10px'
   },
-  cardsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: '1.25rem'
+  dayTabBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    minHeight: '48px',
+    padding: '10px',
+    borderRadius: '12px',
+    border: '1.5px solid',
+    fontSize: '0.9rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  },
+  miniBadge: {
+    padding: '2px 6px',
+    borderRadius: '999px',
+    fontSize: '0.7rem',
+    fontWeight: 800
   },
   mealCard: {
-    borderRadius: '14px',
+    borderRadius: '16px',
     border: '1.5px solid #e2e8f0',
-    padding: '1.25rem',
+    padding: '1.5rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+    gap: '1.25rem',
+    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)'
   },
   mealCardHeader: {
     display: 'flex',
     alignItems: 'flex-start',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    gap: '8px'
   },
   mealIconBox: {
-    width: '42px',
-    height: '42px',
-    borderRadius: '10px',
+    width: '46px',
+    height: '46px',
+    borderRadius: '12px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
   },
   mealTitle: {
     margin: 0,
-    fontSize: '1.15rem',
-    fontWeight: 700,
+    fontSize: '1.2rem',
+    fontWeight: 800,
     color: '#0f172a'
   },
   mealCutoff: {
@@ -851,7 +1092,7 @@ const styles = {
     alignItems: 'center',
     fontSize: '0.75rem',
     color: '#64748b',
-    marginTop: '2px'
+    marginTop: '3px'
   },
   badge: {
     padding: '4px 10px',
@@ -867,15 +1108,15 @@ const styles = {
   confirmedBox: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
-    padding: '10px 12px',
+    gap: '12px',
+    padding: '12px 14px',
     backgroundColor: '#ecfdf5',
-    borderRadius: '8px',
+    borderRadius: '10px',
     border: '1px solid #a7f3d0'
   },
   mealDesc: {
     margin: 0,
-    fontSize: '0.85rem',
+    fontSize: '0.9rem',
     color: '#64748b',
     lineHeight: '1.4'
   },
@@ -884,44 +1125,47 @@ const styles = {
   },
   orderBtn: {
     width: '100%',
-    padding: '11px',
-    borderRadius: '8px',
+    minHeight: '48px',
+    padding: '12px',
+    borderRadius: '10px',
     border: 'none',
     color: '#ffffff',
     fontWeight: 700,
-    fontSize: '0.95rem'
+    fontSize: '1rem',
+    boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
   },
   cancelBtn: {
     width: '100%',
+    minHeight: '44px',
     padding: '10px',
-    borderRadius: '8px',
+    borderRadius: '10px',
     border: '1px solid #fca5a5',
     backgroundColor: '#fff',
     color: '#dc2626',
-    fontWeight: 600,
-    fontSize: '0.85rem',
+    fontWeight: 700,
+    fontSize: '0.9rem',
     cursor: 'pointer'
   },
   summarySection: {
-    marginTop: '0.5rem'
+    marginTop: '0.25rem'
   },
   summaryGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '1rem'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: '10px'
   },
   summaryCard: {
     backgroundColor: '#ffffff',
     borderRadius: '12px',
     border: '1px solid #e2e8f0',
-    padding: '1.25rem',
+    padding: '1.15rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '4px'
   },
   summaryLabel: {
-    fontSize: '0.8rem',
-    fontWeight: 600,
+    fontSize: '0.75rem',
+    fontWeight: 700,
     color: '#64748b',
     textTransform: 'uppercase'
   },
@@ -965,7 +1209,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '10px 12px',
-    borderRadius: '8px',
+    borderRadius: '10px',
     backgroundColor: '#f8fafc',
     border: '1px solid #f1f5f9'
   },
@@ -973,8 +1217,99 @@ const styles = {
     width: '32px',
     height: '32px',
     borderRadius: '8px',
+    backgroundColor: '#fef3c7',
+    color: '#d97706',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
+  },
+
+  // Modal
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+    padding: '1rem'
+  },
+  modalCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    width: '100%',
+    maxWidth: '420px',
+    overflow: 'hidden',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
+  },
+  modalHeader: {
+    padding: '14px 18px',
+    borderBottom: '1px solid #e2e8f0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc'
+  },
+  modalTitle: {
+    margin: 0,
+    fontSize: '1.05rem',
+    fontWeight: 700,
+    color: '#0f172a'
+  },
+  modalCloseBtn: {
+    background: 'none',
+    border: 'none',
+    fontSize: '1.4rem',
+    color: '#64748b',
+    cursor: 'pointer'
+  },
+  modalBody: {
+    padding: '16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  },
+  stepItem: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '10px',
+    backgroundColor: '#f8fafc',
+    padding: '10px',
+    borderRadius: '10px',
+    border: '1px solid #e2e8f0'
+  },
+  stepNum: {
+    width: '24px',
+    height: '24px',
+    borderRadius: '999px',
+    backgroundColor: '#0284c7',
+    color: '#ffffff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '0.75rem',
+    fontWeight: 800,
+    flexShrink: 0
+  },
+  modalFooter: {
+    padding: '12px 18px',
+    borderTop: '1px solid #e2e8f0',
+    display: 'flex',
+    justifyContent: 'flex-end',
+    backgroundColor: '#f8fafc'
+  },
+  btnPrimary: {
+    padding: '8px 18px',
+    borderRadius: '8px',
+    border: 'none',
+    backgroundColor: '#0284c7',
+    color: '#ffffff',
+    fontWeight: 700,
+    fontSize: '0.9rem',
+    cursor: 'pointer'
   }
 };

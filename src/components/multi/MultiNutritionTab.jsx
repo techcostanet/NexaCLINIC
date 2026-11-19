@@ -19,12 +19,12 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
 
   const subAbas = [
     { id: 'painel', rotulo: 'Painel', icone: LayoutDashboard },
-    { id: 'marmitas', rotulo: 'Marmitas', icone: Utensils },
     { id: 'sobras', rotulo: 'Sobras', icone: Trash2 },
     { id: 'entradas', rotulo: 'Entradas', icone: PackagePlus },
     { id: 'aproveitamento', rotulo: 'Aproveitamento', icone: TrendingUp },
     { id: 'previsao', rotulo: 'Previsão', icone: Sparkles },
     { id: 'produtos', rotulo: 'Produtos', icone: Package },
+    { id: 'marmitas', rotulo: 'Marmitas', icone: Utensils },
     { id: 'pacientes', rotulo: 'Pacientes', icone: Users },
   ];
 
@@ -191,10 +191,7 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
       {/* 1. PAINEL DE SOBRAS & DESPERDÍCIO */}
       {subTab === 'painel' && <FoodDashboard />}
 
-      {/* 2. CONTROLE DE MARMITAS DE FUNCIONÁRIOS */}
-      {subTab === 'marmitas' && <FoodMealsTab />}
-
-      {/* 3. REGISTRO DE SOBRAS */}
+      {/* 2. REGISTRO DE SOBRAS */}
       {subTab === 'sobras' && <FoodWasteTab currentUser={currentUser} />}
 
       {/* 3. ENTRADAS DE ALIMENTOS */}
@@ -209,7 +206,10 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
       {/* 6. CATÁLOGO DE PRODUTOS */}
       {subTab === 'produtos' && <FoodProductsTab currentUser={currentUser} />}
 
-      {/* 7. PACIENTES / AVALIAÇÃO CLÍNICA RENAL */}
+      {/* 7. CONTROLE DE MARMITAS DE FUNCIONÁRIOS */}
+      {subTab === 'marmitas' && <FoodMealsTab />}
+
+      {/* 8. PACIENTES / AVALIAÇÃO CLÍNICA RENAL */}
       {subTab === 'pacientes' && (
         <>
           {/* BARRA DE AÇÕES */}
