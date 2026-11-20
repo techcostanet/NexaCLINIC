@@ -3414,6 +3414,17 @@ export const MODULE_GUIDES = {
         ]
       },
       {
+        title: 'Como Realizar Avaliação Nutricional com Motor de Busca de Pacientes',
+        steps: [
+          'No módulo ".MULTI", acesse a aba "Nutrição" e selecione a sub-aba "Pacientes".',
+          'Clique no botão "+ Avaliação" para abrir a janela de consulta e avaliação nutricional.',
+          'No motor de busca de pacientes, digite o nome, CPF, prontuário ou turno do paciente, ou selecione diretamente na lista de pacientes cadastrados na clínica.',
+          'Ao selecionar o paciente, o sistema carrega automaticamente seus dados cadastrais, peso seco e consulta o histórico laboratorial no LIS (fósforo, potássio e cálcio), sugerindo condutas dietéticas com base nos exames.',
+          'Preencha as informações antropométricas (altura, IMC automático, apetite, ingestão hídrica) e a conduta nutricional e clique em "Salvar".',
+          'Na tabela de registros, utilize o botão "Editar" para atualizar consultas anteriores ou "Exames" para consultar o histórico laboratorial completo.'
+        ]
+      },
+      {
         title: 'Como Exportar Relatórios em Excel (.xlsx)',
         steps: [
           'Acesse a aba "Trocas" ou clique no botão "Relatórios" no cabeçalho do módulo.',
@@ -3641,6 +3652,17 @@ export const MODULE_GUIDES = {
         ]
       },
       {
+        title: 'Como Realizar Avaliação Nutricional com Motor de Busca de Pacientes',
+        steps: [
+          'No módulo ".MULTI", acesse a aba "Nutrição" e selecione a sub-aba "Pacientes".',
+          'Clique no botão "+ Avaliação" para abrir a janela de consulta e avaliação nutricional.',
+          'No motor de busca de pacientes, digite o nome, CPF, prontuário ou turno do paciente, ou selecione diretamente na lista de pacientes cadastrados na clínica.',
+          'Ao selecionar o paciente, o sistema carrega automaticamente seus dados cadastrais, peso seco e consulta o histórico laboratorial no LIS (fósforo, potássio e cálcio), sugerindo condutas dietéticas com base nos exames.',
+          'Preencha as informações antropométricas (altura, IMC automático, apetite, ingestão hídrica) e a conduta nutricional e clique em "Salvar".',
+          'Na tabela de registros, utilize o botão "Editar" para atualizar consultas anteriores ou "Exames" para consultar o histórico laboratorial completo.'
+        ]
+      },
+      {
         title: 'Como Exportar Relatórios em Excel (.xlsx)',
         steps: [
           'No cabeçalho do módulo ".MULTI", clique no botão "Relatórios" ou no botão "Exportar" na aba Social ou Fisioterapia.',
@@ -3689,6 +3711,10 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Como funciona o cálculo de Previsão Preditiva com IA para compras de alimentos?',
         resposta: 'O algoritmo analisa a média diária de consumo real e a taxa de descarte histórico de cada alimento nos últimos 60 dias. Aplicando o horizonte de dias selecionado (ex: 7 ou 14 dias) e a margem de segurança definida, a IA calcula a quantidade exata recomendada para compra, estima o investimento total e projeta a economia financeira gerada ao reduzir excessos de produção e descartes.'
+      },
+      {
+        pergunta: 'Como funciona o motor de busca de pacientes na Nutrição?',
+        resposta: 'O motor de busca é integrado à base consolidada de pacientes da clínica. Ao abrir a avaliação nutricional, os pacientes cadastrados já são listados imediatamente para seleção. A busca é tolerante a acentos e permite localizar qualquer paciente por nome completo, nome social, CPF, número de prontuário, turno ou tipo de acesso vascular (FAV/CDL), carregando automaticamente os dados antropométricos e exames laboratoriais mais recentes.'
       }
     ]
   }

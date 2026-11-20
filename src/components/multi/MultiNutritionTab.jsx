@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  Apple, Plus, Search, Save, X, Activity,
+  Apple, Plus, Search, Save, X, Activity, User, Check, RefreshCw, Edit2,
   LayoutDashboard, Trash2, PackagePlus, TrendingUp, Sparkles, Package, Users, Utensils
 } from 'lucide-react';
 import { dbService } from '../../firebase';
@@ -12,6 +12,15 @@ import FoodEntriesTab from './food/FoodEntriesTab';
 import FoodAproveitamentoTab from './food/FoodAproveitamentoTab';
 import FoodPredictionTab from './food/FoodPredictionTab';
 import FoodProductsTab from './food/FoodProductsTab';
+
+const normalizeSearch = (str) => {
+  if (!str) return '';
+  return String(str)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+};
 
 export default function MultiNutritionTab({ unitId = 'betim', currentUser = null }) {
   // Sub-abas de Nutrição (Padrão rigoroso de 1 palavra)
@@ -73,40 +82,90 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
         dbService.getPatients(unitId)
       ]);
       setRecords(recs || []);
-      setClinicPatients(pats || []);
+      if (pats && pats.length > 0) {
+        setClinicPatients(pats);
+      } else {
+        const fallback = await dbService.getPatients();
+        setClinicPatients(fallback || []);
+      }
     } catch (e) {
       console.warn('Erro ao carregar dados de nutrição:', e);
+      try {
+        const fallback = await dbService.getPatients();
+        setClinicPatients(fallback || []);
+      } catch (errFallback) {
+        console.warn('Fallback de pacientes falhou:', errFallback);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const selectedPatientObj = useMemo(() => {
+    if (!formData.patientId && !formData.nomePaciente) return null;
+    return clinicPatients.find(p => 
+      (formData.patientId && p.id === formData.patientId) ||
+      (formData.nomePaciente && normalizeSearch(p.name || p.nome) === normalizeSearch(formData.nomePaciente))
+    ) || null;
+  }, [clinicPatients, formData.patientId, formData.nomePaciente]);
+
   const filteredPatients = useMemo(() => {
-    if (!patientSearch || patientSearch.length < 2) return [];
-    const s = patientSearch.toLowerCase();
-    return clinicPatients.filter(p => (p.name || p.nome || '').toLowerCase().includes(s)).slice(0, 8);
+    if (!clinicPatients || clinicPatients.length === 0) return [];
+    const term = normalizeSearch(patientSearch);
+    const cleanDigits = (patientSearch || '').replace(/\D/g, '');
+
+    // Se o termo de busca estiver vazio, exibe os 15 primeiros pacientes cadastrados
+    if (!term) {
+      return clinicPatients.slice(0, 15);
+    }
+
+    return clinicPatients.filter(p => {
+      const pName = normalizeSearch(p.name || p.nome);
+      const pSocial = normalizeSearch(p.socialName || p.nomeSocial);
+      const pCpf = (p.cpf || '').replace(/\D/g, '');
+      const pCns = (p.cns || '').replace(/\D/g, '');
+      const pChart = normalizeSearch(p.chartNumber || p.prontuario);
+      const pShift = normalizeSearch(p.shift || p.turno);
+      const pAccess = normalizeSearch(p.accessType || p.tipoAcesso);
+
+      return (
+        pName.includes(term) ||
+        (pSocial && pSocial.includes(term)) ||
+        (cleanDigits && pCpf.includes(cleanDigits)) ||
+        (cleanDigits && pCns.includes(cleanDigits)) ||
+        (pChart && pChart.includes(term)) ||
+        (pShift && pShift.includes(term)) ||
+        (pAccess && pAccess.includes(term))
+      );
+    }).slice(0, 25);
   }, [clinicPatients, patientSearch]);
 
   const filteredRecords = useMemo(() => {
     return records.filter(r => {
       if (!searchTerm) return true;
-      const s = searchTerm.toLowerCase();
-      return (r.nomePaciente || '').toLowerCase().includes(s);
+      const s = normalizeSearch(searchTerm);
+      return normalizeSearch(r.nomePaciente).includes(s);
     });
   }, [records, searchTerm]);
 
   const handleSelectPatient = async (p) => {
-    setFormData(prev => ({
-      ...prev,
-      patientId: p.id,
-      nomePaciente: p.name || p.nome,
-      pesoSeco: p.dryWeight || p.pesoSeco || ''
-    }));
-    setPatientSearch(p.name || p.nome);
+    const pName = (p.name || p.nome || '').trim().toUpperCase();
+    const pWeight = p.dryWeight || p.pesoSeco || '';
+    setFormData(prev => {
+      const imcVal = calculateImc(pWeight, prev.altura);
+      return {
+        ...prev,
+        patientId: p.id || '',
+        nomePaciente: pName,
+        pesoSeco: pWeight || prev.pesoSeco,
+        imc: imcVal || prev.imc
+      };
+    });
+    setPatientSearch('');
     setShowPatientDropdown(false);
     setLoadingPatientLabs(true);
     try {
-      const exams = await dbService.getPatientLabExams(p.id || p.name || p.nome);
+      const exams = await dbService.getPatientLabExams(p.id || pName);
       setPatientRecentLabs(exams || []);
       if (exams && exams.length > 0) {
         const latest = exams[0];
@@ -131,6 +190,71 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
       console.warn('Erro ao carregar exames laboratoriais na nutrição:', err);
     } finally {
       setLoadingPatientLabs(false);
+    }
+  };
+
+  const handleClearSelectedPatient = () => {
+    setFormData(prev => ({
+      ...prev,
+      patientId: '',
+      nomePaciente: '',
+      pesoSeco: '',
+      imc: ''
+    }));
+    setPatientSearch('');
+    setShowPatientDropdown(true);
+    setPatientRecentLabs([]);
+  };
+
+  const handleOpenNewAssessment = () => {
+    setFormData({
+      id: '',
+      patientId: '',
+      nomePaciente: '',
+      data: new Date().toISOString().substring(0, 10),
+      pesoSeco: '',
+      altura: '',
+      imc: '',
+      apetite: 'Bom',
+      ingestaoHidrica: 'Adequada (<1L)',
+      controleFosforo: 'Na Meta (<5.5 mg/dL)',
+      controlePotassio: 'Na Meta (3.5-5.5 mEq/L)',
+      condutaNutricional: '',
+      responsavel: currentUser?.name || 'Nutrição',
+      crn: ''
+    });
+    setPatientSearch('');
+    setShowPatientDropdown(true);
+    setPatientRecentLabs([]);
+    setShowModal(true);
+  };
+
+  const handleEditRecord = (item) => {
+    setFormData({
+      id: item.id || '',
+      patientId: item.patientId || '',
+      nomePaciente: item.nomePaciente || '',
+      data: item.data || new Date().toISOString().substring(0, 10),
+      pesoSeco: item.pesoSeco || '',
+      altura: item.altura || '',
+      imc: item.imc || '',
+      apetite: item.apetite || 'Bom',
+      ingestaoHidrica: item.ingestaoHidrica || 'Adequada (<1L)',
+      controleFosforo: item.controleFosforo || 'Na Meta (<5.5 mg/dL)',
+      controlePotassio: item.controlePotassio || 'Na Meta (3.5-5.5 mEq/L)',
+      condutaNutricional: item.condutaNutricional || '',
+      responsavel: item.responsavel || currentUser?.name || 'Nutrição',
+      crn: item.crn || ''
+    });
+    setPatientSearch('');
+    setShowPatientDropdown(false);
+    setShowModal(true);
+    if (item.patientId || item.nomePaciente) {
+      setLoadingPatientLabs(true);
+      dbService.getPatientLabExams(item.patientId || item.nomePaciente)
+        .then(exams => setPatientRecentLabs(exams || []))
+        .catch(() => setPatientRecentLabs([]))
+        .finally(() => setLoadingPatientLabs(false));
     }
   };
 
@@ -227,26 +351,7 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
 
         <button
           type="button"
-          onClick={() => {
-            setFormData({
-              id: '',
-              patientId: '',
-              nomePaciente: '',
-              data: new Date().toISOString().substring(0, 10),
-              pesoSeco: '',
-              altura: '',
-              imc: '',
-              apetite: 'Bom',
-              ingestaoHidrica: 'Adequada (<1L)',
-              controleFosforo: 'Na Meta (<5.5 mg/dL)',
-              controlePotassio: 'Na Meta (3.5-5.5 mEq/L)',
-              condutaNutricional: '',
-              responsavel: currentUser?.name || 'Nutrição',
-              crn: ''
-            });
-            setPatientSearch('');
-            setShowModal(true);
-          }}
+          onClick={handleOpenNewAssessment}
           style={styles.btnPrimary}
         >
           <Plus size={16} />
@@ -316,39 +421,62 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
                       </div>
                     </td>
                     <td style={styles.td}>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          setViewLabsPatient({ name: item.nomePaciente, patientId: item.patientId });
-                          setShowLabsViewer(true);
-                          setLoadingViewerLabs(true);
-                          try {
-                            const ex = await dbService.getPatientLabExams(item.patientId || item.nomePaciente);
-                            setViewLabsList(ex || []);
-                          } catch (err) {
-                            setViewLabsList([]);
-                          } finally {
-                            setLoadingViewerLabs(false);
-                          }
-                        }}
-                        style={{
-                          padding: '4px 8px',
-                          borderRadius: '6px',
-                          border: '1px solid #0891b2',
-                          backgroundColor: '#f0fdfa',
-                          color: '#0891b2',
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
-                        title="Consultar histórico de exames laboratoriais do paciente"
-                      >
-                        <Activity size={12} />
-                        <span>Exames</span>
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleEditRecord(item)}
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #16a34a',
+                            backgroundColor: '#f0fdf4',
+                            color: '#16a34a',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                          title="Editar avaliação nutricional"
+                        >
+                          <Edit2 size={12} />
+                          <span>Editar</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setViewLabsPatient({ name: item.nomePaciente, patientId: item.patientId });
+                            setShowLabsViewer(true);
+                            setLoadingViewerLabs(true);
+                            try {
+                              const ex = await dbService.getPatientLabExams(item.patientId || item.nomePaciente);
+                              setViewLabsList(ex || []);
+                            } catch (err) {
+                              setViewLabsList([]);
+                            } finally {
+                              setLoadingViewerLabs(false);
+                            }
+                          }}
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #0891b2',
+                            backgroundColor: '#f0fdfa',
+                            color: '#0891b2',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                          title="Consultar histórico de exames laboratoriais do paciente"
+                        >
+                          <Activity size={12} />
+                          <span>Exames</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -374,35 +502,213 @@ export default function MultiNutritionTab({ unitId = 'betim', currentUser = null
               </button>
             </div>
 
-            <form onSubmit={handleSave} style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ position: 'relative' }}>
-                <label style={styles.label}>Paciente *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Buscar paciente..."
-                  value={patientSearch}
-                  onChange={(e) => {
-                    setPatientSearch(e.target.value);
-                    setShowPatientDropdown(true);
-                  }}
-                  onFocus={() => setShowPatientDropdown(true)}
-                  style={styles.input}
-                />
-                {showPatientDropdown && filteredPatients.length > 0 && (
-                  <div style={styles.dropdown}>
-                    {filteredPatients.map(p => (
-                      <div
-                        key={p.id}
-                        onClick={() => handleSelectPatient(p)}
-                        style={styles.dropdownItem}
-                      >
-                        {p.name || p.nome}
+            <form onSubmit={handleSave} style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto' }}>
+              {/* MOTOR DE BUSCA E SELEÇÃO DE PACIENTES */}
+              {formData.nomePaciente ? (
+                /* Card do Paciente Selecionado */
+                <div>
+                  <label style={styles.label}>Paciente</label>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.85rem 1rem',
+                    backgroundColor: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    borderRadius: '10px',
+                    gap: '0.75rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                      <div style={{
+                        width: '38px',
+                        height: '38px',
+                        borderRadius: '50%',
+                        backgroundColor: '#dcfce7',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#15803d',
+                        flexShrink: 0
+                      }}>
+                        <User size={20} />
                       </div>
-                    ))}
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: '700', fontSize: '0.95rem', color: '#166534', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {formData.nomePaciente}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', color: '#15803d', flexWrap: 'wrap', marginTop: '2px' }}>
+                          {selectedPatientObj?.cpf && <span>CPF: {selectedPatientObj.cpf}</span>}
+                          {selectedPatientObj?.chartNumber && <span>• Pront: {selectedPatientObj.chartNumber}</span>}
+                          {selectedPatientObj?.shift && <span>• {selectedPatientObj.shift}</span>}
+                          {(selectedPatientObj?.dryWeight || selectedPatientObj?.pesoSeco) && <span>• Peso: {selectedPatientObj.dryWeight || selectedPatientObj.pesoSeco} kg</span>}
+                          {selectedPatientObj?.accessType && <span>• {selectedPatientObj.accessType}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleClearSelectedPatient}
+                      style={{
+                        padding: '0.45rem 0.75rem',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #86efac',
+                        borderRadius: '6px',
+                        color: '#166534',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        flexShrink: 0
+                      }}
+                      title="Trocar de paciente"
+                    >
+                      <RefreshCw size={12} />
+                      <span>Trocar</span>
+                    </button>
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                /* Motor de Pesquisa com Sugestões e Dropdown Aberto */
+                <div style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <label style={styles.label}>Paciente *</label>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary, #64748b)' }}>
+                      {clinicPatients.length} cadastrados
+                    </span>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    backgroundColor: '#ffffff',
+                    padding: '0.6rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color, #cbd5e1)',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                  }}>
+                    <Search size={16} color="#64748b" />
+                    <input
+                      type="text"
+                      placeholder="Pesquisar por nome, CPF, prontuário ou turno..."
+                      value={patientSearch}
+                      onChange={(e) => {
+                        setPatientSearch(e.target.value);
+                        setShowPatientDropdown(true);
+                      }}
+                      onFocus={() => setShowPatientDropdown(true)}
+                      style={{
+                        border: 'none',
+                        outline: 'none',
+                        width: '100%',
+                        fontSize: '0.875rem',
+                        color: 'var(--text-primary, #0f172a)'
+                      }}
+                      autoFocus
+                    />
+                    {patientSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setPatientSearch('')}
+                        style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0 }}
+                        title="Limpar pesquisa"
+                      >
+                        <X size={15} />
+                      </button>
+                    )}
+                  </div>
+
+                  {showPatientDropdown && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      marginTop: '4px',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      zIndex: 50,
+                      maxHeight: '220px',
+                      overflowY: 'auto',
+                      boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                    }}>
+                      <div style={{
+                        padding: '6px 10px',
+                        backgroundColor: '#f8fafc',
+                        borderBottom: '1px solid #e2e8f0',
+                        fontSize: '0.72rem',
+                        fontWeight: '700',
+                        color: '#64748b',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <span>
+                          {patientSearch ? `Resultados (${filteredPatients.length})` : `Cadastrados (${filteredPatients.length} de ${clinicPatients.length})`}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowPatientDropdown(false)}
+                          style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '0.7rem' }}
+                        >
+                          Fechar
+                        </button>
+                      </div>
+
+                      {filteredPatients.length === 0 ? (
+                        <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.82rem' }}>
+                          Nenhum paciente encontrado para &quot;{patientSearch}&quot;.
+                        </div>
+                      ) : (
+                        filteredPatients.map(p => {
+                          const pName = (p.name || p.nome || '').trim().toUpperCase();
+                          return (
+                            <div
+                              key={p.id}
+                              onClick={() => handleSelectPatient(p)}
+                              style={{
+                                padding: '0.65rem 0.85rem',
+                                cursor: 'pointer',
+                                borderBottom: '1px solid #f1f5f9',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                transition: 'background-color 0.15s ease'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0fdf4'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                              <div>
+                                <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#0f172a' }}>
+                                  {pName}
+                                </div>
+                                <div style={{ display: 'flex', gap: '6px', fontSize: '0.72rem', color: '#64748b', flexWrap: 'wrap', marginTop: '2px' }}>
+                                  {p.cpf && <span>CPF: {p.cpf}</span>}
+                                  {p.chartNumber && <span>• Pront: {p.chartNumber}</span>}
+                                  {p.shift && <span>• {p.shift}</span>}
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                {p.accessType && (
+                                  <span style={{ fontSize: '0.7rem', padding: '2px 6px', backgroundColor: '#e2e8f0', borderRadius: '4px', fontWeight: '600', color: '#334155' }}>
+                                    {p.accessType}
+                                  </span>
+                                )}
+                                <span style={{ fontSize: '0.72rem', color: '#16a34a', fontWeight: '700' }}>
+                                  Selecionar
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Card de Exames Laboratoriais Integrados da Clínica */}
               {loadingPatientLabs ? (
@@ -825,7 +1131,10 @@ const styles = {
     maxWidth: '640px',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15)',
     border: '1px solid var(--border-color, #e2e8f0)',
-    overflow: 'hidden'
+    overflow: 'visible',
+    maxHeight: '92vh',
+    display: 'flex',
+    flexDirection: 'column'
   },
   modalHeader: {
     display: 'flex',

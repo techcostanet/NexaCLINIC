@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.44',
+      date: '20/11/2026',
+      title: 'Nex-Ai CLINIC (.MULTI) — Motor de Busca Central de Pacientes na Avaliação Nutricional e Resiliência de Carregamento',
+      description: 'Implementação do motor de busca unificado e resiliente de pacientes na sub-aba Pacientes do módulo Nutrição (.MULTI): 1) Motor de Busca Multi-Critério: pesquisa instantânea com normalização completa de acentos por Nome, Nome Social, CPF (apenas dígitos), CNS, Prontuário, Turno e Acesso Vascular; 2) Carregamento Automático de Pacientes Cadastrados: ao abrir a janela de avaliação (+ Avaliação), os pacientes cadastrados da clínica já são listados imediatamente para seleção sem necessidade de digitação prévia; 3) Card de Paciente Selecionado: visualização em destaque dos dados do paciente com botão de troca rápida em 1 clique ("Trocar"); 4) Integração Laboratorial do LIS Preservada: ao selecionar o paciente, o sistema consulta automaticamente os últimos exames (fósforo, potássio e cálcio) e auto-sugere condutas dietéticas; 5) Edição de Avaliações: novo botão "Editar" na tabela de registros permitindo atualizar avaliações anteriores.',
+      changes: [
+        { type: 'Motor de Busca na Nutrição', text: 'Busca inteligente de pacientes cadastrados por Nome, CPF, Prontuário, CNS e Turno com tolerância total a acentos.' },
+        { type: 'Exibição Imediata de Pacientes', text: 'Ao abrir o modal de avaliação, os pacientes da clínica já aparecem listados para seleção instantânea.' },
+        { type: 'Card de Paciente Selecionado', text: 'Card visual com dados cadastrais e botão "Trocar" para alternar pacientes com facilidade.' },
+        { type: 'Resiliência no Carregamento', text: 'Fallback seguro no patientService garantindo disponibilidade ininterrupta da base de pacientes.' },
+        { type: 'Edição de Avaliações', text: 'Ação "Editar" adicionada à tabela de avaliações nutricionais com histórico integrado.' }
+      ]
+    },
+    {
       version: 'v5.0.43',
       date: '19/11/2026',
       title: 'Nex-Ai CLINIC (.MULTI & .HR) — Refinamento do Módulo Multiprofissional, Exclusividade de Almoço, Reserva Antecipada de Marmitas e Suporte a App PWA (Android & iOS/iPhone)',

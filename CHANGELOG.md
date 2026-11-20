@@ -1,3 +1,17 @@
+## [v5.0.44] - 20 de Novembro, 2026
+### Nex-Ai CLINIC (.MULTI) — Motor de Busca Central de Pacientes na Avaliação Nutricional e Resiliência de Carregamento
+- **Motor de Busca de Pacientes na Avaliação Nutricional (`MultiNutritionTab.jsx`):**
+  - Implementação de motor de pesquisa multi-critério tolerante a acentos para consulta instantânea por Nome, Nome Social, CPF (apenas dígitos), CNS, Prontuário, Turno e Acesso Vascular (FAV/CDL).
+  - Ao clicar em "+ Avaliação", a lista de pacientes cadastrados na clínica já aparece imediatamente disponível para seleção rápida, sem exigir digitação inicial.
+- **Card de Paciente Selecionado com Troca Rápida:**
+  - Exibição de card visual com nome completo em destaque, CPF, número de prontuário, turno de diálise, peso seco e acesso vascular.
+  - Botão de ação rápida "Trocar" permitindo alternar de paciente com 1 clique.
+- **Resiliência e Retrocompatibilidade no Carregamento de Pacientes (`patientService.js`):**
+  - Fallback automático para consulta irrestrita no Firestore caso o filtro por `unitId` retorne vazio devido a cadastros legados sem campo de filial explícito.
+  - Carregamento garantido para que a clínica nunca fique sem a listagem de pacientes cadastrados.
+- **Edição de Avaliações Nutricionais Anteriores:**
+  - Adicionado botão de ação "Editar" na tabela de pacientes avaliados, permitindo atualizar condutas, peso seco e dados clínicos com recálculo automático de IMC e exames do LIS.
+
 ## [v5.0.43] - 19 de Novembro, 2026
 ### Nex-Ai CLINIC (.MULTI & .HR) — Refinamento do Módulo Multiprofissional, Exclusividade de Almoço, Reserva Antecipada de Marmitas e Suporte a App PWA (Android & iOS/iPhone)
 - **Aba Painel como Primeira da Esquerda no Módulo Multiprofissional (`MultiPanel.jsx`):**

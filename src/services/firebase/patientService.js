@@ -40,12 +40,17 @@ export const getPatients = async (unitId = null) => {
       if (unitId && unitId !== 'all') {
         const q = query(collection(db, 'patients'), where('unitId', '==', unitId));
         snap = await getDocs(q);
+        // Fallback resiliente: se a consulta específica por unitId vier vazia no Firestore
+        // (ex: registros legados de Betim sem o campo unitId gravado), busca todos os pacientes
+        if (snap.empty) {
+          snap = await getDocs(collection(db, 'patients'));
+        }
       } else {
         snap = await getDocs(collection(db, 'patients'));
       }
       
       // Seed default patients if Firestore is empty
-      if (snap.empty && (!unitId || unitId === 'all')) {
+      if (snap.empty) {
         const patientsList = await mockFirestore.getPatients();
         const chunkSize = 400;
         for (let i = 0; i < patientsList.length; i += chunkSize) {
@@ -61,13 +66,30 @@ export const getPatients = async (unitId = null) => {
 
       const rawList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       if (rawList.length === 0) {
-        return mockFirestore.getPatients(unitId);
+        const fallbackList = await mockFirestore.getPatients(unitId);
+        if (fallbackList && fallbackList.length > 0) return fallbackList;
+        return mockFirestore.getPatients();
+      }
+
+      // Se filtrou por unidade específica, aplicar filtro com retrocompatibilidade
+      let candidateList = rawList;
+      if (unitId && unitId !== 'all') {
+        const uTarget = String(unitId).toLowerCase().trim();
+        const matched = rawList.filter(pat => {
+          const b = String(pat.unitId || pat.filial || pat.branch || pat.unidade || pat.unit || '').toLowerCase().trim();
+          if (b) return b === uTarget || b === 'all' || b === '*';
+          // Registros sem unidade são tratados por padrão como Betim (retrocompatibilidade)
+          return uTarget === 'betim' || uTarget === 'btm';
+        });
+        if (matched.length > 0) {
+          candidateList = matched;
+        }
       }
 
       // Deduplicate by clean CPF (if valid 11 digits) or by id/normalized name
       const seen = new Set();
       const deduplicated = [];
-      for (const pat of rawList) {
+      for (const pat of candidateList) {
         if (!pat || !pat.name) continue;
         pat.name = pat.name.trim().toUpperCase();
         const cleanCpf = pat.cpf ? String(pat.cpf).replace(/\D/g, '') : '';
