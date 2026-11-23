@@ -7,31 +7,83 @@ export const getAccountsPayable = async () => {
     const { getFirestore, collection, getDocs } = await import('firebase/firestore');
     const db = getFirestore(app);
     const snap = await getDocs(collection(db, 'accounts_payable'));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (typeof localStorage !== 'undefined' && list.length > 0) {
+      try {
+        localStorage.setItem('nexa_accounts_payable_cache', JSON.stringify(list));
+      } catch (e) {}
+    }
+    return list;
   } catch (e) {
     console.error('Erro Firestore export const getAccountsPayable =', e);
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('nexa_accounts_payable_cache');
+        if (cached) return JSON.parse(cached);
+      } catch (errCache) {}
+    }
     return [];
   }
 };
 
 export const saveAccountsPayable = async (item) => {
   if (USE_MOCK) return mockFirestore.saveAccountsPayable(item);
-  const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
-  const db = getFirestore(app);
-  if (item.id) {
-    await setDoc(doc(db, 'accounts_payable', item.id), item, { merge: true });
-    return item;
+  try {
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    let saved;
+    if (item.id) {
+      await setDoc(doc(db, 'accounts_payable', item.id), item, { merge: true });
+      saved = item;
+    } else {
+      const ref = await addDoc(collection(db, 'accounts_payable'), { ...item, createdAt: new Date().toISOString() });
+      saved = { id: ref.id, ...item };
+    }
+
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('nexa_accounts_payable_cache');
+        let list = cached ? JSON.parse(cached) : [];
+        if (!Array.isArray(list)) list = [];
+        const idx = list.findIndex(p => p.id === saved.id);
+        if (idx >= 0) list[idx] = saved;
+        else list.unshift(saved);
+        localStorage.setItem('nexa_accounts_payable_cache', JSON.stringify(list));
+      } catch (errCache) {}
+    }
+
+    return saved;
+  } catch (e) {
+    console.error('Erro Firestore saveAccountsPayable =', e);
+    throw e;
   }
-  const ref = await addDoc(collection(db, 'accounts_payable'), { ...item, createdAt: new Date().toISOString() });
-  return { id: ref.id, ...item };
 };
 
 export const deleteAccountsPayable = async (id) => {
   if (USE_MOCK) return mockFirestore.deleteAccountsPayable(id);
-  const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
-  const db = getFirestore(app);
-  await deleteDoc(doc(db, 'accounts_payable', id));
-  return { success: true };
+  try {
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'accounts_payable', id));
+
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('nexa_accounts_payable_cache');
+        if (cached) {
+          const list = JSON.parse(cached);
+          if (Array.isArray(list)) {
+            const updated = list.filter(p => p.id !== id);
+            localStorage.setItem('nexa_accounts_payable_cache', JSON.stringify(updated));
+          }
+        }
+      } catch (errCache) {}
+    }
+
+    return { success: true };
+  } catch (e) {
+    console.error('Erro Firestore deleteAccountsPayable =', e);
+    throw e;
+  }
 };
 
 export const getAccountsReceivable = async () => {
@@ -40,31 +92,83 @@ export const getAccountsReceivable = async () => {
     const { getFirestore, collection, getDocs } = await import('firebase/firestore');
     const db = getFirestore(app);
     const snap = await getDocs(collection(db, 'accounts_receivable'));
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (typeof localStorage !== 'undefined' && list.length > 0) {
+      try {
+        localStorage.setItem('nexa_accounts_receivable_cache', JSON.stringify(list));
+      } catch (e) {}
+    }
+    return list;
   } catch (e) {
     console.error('Erro Firestore export const getAccountsReceivable =', e);
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('nexa_accounts_receivable_cache');
+        if (cached) return JSON.parse(cached);
+      } catch (errCache) {}
+    }
     return [];
   }
 };
 
 export const saveAccountsReceivable = async (item) => {
   if (USE_MOCK) return mockFirestore.saveAccountsReceivable(item);
-  const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
-  const db = getFirestore(app);
-  if (item.id) {
-    await setDoc(doc(db, 'accounts_receivable', item.id), item, { merge: true });
-    return item;
+  try {
+    const { getFirestore, collection, addDoc, doc, setDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    let saved;
+    if (item.id) {
+      await setDoc(doc(db, 'accounts_receivable', item.id), item, { merge: true });
+      saved = item;
+    } else {
+      const ref = await addDoc(collection(db, 'accounts_receivable'), { ...item, createdAt: new Date().toISOString() });
+      saved = { id: ref.id, ...item };
+    }
+
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('nexa_accounts_receivable_cache');
+        let list = cached ? JSON.parse(cached) : [];
+        if (!Array.isArray(list)) list = [];
+        const idx = list.findIndex(r => r.id === saved.id);
+        if (idx >= 0) list[idx] = saved;
+        else list.unshift(saved);
+        localStorage.setItem('nexa_accounts_receivable_cache', JSON.stringify(list));
+      } catch (errCache) {}
+    }
+
+    return saved;
+  } catch (e) {
+    console.error('Erro Firestore saveAccountsReceivable =', e);
+    throw e;
   }
-  const ref = await addDoc(collection(db, 'accounts_receivable'), { ...item, createdAt: new Date().toISOString() });
-  return { id: ref.id, ...item };
 };
 
 export const deleteAccountsReceivable = async (id) => {
   if (USE_MOCK) return mockFirestore.deleteAccountsReceivable(id);
-  const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
-  const db = getFirestore(app);
-  await deleteDoc(doc(db, 'accounts_receivable', id));
-  return { success: true };
+  try {
+    const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'accounts_receivable', id));
+
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('nexa_accounts_receivable_cache');
+        if (cached) {
+          const list = JSON.parse(cached);
+          if (Array.isArray(list)) {
+            const updated = list.filter(r => r.id !== id);
+            localStorage.setItem('nexa_accounts_receivable_cache', JSON.stringify(updated));
+          }
+        }
+      } catch (errCache) {}
+    }
+
+    return { success: true };
+  } catch (e) {
+    console.error('Erro Firestore deleteAccountsReceivable =', e);
+    throw e;
+  }
 };
 
 export const getBankStatements = async () => {

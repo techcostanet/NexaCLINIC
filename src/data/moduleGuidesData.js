@@ -114,10 +114,10 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Lançar uma Conta a Pagar',
         steps: [
-          'Acesse a aba "Contas a Pagar" e clique no botão "+ Nova Despesa".',
+          'Acesse a aba "Contas a Pagar" e clique no botão "+ Despesa".',
           'Preencha o Fornecedor, CNPJ, Categoria (ex: MatMed, Medicamentos), Centro de Custo, Valor e a Filial (Betim ou Taguatinga).',
           'Defina a Data de Vencimento e anexe o comprovante ou Nota Fiscal se houver.',
-          'Clique em "Salvar Lançamento". O título entrará automaticamente nas projeções de fluxo de caixa.'
+          'Clique em "Salvar". O título entrará automaticamente nas projeções de fluxo de caixa.'
         ]
       },
       {

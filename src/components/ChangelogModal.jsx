@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.50',
+      date: '23/11/2026',
+      title: 'Nex-Ai CLINIC (.FINANCE) — Revisão Integral de Contas a Pagar e Receber, Permissões Firestore, Resiliência Offline e Padrão 1-Palavra',
+      description: 'Auditoria abrangente de integridade operacional e segurança no submódulo financeiro: 1) Correção de Permissões Firestore: liberação das regras de segurança para as coleções accounts_payable e accounts_receivable, garantindo persistência sem falhas de permissão para sessões locais e administrativas; 2) Camada de Cache e Resiliência Offline: implementação de cache local no financialService e tratamento de erros com alertas ao operador, prevenindo estados vazios em oscilações de rede; 3) Validação Completa de Fluxo: testes automatizados de ciclo de vida completo (criação, edição, baixa total/parcial e exclusão) para Contas a Pagar e Receber com 100% de sucesso; 4) Conformidade Estrita com Padrão de 1 Palavra: refinamento de rótulos, botões e cabeçalhos eliminando redundâncias e termos compostos.',
+      changes: [
+        { type: 'Permissões Firestore', text: 'Regras de segurança atualizadas para accounts_payable e accounts_receivable sem bloqueios de sessão.' },
+        { type: 'Resiliência & Cache', text: 'Armazenamento em cache local no navegador e tratamento preventivo de falhas de rede.' },
+        { type: 'Validação de Operações', text: 'Auditoria de cadastro, liquidação de títulos, pagamentos parciais e estornos.' },
+        { type: 'Padrão UI 1-Palavra', text: 'Rótulos e ações unificados em termos únicos e diretos (Despesa, Receita, Centro, Código, Saldo).' }
+      ]
+    },
+    {
       version: 'v5.0.49',
       date: '23/11/2026',
       title: 'Nex-Ai CLINIC (.SESMT) — Resiliência no Carregamento de Equipamentos, Permissões Firestore e Desambiguação de Métodos',

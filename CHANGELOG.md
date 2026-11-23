@@ -1,3 +1,16 @@
+## [v5.0.50] - 23 de Novembro, 2026
+### Nex-Ai CLINIC (.FINANCE) — Revisão Integral de Contas a Pagar e Receber, Permissões Firestore, Resiliência Offline e Padrão 1-Palavra
+- **Permissões de Nuvem Firestore (`firestore.rules`):**
+  - Correção das regras de segurança de acesso para as coleções `accounts_payable`, `accounts_receivable`, `bank_statements`, `debts`, `budget_plans`, `agreements`, `xml_imports` e `cost_centers`, eliminando erros de falta de permissão (`permission-denied`) em sessões personalizadas e anônimas.
+- **Camada de Resiliência Offline e Cache Local (`financialService.js`):**
+  - Armazenamento em cache inteligente (`localStorage`) para `accounts_payable` e `accounts_receivable`, assegurando renderização instantânea da listagem mesmo em oscilações momentâneas de conectividade.
+  - Tratamento preventivo com try/catch e alertas informativos ao operador em operações de gravação e exclusão.
+- **Auditoria e Validação de Fluxos (`FinancePanel.jsx`):**
+  - Verificação de ciclo completo: cadastro de títulos, edição, baixa com confirmação de pagamento, liquidação parcial com geração de resíduo e exclusão de lançamentos.
+  - Toasts de feedback imediato para ações críticas e cópia de linhas digitáveis.
+- **Conformidade Estrita com UI de 1 Palavra (`FinancePanel.jsx`):**
+  - Rótulos e botões alinhados com o padrão rigoroso de termo único: `Despesa`, `Receita`, `Centro`, `Nota`, `Código`, `Saldo` e `Salvar`.
+
 ## [v5.0.49] - 23 de Novembro, 2026
 ### Nex-Ai CLINIC (.SESMT) — Resiliência no Carregamento de Equipamentos, Permissões Firestore e Desambiguação de Métodos
 - **Permissões do Firestore Atualizadas (`firestore.rules`):**

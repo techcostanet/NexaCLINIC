@@ -958,9 +958,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       setPartialItem(null);
       setPartialAmountPaid('');
       setPartialPaymentDate(new Date().toISOString().substring(0, 10));
+      setCopiedToast('Baixa parcial registrada com sucesso!');
+      setTimeout(() => setCopiedToast(''), 3000);
       loadData();
     } catch (err) {
       console.error(err);
+      alert('Erro ao registrar baixa parcial: ' + (err.message || 'Falha no servidor'));
     }
   };
 
@@ -1108,9 +1111,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         boletoFileName: '',
         digitableLine: ''
       });
+      setCopiedToast(editingPayable ? 'Despesa atualizada com sucesso!' : 'Despesa cadastrada com sucesso!');
+      setTimeout(() => setCopiedToast(''), 3000);
       loadData();
     } catch (err) {
       console.error(err);
+      alert('Erro ao salvar despesa: ' + (err.message || 'Falha de comunicação com o banco'));
     }
   };
 
@@ -1192,9 +1198,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         invoiceNumber: '',
         unitId: activeUnitId === 'all' ? 'betim' : activeUnitId
       });
+      setCopiedToast(editingReceivable ? 'Receita atualizada com sucesso!' : 'Receita cadastrada com sucesso!');
+      setTimeout(() => setCopiedToast(''), 3000);
       loadData();
     } catch (err) {
       console.error(err);
+      alert('Erro ao salvar receita: ' + (err.message || 'Falha de comunicação com o banco'));
     }
   };
 
@@ -1216,6 +1225,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         });
       }
 
+      setCopiedToast(nextStatus === 'Pago' ? 'Título liquidado como Pago!' : 'Título alterado para Pendente!');
+      setTimeout(() => setCopiedToast(''), 3000);
       loadData();
     } catch (err) {
       console.error(err);
@@ -1232,6 +1243,8 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         status: nextStatus,
         receivedDate
       });
+      setCopiedToast(nextStatus === 'Pago' ? 'Recebimento liquidado!' : 'Recebimento alterado para Pendente!');
+      setTimeout(() => setCopiedToast(''), 3000);
       loadData();
     } catch (err) {
       console.error(err);
@@ -1243,9 +1256,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     if (confirm('Deseja realmente excluir este lançamento financeiro?')) {
       try {
         await dbService.deleteAccountsPayable(id);
+        setCopiedToast('Lançamento excluído com sucesso!');
+        setTimeout(() => setCopiedToast(''), 3000);
         loadData();
       } catch (err) {
         console.error(err);
+        alert('Erro ao excluir lançamento: ' + (err.message || 'Falha no servidor'));
       }
     }
   };
@@ -1255,9 +1271,12 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     if (confirm('Deseja realmente excluir este recebimento?')) {
       try {
         await dbService.deleteAccountsReceivable(id);
+        setCopiedToast('Recebimento excluído com sucesso!');
+        setTimeout(() => setCopiedToast(''), 3000);
         loadData();
       } catch (err) {
         console.error(err);
+        alert('Erro ao excluir recebimento: ' + (err.message || 'Falha no servidor'));
       }
     }
   };
@@ -2600,7 +2619,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   title="Sincronizar notas fiscais cadastradas no estoque diretamente no Contas a Pagar"
                 >
                   <Boxes size={15} />
-                  <span>{isSyncingStock ? 'Sincronizando...' : 'Sincronizar Estoque'}</span>
+                  <span>{isSyncingStock ? 'Sincronizando...' : 'Estoque'}</span>
                 </button>
               )}
               <button 
@@ -2611,7 +2630,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 style={styles.btnPrimary}
               >
                 <Plus size={14} />
-                <span>Nova Despesa</span>
+                <span>Despesa</span>
               </button>
             </div>
           </div>
@@ -2702,7 +2721,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Centro de Custo</label>
+                  <label style={styles.label}>Centro</label>
                   <select 
                     value={editingPayable ? (editingPayable.costCenterId || '1.1') : (newPayable.costCenterId || '1.1')} 
                     onChange={e => {
@@ -2717,7 +2736,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Nota Fiscal</label>
+                  <label style={styles.label}>Nota</label>
                   <input 
                     type="text" 
                     value={editingPayable ? (editingPayable.invoiceNumber || '') : newPayable.invoiceNumber} 
@@ -2832,7 +2851,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   </div>
                 </div>
                 <div style={{ ...styles.inputGroup, gridColumn: 'span 2' }}>
-                  <label style={styles.label}>Linha Digitável</label>
+                  <label style={styles.label}>Código</label>
                   <input 
                     type="text" 
                     value={editingPayable ? (editingPayable.digitableLine || '') : (newPayable.digitableLine || '')} 
@@ -2859,7 +2878,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   Cancelar
                 </button>
                 <button type="submit" style={styles.btnSave}>
-                  {editingPayable ? 'Salvar Alterações' : 'Adicionar Despesa'}
+                  {editingPayable ? 'Salvar' : 'Adicionar'}
                 </button>
               </div>
             </form>
@@ -2871,10 +2890,10 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               <thead>
                 <tr>
                   {renderSortableHeader('Fornecedor', 'supplier', payableSort, setPayableSort)}
-                  {renderSortableHeader('Nota Fiscal', 'invoiceNumber', payableSort, setPayableSort)}
+                  {renderSortableHeader('Nota', 'invoiceNumber', payableSort, setPayableSort)}
                   {renderSortableHeader('Boleto', 'digitableLine', payableSort, setPayableSort)}
                   {renderSortableHeader('Parcela', 'installmentInfo', payableSort, setPayableSort)}
-                  {renderSortableHeader('Centro de Custo', 'costCenterId', payableSort, setPayableSort)}
+                  {renderSortableHeader('Centro', 'costCenterId', payableSort, setPayableSort)}
                   {renderSortableHeader('Vencimento', 'dueDate', payableSort, setPayableSort)}
                   {renderSortableHeader('Devido', 'amount', payableSort, setPayableSort)}
                   {renderSortableHeader('Pago', 'amountPaid', payableSort, setPayableSort)}
@@ -3182,7 +3201,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
               style={styles.btnPrimary}
             >
               <Plus size={14} />
-              <span>Nova Receita</span>
+              <span>Receita</span>
             </button>
           </div>
 
@@ -3341,7 +3360,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                   Cancelar
                 </button>
                 <button type="submit" style={styles.btnSave}>
-                  {editingReceivable ? 'Salvar Alterações' : 'Adicionar Receita'}
+                  {editingReceivable ? 'Salvar' : 'Adicionar'}
                 </button>
               </div>
             </form>
@@ -4221,7 +4240,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
               <div style={styles.formGrid}>
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Centro de Custos</label>
+                  <label style={styles.label}>Centro</label>
                   <select 
                     value={newBudget.costCenterId} 
                     onChange={e => setNewBudget({ ...newBudget, costCenterId: e.target.value })}
@@ -4520,7 +4539,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 </div>
 
                 <div style={styles.inputGroup}>
-                  <label style={styles.label}>Saldo Inicial</label>
+                  <label style={styles.label}>Saldo</label>
                   <input 
                     type="number" 
                     step="0.01" 
