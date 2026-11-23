@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   X, FileText, Download, Filter, FileSpreadsheet, FilePieChart,
   Calendar, CheckCircle2, TrendingUp, TrendingDown, DollarSign
@@ -6,6 +6,25 @@ import {
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { DEFAULT_FINANCE_REPORTS_CONFIG } from './FinancePanel';
+
+export const FINANCIAL_REPORTS_LIST = [
+  { id: 'EXTRATO_GERAL', name: '1. Extrato Geral', icon: FileText, num: 1 },
+  { id: 'CONTAS_PAGAR', name: '2. Contas a Pagar', icon: TrendingDown, num: 2 },
+  { id: 'CONTAS_RECEBER', name: '3. Contas a Receber', icon: TrendingUp, num: 3 },
+  { id: 'INADIMPLENCIA', name: '4. Inadimplência', icon: FileText, num: 4 },
+  { id: 'DESPESAS_CC', name: '5. Despesas por Centro de Custo', icon: FilePieChart, num: 5 },
+  { id: 'RECEITAS_CAT', name: '6. Receitas por Categoria', icon: FilePieChart, num: 6 },
+  { id: 'DRE', name: '7. DRE Gerencial', icon: FileSpreadsheet, num: 7 },
+  { id: 'FLUXO_CAIXA_DIARIO', name: '8. Fluxo Diário', icon: Calendar, num: 8 },
+  { id: 'PREVISAO_CAIXA', name: '9. Projeção de Fluxo', icon: Calendar, num: 9 },
+  { id: 'TITULOS_PAGOS', name: '10. Histórico de Pagamentos', icon: CheckCircle2, num: 10 },
+  { id: 'FIXO_VARIAVEL', name: '11. Fixas e Variáveis', icon: FilePieChart, num: 11 },
+  { id: 'MEIO_PAGAMENTO', name: '12. Entradas por Pagamento', icon: DollarSign, num: 12 },
+  { id: 'TOP_FORNECEDORES', name: '13. Despesas por Fornecedor', icon: TrendingDown, num: 13 },
+  { id: 'FATURAMENTO_FILIAL', name: '14. Faturamento por Unidade', icon: TrendingUp, num: 14 },
+  { id: 'AUDITORIA', name: '15. Auditoria de Lançamentos', icon: FileText, num: 15 }
+];
 
 export default function FinanceReportsModal({ 
   onClose, 
@@ -14,7 +33,31 @@ export default function FinanceReportsModal({
   costCenters = [],
   tenantSettings = { name: 'Nexa Clínica', cnpj: '00.000.000/0001-00', logo: '' }
 }) {
-  const [selectedReport, setSelectedReport] = useState('EXTRATO_GERAL');
+  const [showAllReports, setShowAllReports] = useState(false);
+
+  const visibleReportsConfig = useMemo(() => {
+    let conf = { ...DEFAULT_FINANCE_REPORTS_CONFIG };
+    if (tenantSettings && tenantSettings.financeVisibleReports) {
+      Object.assign(conf, tenantSettings.financeVisibleReports);
+    }
+    try {
+      const local = localStorage.getItem('nexa_finance_reports_config');
+      if (local) Object.assign(conf, JSON.parse(local));
+    } catch (e) {}
+    return conf;
+  }, [tenantSettings]);
+
+  const displayedReports = useMemo(() => {
+    if (showAllReports) return FINANCIAL_REPORTS_LIST;
+    const filtered = FINANCIAL_REPORTS_LIST.filter(r => visibleReportsConfig[r.id]);
+    return filtered.length > 0 ? filtered : FINANCIAL_REPORTS_LIST;
+  }, [showAllReports, visibleReportsConfig]);
+
+  const [selectedReport, setSelectedReport] = useState(() => {
+    const first = FINANCIAL_REPORTS_LIST.find(r => DEFAULT_FINANCE_REPORTS_CONFIG[r.id]);
+    return first ? first.id : 'CONTAS_PAGAR';
+  });
+
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -30,23 +73,7 @@ export default function FinanceReportsModal({
   const [reportData, setReportData] = useState([]);
   const [reportColumns, setReportColumns] = useState([]);
 
-  const REPORTS = [
-    { id: 'EXTRATO_GERAL', name: '1. Extrato Geral', icon: FileText },
-    { id: 'CONTAS_PAGAR', name: '2. Contas a Pagar', icon: TrendingDown },
-    { id: 'CONTAS_RECEBER', name: '3. Contas a Receber', icon: TrendingUp },
-    { id: 'INADIMPLENCIA', name: '4. Inadimplência', icon: FileText },
-    { id: 'DESPESAS_CC', name: '5. Despesas por Centro de Custo', icon: FilePieChart },
-    { id: 'RECEITAS_CAT', name: '6. Receitas por Categoria', icon: FilePieChart },
-    { id: 'DRE', name: '7. DRE Gerencial', icon: FileSpreadsheet },
-    { id: 'FLUXO_CAIXA_DIARIO', name: '8. Fluxo Diário', icon: Calendar },
-    { id: 'PREVISAO_CAIXA', name: '9. Projeção de Fluxo', icon: Calendar },
-    { id: 'TITULOS_PAGOS', name: '10. Histórico de Pagamentos', icon: CheckCircle2 },
-    { id: 'FIXO_VARIAVEL', name: '11. Fixas e Variáveis', icon: FilePieChart },
-    { id: 'MEIO_PAGAMENTO', name: '12. Entradas por Pagamento', icon: DollarSign },
-    { id: 'TOP_FORNECEDORES', name: '13. Despesas por Fornecedor', icon: TrendingDown },
-    { id: 'FATURAMENTO_FILIAL', name: '14. Faturamento por Unidade', icon: TrendingUp },
-    { id: 'AUDITORIA', name: '15. Auditoria de Lançamentos', icon: FileText }
-  ];
+  const REPORTS = FINANCIAL_REPORTS_LIST;
 
   const formatDateBR = (dateStr) => {
     if (!dateStr) return '-';
@@ -54,6 +81,14 @@ export default function FinanceReportsModal({
     if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
     return String(dateStr);
   };
+
+  useEffect(() => {
+    if (!displayedReports.some(r => r.id === selectedReport)) {
+      if (displayedReports.length > 0) {
+        setSelectedReport(displayedReports[0].id);
+      }
+    }
+  }, [displayedReports, selectedReport]);
 
   useEffect(() => {
     generateReport();
@@ -429,9 +464,31 @@ export default function FinanceReportsModal({
         <div style={styles.body}>
           {/* Sidebar */}
           <div style={styles.sidebar}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-muted, #94a3b8)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Relatórios Disponíveis</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-muted, #94a3b8)', textTransform: 'uppercase' }}>
+                Relatórios
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowAllReports(!showAllReports)}
+                style={{
+                  background: 'none',
+                  border: '1px solid var(--border-color, #e2e8f0)',
+                  borderRadius: '4px',
+                  padding: '0.15rem 0.5rem',
+                  fontSize: '0.7rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  color: showAllReports ? '#10b981' : 'var(--text-secondary, #64748b)',
+                  backgroundColor: showAllReports ? 'rgba(16,185,129,0.1)' : 'var(--surface-muted, #f1f5f9)'
+                }}
+                title="Alternar entre relatórios recomendados e todos os 15 relatórios"
+              >
+                {showAllReports ? 'Filtrar' : 'Todos'}
+              </button>
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', overflowY: 'auto', maxHeight: 'calc(100vh - 200px)', paddingRight: '0.5rem' }}>
-              {REPORTS.map(r => {
+              {displayedReports.map(r => {
                 const isSelected = selectedReport === r.id;
                 const Icon = r.icon;
                 return (

@@ -1,3 +1,18 @@
+## [v5.0.46] - 23 de Novembro, 2026
+### Nex-Ai CLINIC (.FINANCE & .CONFIG) — Controle Centralizado de Botões Auxiliares, Remoção de Duplicidade de Relatórios e Seletor Inteligente dos 15 Relatórios Financeiros
+- **Remoção de Duplicidade de Botão de Relatórios (`FinancePanel.jsx`):**
+  - Removido o botão redundante de Relatórios do cabeçalho do módulo Financeiro, centralizando a consulta de relatórios exclusivamente no botão oficial da barra de navegação superior (Navbar).
+- **Gestão Centralizada de Botões Auxiliares no NexaCONFIG (`ConfigPanel.jsx`):**
+  - Novo card de configuração "Botões" na aba Financeiro para ativar ou ocultar os botões auxiliares: `CNAB` (cabeçalho), `Remessa` (contas a pagar) e `Sincronizar Estoque` (contas a pagar).
+  - Padrão inicial definido e gravado em nuvem: todos os 3 botões iniciam ocultos conforme solicitado.
+  - Atalhos em 1 clique: `Padrão` (ocultos), `Exibir` (todos visíveis) e `Ocultar`.
+- **Seletor Inteligente de Relatórios Financeiros (`FinanceReportsModal.jsx` & `ConfigPanel.jsx`):**
+  - Novo card "Relatórios" no .CONFIG para selecionar quais relatórios devem ficar à vista na rotina da clínica.
+  - Padrão inicial configurado: visíveis exclusivamente o relatório **2 (Contas a Pagar)** e o **3 (Contas a Receber)**; os outros 13 relatórios iniciam ocultos na lista principal.
+  - Botão de alternância rápida **"Todos / Filtrar"** diretamente na barra lateral do modal de relatórios, permitindo ao operador expandir para os 15 relatórios completos instantaneamente quando necessário.
+- **Conformidade Rigorosa de UI/UX (Regra de 1 Palavra):**
+  - Todas as seções, botões e abas estruturados em termos únicos: `Botões`, `Relatórios`, `Padrão`, `Exibir`, `Ocultar`, `Todos`, `Filtrar`, `Salvar`.
+
 ## [v5.0.45] - 23 de Novembro, 2026
 ### Nex-Ai CLINIC (.FINANCE & .CONFIG) — Limpeza Completa da Base Financeira e Gestão Centralizada de Visibilidade das Abas do Financeiro no Config
 - **Limpeza Total da Base Financeira em Nuvem (Firestore `nexa-index`):**

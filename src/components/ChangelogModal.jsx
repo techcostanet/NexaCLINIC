@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.46',
+      date: '23/11/2026',
+      title: 'Nex-Ai CLINIC (.FINANCE & .CONFIG) — Controle Centralizado de Botões Auxiliares, Remoção de Duplicidade de Relatórios e Seletor Inteligente dos 15 Relatórios Financeiros',
+      description: 'Refinamento avançado de ergonomia visual e governança de funcionalidades no módulo Financeiro: 1) Remoção de Duplicidade de Relatórios: eliminação do botão de relatório local no cabeçalho do FinancePanel, unificando a abertura global pelo botão "Relatórios" da Navbar superior; 2) Controle de Visibilidade de Botões no NexaCONFIG (.CONFIG): novo painel "Botões" na aba Financeiro para ocultar/exibir os botões auxiliares CNAB (cabeçalho), Remessa e Sincronizar Estoque (contas a pagar), com padrão inicial oculto conforme solicitado; 3) Seletor Inteligente de Relatórios (Presets e Alternância): gerenciamento completo dos 15 relatórios financeiros no .CONFIG com padrão inicial deixando visíveis exclusivamente o relatório 2 (Contas a Pagar) e o 3 (Contas a Receber); 4) Botão de Alternância "Todos / Filtrar" no Modal: operador pode alternar com 1 clique diretamente dentro da janela de relatórios para acessar qualquer um dos 15 relatórios a qualquer momento.',
+      changes: [
+        { type: 'Remoção de Duplicidade', text: 'Botão de relatórios redundante no cabeçalho financeiro removido, mantendo o ponto único na Navbar.' },
+        { type: 'Gestão de Botões Auxiliares', text: 'Painel no .CONFIG para ocultar botões CNAB, Remessa e Sincronizar com padrão inicial oculto.' },
+        { type: 'Filtro dos 15 Relatórios', text: 'Configuração dos relatórios visíveis no .CONFIG mantendo por padrão somente o 2 e 3 à vista.' },
+        { type: 'Alternância Rápida de Relatórios', text: 'Botão "Todos / Filtrar" na barra lateral do modal de relatórios para visualização completa instantânea.' }
+      ]
+    },
+    {
       version: 'v5.0.45',
       date: '23/11/2026',
       title: 'Nex-Ai CLINIC (.FINANCE & .CONFIG) — Limpeza Completa da Base Financeira e Gestão Centralizada de Visibilidade das Abas do Financeiro no Config',

@@ -90,6 +90,30 @@ export const DEFAULT_FINANCE_TABS_CONFIG = {
   dre: false
 };
 
+export const DEFAULT_FINANCE_BUTTONS_CONFIG = {
+  cnabHeader: false,
+  remessaPayable: false,
+  syncStockPayable: false
+};
+
+export const DEFAULT_FINANCE_REPORTS_CONFIG = {
+  EXTRATO_GERAL: false,
+  CONTAS_PAGAR: true,       // 2. Contas a Pagar
+  CONTAS_RECEBER: true,     // 3. Contas a Receber
+  INADIMPLENCIA: false,
+  DESPESAS_CC: false,
+  RECEITAS_CAT: false,
+  DRE: false,
+  FLUXO_CAIXA_DIARIO: false,
+  PREVISAO_CAIXA: false,
+  TITULOS_PAGOS: false,
+  FIXO_VARIAVEL: false,
+  MEIO_PAGAMENTO: false,
+  TOP_FORNECEDORES: false,
+  FATURAMENTO_FILIAL: false,
+  AUDITORIA: false
+};
+
 export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const { activeUnitId, activeUnit, isConsolidated, filterByActiveUnit, getUnitMeta, units } = useUnit();
 
@@ -136,6 +160,27 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     return merged;
   }, [tenantSettings, localTabsOverride]);
 
+  // Dynamic Finance Buttons Visibility
+  const [localButtonsOverride, setLocalButtonsOverride] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexa_finance_buttons_config');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const financeButtonsConfig = useMemo(() => {
+    const merged = { ...DEFAULT_FINANCE_BUTTONS_CONFIG };
+    if (tenantSettings && tenantSettings.financeVisibleButtons) {
+      Object.assign(merged, tenantSettings.financeVisibleButtons);
+    }
+    if (localButtonsOverride) {
+      Object.assign(merged, localButtonsOverride);
+    }
+    return merged;
+  }, [tenantSettings, localButtonsOverride]);
+
   useEffect(() => {
     const handleTabsChanged = () => {
       try {
@@ -145,13 +190,23 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         console.error('Erro ao ler abas locais:', e);
       }
     };
+    const handleButtonsChanged = () => {
+      try {
+        const saved = localStorage.getItem('nexa_finance_buttons_config');
+        if (saved) setLocalButtonsOverride(JSON.parse(saved));
+      } catch (e) {
+        console.error('Erro ao ler botões locais:', e);
+      }
+    };
     const handleDataCleared = () => {
       loadData();
     };
     window.addEventListener('finance-tabs-changed', handleTabsChanged);
+    window.addEventListener('finance-buttons-changed', handleButtonsChanged);
     window.addEventListener('finance-data-cleared', handleDataCleared);
     return () => {
       window.removeEventListener('finance-tabs-changed', handleTabsChanged);
+      window.removeEventListener('finance-buttons-changed', handleButtonsChanged);
       window.removeEventListener('finance-data-cleared', handleDataCleared);
     };
   }, []);
@@ -1363,53 +1418,31 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         dotColor="#10b981"
         actions={
           <>
-            <button
-              type="button"
-              onClick={() => setShowCnabModal(true)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.55rem 0.95rem',
-                borderRadius: '8px',
-                backgroundColor: 'var(--bg-card, #ffffff)',
-                border: '1px solid var(--border-color, #e2e8f0)',
-                color: 'var(--text-primary, #0f172a)',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                boxShadow: 'var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05))'
-              }}
-              title="Exportação de Remessa CNAB 240 Sicoob"
-            >
-              <FileSpreadsheet size={16} color="#10b981" />
-              <span>CNAB</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsReportsOpen && setIsReportsOpen(true)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.55rem 0.95rem',
-                borderRadius: '8px',
-                backgroundColor: 'var(--bg-card, #ffffff)',
-                border: '1px solid var(--border-color, #e2e8f0)',
-                color: 'var(--text-primary, #0f172a)',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                boxShadow: 'var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05))'
-              }}
-              title="Relatórios Financeiros Oficiais"
-            >
-              <FileText size={16} color="#0284c7" />
-              <span>Relatórios</span>
-            </button>
+            {financeButtonsConfig.cnabHeader && (
+              <button
+                type="button"
+                onClick={() => setShowCnabModal(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.55rem 0.95rem',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--bg-card, #ffffff)',
+                  border: '1px solid var(--border-color, #e2e8f0)',
+                  color: 'var(--text-primary, #0f172a)',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: 'var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05))'
+                }}
+                title="Exportação de Remessa CNAB 240 Sicoob"
+              >
+                <FileSpreadsheet size={16} color="#10b981" />
+                <span>CNAB</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -2523,49 +2556,53 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <button 
-                type="button"
-                onClick={() => setShowCnabModal(true)}
-                style={{
-                  ...styles.btnSecondary,
-                  backgroundColor: '#f0f9ff',
-                  color: '#0284c7',
-                  border: '1px solid #bae6fd',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  fontWeight: '700',
-                  padding: '0.45rem 0.75rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-                }}
-                title="Gerar arquivo de remessa Sicoob CNAB 240 para pagamento de boletos"
-              >
-                <FileSpreadsheet size={15} />
-                <span>Remessa</span>
-              </button>
-              <button 
-                type="button"
-                onClick={handleSyncStockInvoices}
-                disabled={isSyncingStock}
-                style={{
-                  ...styles.btnSecondary,
-                  backgroundColor: 'rgba(16,185,129,0.08)',
-                  color: '#059669',
-                  border: '1px solid rgba(16,185,129,0.25)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  fontWeight: '700',
-                  padding: '0.45rem 0.75rem',
-                  borderRadius: '6px',
-                  cursor: isSyncingStock ? 'not-allowed' : 'pointer'
-                }}
-                title="Sincronizar notas fiscais cadastradas no estoque diretamente no Contas a Pagar"
-              >
-                <Boxes size={15} />
-                <span>{isSyncingStock ? 'Sincronizando...' : 'Sincronizar Estoque'}</span>
-              </button>
+              {financeButtonsConfig.remessaPayable && (
+                <button 
+                  type="button"
+                  onClick={() => setShowCnabModal(true)}
+                  style={{
+                    ...styles.btnSecondary,
+                    backgroundColor: '#f0f9ff',
+                    color: '#0284c7',
+                    border: '1px solid #bae6fd',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    fontWeight: '700',
+                    padding: '0.45rem 0.75rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                  title="Gerar arquivo de remessa Sicoob CNAB 240 para pagamento de boletos"
+                >
+                  <FileSpreadsheet size={15} />
+                  <span>Remessa</span>
+                </button>
+              )}
+              {financeButtonsConfig.syncStockPayable && (
+                <button 
+                  type="button"
+                  onClick={handleSyncStockInvoices}
+                  disabled={isSyncingStock}
+                  style={{
+                    ...styles.btnSecondary,
+                    backgroundColor: 'rgba(16,185,129,0.08)',
+                    color: '#059669',
+                    border: '1px solid rgba(16,185,129,0.25)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    fontWeight: '700',
+                    padding: '0.45rem 0.75rem',
+                    borderRadius: '6px',
+                    cursor: isSyncingStock ? 'not-allowed' : 'pointer'
+                  }}
+                  title="Sincronizar notas fiscais cadastradas no estoque diretamente no Contas a Pagar"
+                >
+                  <Boxes size={15} />
+                  <span>{isSyncingStock ? 'Sincronizando...' : 'Sincronizar Estoque'}</span>
+                </button>
+              )}
               <button 
                 onClick={() => {
                   setEditingPayable(null);

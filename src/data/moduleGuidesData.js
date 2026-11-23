@@ -59,9 +59,22 @@ export const MODULE_GUIDES = {
       {
         title: 'Gestão de Visibilidade de Abas e Limpeza',
         desc: 'Controle centralizado pelo módulo NexaCONFIG (.CONFIG) permitindo ativar/desativar abas financeiras (Dashboard, Pagar, Receber, Orçamento, Projeção, Acordos, Dívidas, Conciliação e DRE), além de ferramenta de limpeza profunda com autorização de segurança.'
+      },
+      {
+        title: 'Controle de Botões e Seletor de Relatórios',
+        desc: 'Gerenciamento no .CONFIG permitindo ocultar botões auxiliares (CNAB, Remessa e Sincronizar Estoque) e filtrar os 15 relatórios disponíveis, mantendo à vista por padrão apenas os relatórios essenciais (Contas a Pagar e Contas a Receber).'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Ocultar Botões Auxiliares e Escolher Relatórios',
+        steps: [
+          'Acesse o módulo .CONFIG e selecione a aba "Financeiro".',
+          'No card "Botões", ative ou oculte os botões CNAB (cabeçalho), Remessa e Sincronizar Estoque (contas a pagar).',
+          'No card "Relatórios", escolha quais relatórios ficam à vista (padrão: 2. Contas a Pagar e 3. Contas a Receber) ou clique em "Todos" para exibir a lista completa.',
+          'Clique em "Salvar" para aplicar as preferências instantaneamente em toda a clínica.'
+        ]
+      },
       {
         title: 'Como Configurar a Visibilidade das Abas do Financeiro',
         steps: [
@@ -207,6 +220,10 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Se uma aba for desativada, os dados cadastrados nela são perdidos?',
         resposta: 'Não. Ocultar uma aba apenas simplifica a navegação visual da equipe. Todos os dados permanecem gravados em nuvem e voltam a ser exibidos assim que a aba for reativada.'
+      },
+      {
+        pergunta: 'Como ver os outros 13 relatórios se apenas o 2 e 3 estão visíveis?',
+        resposta: 'Ao abrir a janela de Relatórios, basta clicar no botão "Todos" no canto superior da lista lateral para expandir e acessar qualquer um dos 15 relatórios financeiros oficiais. Além disso, o gestor pode ativar relatórios permanentes pelo módulo .CONFIG > Financeiro.'
       }
     ]
   },

@@ -4,7 +4,7 @@ import {
   Settings, Users, Shield, Globe, Database, Key, Check, Plus, X, 
   Trash2, ShieldAlert, ShieldCheck, CheckCircle2, Copy, Download, Upload, Palette,
   ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock, Mail, Activity, Calendar, Sparkles,
-  DollarSign, AlertTriangle
+  DollarSign, AlertTriangle, FileText, Sliders
 } from 'lucide-react';
 import EmailSettingsTab from './config/EmailSettingsTab';
 import ThemeToggle from './common/ThemeToggle';
@@ -14,7 +14,12 @@ import {
   validatePasswordAgainstPolicy 
 } from '../utils/passwordPolicy';
 import { financialService } from '../services/firebase/financialService';
-import { DEFAULT_FINANCE_TABS_CONFIG } from './FinancePanel';
+import { 
+  DEFAULT_FINANCE_TABS_CONFIG, 
+  DEFAULT_FINANCE_BUTTONS_CONFIG, 
+  DEFAULT_FINANCE_REPORTS_CONFIG 
+} from './FinancePanel';
+import { FINANCIAL_REPORTS_LIST } from './FinanceReportsModal';
 
 const FINANCE_TABS_LIST = [
   { id: 'dashboard', label: 'Dashboard', desc: 'Indicadores gerais e visão analítica' },
@@ -26,6 +31,12 @@ const FINANCE_TABS_LIST = [
   { id: 'installments', label: 'Dívidas', desc: 'Controle de dívidas e financiamentos' },
   { id: 'reconciliation', label: 'Conciliação', desc: 'Conferência de extratos bancários' },
   { id: 'dre', label: 'DRE', desc: 'Demonstrativo de resultado do exercício' },
+];
+
+const FINANCE_BUTTONS_LIST = [
+  { id: 'cnabHeader', label: 'CNAB', desc: 'Botão de exportação CNAB no cabeçalho do módulo' },
+  { id: 'remessaPayable', label: 'Remessa', desc: 'Botão de remessa bancária no contas a pagar' },
+  { id: 'syncStockPayable', label: 'Sincronizar', desc: 'Botão de sincronização com o estoque no contas a pagar' },
 ];
 
 export default function ConfigPanel() {
@@ -49,6 +60,26 @@ export default function ConfigPanel() {
       return saved ? { ...DEFAULT_FINANCE_TABS_CONFIG, ...JSON.parse(saved) } : { ...DEFAULT_FINANCE_TABS_CONFIG };
     } catch {
       return { ...DEFAULT_FINANCE_TABS_CONFIG };
+    }
+  });
+
+  // Finance Buttons Configuration State
+  const [financeButtonsConfig, setFinanceButtonsConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexa_finance_buttons_config');
+      return saved ? { ...DEFAULT_FINANCE_BUTTONS_CONFIG, ...JSON.parse(saved) } : { ...DEFAULT_FINANCE_BUTTONS_CONFIG };
+    } catch {
+      return { ...DEFAULT_FINANCE_BUTTONS_CONFIG };
+    }
+  });
+
+  // Finance Reports Configuration State
+  const [financeReportsConfig, setFinanceReportsConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexa_finance_reports_config');
+      return saved ? { ...DEFAULT_FINANCE_REPORTS_CONFIG, ...JSON.parse(saved) } : { ...DEFAULT_FINANCE_REPORTS_CONFIG };
+    } catch {
+      return { ...DEFAULT_FINANCE_REPORTS_CONFIG };
     }
   });
   const [showClearFinanceModal, setShowClearFinanceModal] = useState(false);
@@ -194,6 +225,12 @@ export default function ConfigPanel() {
         if (settings.financeVisibleTabs) {
           setFinanceTabsConfig(prev => ({ ...prev, ...settings.financeVisibleTabs }));
         }
+        if (settings.financeVisibleButtons) {
+          setFinanceButtonsConfig(prev => ({ ...prev, ...settings.financeVisibleButtons }));
+        }
+        if (settings.financeVisibleReports) {
+          setFinanceReportsConfig(prev => ({ ...prev, ...settings.financeVisibleReports }));
+        }
       }
       setProfiles(profileList);
       setUsersList(users);
@@ -319,6 +356,92 @@ export default function ConfigPanel() {
       localStorage.setItem('nexa_finance_tabs_config', JSON.stringify(financeTabsConfig));
       window.dispatchEvent(new CustomEvent('finance-tabs-changed', { detail: financeTabsConfig }));
       showAlert('Configuração salva com sucesso neste dispositivo!', 'warning');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Button Visibility Handlers
+  const handleToggleFinanceButton = (btnId) => {
+    setFinanceButtonsConfig(prev => ({
+      ...prev,
+      [btnId]: !prev[btnId]
+    }));
+  };
+
+  const handleApplyFinanceButtonsPreset = (preset) => {
+    if (preset === 'default' || preset === 'minimal') {
+      setFinanceButtonsConfig({ ...DEFAULT_FINANCE_BUTTONS_CONFIG });
+    } else if (preset === 'all') {
+      const allActive = {};
+      FINANCE_BUTTONS_LIST.forEach(b => { allActive[b.id] = true; });
+      setFinanceButtonsConfig(allActive);
+    }
+  };
+
+  const handleSaveFinanceButtons = async () => {
+    setActionLoading(true);
+    try {
+      const payload = {
+        ...(tenantSettings || {}),
+        financeVisibleButtons: financeButtonsConfig
+      };
+      await dbService.saveTenantSettings(payload);
+      setTenantSettings(payload);
+      localStorage.setItem('nexa_finance_buttons_config', JSON.stringify(financeButtonsConfig));
+      window.dispatchEvent(new CustomEvent('finance-buttons-changed', { detail: financeButtonsConfig }));
+      showAlert('Configuração de botões salva com sucesso!', 'success');
+      logAudit('Financeiro', 'Configuração de botões auxiliares atualizada no tenant.');
+    } catch (err) {
+      console.warn('Erro ao salvar no tenant Firestore, usando armazenamento local:', err);
+      localStorage.setItem('nexa_finance_buttons_config', JSON.stringify(financeButtonsConfig));
+      window.dispatchEvent(new CustomEvent('finance-buttons-changed', { detail: financeButtonsConfig }));
+      showAlert('Configuração de botões salva localmente!', 'warning');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Report Visibility Handlers
+  const handleToggleFinanceReport = (reportId) => {
+    setFinanceReportsConfig(prev => ({
+      ...prev,
+      [reportId]: !prev[reportId]
+    }));
+  };
+
+  const handleApplyFinanceReportsPreset = (preset) => {
+    if (preset === 'default') {
+      setFinanceReportsConfig({ ...DEFAULT_FINANCE_REPORTS_CONFIG });
+    } else if (preset === 'all') {
+      const allActive = {};
+      FINANCIAL_REPORTS_LIST.forEach(r => { allActive[r.id] = true; });
+      setFinanceReportsConfig(allActive);
+    } else if (preset === 'minimal') {
+      const noneActive = {};
+      FINANCIAL_REPORTS_LIST.forEach(r => { noneActive[r.id] = false; });
+      setFinanceReportsConfig(noneActive);
+    }
+  };
+
+  const handleSaveFinanceReports = async () => {
+    setActionLoading(true);
+    try {
+      const payload = {
+        ...(tenantSettings || {}),
+        financeVisibleReports: financeReportsConfig
+      };
+      await dbService.saveTenantSettings(payload);
+      setTenantSettings(payload);
+      localStorage.setItem('nexa_finance_reports_config', JSON.stringify(financeReportsConfig));
+      window.dispatchEvent(new CustomEvent('finance-reports-changed', { detail: financeReportsConfig }));
+      showAlert('Configuração de relatórios salva com sucesso!', 'success');
+      logAudit('Financeiro', 'Configuração de visibilidade de relatórios atualizada no tenant.');
+    } catch (err) {
+      console.warn('Erro ao salvar no tenant Firestore, usando armazenamento local:', err);
+      localStorage.setItem('nexa_finance_reports_config', JSON.stringify(financeReportsConfig));
+      window.dispatchEvent(new CustomEvent('finance-reports-changed', { detail: financeReportsConfig }));
+      showAlert('Configuração de relatórios salva localmente!', 'warning');
     } finally {
       setActionLoading(false);
     }
@@ -2561,7 +2684,274 @@ export default function ConfigPanel() {
                 </div>
               </div>
 
-              {/* Card 2: Limpeza de Registros */}
+              {/* Card 2: Visibilidade de Botões */}
+              <div style={{ ...styles.settingsCard, backgroundColor: 'var(--bg-card)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Sliders size={20} color="var(--primary-color)" />
+                      Botões
+                    </h3>
+                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      Controle a exibição de botões auxiliares (CNAB, Remessa e Sincronização de Estoque).
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyFinanceButtonsPreset('default')}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        backgroundColor: 'var(--surface-muted, #f1f5f9)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Padrão
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyFinanceButtonsPreset('all')}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        backgroundColor: 'var(--surface-muted, #f1f5f9)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Exibir
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyFinanceButtonsPreset('minimal')}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        backgroundColor: 'var(--surface-muted, #f1f5f9)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Ocultar
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                  gap: '1rem',
+                  marginTop: '0.5rem'
+                }}>
+                  {FINANCE_BUTTONS_LIST.map((btn) => {
+                    const isChecked = !!financeButtonsConfig[btn.id];
+                    return (
+                      <div
+                        key={btn.id}
+                        onClick={() => handleToggleFinanceButton(btn.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.85rem 1rem',
+                          borderRadius: '8px',
+                          border: `1px solid ${isChecked ? 'var(--primary-color)' : 'var(--border-color)'}`,
+                          backgroundColor: isChecked ? 'rgba(236, 72, 153, 0.05)' : 'var(--bg-card)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                            {btn.label}
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                            {btn.desc}
+                          </div>
+                        </div>
+                        <div style={{
+                          width: '42px',
+                          height: '24px',
+                          borderRadius: '12px',
+                          backgroundColor: isChecked ? 'var(--primary-color, #ec4899)' : '#cbd5e1',
+                          position: 'relative',
+                          transition: 'background-color 0.2s',
+                          flexShrink: 0
+                        }}>
+                          <div style={{
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            backgroundColor: '#ffffff',
+                            position: 'absolute',
+                            top: '3px',
+                            left: isChecked ? '21px' : '3px',
+                            transition: 'left 0.2s'
+                          }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                  <button
+                    type="button"
+                    disabled={actionLoading}
+                    onClick={handleSaveFinanceButtons}
+                    className="btn btn-primary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.25rem' }}
+                  >
+                    <Check size={16} />
+                    <span>Salvar</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 3: Visibilidade de Relatórios */}
+              <div style={{ ...styles.settingsCard, backgroundColor: 'var(--bg-card)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <FileText size={20} color="var(--primary-color)" />
+                      Relatórios
+                    </h3>
+                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      Selecione quais relatórios financeiros ficam visíveis (padrão: 2 e 3 ativos).
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyFinanceReportsPreset('default')}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        backgroundColor: 'var(--surface-muted, #f1f5f9)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Padrão
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyFinanceReportsPreset('all')}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        backgroundColor: 'var(--surface-muted, #f1f5f9)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Todos
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyFinanceReportsPreset('minimal')}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        backgroundColor: 'var(--surface-muted, #f1f5f9)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Ocultar
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                  gap: '0.75rem',
+                  marginTop: '0.5rem'
+                }}>
+                  {FINANCIAL_REPORTS_LIST.map((rep) => {
+                    const isChecked = !!financeReportsConfig[rep.id];
+                    return (
+                      <div
+                        key={rep.id}
+                        onClick={() => handleToggleFinanceReport(rep.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.75rem 1rem',
+                          borderRadius: '8px',
+                          border: `1px solid ${isChecked ? 'var(--primary-color)' : 'var(--border-color)'}`,
+                          backgroundColor: isChecked ? 'rgba(236, 72, 153, 0.05)' : 'var(--bg-card)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: '600', fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                            {rep.name}
+                          </div>
+                        </div>
+                        <div style={{
+                          width: '42px',
+                          height: '24px',
+                          borderRadius: '12px',
+                          backgroundColor: isChecked ? 'var(--primary-color, #ec4899)' : '#cbd5e1',
+                          position: 'relative',
+                          transition: 'background-color 0.2s',
+                          flexShrink: 0
+                        }}>
+                          <div style={{
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            backgroundColor: '#ffffff',
+                            position: 'absolute',
+                            top: '3px',
+                            left: isChecked ? '21px' : '3px',
+                            transition: 'left 0.2s'
+                          }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                  <button
+                    type="button"
+                    disabled={actionLoading}
+                    onClick={handleSaveFinanceReports}
+                    className="btn btn-primary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.25rem' }}
+                  >
+                    <Check size={16} />
+                    <span>Salvar</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 4: Limpeza de Registros */}
               <div style={{
                 ...styles.settingsCard,
                 backgroundColor: 'var(--bg-card)',
