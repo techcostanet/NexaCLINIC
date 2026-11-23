@@ -55,9 +55,31 @@ export const MODULE_GUIDES = {
       {
         title: 'Remessa Bancária CNAB 240 (Banco Sicoob 756)',
         desc: 'Geração de arquivo de remessa Febraban CNAB 240 v3.3 (Segmentos J e J-52) para pagamento em lote de títulos e boletos de fornecedores via Sicoob Internet Banking.'
+      },
+      {
+        title: 'Gestão de Visibilidade de Abas e Limpeza',
+        desc: 'Controle centralizado pelo módulo NexaCONFIG (.CONFIG) permitindo ativar/desativar abas financeiras (Dashboard, Pagar, Receber, Orçamento, Projeção, Acordos, Dívidas, Conciliação e DRE), além de ferramenta de limpeza profunda com autorização de segurança.'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Configurar a Visibilidade das Abas do Financeiro',
+        steps: [
+          'Acesse o módulo de administração e T.I. (.CONFIG).',
+          'Clique na aba "Financeiro" na barra superior de configurações.',
+          'No painel "Visibilidade", marque ou desmarque as abas desejadas (Dashboard, Pagar, Receber, Orçamento, Projeção, Acordos, Dívidas, Conciliação, DRE) ou use os atalhos "Padrão", "Exibir" ou "Ocultar".',
+          'Clique em "Salvar" para aplicar as preferências instantaneamente em nuvem e sincronizar para toda a equipe da clínica.'
+        ]
+      },
+      {
+        title: 'Como Realizar a Limpeza Completa de Registros Financeiros',
+        steps: [
+          'Acesse o módulo .CONFIG e entre na aba "Financeiro".',
+          'Localize o card "Limpeza" e clique no botão "Limpar".',
+          'No modal de segurança, leia atentamente o aviso de exclusão permanente de títulos de pagar, receber, dívidas e extratos.',
+          'Digite exatamente "CONFIRMAR LIMPEZA" no campo de validação e clique em "Confirmar". Todos os registros serão zerados com segurança em nuvem.'
+        ]
+      },
       {
         title: 'Como Importar Extrato Bancário (OFX / CSV) e Conciliar',
         steps: [
@@ -177,6 +199,14 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Como o boleto bancário é vinculado à conta a pagar?',
         resposta: 'Ele pode ser anexado automaticamente na entrada da Nota Fiscal no módulo de Estoque (com leitura inteligente do código de barras) ou anexado manualmente no formulário de Nova Despesa.'
+      },
+      {
+        pergunta: 'Como ocultar abas que minha equipe não utiliza no dia a dia?',
+        resposta: 'Basta acessar o painel de T.I (.CONFIG) > aba "Financeiro", desmarcar as abas que deseja ocultar (ex: Dívidas, Acordos, DRE) e clicar em "Salvar". Por padrão, apenas Dashboard, Pagar e Receber permanecem visíveis.'
+      },
+      {
+        pergunta: 'Se uma aba for desativada, os dados cadastrados nela são perdidos?',
+        resposta: 'Não. Ocultar uma aba apenas simplifica a navegação visual da equipe. Todos os dados permanecem gravados em nuvem e voltam a ser exibidos assim que a aba for reativada.'
       }
     ]
   },

@@ -1,3 +1,22 @@
+## [v5.0.45] - 23 de Novembro, 2026
+### Nex-Ai CLINIC (.FINANCE & .CONFIG) — Limpeza Completa da Base Financeira e Gestão Centralizada de Visibilidade das Abas do Financeiro no Config
+- **Limpeza Total da Base Financeira em Nuvem (Firestore `nexa-index`):**
+  - Exclusão definitiva de 1.037 registros legados (1.028 títulos em `accounts_payable`, 9 títulos em `accounts_receivable`, além de coleções de dívidas, acordos e extratos zeradas com sucesso).
+  - Inicialização de arrays vazios e método de limpeza no `mockFirebase.js` e `financialService.js`.
+- **Gestão Centralizada de Visibilidade de Abas no NexaCONFIG (`ConfigPanel.jsx`):**
+  - Nova aba "Financeiro" no painel de administração e T.I. com interface ergonômica para controlar a exibição individual das 9 abas do módulo financeiro: `Dashboard`, `Pagar`, `Receber`, `Orçamento`, `Projeção`, `Acordos`, `Dívidas`, `Conciliação` e `DRE`.
+  - Configuração padrão definida em nuvem: ativas exclusivamente as abas **Dashboard**, **Pagar** e **Receber**; todas as demais 6 abas iniciam ocultas por padrão.
+  - Botões de presets rápidos em 1 clique: `Padrão` (visão balanceada de 3 abas), `Exibir` (todas as 9 abas ativas) e `Ocultar` (apenas Pagar e Receber).
+  - Persistência híbrida no documento `tenant_settings/main` do Firestore com fallback local e disparo de eventos globais (`finance-tabs-changed`).
+- **Renderização Condicional e Fallback Inteligente no Painel Financeiro (`FinancePanel.jsx`):**
+  - Cada aba de navegação é condicionada aos parâmetros de visibilidade ativos.
+  - Se a aba atualmente aberta for desativada pelo gestor, o sistema redireciona automaticamente para a primeira aba visível da lista, prevenindo qualquer tela vazia.
+- **Ferramenta de Limpeza Profunda com Proteção por Confirmação Estrita:**
+  - Card de limpeza no .CONFIG com acionamento de modal de segurança.
+  - Exigência de digitação literal de `CONFIRMAR LIMPEZA` para habilitar o botão de exclusão, protegendo contra operações destrutivas acidentais.
+- **Conformidade Rigorosa de UI/UX (Regra de 1 Palavra):**
+  - Rótulos, abas e botões formatados em termo único: `Financeiro`, `Visibilidade`, `Limpeza`, `Padrão`, `Exibir`, `Ocultar`, `Salvar`, `Limpar`, `Cancelar`, `Confirmar`.
+
 ## [v5.0.44] - 20 de Novembro, 2026
 ### Nex-Ai CLINIC (.MULTI) — Motor de Busca Central de Pacientes na Avaliação Nutricional e Resiliência de Carregamento
 - **Motor de Busca de Pacientes na Avaliação Nutricional (`MultiNutritionTab.jsx`):**

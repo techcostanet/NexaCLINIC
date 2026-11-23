@@ -3,7 +3,8 @@ import { dbService } from '../firebase';
 import { 
   Settings, Users, Shield, Globe, Database, Key, Check, Plus, X, 
   Trash2, ShieldAlert, ShieldCheck, CheckCircle2, Copy, Download, Upload, Palette,
-  ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock, Mail, Activity, Calendar, Sparkles
+  ListFilter, Edit, Warehouse, KeyRound, RefreshCw, Clock, Mail, Activity, Calendar, Sparkles,
+  DollarSign, AlertTriangle
 } from 'lucide-react';
 import EmailSettingsTab from './config/EmailSettingsTab';
 import ThemeToggle from './common/ThemeToggle';
@@ -12,6 +13,20 @@ import {
   getEffectivePasswordPolicy, 
   validatePasswordAgainstPolicy 
 } from '../utils/passwordPolicy';
+import { financialService } from '../services/firebase/financialService';
+import { DEFAULT_FINANCE_TABS_CONFIG } from './FinancePanel';
+
+const FINANCE_TABS_LIST = [
+  { id: 'dashboard', label: 'Dashboard', desc: 'Indicadores gerais e visão analítica' },
+  { id: 'payable', label: 'Pagar', desc: 'Contas e títulos a pagar' },
+  { id: 'receivable', label: 'Receber', desc: 'Faturas e receitas a receber' },
+  { id: 'budget', label: 'Orçamento', desc: 'Planejamento orçamentário mensal' },
+  { id: 'cashflow_projection', label: 'Projeção', desc: 'Fluxo de caixa projetado' },
+  { id: 'agreements', label: 'Acordos', desc: 'Gestão de parcelamentos com credores' },
+  { id: 'installments', label: 'Dívidas', desc: 'Controle de dívidas e financiamentos' },
+  { id: 'reconciliation', label: 'Conciliação', desc: 'Conferência de extratos bancários' },
+  { id: 'dre', label: 'DRE', desc: 'Demonstrativo de resultado do exercício' },
+];
 
 export default function ConfigPanel() {
   const [activeTab, setActiveTab] = useState('branding'); // 'branding' | 'profiles' | 'users' | 'passwords' | 'locations' | 'categories' | 'email' | 'integrations' | 'logs' | 'schedules'
@@ -26,6 +41,19 @@ export default function ConfigPanel() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [categoriesList, setCategoriesList] = useState([]);
   const [stockLocations, setStockLocations] = useState([]);
+
+  // Finance Tabs Configuration & Wipe State
+  const [financeTabsConfig, setFinanceTabsConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexa_finance_tabs_config');
+      return saved ? { ...DEFAULT_FINANCE_TABS_CONFIG, ...JSON.parse(saved) } : { ...DEFAULT_FINANCE_TABS_CONFIG };
+    } catch {
+      return { ...DEFAULT_FINANCE_TABS_CONFIG };
+    }
+  });
+  const [showClearFinanceModal, setShowClearFinanceModal] = useState(false);
+  const [clearFinanceConfirmText, setClearFinanceConfirmText] = useState('');
+  const [isClearingFinance, setIsClearingFinance] = useState(false);
 
   // Esquemas de Dias de Sessão (Módulo T.I Centralizado)
   const [dialysisSchedulesList, setDialysisSchedulesList] = useState([]);
@@ -163,6 +191,9 @@ export default function ConfigPanel() {
       setTenantSettings(settings);
       if (settings) {
         setPasswordPolicyForm(getEffectivePasswordPolicy(settings));
+        if (settings.financeVisibleTabs) {
+          setFinanceTabsConfig(prev => ({ ...prev, ...settings.financeVisibleTabs }));
+        }
       }
       setProfiles(profileList);
       setUsersList(users);
@@ -241,6 +272,76 @@ export default function ConfigPanel() {
         setTenantSettings(s => ({ ...s, logo: reader.result }));
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // ----------------------------------------------------
+  // Finance Module Configuration & Wipe Handlers
+  // ----------------------------------------------------
+  const handleToggleFinanceTab = (tabId) => {
+    setFinanceTabsConfig(prev => ({
+      ...prev,
+      [tabId]: !prev[tabId]
+    }));
+  };
+
+  const handleApplyFinancePreset = (preset) => {
+    if (preset === 'default') {
+      setFinanceTabsConfig({ ...DEFAULT_FINANCE_TABS_CONFIG });
+    } else if (preset === 'all') {
+      const allActive = {};
+      FINANCE_TABS_LIST.forEach(t => { allActive[t.id] = true; });
+      setFinanceTabsConfig(allActive);
+    } else if (preset === 'minimal') {
+      const minimal = {};
+      FINANCE_TABS_LIST.forEach(t => { minimal[t.id] = false; });
+      minimal.payable = true;
+      minimal.receivable = true;
+      setFinanceTabsConfig(minimal);
+    }
+  };
+
+  const handleSaveFinanceTabs = async () => {
+    setActionLoading(true);
+    try {
+      const payload = {
+        ...(tenantSettings || {}),
+        financeVisibleTabs: financeTabsConfig
+      };
+      await dbService.saveTenantSettings(payload);
+      setTenantSettings(payload);
+      localStorage.setItem('nexa_finance_tabs_config', JSON.stringify(financeTabsConfig));
+      window.dispatchEvent(new CustomEvent('finance-tabs-changed', { detail: financeTabsConfig }));
+      showAlert('Configuração de abas salva com sucesso!', 'success');
+      logAudit('Financeiro', 'Configuração de abas atualizada no tenant.');
+    } catch (err) {
+      console.warn('Erro ao salvar no tenant Firestore, usando armazenamento local:', err);
+      localStorage.setItem('nexa_finance_tabs_config', JSON.stringify(financeTabsConfig));
+      window.dispatchEvent(new CustomEvent('finance-tabs-changed', { detail: financeTabsConfig }));
+      showAlert('Configuração salva com sucesso neste dispositivo!', 'warning');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleClearAllFinanceData = async () => {
+    if (clearFinanceConfirmText !== 'CONFIRMAR LIMPEZA') {
+      showAlert('Digite exatamente CONFIRMAR LIMPEZA para autorizar.', 'warning');
+      return;
+    }
+    setIsClearingFinance(true);
+    try {
+      await financialService.clearAllFinanceData();
+      window.dispatchEvent(new Event('finance-data-cleared'));
+      setShowClearFinanceModal(false);
+      setClearFinanceConfirmText('');
+      showAlert('Dados financeiros excluídos com sucesso!', 'success');
+      logAudit('Financeiro', 'Limpeza completa de registros financeiros executada.');
+    } catch (err) {
+      console.error('Erro na limpeza financeira:', err);
+      showAlert('Erro ao executar limpeza financeira.', 'danger');
+    } finally {
+      setIsClearingFinance(false);
     }
   };
 
@@ -940,6 +1041,9 @@ export default function ConfigPanel() {
         </button>
         <button onClick={() => setActiveTab('logs')} style={{ ...styles.tabBtn, ...(activeTab === 'logs' ? styles.tabBtnActive : {}) }}>
           <ShieldAlert size={16} /> Logs ({auditLogs.length})
+        </button>
+        <button onClick={() => setActiveTab('finance')} style={{ ...styles.tabBtn, ...(activeTab === 'finance' ? styles.tabBtnActive : {}) }}>
+          <DollarSign size={16} /> Financeiro
         </button>
       </div>
 
@@ -2318,6 +2422,188 @@ export default function ConfigPanel() {
               </table>
             </div>
           )}
+
+          {/* TAB: Financeiro (Visibilidade & Limpeza) */}
+          {activeTab === 'finance' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {/* Card 1: Visibilidade de Abas */}
+              <div style={{ ...styles.settingsCard, backgroundColor: 'var(--bg-card)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <DollarSign size={20} color="var(--primary-color)" />
+                      Visibilidade
+                    </h3>
+                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      Selecione quais abas do módulo financeiro ficam ativas para a equipe da clínica.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyFinancePreset('default')}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        backgroundColor: 'var(--surface-muted, #f1f5f9)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Padrão
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyFinancePreset('all')}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        backgroundColor: 'var(--surface-muted, #f1f5f9)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Exibir
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyFinancePreset('minimal')}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        backgroundColor: 'var(--surface-muted, #f1f5f9)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Ocultar
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                  gap: '1rem',
+                  marginTop: '0.5rem'
+                }}>
+                  {FINANCE_TABS_LIST.map((tab) => {
+                    const isChecked = !!financeTabsConfig[tab.id];
+                    return (
+                      <div
+                        key={tab.id}
+                        onClick={() => handleToggleFinanceTab(tab.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.85rem 1rem',
+                          borderRadius: '8px',
+                          border: `1px solid ${isChecked ? 'var(--primary-color)' : 'var(--border-color)'}`,
+                          backgroundColor: isChecked ? 'rgba(236, 72, 153, 0.05)' : 'var(--bg-card)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                            {tab.label}
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                            {tab.desc}
+                          </div>
+                        </div>
+                        <div style={{
+                          width: '42px',
+                          height: '24px',
+                          borderRadius: '12px',
+                          backgroundColor: isChecked ? 'var(--primary-color, #ec4899)' : '#cbd5e1',
+                          position: 'relative',
+                          transition: 'background-color 0.2s',
+                          flexShrink: 0
+                        }}>
+                          <div style={{
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            backgroundColor: '#ffffff',
+                            position: 'absolute',
+                            top: '3px',
+                            left: isChecked ? '21px' : '3px',
+                            transition: 'left 0.2s'
+                          }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                  <button
+                    type="button"
+                    disabled={actionLoading}
+                    onClick={handleSaveFinanceTabs}
+                    className="btn btn-primary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.25rem' }}
+                  >
+                    <Check size={16} />
+                    <span>Salvar</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 2: Limpeza de Registros */}
+              <div style={{
+                ...styles.settingsCard,
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid #fecaca'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ flex: '1 1 300px' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <AlertTriangle size={20} color="#dc2626" />
+                      Limpeza
+                    </h3>
+                    <p style={{ margin: '0.35rem 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                      Limpeza profunda de todos os registros e títulos do financeiro (pagar, receber, dívidas e extratos em nuvem).
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClearFinanceConfirmText('');
+                      setShowClearFinanceModal(true);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 1.25rem',
+                      borderRadius: '6px',
+                      backgroundColor: '#dc2626',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontWeight: '600',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Trash2 size={16} />
+                    <span>Limpar</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -2916,6 +3202,88 @@ export default function ConfigPanel() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Limpeza Financeira */}
+      {showClearFinanceModal && (
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modalCard, maxWidth: '480px' }}>
+            <div style={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  backgroundColor: '#fee2e2',
+                  color: '#dc2626',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <AlertTriangle size={20} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, color: '#b91c1c' }}>
+                    Confirmar
+                  </h2>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
+                    Exclusão permanente de registros financeiros
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowClearFinanceModal(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0, lineHeight: '1.5' }}>
+                Esta ação excluirá permanentemente todos os lançamentos financeiros da nuvem. Digite <strong>CONFIRMAR LIMPEZA</strong> para autorizar:
+              </p>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="CONFIRMAR LIMPEZA"
+                value={clearFinanceConfirmText}
+                onChange={(e) => setClearFinanceConfirmText(e.target.value)}
+                style={{ padding: '0.6rem 0.75rem', fontWeight: '600' }}
+              />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', padding: '1rem 1.25rem', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--surface-muted, #f8fafc)' }}>
+              <button
+                type="button"
+                onClick={() => setShowClearFinanceModal(false)}
+                className="btn btn-secondary"
+                style={{ padding: '0.45rem 1rem' }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={clearFinanceConfirmText !== 'CONFIRMAR LIMPEZA' || isClearingFinance}
+                onClick={handleClearAllFinanceData}
+                style={{
+                  padding: '0.45rem 1.25rem',
+                  borderRadius: '6px',
+                  backgroundColor: clearFinanceConfirmText === 'CONFIRMAR LIMPEZA' ? '#dc2626' : '#cbd5e1',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontWeight: '600',
+                  cursor: clearFinanceConfirmText === 'CONFIRMAR LIMPEZA' ? 'pointer' : 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                {isClearingFinance ? <RefreshCw size={14} className="spin" /> : <Trash2 size={14} />}
+                <span>Confirmar</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

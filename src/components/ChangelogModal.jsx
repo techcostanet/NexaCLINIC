@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.45',
+      date: '23/11/2026',
+      title: 'Nex-Ai CLINIC (.FINANCE & .CONFIG) — Limpeza Completa da Base Financeira e Gestão Centralizada de Visibilidade das Abas do Financeiro no Config',
+      description: 'Implementação de duas frentes solicitadas para a controladoria financeira da clínica: 1) Limpeza Total da Base Financeira em Nuvem: exclusão definitiva de 1.037 registros (1.028 contas a pagar e 9 contas a receber, além de dívidas, acordos e conciliações) diretamente do Firestore oficial do Nex-Ai CLINIC (nexa-index), zerando a base com segurança; 2) Gestão Centralizada de Visibilidade de Abas no NexaCONFIG (.CONFIG): nova aba "Financeiro" no painel de administração permitindo ativar ou desativar individualmente a exibição de cada uma das 9 abas do módulo (Dashboard, Pagar, Receber, Orçamento, Projeção, Acordos, Dívidas, Conciliação e DRE); 3) Configuração Padrão Oculta: configurado em nuvem para manter ativas por padrão apenas Dashboard, Pagar e Receber, mantendo as demais 6 abas ocultas mas prontamente configuráveis a qualquer momento; 4) Atalhos de 1 Clique: botões "Padrão", "Exibir" e "Ocultar" para alternar presets instantaneamente; 5) Fallback Inteligente de Navegação: redirecionamento automático para a primeira aba disponível caso o usuário esteja em uma aba que foi ocultada; 6) Ferramenta de Limpeza com Autorização de Segurança: card de limpeza no .CONFIG com modal de confirmação estrita exigindo a digitação de "CONFIRMAR LIMPEZA".',
+      changes: [
+        { type: 'Limpeza Total do Banco Financeiro', text: 'Exclusão de 1.037 títulos legados em nuvem, deixando a base pronta para novos lançamentos limpos.' },
+        { type: 'Aba Financeiro no NexaCONFIG', text: 'Gestão visual de visibilidade de abas com toggles e atalhos rápidos Padrão, Exibir e Ocultar.' },
+        { type: 'Padrão com Abas Secundárias Ocultas', text: 'Por padrão apenas Dashboard, Pagar e Receber ficam visíveis, simplificando o fluxo de trabalho.' },
+        { type: 'Fallback Seguro no FinancePanel', text: 'Redirecionamento automático de aba ativa evitando telas em branco caso a aba atual seja desativada.' },
+        { type: 'Modal de Segurança para Limpeza', text: 'Confirmação com digitação de texto obrigatório para impedir limpezas acidentais no sistema.' }
+      ]
+    },
+    {
       version: 'v5.0.44',
       date: '20/11/2026',
       title: 'Nex-Ai CLINIC (.MULTI) — Motor de Busca Central de Pacientes na Avaliação Nutricional e Resiliência de Carregamento',

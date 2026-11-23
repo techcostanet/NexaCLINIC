@@ -34,6 +34,10 @@ export const multiService = {
   ...multiFunctions
 };
 
+export const financialService = {
+  ...financialFunctions
+};
+
 export const dbService = {
   ...authFunctions,
   ...patientFunctions,

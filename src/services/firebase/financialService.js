@@ -510,7 +510,20 @@ export const deleteBankStatement = async (id) => {
   };
 
 export const clearAllFinanceData = async () => {
-    if (USE_MOCK) return { success: true };
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem('sistema_indicadores_initial_cash_balance');
+        localStorage.removeItem('sistema_indicadores_finance_dashboard_layout');
+      } catch (e) {
+        console.warn('Erro ao limpar localStorage financeiro:', e);
+      }
+    }
+    if (USE_MOCK) {
+      if (mockFirestore && mockFirestore.clearAllFinanceData) {
+        return mockFirestore.clearAllFinanceData();
+      }
+      return { success: true };
+    }
     const { getFirestore, collection, getDocs, writeBatch, doc } = await import('firebase/firestore');
     const db = getFirestore(app);
     const cols = ['accounts_payable', 'accounts_receivable', 'debts', 'bank_statements', 'budget_plans', 'agreements', 'xml_imports'];
@@ -531,3 +544,7 @@ export const clearAllFinanceData = async () => {
     }
     return { success: true };
   };
+
+export const financialService = {
+  clearAllFinanceData
+};

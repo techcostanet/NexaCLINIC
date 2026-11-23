@@ -1244,22 +1244,11 @@ const getDB = () => {
     }
 
     if (!parsed.accounts_payable) {
-      parsed.accounts_payable = [
-        { id: 'pay-1', supplier: 'Baxter Hospitalar Ltda', cnpj: '12.345.678/0001-90', description: 'Compra de Dialisadores HF80', amount: 10200.00, dueDate: '2026-07-25', status: 'Pendente', category: 'Insumo Clínico', invoiceNumber: '9931', paymentDate: '' },
-        { id: 'pay-2', supplier: 'Fresenius Medical Care', cnpj: '98.765.432/0001-21', description: 'Concentrado Ácido de Hemodiálise', amount: 2475.00, dueDate: '2026-07-20', status: 'Pago', category: 'Concentrado', invoiceNumber: '10432', paymentDate: '2026-07-15' },
-        { id: 'pay-3', supplier: 'Distribuidora Farmamed', cnpj: '33.221.109/0001-44', description: 'Medicamentos Epoetina', amount: 3600.00, dueDate: '2026-08-05', status: 'Pendente', category: 'Medicamento', invoiceNumber: '2844', paymentDate: '' },
-        { id: 'pay-4', supplier: 'Companhia de Água e Saneamento', cnpj: '11.222.333/0001-00', description: 'Consumo de água - Osmose Reversa', amount: 4800.00, dueDate: '2026-07-30', status: 'Pendente', category: 'Serviço/Utilidades', invoiceNumber: '0726', paymentDate: '' },
-        { id: 'pay-5', supplier: 'Concessionária de Energia S.A.', cnpj: '44.555.666/0001-11', description: 'Energia Elétrica', amount: 8900.00, dueDate: '2026-07-28', status: 'Pago', category: 'Serviço/Utilidades', invoiceNumber: '1126', paymentDate: '2026-07-16' }
-      ];
+      parsed.accounts_payable = [];
       updated = true;
     }
     if (!parsed.accounts_receivable) {
-      parsed.accounts_receivable = [
-        { id: 'rec-1', client: 'Sistema Único de Saúde (SUS) - APAC', category: 'SUS', description: 'Repasse APAC Hemodiálise Jun/2026', amount: 485000.00, dueDate: '2026-07-30', status: 'Pendente', invoiceNumber: 'APAC-2026-06', receivedDate: '' },
-        { id: 'rec-2', client: 'Unimed BH', category: 'Convênio', description: 'Mensalidade Hemodiálise Convênio Jun/2026', amount: 72000.00, dueDate: '2026-07-22', status: 'Pago', invoiceNumber: 'UNIMED-993', receivedDate: '2026-07-20' },
-        { id: 'rec-3', client: 'Bradesco Saúde', category: 'Convênio', description: 'Procedimentos de nefrologia', amount: 28400.00, dueDate: '2026-07-24', status: 'Pendente', invoiceNumber: 'BRAD-402', receivedDate: '' },
-        { id: 'rec-4', client: 'Amil Assistência', category: 'Convênio', description: 'Sessões de diálise peritoneal APD', amount: 19800.00, dueDate: '2026-07-27', status: 'Pago', invoiceNumber: 'AMIL-112', receivedDate: '2026-07-16' }
-      ];
+      parsed.accounts_receivable = [];
       updated = true;
     }
     if (!parsed.xml_imports) {
@@ -5523,6 +5512,19 @@ export const mockFirestore = {
     
     setDB(db);
     return { success: true, bill: newBill, xml: newXml };
+  },
+
+  clearAllFinanceData: async () => {
+    const db = getDB();
+    db.accounts_payable = [];
+    db.accounts_receivable = [];
+    db.debts = [];
+    db.bank_statements = [];
+    db.budget_plans = [];
+    db.agreements = [];
+    db.xml_imports = [];
+    setDB(db);
+    return { success: true };
   },
 
   // Tenant Settings (SaaS Configurations)

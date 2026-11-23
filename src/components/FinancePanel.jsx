@@ -78,6 +78,18 @@ export const EXPENSE_CATEGORIES = [
   'Outros'
 ];
 
+export const DEFAULT_FINANCE_TABS_CONFIG = {
+  dashboard: true,
+  payable: true,
+  receivable: true,
+  budget: false,
+  cashflow_projection: false,
+  agreements: false,
+  installments: false,
+  reconciliation: false,
+  dre: false
+};
+
 export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsOpen }) {
   const { activeUnitId, activeUnit, isConsolidated, filterByActiveUnit, getUnitMeta, units } = useUnit();
 
@@ -102,6 +114,58 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const [loading, setLoading] = useState(true);
   const [tenantSettings, setTenantSettings] = useState(null);
   const [showCnabModal, setShowCnabModal] = useState(false);
+
+  // Dynamic Finance Tabs Visibility
+  const [localTabsOverride, setLocalTabsOverride] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexa_finance_tabs_config');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const financeTabsConfig = useMemo(() => {
+    const merged = { ...DEFAULT_FINANCE_TABS_CONFIG };
+    if (tenantSettings && tenantSettings.financeVisibleTabs) {
+      Object.assign(merged, tenantSettings.financeVisibleTabs);
+    }
+    if (localTabsOverride) {
+      Object.assign(merged, localTabsOverride);
+    }
+    return merged;
+  }, [tenantSettings, localTabsOverride]);
+
+  useEffect(() => {
+    const handleTabsChanged = () => {
+      try {
+        const saved = localStorage.getItem('nexa_finance_tabs_config');
+        if (saved) setLocalTabsOverride(JSON.parse(saved));
+      } catch (e) {
+        console.error('Erro ao ler abas locais:', e);
+      }
+    };
+    const handleDataCleared = () => {
+      loadData();
+    };
+    window.addEventListener('finance-tabs-changed', handleTabsChanged);
+    window.addEventListener('finance-data-cleared', handleDataCleared);
+    return () => {
+      window.removeEventListener('finance-tabs-changed', handleTabsChanged);
+      window.removeEventListener('finance-data-cleared', handleDataCleared);
+    };
+  }, []);
+
+  // Fallback to first visible tab if activeTab is hidden
+  useEffect(() => {
+    if (!financeTabsConfig[activeTab]) {
+      const tabOrder = ['dashboard', 'payable', 'receivable', 'budget', 'cashflow_projection', 'agreements', 'installments', 'reconciliation', 'dre'];
+      const firstVisible = tabOrder.find(t => financeTabsConfig[t]);
+      if (firstVisible) {
+        setActiveTab(firstVisible);
+      }
+    }
+  }, [financeTabsConfig, activeTab]);
 
   useEffect(() => {
     setSelectedUnit(activeUnit?.shortName || (activeUnitId === 'all' ? 'Todas' : (activeUnitId === 'taguatinga' ? 'Taguatinga' : 'Betim')));
@@ -1375,109 +1439,127 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       {/* Navigation tabs */}
       <div style={styles.tabsHeader}>
         <div style={styles.tabs}>
-          <button 
-            onClick={() => setActiveTab('dashboard')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'dashboard' ? styles.tabBtnActive : {}) }}
-          >
-            <BarChart2 size={16} />
-            <span>Dashboard</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('payable')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'payable' ? styles.tabBtnActive : {}) }}
-          >
-            <TrendingDown size={16} />
-            <span>Pagar</span>
-            <span style={{
-              fontSize: '0.72rem',
-              padding: '0.1rem 0.45rem',
-              borderRadius: '10px',
-              backgroundColor: activeTab === 'payable' ? '#10b981' : 'var(--surface-muted, #e2e8f0)',
-              color: activeTab === 'payable' ? '#ffffff' : 'var(--text-secondary, #64748b)',
-              fontWeight: '700'
-            }}>
-              {currentPayableList.length}
-            </span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('receivable')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'receivable' ? styles.tabBtnActive : {}) }}
-          >
-            <TrendingUp size={16} />
-            <span>Receber</span>
-            <span style={{
-              fontSize: '0.72rem',
-              padding: '0.1rem 0.45rem',
-              borderRadius: '10px',
-              backgroundColor: activeTab === 'receivable' ? '#10b981' : 'var(--surface-muted, #e2e8f0)',
-              color: activeTab === 'receivable' ? '#ffffff' : 'var(--text-secondary, #64748b)',
-              fontWeight: '700'
-            }}>
-              {currentReceivableList.length}
-            </span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('budget')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'budget' ? styles.tabBtnActive : {}) }}
-          >
-            <Target size={16} />
-            <span>Orçamento</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('cashflow_projection')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'cashflow_projection' ? styles.tabBtnActive : {}) }}
-          >
-            <Activity size={16} />
-            <span>Projeção</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('agreements')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'agreements' ? styles.tabBtnActive : {}) }}
-          >
-            <ShieldCheck size={16} />
-            <span>Acordos</span>
-            <span style={{
-              fontSize: '0.72rem',
-              padding: '0.1rem 0.45rem',
-              borderRadius: '10px',
-              backgroundColor: activeTab === 'agreements' ? '#10b981' : 'var(--surface-muted, #e2e8f0)',
-              color: activeTab === 'agreements' ? '#ffffff' : 'var(--text-secondary, #64748b)',
-              fontWeight: '700'
-            }}>
-              {currentAgreementsList.length}
-            </span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('installments')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'installments' ? styles.tabBtnActive : {}) }}
-          >
-            <Building2 size={16} />
-            <span>Dívidas</span>
-            <span style={{
-              fontSize: '0.72rem',
-              padding: '0.1rem 0.45rem',
-              borderRadius: '10px',
-              backgroundColor: activeTab === 'installments' ? '#10b981' : 'var(--surface-muted, #e2e8f0)',
-              color: activeTab === 'installments' ? '#ffffff' : 'var(--text-secondary, #64748b)',
-              fontWeight: '700'
-            }}>
-              {currentDebtsList.length}
-            </span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('reconciliation')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'reconciliation' ? styles.tabBtnActive : {}) }}
-          >
-            <CheckCircle2 size={16} />
-            <span>Conciliação</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('dre')} 
-            style={{ ...styles.tabBtn, ...(activeTab === 'dre' ? styles.tabBtnActive : {}) }}
-          >
-            <FileSpreadsheet size={16} />
-            <span>DRE</span>
-          </button>
+          {financeTabsConfig.dashboard && (
+            <button 
+              onClick={() => setActiveTab('dashboard')} 
+              style={{ ...styles.tabBtn, ...(activeTab === 'dashboard' ? styles.tabBtnActive : {}) }}
+            >
+              <BarChart2 size={16} />
+              <span>Dashboard</span>
+            </button>
+          )}
+          {financeTabsConfig.payable && (
+            <button 
+              onClick={() => setActiveTab('payable')} 
+              style={{ ...styles.tabBtn, ...(activeTab === 'payable' ? styles.tabBtnActive : {}) }}
+            >
+              <TrendingDown size={16} />
+              <span>Pagar</span>
+              <span style={{
+                fontSize: '0.72rem',
+                padding: '0.1rem 0.45rem',
+                borderRadius: '10px',
+                backgroundColor: activeTab === 'payable' ? '#10b981' : 'var(--surface-muted, #e2e8f0)',
+                color: activeTab === 'payable' ? '#ffffff' : 'var(--text-secondary, #64748b)',
+                fontWeight: '700'
+              }}>
+                {currentPayableList.length}
+              </span>
+            </button>
+          )}
+          {financeTabsConfig.receivable && (
+            <button 
+              onClick={() => setActiveTab('receivable')} 
+              style={{ ...styles.tabBtn, ...(activeTab === 'receivable' ? styles.tabBtnActive : {}) }}
+            >
+              <TrendingUp size={16} />
+              <span>Receber</span>
+              <span style={{
+                fontSize: '0.72rem',
+                padding: '0.1rem 0.45rem',
+                borderRadius: '10px',
+                backgroundColor: activeTab === 'receivable' ? '#10b981' : 'var(--surface-muted, #e2e8f0)',
+                color: activeTab === 'receivable' ? '#ffffff' : 'var(--text-secondary, #64748b)',
+                fontWeight: '700'
+              }}>
+                {currentReceivableList.length}
+              </span>
+            </button>
+          )}
+          {financeTabsConfig.budget && (
+            <button 
+              onClick={() => setActiveTab('budget')} 
+              style={{ ...styles.tabBtn, ...(activeTab === 'budget' ? styles.tabBtnActive : {}) }}
+            >
+              <Target size={16} />
+              <span>Orçamento</span>
+            </button>
+          )}
+          {financeTabsConfig.cashflow_projection && (
+            <button 
+              onClick={() => setActiveTab('cashflow_projection')} 
+              style={{ ...styles.tabBtn, ...(activeTab === 'cashflow_projection' ? styles.tabBtnActive : {}) }}
+            >
+              <Activity size={16} />
+              <span>Projeção</span>
+            </button>
+          )}
+          {financeTabsConfig.agreements && (
+            <button 
+              onClick={() => setActiveTab('agreements')} 
+              style={{ ...styles.tabBtn, ...(activeTab === 'agreements' ? styles.tabBtnActive : {}) }}
+            >
+              <ShieldCheck size={16} />
+              <span>Acordos</span>
+              <span style={{
+                fontSize: '0.72rem',
+                padding: '0.1rem 0.45rem',
+                borderRadius: '10px',
+                backgroundColor: activeTab === 'agreements' ? '#10b981' : 'var(--surface-muted, #e2e8f0)',
+                color: activeTab === 'agreements' ? '#ffffff' : 'var(--text-secondary, #64748b)',
+                fontWeight: '700'
+              }}>
+                {currentAgreementsList.length}
+              </span>
+            </button>
+          )}
+          {financeTabsConfig.installments && (
+            <button 
+              onClick={() => setActiveTab('installments')} 
+              style={{ ...styles.tabBtn, ...(activeTab === 'installments' ? styles.tabBtnActive : {}) }}
+            >
+              <Building2 size={16} />
+              <span>Dívidas</span>
+              <span style={{
+                fontSize: '0.72rem',
+                padding: '0.1rem 0.45rem',
+                borderRadius: '10px',
+                backgroundColor: activeTab === 'installments' ? '#10b981' : 'var(--surface-muted, #e2e8f0)',
+                color: activeTab === 'installments' ? '#ffffff' : 'var(--text-secondary, #64748b)',
+                fontWeight: '700'
+              }}>
+                {currentDebtsList.length}
+              </span>
+            </button>
+          )}
+          {financeTabsConfig.reconciliation && (
+            <button 
+              onClick={() => setActiveTab('reconciliation')} 
+              style={{ ...styles.tabBtn, ...(activeTab === 'reconciliation' ? styles.tabBtnActive : {}) }}
+            >
+              <CheckCircle2 size={16} />
+              <span>Conciliação</span>
+            </button>
+          )}
+          {financeTabsConfig.dre && (
+            <button 
+              onClick={() => setActiveTab('dre')} 
+              style={{ ...styles.tabBtn, ...(activeTab === 'dre' ? styles.tabBtnActive : {}) }}
+            >
+              <FileSpreadsheet size={16} />
+              <span>DRE</span>
+            </button>
+          )}
         </div>
       </div>
 
