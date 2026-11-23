@@ -197,48 +197,140 @@ export const deleteFireHydrantInspection = async (id) => {
 // CADASTRO DE EQUIPAMENTOS (Extintores / Hidrantes)
 // ==========================================
 
-export const getEquipment = async (category = null) => {
+export const DEFAULT_SESMT_EQUIPMENT = [
+    { id: 'ext-01', code: 'EXT-01', category: 'EXTINGUISHER', type: 'CO₂', sector: 'Bloco Cirúrgico', capacity: '6 kg', status: 'ATIVO' },
+    { id: 'ext-02', code: 'EXT-02', category: 'EXTINGUISHER', type: 'ABC', sector: 'Bloco Cirúrgico', capacity: '6 kg', status: 'ATIVO' },
+    { id: 'ext-03', code: 'EXT-03', category: 'EXTINGUISHER', type: 'ABC', sector: 'Salão-1', capacity: '4 kg', status: 'ATIVO' },
+    { id: 'ext-04', code: 'EXT-04', category: 'EXTINGUISHER', type: 'ABC', sector: 'Salão-1', capacity: '6 kg', status: 'ATIVO' },
+    { id: 'ext-05', code: 'EXT-05', category: 'EXTINGUISHER', type: 'ABC', sector: 'Salão-2', capacity: '4 kg', status: 'ATIVO' },
+    { id: 'ext-06', code: 'EXT-06', category: 'EXTINGUISHER', type: 'ABC', sector: 'Salão-2', capacity: '6 kg', status: 'ATIVO' },
+    { id: 'ext-07', code: 'EXT-07', category: 'EXTINGUISHER', type: 'ABC', sector: 'Salão-3', capacity: '4 kg', status: 'ATIVO' },
+    { id: 'ext-08', code: 'EXT-08', category: 'EXTINGUISHER', type: 'ABC', sector: 'Salão-3', capacity: '6 kg', status: 'ATIVO' },
+    { id: 'ext-09', code: 'EXT-09', category: 'EXTINGUISHER', type: 'ABC', sector: 'Diálise Peritoneal', capacity: '4 kg', status: 'ATIVO' },
+    { id: 'ext-10', code: 'EXT-10', category: 'EXTINGUISHER', type: 'ABC', sector: 'Hemodiálise Externa', capacity: '4 kg', status: 'ATIVO' },
+    { id: 'ext-11', code: 'EXT-11', category: 'EXTINGUISHER', type: 'ABC', sector: 'Reuso', capacity: '6 kg', status: 'ATIVO' },
+    { id: 'ext-12', code: 'EXT-12', category: 'EXTINGUISHER', type: 'ABC', sector: 'Reuso', capacity: '4 kg', status: 'ATIVO' },
+    { id: 'ext-13', code: 'EXT-13', category: 'EXTINGUISHER', type: 'ABC', sector: 'Sala Amarela', capacity: '4 kg', status: 'ATIVO' },
+    { id: 'ext-14', code: 'EXT-14', category: 'EXTINGUISHER', type: 'ABC', sector: 'Recepção Principal', capacity: '6 kg', status: 'ATIVO' },
+    { id: 'ext-15', code: 'EXT-15', category: 'EXTINGUISHER', type: 'ABC', sector: 'Recepção Principal', capacity: '4 kg', status: 'ATIVO' },
+    { id: 'ext-16', code: 'EXT-16', category: 'EXTINGUISHER', type: 'ABC', sector: 'Corredor Central', capacity: '6 kg', status: 'ATIVO' },
+    { id: 'ext-17', code: 'EXT-17', category: 'EXTINGUISHER', type: 'ABC', sector: 'Farmácia', capacity: '4 kg', status: 'ATIVO' },
+    { id: 'ext-18', code: 'EXT-18', category: 'EXTINGUISHER', type: 'CO₂', sector: 'CPD', capacity: '6 kg', status: 'ATIVO' },
+    { id: 'ext-19', code: 'EXT-19', category: 'EXTINGUISHER', type: 'CO₂', sector: 'Sala de Máquinas', capacity: '6 kg', status: 'ATIVO' },
+    { id: 'ext-20', code: 'EXT-20', category: 'EXTINGUISHER', type: 'ABC', sector: 'DML', capacity: '6 kg', status: 'ATIVO' },
+    { id: 'ext-21', code: 'EXT-21', category: 'EXTINGUISHER', type: 'ABC', sector: 'Copa', capacity: '4 kg', status: 'ATIVO' },
+    { id: 'hid-01', code: 'HID-01', category: 'HYDRANT', type: 'Hidrante de Parede', sector: 'Salão-1', capacity: 'Mangueira 30m', status: 'ATIVO' },
+    { id: 'hid-02', code: 'HID-02', category: 'HYDRANT', type: 'Hidrante de Parede', sector: 'Bloco Cirúrgico', capacity: 'Mangueira 30m', status: 'ATIVO' },
+    { id: 'hid-03', code: 'HID-03', category: 'HYDRANT', type: 'Hidrante de Parede', sector: 'Recepção Principal', capacity: 'Mangueira 30m', status: 'ATIVO' },
+    { id: 'hid-04', code: 'HID-04', category: 'HYDRANT', type: 'Hidrante de Parede', sector: 'Reuso', capacity: 'Mangueira 30m', status: 'ATIVO' },
+    { id: 'hid-05', code: 'HID-05', category: 'HYDRANT', type: 'Hidrante Externo', sector: 'Acesso Externo', capacity: 'Mangueira 30m', status: 'ATIVO' },
+    { id: 'hid-06', code: 'HID-06', category: 'HYDRANT', type: 'Hidrante de Parede', sector: 'Sala de Máquinas', capacity: 'Mangueira 30m', status: 'ATIVO' }
+].map(item => {
+    const today = new Date().toISOString().split('T')[0];
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    const defVal = nextYear.toISOString().split('T')[0];
+    const hydroDate = new Date();
+    hydroDate.setFullYear(hydroDate.getFullYear() + 5);
+    const defHydro = hydroDate.toISOString().split('T')[0];
+    return {
+        ...item,
+        rechargeDate: today,
+        validityDate: defVal,
+        hydrostaticTestDate: defHydro,
+        createdAt: today
+    };
+});
+
+const sortEquipmentList = (list) => {
+    return [...list].sort((a, b) => {
+        const catA = a.category || 'EXTINGUISHER';
+        const catB = b.category || 'EXTINGUISHER';
+        if (catA !== catB) {
+            return catA === 'EXTINGUISHER' ? -1 : 1;
+        }
+        const numA = parseInt((a.code || '').replace(/\D/g, '') || '0', 10);
+        const numB = parseInt((b.code || '').replace(/\D/g, '') || '0', 10);
+        if (numA !== numB) return numA - numB;
+        return (a.code || '').localeCompare(b.code || '');
+    });
+};
+
+export const getSesmtEquipment = async (category = null) => {
     if (USE_MOCK && mockFirestore.getEquipment) return mockFirestore.getEquipment(category);
     try {
-        const { getFirestore, collection, getDocs, orderBy, query, where } = await import('firebase/firestore');
+        const { getFirestore, collection, getDocs, query, where } = await import('firebase/firestore');
         const db = getFirestore(app);
         
         let q;
-        if (category) {
+        if (category && category !== 'ALL') {
             q = query(collection(db, 'sesmt_equipment'), where('category', '==', category));
         } else {
-            q = query(collection(db, 'sesmt_equipment'), orderBy('code', 'asc'));
+            q = collection(db, 'sesmt_equipment');
         }
         
         const snap = await getDocs(q);
-        const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        let list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // Se a lista estiver vazia, faz o seed automático e busca novamente
+        // Se a coleção estiver vazia, aciona o seed e tenta carregar novamente
         if (list.length === 0) {
             await seedDefaultEquipmentIfEmpty();
             const snap2 = await getDocs(q);
-            return snap2.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            list = snap2.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         }
 
-        // Ordenar por categoria e por número/código
-        return list.sort((a, b) => {
-            const catA = a.category || 'EXTINGUISHER';
-            const catB = b.category || 'EXTINGUISHER';
-            if (catA !== catB) {
-                return catA === 'EXTINGUISHER' ? -1 : 1;
+        // Se ainda assim for vazio (ex: offline), usa DEFAULT_SESMT_EQUIPMENT
+        if (list.length === 0) {
+            const cached = typeof localStorage !== 'undefined' ? localStorage.getItem('nexa_sesmt_equipment_cache') : null;
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        list = parsed;
+                    }
+                } catch (e) {}
             }
-            const numA = parseInt(a.code?.replace(/\D/g, '') || '0', 10);
-            const numB = parseInt(b.code?.replace(/\D/g, '') || '0', 10);
-            if (numA !== numB) return numA - numB;
-            return (a.code || '').localeCompare(b.code || '');
-        });
+            if (list.length === 0) {
+                list = category && category !== 'ALL' 
+                    ? DEFAULT_SESMT_EQUIPMENT.filter(i => i.category === category)
+                    : DEFAULT_SESMT_EQUIPMENT;
+            }
+        } else {
+            // Salva cache local para resiliência instantânea
+            if (typeof localStorage !== 'undefined' && (!category || category === 'ALL')) {
+                try {
+                    localStorage.setItem('nexa_sesmt_equipment_cache', JSON.stringify(list));
+                } catch (e) {}
+            }
+        }
+
+        return sortEquipmentList(list);
     } catch (e) {
-        console.error('Erro Firestore getEquipment =', e);
-        return [];
+        console.error('Erro Firestore getSesmtEquipment, usando cache/fallback:', e);
+        if (typeof localStorage !== 'undefined') {
+            try {
+                const cached = localStorage.getItem('nexa_sesmt_equipment_cache');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        const filtered = category && category !== 'ALL' 
+                            ? parsed.filter(i => i.category === category)
+                            : parsed;
+                        return sortEquipmentList(filtered);
+                    }
+                }
+            } catch (errCache) {}
+        }
+        const fallback = category && category !== 'ALL'
+            ? DEFAULT_SESMT_EQUIPMENT.filter(i => i.category === category)
+            : DEFAULT_SESMT_EQUIPMENT;
+        return sortEquipmentList(fallback);
     }
 };
 
-export const saveEquipment = async (item) => {
+export const getEquipment = getSesmtEquipment;
+
+export const saveSesmtEquipment = async (item) => {
     if (USE_MOCK && mockFirestore.saveEquipment) return mockFirestore.saveEquipment(item);
     try {
         const { getFirestore, collection, addDoc, doc, updateDoc } = await import('firebase/firestore');
@@ -249,34 +341,72 @@ export const saveEquipment = async (item) => {
             updatedAt: new Date().toISOString()
         };
 
+        let saved;
         if (item.id) {
             const docRef = doc(db, 'sesmt_equipment', item.id);
             await updateDoc(docRef, dataToSave);
-            return { ...dataToSave };
+            saved = { ...dataToSave };
         } else {
             dataToSave.createdAt = new Date().toISOString();
             dataToSave.status = dataToSave.status || 'ATIVO';
             const docRef = await addDoc(collection(db, 'sesmt_equipment'), dataToSave);
-            return { id: docRef.id, ...dataToSave };
+            saved = { id: docRef.id, ...dataToSave };
         }
+
+        // Atualiza cache local
+        if (typeof localStorage !== 'undefined') {
+            try {
+                const cached = localStorage.getItem('nexa_sesmt_equipment_cache');
+                let list = cached ? JSON.parse(cached) : [];
+                if (!Array.isArray(list)) list = [];
+                const idx = list.findIndex(e => e.id === saved.id || (e.code && e.code === saved.code));
+                if (idx >= 0) {
+                    list[idx] = saved;
+                } else {
+                    list.push(saved);
+                }
+                localStorage.setItem('nexa_sesmt_equipment_cache', JSON.stringify(list));
+            } catch (errCache) {}
+        }
+
+        return saved;
     } catch (e) {
-        console.error('Erro Firestore saveEquipment =', e);
+        console.error('Erro Firestore saveSesmtEquipment =', e);
         throw e;
     }
 };
 
-export const deleteEquipment = async (id) => {
+export const saveEquipment = saveSesmtEquipment;
+
+export const deleteSesmtEquipment = async (id) => {
     if (USE_MOCK && mockFirestore.deleteEquipment) return mockFirestore.deleteEquipment(id);
     try {
         const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
         const db = getFirestore(app);
         await deleteDoc(doc(db, 'sesmt_equipment', id));
+
+        // Atualiza cache local
+        if (typeof localStorage !== 'undefined') {
+            try {
+                const cached = localStorage.getItem('nexa_sesmt_equipment_cache');
+                if (cached) {
+                    const list = JSON.parse(cached);
+                    if (Array.isArray(list)) {
+                        const updated = list.filter(e => e.id !== id);
+                        localStorage.setItem('nexa_sesmt_equipment_cache', JSON.stringify(updated));
+                    }
+                }
+            } catch (errCache) {}
+        }
+
         return true;
     } catch (e) {
-        console.error('Erro Firestore deleteEquipment =', e);
+        console.error('Erro Firestore deleteSesmtEquipment =', e);
         throw e;
     }
 };
+
+export const deleteEquipment = deleteSesmtEquipment;
 
 export const seedDefaultEquipmentIfEmpty = async () => {
     try {

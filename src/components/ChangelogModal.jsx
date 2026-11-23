@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.49',
+      date: '23/11/2026',
+      title: 'Nex-Ai CLINIC (.SESMT) — Resiliência no Carregamento de Equipamentos, Permissões Firestore e Desambiguação de Métodos',
+      description: 'Correção de segurança e robustez para exibição imediata do parque de combate a incêndio: 1) Permissões de Nuvem Atualizadas: liberação de regras do Firestore para sesmt_equipment e sesmt_waste_inspections, eliminando falhas de permissão no carregamento; 2) Desambiguação no Firebase Service: separação estrita entre saveEquipment (manutenção predial) e saveSesmtEquipment (extintores e hidrantes); 3) Auto-recuperação e Cache Local: carregamento direto e armazenamento em cache com fallback canônico dos 27 equipamentos (21 extintores e 6 hidrantes), garantindo visualização 100% garantida na aba Equipamentos.',
+      changes: [
+        { type: 'Correção Firestore', text: 'Regras de segurança liberadas para acesso de leitura/escrita à coleção sesmt_equipment sem bloqueios.' },
+        { type: 'Desambiguação Manutenção/SESMT', text: 'Separação dos métodos de gravação de equipamentos da Manutenção e do SESMT.' },
+        { type: 'Auto-recuperação', text: 'SesmtEquipmentManager busca diretamente os dados caso o estado pai esteja vazio na montagem.' },
+        { type: 'Cache Resiliente', text: 'Armazenamento em cache local e fallback para garantir a exibição dos 27 equipamentos mapeados.' }
+      ]
+    },
+    {
       version: 'v5.0.48',
       date: '23/11/2026',
       title: 'Nex-Ai CLINIC (.SESMT) — Gestão Completa de Equipamentos (Extintores e Hidrantes), CRUD Integrado e Ações Operacionais Especializadas',

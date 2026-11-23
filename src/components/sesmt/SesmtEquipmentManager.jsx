@@ -76,6 +76,8 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
   const [filterSector, setFilterSector] = useState('TODOS');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('table');
+  const [localEquipment, setLocalEquipment] = useState(equipmentData || []);
+  const [loadingLocal, setLoadingLocal] = useState(false);
 
   useEffect(() => {
     if (window.innerWidth < 1024) {
@@ -84,6 +86,33 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
       setViewMode('table');
     }
   }, []);
+
+  // Sincronização e auto-recuperação do censo de equipamentos
+  useEffect(() => {
+    if (equipmentData && equipmentData.length > 0) {
+      setLocalEquipment(equipmentData);
+    } else {
+      const loadDirectly = async () => {
+        setLoadingLocal(true);
+        try {
+          const fetcher = dbService.getSesmtEquipment || dbService.getEquipment;
+          if (fetcher) {
+            const data = await fetcher();
+            if (data && data.length > 0) {
+              setLocalEquipment(data);
+            }
+          }
+        } catch (e) {
+          console.error('Erro ao recuperar equipamentos diretamente:', e);
+        } finally {
+          setLoadingLocal(false);
+        }
+      };
+      loadDirectly();
+    }
+  }, [equipmentData]);
+
+  const itemsToUse = localEquipment && localEquipment.length > 0 ? localEquipment : (equipmentData || []);
 
   // Modais de Gestão e Ações
   const [modalOpen, setModalOpen] = useState(false);
@@ -163,18 +192,32 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
     setEditingItem(null);
   };
 
+  const reloadData = async () => {
+    if (onRefresh) onRefresh();
+    try {
+      const fetcher = dbService.getSesmtEquipment || dbService.getEquipment;
+      if (fetcher) {
+        const fresh = await fetcher();
+        if (fresh && fresh.length > 0) setLocalEquipment(fresh);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   // Salvar Equipamento (CRUD Create / Update)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await dbService.saveEquipment({
+      const saveFn = dbService.saveSesmtEquipment || dbService.saveEquipment;
+      await saveFn({
         ...(editingItem ? { id: editingItem.id } : {}),
         ...formData
       });
       setFeedbackMsg({ text: editingItem ? 'Equipamento atualizado!' : 'Equipamento cadastrado!', type: 'success' });
       handleCloseModal();
-      if (onRefresh) onRefresh();
+      await reloadData();
       setTimeout(() => setFeedbackMsg({ text: '', type: '' }), 3500);
     } catch (err) {
       console.error(err);
@@ -187,10 +230,11 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
   // Excluir Equipamento (CRUD Delete)
   const handleDelete = async (id) => {
     try {
-      await dbService.deleteEquipment(id);
+      const delFn = dbService.deleteSesmtEquipment || dbService.deleteEquipment;
+      await delFn(id);
       setDeleteConfirmId(null);
       setFeedbackMsg({ text: 'Equipamento removido com sucesso!', type: 'success' });
-      if (onRefresh) onRefresh();
+      await reloadData();
       setTimeout(() => setFeedbackMsg({ text: '', type: '' }), 3500);
     } catch (err) {
       console.error(err);
@@ -230,7 +274,8 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
 
       const updatedHistory = [...(rechargeModalItem.actionHistory || []), historyEntry];
 
-      await dbService.saveEquipment({
+      const saveFn = dbService.saveSesmtEquipment || dbService.saveEquipment;
+      await saveFn({
         ...rechargeModalItem,
         rechargeDate: rechargeForm.date,
         validityDate: rechargeForm.nextDate,
@@ -242,7 +287,7 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
 
       setFeedbackMsg({ text: `Recarga de ${rechargeModalItem.code} registrada com sucesso!`, type: 'success' });
       setRechargeModalItem(null);
-      if (onRefresh) onRefresh();
+      await reloadData();
       setTimeout(() => setFeedbackMsg({ text: '', type: '' }), 3500);
     } catch (err) {
       console.error(err);
@@ -282,7 +327,8 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
 
       const updatedHistory = [...(hydroModalItem.actionHistory || []), historyEntry];
 
-      await dbService.saveEquipment({
+      const saveFn = dbService.saveSesmtEquipment || dbService.saveEquipment;
+      await saveFn({
         ...hydroModalItem,
         hydrostaticTestDate: hydroForm.nextDate,
         lastHydroDate: hydroForm.date,
@@ -292,7 +338,7 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
 
       setFeedbackMsg({ text: `Teste hidrostático de ${hydroModalItem.code} registrado!`, type: 'success' });
       setHydroModalItem(null);
-      if (onRefresh) onRefresh();
+      await reloadData();
       setTimeout(() => setFeedbackMsg({ text: '', type: '' }), 3500);
     } catch (err) {
       console.error(err);
@@ -328,7 +374,8 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
 
       const updatedHistory = [...(statusModalItem.actionHistory || []), historyEntry];
 
-      await dbService.saveEquipment({
+      const saveFn = dbService.saveSesmtEquipment || dbService.saveEquipment;
+      await saveFn({
         ...statusModalItem,
         status: statusForm.status,
         maintenanceReason: statusForm.status === 'MANUTENCAO' ? statusForm.reason : '',
@@ -338,7 +385,7 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
 
       setFeedbackMsg({ text: `Status de ${statusModalItem.code} alterado para ${statusForm.status}!`, type: 'success' });
       setStatusModalItem(null);
-      if (onRefresh) onRefresh();
+      await reloadData();
       setTimeout(() => setFeedbackMsg({ text: '', type: '' }), 3500);
     } catch (err) {
       console.error(err);
@@ -621,15 +668,15 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
   };
 
   // Filtragem por Categoria (Todos / Extintor / Hidrante)
-  const categoryItems = equipmentData.filter(item => {
+  const categoryItems = itemsToUse.filter(item => {
     if (activeCategory === 'ALL') return true;
     return (item.category || 'EXTINGUISHER') === activeCategory;
   });
 
   // Contadores
-  const totalAll = equipmentData.length;
-  const totalExt = equipmentData.filter(i => (i.category || 'EXTINGUISHER') === 'EXTINGUISHER').length;
-  const totalHyd = equipmentData.filter(i => i.category === 'HYDRANT').length;
+  const totalAll = itemsToUse.length;
+  const totalExt = itemsToUse.filter(i => (i.category || 'EXTINGUISHER') === 'EXTINGUISHER').length;
+  const totalHyd = itemsToUse.filter(i => i.category === 'HYDRANT').length;
 
   let totalCount = categoryItems.length;
   let activeCount = 0;
@@ -854,9 +901,18 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
       {/* 1. Modo Cartões (Mobile / Tablet) */}
       {viewMode === 'cards' && (
         <div style={styles.equipCardsGrid}>
-          {filteredList.length === 0 ? (
+          {loadingLocal ? (
+            <div style={styles.emptyCardBox}>
+              <p style={{ margin: 0, color: '#0891b2', fontWeight: 600 }}>Carregando equipamentos...</p>
+            </div>
+          ) : filteredList.length === 0 ? (
             <div style={styles.emptyCardBox}>
               <p style={{ margin: 0, color: '#94a3b8' }}>Nenhum equipamento encontrado com os filtros atuais.</p>
+              {itemsToUse.length === 0 && (
+                <button onClick={reloadData} style={{ ...styles.actionAuxBtn, marginTop: '0.75rem' }}>
+                  <RefreshCw size={14} /> Carregar
+                </button>
+              )}
             </div>
           ) : (
             filteredList.map((item) => {
@@ -994,10 +1050,21 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
               </tr>
             </thead>
             <tbody>
-              {filteredList.length === 0 ? (
+              {loadingLocal ? (
+                <tr>
+                  <td colSpan={activeCategory === 'ALL' ? '10' : '9'} style={{ ...styles.emptyRow, color: '#0891b2', fontWeight: 600 }}>
+                    Carregando equipamentos...
+                  </td>
+                </tr>
+              ) : filteredList.length === 0 ? (
                 <tr>
                   <td colSpan={activeCategory === 'ALL' ? '10' : '9'} style={styles.emptyRow}>
-                    Nenhum equipamento encontrado com os filtros atuais.
+                    <div>Nenhum equipamento encontrado com os filtros atuais.</div>
+                    {itemsToUse.length === 0 && (
+                      <button onClick={reloadData} style={{ ...styles.actionAuxBtn, marginTop: '0.5rem', display: 'inline-flex' }}>
+                        <RefreshCw size={14} /> Carregar
+                      </button>
+                    )}
                   </td>
                 </tr>
               ) : (

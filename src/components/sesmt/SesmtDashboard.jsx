@@ -91,7 +91,7 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
         dbService.getEpiInspections(),
         dbService.getFireExtinguisherInspections(),
         dbService.getFireHydrantInspections(),
-        dbService.getEquipment(),
+        (dbService.getSesmtEquipment ? dbService.getSesmtEquipment() : dbService.getEquipment()),
         dbService.getCopaInspections(),
         dbService.getWasteInspections()
       ]);

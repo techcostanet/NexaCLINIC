@@ -1,3 +1,14 @@
+## [v5.0.49] - 23 de Novembro, 2026
+### Nex-Ai CLINIC (.SESMT) — Resiliência no Carregamento de Equipamentos, Permissões Firestore e Desambiguação de Métodos
+- **Permissões do Firestore Atualizadas (`firestore.rules`):**
+  - Ajuste nas regras de segurança do Firestore para liberar o acesso de leitura e escrita às coleções `sesmt_equipment` e `sesmt_waste_inspections`, solucionando o erro de falta de permissão (`permission-denied`) que impedia a renderização dos equipamentos no navegador.
+- **Desambiguação e Integridade no Serviço Firebase (`src/firebase.js`):**
+  - Isolamento explícito de métodos entre Manutenção Predial (`maintenanceFunctions.saveEquipment` para `equipments`) e SESMT (`sesmtFunctions.saveSesmtEquipment` para `sesmt_equipment`), prevenindo conflitos de sobrescrita.
+- **Camada de Resiliência e Auto-recuperação (`sesmtService.js` & `SesmtEquipmentManager.jsx`):**
+  - Consulta do Firestore otimizada sem ordenação remota (ordenação canônica executada em memória em JavaScript).
+  - Cache local (`localStorage`) e lista canônica de fallback com os 27 equipamentos (21 extintores e 6 hidrantes), prevenindo telas vazias em caso de instabilidade de conexão.
+  - Auto-recuperação direta dentro do componente `SesmtEquipmentManager` caso a prop inicial esteja vazia na montagem.
+
 ## [v5.0.48] - 23 de Novembro, 2026
 ### Nex-Ai CLINIC (.SESMT) — Gestão Completa de Equipamentos (Extintores e Hidrantes), CRUD Integrado e Ações Operacionais Especializadas
 - **Visão Unificada de Todos os Equipamentos (`SesmtEquipmentManager.jsx`):**
