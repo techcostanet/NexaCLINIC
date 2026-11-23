@@ -1,3 +1,29 @@
+## [v5.0.47] - 23 de Novembro, 2026
+### Nex-Ai CLINIC (.SESMT) — Padronização Oficial de Extintores (ABC, BC e CO₂), Cadastro Individual com Capacidade em kg e Atualização dos 5 Critérios Normativos de Inspeção
+- **Padronização Oficial das Classes de Extintor (`SesmtEquipmentManager.jsx` & `WeeklyFireExtinguisherForm.jsx`):**
+  - Substituição das classificações legadas pelas classes normativas oficiais: **ABC** (pó polivalente), **BC** (líquidos inflamáveis e gases) e **CO₂** (dióxido de carbono), conforme NBR 12962 e NBR 12693.
+  - Normalizador automático de tipos legados para manter compatibilidade total com os extintores já cadastrados.
+- **Cadastro Individual com Capacidade em kg e Prazos Normativos (`SesmtEquipmentManager.jsx`):**
+  - Novo seletor padronizado de Tipo (ABC, BC, CO₂) para extintores e tipos oficiais para hidrantes.
+  - Campo estruturado de Capacidade em kg com atalhos rápidos de seleção (`2 kg`, `4 kg`, `6 kg`, `8 kg`, `10 kg`, `12 kg`).
+  - Gestão visual clara dos prazos: data da última Recarga, data de Validade da próxima recarga anual e Teste Hidrostático quinquenal (a cada 5 anos).
+- **Checklist Semanal Atualizado para os 5 Critérios Normativos (`WeeklyFireExtinguisherForm.jsx`):**
+  - Atualização do checklist de inspeção semanal para os 5 itens sugeridos pela Técnica de Segurança:
+    1. `Mangueira` (Mangueira/difusor);
+    2. `Lacre` (Lacre de segurança intacto);
+    3. `Manômetro` (Indicador na faixa verde);
+    4. `Suporte` (Conservação do suporte de fixação);
+    5. `Sinalização` (Demarcação e placa visíveis).
+  - Preservação do layout híbrido inteligente (modo Cartões Touch para celulares/tablets com botões C/NC rápidos e modo Tabela com cabeçalhos e tooltips explicativos).
+- **Histórico e Relatórios Regulamentares com Retrocompatibilidade (`SesmtHistory.jsx` & `SesmtReportsModal.jsx`):**
+  - Tabela de detalhes no histórico com renderização dinâmica: detecta automaticamente se a vistoria utilizou os 5 novos critérios ou os critérios legados, garantindo 100% de integridade aos registros anteriores.
+  - Banners de resumo no histórico agora indicam o número de extintores conformes e o total de não-conformidades identificadas.
+  - Central de 26 relatórios atualizada com novos KPIs por classe (ABC, BC, CO₂) e auditoria semanal dos 5 critérios normativos.
+- **Atualização do Manual do Sistema (`src/data/moduleGuidesData.js`):**
+  - Manual do usuário do módulo SESMT enriquecido com o passo a passo de cadastro de extintores por classe/kg e FAQ técnica dos 5 critérios semanais.
+- **Conformidade Rigorosa de UI/UX (Regra de 1 Palavra):**
+  - Rótulos, abas, botões e cabeçalhos em termos estritamente concisos: `Código`, `Setor`, `Tipo`, `Capacidade`, `Recarga`, `Validade`, `Hidrostático`, `Status`, `Mangueira`, `Lacre`, `Manômetro`, `Suporte`, `Sinalização`, `Salvar`, `Novo`.
+
 ## [v5.0.46] - 23 de Novembro, 2026
 ### Nex-Ai CLINIC (.FINANCE & .CONFIG) — Controle Centralizado de Botões Auxiliares, Remoção de Duplicidade de Relatórios e Seletor Inteligente dos 15 Relatórios Financeiros
 - **Remoção de Duplicidade de Botão de Relatórios (`FinancePanel.jsx`):**

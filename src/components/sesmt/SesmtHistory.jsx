@@ -457,8 +457,18 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
                   <span style={styles.ncBadge}><AlertTriangle size={12} /> {ncCount} Não Conforme(s)</span>
                 );
               } else if (record.recordType === 'EXTINGUISHER') {
-                const total = (record.items || []).length;
-                summaryElement = <span style={styles.neutralBadge}>{total} Extintores Inspecionados</span>;
+                const items = record.items || [];
+                let ncCount = 0;
+                items.forEach(it => {
+                  Object.values(it.evaluations || {}).forEach(v => {
+                    if (v === 'NC') ncCount++;
+                  });
+                });
+                summaryElement = ncCount === 0 ? (
+                  <span style={styles.conformBadge}><Check size={12} /> {items.length} Conformes</span>
+                ) : (
+                  <span style={styles.ncBadge}><AlertTriangle size={12} /> {ncCount} NC ({items.length} Extintores)</span>
+                );
               } else if (record.recordType === 'HYDRANT') {
                 const total = (record.items || []).length;
                 summaryElement = <span style={styles.neutralBadge}>{total} Hidrantes Inspecionados</span>;
@@ -568,8 +578,18 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
                       <span style={styles.ncBadge}><AlertTriangle size={12} /> {ncCount} Não Conforme(s)</span>
                     );
                   } else if (record.recordType === 'EXTINGUISHER') {
-                    const total = (record.items || []).length;
-                    summaryElement = <span style={styles.neutralBadge}>{total} Extintores Inspecionados</span>;
+                    const items = record.items || [];
+                    let ncCount = 0;
+                    items.forEach(it => {
+                      Object.values(it.evaluations || {}).forEach(v => {
+                        if (v === 'NC') ncCount++;
+                      });
+                    });
+                    summaryElement = ncCount === 0 ? (
+                      <span style={styles.conformBadge}><Check size={12} /> {items.length} Conformes</span>
+                    ) : (
+                      <span style={styles.ncBadge}><AlertTriangle size={12} /> {ncCount} NC ({items.length} Extintores)</span>
+                    );
                   } else if (record.recordType === 'HYDRANT') {
                     const total = (record.items || []).length;
                     summaryElement = <span style={styles.neutralBadge}>{total} Hidrantes Inspecionados</span>;
@@ -808,45 +828,86 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
               )}
 
               {/* Conteúdo de Extintores */}
-              {selectedItem.recordType === 'EXTINGUISHER' && (
-                <div style={{ marginTop: '1.5rem', overflowX: 'auto' }}>
-                  <h4 style={styles.sectionTitle}>Inspeção de Extintores de Incêndio</h4>
-                  <table style={styles.innerTable}>
-                    <thead>
-                      <tr>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Código</th>
-                        <th style={styles.innerTh}>Setor</th>
-                        <th style={styles.innerTh}>Tipo</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Acesso</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Sinaliz.</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Pino</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Lacre</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Pressão</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Mangueira</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Bico</th>
-                        <th style={{ ...styles.innerTh, textAlign: 'center' }}>Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(selectedItem.items || []).map((item, idx) => (
-                        <tr key={item.code || item.extinguisherNum || idx} style={styles.innerTr}>
-                          <td style={{ ...styles.innerTd, textAlign: 'center', fontWeight: 'bold' }}>{item.code || item.extinguisherNum}</td>
-                          <td style={styles.innerTd}>{item.sector || '-'}</td>
-                          <td style={styles.innerTd}>{item.type || '-'}</td>
-                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.acesso || 'C'}</td>
-                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.sinalizacao || 'C'}</td>
-                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.pino || 'C'}</td>
-                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.lacre || 'C'}</td>
-                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.pressurizacao || 'C'}</td>
-                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.mangueira || 'C'}</td>
-                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.bico || 'C'}</td>
-                          <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.estado_fisico || 'C'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              {selectedItem.recordType === 'EXTINGUISHER' && (() => {
+                const isNewCriteria = (selectedItem.items || []).some(
+                  it => it.evaluations?.mangueira_difusor !== undefined || it.evaluations?.manometro !== undefined || it.evaluations?.suporte !== undefined
+                );
+
+                return (
+                  <div style={{ marginTop: '1.5rem', overflowX: 'auto' }}>
+                    <h4 style={styles.sectionTitle}>Inspeção de Extintores</h4>
+                    <table style={styles.innerTable}>
+                      <thead>
+                        {isNewCriteria ? (
+                          <tr>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Código</th>
+                            <th style={styles.innerTh}>Setor</th>
+                            <th style={styles.innerTh}>Tipo</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Mangueira</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Lacre</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Manômetro</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Suporte</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Sinalização</th>
+                          </tr>
+                        ) : (
+                          <tr>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Código</th>
+                            <th style={styles.innerTh}>Setor</th>
+                            <th style={styles.innerTh}>Tipo</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Acesso</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Sinaliz.</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Pino</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Lacre</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Pressão</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Mangueira</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Bico</th>
+                            <th style={{ ...styles.innerTh, textAlign: 'center' }}>Estado</th>
+                          </tr>
+                        )}
+                      </thead>
+                      <tbody>
+                        {(selectedItem.items || []).map((item, idx) => (
+                          <tr key={item.code || item.extinguisherNum || idx} style={styles.innerTr}>
+                            <td style={{ ...styles.innerTd, textAlign: 'center', fontWeight: 'bold' }}>{item.code || item.extinguisherNum}</td>
+                            <td style={styles.innerTd}>{item.sector || '-'}</td>
+                            <td style={styles.innerTd}>{item.type || '-'}</td>
+                            {isNewCriteria ? (
+                              <>
+                                <td style={{ ...styles.innerTd, textAlign: 'center', fontWeight: item.evaluations?.mangueira_difusor === 'NC' ? 'bold' : 'normal', color: item.evaluations?.mangueira_difusor === 'NC' ? '#dc2626' : 'inherit' }}>
+                                  {item.evaluations?.mangueira_difusor || item.evaluations?.mangueira || 'C'}
+                                </td>
+                                <td style={{ ...styles.innerTd, textAlign: 'center', fontWeight: item.evaluations?.lacre === 'NC' ? 'bold' : 'normal', color: item.evaluations?.lacre === 'NC' ? '#dc2626' : 'inherit' }}>
+                                  {item.evaluations?.lacre || 'C'}
+                                </td>
+                                <td style={{ ...styles.innerTd, textAlign: 'center', fontWeight: item.evaluations?.manometro === 'NC' ? 'bold' : 'normal', color: item.evaluations?.manometro === 'NC' ? '#dc2626' : 'inherit' }}>
+                                  {item.evaluations?.manometro || item.evaluations?.pressurizacao || 'C'}
+                                </td>
+                                <td style={{ ...styles.innerTd, textAlign: 'center', fontWeight: item.evaluations?.suporte === 'NC' ? 'bold' : 'normal', color: item.evaluations?.suporte === 'NC' ? '#dc2626' : 'inherit' }}>
+                                  {item.evaluations?.suporte || item.evaluations?.acesso || 'C'}
+                                </td>
+                                <td style={{ ...styles.innerTd, textAlign: 'center', fontWeight: item.evaluations?.sinalizacao === 'NC' ? 'bold' : 'normal', color: item.evaluations?.sinalizacao === 'NC' ? '#dc2626' : 'inherit' }}>
+                                  {item.evaluations?.sinalizacao || 'C'}
+                                </td>
+                              </>
+                            ) : (
+                              <>
+                                <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.acesso || 'C'}</td>
+                                <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.sinalizacao || 'C'}</td>
+                                <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.pino || 'C'}</td>
+                                <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.lacre || 'C'}</td>
+                                <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.pressurizacao || 'C'}</td>
+                                <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.mangueira || 'C'}</td>
+                                <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.bico || 'C'}</td>
+                                <td style={{ ...styles.innerTd, textAlign: 'center' }}>{item.evaluations?.estado_fisico || 'C'}</td>
+                              </>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
 
               {/* Conteúdo de Hidrantes */}
               {selectedItem.recordType === 'HYDRANT' && (

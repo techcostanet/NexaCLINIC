@@ -40,12 +40,20 @@ const SECTORS_LIST = [
   'Acesso Externo'
 ];
 
-const EXTINGUISHER_TYPES = [
-  'CO2 (Dióxido de Carbono)',
-  'PQS (Pó Químico Seco)',
-  'AP (Água Pressurizada)',
-  'Pó ABC (Polivalente)'
+export const EXTINGUISHER_TYPES = [
+  'ABC',
+  'BC',
+  'CO₂'
 ];
+
+export function normalizeExtinguisherType(type) {
+  if (!type) return 'ABC';
+  const str = String(type).trim();
+  const upper = str.toUpperCase();
+  if (upper.includes('CO2') || upper.includes('CO₂')) return 'CO₂';
+  if (upper.includes('BC') && !upper.includes('ABC')) return 'BC';
+  return 'ABC';
+}
 
 const HYDRANT_TYPES = [
   'Hidrante de Parede',
@@ -99,12 +107,13 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
   const handleOpenModal = (item = null) => {
     if (item) {
       setEditingItem(item);
+      const isExt = (item.category || activeCategory) === 'EXTINGUISHER';
       setFormData({
         category: item.category || activeCategory,
         code: item.code || '',
         sector: item.sector || SECTORS_LIST[0],
-        type: item.type || '',
-        capacity: item.capacity || '',
+        type: isExt ? normalizeExtinguisherType(item.type) : (item.type || HYDRANT_TYPES[0]),
+        capacity: item.capacity || (isExt ? '6 kg' : 'Mangueira 30m'),
         rechargeDate: item.rechargeDate || '',
         validityDate: item.validityDate || '',
         hydrostaticTestDate: item.hydrostaticTestDate || '',
@@ -283,7 +292,7 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
           </div>
 
           <button onClick={() => handleOpenModal()} style={styles.addBtn}>
-            <Plus size={16} /> Novo Equipamento
+            <Plus size={16} /> Novo
           </button>
         </div>
       </div>
@@ -422,7 +431,7 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
                       <span style={styles.detailVal}>{item.capacity || '-'}</span>
                     </div>
                     <div style={styles.equipDetailItem}>
-                      <span style={styles.detailKey}>Última Carga</span>
+                      <span style={styles.detailKey}>Recarga</span>
                       <span style={styles.detailVal}>{item.rechargeDate ? formatDateBR(item.rechargeDate) : '-'}</span>
                     </div>
                     <div style={styles.equipDetailItem}>
@@ -607,7 +616,15 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
                   <label style={styles.label}>Categoria *</label>
                   <select 
                     value={formData.category} 
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    onChange={(e) => {
+                      const newCat = e.target.value;
+                      setFormData({ 
+                        ...formData, 
+                        category: newCat,
+                        type: newCat === 'HYDRANT' ? HYDRANT_TYPES[0] : EXTINGUISHER_TYPES[0],
+                        capacity: newCat === 'HYDRANT' ? 'Mangueira 30m' : '6 kg'
+                      });
+                    }}
                     style={styles.select}
                   >
                     <option value="EXTINGUISHER">Extintor</option>
@@ -644,27 +661,72 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
 
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Tipo *</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: CO2 (6kg), AP (10L), PQS (4kg)" 
-                    value={formData.type} 
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    style={styles.input}
-                    required
-                  />
+                  {formData.category === 'HYDRANT' ? (
+                    <select 
+                      value={formData.type} 
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                      style={styles.select}
+                      required
+                    >
+                      {HYDRANT_TYPES.map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <select 
+                      value={formData.type || 'ABC'} 
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                      style={styles.select}
+                      required
+                    >
+                      {EXTINGUISHER_TYPES.map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
 
               <div style={styles.formRow2}>
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Capacidade</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: 6 kg, 10 L, Mangueira 30m" 
-                    value={formData.capacity} 
-                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                    style={styles.input}
-                  />
+                  {formData.category === 'HYDRANT' ? (
+                    <input 
+                      type="text" 
+                      placeholder="Ex: Mangueira 30m" 
+                      value={formData.capacity} 
+                      onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                      style={styles.input}
+                    />
+                  ) : (
+                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                      <input 
+                        type="text" 
+                        placeholder="Ex: 6 kg" 
+                        value={formData.capacity} 
+                        onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                        style={{ ...styles.input, flex: 1 }}
+                      />
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            setFormData({ ...formData, capacity: e.target.value });
+                          }
+                        }}
+                        style={{ ...styles.select, width: 'auto', minWidth: '78px', fontSize: '0.8rem', padding: '0.45rem' }}
+                        title="Opções em kg"
+                      >
+                        <option value="">kg</option>
+                        <option value="2 kg">2 kg</option>
+                        <option value="4 kg">4 kg</option>
+                        <option value="6 kg">6 kg</option>
+                        <option value="8 kg">8 kg</option>
+                        <option value="10 kg">10 kg</option>
+                        <option value="12 kg">12 kg</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 <div style={styles.inputGroup}>
@@ -730,7 +792,7 @@ export default function SesmtEquipmentManager({ equipmentData = [], onRefresh })
                   Cancelar
                 </button>
                 <button type="submit" disabled={submitting} style={styles.saveBtn}>
-                  {submitting ? 'Salvando...' : editingItem ? 'Salvar Alterações' : 'Cadastrar Equipamento'}
+                  {submitting ? 'Salvando...' : 'Salvar'}
                 </button>
               </div>
             </form>

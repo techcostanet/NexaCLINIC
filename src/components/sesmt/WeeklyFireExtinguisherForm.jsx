@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../../firebase';
 import { Save, Flame, RefreshCw, CheckCircle2, AlertTriangle, LayoutGrid, Table, CheckCheck } from 'lucide-react';
 import SignaturePad from './SignaturePad';
+import { normalizeExtinguisherType } from './SesmtEquipmentManager';
 
-const CRITERIA = [
-  { id: 'acesso', label: 'Acesso' },
-  { id: 'sinalizacao', label: 'Sinalização' },
-  { id: 'pino', label: 'Pino' },
-  { id: 'lacre', label: 'Lacre' },
-  { id: 'pressurizacao', label: 'Pressurização' },
-  { id: 'mangueira', label: 'Mangueira' },
-  { id: 'bico', label: 'Bico' },
-  { id: 'estado_fisico', label: 'Estado' }
+export const FIRE_EXTINGUISHER_CRITERIA = [
+  { id: 'mangueira_difusor', label: 'Mangueira', sublabel: 'Mangueira/difusor' },
+  { id: 'lacre', label: 'Lacre', sublabel: 'Lacre' },
+  { id: 'manometro', label: 'Manômetro', sublabel: 'Indicador na faixa verde' },
+  { id: 'suporte', label: 'Suporte', sublabel: 'Conservação do suporte' },
+  { id: 'sinalizacao', label: 'Sinalização', sublabel: 'Sinalização' }
 ];
+
+const CRITERIA = FIRE_EXTINGUISHER_CRITERIA;
 
 export default function WeeklyFireExtinguisherForm({ onSuccess }) {
   const [formData, setFormData] = useState({
@@ -49,13 +49,13 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
         equipmentId: ext.id,
         code: ext.code || `EXT-${String(i + 1).padStart(2, '0')}`,
         sector: ext.sector || 'Geral',
-        type: ext.type || 'PQS',
+        type: normalizeExtinguisherType(ext.type),
         evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
       })) : Array.from({ length: 21 }).map((_, i) => ({
         extinguisherNum: i + 1,
         code: `EXT-${String(i + 1).padStart(2, '0')}`,
         sector: 'Geral',
-        type: 'PQS',
+        type: 'ABC',
         evaluations: CRITERIA.reduce((acc, c) => ({ ...acc, [c.id]: 'C' }), {})
       }));
 
@@ -195,7 +195,7 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
         {/* Barra superior de Dados e Ação Rápida */}
         <div style={styles.topControlGrid}>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Data da Inspeção</label>
+            <label style={styles.label}>Data</label>
             <input 
               type="date" 
               name="date"
@@ -212,7 +212,7 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
               onClick={handleSetAllConformGlobal}
               style={styles.quickConformBtn}
             >
-              <CheckCheck size={16} /> Marcar Todos como Conforme
+              <CheckCheck size={16} /> Conforme
             </button>
             <span style={styles.quickStatText}>
               {totalNC === 0 ? '✓ 100% Conforme' : `⚠ ${totalNC} não-conformidade(s)`}
@@ -258,7 +258,12 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
                       const isNC = item.evaluations[c.id] === 'NC';
                       return (
                         <div key={c.id} style={styles.criterionRow}>
-                          <span style={styles.criterionLabel}>{c.label}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                            <span style={styles.criterionLabel}>{c.label}</span>
+                            {c.sublabel && c.sublabel !== c.label && (
+                              <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{c.sublabel}</span>
+                            )}
+                          </div>
                           <div style={styles.touchPillGroup}>
                             <button
                               type="button"
@@ -301,7 +306,7 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
                   <th style={{ ...styles.th, textAlign: 'left', minWidth: '150px' }}>Setor</th>
                   <th style={{ ...styles.th, minWidth: '110px' }}>Tipo</th>
                   {CRITERIA.map(c => (
-                    <th key={c.id} style={{...styles.th, textAlign: 'center'}}>{c.label}</th>
+                    <th key={c.id} style={{...styles.th, textAlign: 'center'}} title={c.sublabel}>{c.label}</th>
                   ))}
                   <th style={{ ...styles.th, width: '90px' }}>Ações</th>
                 </tr>
@@ -362,7 +367,7 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
         <div style={styles.signaturesSection}>
           <div style={styles.grid2}>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Inspetor Responsável</label>
+              <label style={styles.label}>Inspetor</label>
               <input 
                 type="text" 
                 name="inspectorName"
@@ -374,7 +379,7 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
               />
             </div>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Técnico de Segurança</label>
+              <label style={styles.label}>Técnico</label>
               <input 
                 type="text" 
                 name="tecnicoSeguranca"
@@ -403,7 +408,7 @@ export default function WeeklyFireExtinguisherForm({ onSuccess }) {
             style={loading ? {...styles.btnPrimary, opacity: 0.7} : styles.btnPrimary}
           >
             <Save size={18} />
-            <span>{loading ? 'Salvando...' : 'Salvar Inspeção'}</span>
+            <span>{loading ? 'Salvando...' : 'Salvar'}</span>
           </button>
         </div>
       </form>

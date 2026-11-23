@@ -3221,8 +3221,8 @@ export const MODULE_GUIDES = {
         desc: 'Inspeção dedicada ao setor da Copa e nutrição com checagem de EPI, higienização, descarte, guarda de EPIs, ausência de adornos, limpeza de bancadas e requisitos de higiene das unhas.'
       },
       {
-        title: 'Inspeção Semanal de Extintores',
-        desc: 'Conferência técnica completa de extintores com checagem de acesso, sinalização, pino de segurança, lacre, pressurização, mangueira, bico e estado físico geral.'
+        title: 'Inspeção Semanal de Extintores (5 Critérios Normativos)',
+        desc: 'Conferência técnica padronizada com os 5 critérios normativos: Mangueira/difusor, Lacre, Manômetro (faixa verde), Conservação do suporte e Sinalização, com classificação padronizada ABC, BC e CO₂.'
       },
       {
         title: 'Inspeção Semanal de Hidrantes',
@@ -3323,14 +3323,19 @@ export const MODULE_GUIDES = {
         title: 'Como Cadastrar ou Editar Extintores e Hidrantes',
         steps: [
           'Acesse a aba "Equipamentos" no topo do módulo SESMT.',
-          'Clique no botão "+ Novo Equipamento".',
-          'Preencha o código identificador, selecione se é Extintor ou Hidrante, informe o setor e a capacidade.',
-          'Informe as datas de recarga e teste hidrostático (a cada 5 anos).',
-          'Clique em "Salvar" para disponibilizar o equipamento imediatamente nas inspeções semanais.'
+          'Clique no botão "+ Novo".',
+          'Preencha o código identificador (ex: EXT-01 ou HID-01) e selecione a Categoria (Extintor ou Hidrante).',
+          'Selecione o Tipo padronizado (ABC, BC ou CO₂) e a Capacidade em kg (ex: 4 kg, 6 kg, 10 kg).',
+          'Informe a data da última Recarga, a data de Validade da próxima recarga e o Teste Hidrostático quinquenal.',
+          'Clique em "Salvar" para disponibilizar o equipamento imediatamente nas vistorias e relatórios.'
         ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Quais são os tipos de extintores e os 5 critérios de inspeção semanal?',
+        resposta: 'Conforme as normas NBR 12962 e NBR 12693, os extintores são classificados em ABC (pó polivalente), BC (gás carbônico e pó para líquidos) e CO₂ (dióxido de carbono). O checklist semanal inspeciona 5 critérios: 1) Mangueira/difusor; 2) Lacre; 3) Manômetro (na faixa verde); 4) Conservação do suporte; e 5) Sinalização.'
+      },
       {
         pergunta: 'Quais são os 26 relatórios disponíveis no módulo SESMT?',
         resposta: 'A Central de Relatórios possui 26 relatórios divididos em 6 áreas: EPI (5 relatórios), Extintores (5 relatórios), Hidrantes (5 relatórios), Copa (5 relatórios), Resíduos Infectantes (Relatório 26 - Descarte de Lixo Infectante por Local) e Ativos/Gestão Estratégica (5 relatórios).'

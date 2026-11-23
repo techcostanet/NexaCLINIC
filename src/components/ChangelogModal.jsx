@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.47',
+      date: '23/11/2026',
+      title: 'Nex-Ai CLINIC (.SESMT) — Padronização Oficial de Extintores (ABC, BC e CO₂), Cadastro Individual com Capacidade em kg e Atualização dos 5 Critérios Normativos de Inspeção',
+      description: 'Atendimento integral às diretrizes da Técnica de Segurança do Trabalho e normas NBR 12962 / NBR 12693: 1) Padronização Oficial de Tipos: substituição das classificações legadas pelas classes normativas ABC, BC e CO₂; 2) Cadastro Individual de Equipamentos: campos estruturados de Capacidade (kg) com atalhos ágeis (2 kg a 12 kg), Tipo padronizado, data da última Recarga, data de Validade da próxima recarga e Teste Hidrostático de 5 anos; 3) Checklist Semanal Atualizado para os 5 Critérios Normativos: Mangueira/difusor, Lacre, Manômetro (indicador na faixa verde), Conservação do suporte e Sinalização, em modo Cartões Touch ou Tabela; 4) Histórico e Relatórios Retrocompatíveis: exibição dinâmica das colunas no histórico e atualização dos relatórios 6, 7, 8, 9, 10 e 23 com indicadores de extintores ABC, BC e CO₂; 5) Conformidade Estrita de UI/UX com rótulos de termo único.',
+      changes: [
+        { type: 'Classificação Padronizada', text: 'Substituição das opções legadas pelas classes oficiais ABC, BC e CO₂ no cadastro e inspeções.' },
+        { type: 'Cadastro Individual (kg)', text: 'Controle de capacidade em kg, seletor de tipo, recarga anual e teste hidrostático quinquenal.' },
+        { type: 'Checklist de 5 Critérios', text: 'Vistoria semanal focada em Mangueira/difusor, Lacre, Manômetro, Suporte e Sinalização.' },
+        { type: 'Histórico & Relatórios', text: 'Compatibilidade com inspeções anteriores e métricas analíticas por classe ABC, BC e CO₂.' }
+      ]
+    },
+    {
       version: 'v5.0.46',
       date: '23/11/2026',
       title: 'Nex-Ai CLINIC (.FINANCE & .CONFIG) — Controle Centralizado de Botões Auxiliares, Remoção de Duplicidade de Relatórios e Seletor Inteligente dos 15 Relatórios Financeiros',

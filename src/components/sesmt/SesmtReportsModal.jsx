@@ -699,9 +699,9 @@ export default function SesmtReportsModal({
 
         kpis = [
           { label: 'Total Extintores', value: data.length, color: '#0891b2' },
-          { label: 'PQS / ABC', value: data.filter(d => d.type.includes('Pó') || d.type.includes('ABC') || d.type.includes('PQS')).length, color: '#10b981' },
-          { label: 'CO2', value: data.filter(d => d.type.includes('CO2')).length, color: '#6366f1' },
-          { label: 'Água Pressurizada', value: data.filter(d => d.type.includes('Água') || d.type.includes('AP')).length, color: '#0284c7' }
+          { label: 'ABC', value: data.filter(d => (d.type || '').toUpperCase().includes('ABC') || (d.type || '').toUpperCase().includes('PÓ') || (d.type || '').toUpperCase().includes('PQS')).length, color: '#10b981' },
+          { label: 'BC', value: data.filter(d => (d.type || '').toUpperCase().includes('BC') && !(d.type || '').toUpperCase().includes('ABC')).length, color: '#f59e0b' },
+          { label: 'CO₂', value: data.filter(d => (d.type || '').toUpperCase().includes('CO2') || (d.type || '').toUpperCase().includes('CO₂')).length, color: '#6366f1' }
         ];
         break;
       }
@@ -795,28 +795,34 @@ export default function SesmtReportsModal({
           { header: 'Data', key: 'date' },
           { header: 'Inspetor', key: 'inspector' },
           { header: 'Extintores Vistoriados', key: 'qty' },
-          { header: 'Manômetro OK', key: 'press' },
+          { header: 'Mangueira/Difusor', key: 'hose' },
           { header: 'Lacre Íntegro', key: 'seal' },
-          { header: 'Acesso Desobstruído', key: 'access' },
+          { header: 'Manômetro OK', key: 'press' },
+          { header: 'Suporte OK', key: 'support' },
           { header: 'Sinalização OK', key: 'sign' },
           { header: 'Situação', key: 'status' }
         ];
 
         data = filteredExtInspections.map(insp => {
           const items = insp.items || [];
-          const pressOk = items.filter(it => it.evaluations?.pressurizacao === 'C').length;
+          const hoseOk = items.filter(it => it.evaluations?.mangueira_difusor === 'C' || it.evaluations?.mangueira === 'C').length;
           const sealOk = items.filter(it => it.evaluations?.lacre === 'C').length;
-          const accessOk = items.filter(it => it.evaluations?.acesso === 'C').length;
+          const pressOk = items.filter(it => it.evaluations?.manometro === 'C' || it.evaluations?.pressurizacao === 'C').length;
+          const supportOk = items.filter(it => it.evaluations?.suporte === 'C' || it.evaluations?.acesso === 'C').length;
           const signOk = items.filter(it => it.evaluations?.sinalizacao === 'C').length;
+          const totalChecks = items.length * 5;
+          const okChecks = hoseOk + sealOk + pressOk + supportOk + signOk;
+          const isAllOk = totalChecks > 0 && okChecks === totalChecks;
           return {
             date: formatDateBR(insp.date),
             inspector: insp.inspectorName || insp.tecnicoSeguranca || 'Técnico SESMT',
             qty: items.length || 21,
-            press: `${pressOk}/${items.length || 21}`,
+            hose: `${hoseOk}/${items.length || 21}`,
             seal: `${sealOk}/${items.length || 21}`,
-            access: `${accessOk}/${items.length || 21}`,
+            press: `${pressOk}/${items.length || 21}`,
+            support: `${supportOk}/${items.length || 21}`,
             sign: `${signOk}/${items.length || 21}`,
-            status: pressOk === (items.length || 21) ? '100% Conforme' : 'Desvios Apontados'
+            status: isAllOk ? '100% Conforme' : 'Desvios Apontados'
           };
         });
 
@@ -1298,9 +1304,9 @@ export default function SesmtReportsModal({
         ];
 
         data = [
-          { month: 'Novembro/2026', equip: 'Extintores PQS 4kg', maint: 'Recarga Anual de Agente Extintor', qty: '8 un', unitCost: 'R$ 65,00', totalCost: 'R$ 520,00', status: 'Programado' },
-          { month: 'Dezembro/2026', equip: 'Extintores CO2 6kg', maint: 'Recarga Anual + Pesagem', qty: '4 un', unitCost: 'R$ 95,00', totalCost: 'R$ 380,00', status: 'Programado' },
-          { month: 'Fevereiro/2027', equip: 'Extintores AP 10L', maint: 'Recarga de Água Pressurizada', qty: '6 un', unitCost: 'R$ 55,00', totalCost: 'R$ 330,00', status: 'Previsto' },
+          { month: 'Novembro/2026', equip: 'Extintores ABC 4kg / 6kg', maint: 'Recarga Anual de Agente Extintor', qty: '8 un', unitCost: 'R$ 65,00', totalCost: 'R$ 520,00', status: 'Programado' },
+          { month: 'Dezembro/2026', equip: 'Extintores CO₂ 6kg', maint: 'Recarga Anual + Pesagem', qty: '4 un', unitCost: 'R$ 95,00', totalCost: 'R$ 380,00', status: 'Programado' },
+          { month: 'Fevereiro/2027', equip: 'Extintores BC 4kg', maint: 'Recarga de Agente Extintor BC', qty: '6 un', unitCost: 'R$ 55,00', totalCost: 'R$ 330,00', status: 'Previsto' },
           { month: 'Abril/2027', equip: 'Mangueiras de Hidrante', maint: 'Ensaio Hidrostático NBR 12779', qty: '12 lances', unitCost: 'R$ 45,00', totalCost: 'R$ 540,00', status: 'Previsto' },
           { month: 'Maio/2027', equip: 'Cilindros de Extintor', maint: 'Teste Hidrostático Quinquenal', qty: '3 un', unitCost: 'R$ 110,00', totalCost: 'R$ 330,00', status: 'Previsto' }
         ];
