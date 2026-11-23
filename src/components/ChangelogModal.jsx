@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.48',
+      date: '23/11/2026',
+      title: 'Nex-Ai CLINIC (.SESMT) — Gestão Completa de Equipamentos (Extintores e Hidrantes), CRUD Integrado e Ações Operacionais Especializadas',
+      description: 'Consolidação definitiva do parque patrimonial de combate a incêndio da instituição: 1) Visão Unificada "Todos": nova aba exibindo os 27 equipamentos cadastrados (21 extintores e 6 hidrantes) de forma simultânea com badges de categoria, busca instantânea e filtros por setor e status; 2) CRUD Completo em Nuvem: cadastro, consulta, edição e exclusão de extintores e hidrantes com ordenação canônica no Firestore; 3) Ações Operacionais Especializadas: a) Ação Rápida de Recarga (recalcula validade para +1 ano e armazena selo INMETRO e fornecedor); b) Teste Hidrostático rápido (recalcula validade quinquenal de 5 anos); c) Gestão de Situação/Manutenção (com motivo e previsão de retorno); d) Ficha Técnica detalhada com histórico; e e) Impressão de Etiqueta física individual com vistos mensais de inspeção; 4) Ações Globais: Impressão de Censo Patrimonial / Inventário Completo e sincronização direta em nuvem; 5) Base 100% Padronizada no Firestore: extintores canonicamente classificados em ABC, BC e CO₂ com capacidades estruturadas em kg.',
+      changes: [
+        { type: 'Visão Unificada "Todos"', text: 'Aba Todos com listagem consolidada dos 21 extintores e 6 hidrantes cadastrados na clínica.' },
+        { type: 'CRUD Completo', text: 'Criação, edição, exclusão e busca de equipamentos com persistência direta no Firestore.' },
+        { type: 'Ações Operacionais', text: 'Botões rápidos de Registrar Recarga, Teste Hidrostático, Situação/Manutenção e Ficha Técnica.' },
+        { type: 'Etiquetas e Inventário', text: 'Impressão de etiquetas de inspeção física com visto mensal e relatório de inventário patrimonial.' }
+      ]
+    },
+    {
       version: 'v5.0.47',
       date: '23/11/2026',
       title: 'Nex-Ai CLINIC (.SESMT) — Padronização Oficial de Extintores (ABC, BC e CO₂), Cadastro Individual com Capacidade em kg e Atualização dos 5 Critérios Normativos de Inspeção',

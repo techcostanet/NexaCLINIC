@@ -1,3 +1,25 @@
+## [v5.0.48] - 23 de Novembro, 2026
+### Nex-Ai CLINIC (.SESMT) — Gestão Completa de Equipamentos (Extintores e Hidrantes), CRUD Integrado e Ações Operacionais Especializadas
+- **Visão Unificada de Todos os Equipamentos (`SesmtEquipmentManager.jsx`):**
+  - Nova aba "Todos" exibindo de forma simultânea e consolidada os 27 equipamentos cadastrados na instituição (21 extintores e 6 hidrantes), com badges visuais de categoria e filtros ágeis.
+  - Abas temáticas dedicadas: `Todos (27)`, `Extintores (21)` e `Hidrantes (6)`.
+- **CRUD Completo de Equipamentos em Nuvem (`SesmtEquipmentManager.jsx` & `sesmtService.js`):**
+  - **Cadastrar:** Modal estruturado com seletor de categoria, código, setor, tipo, capacidade, status, datas e selo INMETRO.
+  - **Consultar:** Filtros múltiplos por Categoria, Status (`Todos`, `Ativos`, `A Vencer`, `Vencidos`, `Manutenção`, `Inativos`) e Setor da clínica, com modo Tabela (desktop) e Cartões (mobile/tablet).
+  - **Editar:** Formulário completo para atualização imediata dos dados patrimoniais.
+  - **Excluir:** Modal de confirmação segura com exclusão definitiva no Firestore.
+- **Suíte de Ações Rápidas por Equipamento:**
+  - **`Recarga`:** Modal de ação rápida para registrar recarga anual, calculando automaticamente a nova validade para +1 ano e registrando fornecedor e selo INMETRO.
+  - **`Teste`:** Modal de ação rápida para registrar teste hidrostático, calculando a validade quinquenal de 5 anos com registro de certificado.
+  - **`Status`:** Ação para gerenciar a situação operacional (`ATIVO`, `MANUTENÇÃO`, `INATIVO`) com motivo da intervenção e data de retorno.
+  - **`Ficha`:** Modal com a Ficha Técnica individual do extintor/hidrante, contadores de prazos e histórico de intervenções.
+  - **`Etiqueta`:** Impressão de etiqueta de inspeção física com visto mensal (12 quadrantes) para fixação no equipamento.
+- **Ações Globais no Cabeçalho:**
+  - **`Inventário`:** Emissão e impressão do Censo Patrimonial Completo com relação de todos os equipamentos, agrupados com indicadores e campo para assinaturas técnicas.
+  - **`Sincronizar`:** Recarga instantânea dos dados do Firestore com ordenação patrimonial canônica.
+- **Padronização dos 27 Equipamentos em Nuvem:**
+  - Base do Firestore migrada e atualizada: extintores canonicamente classificados em **ABC**, **BC** e **CO₂** com capacidades padronizadas em kg.
+
 ## [v5.0.47] - 23 de Novembro, 2026
 ### Nex-Ai CLINIC (.SESMT) — Padronização Oficial de Extintores (ABC, BC e CO₂), Cadastro Individual com Capacidade em kg e Atualização dos 5 Critérios Normativos de Inspeção
 - **Padronização Oficial das Classes de Extintor (`SesmtEquipmentManager.jsx` & `WeeklyFireExtinguisherForm.jsx`):**

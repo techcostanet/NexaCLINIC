@@ -220,11 +220,17 @@ export const getEquipment = async (category = null) => {
             return snap2.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         }
 
-        // Ordenar por número/código
+        // Ordenar por categoria e por número/código
         return list.sort((a, b) => {
+            const catA = a.category || 'EXTINGUISHER';
+            const catB = b.category || 'EXTINGUISHER';
+            if (catA !== catB) {
+                return catA === 'EXTINGUISHER' ? -1 : 1;
+            }
             const numA = parseInt(a.code?.replace(/\D/g, '') || '0', 10);
             const numB = parseInt(b.code?.replace(/\D/g, '') || '0', 10);
-            return numA - numB;
+            if (numA !== numB) return numA - numB;
+            return (a.code || '').localeCompare(b.code || '');
         });
     } catch (e) {
         console.error('Erro Firestore getEquipment =', e);
@@ -288,35 +294,35 @@ export const seedDefaultEquipmentIfEmpty = async () => {
         const defaultHydro = hydroDate.toISOString().split('T')[0];
 
         const defaultExtinguishers = [
-            { code: 'EXT-01', type: 'CO2', sector: 'Bloco Cirúrgico', capacity: '6 kg' },
-            { code: 'EXT-02', type: 'AP (Água Pressurizada)', sector: 'Bloco Cirúrgico', capacity: '10 L' },
-            { code: 'EXT-03', type: 'PQS (Pó Químico Seco)', sector: 'Salão-1', capacity: '4 kg' },
-            { code: 'EXT-04', type: 'AP (Água Pressurizada)', sector: 'Salão-1', capacity: '10 L' },
-            { code: 'EXT-05', type: 'PQS (Pó Químico Seco)', sector: 'Salão-2', capacity: '4 kg' },
-            { code: 'EXT-06', type: 'AP (Água Pressurizada)', sector: 'Salão-2', capacity: '10 L' },
-            { code: 'EXT-07', type: 'PQS (Pó Químico Seco)', sector: 'Salão-3', capacity: '4 kg' },
-            { code: 'EXT-08', type: 'AP (Água Pressurizada)', sector: 'Salão-3', capacity: '10 L' },
-            { code: 'EXT-09', type: 'PQS (Pó Químico Seco)', sector: 'Diálise Peritoneal', capacity: '4 kg' },
-            { code: 'EXT-10', type: 'PQS (Pó Químico Seco)', sector: 'Hemodiálise Externa', capacity: '4 kg' },
-            { code: 'EXT-11', type: 'AP (Água Pressurizada)', sector: 'Reuso', capacity: '10 L' },
-            { code: 'EXT-12', type: 'PQS (Pó Químico Seco)', sector: 'Reuso', capacity: '4 kg' },
-            { code: 'EXT-13', type: 'PQS (Pó Químico Seco)', sector: 'Sala Amarela', capacity: '4 kg' },
-            { code: 'EXT-14', type: 'AP (Água Pressurizada)', sector: 'Recepção Principal', capacity: '10 L' },
-            { code: 'EXT-15', type: 'PQS (Pó Químico Seco)', sector: 'Recepção Principal', capacity: '4 kg' },
-            { code: 'EXT-16', type: 'AP (Água Pressurizada)', sector: 'Corredor Central', capacity: '10 L' },
-            { code: 'EXT-17', type: 'PQS (Pó Químico Seco)', sector: 'Farmácia', capacity: '4 kg' },
-            { code: 'EXT-18', type: 'CO2', sector: 'Servidores', capacity: '6 kg' },
-            { code: 'EXT-19', type: 'CO2', sector: 'Sala de Máquinas', capacity: '6 kg' },
-            { code: 'EXT-20', type: 'AP (Água Pressurizada)', sector: 'Limpeza', capacity: '10 L' },
-            { code: 'EXT-21', type: 'PQS (Pó Químico Seco)', sector: 'Copa', capacity: '4 kg' }
+            { code: 'EXT-01', type: 'CO₂', sector: 'Bloco Cirúrgico', capacity: '6 kg' },
+            { code: 'EXT-02', type: 'ABC', sector: 'Bloco Cirúrgico', capacity: '6 kg' },
+            { code: 'EXT-03', type: 'ABC', sector: 'Salão-1', capacity: '4 kg' },
+            { code: 'EXT-04', type: 'ABC', sector: 'Salão-1', capacity: '6 kg' },
+            { code: 'EXT-05', type: 'ABC', sector: 'Salão-2', capacity: '4 kg' },
+            { code: 'EXT-06', type: 'ABC', sector: 'Salão-2', capacity: '6 kg' },
+            { code: 'EXT-07', type: 'ABC', sector: 'Salão-3', capacity: '4 kg' },
+            { code: 'EXT-08', type: 'ABC', sector: 'Salão-3', capacity: '6 kg' },
+            { code: 'EXT-09', type: 'ABC', sector: 'Diálise Peritoneal', capacity: '4 kg' },
+            { code: 'EXT-10', type: 'ABC', sector: 'Hemodiálise Externa', capacity: '4 kg' },
+            { code: 'EXT-11', type: 'ABC', sector: 'Reuso', capacity: '6 kg' },
+            { code: 'EXT-12', type: 'ABC', sector: 'Reuso', capacity: '4 kg' },
+            { code: 'EXT-13', type: 'ABC', sector: 'Sala Amarela', capacity: '4 kg' },
+            { code: 'EXT-14', type: 'ABC', sector: 'Recepção Principal', capacity: '6 kg' },
+            { code: 'EXT-15', type: 'ABC', sector: 'Recepção Principal', capacity: '4 kg' },
+            { code: 'EXT-16', type: 'ABC', sector: 'Corredor Central', capacity: '6 kg' },
+            { code: 'EXT-17', type: 'ABC', sector: 'Farmácia', capacity: '4 kg' },
+            { code: 'EXT-18', type: 'CO₂', sector: 'CPD', capacity: '6 kg' },
+            { code: 'EXT-19', type: 'CO₂', sector: 'Sala de Máquinas', capacity: '6 kg' },
+            { code: 'EXT-20', type: 'ABC', sector: 'DML', capacity: '6 kg' },
+            { code: 'EXT-21', type: 'ABC', sector: 'Copa', capacity: '4 kg' }
         ];
 
         const defaultHydrants = [
-            { code: 'HID-01', type: 'Hidrante de Parede', sector: 'Corredor Salão 1', capacity: 'Mangueira 30m' },
-            { code: 'HID-02', type: 'Hidrante de Parede', sector: 'Corredor Bloco Cirúrgico', capacity: 'Mangueira 30m' },
-            { code: 'HID-03', type: 'Hidrante de Parede', sector: 'Hall da Recepção', capacity: 'Mangueira 30m' },
-            { code: 'HID-04', type: 'Hidrante de Parede', sector: 'Corredor Reuso', capacity: 'Mangueira 30m' },
-            { code: 'HID-05', type: 'Hidrante Externo', sector: 'Estacionamento', capacity: 'Mangueira 30m' },
+            { code: 'HID-01', type: 'Hidrante de Parede', sector: 'Salão-1', capacity: 'Mangueira 30m' },
+            { code: 'HID-02', type: 'Hidrante de Parede', sector: 'Bloco Cirúrgico', capacity: 'Mangueira 30m' },
+            { code: 'HID-03', type: 'Hidrante de Parede', sector: 'Recepção Principal', capacity: 'Mangueira 30m' },
+            { code: 'HID-04', type: 'Hidrante de Parede', sector: 'Reuso', capacity: 'Mangueira 30m' },
+            { code: 'HID-05', type: 'Hidrante Externo', sector: 'Acesso Externo', capacity: 'Mangueira 30m' },
             { code: 'HID-06', type: 'Hidrante de Parede', sector: 'Sala de Máquinas', capacity: 'Mangueira 30m' }
         ];
 

@@ -3323,15 +3323,31 @@ export const MODULE_GUIDES = {
         title: 'Como Cadastrar ou Editar Extintores e Hidrantes',
         steps: [
           'Acesse a aba "Equipamentos" no topo do módulo SESMT.',
-          'Clique no botão "+ Novo".',
-          'Preencha o código identificador (ex: EXT-01 ou HID-01) e selecione a Categoria (Extintor ou Hidrante).',
+          'Navegue entre as abas "Todos", "Extintores" ou "Hidrantes" para filtrar a visualização.',
+          'Clique no botão "+ Novo" para cadastrar um novo equipamento.',
+          'Preencha o código identificador (ex: EXT-22 ou HID-07) e selecione a Categoria (Extintor ou Hidrante).',
           'Selecione o Tipo padronizado (ABC, BC ou CO₂) e a Capacidade em kg (ex: 4 kg, 6 kg, 10 kg).',
           'Informe a data da última Recarga, a data de Validade da próxima recarga e o Teste Hidrostático quinquenal.',
           'Clique em "Salvar" para disponibilizar o equipamento imediatamente nas vistorias e relatórios.'
         ]
+      },
+      {
+        title: 'Como Utilizar as Ações de Equipamentos (Recarga, Teste, Ficha e Etiquetas)',
+        steps: [
+          'Na tabela ou nos cartões da aba "Equipamentos", localize o equipamento desejado.',
+          'Clique no botão "Recarga" (ícone verde de retorno) para registrar uma nova recarga anual: o sistema calcula automaticamente a próxima validade (+1 ano) e permite salvar fornecedor e selo INMETRO.',
+          'Clique no botão "Teste" (ícone azul de escudo) para registrar o teste hidrostático: o sistema calcula automaticamente a nova validade quinquenal (+5 anos).',
+          'Clique no botão "Ficha" para consultar a Ficha Técnica completa com todas as especificações e histórico de manutenções.',
+          'Clique no botão "Etiqueta" para gerar e imprimir a etiqueta oficial de inspeção com vistos mensais para fixar no equipamento.',
+          'Utilize os botões globais "Inventário" (para imprimir o censo geral patrimonial) e "Sincronizar" (para atualizar os dados em nuvem).'
+        ]
       }
     ],
     duvidas: [
+      {
+        pergunta: 'Quais são as ações rápidas disponíveis na aba Equipamentos do SESMT?',
+        resposta: 'Cada extintor e hidrante conta com ações diretas: 1) Recarga rápida (atualiza recarga e validade para +1 ano); 2) Teste Hidrostático rápido (atualiza para +5 anos); 3) Ficha Técnica completa com histórico; 4) Impressão de Etiqueta individual de inspeção com visto mensal; 5) Edição cadastral (CRUD); 6) Alteração de Status operacional (Ativo, Em Manutenção ou Inativo); e 7) Exclusão com confirmação.'
+      },
       {
         pergunta: 'Quais são os tipos de extintores e os 5 critérios de inspeção semanal?',
         resposta: 'Conforme as normas NBR 12962 e NBR 12693, os extintores são classificados em ABC (pó polivalente), BC (gás carbônico e pó para líquidos) e CO₂ (dióxido de carbono). O checklist semanal inspeciona 5 critérios: 1) Mangueira/difusor; 2) Lacre; 3) Manômetro (na faixa verde); 4) Conservação do suporte; e 5) Sinalização.'
