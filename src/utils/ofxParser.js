@@ -51,6 +51,12 @@ export const parseOfxContent = (content) => {
     bankName = org;
   } else if (bankId === '756' || bankId.includes('SICOOB')) {
     bankName = 'Sicoob';
+  } else if (bankId === '070' || bankId.includes('BRB')) {
+    bankName = 'BRB';
+  } else if (bankId === '077' || bankId.includes('INTER')) {
+    bankName = 'Inter';
+  } else if (bankId === '260' || bankId.includes('NUBANK') || bankId.includes('NU PAGAMENTOS')) {
+    bankName = 'Nubank';
   } else if (bankId === '341' || bankId.includes('ITAU')) {
     bankName = 'Itaú Unibanco';
   } else if (bankId === '001' || bankId.includes('BRASIL')) {
@@ -61,8 +67,6 @@ export const parseOfxContent = (content) => {
     bankName = 'Caixa Econômica';
   } else if (bankId === '237' || bankId.includes('BRADESCO')) {
     bankName = 'Bradesco';
-  } else if (bankId === '077' || bankId.includes('INTER')) {
-    bankName = 'Banco Inter';
   }
 
   // 2. Extração de blocos de transações <STMTTRN>

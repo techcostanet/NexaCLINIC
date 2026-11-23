@@ -63,9 +63,28 @@ export const MODULE_GUIDES = {
       {
         title: 'Controle de Botões e Seletor de Relatórios',
         desc: 'Gerenciamento no .CONFIG permitindo ocultar botões auxiliares (CNAB, Remessa e Sincronizar Estoque) e filtrar os 15 relatórios disponíveis, mantendo à vista por padrão apenas os relatórios essenciais (Contas a Pagar e Contas a Receber).'
+      },
+      {
+        title: 'Filtros Combináveis no Contas a Pagar',
+        desc: 'Busca inteligente por texto (fornecedor, nota, boleto, descrição, centro de custo), filtro flexível por período (datas de início e fim ou atalhos) e status (Todos, Pendente, Pago, Atrasado), operando de forma combinada e simultânea com botão rápido de limpar.'
+      },
+      {
+        title: 'Suporte Ampliado a Bancos e Cooperativas',
+        desc: 'Integração e seleção direta dos principais bancos brasileiros e cooperativas: Sicoob (756), BRB (070), Banco Inter (077), Nubank (260), Itaú Unibanco (341), Banco do Brasil (001), Bradesco (237), Caixa Econômica (104), Santander (033) e Stone.'
       }
     ],
     tutorial: [
+      {
+        title: 'Como Pesquisar e Combinar Filtros no Contas a Pagar',
+        steps: [
+          'Acesse o módulo Financeiro e clique na aba "Contas a Pagar".',
+          'Digite no campo de busca qualquer termo desejado (nome do fornecedor, número de nota, código do boleto, etc.).',
+          'Selecione as datas de Início e Fim do período de vencimento ou clique no atalho rápido "Mês" ou "30d".',
+          'Clique nos botões de status: "Todos", "Pendente", "Pago" ou "Atrasado".',
+          'Todos os critérios são combinados simultaneamente em tempo real, recalculando o total exibido, o valor pago e o saldo pendente.',
+          'Para restaurar a visualização padrão de todos os títulos, clique no botão "Limpar".'
+        ]
+      },
       {
         title: 'Como Ocultar Botões Auxiliares e Escolher Relatórios',
         steps: [

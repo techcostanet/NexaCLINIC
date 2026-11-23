@@ -40,7 +40,8 @@ import {
   Activity,
   Copy,
   Boxes,
-  Package
+  Package,
+  RotateCcw
 } from 'lucide-react';
 
 import { dbService } from '../firebase';
@@ -76,6 +77,20 @@ export const EXPENSE_CATEGORIES = [
   'Serviço/Utilidades',
   'Equipamento',
   'Outros'
+];
+
+export const BANK_OPTIONS = [
+  { value: 'Sicoob', label: 'Sicoob (Banco 756)' },
+  { value: 'BRB', label: 'BRB (Banco de Brasília - 070)' },
+  { value: 'Inter', label: 'Banco Inter (077)' },
+  { value: 'Nubank', label: 'Nubank (Nu Pagamentos - 260)' },
+  { value: 'Itaú Unibanco (PJ)', label: 'Itaú Unibanco (341)' },
+  { value: 'Banco do Brasil', label: 'Banco do Brasil (001)' },
+  { value: 'Bradesco', label: 'Bradesco (237)' },
+  { value: 'Caixa Econômica', label: 'Caixa Econômica (104)' },
+  { value: 'Santander', label: 'Santander (033)' },
+  { value: 'Stone', label: 'Stone Pagamentos' },
+  { value: 'Outro', label: 'Outro Banco' }
 ];
 
 export const DEFAULT_FINANCE_TABS_CONFIG = {
@@ -262,7 +277,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
   const [showAddManualStatement, setShowAddManualStatement] = useState(false);
   const [newManualStatement, setNewManualStatement] = useState({
     date: new Date().toISOString().substring(0, 10),
-    bankName: 'Itaú Unibanco (PJ)',
+    bankName: 'Sicoob',
     description: '',
     amount: '',
     type: 'Débito'
@@ -369,7 +384,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     costCenterId: '1.1',
     invoiceNumber: '',
     paymentMethod: 'PIX',
-    bankAccount: 'Itaú Unibanco (PJ)',
+    bankAccount: 'Sicoob',
     natureType: 'Custo Variável / Operacional',
     boletoUrl: '',
     boletoFileName: '',
@@ -384,17 +399,15 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
     dueDate: '',
     invoiceNumber: '',
     paymentMethod: 'PIX',
-    bankAccount: 'Itaú Unibanco (PJ)'
+    bankAccount: 'Sicoob'
   });
 
   // Filter & Sort states
-  const [payableFilter, setPayableFilter] = useState('Todos'); // 'Todos' | 'Pendente' | 'Pago'
-  const [payableMonthFilter, setPayableMonthFilter] = useState(() => {
-    const today = new Date();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const yyyy = today.getFullYear();
-    return `${yyyy}-${mm}`;
-  });
+  const [payableFilter, setPayableFilter] = useState('Todos'); // 'Todos' | 'Pendente' | 'Pago' | 'Atrasado'
+  const [payableSearchText, setPayableSearchText] = useState('');
+  const [payableStartDate, setPayableStartDate] = useState('');
+  const [payableEndDate, setPayableEndDate] = useState('');
+  const [payableMonthFilter, setPayableMonthFilter] = useState('');
   const [receivableFilter, setReceivableFilter] = useState('Todos'); // 'Todos' | 'Pendente' | 'Pago'
 
   // Formato das linhas de registros em Contas a Pagar ('compacta' por padrão | 'normal')
@@ -682,7 +695,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       const finalAmt = newManualStatement.type === 'Débito' ? -Math.abs(numVal) : Math.abs(numVal);
       await dbService.saveBankStatement({
         date: newManualStatement.date,
-        bankName: newManualStatement.bankName || 'Itaú Unibanco (PJ)',
+        bankName: newManualStatement.bankName || 'Sicoob',
         description: newManualStatement.description,
         amount: finalAmt,
         type: newManualStatement.type,
@@ -693,7 +706,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       setShowAddManualStatement(false);
       setNewManualStatement({
         date: new Date().toISOString().substring(0, 10),
-        bankName: 'Itaú Unibanco (PJ)',
+        bankName: 'Sicoob',
         description: '',
         amount: '',
         type: 'Débito'
@@ -1104,7 +1117,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
         costCenterId: '1.1',
         invoiceNumber: '',
         paymentMethod: 'PIX',
-        bankAccount: 'Itaú Unibanco (PJ)',
+        bankAccount: 'Sicoob',
         natureType: 'Custo Variável / Operacional',
         unitId: activeUnitId === 'all' ? 'betim' : activeUnitId,
         boletoUrl: '',
@@ -1399,6 +1412,94 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
 
   const payables15DaysList = currentPayableList.filter(p => !isItemPaid(p) && (p.dueDate || '') >= todayStr && (p.dueDate || '') <= date15DaysStr);
   const totalPayables15Days = payables15DaysList.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+  // Contas a Pagar - Contadores de Status
+  const totalPayablesCount = currentPayableList.length;
+  const pendingPayablesCount = currentPayableList.filter(p => !isItemPaid(p)).length;
+  const paidPayablesCount = currentPayableList.filter(p => isItemPaid(p)).length;
+  const overduePayablesCount = currentPayableList.filter(p => !isItemPaid(p) && (p.dueDate || '') < todayStr).length;
+
+  // Contas a Pagar - Filtros Combináveis (Texto + Período + Status)
+  const filteredPayables = useMemo(() => {
+    const term = (payableSearchText || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return currentPayableList.filter(p => {
+      // 1. Filtro de Status
+      const isPaid = isItemPaid(p);
+      if (payableFilter === 'Pago' && !isPaid) return false;
+      if (payableFilter === 'Pendente' && isPaid) return false;
+      if (payableFilter === 'Atrasado' && (isPaid || (p.dueDate && p.dueDate >= todayStr))) return false;
+
+      // 2. Filtro de Período (Início e Fim flexíveis)
+      if (payableStartDate && p.dueDate && p.dueDate < payableStartDate) return false;
+      if (payableEndDate && p.dueDate && p.dueDate > payableEndDate) return false;
+      if (!payableStartDate && !payableEndDate && payableMonthFilter && p.dueDate) {
+        if (!p.dueDate.startsWith(payableMonthFilter)) return false;
+      }
+
+      // 3. Pesquisa por Texto (Fornecedor, Nota, Boleto, Descrição, Centro, Categoria, Banco, Valor)
+      if (term) {
+        const cc = costCenters.find(c => c.id === p.costCenterId);
+        const textPayload = [
+          p.supplier,
+          p.invoiceNumber,
+          p.digitableLine,
+          p.description,
+          p.notes,
+          p.category,
+          p.bankAccount,
+          p.natureType,
+          p.amount,
+          p.amountPaid,
+          cc?.name,
+          cc?.code,
+          p.unit
+        ].filter(Boolean).join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+        if (!textPayload.includes(term)) return false;
+      }
+
+      return true;
+    });
+  }, [currentPayableList, payableFilter, payableStartDate, payableEndDate, payableMonthFilter, payableSearchText, costCenters, todayStr]);
+
+  const filteredPayableTotal = useMemo(() => {
+    return filteredPayables.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  }, [filteredPayables]);
+
+  const filteredPayablePaidTotal = useMemo(() => {
+    return filteredPayables.reduce((acc, curr) => acc + (parseFloat(curr.amountPaid || (isItemPaid(curr) ? curr.amount : 0)) || 0), 0);
+  }, [filteredPayables]);
+
+  const handleSetPayablePeriodPreset = (preset) => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    if (preset === 'currentMonth') {
+      const start = new Date(y, m, 1).toISOString().substring(0, 10);
+      const end = new Date(y, m + 1, 0).toISOString().substring(0, 10);
+      setPayableStartDate(start);
+      setPayableEndDate(end);
+      setPayableMonthFilter('');
+    } else if (preset === 'next30') {
+      const start = d.toISOString().substring(0, 10);
+      const end = new Date(d.getTime() + 30 * 86400000).toISOString().substring(0, 10);
+      setPayableStartDate(start);
+      setPayableEndDate(end);
+      setPayableMonthFilter('');
+    } else if (preset === 'all') {
+      setPayableStartDate('');
+      setPayableEndDate('');
+      setPayableMonthFilter('');
+    }
+  };
+
+  const handleClearPayableFilters = () => {
+    setPayableSearchText('');
+    setPayableStartDate('');
+    setPayableEndDate('');
+    setPayableMonthFilter('');
+    setPayableFilter('Todos');
+  };
 
   // Simulated APAC alert list (Only for Betim / Global, Empty for other units)
   const mockApacs = (activeUnitId === 'taguatinga') ? [] : [
@@ -2495,143 +2596,335 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
       {/* Accounts Payable (Contas a Pagar) View */}
       {activeTab === 'payable' && (
         <div style={styles.tabContent}>
-          <div style={styles.actionsBar}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          {/* Actions Bar & Combined Filter Bar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
+            {/* Top row: Status badges & primary action buttons */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+              {/* Status Badges */}
               <div style={styles.filtersGroup}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginRight: '0.5rem' }}>Filtro:</span>
-                <input 
-                  type="month"
-                  value={payableMonthFilter}
-                  onChange={(e) => setPayableMonthFilter(e.target.value)}
-                  style={{ padding: '0.35rem 0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)', outline: 'none', marginRight: '0.5rem', fontSize: '0.85rem' }}
-                  title="Mês/Ano de Vencimento"
-                />
                 <button 
+                  type="button"
                   onClick={() => setPayableFilter('Todos')}
                   style={{ ...styles.filterBadge, ...(payableFilter === 'Todos' ? styles.filterBadgeActive : {}) }}
                 >
-                  Todos
+                  Todos ({totalPayablesCount})
                 </button>
                 <button 
+                  type="button"
                   onClick={() => setPayableFilter('Pendente')}
                   style={{ ...styles.filterBadge, ...(payableFilter === 'Pendente' ? styles.filterBadgeActive : {}) }}
                 >
-                  Pendente
+                  Pendente ({pendingPayablesCount})
                 </button>
                 <button 
+                  type="button"
                   onClick={() => setPayableFilter('Pago')}
                   style={{ ...styles.filterBadge, ...(payableFilter === 'Pago' ? styles.filterBadgeActive : {}) }}
                 >
-                  Pago
+                  Pago ({paidPayablesCount})
                 </button>
+                {overduePayablesCount > 0 && (
+                  <button 
+                    type="button"
+                    onClick={() => setPayableFilter('Atrasado')}
+                    style={{ 
+                      ...styles.filterBadge, 
+                      ...(payableFilter === 'Atrasado' ? { backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' } : { color: '#dc2626', borderColor: '#fecaca', backgroundColor: '#fef2f2' }) 
+                    }}
+                  >
+                    Atrasado ({overduePayablesCount})
+                  </button>
+                )}
               </div>
 
-              {/* Seletor de Formato das Linhas (Compacta ou Normal - Padrão: Compacta) */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: 'var(--bg-secondary)', padding: '0.2rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', padding: '0 0.3rem', fontWeight: '600' }}>Linhas:</span>
-                <button
-                  onClick={() => handleSetPayableDensity('compacta')}
-                  style={{
-                    padding: '0.25rem 0.5rem',
-                    fontSize: '0.75rem',
-                    fontWeight: payableRowDensity === 'compacta' ? '700' : '500',
-                    borderRadius: '4px',
-                    border: 'none',
-                    backgroundColor: payableRowDensity === 'compacta' ? 'var(--bg-card)' : 'transparent',
-                    color: payableRowDensity === 'compacta' ? '#10b981' : 'var(--text-muted)',
-                    boxShadow: payableRowDensity === 'compacta' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem'
-                  }}
-                  title="Modo Compacto (Padrão): exibe mais registros por página"
+              {/* Right actions: Density + Aux Buttons + Nova Despesa */}
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                {/* Linhas Density */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: 'var(--bg-secondary)', padding: '0.2rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', padding: '0 0.3rem', fontWeight: '600' }}>Linhas:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSetPayableDensity('compacta')}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '0.75rem',
+                      fontWeight: payableRowDensity === 'compacta' ? '700' : '500',
+                      borderRadius: '4px',
+                      border: 'none',
+                      backgroundColor: payableRowDensity === 'compacta' ? 'var(--bg-card)' : 'transparent',
+                      color: payableRowDensity === 'compacta' ? '#10b981' : 'var(--text-muted)',
+                      boxShadow: payableRowDensity === 'compacta' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem'
+                    }}
+                    title="Modo Compacto (Padrão): exibe mais registros por página"
+                  >
+                    <Sliders size={12} />
+                    <span>Compacta</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetPayableDensity('normal')}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '0.75rem',
+                      fontWeight: payableRowDensity === 'normal' ? '700' : '500',
+                      borderRadius: '4px',
+                      border: 'none',
+                      backgroundColor: payableRowDensity === 'normal' ? 'var(--bg-card)' : 'transparent',
+                      color: payableRowDensity === 'normal' ? '#10b981' : 'var(--text-muted)',
+                      boxShadow: payableRowDensity === 'normal' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem'
+                    }}
+                    title="Modo Normal: espaçamento padrão"
+                  >
+                    <Layers size={12} />
+                    <span>Normal</span>
+                  </button>
+                </div>
+
+                {financeButtonsConfig.remessaPayable && (
+                  <button 
+                    type="button"
+                    onClick={() => setShowCnabModal(true)}
+                    style={{
+                      ...styles.btnSecondary,
+                      backgroundColor: '#f0f9ff',
+                      color: '#0284c7',
+                      border: '1px solid #bae6fd',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      fontWeight: '700',
+                      padding: '0.45rem 0.75rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                    title="Gerar arquivo de remessa Sicoob CNAB 240 para pagamento de boletos"
+                  >
+                    <FileSpreadsheet size={15} />
+                    <span>Remessa</span>
+                  </button>
+                )}
+                {financeButtonsConfig.syncStockPayable && (
+                  <button 
+                    type="button"
+                    onClick={handleSyncStockInvoices}
+                    disabled={isSyncingStock}
+                    style={{
+                      ...styles.btnSecondary,
+                      backgroundColor: 'rgba(16,185,129,0.08)',
+                      color: '#059669',
+                      border: '1px solid rgba(16,185,129,0.25)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      fontWeight: '700',
+                      padding: '0.45rem 0.75rem',
+                      borderRadius: '6px',
+                      cursor: isSyncingStock ? 'not-allowed' : 'pointer'
+                    }}
+                    title="Sincronizar notas fiscais cadastradas no estoque diretamente no Contas a Pagar"
+                  >
+                    <Boxes size={15} />
+                    <span>{isSyncingStock ? 'Sincronizando...' : 'Estoque'}</span>
+                  </button>
+                )}
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setEditingPayable(null);
+                    setShowAddPayable(!showAddPayable);
+                  }} 
+                  style={styles.btnPrimary}
                 >
-                  <Sliders size={12} />
-                  <span>Compacta</span>
-                </button>
-                <button
-                  onClick={() => handleSetPayableDensity('normal')}
-                  style={{
-                    padding: '0.25rem 0.5rem',
-                    fontSize: '0.75rem',
-                    fontWeight: payableRowDensity === 'normal' ? '700' : '500',
-                    borderRadius: '4px',
-                    border: 'none',
-                    backgroundColor: payableRowDensity === 'normal' ? 'var(--bg-card)' : 'transparent',
-                    color: payableRowDensity === 'normal' ? '#10b981' : 'var(--text-muted)',
-                    boxShadow: payableRowDensity === 'normal' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem'
-                  }}
-                  title="Modo Normal: espaçamento padrão"
-                >
-                  <Layers size={12} />
-                  <span>Normal</span>
+                  <Plus size={14} />
+                  <span>Despesa</span>
                 </button>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              {financeButtonsConfig.remessaPayable && (
-                <button 
-                  type="button"
-                  onClick={() => setShowCnabModal(true)}
+            {/* Combined Filters Row: Text search + Date range + Quick presets + Clear button */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.65rem',
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              padding: '0.65rem 0.85rem',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color, #e2e8f0)',
+              flexWrap: 'wrap'
+            }}>
+              {/* Text Search Input */}
+              <div style={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                flex: '1 1 240px',
+                minWidth: '220px'
+              }}>
+                <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '0.65rem', pointerEvents: 'none' }} />
+                <input 
+                  type="text"
+                  value={payableSearchText}
+                  onChange={e => setPayableSearchText(e.target.value)}
+                  placeholder="Buscar fornecedor, nota, boleto, descrição..."
                   style={{
-                    ...styles.btnSecondary,
-                    backgroundColor: '#f0f9ff',
-                    color: '#0284c7',
-                    border: '1px solid #bae6fd',
+                    width: '100%',
+                    padding: '0.45rem 2rem 0.45rem 2.1rem',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-color)',
+                    fontSize: '0.825rem',
+                    outline: 'none',
+                    backgroundColor: 'var(--bg-secondary, #f8fafc)',
+                    color: 'var(--text-primary)'
+                  }}
+                />
+                {payableSearchText && (
+                  <button 
+                    type="button"
+                    onClick={() => setPayableSearchText('')}
+                    style={{ position: 'absolute', right: '0.5rem', border: 'none', background: 'none', cursor: 'pointer', padding: '0.2rem', color: 'var(--text-muted)' }}
+                    title="Limpar busca"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              {/* Period Date Range: Início & Fim */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Início:</span>
+                <input 
+                  type="date"
+                  value={payableStartDate}
+                  onChange={e => {
+                    setPayableStartDate(e.target.value);
+                    setPayableMonthFilter('');
+                  }}
+                  style={{
+                    padding: '0.38rem 0.5rem',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-color)',
+                    fontSize: '0.8rem',
+                    backgroundColor: 'var(--bg-secondary, #f8fafc)',
+                    color: 'var(--text-primary)',
+                    outline: 'none'
+                  }}
+                  title="Data de Vencimento Inicial"
+                />
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Fim:</span>
+                <input 
+                  type="date"
+                  value={payableEndDate}
+                  onChange={e => {
+                    setPayableEndDate(e.target.value);
+                    setPayableMonthFilter('');
+                  }}
+                  style={{
+                    padding: '0.38rem 0.5rem',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-color)',
+                    fontSize: '0.8rem',
+                    backgroundColor: 'var(--bg-secondary, #f8fafc)',
+                    color: 'var(--text-primary)',
+                    outline: 'none'
+                  }}
+                  title="Data de Vencimento Final"
+                />
+
+                {/* Quick Period Presets */}
+                <button
+                  type="button"
+                  onClick={() => handleSetPayablePeriodPreset('currentMonth')}
+                  style={{
+                    padding: '0.35rem 0.55rem',
+                    fontSize: '0.75rem',
+                    borderRadius: '5px',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-secondary)',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                  title="Definir período para o mês atual"
+                >
+                  Mês
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSetPayablePeriodPreset('next30')}
+                  style={{
+                    padding: '0.35rem 0.55rem',
+                    fontSize: '0.75rem',
+                    borderRadius: '5px',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-secondary)',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                  title="Próximos 30 dias"
+                >
+                  30d
+                </button>
+              </div>
+
+              {/* Clear Filters Button (shown when any filter is active) */}
+              {(payableSearchText || payableStartDate || payableEndDate || payableMonthFilter || payableFilter !== 'Todos') && (
+                <button
+                  type="button"
+                  onClick={handleClearPayableFilters}
+                  style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '0.35rem',
-                    fontWeight: '700',
-                    padding: '0.45rem 0.75rem',
+                    gap: '0.3rem',
+                    padding: '0.38rem 0.65rem',
                     borderRadius: '6px',
+                    border: '1px solid #fecaca',
+                    backgroundColor: '#fef2f2',
+                    color: '#dc2626',
+                    fontSize: '0.78rem',
+                    fontWeight: '700',
                     cursor: 'pointer'
                   }}
-                  title="Gerar arquivo de remessa Sicoob CNAB 240 para pagamento de boletos"
+                  title="Limpar todos os filtros e mostrar tudo"
                 >
-                  <FileSpreadsheet size={15} />
-                  <span>Remessa</span>
+                  <RotateCcw size={12} />
+                  <span>Limpar</span>
                 </button>
               )}
-              {financeButtonsConfig.syncStockPayable && (
-                <button 
-                  type="button"
-                  onClick={handleSyncStockInvoices}
-                  disabled={isSyncingStock}
-                  style={{
-                    ...styles.btnSecondary,
-                    backgroundColor: 'rgba(16,185,129,0.08)',
-                    color: '#059669',
-                    border: '1px solid rgba(16,185,129,0.25)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    fontWeight: '700',
-                    padding: '0.45rem 0.75rem',
-                    borderRadius: '6px',
-                    cursor: isSyncingStock ? 'not-allowed' : 'pointer'
-                  }}
-                  title="Sincronizar notas fiscais cadastradas no estoque diretamente no Contas a Pagar"
-                >
-                  <Boxes size={15} />
-                  <span>{isSyncingStock ? 'Sincronizando...' : 'Estoque'}</span>
-                </button>
-              )}
-              <button 
-                onClick={() => {
-                  setEditingPayable(null);
-                  setShowAddPayable(!showAddPayable);
-                }} 
-                style={styles.btnPrimary}
-              >
-                <Plus size={14} />
-                <span>Despesa</span>
-              </button>
+            </div>
+
+            {/* Filtered Results Summary Bar */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '0.35rem 0.5rem',
+              fontSize: '0.78rem',
+              color: 'var(--text-secondary)',
+              flexWrap: 'wrap',
+              gap: '0.5rem'
+            }}>
+              <div>
+                <span>Exibindo <strong>{filteredPayables.length}</strong> de <strong>{totalPayablesCount}</strong> títulos</span>
+                {(payableSearchText || payableStartDate || payableEndDate || payableMonthFilter || payableFilter !== 'Todos') && (
+                  <span style={{ color: '#0284c7', marginLeft: '0.5rem', fontWeight: '600' }}>
+                    (Filtros combinados ativos)
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <span>Total: <strong style={{ color: 'var(--text-primary)' }}>R$ {filteredPayableTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></span>
+                <span>Pago: <strong style={{ color: '#059669' }}>R$ {filteredPayablePaidTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></span>
+                <span>Saldo: <strong style={{ color: '#dc2626' }}>R$ {(filteredPayableTotal - filteredPayablePaidTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></span>
+              </div>
             </div>
           </div>
 
@@ -2769,19 +3062,16 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Banco</label>
                   <select 
-                    value={editingPayable ? (editingPayable.bankAccount || 'Itaú Unibanco (PJ)') : newPayable.bankAccount} 
+                    value={editingPayable ? (editingPayable.bankAccount || 'Sicoob') : newPayable.bankAccount} 
                     onChange={e => {
                       if (editingPayable) setEditingPayable({ ...editingPayable, bankAccount: e.target.value });
                       else setNewPayable({ ...newPayable, bankAccount: e.target.value });
                     }} 
                     style={styles.input}
                   >
-                    <option value="Itaú Unibanco (PJ)">Itaú Unibanco</option>
-                    <option value="Banco do Brasil">Banco do Brasil</option>
-                    <option value="Bradesco">Bradesco</option>
-                    <option value="Caixa Econômica">Caixa Econômica</option>
-                    <option value="Stone">Stone</option>
-                    <option value="Outro">Outro</option>
+                    {BANK_OPTIONS.map(b => (
+                      <option key={b.value} value={b.value}>{b.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
@@ -2904,21 +3194,7 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 </tr>
               </thead>
               <tbody>
-                {sortList(
-                  payableList.filter(p => {
-                    const matchUnit = matchItemUnit(p);
-                    const isPaid = isItemPaid(p);
-                    const matchFilter = payableFilter === 'Todos' || (payableFilter === 'Pago' && isPaid) || (payableFilter === 'Pendente' && !isPaid) || p.status === payableFilter;
-                    
-                    let matchMonth = true;
-                    if (payableMonthFilter && p.dueDate) {
-                      matchMonth = p.dueDate.startsWith(payableMonthFilter);
-                    }
-                    
-                    return matchUnit && matchFilter && matchMonth;
-                  }),
-                  payableSort
-                ).map(p => {
+                {sortList(filteredPayables, payableSort).map(p => {
                   const amt = parseFloat(p.amount) || 0;
                   const paid = parseFloat(p.amountPaid) || 0;
                   const dueBalance = amt - paid;
@@ -3160,6 +3436,27 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                     </tr>
                   );
                 })}
+                {filteredPayables.length === 0 && (
+                  <tr>
+                    <td colSpan={11} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                      <AlertCircle size={28} style={{ margin: '0 auto 0.5rem auto', color: '#94a3b8', display: 'block' }} />
+                      <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)' }}>Nenhum título encontrado</strong>
+                      <span style={{ fontSize: '0.825rem' }}>Nenhuma conta a pagar corresponde aos filtros selecionados.</span>
+                      {(payableSearchText || payableStartDate || payableEndDate || payableMonthFilter || payableFilter !== 'Todos') && (
+                        <div style={{ marginTop: '0.75rem' }}>
+                          <button 
+                            type="button" 
+                            onClick={handleClearPayableFilters}
+                            style={{ ...styles.btnSecondary, fontSize: '0.8rem', padding: '0.35rem 0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                          >
+                            <RotateCcw size={13} />
+                            <span>Limpar</span>
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -3315,19 +3612,16 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Banco</label>
                   <select 
-                    value={editingReceivable ? (editingReceivable.bankAccount || 'Itaú Unibanco (PJ)') : newReceivable.bankAccount} 
+                    value={editingReceivable ? (editingReceivable.bankAccount || 'Sicoob') : newReceivable.bankAccount} 
                     onChange={e => {
                       if (editingReceivable) setEditingReceivable({ ...editingReceivable, bankAccount: e.target.value });
                       else setNewReceivable({ ...newReceivable, bankAccount: e.target.value });
                     }} 
                     style={styles.input}
                   >
-                    <option value="Itaú Unibanco (PJ)">Itaú Unibanco</option>
-                    <option value="Banco do Brasil">Banco do Brasil</option>
-                    <option value="Bradesco">Bradesco</option>
-                    <option value="Caixa Econômica">Caixa Econômica</option>
-                    <option value="Stone">Stone</option>
-                    <option value="Outro">Outro</option>
+                    {BANK_OPTIONS.map(b => (
+                      <option key={b.value} value={b.value}>{b.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div style={styles.inputGroup}>
@@ -3797,14 +4091,15 @@ export default function FinancePanel({ currentUser, isReportsOpen, setIsReportsO
                 </div>
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Banco</label>
-                  <input 
-                    type="text" 
+                  <select 
                     value={newManualStatement.bankName} 
                     onChange={e => setNewManualStatement({ ...newManualStatement, bankName: e.target.value })}
-                    placeholder="Ex: Itaú Unibanco (PJ)"
                     style={styles.input}
-                    required
-                  />
+                  >
+                    {BANK_OPTIONS.map(b => (
+                      <option key={b.value} value={b.value}>{b.label}</option>
+                    ))}
+                  </select>
                 </div>
                 <div style={styles.inputGroup}>
                   <label style={styles.label}>Descrição</label>

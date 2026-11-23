@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.51',
+      date: '23/11/2026',
+      title: 'Nex-Ai CLINIC (.FINANCE) — Filtros Combináveis em Contas a Pagar e Cadastro Ampliado de Bancos (BRB, Sicoob, Inter e Nubank)',
+      description: 'Aprimoramento das ferramentas de busca e ampliação do catálogo de contas bancárias no módulo financeiro: 1) Filtros Combináveis em Contas a Pagar: busca instantânea por texto (fornecedor, nota, boleto, descrição, centro de custo), filtro flexível por período (datas de início e fim com atalhos de Mês e 30d) e status (Todos, Pendente, Pago, Atrasado), operando simultaneamente com botão rápido de limpar; 2) Resumo em Tempo Real: cálculo dinâmico da quantidade de títulos filtrados, valor total, montante pago e saldo a pagar; 3) Cadastro Oficial de Bancos: suporte nativo a BRB (Banco de Brasília - 070), Sicoob (Banco 756), Banco Inter (077) e Nubank (Nu Pagamentos - 260), além de Itaú, BB, Bradesco, Caixa, Santander e Stone em Contas a Pagar, Contas a Receber e Conciliação; 4) Parser OFX Atualizado: reconhecimento automático dos identificadores de extrato de BRB e Nubank.',
+      changes: [
+        { type: 'Busca por Texto', text: 'Pesquisa instantânea em fornecedores, notas, linhas digitáveis, descrições e centros de custo com normalização fonética.' },
+        { type: 'Filtro por Período & Presets', text: 'Seleção livre de datas Início e Fim com atalhos rápidos para Mês Atual e Próximos 30 dias.' },
+        { type: 'Combinação & Resumo', text: 'Filtros operam de forma combinada com botão Limpar e barra com contagem e somatórios dinâmicos.' },
+        { type: 'Bancos BRB, Sicoob, Inter e Nubank', text: 'Opções bancárias padronizadas disponíveis em todos os formulários e parser de extratos OFX.' }
+      ]
+    },
+    {
       version: 'v5.0.50',
       date: '23/11/2026',
       title: 'Nex-Ai CLINIC (.FINANCE) — Revisão Integral de Contas a Pagar e Receber, Permissões Firestore, Resiliência Offline e Padrão 1-Palavra',

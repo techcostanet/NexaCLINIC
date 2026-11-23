@@ -1,3 +1,17 @@
+## [v5.0.51] - 23 de Novembro, 2026
+### Nex-Ai CLINIC (.FINANCE) — Filtros Combináveis em Contas a Pagar e Cadastro Ampliado de Bancos (BRB, Sicoob, Inter e Nubank)
+- **Filtros Combináveis no Contas a Pagar (`FinancePanel.jsx`):**
+  - **Busca por Texto:** Campo de pesquisa instantâneo com normalização fonética de acentos, filtrando fornecedor, número de nota fiscal, código de boleto/linha digitável, descrição, categoria, banco e centro de custo.
+  - **Filtro por Período:** Campos de data livres para `Início` e `Fim`, combináveis com atalhos rápidos de período (`Mês` e `30d`).
+  - **Filtro por Status:** Seletor com contadores dinâmicos para `Todos`, `Pendente`, `Pago` e `Atrasado`.
+  - **Combinação Total:** Todos os filtros (Texto + Período + Status + Unidade) operam simultaneamente com lógica AND.
+  - **Ação Rápida de Limpeza:** Botão `Limpar` para restauração imediata de todos os filtros.
+  - **Barra de Resumo Dinâmico:** Exibição da quantidade de lançamentos filtrados, total faturado, montante liquidado e saldo em aberto.
+- **Cadastro Ampliado de Bancos e Cooperativas (`FinancePanel.jsx` & `ofxParser.js`):**
+  - Inclusão oficial dos bancos: **BRB (Banco de Brasília - 070)**, **Sicoob (Banco 756)**, **Banco Inter (077)** e **Nubank (Nu Pagamentos - 260)**.
+  - Padronização da lista de bancos em Contas a Pagar, Contas a Receber e Lançamentos Manuais de Conciliação.
+  - Atualização do leitor OFX para reconhecimento automático de arquivos de extrato do BRB e Nubank.
+
 ## [v5.0.50] - 23 de Novembro, 2026
 ### Nex-Ai CLINIC (.FINANCE) — Revisão Integral de Contas a Pagar e Receber, Permissões Firestore, Resiliência Offline e Padrão 1-Palavra
 - **Permissões de Nuvem Firestore (`firestore.rules`):**
