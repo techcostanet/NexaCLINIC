@@ -162,6 +162,101 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
       return;
     }
 
+    if (record.recordType === 'WASTE') {
+      const formattedDate = record.displayDate ? record.displayDate.split('-').reverse().join('/') : '-';
+      const isConform = record.status === 'CONFORME';
+      const statusLabel = isConform ? 'CONFORME (APROVADO)' : 'NÃO CONFORME (DESVIOS IDENTIFICADOS)';
+      const deviationsList = (record.deviations || []).map(d => `<li style="margin-bottom: 4px;">${d}</li>`).join('') || '<li>Nenhum desvio registrado</li>';
+
+      const wasteHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Vistoria de Resíduos - ${formattedDate}</title>
+          <style>
+            @page { size: A4 portrait; margin: 12mm 15mm; }
+            body { font-family: Arial, Helvetica, sans-serif; color: #000; margin: 0; padding: 10px; }
+            .header-box { text-align: center; border: 2px solid #000; padding: 10px; margin-bottom: 12px; }
+            .header-title { font-size: 14px; font-weight: bold; text-transform: uppercase; margin: 0; }
+            .meta-box { border: 1px solid #000; padding: 8px 12px; margin-bottom: 12px; font-size: 11px; line-height: 1.6; }
+            .meta-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+            .result-box { border: 2px solid ${isConform ? '#166534' : '#991b1b'}; background-color: ${isConform ? '#f0fdf4' : '#fef2f2'}; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; }
+            .section-box { border: 1px solid #000; padding: 10px; margin-bottom: 12px; }
+            .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 6px; }
+            .evidence-img { max-width: 100%; max-height: 280px; border: 1px solid #999; margin-top: 6px; display: block; }
+            .resp-box { border: 1px solid #000; padding: 10px; margin-top: 10px; }
+            .sig-img { max-height: 50px; object-fit: contain; margin-top: 4px; }
+          </style>
+        </head>
+        <body>
+          <div class="header-box">
+            <div class="header-title">VISTORIA TÉCNICA DE RESÍDUOS INFECTANTES (PGRSS / RDC 222)</div>
+            <div style="font-size: 11px; margin-top: 4px; color: #333;">NEX-AI CLINIC • MÓDULO SESMT</div>
+          </div>
+
+          <div class="meta-box">
+            <div class="meta-row">
+              <div><strong>DATA:</strong> ${formattedDate}</div>
+              <div><strong>HORÁRIO:</strong> ${record.displayTime || '-'}</div>
+              <div><strong>TURNO:</strong> ${record.displayShift || '-'}</div>
+            </div>
+            <div style="margin-top: 4px;">
+              <strong>SETOR:</strong> ${record.displaySector || '-'}
+            </div>
+          </div>
+
+          <div class="result-box">
+            <strong>RESULTADO DA INSPEÇÃO:</strong> ${statusLabel}
+          </div>
+
+          ${!isConform ? `
+            <div class="section-box">
+              <div class="section-title">Desvios Identificados (RDC 222 / NR-32)</div>
+              <ul style="margin: 0; padding-left: 18px; font-size: 11px;">
+                ${deviationsList}
+              </ul>
+            </div>
+            ${record.immediateAction ? `
+              <div class="section-box">
+                <div class="section-title">Ação Imediata Adotada</div>
+                <div style="font-size: 11px;">${record.immediateAction}</div>
+              </div>
+            ` : ''}
+            ${record.photo ? `
+              <div class="section-box">
+                <div class="section-title">Evidência Fotográfica Registrada no Tablet</div>
+                <img src="${record.photo}" class="evidence-img" alt="Evidência Fotográfica" />
+              </div>
+            ` : ''}
+            ${(record.email1 || record.email2) ? `
+              <div class="section-box">
+                <div class="section-title">Notificações Emitidas por E-mail</div>
+                <div style="font-size: 11px;">${[record.email1, record.email2].filter(Boolean).join('; ')}</div>
+              </div>
+            ` : ''}
+          ` : ''}
+
+          <div class="resp-box">
+            <div style="font-size: 10px; color: #333;">Auditor / Técnico de Segurança:</div>
+            <div style="font-size: 12px; font-weight: bold; margin-top: 2px;">${record.responsible || '-'}</div>
+            ${record.signature ? `<img src="${record.signature}" class="sig-img" alt="Assinatura" />` : ''}
+          </div>
+
+          <script>
+            window.onload = function() {
+              setTimeout(function() { window.print(); }, 300);
+            };
+          </script>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.open();
+      printWindow.document.write(wasteHtml);
+      printWindow.document.close();
+      return;
+    }
+
     const isCopa = record.recordType === 'COPA';
     const isEpi = record.recordType === 'EPI';
 
@@ -778,6 +873,28 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
                       })}
                     </tbody>
                   </table>
+
+                  {selectedItem.photo && (
+                    <div style={{ marginTop: '1.25rem' }}>
+                      <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem' }}>Evidência Fotográfica de EPI</h5>
+                      <img 
+                        src={selectedItem.photo} 
+                        alt="Evidência Fotográfica EPI" 
+                        style={{ maxWidth: '100%', maxHeight: '240px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
+                        onClick={() => window.open(selectedItem.photo, '_blank')}
+                        title="Clique para ampliar"
+                      />
+                    </div>
+                  )}
+
+                  {(selectedItem.email1 || selectedItem.email2) && (
+                    <div style={{ padding: '0.85rem', borderRadius: '6px', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', marginTop: '1rem' }}>
+                      <strong style={{ fontSize: '0.8rem', color: '#0369a1', display: 'block', marginBottom: '0.25rem' }}>Notificações Enviadas por E-mail:</strong>
+                      <span style={{ fontSize: '0.85rem', color: '#0c4a6e' }}>
+                        {[selectedItem.email1, selectedItem.email2].filter(Boolean).join(' • ')}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -824,6 +941,28 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
                       })}
                     </tbody>
                   </table>
+
+                  {selectedItem.photo && (
+                    <div style={{ marginTop: '1.25rem' }}>
+                      <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem' }}>Evidência Fotográfica de EPI</h5>
+                      <img 
+                        src={selectedItem.photo} 
+                        alt="Evidência Fotográfica EPI" 
+                        style={{ maxWidth: '100%', maxHeight: '240px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
+                        onClick={() => window.open(selectedItem.photo, '_blank')}
+                        title="Clique para ampliar"
+                      />
+                    </div>
+                  )}
+
+                  {(selectedItem.email1 || selectedItem.email2) && (
+                    <div style={{ padding: '0.85rem', borderRadius: '6px', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', marginTop: '1rem' }}>
+                      <strong style={{ fontSize: '0.8rem', color: '#0369a1', display: 'block', marginBottom: '0.25rem' }}>Notificações Enviadas por E-mail:</strong>
+                      <span style={{ fontSize: '0.85rem', color: '#0c4a6e' }}>
+                        {[selectedItem.email1, selectedItem.email2].filter(Boolean).join(' • ')}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -997,6 +1136,33 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
                     <div style={{ padding: '0.85rem', borderRadius: '6px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', marginBottom: '1.25rem' }}>
                       <strong style={{ fontSize: '0.8rem', color: '#92400e', display: 'block', marginBottom: '0.25rem' }}>Ação Imediata Adotada:</strong>
                       <span style={{ fontSize: '0.85rem', color: '#78350f' }}>{selectedItem.immediateAction}</span>
+                    </div>
+                  )}
+
+                  {selectedItem.photo && (
+                    <div style={{ marginBottom: '1.25rem' }}>
+                      <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem' }}>Evidência Fotográfica</h5>
+                      <div style={{ display: 'inline-block' }}>
+                        <img 
+                          src={selectedItem.photo} 
+                          alt="Evidência Fotográfica" 
+                          style={{ maxWidth: '100%', maxHeight: '240px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
+                          onClick={() => window.open(selectedItem.photo, '_blank')}
+                          title="Clique para ampliar"
+                        />
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+                          Foto registrada no tablet durante a auditoria (clique para ampliar)
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {(selectedItem.email1 || selectedItem.email2) && (
+                    <div style={{ padding: '0.85rem', borderRadius: '6px', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', marginBottom: '1.25rem' }}>
+                      <strong style={{ fontSize: '0.8rem', color: '#0369a1', display: 'block', marginBottom: '0.25rem' }}>Notificações Enviadas por E-mail:</strong>
+                      <span style={{ fontSize: '0.85rem', color: '#0c4a6e' }}>
+                        {[selectedItem.email1, selectedItem.email2].filter(Boolean).join(' • ')}
+                      </span>
                     </div>
                   )}
                 </div>

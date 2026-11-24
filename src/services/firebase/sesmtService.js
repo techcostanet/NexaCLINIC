@@ -21,17 +21,77 @@ export const saveEpiInspection = async (item) => {
         const { getFirestore, collection, addDoc, doc, updateDoc } = await import('firebase/firestore');
         const db = getFirestore(app);
         const dataToSave = { ...item };
+        let savedResult;
         if (dataToSave.id) {
             const id = dataToSave.id;
             delete dataToSave.id;
             const docRef = doc(db, 'sesmt_epi_inspections', id);
             await updateDoc(docRef, dataToSave);
-            return { id, ...dataToSave };
+            savedResult = { id, ...dataToSave };
         } else {
             delete dataToSave.id;
             const docRef = await addDoc(collection(db, 'sesmt_epi_inspections'), dataToSave);
-            return { id: docRef.id, ...dataToSave };
+            savedResult = { id: docRef.id, ...dataToSave };
         }
+
+        // Disparo de E-mail de Alerta se houver Não Conformidade em EPI
+        const emailRecipients = [item.email1, item.email2]
+            .map(e => (e || '').trim())
+            .filter(e => e.length > 0 && e.includes('@'));
+
+        const hasNC = Object.values(item.evaluations || {}).some(ev => ev.status === 'NC');
+        if (hasNC && emailRecipients.length > 0) {
+            try {
+                const { sendSystemEmail } = await import('./systemService');
+                const ncItems = Object.entries(item.evaluations || {})
+                    .filter(([_, ev]) => ev.status === 'NC')
+                    .map(([k, ev]) => `• ${k}: ${ev.observation || 'Não Conforme'}`)
+                    .join('<br>');
+
+                const htmlContent = `
+                  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; border: 1px solid #fecaca; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
+                    <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 18px 22px; border-radius: 8px; color: #ffffff;">
+                      <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700;">🚨 Alerta de Não Conformidade — SESMT (EPI)</h2>
+                      <p style="margin: 4px 0 0; font-size: 0.85rem; opacity: 0.95;">Checklist Diário de EPI (NR-32) • Nex-Ai CLINIC</p>
+                    </div>
+                    <div style="margin-top: 20px; font-size: 0.9rem; line-height: 1.6;">
+                      <p>Foi registrada uma <strong>Não Conformidade de EPI</strong> no setor <strong>${item.sector}</strong>.</p>
+                      <table style="width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 16px;">
+                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Data/Hora:</td><td style="padding: 8px 0; font-weight: 700;">${item.date ? item.date.split('-').reverse().join('/') : '-'} às ${item.time || '-'}</td></tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Setor:</td><td style="padding: 8px 0; font-weight: 700; color: #b91c1c;">${item.sector}</td></tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Turno:</td><td style="padding: 8px 0; font-weight: 700;">${item.shift || '-'}</td></tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Responsável:</td><td style="padding: 8px 0; font-weight: 700;">${item.enfermeiro || item.tecnicoSeguranca || '-'}</td></tr>
+                      </table>
+                      <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px;">
+                        <strong style="color: #991b1b; display: block; margin-bottom: 6px;">Itens Reprovados:</strong>
+                        <div style="color: #7f1d1d; font-size: 0.85rem;">${ncItems}</div>
+                      </div>
+                      ${item.photo ? `
+                        <div style="margin-top: 16px; margin-bottom: 16px;">
+                          <strong style="color: #0f172a; display: block; margin-bottom: 8px;">Evidência Fotográfica:</strong>
+                          <img src="${item.photo}" alt="Foto da Evidência" style="max-width: 100%; max-height: 380px; border-radius: 8px; border: 1px solid #cbd5e1; display: block;" />
+                        </div>
+                      ` : ''}
+                      <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+                        Mensagem automática gerada pelo módulo SESMT do sistema Nex-Ai CLINIC.
+                      </p>
+                    </div>
+                  </div>
+                `;
+
+                await sendSystemEmail({
+                    to: emailRecipients,
+                    subject: `🚨 [SESMT Não Conformidade EPI] ${item.sector} — ${item.date || ''} ${item.time || ''}`,
+                    body: `Alerta SESMT Não Conformidade EPI em ${item.sector}\nData: ${item.date} ${item.time}\nResponsável: ${item.enfermeiro || item.tecnicoSeguranca}`,
+                    html: htmlContent,
+                    moduleSource: 'SESMT'
+                });
+            } catch (emailErr) {
+                console.warn('Erro ao enviar e-mail de alerta EPI do SESMT:', emailErr);
+            }
+        }
+
+        return savedResult;
     } catch (e) {
         console.error('Erro Firestore saveEpiInspection =', e);
         throw e;
@@ -594,6 +654,64 @@ export const saveWasteInspection = async (item) => {
                 });
             } catch (assistErr) {
                 console.warn('Erro ao enviar comunicado de alerta no .ASSIST:', assistErr);
+            }
+        }
+
+        // Disparo de E-mail de Alerta para os Destinatários Informados
+        const emailRecipients = [item.email1, item.email2]
+            .map(e => (e || '').trim())
+            .filter(e => e.length > 0 && e.includes('@'));
+
+        if (item.status === 'NAO_CONFORME' && emailRecipients.length > 0) {
+            try {
+                const { sendSystemEmail } = await import('./systemService');
+                const devsList = (item.deviations || []).map(d => `• ${d}`).join('<br>') || 'Desvios apontados na vistoria de resíduos infectantes.';
+                const htmlContent = `
+                  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; border: 1px solid #fecaca; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
+                    <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 18px 22px; border-radius: 8px; color: #ffffff;">
+                      <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700;">🚨 Alerta de Não Conformidade — SESMT</h2>
+                      <p style="margin: 4px 0 0; font-size: 0.85rem; opacity: 0.95;">Vistoria de Resíduos Infectantes (RDC 222 / NR-32) • Nex-Ai CLINIC</p>
+                    </div>
+                    <div style="margin-top: 20px; font-size: 0.9rem; line-height: 1.6;">
+                      <p>Foi registrada uma <strong>Não Conformidade</strong> durante a inspeção presencial no setor <strong>${item.sector}</strong>.</p>
+                      <table style="width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 16px;">
+                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Data/Hora:</td><td style="padding: 8px 0; font-weight: 700;">${item.date ? item.date.split('-').reverse().join('/') : '-'} às ${item.time || '-'}</td></tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Setor:</td><td style="padding: 8px 0; font-weight: 700; color: #b91c1c;">${item.sector}</td></tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Turno:</td><td style="padding: 8px 0; font-weight: 700;">${item.shift || '-'}</td></tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Auditor:</td><td style="padding: 8px 0; font-weight: 700;">${item.auditor || 'Técnico de Segurança'}</td></tr>
+                      </table>
+                      <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px;">
+                        <strong style="color: #991b1b; display: block; margin-bottom: 6px;">Desvios Identificados:</strong>
+                        <div style="color: #7f1d1d; font-size: 0.85rem;">${devsList}</div>
+                      </div>
+                      ${item.immediateAction ? `
+                        <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px;">
+                          <strong style="color: #92400e; display: block; margin-bottom: 4px;">Ação Imediata Adotada:</strong>
+                          <span style="color: #78350f; font-size: 0.85rem;">${item.immediateAction}</span>
+                        </div>
+                      ` : ''}
+                      ${item.photo ? `
+                        <div style="margin-top: 16px; margin-bottom: 16px;">
+                          <strong style="color: #0f172a; display: block; margin-bottom: 8px;">Evidência Fotográfica Anexada:</strong>
+                          <img src="${item.photo}" alt="Foto da Evidência" style="max-width: 100%; max-height: 380px; border-radius: 8px; border: 1px solid #cbd5e1; display: block;" />
+                        </div>
+                      ` : ''}
+                      <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+                        Mensagem automática gerada pelo módulo SESMT do sistema Nex-Ai CLINIC.
+                      </p>
+                    </div>
+                  </div>
+                `;
+
+                await sendSystemEmail({
+                    to: emailRecipients,
+                    subject: `🚨 [SESMT Não Conformidade] ${item.sector} — ${item.date || ''} ${item.time || ''}`,
+                    body: `Alerta SESMT Não Conformidade em ${item.sector}\nData: ${item.date} ${item.time}\nAuditor: ${item.auditor}\nDesvios: ${(item.deviations || []).join(', ')}\nAção: ${item.immediateAction || '-'}`,
+                    html: htmlContent,
+                    moduleSource: 'SESMT'
+                });
+            } catch (emailErr) {
+                console.warn('Erro ao enviar e-mail de alerta do SESMT:', emailErr);
             }
         }
 

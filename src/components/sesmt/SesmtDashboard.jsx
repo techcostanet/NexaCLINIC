@@ -52,7 +52,12 @@ const SECTOR_OPTIONS = [
   'Bloco Cirúrgico', 
   'Reuso', 
   'Sala Amarela',
-  'Copa'
+  'Recepção',
+  'Recepção 2',
+  'Copa',
+  'Lavatório',
+  'Consultórios',
+  'Corredor Central'
 ];
 
 const SHIFT_OPTIONS = [

@@ -1,3 +1,21 @@
+## [v5.0.52] - 24 de Novembro, 2026
+### Nex-Ai CLINIC (.SESMT) — Novos Setores (Lavatório, Recepção 2, Consultórios), Evidência Fotográfica Obrigatória em Tablet para Não Conformidades, Alertas por E-mail e Dossiê Regulamentar
+- **Novos Setores Cadastrados (`sesmtConstants.js`):**
+  - Integração oficial dos setores **Lavatório**, **Recepção 2** e **Consultórios** em todos os formulários operacionais: Vistoria de Resíduos Infectantes (PGRSS), Checklist Diário de EPI (NR-32), Gerenciador de Equipamentos de Incêndio (Extintores e Hidrantes), Filtros do Dashboard e Central de Relatórios.
+- **Evidência Fotográfica Obrigatória para Não Conformidades (`DailyWasteChecklist.jsx` & `DailyEPIChecklist.jsx`):**
+  - **Otimização para Tablet:** Interface limpa com botões dedicados acionando diretamente a câmera do dispositivo (`Camera` com `capture="environment"`) ou a galeria (`Paperclip`).
+  - **Trava de Validação Regulatória:** O sistema bloqueia a gravação se o status for Não Conforme ou se houver itens reprovados sem a inclusão da foto comprobatória.
+  - **Compressão Automática em Canvas (`imageCompressor.js`):** Processamento local instantâneo redimensionando a foto e gerando arquivos otimizados (~90KB a 140KB) em alta resolução, poupando a franquia de dados móveis do tablet e garantindo gravação instantânea no Firestore.
+  - **Preview & Descarte:** Miniatura visual com badge de status, tamanho otimizado em KB e botão de exclusão rápida para refazer a captura.
+- **Disparo Automático de Alertas por E-mail (`sesmtService.js`):**
+  - Inclusão dos campos de destinatários (E-mail 1 e E-mail 2) ativados automaticamente na identificação de desvios.
+  - **Sugestão Inteligente por Setor:** Preenchimento automático com os e-mails das lideranças e do SESMT responsáveis pela área inspecionada (ex: Higienização para Lavatório, Médicos para Consultórios, Enfermagem para Salões e SESMT).
+  - **Template HTML Clínico:** Notificação enviada em tempo real pelo serviço de e-mails corporativo (`integracao@dialize.com.br`) contendo data, hora, setor, turno, auditor, lista de desvios, ação imediata e a foto comprobatória incorporada.
+- **Histórico e Central de Relatórios (`SesmtHistory.jsx` & `SesmtReportsModal.jsx`):**
+  - Visualização da foto da evidência e destinatários notificados no modal de detalhes do Histórico com ampliação em tela cheia.
+  - Impressão oficial da ficha física de vistoria de resíduos formatada em folha A4 contendo a foto da não conformidade e assinaturas digitais.
+  - Novo **Relatório 27 — Dossiê de Evidências Fotográficas de Não Conformidades** na Central de Relatórios com listagem completa, contadores analíticos e fotos das não conformidades.
+
 ## [v5.0.51] - 23 de Novembro, 2026
 ### Nex-Ai CLINIC (.FINANCE) — Filtros Combináveis em Contas a Pagar e Cadastro Ampliado de Bancos (BRB, Sicoob, Inter e Nubank)
 - **Filtros Combináveis no Contas a Pagar (`FinancePanel.jsx`):**

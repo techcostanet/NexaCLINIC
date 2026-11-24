@@ -4,7 +4,7 @@ import {
   ShieldCheck, Activity, Printer, CheckCircle2, AlertTriangle, 
   Clock, Flame, Droplet, Coffee, Shield, Search, Layers,
   Thermometer, UserCheck, AlertOctagon, CheckCheck, RefreshCw,
-  Trash2
+  Trash2, Camera
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -343,6 +343,16 @@ export default function SesmtReportsModal({
       badge: 'Resíduos',
       badgeColor: '#059669',
       icon: Trash2
+    },
+    {
+      id: 'SESMT_EVIDENCIAS_FOTOGRAFICAS_NC',
+      section: 'RESIDUOS',
+      num: 27,
+      title: '27. Evidências Fotográficas de Não Conformidades',
+      desc: 'Dossiê técnico com listagem de desvios sanitários, ações imediatas adotadas e fotos registradas via tablet.',
+      badge: 'Evidências',
+      badgeColor: '#dc2626',
+      icon: Camera
     }
   ];
 
@@ -1266,7 +1276,8 @@ export default function SesmtReportsModal({
         const sectors = [
           'Salão Hemodiálise 1', 'Salão Hemodiálise 2', 'Salão Hemodiálise 3',
           'Diálise Peritoneal', 'Hemodiálise Externa', 'Bloco Cirúrgico',
-          'Reuso', 'Sala Amarela', 'Copa', 'Corredor Central', 'Recepção'
+          'Reuso', 'Sala Amarela', 'Copa', 'Corredor Central', 'Recepção',
+          'Lavatório', 'Recepção 2', 'Consultórios'
         ];
 
         data = sectors.map(sec => {
@@ -1422,9 +1433,9 @@ export default function SesmtReportsModal({
           { header: 'Status', key: 'status' }
         ];
 
-        // Mapear por setores padrão conforme documento: D.P, Salão 1, Salão 2, Salão 3
+        // Mapear por setores padrão conforme documento: D.P, Salão 1, Salão 2, Salão 3, Lavatório, Recepção 2, Consultórios
         const sectorsMap = {};
-        const defaultSectors = ['D.P', 'Salão 1', 'Salão 2', 'Salão 3'];
+        const defaultSectors = ['D.P', 'Salão 1', 'Salão 2', 'Salão 3', 'Lavatório', 'Recepção 2', 'Consultórios'];
         defaultSectors.forEach(s => {
           sectorsMap[s] = { conform: 0, notConform: 0, total: 0 };
         });
@@ -1486,6 +1497,37 @@ export default function SesmtReportsModal({
           { label: 'Vistorias', value: totalGeral, color: '#0891b2' },
           { label: 'Conformidade', value: `${generalPC}%`, color: '#059669' },
           { label: 'Desvios', value: `${generalPNC}%`, color: parseFloat(generalPNC) > 5 ? '#dc2626' : '#10b981' }
+        ];
+        break;
+      }
+
+      case 'SESMT_EVIDENCIAS_FOTOGRAFICAS_NC': {
+        cols = [
+          { header: 'Data', key: 'displayDate' },
+          { header: 'Setor', key: 'sector' },
+          { header: 'Turno', key: 'shift' },
+          { header: 'Auditor', key: 'auditor' },
+          { header: 'Desvios', key: 'deviations' },
+          { header: 'Ação', key: 'immediateAction' },
+          { header: 'Evidência', key: 'photoThumbnail' }
+        ];
+
+        const ncWastes = filteredWastes.filter(w => w.status === 'NAO_CONFORME' || !w.isConform);
+        data = ncWastes.map(w => ({
+          displayDate: w.date ? `${formatDateBR(w.date)} ${w.time || ''}` : '-',
+          sector: w.sector || 'Geral',
+          shift: w.shift || '-',
+          auditor: w.auditor || '-',
+          deviations: (w.deviations || []).join('; ') || 'Desvio identificado na vistoria',
+          immediateAction: w.immediateAction || '-',
+          photo: w.photo || '',
+          photoThumbnail: w.photo ? '✓ Foto Anexada' : 'Pendente'
+        }));
+
+        kpis = [
+          { label: 'Não Conformidades', value: ncWastes.length, color: '#dc2626' },
+          { label: 'Com Foto', value: ncWastes.filter(w => w.photo).length, color: '#059669' },
+          { label: 'Setores com Desvio', value: new Set(ncWastes.map(w => w.sector)).size, color: '#f59e0b' }
         ];
         break;
       }
@@ -1799,6 +1841,11 @@ export default function SesmtReportsModal({
                     <option value="Reuso">Reuso</option>
                     <option value="Sala Amarela">Sala Amarela</option>
                     <option value="Copa">Copa</option>
+                    <option value="Lavatório">Lavatório</option>
+                    <option value="Recepção 2">Recepção 2</option>
+                    <option value="Consultórios">Consultórios</option>
+                    <option value="Recepção">Recepção</option>
+                    <option value="Corredor Central">Corredor Central</option>
                   </select>
                 </div>
 
@@ -1864,7 +1911,18 @@ export default function SesmtReportsModal({
                             const isStatus = col.key === 'status' || col.key === 'sigStatus';
                             return (
                               <td key={colIdx} style={styles.td}>
-                                {isStatus ? (
+                                {col.key === 'photoThumbnail' && row.photo ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                    <img 
+                                      src={row.photo} 
+                                      alt="Foto Evidência" 
+                                      style={{ width: '48px', height: '36px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
+                                      onClick={() => window.open(row.photo, '_blank')}
+                                      title="Clique para ampliar"
+                                    />
+                                    <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: '700' }}>✓ Foto</span>
+                                  </div>
+                                ) : isStatus ? (
                                   <span
                                     style={{
                                       display: 'inline-block',

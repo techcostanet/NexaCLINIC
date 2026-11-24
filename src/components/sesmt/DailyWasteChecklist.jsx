@@ -1,21 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { dbService } from '../../firebase';
-import { Save, CheckCircle2, AlertTriangle, ShieldCheck, CheckCheck, Trash2, AlertOctagon, Send, Check } from 'lucide-react';
+import { 
+  Save, 
+  CheckCircle2, 
+  AlertTriangle, 
+  ShieldCheck, 
+  Trash2, 
+  AlertOctagon, 
+  Send, 
+  Check, 
+  Camera, 
+  Paperclip, 
+  X, 
+  Mail, 
+  RotateCcw,
+  Loader2
+} from 'lucide-react';
 import SignaturePad from './SignaturePad';
+import { SESMT_SECTORS, getSectorDefaultEmails } from '../../data/sesmtConstants';
+import { compressImage } from '../../utils/imageCompressor';
 
-const SECTORS = [
-  'D.P',
-  'Salão 1', 
-  'Salão 2', 
-  'Salão 3', 
-  'Hemodiálise Externa', 
-  'Bloco Cirúrgico', 
-  'Reuso', 
-  'Sala Amarela',
-  'Recepção',
-  'Copa',
-  'Ambulatório'
-];
+const SECTORS = SESMT_SECTORS;
 
 const SHIFTS = [
   '1º Turno (Manhã)',
@@ -34,6 +39,7 @@ const WASTE_ITEMS = [
 ];
 
 export default function DailyWasteChecklist({ onSuccess, existingInspections = [] }) {
+  const initialEmails = getSectorDefaultEmails(SECTORS[0]);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     time: new Date().toTimeString().substring(0, 5),
@@ -44,11 +50,20 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
     signature: '',
     deviations: [],
     immediateAction: '',
-    notifyAssist: true
+    notifyAssist: true,
+    photo: '',
+    photoSize: 0,
+    email1: initialEmails.email1 || '',
+    email2: initialEmails.email2 || '',
+    sendEmailAlert: true
   });
 
   const [loading, setLoading] = useState(false);
+  const [compressing, setCompressing] = useState(false);
   const [message, setMessage] = useState('');
+
+  const cameraInputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Calcula estatística do setor selecionado no mês da data atual (SM-015)
   const currentMonth = (formData.date || '').substring(0, 7);
@@ -63,6 +78,17 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    if (name === 'sector') {
+      const defEmails = getSectorDefaultEmails(value);
+      setFormData(prev => ({
+        ...prev,
+        sector: value,
+        email1: defEmails.email1 || '',
+        email2: defEmails.email2 || ''
+      }));
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -84,10 +110,57 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
   };
 
   const setStatus = (newStatus) => {
+    setFormData(prev => {
+      const defEmails = getSectorDefaultEmails(prev.sector);
+      return {
+        ...prev,
+        status: newStatus,
+        deviations: newStatus === 'CONFORME' ? [] : prev.deviations,
+        email1: prev.email1 || defEmails.email1 || '',
+        email2: prev.email2 || defEmails.email2 || ''
+      };
+    });
+  };
+
+  const handleResetEmails = () => {
+    const defEmails = getSectorDefaultEmails(formData.sector);
     setFormData(prev => ({
       ...prev,
-      status: newStatus,
-      deviations: newStatus === 'CONFORME' ? [] : prev.deviations
+      email1: defEmails.email1 || '',
+      email2: defEmails.email2 || ''
+    }));
+  };
+
+  // Captura e compressão de foto otimizada para tablet
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCompressing(true);
+    setMessage('');
+    try {
+      const compressed = await compressImage(file, 1280, 1280, 0.75);
+      setFormData(prev => ({
+        ...prev,
+        photo: compressed.dataUrl,
+        photoSize: compressed.sizeBytes
+      }));
+    } catch (err) {
+      console.error('Erro ao processar imagem:', err);
+      setMessage('Falha ao processar a foto. Tente novamente.');
+    } finally {
+      setCompressing(false);
+      // Limpa os inputs para permitir nova seleção do mesmo arquivo se necessário
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setFormData(prev => ({
+      ...prev,
+      photo: '',
+      photoSize: 0
     }));
   };
 
@@ -95,6 +168,12 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
     e.preventDefault();
     if (!formData.auditor.trim()) {
       setMessage('Informe o nome do auditor responsável.');
+      return;
+    }
+
+    // Regra Obrigatória: Foto comprovatória exigida para Não Conformidade
+    if (formData.status === 'NAO_CONFORME' && !formData.photo) {
+      setMessage('Para registrar uma Não Conformidade, é obrigatório anexar uma foto comprobatória.');
       return;
     }
 
@@ -107,13 +186,18 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
       });
       setMessage('Vistoria de resíduos infectantes gravada com sucesso!');
       
-      // Reset formulário mantendo auditor
+      // Reset formulário mantendo auditor e restaurando e-mails padrão
+      const defEmails = getSectorDefaultEmails(formData.sector);
       setFormData(prev => ({
         ...prev,
         status: 'CONFORME',
         deviations: [],
         immediateAction: '',
-        signature: ''
+        signature: '',
+        photo: '',
+        photoSize: 0,
+        email1: defEmails.email1 || '',
+        email2: defEmails.email2 || ''
       }));
 
       if (onSuccess) onSuccess();
@@ -188,7 +272,7 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
           </div>
 
           <div style={styles.fieldGroup}>
-            <label style={styles.label}>Hora</label>
+            <label style={styles.label}>Horário</label>
             <input 
               type="time" 
               name="time" 
@@ -305,32 +389,171 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
           </div>
         </div>
 
-        {/* Ação Imediata (se Não Conforme) */}
+        {/* Bloco Exclusivo de Não Conformidade (Foto Obrigatória, Ação e E-mails) */}
         {formData.status === 'NAO_CONFORME' && (
-          <div style={styles.actionBox}>
-            <label style={styles.label}>Ação Imediata Adotada</label>
-            <input 
-              type="text" 
-              name="immediateAction" 
-              placeholder="Ex.: Troca imediata do saco plástico, manutenção no pedal e alinhamento com a equipe"
-              value={formData.immediateAction} 
-              onChange={handleChange} 
-              style={styles.input} 
-            />
-
-            {/* SM-016: Notificação Automática no Feed Assistencial */}
-            <div style={styles.notifyRow}>
-              <label style={styles.notifyLabel}>
+          <div style={styles.ncContainer}>
+            {/* 1. Registro Fotográfico Obrigatório */}
+            <div style={styles.photoSection}>
+              <div style={styles.photoHeader}>
+                <div>
+                  <label style={styles.labelSection}>Evidência Fotográfica</label>
+                  <span style={styles.photoSubtext}>
+                    Obrigatório no registro de Não Conformidade. Utilize a câmera do tablet ou anexe da galeria.
+                  </span>
+                </div>
+                {/* Inputs Ocultos */}
                 <input 
-                  type="checkbox" 
-                  name="notifyAssist" 
-                  checked={formData.notifyAssist} 
-                  onChange={handleChange} 
-                  style={{ accentColor: '#059669', width: '16px', height: '16px' }}
+                  type="file" 
+                  ref={cameraInputRef} 
+                  accept="image/*" 
+                  capture="environment" 
+                  style={{ display: 'none' }} 
+                  onChange={handlePhotoUpload} 
                 />
-                <Send size={15} color="#059669" />
-                <span>Notificar equipe do setor no mural do <strong>.ASSIST</strong></span>
-              </label>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  accept="image/*" 
+                  style={{ display: 'none' }} 
+                  onChange={handlePhotoUpload} 
+                />
+
+                {/* Botões de Ação Touch (Somente Ícones com Tooltip para Tablet) */}
+                <div style={styles.iconButtonsGroup}>
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    disabled={compressing}
+                    style={styles.iconActionBtn}
+                    title="Tirar foto com a câmera do tablet"
+                  >
+                    <Camera size={22} color="#059669" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={compressing}
+                    style={styles.iconActionBtn}
+                    title="Anexar foto da galeria"
+                  >
+                    <Paperclip size={22} color="#0284c7" />
+                  </button>
+                </div>
+              </div>
+
+              {compressing && (
+                <div style={styles.compressingBox}>
+                  <Loader2 size={18} className="animate-spin" color="#059669" />
+                  <span>Otimizando imagem para alta velocidade...</span>
+                </div>
+              )}
+
+              {/* Preview da Foto Capturada */}
+              {formData.photo ? (
+                <div style={styles.photoPreviewCard}>
+                  <div style={styles.photoWrapper}>
+                    <img 
+                      src={formData.photo} 
+                      alt="Evidência Fotográfica da Não Conformidade" 
+                      style={styles.photoImg} 
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      style={styles.photoRemoveBtn}
+                      title="Excluir foto para tirar outra"
+                    >
+                      <X size={16} color="#ffffff" />
+                    </button>
+                  </div>
+                  <div style={styles.photoMeta}>
+                    <span style={styles.photoBadgeSuccess}>✓ Evidência Anexada</span>
+                    <span style={styles.photoSizeText}>
+                      Tamanho otimizado: {Math.round((formData.photoSize || 0) / 1024)} KB
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div style={styles.photoRequiredAlert}>
+                  <AlertTriangle size={18} color="#dc2626" />
+                  <span>Foto comprobatória pendente. Clique na <strong>Câmera</strong> ou no <strong>Anexo</strong> acima para registrar.</span>
+                </div>
+              )}
+            </div>
+
+            {/* 2. Ação Imediata Adotada */}
+            <div style={styles.actionBox}>
+              <label style={styles.label}>Ação Imediata</label>
+              <input 
+                type="text" 
+                name="immediateAction" 
+                placeholder="Ex.: Troca imediata do saco plástico, manutenção no pedal e alinhamento com a equipe"
+                value={formData.immediateAction} 
+                onChange={handleChange} 
+                style={styles.input} 
+              />
+
+              {/* Notificação Automática no Feed Assistencial (.ASSIST) */}
+              <div style={styles.notifyRow}>
+                <label style={styles.notifyLabel}>
+                  <input 
+                    type="checkbox" 
+                    name="notifyAssist" 
+                    checked={formData.notifyAssist} 
+                    onChange={handleChange} 
+                    style={{ accentColor: '#059669', width: '16px', height: '16px' }}
+                  />
+                  <Send size={15} color="#059669" />
+                  <span>Notificar equipe do setor no mural do <strong>.ASSIST</strong></span>
+                </label>
+              </div>
+            </div>
+
+            {/* 3. Disparo Imediato por E-mail (Sugestão 1: Preenchimento Automático por Setor) */}
+            <div style={styles.emailBox}>
+              <div style={styles.emailHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Mail size={18} color="#0284c7" />
+                  <label style={{ ...styles.labelSection, margin: 0 }}>Notificação por E-mail</label>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResetEmails}
+                  style={styles.resetEmailBtn}
+                  title="Restaurar e-mails sugeridos para este setor"
+                >
+                  <RotateCcw size={13} />
+                  <span>Restaurar</span>
+                </button>
+              </div>
+              <span style={styles.emailSubtext}>
+                E-mails sugeridos automaticamente para o setor <strong>{formData.sector}</strong>. Você pode alterar ou informar novos destinatários.
+              </span>
+
+              <div style={styles.emailGrid}>
+                <div style={styles.fieldGroup}>
+                  <label style={styles.label}>E-mail 1</label>
+                  <input 
+                    type="email" 
+                    name="email1" 
+                    placeholder="ex.: lideranca@dialize.com.br"
+                    value={formData.email1} 
+                    onChange={handleChange} 
+                    style={styles.input} 
+                  />
+                </div>
+                <div style={styles.fieldGroup}>
+                  <label style={styles.label}>E-mail 2</label>
+                  <input 
+                    type="email" 
+                    name="email2" 
+                    placeholder="ex.: sesmt@dialize.com.br"
+                    value={formData.email2} 
+                    onChange={handleChange} 
+                    style={styles.input} 
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -338,7 +561,7 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
         {/* Identificação do Auditor e Rubrica */}
         <div style={styles.gridFooter}>
           <div style={styles.fieldGroup}>
-            <label style={styles.label}>Auditor Responsável</label>
+            <label style={styles.label}>Auditor</label>
             <input 
               type="text" 
               name="auditor" 
@@ -351,7 +574,7 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
           </div>
 
           <div style={styles.signatureBox}>
-            <label style={styles.label}>Assinatura Digital</label>
+            <label style={styles.label}>Assinatura</label>
             <SignaturePad 
               value={formData.signature}
               onChange={(sig) => setFormData(prev => ({ ...prev, signature: sig }))}
@@ -363,10 +586,10 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
         <div style={styles.submitContainer}>
           <button 
             type="submit" 
-            disabled={loading}
+            disabled={loading || compressing}
             style={{
               ...styles.submitBtn,
-              opacity: loading ? 0.7 : 1
+              opacity: (loading || compressing) ? 0.7 : 1
             }}
           >
             <Save size={18} />
@@ -480,7 +703,7 @@ const styles = {
     fontWeight: '700',
     color: 'var(--text-primary, #1e293b)',
     display: 'block',
-    marginBottom: '0.5rem'
+    marginBottom: '0.35rem'
   },
   input: {
     padding: '0.55rem 0.75rem',
@@ -587,10 +810,136 @@ const styles = {
   itemLabel: {
     fontSize: '0.85rem'
   },
+  ncContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    padding: '1rem',
+    backgroundColor: '#fffaf0',
+    borderRadius: '10px',
+    border: '1px solid #fed7aa'
+  },
+  photoSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    padding: '1rem',
+    backgroundColor: '#ffffff',
+    borderRadius: '8px',
+    border: '1px solid #fecaca'
+  },
+  photoHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.75rem'
+  },
+  photoSubtext: {
+    fontSize: '0.75rem',
+    color: '#64748b',
+    display: 'block'
+  },
+  iconButtonsGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem'
+  },
+  iconActionBtn: {
+    width: '46px',
+    height: '46px',
+    borderRadius: '10px',
+    border: '1.5px solid #cbd5e1',
+    backgroundColor: '#f8fafc',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  compressingBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.5rem 0.75rem',
+    backgroundColor: '#ecfdf5',
+    color: '#065f46',
+    borderRadius: '6px',
+    fontSize: '0.8rem'
+  },
+  photoPreviewCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    padding: '0.75rem',
+    backgroundColor: '#f8fafc',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    flexWrap: 'wrap'
+  },
+  photoWrapper: {
+    position: 'relative',
+    width: '120px',
+    height: '90px',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    border: '1px solid #cbd5e1',
+    flexShrink: 0
+  },
+  photoImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover'
+  },
+  photoRemoveBtn: {
+    position: 'absolute',
+    top: '4px',
+    right: '4px',
+    width: '24px',
+    height: '24px',
+    borderRadius: '50%',
+    backgroundColor: '#ef4444',
+    border: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.3)'
+  },
+  photoMeta: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem'
+  },
+  photoBadgeSuccess: {
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    color: '#15803d',
+    backgroundColor: '#dcfce7',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '4px',
+    alignSelf: 'flex-start'
+  },
+  photoSizeText: {
+    fontSize: '0.75rem',
+    color: '#64748b'
+  },
+  photoRequiredAlert: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.65rem 0.85rem',
+    backgroundColor: '#fef2f2',
+    border: '1px dashed #ef4444',
+    borderRadius: '6px',
+    color: '#b91c1c',
+    fontSize: '0.8rem',
+    fontWeight: '600'
+  },
   actionBox: {
     padding: '1rem',
     borderRadius: '8px',
-    backgroundColor: '#fffbeb',
+    backgroundColor: '#ffffff',
     border: '1px solid #fde68a',
     display: 'flex',
     flexDirection: 'column',
@@ -608,6 +957,42 @@ const styles = {
     fontSize: '0.8rem',
     color: '#92400e',
     cursor: 'pointer'
+  },
+  emailBox: {
+    padding: '1rem',
+    borderRadius: '8px',
+    backgroundColor: '#ffffff',
+    border: '1px solid #bae6fd',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem'
+  },
+  emailHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  resetEmailBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.25rem 0.5rem',
+    borderRadius: '4px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: '#f8fafc',
+    color: '#475569',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    cursor: 'pointer'
+  },
+  emailSubtext: {
+    fontSize: '0.75rem',
+    color: '#64748b'
+  },
+  emailGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '0.75rem'
   },
   gridFooter: {
     display: 'grid',

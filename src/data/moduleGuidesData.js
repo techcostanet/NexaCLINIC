@@ -3360,6 +3360,17 @@ export const MODULE_GUIDES = {
           'Clique no botão "Etiqueta" para gerar e imprimir a etiqueta oficial de inspeção com vistos mensais para fixar no equipamento.',
           'Utilize os botões globais "Inventário" (para imprimir o censo geral patrimonial) e "Sincronizar" (para atualizar os dados em nuvem).'
         ]
+      },
+      {
+        title: 'Como Registrar uma Não Conformidade com Foto no Tablet e Disparar Alerta por E-mail',
+        steps: [
+          'No formulário de Vistoria de Resíduos ou Checklist de EPI, selecione o Setor auditado (incluindo Lavatório, Recepção 2 ou Consultórios).',
+          'Ao identificar desvios sanitários ou irregularidades de EPI, selecione o status "Não Conforme".',
+          'O sistema abrirá a seção de Evidência Fotográfica: clique no ícone da Câmera para disparar a lente do tablet ou no Anexo para escolher uma foto da galeria.',
+          'A foto é automaticamente otimizada e comprimida no navegador em menos de 1 segundo, mantendo nitidez para auditoria sem sobrecarregar a rede móvel.',
+          'Os campos de "E-mail 1" e "E-mail 2" virão preenchidos automaticamente com base no setor auditado (ex: higienizacao@dialize.com.br, enfermagem@dialize.com.br, medicos@dialize.com.br e sesmt@dialize.com.br), podendo ser alterados livremente.',
+          'Descreva a Ação Imediata adotada, colha a rubrica do responsável e clique em "Salvar Vistoria". O registro é salvo e os alertas por e-mail são enviados instantaneamente.'
+        ]
       }
     ],
     duvidas: [
@@ -3394,6 +3405,18 @@ export const MODULE_GUIDES = {
       {
         pergunta: 'Como funciona a alternância entre Modo Cartões e Modo Tabela?',
         resposta: 'No topo de cada formulário e na aba de histórico existe um seletor visual com os botões "Cartões" e "Tabela". Em telas menores (celulares e tablets), o sistema já abre automaticamente no modo Cartões para facilitar a operação portátil.'
+      },
+      {
+        pergunta: 'Por que a foto é obrigatória ao registrar uma Não Conformidade no SESMT?',
+        resposta: 'Para garantir rigor de auditoria sanitária e respaldo legal perante a Vigilância Sanitária (VISA) e o Ministério do Trabalho (NR-32/NR-1). O sistema exige evidência visual antes de salvar desvios, disponibilizando botões rápidos para a câmera do tablet ou galeria com compressão automática em Canvas para não pesar a rede.'
+      },
+      {
+        pergunta: 'Como funciona o preenchimento automático de e-mails de alerta por setor?',
+        resposta: 'Ao selecionar o setor inspecionado (ex: Lavatório, Salão 1, Copa, Consultórios), o sistema preenche automaticamente os e-mails das lideranças e do SESMT responsáveis pela área. O auditor pode revisar, editar ou adicionar destinatários diretamente na tela do tablet antes de salvar.'
+      },
+      {
+        pergunta: 'Quais novos setores foram incorporados ao módulo SESMT?',
+        resposta: 'Foram incluídos os setores Lavatório, Recepção 2 e Consultórios em todos os checklists diários (Resíduos e EPI), no Gerenciador de Equipamentos de Incêndio (Extintores e Hidrantes), na aba de Histórico e na Central de Relatórios Regulamentares.'
       }
     ]
   },

@@ -6,6 +6,19 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.52',
+      date: '24/11/2026',
+      title: 'Nex-Ai CLINIC (.SESMT) — Novos Setores (Lavatório, Recepção 2, Consultórios), Evidência Fotográfica Obrigatória em Tablet para Não Conformidades, Alertas por E-mail e Dossiê Regulamentar',
+      description: 'Implementação de protocolo rígido de conformidade e auditoria sanitária no módulo SESMT com foco em tablets operacionais: 1) Expansão de Setores: cadastro oficial de Lavatório, Recepção 2 e Consultórios em todos os checklists, histórico, equipamentos e relatórios; 2) Evidência Fotográfica Obrigatória: trava que exige foto comprobatória ao apontar não conformidades em resíduos e EPI, com botões dedicados de Câmera (disparo direto do tablet) e Anexo (galeria); 3) Compressão em Canvas: otimização local ultrarrápida gerando imagens leves e nítidas (~90KB a 140KB) sem engasgar conexões móveis; 4) Notificação Imediata por E-mail: campos E-mail 1 e E-mail 2 com preenchimento sugerido automaticamente por setor e disparo em tempo real com a foto incorporada; 5) Histórico & Central de Relatórios: visualização ampliada da foto nos detalhes de inspeção, impressão de ficha física com foto e novo Relatório 27 (Dossiê de Evidências Fotográficas de Não Conformidades).',
+      changes: [
+        { type: 'Novos Setores', text: 'Lavatório, Recepção 2 e Consultórios integrados em todos os formulários, extintores/hidrantes e relatórios.' },
+        { type: 'Foto Obrigatória no Tablet', text: 'Botões diretos de Câmera e Galeria com bloqueio de gravação sem foto comprobatória em não conformidades.' },
+        { type: 'Compressão em Canvas', text: 'Processamento local no navegador reduzindo fotos de até 15MB para ~100KB em alta definição.' },
+        { type: 'Alertas por E-mail', text: 'Disparo automático com layout clínico e sugestão inteligente de e-mails de liderança por setor.' },
+        { type: 'Histórico & Relatório 27', text: 'Dossiê de evidências com miniatura de fotos, ampliação e impressão de ficha oficial com foto.' }
+      ]
+    },
+    {
       version: 'v5.0.51',
       date: '23/11/2026',
       title: 'Nex-Ai CLINIC (.FINANCE) — Filtros Combináveis em Contas a Pagar e Cadastro Ampliado de Bancos (BRB, Sicoob, Inter e Nubank)',

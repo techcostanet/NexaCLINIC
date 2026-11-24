@@ -1,18 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { dbService } from '../../firebase';
-import { Save, CheckCircle2, AlertTriangle, LayoutGrid, Table, ShieldCheck, CheckCheck } from 'lucide-react';
+import { 
+  Save, 
+  CheckCircle2, 
+  AlertTriangle, 
+  LayoutGrid, 
+  Table, 
+  ShieldCheck, 
+  CheckCheck,
+  Camera,
+  Paperclip,
+  X,
+  Mail,
+  RotateCcw,
+  Loader2
+} from 'lucide-react';
 import SignaturePad from './SignaturePad';
+import { SESMT_SECTORS, getSectorDefaultEmails } from '../../data/sesmtConstants';
+import { compressImage } from '../../utils/imageCompressor';
 
-const SECTORS = [
-  'Salão Hemodiálise 1', 
-  'Salão Hemodiálise 2', 
-  'Salão Hemodiálise 3', 
-  'Diálise Peritoneal', 
-  'Hemodiálise Externa', 
-  'Bloco Cirúrgico', 
-  'Reuso', 
-  'Sala Amarela'
-];
+const SECTORS = SESMT_SECTORS;
 
 const SHIFTS = [
   '1º Turno (Manhã)',
@@ -35,6 +42,7 @@ const ITEMS = [
 ];
 
 export default function DailyEPIChecklist({ onSuccess }) {
+  const initialEmails = getSectorDefaultEmails(SECTORS[0]);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     time: new Date().toTimeString().substring(0, 5),
@@ -43,6 +51,11 @@ export default function DailyEPIChecklist({ onSuccess }) {
     enfermeiro: '',
     tecnicoSeguranca: '',
     signature: '',
+    photo: '',
+    photoSize: 0,
+    email1: initialEmails.email1 || '',
+    email2: initialEmails.email2 || '',
+    sendEmailAlert: true,
     evaluations: ITEMS.reduce((acc, item) => ({
       ...acc,
       [item.id]: { status: 'C', observation: '' }
@@ -50,8 +63,12 @@ export default function DailyEPIChecklist({ onSuccess }) {
   });
 
   const [loading, setLoading] = useState(false);
+  const [compressing, setCompressing] = useState(false);
   const [message, setMessage] = useState('');
   const [viewMode, setViewMode] = useState('cards');
+
+  const cameraInputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (window.innerWidth >= 1024) {
@@ -63,6 +80,16 @@ export default function DailyEPIChecklist({ onSuccess }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'sector') {
+      const defEmails = getSectorDefaultEmails(value);
+      setFormData(prev => ({
+        ...prev,
+        sector: value,
+        email1: defEmails.email1 || '',
+        email2: defEmails.email2 || ''
+      }));
+      return;
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -90,8 +117,60 @@ export default function DailyEPIChecklist({ onSuccess }) {
     }));
   };
 
+  const handleResetEmails = () => {
+    const defEmails = getSectorDefaultEmails(formData.sector);
+    setFormData(prev => ({
+      ...prev,
+      email1: defEmails.email1 || '',
+      email2: defEmails.email2 || ''
+    }));
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCompressing(true);
+    setMessage('');
+    try {
+      const compressed = await compressImage(file, 1280, 1280, 0.75);
+      setFormData(prev => ({
+        ...prev,
+        photo: compressed.dataUrl,
+        photoSize: compressed.sizeBytes
+      }));
+    } catch (err) {
+      console.error('Erro ao processar imagem de EPI:', err);
+      setMessage('Falha ao processar a foto. Tente novamente.');
+    } finally {
+      setCompressing(false);
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setFormData(prev => ({
+      ...prev,
+      photo: '',
+      photoSize: 0
+    }));
+  };
+
+  let totalNC = 0;
+  Object.values(formData.evaluations || {}).forEach(ev => {
+    if (ev.status === 'NC') totalNC++;
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validação obrigatória: Foto se houver Não Conformidade
+    if (totalNC > 0 && !formData.photo) {
+      setMessage('Para registrar itens Não Conformes, é obrigatório anexar uma foto comprobatória.');
+      return;
+    }
+
     setLoading(true);
     setMessage('');
     try {
@@ -100,6 +179,18 @@ export default function DailyEPIChecklist({ onSuccess }) {
         createdAt: new Date().toISOString()
       });
       setMessage('Checklist de EPI salvo com sucesso!');
+      
+      // Reset
+      const defEmails = getSectorDefaultEmails(formData.sector);
+      setFormData(prev => ({
+        ...prev,
+        photo: '',
+        photoSize: 0,
+        email1: defEmails.email1 || '',
+        email2: defEmails.email2 || '',
+        signature: ''
+      }));
+
       if (onSuccess) onSuccess();
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -109,11 +200,6 @@ export default function DailyEPIChecklist({ onSuccess }) {
       setLoading(false);
     }
   };
-
-  let totalNC = 0;
-  Object.values(formData.evaluations || {}).forEach(ev => {
-    if (ev.status === 'NC') totalNC++;
-  });
 
   return (
     <div style={styles.card}>
@@ -152,7 +238,7 @@ export default function DailyEPIChecklist({ onSuccess }) {
       </div>
       
       {message && (
-        <div style={{ ...styles.alert, backgroundColor: message.includes('Erro') ? '#fef2f2' : '#f0fdf4', color: message.includes('Erro') ? '#991b1b' : '#166534', border: `1px solid ${message.includes('Erro') ? '#f87171' : '#4ade80'}` }}>
+        <div style={{ ...styles.alert, backgroundColor: message.includes('Erro') || message.includes('obrigatório') ? '#fef2f2' : '#f0fdf4', color: message.includes('Erro') || message.includes('obrigatório') ? '#991b1b' : '#166534', border: `1px solid ${message.includes('Erro') || message.includes('obrigatório') ? '#f87171' : '#4ade80'}` }}>
           {message}
         </div>
       )}
@@ -303,14 +389,14 @@ export default function DailyEPIChecklist({ onSuccess }) {
           </div>
         )}
 
-        {/* 2. Modo Tabela Clássica (Desktop) */}
+        {/* 2. Modo Tabela (Desktop) */}
         {viewMode === 'table' && (
-          <div style={styles.tableContainer}>
+          <div style={styles.tableResponsive}>
             <table style={styles.table}>
-              <thead style={styles.tableHead}>
+              <thead>
                 <tr>
-                  <th style={styles.th}>Descrição</th>
-                  <th style={{...styles.th, textAlign: 'center'}}>Avaliação</th>
+                  <th style={styles.th}>Item</th>
+                  <th style={{ ...styles.th, textAlign: 'center', width: '220px' }}>Avaliação</th>
                   <th style={styles.th}>Observações</th>
                 </tr>
               </thead>
@@ -318,15 +404,15 @@ export default function DailyEPIChecklist({ onSuccess }) {
                 {ITEMS.map(item => (
                   <tr key={item.id} style={styles.tr}>
                     <td style={styles.td}>
-                      {item.label}
+                      <strong>{item.label}</strong>
                     </td>
-                    <td style={{...styles.td, textAlign: 'center'}}>
+                    <td style={{ ...styles.td, textAlign: 'center' }}>
                       <div style={styles.radioGroup}>
                         <label style={styles.radioLabel}>
                           <input 
                             type="radio" 
-                            name={`status-${item.id}`} 
-                            value="C" 
+                            name={`status_${item.id}`} 
+                            value="C"
                             checked={formData.evaluations[item.id].status === 'C'}
                             onChange={(e) => handleEvaluationChange(item.id, 'status', e.target.value)}
                           />
@@ -335,8 +421,8 @@ export default function DailyEPIChecklist({ onSuccess }) {
                         <label style={styles.radioLabel}>
                           <input 
                             type="radio" 
-                            name={`status-${item.id}`} 
-                            value="NC" 
+                            name={`status_${item.id}`} 
+                            value="NC"
                             checked={formData.evaluations[item.id].status === 'NC'}
                             onChange={(e) => handleEvaluationChange(item.id, 'status', e.target.value)}
                           />
@@ -345,8 +431,8 @@ export default function DailyEPIChecklist({ onSuccess }) {
                         <label style={styles.radioLabel}>
                           <input 
                             type="radio" 
-                            name={`status-${item.id}`} 
-                            value="NA" 
+                            name={`status_${item.id}`} 
+                            value="NA"
                             checked={formData.evaluations[item.id].status === 'NA'}
                             onChange={(e) => handleEvaluationChange(item.id, 'status', e.target.value)}
                           />
@@ -367,6 +453,138 @@ export default function DailyEPIChecklist({ onSuccess }) {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Bloco de Não Conformidade (Exibido se houver ao menos 1 item NC) */}
+        {totalNC > 0 && (
+          <div style={styles.ncContainer}>
+            {/* Foto Obrigatória */}
+            <div style={styles.photoSection}>
+              <div style={styles.photoHeader}>
+                <div>
+                  <label style={styles.labelSection}>Evidência Fotográfica</label>
+                  <span style={styles.photoSubtext}>
+                    Obrigatório no registro de Não Conformidade ({totalNC} item(ns) reprovado(s)).
+                  </span>
+                </div>
+                <input 
+                  type="file" 
+                  ref={cameraInputRef} 
+                  accept="image/*" 
+                  capture="environment" 
+                  style={{ display: 'none' }} 
+                  onChange={handlePhotoUpload} 
+                />
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  accept="image/*" 
+                  style={{ display: 'none' }} 
+                  onChange={handlePhotoUpload} 
+                />
+                <div style={styles.iconButtonsGroup}>
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    disabled={compressing}
+                    style={styles.iconActionBtn}
+                    title="Tirar foto com a câmera do tablet"
+                  >
+                    <Camera size={22} color="#0891b2" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={compressing}
+                    style={styles.iconActionBtn}
+                    title="Anexar foto da galeria"
+                  >
+                    <Paperclip size={22} color="#0284c7" />
+                  </button>
+                </div>
+              </div>
+
+              {compressing && (
+                <div style={styles.compressingBox}>
+                  <Loader2 size={18} className="animate-spin" color="#0891b2" />
+                  <span>Otimizando imagem para alta velocidade...</span>
+                </div>
+              )}
+
+              {formData.photo ? (
+                <div style={styles.photoPreviewCard}>
+                  <div style={styles.photoWrapper}>
+                    <img src={formData.photo} alt="Foto da Evidência EPI" style={styles.photoImg} />
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      style={styles.photoRemoveBtn}
+                      title="Excluir foto"
+                    >
+                      <X size={16} color="#ffffff" />
+                    </button>
+                  </div>
+                  <div style={styles.photoMeta}>
+                    <span style={styles.photoBadgeSuccess}>✓ Evidência Anexada</span>
+                    <span style={styles.photoSizeText}>
+                      Tamanho otimizado: {Math.round((formData.photoSize || 0) / 1024)} KB
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div style={styles.photoRequiredAlert}>
+                  <AlertTriangle size={18} color="#dc2626" />
+                  <span>Foto comprobatória pendente. Clique na <strong>Câmera</strong> ou no <strong>Anexo</strong> acima.</span>
+                </div>
+              )}
+            </div>
+
+            {/* Notificação por E-mail */}
+            <div style={styles.emailBox}>
+              <div style={styles.emailHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Mail size={18} color="#0284c7" />
+                  <label style={{ ...styles.labelSection, margin: 0 }}>Notificação por E-mail</label>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResetEmails}
+                  style={styles.resetEmailBtn}
+                  title="Restaurar e-mails sugeridos para este setor"
+                >
+                  <RotateCcw size={13} />
+                  <span>Restaurar</span>
+                </button>
+              </div>
+              <span style={styles.emailSubtext}>
+                E-mails sugeridos automaticamente para o setor <strong>{formData.sector}</strong>.
+              </span>
+              <div style={styles.emailGrid}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>E-mail 1</label>
+                  <input 
+                    type="email" 
+                    name="email1" 
+                    placeholder="ex.: lideranca@dialize.com.br"
+                    value={formData.email1} 
+                    onChange={handleChange} 
+                    style={styles.input} 
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>E-mail 2</label>
+                  <input 
+                    type="email" 
+                    name="email2" 
+                    placeholder="ex.: sesmt@dialize.com.br"
+                    value={formData.email2} 
+                    onChange={handleChange} 
+                    style={styles.input} 
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -411,8 +629,8 @@ export default function DailyEPIChecklist({ onSuccess }) {
         <div style={styles.actions}>
           <button 
             type="submit" 
-            disabled={loading}
-            style={loading ? {...styles.btnPrimary, opacity: 0.7} : styles.btnPrimary}
+            disabled={loading || compressing}
+            style={(loading || compressing) ? {...styles.btnPrimary, opacity: 0.7} : styles.btnPrimary}
           >
             <Save size={18} />
             <span>{loading ? 'Salvando...' : 'Salvar'}</span>
@@ -452,29 +670,27 @@ const styles = {
   },
   headerActions: {
     display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    flexWrap: 'wrap'
+    gap: '0.75rem'
   },
   viewToggleGroup: {
     display: 'flex',
     backgroundColor: '#f1f5f9',
-    padding: '0.2rem',
-    borderRadius: '8px'
+    borderRadius: '8px',
+    padding: '3px',
+    border: '1px solid #e2e8f0'
   },
   viewToggleBtn: {
-    display: 'inline-flex',
+    display: 'flex',
     alignItems: 'center',
-    gap: '0.35rem',
-    padding: '0.35rem 0.7rem',
+    gap: '0.4rem',
+    padding: '0.4rem 0.75rem',
     borderRadius: '6px',
     border: 'none',
     backgroundColor: 'transparent',
     color: '#64748b',
-    fontSize: '0.78rem',
+    fontSize: '0.8rem',
     fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.15s'
+    cursor: 'pointer'
   },
   viewToggleBtnActive: {
     backgroundColor: '#ffffff',
@@ -482,223 +698,381 @@ const styles = {
     boxShadow: '0 1px 2px rgba(0,0,0,0.08)'
   },
   alert: {
-    padding: '0.85rem 1rem',
+    padding: '0.75rem 1rem',
     borderRadius: '8px',
     marginBottom: '1.25rem',
-    fontWeight: '600',
-    fontSize: '0.85rem'
+    fontSize: '0.85rem',
+    fontWeight: '600'
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem',
+    gap: '1.25rem'
   },
   grid4: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-    gap: '0.75rem',
+    gap: '1rem'
   },
   grid2: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    gap: '1rem',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: '1rem'
   },
   formGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.4rem',
+    gap: '0.35rem'
   },
   label: {
-    fontSize: '0.82rem',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    color: '#475569'
+  },
+  labelSection: {
+    fontSize: '0.875rem',
     fontWeight: '700',
-    color: '#475569',
+    color: '#0f172a',
+    display: 'block',
+    marginBottom: '0.35rem'
   },
   input: {
-    padding: '0.65rem 0.75rem',
-    borderRadius: '8px',
-    border: '1px solid #cbd5e1',
-    fontSize: '0.9rem',
-    width: '100%',
-    boxSizing: 'border-box'
-  },
-  inputObservation: {
     padding: '0.55rem 0.75rem',
     borderRadius: '6px',
     border: '1px solid #cbd5e1',
-    fontSize: '0.85rem',
-    width: '100%',
-    boxSizing: 'border-box',
-    backgroundColor: '#ffffff'
+    backgroundColor: '#f8fafc',
+    color: '#0f172a',
+    fontSize: '0.85rem'
   },
   quickBar: {
     display: 'flex',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '0.75rem',
+    justifyContent: 'space-between',
+    padding: '0.65rem 1rem',
     backgroundColor: '#f8fafc',
-    padding: '0.75rem 1rem',
     borderRadius: '8px',
-    border: '1px solid #e2e8f0'
+    border: '1px solid #e2e8f0',
+    flexWrap: 'wrap',
+    gap: '0.5rem'
   },
   quickConformBtn: {
-    display: 'inline-flex',
+    display: 'flex',
     alignItems: 'center',
     gap: '0.4rem',
     padding: '0.45rem 0.85rem',
-    backgroundColor: '#10b981',
-    color: '#ffffff',
-    border: 'none',
     borderRadius: '6px',
+    backgroundColor: '#dcfce7',
+    color: '#15803d',
+    border: '1px solid #bbf7d0',
     fontSize: '0.8rem',
     fontWeight: '700',
     cursor: 'pointer'
   },
   quickStatText: {
-    fontSize: '0.8rem',
+    fontSize: '0.82rem',
     fontWeight: '700',
-    color: '#334155'
+    color: '#0f172a'
   },
   cardsGrid: {
-    display: 'flex',
-    flexDirection: 'column',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
     gap: '0.85rem'
   },
   itemCard: {
+    padding: '0.85rem',
+    borderRadius: '8px',
     border: '1px solid #e2e8f0',
-    borderRadius: '10px',
-    padding: '1rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+    gap: '0.65rem',
+    transition: 'all 0.15s ease'
   },
   itemCardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
+    alignItems: 'flex-start',
     gap: '0.5rem'
   },
   itemLabel: {
-    fontSize: '0.95rem',
-    fontWeight: '700',
-    color: '#0f172a'
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    color: '#0f172a',
+    lineHeight: '1.3'
   },
   statusBadge: {
-    fontSize: '0.75rem',
+    fontSize: '0.72rem',
     fontWeight: '700',
-    padding: '0.2rem 0.6rem',
-    borderRadius: '999px'
+    padding: '0.2rem 0.5rem',
+    borderRadius: '4px',
+    flexShrink: 0
   },
   touchButtonsRow: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-    gap: '0.5rem'
+    display: 'flex',
+    gap: '0.4rem'
   },
   touchPill: {
-    height: '42px',
-    borderRadius: '8px',
-    border: '1px solid transparent',
-    fontSize: '0.82rem',
-    fontWeight: '700',
-    cursor: 'pointer',
+    flex: 1,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.35rem',
-    transition: 'all 0.12s'
-  },
-  touchPillCActive: {
-    backgroundColor: '#16a34a',
-    color: '#ffffff',
-    borderColor: '#15803d',
-    boxShadow: '0 2px 4px rgba(22, 163, 74, 0.25)'
-  },
-  touchPillNCActive: {
-    backgroundColor: '#dc2626',
-    color: '#ffffff',
-    borderColor: '#b91c1c',
-    boxShadow: '0 2px 4px rgba(220, 38, 38, 0.25)'
-  },
-  touchPillNAActive: {
-    backgroundColor: '#475569',
-    color: '#ffffff',
-    borderColor: '#334155',
-    boxShadow: '0 2px 4px rgba(71, 85, 105, 0.25)'
+    padding: '0.5rem 0.35rem',
+    borderRadius: '6px',
+    border: '1px solid',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    cursor: 'pointer'
   },
   touchPillInactive: {
     backgroundColor: '#f8fafc',
-    color: '#64748b',
-    borderColor: '#cbd5e1'
+    borderColor: '#e2e8f0',
+    color: '#64748b'
   },
-  signaturesSection: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginTop: '0.5rem',
-    paddingTop: '1rem',
-    borderTop: '1px solid #f1f5f9'
+  touchPillCActive: {
+    backgroundColor: '#dcfce7',
+    borderColor: '#86efac',
+    color: '#15803d'
   },
-  tableContainer: {
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
+  touchPillNCActive: {
+    backgroundColor: '#fee2e2',
+    borderColor: '#fca5a5',
+    color: '#b91c1c'
+  },
+  touchPillNAActive: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#cbd5e1',
+    color: '#475569'
+  },
+  inputObservation: {
+    width: '100%',
+    padding: '0.45rem 0.65rem',
+    borderRadius: '4px',
+    border: '1px solid #cbd5e1',
+    fontSize: '0.8rem',
+    backgroundColor: '#ffffff',
+    color: '#0f172a',
+    boxSizing: 'border-box'
+  },
+  tableResponsive: {
     overflowX: 'auto',
-    WebkitOverflowScrolling: 'touch'
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px'
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    minWidth: '600px'
-  },
-  tableHead: {
-    backgroundColor: '#f8fafc',
+    fontSize: '0.85rem'
   },
   th: {
+    backgroundColor: '#f8fafc',
     padding: '0.75rem 1rem',
     textAlign: 'left',
-    fontSize: '0.75rem',
     fontWeight: '700',
-    color: '#64748b',
-    textTransform: 'uppercase',
-    borderBottom: '1px solid #e2e8f0',
+    color: '#475569',
+    borderBottom: '1px solid #e2e8f0'
   },
   tr: {
-    borderBottom: '1px solid #f1f5f9',
+    borderBottom: '1px solid #f1f5f9'
   },
   td: {
-    padding: '0.75rem 1rem',
-    fontSize: '0.85rem',
-    color: '#334155',
+    padding: '0.65rem 1rem'
   },
   radioGroup: {
     display: 'flex',
-    justifyContent: 'center',
     gap: '1rem',
+    justifyContent: 'center'
   },
   radioLabel: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
+    cursor: 'pointer'
+  },
+  ncContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    padding: '1rem',
+    backgroundColor: '#fffaf0',
+    borderRadius: '10px',
+    border: '1px solid #fed7aa'
+  },
+  photoSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    padding: '1rem',
+    backgroundColor: '#ffffff',
+    borderRadius: '8px',
+    border: '1px solid #fecaca'
+  },
+  photoHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.75rem'
+  },
+  photoSubtext: {
+    fontSize: '0.75rem',
+    color: '#64748b',
+    display: 'block'
+  },
+  iconButtonsGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem'
+  },
+  iconActionBtn: {
+    width: '46px',
+    height: '46px',
+    borderRadius: '10px',
+    border: '1.5px solid #cbd5e1',
+    backgroundColor: '#f8fafc',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  compressingBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.5rem 0.75rem',
+    backgroundColor: '#ecfeff',
+    color: '#0891b2',
+    borderRadius: '6px',
+    fontSize: '0.8rem'
+  },
+  photoPreviewCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    padding: '0.75rem',
+    backgroundColor: '#f8fafc',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    flexWrap: 'wrap'
+  },
+  photoWrapper: {
+    position: 'relative',
+    width: '120px',
+    height: '90px',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    border: '1px solid #cbd5e1',
+    flexShrink: 0
+  },
+  photoImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover'
+  },
+  photoRemoveBtn: {
+    position: 'absolute',
+    top: '4px',
+    right: '4px',
+    width: '24px',
+    height: '24px',
+    borderRadius: '50%',
+    backgroundColor: '#ef4444',
+    border: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.3)'
+  },
+  photoMeta: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem'
+  },
+  photoBadgeSuccess: {
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    color: '#15803d',
+    backgroundColor: '#dcfce7',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '4px',
+    alignSelf: 'flex-start'
+  },
+  photoSizeText: {
+    fontSize: '0.75rem',
+    color: '#64748b'
+  },
+  photoRequiredAlert: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.65rem 0.85rem',
+    backgroundColor: '#fef2f2',
+    border: '1px dashed #ef4444',
+    borderRadius: '6px',
+    color: '#b91c1c',
+    fontSize: '0.8rem',
+    fontWeight: '600'
+  },
+  emailBox: {
+    padding: '1rem',
+    borderRadius: '8px',
+    backgroundColor: '#ffffff',
+    border: '1px solid #bae6fd',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem'
+  },
+  emailHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  resetEmailBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.25rem 0.5rem',
+    borderRadius: '4px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: '#f8fafc',
+    color: '#475569',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    cursor: 'pointer'
+  },
+  emailSubtext: {
+    fontSize: '0.75rem',
+    color: '#64748b'
+  },
+  emailGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '0.75rem'
+  },
+  signaturesSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    paddingTop: '0.5rem'
   },
   actions: {
     display: 'flex',
     justifyContent: 'flex-end',
-    marginTop: '0.5rem',
+    paddingTop: '0.5rem'
   },
   btnPrimary: {
-    display: 'inline-flex',
+    display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
+    padding: '0.75rem 1.75rem',
+    borderRadius: '8px',
     backgroundColor: '#0891b2',
     color: '#ffffff',
-    padding: '0.7rem 1.5rem',
-    borderRadius: '8px',
     border: 'none',
     fontWeight: '700',
-    fontSize: '0.92rem',
+    fontSize: '0.9rem',
     cursor: 'pointer',
-    boxShadow: '0 2px 4px rgba(8, 145, 178, 0.2)'
+    boxShadow: '0 2px 6px rgba(8, 145, 178, 0.25)'
   }
 };
