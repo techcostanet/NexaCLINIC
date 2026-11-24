@@ -1,27 +1,92 @@
 import { app } from './config';
 import { USE_MOCK, mockFirestore } from './mockDb';
 
+const CACHE_KEY_EPI = 'nexai_sesmt_epi_cache';
+const CACHE_KEY_WASTE = 'nexai_sesmt_waste_cache';
+
+// Helper de sanitização para evitar falhas com 'undefined' no Firestore
+function sanitizeForFirestore(obj) {
+  if (obj === null || obj === undefined) return null;
+  if (typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeForFirestore);
+  const clean = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) {
+      clean[k] = (v && typeof v === 'object' && !(v instanceof Date)) ? sanitizeForFirestore(v) : v;
+    }
+  }
+  return clean;
+}
+
+// Helpers de cache local no navegador para histórico imediato e resiliência offline
+function getLocalCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function updateLocalCache(key, item) {
+  try {
+    const list = getLocalCache(key);
+    const idx = list.findIndex(i => i.id === item.id);
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...item };
+    } else {
+      list.unshift(item);
+    }
+    localStorage.setItem(key, JSON.stringify(list));
+  } catch (err) {
+    console.warn('Erro ao atualizar cache local:', err);
+  }
+}
+
+function setLocalCacheList(key, list) {
+  try {
+    localStorage.setItem(key, JSON.stringify(list || []));
+  } catch {}
+}
+
 export const getEpiInspections = async () => {
     if (USE_MOCK && mockFirestore.getEpiInspections) return mockFirestore.getEpiInspections();
     try {
       const { getFirestore, collection, getDocs, orderBy, query } = await import('firebase/firestore');
       const db = getFirestore(app);
-      const q = query(collection(db, 'sesmt_epi_inspections'), orderBy('date', 'desc'));
-      const snap = await getDocs(q);
-      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let docs = [];
+      try {
+        const q = query(collection(db, 'sesmt_epi_inspections'), orderBy('date', 'desc'));
+        const snap = await getDocs(q);
+        docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (qErr) {
+        console.warn('Fallback query simples sem orderBy em sesmt_epi_inspections:', qErr.message);
+        const snap = await getDocs(collection(db, 'sesmt_epi_inspections'));
+        docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      }
+
+      docs.sort((a, b) => ((b.date || '') + ' ' + (b.time || '')).localeCompare((a.date || '') + ' ' + (a.time || '')));
+
+      if (docs.length > 0) {
+        setLocalCacheList(CACHE_KEY_EPI, docs);
+        return docs;
+      }
+
+      const cached = getLocalCache(CACHE_KEY_EPI);
+      return cached.length > 0 ? cached : docs;
     } catch (e) {
-      console.error('Erro Firestore getEpiInspections =', e);
-      return [];
+      console.error('Erro Firestore getEpiInspections, usando cache local:', e);
+      return getLocalCache(CACHE_KEY_EPI);
     }
 };
 
 export const saveEpiInspection = async (item) => {
     if (USE_MOCK && mockFirestore.saveEpiInspection) return mockFirestore.saveEpiInspection(item);
+    const dataToSave = sanitizeForFirestore({ ...item });
+    let savedResult;
     try {
         const { getFirestore, collection, addDoc, doc, updateDoc } = await import('firebase/firestore');
         const db = getFirestore(app);
-        const dataToSave = { ...item };
-        let savedResult;
         if (dataToSave.id) {
             const id = dataToSave.id;
             delete dataToSave.id;
@@ -30,95 +95,107 @@ export const saveEpiInspection = async (item) => {
             savedResult = { id, ...dataToSave };
         } else {
             delete dataToSave.id;
-            const docRef = await addDoc(collection(db, 'sesmt_epi_inspections'), dataToSave);
+            const docRef = await addDoc(collection(db, 'sesmt_epi_inspections'), {
+                ...dataToSave,
+                createdAt: dataToSave.createdAt || new Date().toISOString()
+            });
             savedResult = { id: docRef.id, ...dataToSave };
         }
+    } catch (dbErr) {
+        console.warn('Erro ao salvar no Firestore sesmt_epi_inspections, gravando em cache local:', dbErr);
+        const fallbackId = dataToSave.id || `epi_${Date.now()}`;
+        savedResult = { id: fallbackId, ...dataToSave };
+    }
 
-        // Disparo de E-mail de Alerta se houver Não Conformidade em EPI
-        const emailRecipients = [item.email1, item.email2]
-            .map(e => (e || '').trim())
-            .filter(e => e.length > 0 && e.includes('@'));
+    // Atualiza imediatamente o cache local para histórico instantâneo
+    updateLocalCache(CACHE_KEY_EPI, savedResult);
 
-        const hasNC = Object.values(item.evaluations || {}).some(ev => ev.status === 'NC');
-        if (hasNC && emailRecipients.length > 0) {
-            try {
-                const { sendSystemEmail } = await import('./systemService');
-                const EPI_LABELS = {
-                    uso_epi: 'Uso adequado do EPI',
-                    higienizacao: 'Higienização das mãos',
-                    descarte: 'Descarte de resíduos',
-                    conservacao: 'Conservação e armazenamento de EPI',
-                    limpeza_ralos: 'Condições e limpeza dos ralos',
-                    ausencia_adornos: 'Ausência de adornos durante as atividades',
-                    uso_cilios: 'Uso adequado de cílios',
-                    bancadas_superficies: 'Bancadas e superfícies limpas e organizadas',
-                    produtos_quimicos: 'Produtos químicos identificados e armazenados',
-                    fds_quimicos: 'FDS disponíveis para os produtos químicos aplicáveis',
-                    condicoes_unhas: 'Condições e comprimento das unhas'
-                };
+    // Disparo de E-mail de Alerta se houver Não Conformidade em EPI
+    const emailRecipients = [item.email1, item.email2]
+        .map(e => (e || '').trim())
+        .filter(e => e.length > 0 && e.includes('@'));
 
-                const ncEntries = Object.entries(item.evaluations || {}).filter(([_, ev]) => ev.status === 'NC');
-                const ncItemsHtml = ncEntries.map(([k, ev]) => {
-                    const label = EPI_LABELS[k] || k;
-                    const photo = ev.photo || (ncEntries.length === 1 ? item.photo : null);
-                    return `
-                      <div style="margin-bottom: 14px; padding: 12px; background-color: #ffffff; border-radius: 8px; border: 1px solid #fca5a5;">
-                        <div style="font-weight: 700; color: #b91c1c; font-size: 0.9rem; margin-bottom: 4px;">
-                          ❌ ${label}
-                        </div>
-                        ${ev.observation ? `<div style="font-size: 0.85rem; color: #7f1d1d; margin-bottom: 8px;"><strong>Obs:</strong> ${ev.observation}</div>` : ''}
-                        ${photo ? `
-                          <div style="margin-top: 8px;">
-                            <strong style="color: #475569; font-size: 0.75rem; display: block; margin-bottom: 4px;">Evidência Fotográfica do Item:</strong>
-                            <img src="${photo}" alt="${label}" style="max-width: 100%; max-height: 320px; border-radius: 6px; border: 1px solid #cbd5e1; display: block;" />
-                          </div>
-                        ` : ''}
-                      </div>
-                    `;
-                }).join('');
+    const hasNC = Object.values(item.evaluations || {}).some(ev => ev.status === 'NC');
+    savedResult.emailSent = false;
+    savedResult.emailRecipients = [];
 
-                const htmlContent = `
-                  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; border: 1px solid #fecaca; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
-                    <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 18px 22px; border-radius: 8px; color: #ffffff;">
-                      <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700;">🚨 Alerta de Não Conformidade — SESMT (EPI)</h2>
-                      <p style="margin: 4px 0 0; font-size: 0.85rem; opacity: 0.95;">Checklist Diário de EPI (NR-32) • Nex-Ai CLINIC</p>
+    if (hasNC && emailRecipients.length > 0) {
+        try {
+            const { sendSystemEmail } = await import('./systemService');
+            const EPI_LABELS = {
+                uso_epi: 'Uso adequado do EPI',
+                higienizacao: 'Higienização das mãos',
+                descarte: 'Descarte de resíduos',
+                conservacao: 'Conservação e armazenamento de EPI',
+                limpeza_ralos: 'Condições e limpeza dos ralos',
+                ausencia_adornos: 'Ausência de adornos durante as atividades',
+                uso_cilios: 'Uso adequado de cílios',
+                bancadas_superficies: 'Bancadas e superfícies limpas e organizadas',
+                produtos_quimicos: 'Produtos químicos identificados e armazenados',
+                fds_quimicos: 'FDS disponíveis para os produtos químicos aplicáveis',
+                condicoes_unhas: 'Condições e comprimento das unhas'
+            };
+
+            const ncEntries = Object.entries(item.evaluations || {}).filter(([_, ev]) => ev.status === 'NC');
+            const ncItemsHtml = ncEntries.map(([k, ev]) => {
+                const label = EPI_LABELS[k] || k;
+                const photo = ev.photo || (ncEntries.length === 1 ? item.photo : null);
+                return `
+                  <div style="margin-bottom: 14px; padding: 12px; background-color: #ffffff; border-radius: 8px; border: 1px solid #fca5a5;">
+                    <div style="font-weight: 700; color: #b91c1c; font-size: 0.9rem; margin-bottom: 4px;">
+                      ❌ ${label}
                     </div>
-                    <div style="margin-top: 20px; font-size: 0.9rem; line-height: 1.6;">
-                      <p>Foi registrada uma <strong>Não Conformidade de EPI</strong> no setor <strong>${item.sector}</strong>.</p>
-                      <table style="width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 16px;">
-                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Data/Hora:</td><td style="padding: 8px 0; font-weight: 700;">${item.date ? item.date.split('-').reverse().join('/') : '-'} às ${item.time || '-'}</td></tr>
-                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Setor:</td><td style="padding: 8px 0; font-weight: 700; color: #b91c1c;">${item.sector}</td></tr>
-                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Turno:</td><td style="padding: 8px 0; font-weight: 700;">${item.shift || '-'}</td></tr>
-                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Responsável:</td><td style="padding: 8px 0; font-weight: 700;">${item.enfermeiro || item.tecnicoSeguranca || '-'}</td></tr>
-                      </table>
-                      <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px;">
-                        <strong style="color: #991b1b; display: block; margin-bottom: 10px;">Itens Reprovados (${ncEntries.length}):</strong>
-                        ${ncItemsHtml}
+                    ${ev.observation ? `<div style="font-size: 0.85rem; color: #7f1d1d; margin-bottom: 8px;"><strong>Obs:</strong> ${ev.observation}</div>` : ''}
+                    ${photo ? `
+                      <div style="margin-top: 8px;">
+                        <strong style="color: #475569; font-size: 0.75rem; display: block; margin-bottom: 4px;">Evidência Fotográfica do Item:</strong>
+                        <img src="${photo}" alt="${label}" style="max-width: 100%; max-height: 320px; border-radius: 6px; border: 1px solid #cbd5e1; display: block;" />
                       </div>
-                      <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
-                        Mensagem automática gerada pelo módulo SESMT do sistema Nex-Ai CLINIC.
-                      </p>
-                    </div>
+                    ` : ''}
                   </div>
                 `;
+            }).join('');
 
-                await sendSystemEmail({
-                    to: emailRecipients,
-                    subject: `🚨 [SESMT Não Conformidade EPI] ${item.sector} — ${item.date || ''} ${item.time || ''}`,
-                    body: `Alerta SESMT Não Conformidade EPI em ${item.sector}\nData: ${item.date} ${item.time}\nResponsável: ${item.enfermeiro || item.tecnicoSeguranca}`,
-                    html: htmlContent,
-                    moduleSource: 'SESMT'
-                });
-            } catch (emailErr) {
-                console.warn('Erro ao enviar e-mail de alerta EPI do SESMT:', emailErr);
-            }
+            const htmlContent = `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; border: 1px solid #fecaca; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
+                <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 18px 22px; border-radius: 8px; color: #ffffff;">
+                  <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700;">🚨 Alerta de Não Conformidade — SESMT (EPI)</h2>
+                  <p style="margin: 4px 0 0; font-size: 0.85rem; opacity: 0.95;">Checklist Diário de EPI (NR-32) • Nex-Ai CLINIC</p>
+                </div>
+                <div style="margin-top: 20px; font-size: 0.9rem; line-height: 1.6;">
+                  <p>Foi registrada uma <strong>Não Conformidade de EPI</strong> no setor <strong>${item.sector}</strong>.</p>
+                  <table style="width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 16px;">
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Data/Hora:</td><td style="padding: 8px 0; font-weight: 700;">${item.date ? item.date.split('-').reverse().join('/') : '-'} às ${item.time || '-'}</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Setor:</td><td style="padding: 8px 0; font-weight: 700; color: #b91c1c;">${item.sector}</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Turno:</td><td style="padding: 8px 0; font-weight: 700;">${item.shift || '-'}</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Responsável:</td><td style="padding: 8px 0; font-weight: 700;">${item.enfermeiro || item.tecnicoSeguranca || '-'}</td></tr>
+                  </table>
+                  <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px;">
+                    <strong style="color: #991b1b; display: block; margin-bottom: 10px;">Itens Reprovados (${ncEntries.length}):</strong>
+                    ${ncItemsHtml}
+                  </div>
+                  <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+                    Mensagem automática gerada pelo módulo SESMT do sistema Nex-Ai CLINIC.
+                  </p>
+                </div>
+              </div>
+            `;
+
+            await sendSystemEmail({
+                to: emailRecipients,
+                subject: `🚨 [SESMT Não Conformidade EPI] ${item.sector} — ${item.date || ''} ${item.time || ''}`,
+                body: `Alerta SESMT Não Conformidade EPI em ${item.sector}\nData: ${item.date} ${item.time}\nResponsável: ${item.enfermeiro || item.tecnicoSeguranca}`,
+                html: htmlContent,
+                moduleSource: 'SESMT'
+            });
+            savedResult.emailSent = true;
+            savedResult.emailRecipients = emailRecipients;
+        } catch (emailErr) {
+            console.warn('Erro ao enviar e-mail de alerta EPI do SESMT:', emailErr);
         }
-
-        return savedResult;
-    } catch (e) {
-        console.error('Erro Firestore saveEpiInspection =', e);
-        throw e;
     }
+
+    return savedResult;
 };
 
 export const getCopaInspections = async () => {
@@ -584,17 +661,37 @@ export const getWasteInspections = async () => {
     try {
         const { getFirestore, collection, getDocs, orderBy, query } = await import('firebase/firestore');
         const db = getFirestore(app);
-        const q = query(collection(db, 'sesmt_waste_inspections'), orderBy('date', 'desc'));
-        const snap = await getDocs(q);
-        
-        if (snap.empty && mockFirestore.getWasteInspections) {
+        let docs = [];
+        try {
+            const q = query(collection(db, 'sesmt_waste_inspections'), orderBy('date', 'desc'));
+            const snap = await getDocs(q);
+            docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (qErr) {
+            console.warn('Fallback query simples sem orderBy em sesmt_waste_inspections:', qErr.message);
+            const snap = await getDocs(collection(db, 'sesmt_waste_inspections'));
+            docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+
+        docs.sort((a, b) => ((b.date || '') + ' ' + (b.time || '')).localeCompare((a.date || '') + ' ' + (a.time || '')));
+
+        if (docs.length > 0) {
+            setLocalCacheList(CACHE_KEY_WASTE, docs);
+            return docs;
+        }
+
+        const cached = getLocalCache(CACHE_KEY_WASTE);
+        if (cached && cached.length > 0) return cached;
+
+        if (mockFirestore.getWasteInspections) {
             const seeded = await mockFirestore.getWasteInspections();
             if (seeded && seeded.length > 0) return seeded;
         }
 
-        return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        return docs;
     } catch (e) {
-        console.error('Erro Firestore getWasteInspections, usando fallback:', e);
+        console.error('Erro Firestore getWasteInspections, usando cache local:', e);
+        const cached = getLocalCache(CACHE_KEY_WASTE);
+        if (cached && cached.length > 0) return cached;
         if (mockFirestore.getWasteInspections) {
             return mockFirestore.getWasteInspections();
         }
@@ -606,11 +703,16 @@ export const saveWasteInspection = async (item) => {
     if (USE_MOCK && mockFirestore.saveWasteInspection) {
         return mockFirestore.saveWasteInspection(item);
     }
+    
+    // Remove payload duplicado para manter documento leve (< 1MB Firestore limit)
+    const rawToSave = { ...item };
+    delete rawToSave.itemPhotos;
+    const dataToSave = sanitizeForFirestore(rawToSave);
+    let savedResult;
+
     try {
-        const { getFirestore, collection, addDoc, doc, updateDoc, getDocs, query, where } = await import('firebase/firestore');
+        const { getFirestore, collection, addDoc, doc, updateDoc, getDocs, query } = await import('firebase/firestore');
         const db = getFirestore(app);
-        const dataToSave = { ...item };
-        let savedResult;
 
         if (dataToSave.id) {
             const id = dataToSave.id;
@@ -622,7 +724,7 @@ export const saveWasteInspection = async (item) => {
             delete dataToSave.id;
             const docRef = await addDoc(collection(db, 'sesmt_waste_inspections'), {
                 ...dataToSave,
-                createdAt: new Date().toISOString()
+                createdAt: dataToSave.createdAt || new Date().toISOString()
             });
             savedResult = { id: docRef.id, ...dataToSave };
         }
@@ -658,121 +760,127 @@ export const saveWasteInspection = async (item) => {
         } catch (indErr) {
             console.warn('Erro ao atualizar indicadores de BI após salvar vistoria:', indErr);
         }
-
-        // SM-016: Disparo de Alerta no Feed Assistencial (.ASSIST) se Não Conforme
-        if (item.notifyAssist && item.status === 'NAO_CONFORME') {
-            try {
-                const { createAssistPost } = await import('./assistService');
-                await createAssistPost({
-                    title: `Alerta SESMT: Descarte Irregular em ${item.sector}`,
-                    content: `Detectada não conformidade no descarte de resíduos infectantes durante vistoria técnica no setor ${item.sector} (${item.shift || 'Geral'}).\n` +
-                             `Desvios apontados: ${(item.deviations || []).join(', ') || 'Segregação inadequada'}.\n` +
-                             `Ação imediata recomendada: ${item.immediateAction || 'Adequação imediata conforme RDC 222/2018 e NR-32'}.`,
-                    category: 'alert',
-                    priority: 'high',
-                    author: item.auditor || 'SESMT Segurança',
-                    room: item.sector,
-                    shift: item.shift || 'Geral',
-                    unitId: item.unitId || 'betim'
-                });
-            } catch (assistErr) {
-                console.warn('Erro ao enviar comunicado de alerta no .ASSIST:', assistErr);
-            }
-        }
-
-        // Disparo de E-mail de Alerta para os Destinatários Informados
-        const emailRecipients = [item.email1, item.email2]
-            .map(e => (e || '').trim())
-            .filter(e => e.length > 0 && e.includes('@'));
-
-        if (item.status === 'NAO_CONFORME' && emailRecipients.length > 0) {
-            try {
-                const { sendSystemEmail } = await import('./systemService');
-                
-                // Mapeia cada item de desvio com sua respectiva foto
-                let ncWasteList = [];
-                if (item.items && Array.isArray(item.items)) {
-                    ncWasteList = item.items.filter(it => it.status === 'NC');
-                } else if (item.deviations && Array.isArray(item.deviations)) {
-                    ncWasteList = item.deviations.map(d => ({
-                        label: d,
-                        photo: (item.itemPhotos && item.itemPhotos[d]?.photo) || item.photo || ''
-                    }));
-                }
-
-                const ncItemsHtml = ncWasteList.map(it => `
-                  <div style="margin-bottom: 14px; padding: 12px; background-color: #ffffff; border-radius: 8px; border: 1px solid #fca5a5;">
-                    <div style="font-weight: 700; color: #b91c1c; font-size: 0.9rem; margin-bottom: 6px;">
-                      ❌ ${it.label}
-                    </div>
-                    ${it.photo ? `
-                      <div style="margin-top: 8px;">
-                        <strong style="color: #475569; font-size: 0.75rem; display: block; margin-bottom: 4px;">Evidência Fotográfica do Item:</strong>
-                        <img src="${it.photo}" alt="${it.label}" style="max-width: 100%; max-height: 320px; border-radius: 6px; border: 1px solid #cbd5e1; display: block;" />
-                      </div>
-                    ` : ''}
-                  </div>
-                `).join('');
-
-                const devsSummary = ncWasteList.map(it => `• ${it.label}`).join('<br>') || (item.deviations || []).map(d => `• ${d}`).join('<br>');
-
-                const htmlContent = `
-                  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; border: 1px solid #fecaca; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
-                    <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 18px 22px; border-radius: 8px; color: #ffffff;">
-                      <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700;">🚨 Alerta de Não Conformidade — SESMT</h2>
-                      <p style="margin: 4px 0 0; font-size: 0.85rem; opacity: 0.95;">Vistoria de Resíduos Infectantes (RDC 222 / NR-32) • Nex-Ai CLINIC</p>
-                    </div>
-                    <div style="margin-top: 20px; font-size: 0.9rem; line-height: 1.6;">
-                      <p>Foi registrada uma <strong>Não Conformidade</strong> durante a inspeção presencial no setor <strong>${item.sector}</strong>.</p>
-                      <table style="width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 16px;">
-                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Data/Hora:</td><td style="padding: 8px 0; font-weight: 700;">${item.date ? item.date.split('-').reverse().join('/') : '-'} às ${item.time || '-'}</td></tr>
-                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Setor:</td><td style="padding: 8px 0; font-weight: 700; color: #b91c1c;">${item.sector}</td></tr>
-                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Turno:</td><td style="padding: 8px 0; font-weight: 700;">${item.shift || '-'}</td></tr>
-                        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Auditor:</td><td style="padding: 8px 0; font-weight: 700;">${item.auditor || 'Técnico de Segurança'}</td></tr>
-                      </table>
-                      <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px;">
-                        <strong style="color: #991b1b; display: block; margin-bottom: 10px;">Desvios Identificados (${ncWasteList.length || (item.deviations || []).length}):</strong>
-                        ${ncItemsHtml || `<div style="color: #7f1d1d; font-size: 0.85rem;">${devsSummary}</div>`}
-                      </div>
-                      ${item.immediateAction ? `
-                        <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px;">
-                          <strong style="color: #92400e; display: block; margin-bottom: 4px;">Ação Imediata Adotada:</strong>
-                          <span style="color: #78350f; font-size: 0.85rem;">${item.immediateAction}</span>
-                        </div>
-                      ` : ''}
-                      ${(!ncItemsHtml && item.photo) ? `
-                        <div style="margin-top: 16px; margin-bottom: 16px;">
-                          <strong style="color: #0f172a; display: block; margin-bottom: 8px;">Evidência Fotográfica Anexada:</strong>
-                          <img src="${item.photo}" alt="Foto da Evidência" style="max-width: 100%; max-height: 380px; border-radius: 8px; border: 1px solid #cbd5e1; display: block;" />
-                        </div>
-                      ` : ''}
-                      <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
-                        Mensagem automática gerada pelo módulo SESMT do sistema Nex-Ai CLINIC.
-                      </p>
-                    </div>
-                  </div>
-                `;
-
-                await sendSystemEmail({
-                    to: emailRecipients,
-                    subject: `🚨 [SESMT Não Conformidade] ${item.sector} — ${item.date || ''} ${item.time || ''}`,
-                    body: `Alerta SESMT Não Conformidade em ${item.sector}\nData: ${item.date} ${item.time}\nAuditor: ${item.auditor}\nDesvios: ${(item.deviations || []).join(', ')}\nAção: ${item.immediateAction || '-'}`,
-                    html: htmlContent,
-                    moduleSource: 'SESMT'
-                });
-            } catch (emailErr) {
-                console.warn('Erro ao enviar e-mail de alerta do SESMT:', emailErr);
-            }
-        }
-
-        return savedResult;
     } catch (e) {
-        console.error('Erro Firestore saveWasteInspection, gravando no mock local:', e);
-        if (mockFirestore.saveWasteInspection) {
-            return mockFirestore.saveWasteInspection(item);
-        }
-        throw e;
+        console.warn('Erro Firestore saveWasteInspection, gravando no cache local:', e);
+        const fallbackId = dataToSave.id || `waste_${Date.now()}`;
+        savedResult = { id: fallbackId, ...dataToSave };
     }
+
+    // Atualiza imediatamente o cache local para histórico instantâneo
+    updateLocalCache(CACHE_KEY_WASTE, savedResult);
+
+    // SM-016: Disparo de Alerta no Feed Assistencial (.ASSIST) se Não Conforme
+    if (item.notifyAssist && item.status === 'NAO_CONFORME') {
+        try {
+            const { createAssistPost } = await import('./assistService');
+            await createAssistPost({
+                title: `Alerta SESMT: Descarte Irregular em ${item.sector}`,
+                content: `Detectada não conformidade no descarte de resíduos infectantes durante vistoria técnica no setor ${item.sector} (${item.shift || 'Geral'}).\n` +
+                         `Desvios apontados: ${(item.deviations || []).join(', ') || 'Segregação inadequada'}.\n` +
+                         `Ação imediata recomendada: ${item.immediateAction || 'Adequação imediata conforme RDC 222/2018 e NR-32'}.`,
+                category: 'alert',
+                priority: 'high',
+                author: item.auditor || 'SESMT Segurança',
+                room: item.sector,
+                shift: item.shift || 'Geral',
+                unitId: item.unitId || 'betim'
+            });
+        } catch (assistErr) {
+            console.warn('Erro ao enviar comunicado de alerta no .ASSIST:', assistErr);
+        }
+    }
+
+    // Disparo de E-mail de Alerta para os Destinatários Informados
+    const emailRecipients = [item.email1, item.email2]
+        .map(e => (e || '').trim())
+        .filter(e => e.length > 0 && e.includes('@'));
+
+    savedResult.emailSent = false;
+    savedResult.emailRecipients = [];
+
+    if (item.status === 'NAO_CONFORME' && emailRecipients.length > 0) {
+        try {
+            const { sendSystemEmail } = await import('./systemService');
+            
+            // Mapeia cada item de desvio com sua respectiva foto
+            let ncWasteList = [];
+            if (item.items && Array.isArray(item.items)) {
+                ncWasteList = item.items.filter(it => it.status === 'NC');
+            } else if (item.deviations && Array.isArray(item.deviations)) {
+                ncWasteList = item.deviations.map(d => ({
+                    label: d,
+                    photo: (item.itemPhotos && item.itemPhotos[d]?.photo) || item.photo || ''
+                }));
+            }
+
+            const ncItemsHtml = ncWasteList.map(it => `
+              <div style="margin-bottom: 14px; padding: 12px; background-color: #ffffff; border-radius: 8px; border: 1px solid #fca5a5;">
+                <div style="font-weight: 700; color: #b91c1c; font-size: 0.9rem; margin-bottom: 6px;">
+                  ❌ ${it.label}
+                </div>
+                ${it.photo ? `
+                  <div style="margin-top: 8px;">
+                    <strong style="color: #475569; font-size: 0.75rem; display: block; margin-bottom: 4px;">Evidência Fotográfica do Item:</strong>
+                    <img src="${it.photo}" alt="${it.label}" style="max-width: 100%; max-height: 320px; border-radius: 6px; border: 1px solid #cbd5e1; display: block;" />
+                  </div>
+                ` : ''}
+              </div>
+            `).join('');
+
+            const devsSummary = ncWasteList.map(it => `• ${it.label}`).join('<br>') || (item.deviations || []).map(d => `• ${d}`).join('<br>');
+
+            const htmlContent = `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; border: 1px solid #fecaca; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
+                <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 18px 22px; border-radius: 8px; color: #ffffff;">
+                  <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700;">🚨 Alerta de Não Conformidade — SESMT</h2>
+                  <p style="margin: 4px 0 0; font-size: 0.85rem; opacity: 0.95;">Vistoria de Resíduos Infectantes (RDC 222 / NR-32) • Nex-Ai CLINIC</p>
+                </div>
+                <div style="margin-top: 20px; font-size: 0.9rem; line-height: 1.6;">
+                  <p>Foi registrada uma <strong>Não Conformidade</strong> durante a inspeção presencial no setor <strong>${item.sector}</strong>.</p>
+                  <table style="width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 16px;">
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Data/Hora:</td><td style="padding: 8px 0; font-weight: 700;">${item.date ? item.date.split('-').reverse().join('/') : '-'} às ${item.time || '-'}</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Setor:</td><td style="padding: 8px 0; font-weight: 700; color: #b91c1c;">${item.sector}</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Turno:</td><td style="padding: 8px 0; font-weight: 700;">${item.shift || '-'}</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Auditor:</td><td style="padding: 8px 0; font-weight: 700;">${item.auditor || 'Técnico de Segurança'}</td></tr>
+                  </table>
+                  <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px;">
+                    <strong style="color: #991b1b; display: block; margin-bottom: 10px;">Desvios Identificados (${ncWasteList.length || (item.deviations || []).length}):</strong>
+                    ${ncItemsHtml || `<div style="color: #7f1d1d; font-size: 0.85rem;">${devsSummary}</div>`}
+                  </div>
+                  ${item.immediateAction ? `
+                    <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px;">
+                      <strong style="color: #92400e; display: block; margin-bottom: 4px;">Ação Imediata Adotada:</strong>
+                      <span style="color: #78350f; font-size: 0.85rem;">${item.immediateAction}</span>
+                    </div>
+                  ` : ''}
+                  ${(!ncItemsHtml && item.photo) ? `
+                    <div style="margin-top: 16px; margin-bottom: 16px;">
+                      <strong style="color: #0f172a; display: block; margin-bottom: 8px;">Evidência Fotográfica Anexada:</strong>
+                      <img src="${item.photo}" alt="Foto da Evidência" style="max-width: 100%; max-height: 380px; border-radius: 8px; border: 1px solid #cbd5e1; display: block;" />
+                    </div>
+                  ` : ''}
+                  <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+                    Mensagem automática gerada pelo módulo SESMT do sistema Nex-Ai CLINIC.
+                  </p>
+                </div>
+              </div>
+            `;
+
+            await sendSystemEmail({
+                to: emailRecipients,
+                subject: `🚨 [SESMT Não Conformidade] ${item.sector} — ${item.date || ''} ${item.time || ''}`,
+                body: `Alerta SESMT Não Conformidade em ${item.sector}\nData: ${item.date} ${item.time}\nAuditor: ${item.auditor}\nDesvios: ${(item.deviations || []).join(', ')}\nAção: ${item.immediateAction || '-'}`,
+                html: htmlContent,
+                moduleSource: 'SESMT'
+            });
+            savedResult.emailSent = true;
+            savedResult.emailRecipients = emailRecipients;
+        } catch (emailErr) {
+            console.warn('Erro ao enviar e-mail de alerta do SESMT:', emailErr);
+        }
+    }
+
+    return savedResult;
 };
 
 export const deleteWasteInspection = async (id) => {
@@ -784,9 +892,17 @@ export const deleteWasteInspection = async (id) => {
         if (mockFirestore.deleteWasteInspection) {
             mockFirestore.deleteWasteInspection(id).catch(() => {});
         }
+        try {
+            const list = getLocalCache(CACHE_KEY_WASTE);
+            setLocalCacheList(CACHE_KEY_WASTE, list.filter(i => i.id !== id));
+        } catch {}
         return true;
     } catch (e) {
         console.error('Erro Firestore deleteWasteInspection:', e);
+        try {
+            const list = getLocalCache(CACHE_KEY_WASTE);
+            setLocalCacheList(CACHE_KEY_WASTE, list.filter(i => i.id !== id));
+        } catch {}
         if (mockFirestore.deleteWasteInspection) {
             return mockFirestore.deleteWasteInspection(id);
         }

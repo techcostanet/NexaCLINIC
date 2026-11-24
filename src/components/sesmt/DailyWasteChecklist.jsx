@@ -239,13 +239,18 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
       // Foto principal (primeira encontrada) para compatibilidade com visualizadores legados
       const firstPhoto = Object.values(formData.itemPhotos || {}).find(p => p?.photo)?.photo || '';
 
-      await dbService.saveWasteInspection({
+      const res = await dbService.saveWasteInspection({
         ...formData,
         items: itemsData,
         photo: firstPhoto,
         unitId: 'betim'
       });
-      setMessage('Vistoria de resíduos infectantes gravada com sucesso!');
+
+      if (res?.emailSent && res?.emailRecipients?.length > 0) {
+        setMessage(`Vistoria gravada com sucesso! Alerta de Não Conformidade enviado por e-mail para: ${res.emailRecipients.join(', ')}.`);
+      } else {
+        setMessage('Vistoria de resíduos infectantes gravada com sucesso!');
+      }
       
       // Reset formulário mantendo auditor e restaurando e-mails padrão
       const defEmails = getSectorDefaultEmails(formData.sector);
@@ -261,7 +266,7 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
       }));
 
       if (onSuccess) onSuccess();
-      setTimeout(() => setMessage(''), 3500);
+      setTimeout(() => setMessage(''), 6000);
     } catch (error) {
       console.error('Erro ao salvar vistoria de resíduos:', error);
       setMessage('Erro ao gravar vistoria no sistema.');

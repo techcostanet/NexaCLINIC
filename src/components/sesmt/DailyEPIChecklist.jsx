@@ -216,12 +216,17 @@ export default function DailyEPIChecklist({ onSuccess }) {
     try {
       const firstNcPhoto = Object.values(formData.evaluations || {}).find(ev => ev.status === 'NC' && ev.photo)?.photo || '';
 
-      await dbService.saveEpiInspection({
+      const res = await dbService.saveEpiInspection({
         ...formData,
         photo: firstNcPhoto, // compatibilidade com históricos legados
         createdAt: new Date().toISOString()
       });
-      setMessage('Checklist de EPI salvo com sucesso!');
+      
+      if (res?.emailSent && res?.emailRecipients?.length > 0) {
+        setMessage(`Checklist de EPI salvo com sucesso! Alerta de Não Conformidade enviado por e-mail para: ${res.emailRecipients.join(', ')}.`);
+      } else {
+        setMessage('Checklist de EPI salvo com sucesso!');
+      }
       
       // Reset
       const defEmails = getSectorDefaultEmails(formData.sector);
@@ -237,7 +242,7 @@ export default function DailyEPIChecklist({ onSuccess }) {
       }));
 
       if (onSuccess) onSuccess();
-      setTimeout(() => setMessage(''), 3000);
+      setTimeout(() => setMessage(''), 6000);
     } catch (error) {
       console.error(error);
       setMessage('Erro ao salvar checklist.');

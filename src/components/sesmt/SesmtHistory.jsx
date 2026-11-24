@@ -30,6 +30,9 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
     } else {
       setViewMode('cards');
     }
+    if (onRefresh) {
+      onRefresh();
+    }
   }, []);
 
   // Normalizar registros para listagem unificada
@@ -84,7 +87,11 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
       displayShift: '-',
       responsible: item.inspectorName || '-'
     }))
-  ].sort((a, b) => new Date(b.displayDate + (b.displayTime && b.displayTime !== '-' ? 'T' + b.displayTime : '')) - new Date(a.displayDate + (a.displayTime && a.displayTime !== '-' ? 'T' + a.displayTime : '')));
+  ].sort((a, b) => {
+    const keyA = (a.displayDate || '') + ' ' + (a.displayTime && a.displayTime !== '-' ? a.displayTime : '');
+    const keyB = (b.displayDate || '') + ' ' + (b.displayTime && b.displayTime !== '-' ? b.displayTime : '');
+    return keyB.localeCompare(keyA);
+  });
 
   // Filtragem dos registros
   const filteredRecords = normalizedRecords.filter(item => {
@@ -92,7 +99,7 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
     if (selectedType !== 'ALL' && item.recordType !== selectedType) return false;
 
     // Filtro por turno
-    if (selectedShift !== 'ALL' && (item.recordType === 'EPI' || item.recordType === 'COPA') && item.displayShift !== selectedShift) return false;
+    if (selectedShift !== 'ALL' && item.displayShift && item.displayShift !== '-' && item.displayShift !== selectedShift) return false;
 
     // Filtro por data
     if (startDate && item.displayDate < startDate) return false;

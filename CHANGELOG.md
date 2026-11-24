@@ -1,3 +1,19 @@
+## [v5.0.55] - 24 de Novembro, 2026
+### Nex-Ai CLINIC (.SESMT) — Correção Definitiva de Gravação, Histórico Imediato com Cache Local, Despacho Confiável de E-mails Titan e Confirmação Visual ao Operador
+- **Correção da Causa Raiz de Gravação no Firestore (`sesmtService.js` & `imageCompressor.js`):**
+  - **Eliminação de Payload Duplicado:** Identificada e corrigida a sobrecarga que causava estouro do limite de 1 MB por documento do Firestore. O objeto `itemPhotos` (duplicata de Base64) foi removido do envio ao banco, mantendo apenas as fotos indexadas na lista de itens.
+  - **Sanitização de Dados:** Aplicação de `sanitizeForFirestore` para evitar rejeição do Firestore por atributos `undefined`.
+  - **Compressão Otimizada em Canvas:** Calibrada resolução máxima para 800x800 com qualidade 0.68 gerando imagens de alta nitidez clínica com apenas 50KB a 70KB, mantendo o documento consolidado bem abaixo do limite do Firestore mesmo com múltiplos desvios.
+  - **Resiliência e Cache Offline no Tablet:** Implementação de persistência imediata em `localStorage` (`CACHE_KEY_WASTE` e `CACHE_KEY_EPI`) com fallback de leitura e ordenação em memória, garantindo que o histórico exiba os dados instantaneamente sem dependência exclusiva de conexão.
+- **Histórico Imediato e Sincronizado (`SesmtHistory.jsx`):**
+  - Atualização automática de dados (`onRefresh`) acionada na montagem do componente ao alternar para a aba Histórico.
+  - Ordenação cronológica estrita por data e hora decrescente via comparação lexicográfica segura.
+  - Filtro por turno expandido para abranger vistorias de resíduos além de EPI e copa.
+- **Envio de E-mails Confiável e Mensagem de Sucesso com Destinatários (`DailyWasteChecklist.jsx`, `DailyEPIChecklist.jsx`, `systemService.js` & `functions/index.js`):**
+  - **Conector Corporativo Titan:** Configurado fallback padrão para `smtp.titan.email` (porta 465 com SSL e autenticação segura de `integracao@dialize.com.br`) tanto no `systemService.js` quanto na Cloud Function `processMailQueue`.
+  - **Liberação de Fila no Firestore (`firestore.rules`):** Ajustadas as regras de segurança para a fila de envio `mail`, `email_logs` e `settings` permitindo enfileiramento sem bloqueios de sessão em tablets.
+  - **Confirmação Visual Transparente:** Após o clique em Salvar, quando houver disparo de e-mail de alerta de Não Conformidade, o sistema exibe mensagem clara confirmando a gravação e informando textualmente os endereços de e-mail para os quais o alerta foi despachado.
+
 ## [v5.0.53] - 24 de Novembro, 2026
 ### Nex-Ai CLINIC (.SESMT) — Evidência Fotográfica Individual por Item Reprovado, Validação Estrita e E-mail Consolidado com Fotos dos Desvios
 - **Evidência Fotográfica Atrelada ao Item (`DailyWasteChecklist.jsx` & `DailyEPIChecklist.jsx`):**

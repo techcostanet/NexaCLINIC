@@ -10,29 +10,44 @@ const db = admin.firestore();
 
 /**
  * Obtém transportador Nodemailer com base nas configurações em settings/email
+ * Possui fallback corporativo padrão (Titan Email) para resiliência máxima.
  */
 async function getTransporter() {
-  const settingsSnap = await db.doc('settings/email').get();
-  if (!settingsSnap.exists) {
-    throw new Error('Configurações de e-mail (settings/email) não encontradas no Firestore.');
-  }
-  const s = settingsSnap.data();
-  if (!s.smtpHost || !s.smtpUser) {
-    throw new Error('Parâmetros SMTP incompletos em settings/email.');
+  let s = {};
+  try {
+    const settingsSnap = await db.doc('settings/email').get();
+    if (settingsSnap.exists) {
+      s = settingsSnap.data() || {};
+    }
+  } catch (err) {
+    console.warn('Não foi possível ler settings/email, utilizando credenciais padrão:', err.message);
   }
 
-  const port = Number(s.smtpPort) || 465;
+  const smtpHost = s.smtpHost || 'smtp.titan.email';
+  const smtpPort = Number(s.smtpPort) || 465;
+  const smtpUser = s.smtpUser || s.senderEmail || 'integracao@dialize.com.br';
+  const smtpPassword = s.smtpPassword || 'Dialize@#3344';
+  const secure = smtpPort === 465 || s.encryption === 'SSL';
+
   return {
     transporter: nodemailer.createTransport({
-      host: s.smtpHost,
-      port: port,
-      secure: port === 465,
+      host: smtpHost,
+      port: smtpPort,
+      secure: secure,
       auth: {
-        user: s.smtpUser,
-        pass: s.smtpPassword
+        user: smtpUser,
+        pass: smtpPassword
       }
     }),
-    settings: s
+    settings: {
+      ...s,
+      smtpHost,
+      smtpPort,
+      smtpUser,
+      smtpPassword,
+      senderEmail: s.senderEmail || smtpUser,
+      senderName: s.senderName || 'Nex-Ai CLINIC — SESMT'
+    }
   };
 }
 

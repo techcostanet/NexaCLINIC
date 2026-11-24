@@ -137,15 +137,15 @@ export const deleteStockTransfer = async (id) => {
 export const DEFAULT_EMAIL_SETTINGS = {
   enabled: true,
   senderName: 'Nex-Ai CLINIC — Notificações Automáticas',
-  senderEmail: 'notificacoes@clinica.med.br',
-  replyToEmail: 'contato@clinica.med.br',
+  senderEmail: 'integracao@dialize.com.br',
+  replyToEmail: 'integracao@dialize.com.br',
   provider: 'smtp', // 'smtp' | 'gmail' | 'outlook' | 'ses' | 'resend'
-  smtpHost: 'smtp.gmail.com',
-  smtpPort: 587,
-  encryption: 'TLS', // 'TLS' | 'SSL' | 'None'
-  smtpUser: 'notificacoes@clinica.med.br',
-  smtpPassword: '',
-  bccAudit: 'ti.auditoria@clinica.med.br',
+  smtpHost: 'smtp.titan.email',
+  smtpPort: 465,
+  encryption: 'SSL', // 'TLS' | 'SSL' | 'None'
+  smtpUser: 'integracao@dialize.com.br',
+  smtpPassword: 'Dialize@#3344',
+  bccAudit: 'integracao@dialize.com.br',
   footerSignature: 'Nex-Ai CLINIC — Ecossistema Inteligente de Gestão em Saúde\nEsta é uma notificação automática gerada pelo sistema. Por favor, não responda diretamente a este e-mail.',
   // Configurações do Mural (.ASSIST)
   muralForwardingEnabled: false,

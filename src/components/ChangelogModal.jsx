@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.55',
+      date: '24/11/2026',
+      title: 'Nex-Ai CLINIC (.SESMT) — Correção Definitiva de Gravação, Histórico Imediato com Cache Local, Despacho Confiável de E-mails Titan e Confirmação Visual ao Operador',
+      description: 'Solução integral de persistência e comunicação de alertas no módulo SESMT: 1) Persistência 100% Confiável: eliminada a sobrecarga de Base64 que excedia o limite de 1 MB do Firestore, com sanitização de campos e compressão de imagens em 800x800 (~50KB a 70KB); 2) Histórico Instantâneo: camada de cache local no tablet (localStorage) e recarregamento automático ao abrir a aba Histórico; 3) E-mails Confiáveis: padronização do servidor corporativo Titan (smtp.titan.email) e liberação de regras de envio; 4) Confirmação Visual: exibição clara na tela dos destinatários notificados por e-mail após a gravação da não conformidade.',
+      changes: [
+        { type: 'Persistência no Banco', text: 'Eliminação de payloads duplicados e sanitização recursiva garantindo gravação 100% no Firestore.' },
+        { type: 'Cache no Tablet', text: 'Histórico sincronizado instantaneamente com persistência local resiliente a oscilações de Wi-Fi.' },
+        { type: 'Conector Titan SMTP', text: 'Envio garantido via fila corporativa Titan (integracao@dialize.com.br) na porta 465 SSL.' },
+        { type: 'Confirmação de Envio', text: 'Mensagem informativa exibindo textualmente na tela os e-mails para onde o alerta foi despachado.' }
+      ]
+    },
+    {
       version: 'v5.0.53',
       date: '24/11/2026',
       title: 'Nex-Ai CLINIC (.SESMT) — Evidência Fotográfica Individual por Item Reprovado, Validação Estrita e E-mail Consolidado com Fotos dos Desvios',

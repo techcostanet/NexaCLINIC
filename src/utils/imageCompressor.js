@@ -3,7 +3,7 @@
  * Otimizado para tablets, smartphones e captura direta de câmera em auditorias.
  */
 
-export const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.75) => {
+export const compressImage = (file, maxWidth = 800, maxHeight = 800, quality = 0.68) => {
   return new Promise((resolve, reject) => {
     if (!file || !(file instanceof Blob)) {
       return reject(new Error('Arquivo inválido para compressão.'));

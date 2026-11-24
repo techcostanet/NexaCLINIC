@@ -3370,7 +3370,7 @@ export const MODULE_GUIDES = {
           'Cada item marcado como não conforme deve possuir sua respectiva foto. O sistema bloqueia o salvamento e alerta se algum item reprovado estiver pendente de foto.',
           'A foto de cada item é automaticamente otimizada e comprimida via Canvas no navegador em menos de 1 segundo (~100KB), mantendo alta resolução para auditoria sem lentidão.',
           'Os campos de "E-mail 1" e "E-mail 2" virão preenchidos automaticamente com base no setor auditado, podendo ser alterados livremente.',
-          'Descreva a Ação Imediata adotada, colha a rubrica do responsável e clique em "Salvar Vistoria". O registro é salvo e um único e-mail contendo todas as fotos e desvios é enviado instantaneamente para a equipe.'
+          'Descreva a Ação Imediata adotada, colha a rubrica do responsável e clique em "Salvar Vistoria". O sistema grava a vistoria com segurança em nuvem e em cache local no tablet, despacha o e-mail de alerta corporativo com todas as fotos anexadas e exibe na tela a confirmação com os endereços de e-mail notificados.'
         ]
       }
     ],
