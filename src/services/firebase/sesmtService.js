@@ -43,10 +43,39 @@ export const saveEpiInspection = async (item) => {
         if (hasNC && emailRecipients.length > 0) {
             try {
                 const { sendSystemEmail } = await import('./systemService');
-                const ncItems = Object.entries(item.evaluations || {})
-                    .filter(([_, ev]) => ev.status === 'NC')
-                    .map(([k, ev]) => `• ${k}: ${ev.observation || 'Não Conforme'}`)
-                    .join('<br>');
+                const EPI_LABELS = {
+                    uso_epi: 'Uso adequado do EPI',
+                    higienizacao: 'Higienização das mãos',
+                    descarte: 'Descarte de resíduos',
+                    conservacao: 'Conservação e armazenamento de EPI',
+                    limpeza_ralos: 'Condições e limpeza dos ralos',
+                    ausencia_adornos: 'Ausência de adornos durante as atividades',
+                    uso_cilios: 'Uso adequado de cílios',
+                    bancadas_superficies: 'Bancadas e superfícies limpas e organizadas',
+                    produtos_quimicos: 'Produtos químicos identificados e armazenados',
+                    fds_quimicos: 'FDS disponíveis para os produtos químicos aplicáveis',
+                    condicoes_unhas: 'Condições e comprimento das unhas'
+                };
+
+                const ncEntries = Object.entries(item.evaluations || {}).filter(([_, ev]) => ev.status === 'NC');
+                const ncItemsHtml = ncEntries.map(([k, ev]) => {
+                    const label = EPI_LABELS[k] || k;
+                    const photo = ev.photo || (ncEntries.length === 1 ? item.photo : null);
+                    return `
+                      <div style="margin-bottom: 14px; padding: 12px; background-color: #ffffff; border-radius: 8px; border: 1px solid #fca5a5;">
+                        <div style="font-weight: 700; color: #b91c1c; font-size: 0.9rem; margin-bottom: 4px;">
+                          ❌ ${label}
+                        </div>
+                        ${ev.observation ? `<div style="font-size: 0.85rem; color: #7f1d1d; margin-bottom: 8px;"><strong>Obs:</strong> ${ev.observation}</div>` : ''}
+                        ${photo ? `
+                          <div style="margin-top: 8px;">
+                            <strong style="color: #475569; font-size: 0.75rem; display: block; margin-bottom: 4px;">Evidência Fotográfica do Item:</strong>
+                            <img src="${photo}" alt="${label}" style="max-width: 100%; max-height: 320px; border-radius: 6px; border: 1px solid #cbd5e1; display: block;" />
+                          </div>
+                        ` : ''}
+                      </div>
+                    `;
+                }).join('');
 
                 const htmlContent = `
                   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; border: 1px solid #fecaca; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
@@ -63,15 +92,9 @@ export const saveEpiInspection = async (item) => {
                         <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Responsável:</td><td style="padding: 8px 0; font-weight: 700;">${item.enfermeiro || item.tecnicoSeguranca || '-'}</td></tr>
                       </table>
                       <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px;">
-                        <strong style="color: #991b1b; display: block; margin-bottom: 6px;">Itens Reprovados:</strong>
-                        <div style="color: #7f1d1d; font-size: 0.85rem;">${ncItems}</div>
+                        <strong style="color: #991b1b; display: block; margin-bottom: 10px;">Itens Reprovados (${ncEntries.length}):</strong>
+                        ${ncItemsHtml}
                       </div>
-                      ${item.photo ? `
-                        <div style="margin-top: 16px; margin-bottom: 16px;">
-                          <strong style="color: #0f172a; display: block; margin-bottom: 8px;">Evidência Fotográfica:</strong>
-                          <img src="${item.photo}" alt="Foto da Evidência" style="max-width: 100%; max-height: 380px; border-radius: 8px; border: 1px solid #cbd5e1; display: block;" />
-                        </div>
-                      ` : ''}
                       <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
                         Mensagem automática gerada pelo módulo SESMT do sistema Nex-Ai CLINIC.
                       </p>
@@ -665,7 +688,34 @@ export const saveWasteInspection = async (item) => {
         if (item.status === 'NAO_CONFORME' && emailRecipients.length > 0) {
             try {
                 const { sendSystemEmail } = await import('./systemService');
-                const devsList = (item.deviations || []).map(d => `• ${d}`).join('<br>') || 'Desvios apontados na vistoria de resíduos infectantes.';
+                
+                // Mapeia cada item de desvio com sua respectiva foto
+                let ncWasteList = [];
+                if (item.items && Array.isArray(item.items)) {
+                    ncWasteList = item.items.filter(it => it.status === 'NC');
+                } else if (item.deviations && Array.isArray(item.deviations)) {
+                    ncWasteList = item.deviations.map(d => ({
+                        label: d,
+                        photo: (item.itemPhotos && item.itemPhotos[d]?.photo) || item.photo || ''
+                    }));
+                }
+
+                const ncItemsHtml = ncWasteList.map(it => `
+                  <div style="margin-bottom: 14px; padding: 12px; background-color: #ffffff; border-radius: 8px; border: 1px solid #fca5a5;">
+                    <div style="font-weight: 700; color: #b91c1c; font-size: 0.9rem; margin-bottom: 6px;">
+                      ❌ ${it.label}
+                    </div>
+                    ${it.photo ? `
+                      <div style="margin-top: 8px;">
+                        <strong style="color: #475569; font-size: 0.75rem; display: block; margin-bottom: 4px;">Evidência Fotográfica do Item:</strong>
+                        <img src="${it.photo}" alt="${it.label}" style="max-width: 100%; max-height: 320px; border-radius: 6px; border: 1px solid #cbd5e1; display: block;" />
+                      </div>
+                    ` : ''}
+                  </div>
+                `).join('');
+
+                const devsSummary = ncWasteList.map(it => `• ${it.label}`).join('<br>') || (item.deviations || []).map(d => `• ${d}`).join('<br>');
+
                 const htmlContent = `
                   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; border: 1px solid #fecaca; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
                     <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 18px 22px; border-radius: 8px; color: #ffffff;">
@@ -681,8 +731,8 @@ export const saveWasteInspection = async (item) => {
                         <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b; font-weight: 600;">Auditor:</td><td style="padding: 8px 0; font-weight: 700;">${item.auditor || 'Técnico de Segurança'}</td></tr>
                       </table>
                       <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px;">
-                        <strong style="color: #991b1b; display: block; margin-bottom: 6px;">Desvios Identificados:</strong>
-                        <div style="color: #7f1d1d; font-size: 0.85rem;">${devsList}</div>
+                        <strong style="color: #991b1b; display: block; margin-bottom: 10px;">Desvios Identificados (${ncWasteList.length || (item.deviations || []).length}):</strong>
+                        ${ncItemsHtml || `<div style="color: #7f1d1d; font-size: 0.85rem;">${devsSummary}</div>`}
                       </div>
                       ${item.immediateAction ? `
                         <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px;">
@@ -690,7 +740,7 @@ export const saveWasteInspection = async (item) => {
                           <span style="color: #78350f; font-size: 0.85rem;">${item.immediateAction}</span>
                         </div>
                       ` : ''}
-                      ${item.photo ? `
+                      ${(!ncItemsHtml && item.photo) ? `
                         <div style="margin-top: 16px; margin-bottom: 16px;">
                           <strong style="color: #0f172a; display: block; margin-bottom: 8px;">Evidência Fotográfica Anexada:</strong>
                           <img src="${item.photo}" alt="Foto da Evidência" style="max-width: 100%; max-height: 380px; border-radius: 8px; border: 1px solid #cbd5e1; display: block;" />

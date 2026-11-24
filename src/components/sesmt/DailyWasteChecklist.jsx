@@ -49,10 +49,9 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
     auditor: '',
     signature: '',
     deviations: [],
+    itemPhotos: {}, // { [itemId]: { photo: string, photoSize: number } }
     immediateAction: '',
     notifyAssist: true,
-    photo: '',
-    photoSize: 0,
     email1: initialEmails.email1 || '',
     email2: initialEmails.email2 || '',
     sendEmailAlert: true
@@ -60,6 +59,7 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
 
   const [loading, setLoading] = useState(false);
   const [compressing, setCompressing] = useState(false);
+  const [activePhotoItemId, setActivePhotoItemId] = useState(null);
   const [message, setMessage] = useState('');
 
   const cameraInputRef = useRef(null);
@@ -95,16 +95,24 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
     }));
   };
 
-  const toggleDeviation = (label) => {
+  const toggleDeviation = (label, itemId) => {
     setFormData(prev => {
       const exists = prev.deviations.includes(label);
       const updated = exists 
         ? prev.deviations.filter(d => d !== label)
         : [...prev.deviations, label];
+
+      // Se desmarcou, remove a foto atrelada ao item
+      const updatedPhotos = { ...prev.itemPhotos };
+      if (exists && updatedPhotos[itemId]) {
+        delete updatedPhotos[itemId];
+      }
+
       return {
         ...prev,
         deviations: updated,
-        status: updated.length > 0 ? 'NAO_CONFORME' : prev.status
+        itemPhotos: updatedPhotos,
+        status: updated.length > 0 ? 'NAO_CONFORME' : 'CONFORME'
       };
     });
   };
@@ -116,6 +124,7 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
         ...prev,
         status: newStatus,
         deviations: newStatus === 'CONFORME' ? [] : prev.deviations,
+        itemPhotos: newStatus === 'CONFORME' ? {} : prev.itemPhotos,
         email1: prev.email1 || defEmails.email1 || '',
         email2: prev.email2 || defEmails.email2 || ''
       };
@@ -131,10 +140,25 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
     }));
   };
 
-  // Captura e compressão de foto otimizada para tablet
+  const triggerCamera = (itemId) => {
+    setActivePhotoItemId(itemId);
+    setTimeout(() => {
+      if (cameraInputRef.current) cameraInputRef.current.click();
+    }, 50);
+  };
+
+  const triggerGallery = (itemId) => {
+    setActivePhotoItemId(itemId);
+    setTimeout(() => {
+      if (fileInputRef.current) fileInputRef.current.click();
+    }, 50);
+  };
+
+  // Captura e compressão de foto atrelada a cada item não conforme
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    const targetItemId = activePhotoItemId;
+    if (!file || !targetItemId) return;
 
     setCompressing(true);
     setMessage('');
@@ -142,26 +166,33 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
       const compressed = await compressImage(file, 1280, 1280, 0.75);
       setFormData(prev => ({
         ...prev,
-        photo: compressed.dataUrl,
-        photoSize: compressed.sizeBytes
+        itemPhotos: {
+          ...prev.itemPhotos,
+          [targetItemId]: {
+            photo: compressed.dataUrl,
+            photoSize: compressed.sizeBytes
+          }
+        }
       }));
     } catch (err) {
       console.error('Erro ao processar imagem:', err);
       setMessage('Falha ao processar a foto. Tente novamente.');
     } finally {
       setCompressing(false);
-      // Limpa os inputs para permitir nova seleção do mesmo arquivo se necessário
       if (cameraInputRef.current) cameraInputRef.current.value = '';
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  const handleRemovePhoto = () => {
-    setFormData(prev => ({
-      ...prev,
-      photo: '',
-      photoSize: 0
-    }));
+  const handleRemoveItemPhoto = (itemId) => {
+    setFormData(prev => {
+      const updatedPhotos = { ...prev.itemPhotos };
+      delete updatedPhotos[itemId];
+      return {
+        ...prev,
+        itemPhotos: updatedPhotos
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -171,17 +202,47 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
       return;
     }
 
-    // Regra Obrigatória: Foto comprovatória exigida para Não Conformidade
-    if (formData.status === 'NAO_CONFORME' && !formData.photo) {
-      setMessage('Para registrar uma Não Conformidade, é obrigatório anexar uma foto comprobatória.');
-      return;
+    // Regra Obrigatória: Foto comprovatória exigida para CADA item de Não Conformidade
+    if (formData.status === 'NAO_CONFORME' || formData.deviations.length > 0) {
+      if (formData.deviations.length === 0) {
+        setMessage('Selecione ao menos um item reprovado para registrar a Não Conformidade.');
+        return;
+      }
+
+      const missingPhotos = WASTE_ITEMS.filter(it => 
+        formData.deviations.includes(it.label) && (!formData.itemPhotos?.[it.id]?.photo)
+      );
+
+      if (missingPhotos.length > 0) {
+        const itemNames = missingPhotos.map(it => `"${it.label}"`).join(', ');
+        setMessage(`Foto pendente nos itens não conformes: ${itemNames}. Anexe uma foto para cada desvio antes de salvar.`);
+        return;
+      }
     }
 
     setLoading(true);
     setMessage('');
     try {
+      // Mapeia os itens avaliados com as fotos específicas de cada um
+      const itemsData = WASTE_ITEMS.map(it => {
+        const isNC = formData.deviations.includes(it.label);
+        const pData = formData.itemPhotos?.[it.id];
+        return {
+          id: it.id,
+          label: it.label,
+          status: isNC ? 'NC' : 'C',
+          photo: isNC ? (pData?.photo || '') : '',
+          photoSize: isNC ? (pData?.photoSize || 0) : 0
+        };
+      });
+
+      // Foto principal (primeira encontrada) para compatibilidade com visualizadores legados
+      const firstPhoto = Object.values(formData.itemPhotos || {}).find(p => p?.photo)?.photo || '';
+
       await dbService.saveWasteInspection({
         ...formData,
+        items: itemsData,
+        photo: firstPhoto,
         unitId: 'betim'
       });
       setMessage('Vistoria de resíduos infectantes gravada com sucesso!');
@@ -192,10 +253,9 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
         ...prev,
         status: 'CONFORME',
         deviations: [],
+        itemPhotos: {},
         immediateAction: '',
         signature: '',
-        photo: '',
-        photoSize: 0,
         email1: defEmails.email1 || '',
         email2: defEmails.email2 || ''
       }));
@@ -342,6 +402,23 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
           </div>
         </div>
 
+        {/* Inputs Ocultos de Foto para Tablet */}
+        <input 
+          type="file" 
+          ref={cameraInputRef} 
+          accept="image/*" 
+          capture="environment" 
+          style={{ display: 'none' }} 
+          onChange={handlePhotoUpload} 
+        />
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          accept="image/*" 
+          style={{ display: 'none' }} 
+          onChange={handlePhotoUpload} 
+        />
+
         {/* Itens de Checagem RDC 222 / NR-32 */}
         <div style={styles.itemsCard}>
           <div style={styles.itemsCardHeader}>
@@ -349,139 +426,140 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
               {formData.status === 'NAO_CONFORME' ? 'Desvios Identificados (Selecione)' : 'Requisitos Inspecionados'}
             </label>
             {formData.status === 'NAO_CONFORME' && (
-              <span style={styles.subtextWarning}>Marque os itens reprovados na vistoria</span>
+              <span style={styles.subtextWarning}>Marque os itens reprovados. Cada item reprovado exige sua foto.</span>
             )}
           </div>
 
           <div style={styles.itemsList}>
             {WASTE_ITEMS.map((item) => {
               const isChecked = formData.deviations.includes(item.label);
+              const itemPhotoData = formData.itemPhotos?.[item.id];
+              const hasPhoto = !!itemPhotoData?.photo;
+
               return (
                 <div 
                   key={item.id} 
-                  onClick={() => toggleDeviation(item.label)}
                   style={{
-                    ...styles.itemRow,
-                    ...(isChecked ? styles.itemRowActive : {})
+                    ...styles.itemContainerBox,
+                    borderColor: isChecked ? '#fca5a5' : '#e2e8f0',
+                    backgroundColor: isChecked ? '#fffaf0' : '#ffffff'
                   }}
                 >
-                  <div style={{
-                    ...styles.checkboxCustom,
-                    backgroundColor: isChecked ? '#ef4444' : (formData.status === 'CONFORME' ? '#ecfdf5' : '#f8fafc'),
-                    borderColor: isChecked ? '#ef4444' : (formData.status === 'CONFORME' ? '#10b981' : '#cbd5e1')
-                  }}>
-                    {isChecked ? (
-                      <AlertTriangle size={13} color="#ffffff" />
-                    ) : (
-                      formData.status === 'CONFORME' && <Check size={13} color="#10b981" />
+                  <div 
+                    onClick={() => toggleDeviation(item.label, item.id)}
+                    style={{
+                      ...styles.itemRow,
+                      ...(isChecked ? styles.itemRowActive : {})
+                    }}
+                  >
+                    <div style={{
+                      ...styles.checkboxCustom,
+                      backgroundColor: isChecked ? '#ef4444' : (formData.status === 'CONFORME' ? '#ecfdf5' : '#f8fafc'),
+                      borderColor: isChecked ? '#ef4444' : (formData.status === 'CONFORME' ? '#10b981' : '#cbd5e1')
+                    }}>
+                      {isChecked ? (
+                        <AlertTriangle size={13} color="#ffffff" />
+                      ) : (
+                        formData.status === 'CONFORME' && <Check size={13} color="#10b981" />
+                      )}
+                    </div>
+                    <span style={{
+                      ...styles.itemLabel,
+                      color: isChecked ? '#991b1b' : 'var(--text-primary)',
+                      fontWeight: isChecked ? '600' : '500',
+                      flex: 1
+                    }}>
+                      {item.label}
+                    </span>
+                    {isChecked && (
+                      <span style={{
+                        ...styles.badgeItemStatus,
+                        backgroundColor: hasPhoto ? '#dcfce7' : '#fee2e2',
+                        color: hasPhoto ? '#15803d' : '#b91c1c'
+                      }}>
+                        {hasPhoto ? '✓ Foto Anexada' : '⚠️ Foto Obrigatória'}
+                      </span>
                     )}
                   </div>
-                  <span style={{
-                    ...styles.itemLabel,
-                    color: isChecked ? '#991b1b' : 'var(--text-primary)',
-                    fontWeight: isChecked ? '600' : '500'
-                  }}>
-                    {item.label}
-                  </span>
+
+                  {/* Bloco de Foto Específico deste Item Não Conforme */}
+                  {isChecked && (
+                    <div style={styles.itemPhotoCard}>
+                      <div style={styles.itemPhotoHeader}>
+                        <span style={styles.itemPhotoTitle}>
+                          Evidência Fotográfica do Desvio:
+                        </span>
+                        <div style={styles.iconButtonsGroup}>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); triggerCamera(item.id); }}
+                            disabled={compressing}
+                            style={styles.iconActionBtn}
+                            title="Tirar foto deste desvio com a câmera do tablet"
+                          >
+                            <Camera size={20} color="#059669" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); triggerGallery(item.id); }}
+                            disabled={compressing}
+                            style={styles.iconActionBtn}
+                            title="Anexar foto deste desvio da galeria"
+                          >
+                            <Paperclip size={20} color="#0284c7" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {compressing && activePhotoItemId === item.id && (
+                        <div style={styles.compressingBox}>
+                          <Loader2 size={16} className="animate-spin" color="#059669" />
+                          <span>Otimizando imagem para alta velocidade...</span>
+                        </div>
+                      )}
+
+                      {hasPhoto ? (
+                        <div style={styles.photoPreviewCard}>
+                          <div style={styles.photoWrapper}>
+                            <img 
+                              src={itemPhotoData.photo} 
+                              alt={item.label} 
+                              style={styles.photoImg} 
+                            />
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleRemoveItemPhoto(item.id); }}
+                              style={styles.photoRemoveBtn}
+                              title="Excluir foto deste item"
+                            >
+                              <X size={14} color="#ffffff" />
+                            </button>
+                          </div>
+                          <div style={styles.photoMeta}>
+                            <span style={styles.photoBadgeSuccess}>✓ Evidência Registrada</span>
+                            <span style={styles.photoSizeText}>
+                              Tamanho: {Math.round((itemPhotoData.photoSize || 0) / 1024)} KB
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={styles.photoRequiredAlert}>
+                          <AlertTriangle size={16} color="#dc2626" />
+                          <span>Foto comprobatória deste item pendente. Clique na <strong>Câmera</strong> ou no <strong>Anexo</strong> para cumprir o requisito.</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Bloco Exclusivo de Não Conformidade (Foto Obrigatória, Ação e E-mails) */}
+        {/* Bloco Exclusivo de Não Conformidade (Ação Imediata e E-mails) */}
         {formData.status === 'NAO_CONFORME' && (
           <div style={styles.ncContainer}>
-            {/* 1. Registro Fotográfico Obrigatório */}
-            <div style={styles.photoSection}>
-              <div style={styles.photoHeader}>
-                <div>
-                  <label style={styles.labelSection}>Evidência Fotográfica</label>
-                  <span style={styles.photoSubtext}>
-                    Obrigatório no registro de Não Conformidade. Utilize a câmera do tablet ou anexe da galeria.
-                  </span>
-                </div>
-                {/* Inputs Ocultos */}
-                <input 
-                  type="file" 
-                  ref={cameraInputRef} 
-                  accept="image/*" 
-                  capture="environment" 
-                  style={{ display: 'none' }} 
-                  onChange={handlePhotoUpload} 
-                />
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  accept="image/*" 
-                  style={{ display: 'none' }} 
-                  onChange={handlePhotoUpload} 
-                />
-
-                {/* Botões de Ação Touch (Somente Ícones com Tooltip para Tablet) */}
-                <div style={styles.iconButtonsGroup}>
-                  <button
-                    type="button"
-                    onClick={() => cameraInputRef.current?.click()}
-                    disabled={compressing}
-                    style={styles.iconActionBtn}
-                    title="Tirar foto com a câmera do tablet"
-                  >
-                    <Camera size={22} color="#059669" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={compressing}
-                    style={styles.iconActionBtn}
-                    title="Anexar foto da galeria"
-                  >
-                    <Paperclip size={22} color="#0284c7" />
-                  </button>
-                </div>
-              </div>
-
-              {compressing && (
-                <div style={styles.compressingBox}>
-                  <Loader2 size={18} className="animate-spin" color="#059669" />
-                  <span>Otimizando imagem para alta velocidade...</span>
-                </div>
-              )}
-
-              {/* Preview da Foto Capturada */}
-              {formData.photo ? (
-                <div style={styles.photoPreviewCard}>
-                  <div style={styles.photoWrapper}>
-                    <img 
-                      src={formData.photo} 
-                      alt="Evidência Fotográfica da Não Conformidade" 
-                      style={styles.photoImg} 
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemovePhoto}
-                      style={styles.photoRemoveBtn}
-                      title="Excluir foto para tirar outra"
-                    >
-                      <X size={16} color="#ffffff" />
-                    </button>
-                  </div>
-                  <div style={styles.photoMeta}>
-                    <span style={styles.photoBadgeSuccess}>✓ Evidência Anexada</span>
-                    <span style={styles.photoSizeText}>
-                      Tamanho otimizado: {Math.round((formData.photoSize || 0) / 1024)} KB
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div style={styles.photoRequiredAlert}>
-                  <AlertTriangle size={18} color="#dc2626" />
-                  <span>Foto comprobatória pendente. Clique na <strong>Câmera</strong> ou no <strong>Anexo</strong> acima para registrar.</span>
-                </div>
-              )}
-            </div>
-
-            {/* 2. Ação Imediata Adotada */}
+            {/* 1. Ação Imediata Adotada */}
             <div style={styles.actionBox}>
               <label style={styles.label}>Ação Imediata</label>
               <input 
@@ -509,7 +587,7 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
               </div>
             </div>
 
-            {/* 3. Disparo Imediato por E-mail (Sugestão 1: Preenchimento Automático por Setor) */}
+            {/* 2. Disparo Imediato por E-mail (Preenchimento Automático por Setor) */}
             <div style={styles.emailBox}>
               <div style={styles.emailHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -780,18 +858,51 @@ const styles = {
   itemsList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem'
+    gap: '0.65rem'
+  },
+  itemContainerBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    backgroundColor: '#ffffff',
+    overflow: 'hidden',
+    transition: 'all 0.15s ease'
   },
   itemRow: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
-    padding: '0.6rem 0.8rem',
-    borderRadius: '6px',
-    backgroundColor: 'var(--bg-body, #f8fafc)',
-    border: '1px solid transparent',
+    padding: '0.65rem 0.85rem',
     cursor: 'pointer',
+    userSelect: 'none',
     transition: 'all 0.15s ease'
+  },
+  badgeItemStatus: {
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '4px',
+    flexShrink: 0
+  },
+  itemPhotoCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    padding: '0.65rem 0.85rem',
+    backgroundColor: '#ffffff',
+    borderTop: '1px dashed #fca5a5'
+  },
+  itemPhotoHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem'
+  },
+  itemPhotoTitle: {
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    color: '#991b1b'
   },
   itemRowActive: {
     backgroundColor: '#fef2f2',

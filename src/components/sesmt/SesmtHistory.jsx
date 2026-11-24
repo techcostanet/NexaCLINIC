@@ -222,12 +222,32 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
                 <div style="font-size: 11px;">${record.immediateAction}</div>
               </div>
             ` : ''}
-            ${record.photo ? `
-              <div class="section-box">
-                <div class="section-title">Evidência Fotográfica Registrada no Tablet</div>
-                <img src="${record.photo}" class="evidence-img" alt="Evidência Fotográfica" />
-              </div>
-            ` : ''}
+            ${(() => {
+              const ncItemsWithPhoto = (record.items || []).filter(it => it.photo);
+              if (ncItemsWithPhoto.length > 0) {
+                return `
+                  <div class="section-box">
+                    <div class="section-title">Evidências Fotográficas por Item Reprovado</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px;">
+                      ${ncItemsWithPhoto.map(it => `
+                        <div style="flex: 1; min-width: 180px; border: 1px solid #ddd; padding: 6px; border-radius: 4px; background: #fff;">
+                          <div style="font-size: 10px; font-weight: bold; color: #b91c1c; margin-bottom: 4px;">❌ ${it.label}</div>
+                          <img src="${it.photo}" class="evidence-img" alt="${it.label}" style="max-height: 160px; object-fit: contain;" />
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                `;
+              } else if (record.photo) {
+                return `
+                  <div class="section-box">
+                    <div class="section-title">Evidência Fotográfica Registrada no Tablet</div>
+                    <img src="${record.photo}" class="evidence-img" alt="Evidência Fotográfica" />
+                  </div>
+                `;
+              }
+              return '';
+            })()}
             ${(record.email1 || record.email2) ? `
               <div class="section-box">
                 <div class="section-title">Notificações Emitidas por E-mail</div>
@@ -874,18 +894,59 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
                     </tbody>
                   </table>
 
-                  {selectedItem.photo && (
-                    <div style={{ marginTop: '1.25rem' }}>
-                      <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem' }}>Evidência Fotográfica de EPI</h5>
-                      <img 
-                        src={selectedItem.photo} 
-                        alt="Evidência Fotográfica EPI" 
-                        style={{ maxWidth: '100%', maxHeight: '240px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
-                        onClick={() => window.open(selectedItem.photo, '_blank')}
-                        title="Clique para ampliar"
-                      />
-                    </div>
-                  )}
+                  {/* Evidências Fotográficas por Item de EPI */}
+                  {(() => {
+                    const ncWithPhotos = Object.entries(selectedItem.evaluations || {})
+                      .filter(([_, ev]) => ev.status === 'NC' && ev.photo);
+
+                    if (ncWithPhotos.length > 0) {
+                      return (
+                        <div style={{ marginTop: '1.25rem' }}>
+                          <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.75rem' }}>
+                            Evidências Fotográficas por Item Reprovado:
+                          </h5>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                            {ncWithPhotos.map(([k, ev]) => (
+                              <div key={k} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc' }}>
+                                <strong style={{ fontSize: '0.8rem', color: '#b91c1c', display: 'block', marginBottom: '0.5rem' }}>
+                                  ❌ {labels[k] || k}
+                                </strong>
+                                <img 
+                                  src={ev.photo} 
+                                  alt={labels[k] || k} 
+                                  style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer' }}
+                                  onClick={() => window.open(ev.photo, '_blank')}
+                                  title="Clique para ampliar em tela cheia"
+                                />
+                                {ev.observation && (
+                                  <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block', marginTop: '0.35rem' }}>
+                                    {ev.observation}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    if (selectedItem.photo) {
+                      return (
+                        <div style={{ marginTop: '1.25rem' }}>
+                          <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem' }}>Evidência Fotográfica de EPI</h5>
+                          <img 
+                            src={selectedItem.photo} 
+                            alt="Evidência Fotográfica EPI" 
+                            style={{ maxWidth: '100%', maxHeight: '240px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
+                            onClick={() => window.open(selectedItem.photo, '_blank')}
+                            title="Clique para ampliar"
+                          />
+                        </div>
+                      );
+                    }
+
+                    return null;
+                  })()}
 
                   {(selectedItem.email1 || selectedItem.email2) && (
                     <div style={{ padding: '0.85rem', borderRadius: '6px', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', marginTop: '1rem' }}>
@@ -942,18 +1003,59 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
                     </tbody>
                   </table>
 
-                  {selectedItem.photo && (
-                    <div style={{ marginTop: '1.25rem' }}>
-                      <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem' }}>Evidência Fotográfica de EPI</h5>
-                      <img 
-                        src={selectedItem.photo} 
-                        alt="Evidência Fotográfica EPI" 
-                        style={{ maxWidth: '100%', maxHeight: '240px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
-                        onClick={() => window.open(selectedItem.photo, '_blank')}
-                        title="Clique para ampliar"
-                      />
-                    </div>
-                  )}
+                  {/* Evidências Fotográficas por Item de EPI */}
+                  {(() => {
+                    const ncWithPhotos = Object.entries(selectedItem.evaluations || {})
+                      .filter(([_, ev]) => ev.status === 'NC' && ev.photo);
+
+                    if (ncWithPhotos.length > 0) {
+                      return (
+                        <div style={{ marginTop: '1.25rem' }}>
+                          <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.75rem' }}>
+                            Evidências Fotográficas por Item Reprovado:
+                          </h5>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                            {ncWithPhotos.map(([k, ev]) => (
+                              <div key={k} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc' }}>
+                                <strong style={{ fontSize: '0.8rem', color: '#b91c1c', display: 'block', marginBottom: '0.5rem' }}>
+                                  ❌ {labels[k] || k}
+                                </strong>
+                                <img 
+                                  src={ev.photo} 
+                                  alt={labels[k] || k} 
+                                  style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer' }}
+                                  onClick={() => window.open(ev.photo, '_blank')}
+                                  title="Clique para ampliar em tela cheia"
+                                />
+                                {ev.observation && (
+                                  <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block', marginTop: '0.35rem' }}>
+                                    {ev.observation}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    if (selectedItem.photo) {
+                      return (
+                        <div style={{ marginTop: '1.25rem' }}>
+                          <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem' }}>Evidência Fotográfica de EPI</h5>
+                          <img 
+                            src={selectedItem.photo} 
+                            alt="Evidência Fotográfica EPI" 
+                            style={{ maxWidth: '100%', maxHeight: '240px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
+                            onClick={() => window.open(selectedItem.photo, '_blank')}
+                            title="Clique para ampliar"
+                          />
+                        </div>
+                      );
+                    }
+
+                    return null;
+                  })()}
 
                   {(selectedItem.email1 || selectedItem.email2) && (
                     <div style={{ padding: '0.85rem', borderRadius: '6px', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', marginTop: '1rem' }}>
@@ -1139,23 +1241,61 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
                     </div>
                   )}
 
-                  {selectedItem.photo && (
-                    <div style={{ marginBottom: '1.25rem' }}>
-                      <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem' }}>Evidência Fotográfica</h5>
-                      <div style={{ display: 'inline-block' }}>
-                        <img 
-                          src={selectedItem.photo} 
-                          alt="Evidência Fotográfica" 
-                          style={{ maxWidth: '100%', maxHeight: '240px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
-                          onClick={() => window.open(selectedItem.photo, '_blank')}
-                          title="Clique para ampliar"
-                        />
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
-                          Foto registrada no tablet durante a auditoria (clique para ampliar)
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                  {/* Evidências Fotográficas por Item de Resíduos */}
+                  {(() => {
+                    const ncItemsWithPhotos = (selectedItem.items || []).filter(it => it.status === 'NC' && it.photo);
+
+                    if (ncItemsWithPhotos.length > 0) {
+                      return (
+                        <div style={{ marginBottom: '1.25rem' }}>
+                          <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.75rem' }}>
+                            Evidências Fotográficas por Item Reprovado:
+                          </h5>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                            {ncItemsWithPhotos.map(it => (
+                              <div key={it.id || it.label} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc' }}>
+                                <strong style={{ fontSize: '0.8rem', color: '#b91c1c', display: 'block', marginBottom: '0.5rem' }}>
+                                  ❌ {it.label}
+                                </strong>
+                                <img 
+                                  src={it.photo} 
+                                  alt={it.label} 
+                                  style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer' }}
+                                  onClick={() => window.open(it.photo, '_blank')}
+                                  title="Clique para ampliar em tela cheia"
+                                />
+                                <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b', marginTop: '0.35rem' }}>
+                                  {it.photoSize ? `${Math.round(it.photoSize / 1024)} KB` : 'Foto tablet'} (clique para ampliar)
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    if (selectedItem.photo) {
+                      return (
+                        <div style={{ marginBottom: '1.25rem' }}>
+                          <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem' }}>Evidência Fotográfica</h5>
+                          <div style={{ display: 'inline-block' }}>
+                            <img 
+                              src={selectedItem.photo} 
+                              alt="Evidência Fotográfica" 
+                              style={{ maxWidth: '100%', maxHeight: '240px', borderRadius: '8px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
+                              onClick={() => window.open(selectedItem.photo, '_blank')}
+                              title="Clique para ampliar"
+                            />
+                            <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+                              Foto registrada no tablet durante a auditoria (clique para ampliar)
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return null;
+                  })()}
 
                   {(selectedItem.email1 || selectedItem.email2) && (
                     <div style={{ padding: '0.85rem', borderRadius: '6px', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', marginBottom: '1.25rem' }}>

@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.53',
+      date: '24/11/2026',
+      title: 'Nex-Ai CLINIC (.SESMT) — Evidência Fotográfica Individual por Item Reprovado, Validação Estrita e E-mail Consolidado com Fotos dos Desvios',
+      description: 'Refinamento rigoroso de conformidade e auditoria sanitária no módulo SESMT: 1) Fotos Atreladas ao Item: a captura de fotos comprobatórias agora é realizada diretamente em cada item reprovado (Resíduos e EPI), deixando de ser geral do formulário; 2) Validação Obrigatória: bloqueio automático do salvamento caso algum item não conforme esteja sem sua foto anexada, com alertas especificando os itens pendentes; 3) E-mail Unificado Consolidado: disparo único para o formulário inteiro contendo todos os desvios e as fotos comprobatórias de cada item incorporadas; 4) Histórico & Impressão: visualização e impressão física em A4 com galeria analítica discriminando as fotos por item reprovado.',
+      changes: [
+        { type: 'Fotos por Item', text: 'Cada item marcado como não conforme possui seus próprios botões de Câmera e Anexo touch.' },
+        { type: 'Validação Estrita', text: 'O sistema impede o salvamento até que todos os itens não conformes tenham suas fotos anexadas.' },
+        { type: 'E-mail Consolidado', text: 'Um único e-mail para o formulário contendo o detalhamento e as fotos de cada desvio.' },
+        { type: 'Histórico & Ficha A4', text: 'Galeria visual e impressão física oficial em A4 com as fotos atreladas aos itens reprovados.' }
+      ]
+    },
+    {
       version: 'v5.0.52',
       date: '24/11/2026',
       title: 'Nex-Ai CLINIC (.SESMT) — Novos Setores (Lavatório, Recepção 2, Consultórios), Evidência Fotográfica Obrigatória em Tablet para Não Conformidades, Alertas por E-mail e Dossiê Regulamentar',

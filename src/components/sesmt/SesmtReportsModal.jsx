@@ -1507,27 +1507,51 @@ export default function SesmtReportsModal({
           { header: 'Setor', key: 'sector' },
           { header: 'Turno', key: 'shift' },
           { header: 'Auditor', key: 'auditor' },
-          { header: 'Desvios', key: 'deviations' },
+          { header: 'Item Reprovado', key: 'deviations' },
           { header: 'Ação', key: 'immediateAction' },
           { header: 'Evidência', key: 'photoThumbnail' }
         ];
 
         const ncWastes = filteredWastes.filter(w => w.status === 'NAO_CONFORME' || !w.isConform);
-        data = ncWastes.map(w => ({
-          displayDate: w.date ? `${formatDateBR(w.date)} ${w.time || ''}` : '-',
-          sector: w.sector || 'Geral',
-          shift: w.shift || '-',
-          auditor: w.auditor || '-',
-          deviations: (w.deviations || []).join('; ') || 'Desvio identificado na vistoria',
-          immediateAction: w.immediateAction || '-',
-          photo: w.photo || '',
-          photoThumbnail: w.photo ? '✓ Foto Anexada' : 'Pendente'
-        }));
+        const rows = [];
+
+        ncWastes.forEach(w => {
+          const displayDate = w.date ? `${formatDateBR(w.date)} ${w.time || ''}` : '-';
+          const ncItems = (w.items || []).filter(it => it.status === 'NC');
+
+          if (ncItems.length > 0) {
+            ncItems.forEach(it => {
+              rows.push({
+                displayDate,
+                sector: w.sector || 'Geral',
+                shift: w.shift || '-',
+                auditor: w.auditor || '-',
+                deviations: it.label,
+                immediateAction: w.immediateAction || '-',
+                photo: it.photo || w.photo || '',
+                photoThumbnail: (it.photo || w.photo) ? '✓ Foto Anexada' : 'Pendente'
+              });
+            });
+          } else {
+            rows.push({
+              displayDate,
+              sector: w.sector || 'Geral',
+              shift: w.shift || '-',
+              auditor: w.auditor || '-',
+              deviations: (w.deviations || []).join('; ') || 'Desvio identificado na vistoria',
+              immediateAction: w.immediateAction || '-',
+              photo: w.photo || '',
+              photoThumbnail: w.photo ? '✓ Foto Anexada' : 'Pendente'
+            });
+          }
+        });
+
+        data = rows;
 
         kpis = [
-          { label: 'Não Conformidades', value: ncWastes.length, color: '#dc2626' },
-          { label: 'Com Foto', value: ncWastes.filter(w => w.photo).length, color: '#059669' },
-          { label: 'Setores com Desvio', value: new Set(ncWastes.map(w => w.sector)).size, color: '#f59e0b' }
+          { label: 'Desvios Registrados', value: rows.length, color: '#dc2626' },
+          { label: 'Com Foto Comprobatória', value: rows.filter(r => r.photo).length, color: '#059669' },
+          { label: 'Setores com Desvio', value: new Set(rows.map(r => r.sector)).size, color: '#f59e0b' }
         ];
         break;
       }

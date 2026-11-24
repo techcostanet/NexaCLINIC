@@ -51,19 +51,18 @@ export default function DailyEPIChecklist({ onSuccess }) {
     enfermeiro: '',
     tecnicoSeguranca: '',
     signature: '',
-    photo: '',
-    photoSize: 0,
     email1: initialEmails.email1 || '',
     email2: initialEmails.email2 || '',
     sendEmailAlert: true,
     evaluations: ITEMS.reduce((acc, item) => ({
       ...acc,
-      [item.id]: { status: 'C', observation: '' }
+      [item.id]: { status: 'C', observation: '', photo: '', photoSize: 0 }
     }), {})
   });
 
   const [loading, setLoading] = useState(false);
   const [compressing, setCompressing] = useState(false);
+  const [activePhotoItemId, setActivePhotoItemId] = useState(null);
   const [message, setMessage] = useState('');
   const [viewMode, setViewMode] = useState('cards');
 
@@ -94,16 +93,24 @@ export default function DailyEPIChecklist({ onSuccess }) {
   };
 
   const handleEvaluationChange = (itemId, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      evaluations: {
-        ...prev.evaluations,
-        [itemId]: {
-          ...prev.evaluations[itemId],
-          [field]: value
+    setFormData(prev => {
+      const currentItem = prev.evaluations[itemId] || { status: 'C', observation: '', photo: '', photoSize: 0 };
+      const isStatusChange = field === 'status';
+      const isNowNotNC = isStatusChange && value !== 'NC';
+
+      return {
+        ...prev,
+        evaluations: {
+          ...prev.evaluations,
+          [itemId]: {
+            ...currentItem,
+            [field]: value,
+            // Se mudou de NC para Conforme ou NA, remove foto
+            ...(isNowNotNC ? { photo: '', photoSize: 0 } : {})
+          }
         }
-      }
-    }));
+      };
+    });
   };
 
   // Marcar todos os itens como Conforme
@@ -112,7 +119,7 @@ export default function DailyEPIChecklist({ onSuccess }) {
       ...prev,
       evaluations: ITEMS.reduce((acc, item) => ({
         ...acc,
-        [item.id]: { ...prev.evaluations[item.id], status: 'C' }
+        [item.id]: { ...prev.evaluations[item.id], status: 'C', photo: '', photoSize: 0 }
       }), {})
     }));
   };
@@ -126,9 +133,24 @@ export default function DailyEPIChecklist({ onSuccess }) {
     }));
   };
 
+  const triggerCamera = (itemId) => {
+    setActivePhotoItemId(itemId);
+    setTimeout(() => {
+      if (cameraInputRef.current) cameraInputRef.current.click();
+    }, 50);
+  };
+
+  const triggerGallery = (itemId) => {
+    setActivePhotoItemId(itemId);
+    setTimeout(() => {
+      if (fileInputRef.current) fileInputRef.current.click();
+    }, 50);
+  };
+
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    const targetItemId = activePhotoItemId;
+    if (!file || !targetItemId) return;
 
     setCompressing(true);
     setMessage('');
@@ -136,8 +158,14 @@ export default function DailyEPIChecklist({ onSuccess }) {
       const compressed = await compressImage(file, 1280, 1280, 0.75);
       setFormData(prev => ({
         ...prev,
-        photo: compressed.dataUrl,
-        photoSize: compressed.sizeBytes
+        evaluations: {
+          ...prev.evaluations,
+          [targetItemId]: {
+            ...prev.evaluations[targetItemId],
+            photo: compressed.dataUrl,
+            photoSize: compressed.sizeBytes
+          }
+        }
       }));
     } catch (err) {
       console.error('Erro ao processar imagem de EPI:', err);
@@ -149,11 +177,17 @@ export default function DailyEPIChecklist({ onSuccess }) {
     }
   };
 
-  const handleRemovePhoto = () => {
+  const handleRemoveItemPhoto = (itemId) => {
     setFormData(prev => ({
       ...prev,
-      photo: '',
-      photoSize: 0
+      evaluations: {
+        ...prev.evaluations,
+        [itemId]: {
+          ...prev.evaluations[itemId],
+          photo: '',
+          photoSize: 0
+        }
+      }
     }));
   };
 
@@ -165,17 +199,26 @@ export default function DailyEPIChecklist({ onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validação obrigatória: Foto se houver Não Conformidade
-    if (totalNC > 0 && !formData.photo) {
-      setMessage('Para registrar itens Não Conformes, é obrigatório anexar uma foto comprobatória.');
+    // Validação obrigatória: Foto para CADA item marcado como Não Conforme
+    const unphotographedNCs = ITEMS.filter(item => {
+      const ev = formData.evaluations[item.id];
+      return ev?.status === 'NC' && !ev?.photo;
+    });
+
+    if (unphotographedNCs.length > 0) {
+      const names = unphotographedNCs.map(it => `"${it.label}"`).join(', ');
+      setMessage(`Foto pendente nos seguintes itens não conformes: ${names}. É obrigatório anexar foto para cada item reprovado.`);
       return;
     }
 
     setLoading(true);
     setMessage('');
     try {
+      const firstNcPhoto = Object.values(formData.evaluations || {}).find(ev => ev.status === 'NC' && ev.photo)?.photo || '';
+
       await dbService.saveEpiInspection({
         ...formData,
+        photo: firstNcPhoto, // compatibilidade com históricos legados
         createdAt: new Date().toISOString()
       });
       setMessage('Checklist de EPI salvo com sucesso!');
@@ -184,11 +227,13 @@ export default function DailyEPIChecklist({ onSuccess }) {
       const defEmails = getSectorDefaultEmails(formData.sector);
       setFormData(prev => ({
         ...prev,
-        photo: '',
-        photoSize: 0,
         email1: defEmails.email1 || '',
         email2: defEmails.email2 || '',
-        signature: ''
+        signature: '',
+        evaluations: ITEMS.reduce((acc, item) => ({
+          ...acc,
+          [item.id]: { status: 'C', observation: '', photo: '', photoSize: 0 }
+        }), {})
       }));
 
       if (onSuccess) onSuccess();
@@ -296,6 +341,23 @@ export default function DailyEPIChecklist({ onSuccess }) {
           </div>
         </div>
 
+        {/* Inputs Ocultos de Foto para Tablet */}
+        <input 
+          type="file" 
+          ref={cameraInputRef} 
+          accept="image/*" 
+          capture="environment" 
+          style={{ display: 'none' }} 
+          onChange={handlePhotoUpload} 
+        />
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          accept="image/*" 
+          style={{ display: 'none' }} 
+          onChange={handlePhotoUpload} 
+        />
+
         {/* Barra de ação rápida */}
         <div style={styles.quickBar}>
           <button
@@ -314,10 +376,11 @@ export default function DailyEPIChecklist({ onSuccess }) {
         {viewMode === 'cards' && (
           <div style={styles.cardsGrid}>
             {ITEMS.map(item => {
-              const evalData = formData.evaluations[item.id] || { status: 'C', observation: '' };
+              const evalData = formData.evaluations[item.id] || { status: 'C', observation: '', photo: '', photoSize: 0 };
               const isC = evalData.status === 'C';
               const isNC = evalData.status === 'NC';
               const isNA = evalData.status === 'NA';
+              const hasPhoto = !!evalData.photo;
 
               return (
                 <div 
@@ -335,7 +398,7 @@ export default function DailyEPIChecklist({ onSuccess }) {
                       backgroundColor: isC ? '#dcfce7' : isNC ? '#fee2e2' : '#f1f5f9',
                       color: isC ? '#15803d' : isNC ? '#b91c1c' : '#475569'
                     }}>
-                      {isC ? 'Conforme' : isNC ? 'Não Conforme' : 'Não Avaliado'}
+                      {isC ? 'Conforme' : isNC ? (hasPhoto ? 'NC (Foto Anexada)' : 'NC (Foto Pendente)') : 'Não Avaliado'}
                     </span>
                   </div>
 
@@ -383,6 +446,71 @@ export default function DailyEPIChecklist({ onSuccess }) {
                       style={styles.inputObservation}
                     />
                   </div>
+
+                  {/* Bloco de Foto Específico deste Item de EPI quando Não Conforme */}
+                  {isNC && (
+                    <div style={styles.itemPhotoCard}>
+                      <div style={styles.itemPhotoHeader}>
+                        <span style={styles.itemPhotoTitle}>
+                          Evidência Fotográfica do EPI:
+                        </span>
+                        <div style={styles.iconButtonsGroup}>
+                          <button
+                            type="button"
+                            onClick={() => triggerCamera(item.id)}
+                            disabled={compressing}
+                            style={styles.iconActionBtn}
+                            title="Tirar foto deste EPI com a câmera do tablet"
+                          >
+                            <Camera size={20} color="#0891b2" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => triggerGallery(item.id)}
+                            disabled={compressing}
+                            style={styles.iconActionBtn}
+                            title="Anexar foto deste EPI da galeria"
+                          >
+                            <Paperclip size={20} color="#0284c7" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {compressing && activePhotoItemId === item.id && (
+                        <div style={styles.compressingBox}>
+                          <Loader2 size={16} className="animate-spin" color="#0891b2" />
+                          <span>Otimizando imagem para alta velocidade...</span>
+                        </div>
+                      )}
+
+                      {hasPhoto ? (
+                        <div style={styles.photoPreviewCard}>
+                          <div style={styles.photoWrapper}>
+                            <img src={evalData.photo} alt={item.label} style={styles.photoImg} />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveItemPhoto(item.id)}
+                              style={styles.photoRemoveBtn}
+                              title="Excluir foto deste item"
+                            >
+                              <X size={14} color="#ffffff" />
+                            </button>
+                          </div>
+                          <div style={styles.photoMeta}>
+                            <span style={styles.photoBadgeSuccess}>✓ Evidência Registrada</span>
+                            <span style={styles.photoSizeText}>
+                              Tamanho: {Math.round((evalData.photoSize || 0) / 1024)} KB
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={styles.photoRequiredAlert}>
+                          <AlertTriangle size={15} color="#dc2626" />
+                          <span>Foto comprobatória deste item pendente. Clique na <strong>Câmera</strong> ou no <strong>Anexo</strong> para cumprir o requisito.</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -397,150 +525,122 @@ export default function DailyEPIChecklist({ onSuccess }) {
                 <tr>
                   <th style={styles.th}>Item</th>
                   <th style={{ ...styles.th, textAlign: 'center', width: '220px' }}>Avaliação</th>
-                  <th style={styles.th}>Observações</th>
+                  <th style={styles.th}>Observações e Foto</th>
                 </tr>
               </thead>
               <tbody>
-                {ITEMS.map(item => (
-                  <tr key={item.id} style={styles.tr}>
-                    <td style={styles.td}>
-                      <strong>{item.label}</strong>
-                    </td>
-                    <td style={{ ...styles.td, textAlign: 'center' }}>
-                      <div style={styles.radioGroup}>
-                        <label style={styles.radioLabel}>
+                {ITEMS.map(item => {
+                  const evalData = formData.evaluations[item.id] || { status: 'C', observation: '', photo: '', photoSize: 0 };
+                  const isNC = evalData.status === 'NC';
+                  const hasPhoto = !!evalData.photo;
+
+                  return (
+                    <tr key={item.id} style={{ ...styles.tr, backgroundColor: isNC ? '#fffaf0' : '#ffffff' }}>
+                      <td style={styles.td}>
+                        <strong>{item.label}</strong>
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'center' }}>
+                        <div style={styles.radioGroup}>
+                          <label style={styles.radioLabel}>
+                            <input 
+                              type="radio" 
+                              name={`status_${item.id}`} 
+                              value="C"
+                              checked={evalData.status === 'C'}
+                              onChange={(e) => handleEvaluationChange(item.id, 'status', e.target.value)}
+                            />
+                            <span style={{ color: '#16a34a', fontWeight: 'bold' }} title="Conforme">C</span>
+                          </label>
+                          <label style={styles.radioLabel}>
+                            <input 
+                              type="radio" 
+                              name={`status_${item.id}`} 
+                              value="NC"
+                              checked={evalData.status === 'NC'}
+                              onChange={(e) => handleEvaluationChange(item.id, 'status', e.target.value)}
+                            />
+                            <span style={{ color: '#dc2626', fontWeight: 'bold' }} title="Não Conforme">NC</span>
+                          </label>
+                          <label style={styles.radioLabel}>
+                            <input 
+                              type="radio" 
+                              name={`status_${item.id}`} 
+                              value="NA"
+                              checked={evalData.status === 'NA'}
+                              onChange={(e) => handleEvaluationChange(item.id, 'status', e.target.value)}
+                            />
+                            <span style={{ color: '#6b7280', fontWeight: 'bold' }} title="Não Avaliado">NA</span>
+                          </label>
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                           <input 
-                            type="radio" 
-                            name={`status_${item.id}`} 
-                            value="C"
-                            checked={formData.evaluations[item.id].status === 'C'}
-                            onChange={(e) => handleEvaluationChange(item.id, 'status', e.target.value)}
+                            type="text" 
+                            value={evalData.observation}
+                            onChange={(e) => handleEvaluationChange(item.id, 'observation', e.target.value)}
+                            placeholder="Observações..."
+                            style={styles.input}
                           />
-                          <span style={{ color: '#16a34a', fontWeight: 'bold' }} title="Conforme">C</span>
-                        </label>
-                        <label style={styles.radioLabel}>
-                          <input 
-                            type="radio" 
-                            name={`status_${item.id}`} 
-                            value="NC"
-                            checked={formData.evaluations[item.id].status === 'NC'}
-                            onChange={(e) => handleEvaluationChange(item.id, 'status', e.target.value)}
-                          />
-                          <span style={{ color: '#dc2626', fontWeight: 'bold' }} title="Não Conforme">NC</span>
-                        </label>
-                        <label style={styles.radioLabel}>
-                          <input 
-                            type="radio" 
-                            name={`status_${item.id}`} 
-                            value="NA"
-                            checked={formData.evaluations[item.id].status === 'NA'}
-                            onChange={(e) => handleEvaluationChange(item.id, 'status', e.target.value)}
-                          />
-                          <span style={{ color: '#6b7280', fontWeight: 'bold' }} title="Não Avaliado">NA</span>
-                        </label>
-                      </div>
-                    </td>
-                    <td style={styles.td}>
-                      <input 
-                        type="text" 
-                        value={formData.evaluations[item.id].observation}
-                        onChange={(e) => handleEvaluationChange(item.id, 'observation', e.target.value)}
-                        placeholder="Observações..."
-                        style={styles.input}
-                      />
-                    </td>
-                  </tr>
-                ))}
+                          {isNC && (
+                            <div style={styles.tablePhotoActions}>
+                              <div style={styles.iconButtonsGroup}>
+                                <button
+                                  type="button"
+                                  onClick={() => triggerCamera(item.id)}
+                                  disabled={compressing}
+                                  style={styles.iconActionBtnSm}
+                                  title="Tirar foto deste EPI com a câmera do tablet"
+                                >
+                                  <Camera size={16} color="#0891b2" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => triggerGallery(item.id)}
+                                  disabled={compressing}
+                                  style={styles.iconActionBtnSm}
+                                  title="Anexar foto deste EPI da galeria"
+                                >
+                                  <Paperclip size={16} color="#0284c7" />
+                                </button>
+                              </div>
+                              {hasPhoto ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <img 
+                                    src={evalData.photo} 
+                                    alt="Foto" 
+                                    style={{ width: '40px', height: '30px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #cbd5e1' }} 
+                                  />
+                                  <span style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: '600' }}>✓ Foto Anexada</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveItemPhoto(item.id)}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                                    title="Remover foto"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: '600' }}>
+                                  ⚠️ Foto obrigatória pendente
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
 
-        {/* Bloco de Não Conformidade (Exibido se houver ao menos 1 item NC) */}
+        {/* Bloco de Notificação por E-mail (Exibido se houver ao menos 1 item NC) */}
         {totalNC > 0 && (
           <div style={styles.ncContainer}>
-            {/* Foto Obrigatória */}
-            <div style={styles.photoSection}>
-              <div style={styles.photoHeader}>
-                <div>
-                  <label style={styles.labelSection}>Evidência Fotográfica</label>
-                  <span style={styles.photoSubtext}>
-                    Obrigatório no registro de Não Conformidade ({totalNC} item(ns) reprovado(s)).
-                  </span>
-                </div>
-                <input 
-                  type="file" 
-                  ref={cameraInputRef} 
-                  accept="image/*" 
-                  capture="environment" 
-                  style={{ display: 'none' }} 
-                  onChange={handlePhotoUpload} 
-                />
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  accept="image/*" 
-                  style={{ display: 'none' }} 
-                  onChange={handlePhotoUpload} 
-                />
-                <div style={styles.iconButtonsGroup}>
-                  <button
-                    type="button"
-                    onClick={() => cameraInputRef.current?.click()}
-                    disabled={compressing}
-                    style={styles.iconActionBtn}
-                    title="Tirar foto com a câmera do tablet"
-                  >
-                    <Camera size={22} color="#0891b2" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={compressing}
-                    style={styles.iconActionBtn}
-                    title="Anexar foto da galeria"
-                  >
-                    <Paperclip size={22} color="#0284c7" />
-                  </button>
-                </div>
-              </div>
-
-              {compressing && (
-                <div style={styles.compressingBox}>
-                  <Loader2 size={18} className="animate-spin" color="#0891b2" />
-                  <span>Otimizando imagem para alta velocidade...</span>
-                </div>
-              )}
-
-              {formData.photo ? (
-                <div style={styles.photoPreviewCard}>
-                  <div style={styles.photoWrapper}>
-                    <img src={formData.photo} alt="Foto da Evidência EPI" style={styles.photoImg} />
-                    <button
-                      type="button"
-                      onClick={handleRemovePhoto}
-                      style={styles.photoRemoveBtn}
-                      title="Excluir foto"
-                    >
-                      <X size={16} color="#ffffff" />
-                    </button>
-                  </div>
-                  <div style={styles.photoMeta}>
-                    <span style={styles.photoBadgeSuccess}>✓ Evidência Anexada</span>
-                    <span style={styles.photoSizeText}>
-                      Tamanho otimizado: {Math.round((formData.photoSize || 0) / 1024)} KB
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div style={styles.photoRequiredAlert}>
-                  <AlertTriangle size={18} color="#dc2626" />
-                  <span>Foto comprobatória pendente. Clique na <strong>Câmera</strong> ou no <strong>Anexo</strong> acima.</span>
-                </div>
-              )}
-            </div>
-
-            {/* Notificação por E-mail */}
             <div style={styles.emailBox}>
               <div style={styles.emailHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -852,6 +952,44 @@ const styles = {
     backgroundColor: '#ffffff',
     color: '#0f172a',
     boxSizing: 'border-box'
+  },
+  itemPhotoCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    marginTop: '0.5rem',
+    padding: '0.65rem 0.85rem',
+    backgroundColor: '#ffffff',
+    borderRadius: '6px',
+    border: '1px dashed #fca5a5'
+  },
+  itemPhotoHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem'
+  },
+  itemPhotoTitle: {
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    color: '#991b1b'
+  },
+  tablePhotoActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    flexWrap: 'wrap'
+  },
+  iconActionBtnSm: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: '#f8fafc',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer'
   },
   tableResponsive: {
     overflowX: 'auto',

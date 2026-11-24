@@ -1,3 +1,19 @@
+## [v5.0.53] - 24 de Novembro, 2026
+### Nex-Ai CLINIC (.SESMT) — Evidência Fotográfica Individual por Item Reprovado, Validação Estrita e E-mail Consolidado com Fotos dos Desvios
+- **Evidência Fotográfica Atrelada ao Item (`DailyWasteChecklist.jsx` & `DailyEPIChecklist.jsx`):**
+  - **Atrelamento Exclusivo por Item:** A foto comprobatória deixou de ser anexada ao formulário como um todo e passou a ser exigida individualmente em cada item marcado como Não Conforme / Desvio.
+  - **Interface Touch no Tablet:** Cada item reprovado abre diretamente sua própria seção de captura com botões otimizados de Câmera (`capture="environment"`) e Anexo (galeria), com compressão instantânea em Canvas (~100KB), miniatura e botão de exclusão.
+- **Trava de Validação Regulatória Estrita:**
+  - O sistema impede o salvamento de qualquer vistoria (Resíduos ou EPI) enquanto houver algum item reprovado sem sua respectiva foto comprobatória anexada.
+  - Mensagens claras apontam na tela os nomes dos itens que ainda estão pendentes de evidência visual.
+- **Disparo de E-mail Unificado com Fotos dos Desvios (`sesmtService.js`):**
+  - O envio de notificação por e-mail permanece único para a vistoria inteira (destinado aos e-mails sugeridos automaticamente pelo setor auditado).
+  - O corpo do e-mail consolida todos os itens não conformes identificados, exibindo o título de cada desvio, observações registradas e a respectiva foto comprobatória logo abaixo de cada item.
+- **Histórico, Impressão Oficial e Central de Relatórios (`SesmtHistory.jsx` & `SesmtReportsModal.jsx`):**
+  - No modal de detalhes do Histórico, as evidências fotográficas são apresentadas em galeria analítica organizada por item reprovado com ampliação em tela cheia.
+  - A impressão oficial da ficha física A4 passa a incluir as fotos individuais de cada desvio apontado.
+  - O **Relatório 27 (Dossiê Fotográfico)** desagrega as fotos por item reprovado, exibindo a identificação exata do requisito não atendido.
+
 ## [v5.0.52] - 24 de Novembro, 2026
 ### Nex-Ai CLINIC (.SESMT) — Novos Setores (Lavatório, Recepção 2, Consultórios), Evidência Fotográfica Obrigatória em Tablet para Não Conformidades, Alertas por E-mail e Dossiê Regulamentar
 - **Novos Setores Cadastrados (`sesmtConstants.js`):**

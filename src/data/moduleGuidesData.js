@@ -3362,14 +3362,15 @@ export const MODULE_GUIDES = {
         ]
       },
       {
-        title: 'Como Registrar uma Não Conformidade com Foto no Tablet e Disparar Alerta por E-mail',
+        title: 'Como Registrar Não Conformidades com Fotos por Item no Tablet e Disparar Alerta por E-mail',
         steps: [
           'No formulário de Vistoria de Resíduos ou Checklist de EPI, selecione o Setor auditado (incluindo Lavatório, Recepção 2 ou Consultórios).',
-          'Ao identificar desvios sanitários ou irregularidades de EPI, selecione o status "Não Conforme".',
-          'O sistema abrirá a seção de Evidência Fotográfica: clique no ícone da Câmera para disparar a lente do tablet ou no Anexo para escolher uma foto da galeria.',
-          'A foto é automaticamente otimizada e comprimida no navegador em menos de 1 segundo, mantendo nitidez para auditoria sem sobrecarregar a rede móvel.',
-          'Os campos de "E-mail 1" e "E-mail 2" virão preenchidos automaticamente com base no setor auditado (ex: higienizacao@dialize.com.br, enfermagem@dialize.com.br, medicos@dialize.com.br e sesmt@dialize.com.br), podendo ser alterados livremente.',
-          'Descreva a Ação Imediata adotada, colha a rubrica do responsável e clique em "Salvar Vistoria". O registro é salvo e os alertas por e-mail são enviados instantaneamente.'
+          'Ao identificar desvios sanitários ou irregularidades de EPI, marque o item reprovado como "Não Conforme" (ou selecione os itens de desvio).',
+          'O item marcado abrirá imediatamente sua própria seção de Evidência Fotográfica: clique no ícone da Câmera para disparar a lente do tablet ou no Anexo para escolher uma foto da galeria.',
+          'Cada item marcado como não conforme deve possuir sua respectiva foto. O sistema bloqueia o salvamento e alerta se algum item reprovado estiver pendente de foto.',
+          'A foto de cada item é automaticamente otimizada e comprimida via Canvas no navegador em menos de 1 segundo (~100KB), mantendo alta resolução para auditoria sem lentidão.',
+          'Os campos de "E-mail 1" e "E-mail 2" virão preenchidos automaticamente com base no setor auditado, podendo ser alterados livremente.',
+          'Descreva a Ação Imediata adotada, colha a rubrica do responsável e clique em "Salvar Vistoria". O registro é salvo e um único e-mail contendo todas as fotos e desvios é enviado instantaneamente para a equipe.'
         ]
       }
     ],
@@ -3407,8 +3408,8 @@ export const MODULE_GUIDES = {
         resposta: 'No topo de cada formulário e na aba de histórico existe um seletor visual com os botões "Cartões" e "Tabela". Em telas menores (celulares e tablets), o sistema já abre automaticamente no modo Cartões para facilitar a operação portátil.'
       },
       {
-        pergunta: 'Por que a foto é obrigatória ao registrar uma Não Conformidade no SESMT?',
-        resposta: 'Para garantir rigor de auditoria sanitária e respaldo legal perante a Vigilância Sanitária (VISA) e o Ministério do Trabalho (NR-32/NR-1). O sistema exige evidência visual antes de salvar desvios, disponibilizando botões rápidos para a câmera do tablet ou galeria com compressão automática em Canvas para não pesar a rede.'
+        pergunta: 'Por que a foto é obrigatória em CADA item não conforme no SESMT?',
+        resposta: 'Para garantir rigor de auditoria sanitária e respaldo legal perante a Vigilância Sanitária (VISA) e o Ministério do Trabalho (NR-32/NR-1). O sistema atrela a foto comprobatória diretamente a cada item avaliado que foi reprovado, bloqueando o salvamento se qualquer desvio estiver sem foto. Ao salvar, um único e-mail consolidado é disparado para os responsáveis contendo o detalhamento de cada item e suas respectivas fotos.'
       },
       {
         pergunta: 'Como funciona o preenchimento automático de e-mails de alerta por setor?',
