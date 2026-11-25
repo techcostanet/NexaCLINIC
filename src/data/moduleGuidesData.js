@@ -3755,10 +3755,10 @@ export const MODULE_GUIDES = {
         title: 'Como Gerenciar Marmitas e Pedidos de Colaboradores',
         steps: [
           'No módulo ".MULTI", acesse a aba "Nutrição" e selecione a sub-aba "Marmitas" (localizada antes da aba "Pacientes").',
-          'Acompanhe os contadores do dia em tempo real: Total Pedidos, Entregues, Custo Fornecedor e Desconto Projetado (exclusivo para refeições de almoço).',
+          'Acompanhe os contadores do dia em tempo real: Pedidos e Entregues (exclusivo para refeições de almoço).',
           'Clique em "Configuração" para ajustar o horário limite da véspera (padrão 16:00 para reservas do próximo dia) e definir se pedidos no próprio dia ficam bloqueados.',
           'Clique em "Link" para visualizar o endereço público e o QR Code que os funcionários usam para instalar e pedir pelo celular (/marmitas).',
-          'Clique em "Imprimir" para gerar a lista oficial de retirada de marmitas do dia em formato paisagem com nome completo, setor, dia e campo de assinatura.',
+          'Clique em "Imprimir" para gerar a lista compacta de retirada de marmitas do dia em formato paisagem com nome completo, dia e campo de assinatura.',
           'Conforme as marmitas forem retiradas pelos colaboradores na cozinha, clique no botão "Entregar" para dar baixa imediata na tabela.',
           'Clique em "Exportar" para copiar o texto formatado do pedido consolidado e enviar direto no WhatsApp do fornecedor de alimentos.'
         ]

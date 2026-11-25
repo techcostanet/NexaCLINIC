@@ -186,12 +186,11 @@ export default function FoodMealsTab() {
     }
 
     const rowsHtml = activeOrders.length === 0
-      ? `<tr><td colspan="5" style="text-align:center; padding: 24px; color: #64748b;">Nenhum pedido ativo para esta data.</td></tr>`
+      ? `<tr><td colspan="4" style="text-align:center; padding: 16px; color: #64748b;">Nenhum pedido ativo para esta data.</td></tr>`
       : activeOrders.map((o, idx) => `
         <tr>
           <td style="text-align:center; font-weight:700;">${idx + 1}</td>
           <td style="font-weight:600; white-space:nowrap;">${o.employeeName || '—'}</td>
-          <td>${o.sector || 'Geral'}</td>
           <td style="text-align:center; white-space:nowrap;">${formatDateBR(o.date || selectedDate)}</td>
           <td></td>
         </tr>
@@ -204,25 +203,24 @@ export default function FoodMealsTab() {
         <meta charset="UTF-8" />
         <title>Lista de Entrega de Marmitas - ${formatDateBR(selectedDate)}</title>
         <style>
-          @page { size: A4 landscape; margin: 12mm; }
-          body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; margin: 0; padding: 12px; }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7c3aed; padding-bottom: 8px; margin-bottom: 12px; }
-          .brand { font-size: 18px; font-weight: 800; }
+          @page { size: A4 landscape; margin: 8mm; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; margin: 0; padding: 6px; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7c3aed; padding-bottom: 5px; margin-bottom: 8px; }
+          .brand { font-size: 16px; font-weight: 800; }
           .brand span { color: #7c3aed; }
-          .meta { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 14px; margin-bottom: 12px; font-size: 13px; }
-          table { width: 100%; border-collapse: collapse; font-size: 12px; }
-          th { background: #f1f5f9; color: #334155; text-align: left; padding: 8px 10px; border: 1px solid #cbd5e1; text-transform: uppercase; font-size: 11px; }
-          td { padding: 9px 10px; border: 1px solid #cbd5e1; height: 28px; vertical-align: middle; }
-          .footer { margin-top: 26px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 12px; color: #475569; }
-          .sig { border-top: 1px solid #334155; width: 280px; text-align: center; padding-top: 5px; }
+          .meta { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 12px; margin-bottom: 8px; font-size: 12px; }
+          table { width: 100%; border-collapse: collapse; font-size: 11px; }
+          th { background: #f1f5f9; color: #334155; text-align: left; padding: 5px 8px; border: 1px solid #cbd5e1; text-transform: uppercase; font-size: 10px; }
+          td { padding: 4px 8px; border: 1px solid #cbd5e1; height: 20px; line-height: 1.15; vertical-align: middle; }
+          .footer { margin-top: 14px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 11px; color: #475569; }
+          .sig { border-top: 1px solid #334155; width: 260px; text-align: center; padding-top: 4px; }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="brand">Nex-Ai <span>MULTI • Nutrição</span></div>
-          <div style="text-align:right; font-size:12px; color:#475569;">
-            <strong>Relação de Retirada de Marmitas (Almoço)</strong><br/>
-            Assinatura do Colaborador no Recebimento
+          <div style="text-align:right; font-size:11px; color:#475569;">
+            <strong>Relação de Retirada de Marmitas (Almoço)</strong> — Assinatura no Recebimento
           </div>
         </div>
 
@@ -235,11 +233,10 @@ export default function FoodMealsTab() {
         <table>
           <thead>
             <tr>
-              <th style="width: 38px; text-align:center;">#</th>
-              <th style="width: 34%;">Colaborador</th>
-              <th style="width: 16%;">Setor</th>
-              <th style="width: 11%; text-align:center;">Dia</th>
-              <th style="width: 35%;">Assinatura</th>
+              <th style="width: 36px; text-align:center;">#</th>
+              <th style="width: 45%;">Colaborador</th>
+              <th style="width: 12%; text-align:center;">Dia</th>
+              <th style="width: 39%;">Assinatura</th>
             </tr>
           </thead>
           <tbody>
@@ -353,18 +350,6 @@ export default function FoodMealsTab() {
           <span style={styles.statTitle}>Entregues</span>
           <strong style={{ ...styles.statNumber, color: '#059669' }}>{stats.entregues}</strong>
           <span style={styles.statSub}>baixa na cozinha</span>
-        </div>
-
-        <div style={styles.statCard}>
-          <span style={styles.statTitle}>Fornecedor</span>
-          <strong style={styles.statNumber}>{formatCurrency(stats.fornecedor)}</strong>
-          <span style={styles.statSub}>custo total do lote</span>
-        </div>
-
-        <div style={styles.statCard}>
-          <span style={styles.statTitle}>Desconto</span>
-          <strong style={{ ...styles.statNumber, color: '#dc2626' }}>{formatCurrency(stats.desconto)}</strong>
-          <span style={styles.statSub}>desconto em folha</span>
         </div>
       </div>
 

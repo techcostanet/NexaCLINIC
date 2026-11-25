@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.60',
+      date: '25/11/2026',
+      title: 'Nex-Ai CLINIC (.MULTI > Nutrição > Marmitas) — Cards Operacionais e Impressão Paisagem Compacta',
+      description: 'Refinamento da aba de Marmitas na Nutrição removendo os cards financeiros e otimizando a lista impressa em paisagem para caber mais colaboradores por folha.',
+      changes: [
+        { type: 'Cards Limpos', text: 'Removidos os cards Fornecedor e Desconto da aba Nutrição > Marmitas, mantendo foco em Pedidos e Entregues.' },
+        { type: 'Impressão Compacta', text: 'Removida a coluna Setor da relação impressa e reduzido o espaçamento vertical entre linhas para aproveitar melhor a folha.' }
+      ]
+    },
+    {
       version: 'v5.0.59',
       date: '25/11/2026',
       title: 'Nex-Ai CLINIC (.HR & .MULTI) — Correção de Permissões, Impressão Paisagem na Nutrição e Reserva até 16h',

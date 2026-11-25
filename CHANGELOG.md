@@ -1,3 +1,10 @@
+## [v5.0.60] - 25 de Novembro, 2026
+### Nex-Ai CLINIC (.MULTI > Nutrição > Marmitas) — Cards Focados em Operação e Impressão Paisagem Compacta
+- **Remoção de Cards Financeiros (`FoodMealsTab.jsx`):**
+  - Removidos os cards `Fornecedor` e `Desconto` da aba de Nutrição, mantendo a tela limpa e focada apenas em `Pedidos` e `Entregues`.
+- **Impressão Paisagem Compacta (`FoodMealsTab.jsx`):**
+  - Removida a coluna `Setor` da relação impressa de retirada de marmitas e reduzido o espaçamento entre linhas e margens para comportar maior número de colaboradores por folha A4 paisagem.
+
 ## [v5.0.59] - 25 de Novembro, 2026
 ### Nex-Ai CLINIC (.HR & .MULTI) — Correção de Permissões (`meal_packages`), Impressão Paisagem na Nutrição e Regra Exclusiva de Reserva até 16h
 - **Correção de Permissões no Firestore (`firestore.rules`):**
