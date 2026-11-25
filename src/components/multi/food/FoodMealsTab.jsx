@@ -180,6 +180,91 @@ export default function FoodMealsTab() {
       `_Gerado pelo NexAi CLINIC em ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}._`;
   }, [orders, selectedDate]);
 
+  // Impressão da Lista de Entrega de Marmitas com Campo de Assinatura (Nutrição)
+  const handlePrintSignatureList = () => {
+    const activeOrders = orders.filter(o => o.status !== 'cancelado');
+    const win = window.open('', '_blank', 'width=900,height=950');
+    if (!win) {
+      alert('Permita pop-ups no navegador para imprimir a lista de assinaturas.');
+      return;
+    }
+
+    const rowsHtml = activeOrders.length === 0
+      ? `<tr><td colspan="5" style="text-align:center; padding: 24px; color: #64748b;">Nenhum pedido ativo para esta data.</td></tr>`
+      : activeOrders.map((o, idx) => `
+        <tr>
+          <td style="text-align:center; font-weight:700;">${idx + 1}</td>
+          <td style="font-weight:600;">${o.employeeName || '—'}</td>
+          <td>${o.sector || 'Geral'}</td>
+          <td style="text-align:center;">${o.paymentSource === 'pacote' ? 'Pacote' : 'Avulso'}</td>
+          <td style="min-width: 240px;"></td>
+        </tr>
+      `).join('');
+
+    win.document.write(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Lista de Entrega de Marmitas - ${formatDateBR(selectedDate)}</title>
+        <style>
+          @page { size: A4; margin: 14mm; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; margin: 0; padding: 16px; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7c3aed; padding-bottom: 10px; margin-bottom: 14px; }
+          .brand { font-size: 18px; font-weight: 800; }
+          .brand span { color: #7c3aed; }
+          .meta { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; }
+          table { width: 100%; border-collapse: collapse; font-size: 12px; }
+          th { background: #f1f5f9; color: #334155; text-align: left; padding: 8px 10px; border: 1px solid #cbd5e1; text-transform: uppercase; font-size: 11px; }
+          td { padding: 10px; border: 1px solid #cbd5e1; height: 28px; vertical-align: middle; }
+          .footer { margin-top: 32px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 12px; color: #475569; }
+          .sig { border-top: 1px solid #334155; width: 260px; text-align: center; padding-top: 5px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="brand">Nex-Ai <span>MULTI • Nutrição</span></div>
+          <div style="text-align:right; font-size:12px; color:#475569;">
+            <strong>Controle de Retirada de Marmitas</strong><br/>
+            Almoço de Colaboradores
+          </div>
+        </div>
+
+        <div class="meta">
+          <div><strong>Data:</strong> ${formatDateBR(selectedDate)}</div>
+          <div><strong>Total de Marmitas:</strong> ${activeOrders.length}</div>
+          <div><strong>Impresso em:</strong> ${new Date().toLocaleString('pt-BR')}</div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 36px; text-align:center;">#</th>
+              <th>Colaborador</th>
+              <th>Setor</th>
+              <th style="width: 80px; text-align:center;">Tipo</th>
+              <th style="width: 240px;">Assinatura (Retirada)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <div>Assinar ao retirar a marmita na copa/nutrição.</div>
+          <div class="sig">Responsável Nutrição</div>
+        </div>
+
+        <script>
+          window.onload = function() { window.print(); };
+        </script>
+      </body>
+      </html>
+    `);
+    win.document.close();
+  };
+
   return (
     <div style={styles.container}>
       {/* BARRA SUPERIOR DE AÇÕES & CONTROLES */}
@@ -220,6 +305,15 @@ export default function FoodMealsTab() {
             }}
           >
             Amanhã
+          </button>
+
+          <button
+            onClick={handlePrintSignatureList}
+            style={styles.actionBtnOutline}
+            title="Imprimir lista de retirada para assinatura dos colaboradores"
+          >
+            <Printer size={15} />
+            Imprimir
           </button>
 
           <button
@@ -356,7 +450,11 @@ export default function FoodMealsTab() {
                         </span>
                       </td>
                       <td style={{ ...styles.td, fontWeight: 600 }}>
-                        {formatCurrency(order.discountValue)}
+                        {order.paymentSource === 'pacote' ? (
+                          <span style={{ color: '#059669' }}>Pacote</span>
+                        ) : (
+                          formatCurrency(order.discountValue)
+                        )}
                       </td>
                       <td style={{ ...styles.td, textAlign: 'center' }}>
                         <div style={{ display: 'inline-flex', gap: '6px' }}>

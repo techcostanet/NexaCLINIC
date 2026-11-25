@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.58',
+      date: '25/11/2026',
+      title: 'Nex-Ai CLINIC (.HR & .MULTI) — Pacotes de Vale Refeição (15, 22 e 26), Termo Contábil, Saldo no Portal e Lista de Assinaturas',
+      description: 'Implementado o fluxo completo de venda/liberação de pacotes de vale refeição no RH com integração direta ao Portal do Colaborador e à Nutrição.',
+      changes: [
+        { type: 'Pacotes no RH', text: 'Liberação de pacotes de 15, 22 e 26 refeições com valor unitário configurável (padrão R$ 2,00) e fechamento em folha.' },
+        { type: 'Termo Contábil', text: 'Impressão automática em A4 do Termo de Autorização de Desconto em Folha para assinatura do colaborador.' },
+        { type: 'Portal do Colaborador', text: 'Exibição do saldo disponível do pacote, consumo por pedido e estorno automático em cancelamentos.' },
+        { type: 'Lista na Nutrição', text: 'Botão Imprimir em .MULTI > Nutrição > Marmitas com relação do dia e coluna de assinatura na retirada.' }
+      ]
+    },
+    {
       version: 'v5.0.56',
       date: '25/11/2026',
       title: 'Nex-Ai CLINIC (.SESMT) — Correção Definitiva do Histórico (QuotaExceededError) e Verificação Real de Entrega de E-mails',

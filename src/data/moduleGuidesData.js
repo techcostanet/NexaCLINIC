@@ -330,8 +330,8 @@ export const MODULE_GUIDES = {
         desc: 'Botão Sincronizar na barra superior e auto-seed inteligente que carrega e atualiza todos os 16 treinamentos no banco de dados automaticamente.'
       },
       {
-        title: 'Gestão de Marmitas & Desconto em Folha',
-        desc: 'Aba dedicada "Marmitas" no RH com extrato mensal consolidado do consumo de refeições por colaborador (Almoço, Jantar e Total), cálculo automático do valor de desconto em folha, visualização do histórico detalhado de datas de cada funcionário, ferramenta de reset de senha do portal de marmitas e exportação de planilha CSV pronta para a folha.'
+        title: 'Pacotes de Vale Refeição & Desconto em Folha',
+        desc: 'Aba dedicada "Marmitas" no RH para liberação de pacotes de vale refeição (15, 22 ou 26 refeições) com valor unitário configurável (padrão R$ 2,00), emissão automática do Termo de Autorização de Desconto em Folha para assinatura do colaborador (exigência contábil), acompanhamento de saldo consumido, reset de senha do portal e exportação CSV para fechamento de folha.'
       },
       {
         title: 'Apresentações PowerPoint (PPTX) & Suporte a Vídeo YouTube',
@@ -475,14 +475,14 @@ export const MODULE_GUIDES = {
         ]
       },
       {
-        title: 'Como Realizar o Fechamento de Marmitas e Desconto em Folha',
+        title: 'Como Liberar Pacotes de Vale Refeição e Fechar o Desconto em Folha',
         steps: [
           'No módulo ".HR", clique na aba "Marmitas".',
-          'Selecione o Mês desejado no topo da tela para carregar todos os pedidos consolidados do período.',
-          'Analise os indicadores de consumo: Total de Marmitas, Colaboradores Atendidos, Total a Descontar em Folha e Custo Fornecedor.',
-          'Clique em "Detalhes" em qualquer funcionário para auditar os dias e turnos exatos em que ele solicitou as refeições.',
-          'Caso um colaborador esqueça a senha de acesso ao portal móvel, clique em "Resetar" para retornar a senha aos 4 primeiros dígitos do CPF.',
-          'Clique no botão "Exportar" para baixar a planilha formatada em CSV pronta para importação na folha de pagamento.'
+          'Clique em "Configuração" sempre que precisar ajustar o valor unitário da refeição (padrão R$ 2,00) ou a exigência de pacote.',
+          'Para vender/liberar um pacote ao colaborador, clique em "Liberar", selecione o funcionário, escolha o pacote de 15, 22 ou 26 refeições, informe a competência e confirme.',
+          'Imprima o Termo de Autorização de Desconto em Folha gerado automaticamente (ou reimprima pelo botão "Termo" na lista) para que o colaborador assine para a contabilidade.',
+          'O saldo é liberado imediatamente no Portal do Colaborador (/marmitas) para que ele solicite o almoço diariamente.',
+          'Na sub-aba "Fechamento", acompanhe os descontos consolidados do mês, visualize detalhes por colaborador, resete senhas se necessário e clique em "Exportar" para baixar a planilha CSV da folha.'
         ]
       }
     ],
@@ -3758,6 +3758,7 @@ export const MODULE_GUIDES = {
           'Acompanhe os contadores do dia em tempo real: Total Pedidos, Entregues, Custo Fornecedor e Desconto Projetado (exclusivo para refeições de almoço).',
           'Clique em "Configuração" para definir os horários limites: Corte Hoje (padrão 09:30 para pedidos no dia) e Corte Véspera (padrão 16:00 para reservas antecipadas do dia seguinte), além do modo de cobrança (Coparticipação ou Integral).',
           'Clique em "Link" para visualizar o endereço público e o QR Code que os funcionários usam para instalar e pedir pelo celular (/marmitas).',
+          'Clique em "Imprimir" para gerar a lista oficial de retirada de marmitas do dia com espaço para assinatura de cada colaborador no momento da entrega.',
           'Conforme as marmitas forem retiradas pelos colaboradores na cozinha, clique no botão "Entregar" para dar baixa imediata na tabela.',
           'Clique em "Exportar" para copiar o texto formatado do pedido consolidado e enviar direto no WhatsApp do fornecedor de alimentos.'
         ]
@@ -3817,7 +3818,7 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'Como os funcionários solicitam marmitas e como funciona o desconto em folha?',
-        resposta: 'Os colaboradores acessam o link (/marmitas) no celular (podendo adicionar como App à tela de início em Android e iPhone), digitam CPF e senha. Eles podem solicitar o almoço para hoje (até as 09:30) ou reservar para o dia seguinte (até as 16:00 da véspera). Os pedidos geram o extrato consolidado diário na Nutrição e alimentam o fechamento mensal no módulo RH (aba Marmitas), calculando o valor exato a ser descontado na folha de pagamento.'
+        resposta: 'Primeiro, o colaborador adquire um pacote de vale refeição (15, 22 ou 26 refeições) diretamente no RH e assina o termo de autorização de desconto em folha. Com o saldo ativo, ele acessa o link (/marmitas) no celular, visualiza suas refeições disponíveis e solicita o almoço para hoje (até as 09:30) ou reserva para amanhã (até as 16:00). Os pedidos aparecem na hora na aba Nutrição -> Marmitas, onde a equipe imprime a lista de retirada para assinatura e dá baixa na entrega.'
       },
       {
         pergunta: 'Como funciona o cálculo de Previsão Preditiva com IA para compras de alimentos?',

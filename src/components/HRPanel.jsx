@@ -2396,7 +2396,7 @@ export default function HRPanel({ currentUser, isReportsOpen, setIsReportsOpen }
 
           {/* TAB: Marmitas & Descontos em Folha */}
           {activeTab === 'meals' && (
-            <MealDeductionsTab />
+            <MealDeductionsTab employees={employees} currentUser={currentUser} />
           )}
 
           {/* TAB 4: Audit Logs */}

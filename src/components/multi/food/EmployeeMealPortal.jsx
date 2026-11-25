@@ -21,7 +21,8 @@ import {
   Share,
   PlusSquare,
   ChevronRight,
-  Download
+  Download,
+  Ticket
 } from 'lucide-react';
 import {
   getMealSettings,
@@ -29,6 +30,7 @@ import {
   createMealOrder,
   cancelMealOrder,
   getEmployeeOrders,
+  getEmployeeMealPackages,
   isTimeCutoffPassed,
   getTodayDateStr,
   getTomorrowDateStr
@@ -55,6 +57,7 @@ export default function EmployeeMealPortal({ onExitPortal }) {
   // Portal dashboard state
   const [settings, setSettings] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [packages, setPackages] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [actionLoading, setActionLoading] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState(null);
@@ -159,12 +162,14 @@ export default function EmployeeMealPortal({ onExitPortal }) {
     if (!session?.id) return;
     setLoadingOrders(true);
     try {
-      const [sets, ords] = await Promise.all([
+      const [sets, ords, pkgs] = await Promise.all([
         getMealSettings(),
-        getEmployeeOrders(session.id)
+        getEmployeeOrders(session.id),
+        getEmployeeMealPackages(session.id)
       ]);
       setSettings(sets);
       setOrders(ords);
+      setPackages(pkgs || []);
     } catch (err) {
       console.error('Erro ao carregar dados do portal:', err);
     } finally {
@@ -185,10 +190,18 @@ export default function EmployeeMealPortal({ onExitPortal }) {
   const todayOrder = orders.find(o => o.date === todayStr && o.status !== 'cancelado');
   const tomorrowOrder = orders.find(o => o.date === tomorrowStr && o.status !== 'cancelado');
 
-  // Cálculos do mês atual
+  // Cálculos do mês atual e saldo de pacotes
   const currentYearMonth = todayStr.slice(0, 7);
   const currentMonthOrders = orders.filter(o => o.status !== 'cancelado' && String(o.date || '').startsWith(currentYearMonth));
-  const totalMonthDiscount = currentMonthOrders.reduce((sum, o) => sum + (Number(o.discountValue) || 0), 0);
+  const currentMonthPackages = packages.filter(p => String(p.referenceMonth || String(p.createdAt || '').slice(0, 7)) === currentYearMonth);
+  const totalMonthDiscount =
+    currentMonthOrders.reduce((sum, o) => sum + (Number(o.discountValue) || 0), 0) +
+    currentMonthPackages.reduce((sum, p) => sum + (Number(p.totalValue) || 0), 0);
+
+  const activePackages = packages.filter(p => p.status === 'ativo' && (Number(p.remainingMeals) || 0) > 0);
+  const remainingMeals = activePackages.reduce((sum, p) => sum + (Number(p.remainingMeals) || 0), 0);
+  const requirePackage = settings ? settings.requirePackage !== false : true;
+  const blockedByNoPackage = requirePackage && remainingMeals <= 0;
 
   // Validação de horário de corte
   const isTodayCutoff = isTimeCutoffPassed(settings?.lunchCutoff || '09:30');
@@ -436,6 +449,57 @@ export default function EmployeeMealPortal({ onExitPortal }) {
           </div>
         )}
 
+        {/* CARD DE SALDO DO PACOTE DE VALE REFEIÇÃO */}
+        <section style={{
+          backgroundColor: remainingMeals > 0 ? '#f0fdf4' : '#fffbeb',
+          border: `1.5px solid ${remainingMeals > 0 ? '#86efac' : '#fde68a'}`,
+          borderRadius: '14px',
+          padding: '14px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              backgroundColor: remainingMeals > 0 ? '#dcfce7' : '#fef3c7',
+              color: remainingMeals > 0 ? '#059669' : '#d97706',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Ticket size={22} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: remainingMeals > 0 ? '#166534' : '#92400e' }}>
+                {remainingMeals > 0 ? 'Pacote' : 'Sem Saldo'}
+              </div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
+                {remainingMeals > 0
+                  ? `${remainingMeals} ${remainingMeals === 1 ? 'refeição disponível' : 'refeições disponíveis'}`
+                  : 'Nenhuma refeição disponível'}
+              </div>
+              <div style={{ fontSize: '0.76rem', color: '#475569' }}>
+                {remainingMeals > 0
+                  ? activePackages.map(p => `Pacote ${p.quantity} (${p.remainingMeals}/${p.quantity})`).join(' • ')
+                  : 'Procure o RH para adquirir um pacote de 15, 22 ou 26 refeições.'}
+              </div>
+            </div>
+          </div>
+          <div style={{
+            fontSize: '1.5rem',
+            fontWeight: 800,
+            color: remainingMeals > 0 ? '#059669' : '#d97706',
+            flexShrink: 0
+          }}>
+            {remainingMeals}
+          </div>
+        </section>
+
         {/* NAVEGAÇÃO DE DIAS: HOJE vs AMANHÃ (RESERVA ANTECIPADA) */}
         <div style={styles.daySelectorContainer}>
           <button
@@ -563,17 +627,19 @@ export default function EmployeeMealPortal({ onExitPortal }) {
               ) : (
                 <button
                   onClick={() => handleOrderMeal(todayStr)}
-                  disabled={isTodayCutoff || actionLoading === `order_${todayStr}`}
+                  disabled={isTodayCutoff || blockedByNoPackage || actionLoading === `order_${todayStr}`}
                   style={{
                     ...styles.orderBtn,
-                    backgroundColor: isTodayCutoff ? '#94a3b8' : '#0284c7',
-                    cursor: isTodayCutoff ? 'not-allowed' : 'pointer'
+                    backgroundColor: (isTodayCutoff || blockedByNoPackage) ? '#94a3b8' : '#0284c7',
+                    cursor: (isTodayCutoff || blockedByNoPackage) ? 'not-allowed' : 'pointer'
                   }}
                 >
                   {actionLoading === `order_${todayStr}` ? (
                     'Solicitando...'
                   ) : isTodayCutoff ? (
                     `Encerrado hoje às ${settings?.lunchCutoff || '09:30'}`
+                  ) : blockedByNoPackage ? (
+                    'Sem saldo de pacote'
                   ) : (
                     'Solicitar Almoço de Hoje'
                   )}
@@ -655,17 +721,19 @@ export default function EmployeeMealPortal({ onExitPortal }) {
               ) : (
                 <button
                   onClick={() => handleOrderMeal(tomorrowStr)}
-                  disabled={isAdvanceCutoff || actionLoading === `order_${tomorrowStr}`}
+                  disabled={isAdvanceCutoff || blockedByNoPackage || actionLoading === `order_${tomorrowStr}`}
                   style={{
                     ...styles.orderBtn,
-                    backgroundColor: isAdvanceCutoff ? '#94a3b8' : '#059669',
-                    cursor: isAdvanceCutoff ? 'not-allowed' : 'pointer'
+                    backgroundColor: (isAdvanceCutoff || blockedByNoPackage) ? '#94a3b8' : '#059669',
+                    cursor: (isAdvanceCutoff || blockedByNoPackage) ? 'not-allowed' : 'pointer'
                   }}
                 >
                   {actionLoading === `order_${tomorrowStr}` ? (
                     'Reservando...'
                   ) : isAdvanceCutoff ? (
                     `Reserva encerrada às ${settings?.advanceCutoff || '16:00'}`
+                  ) : blockedByNoPackage ? (
+                    'Sem saldo de pacote'
                   ) : (
                     'Reservar Almoço para Amanhã'
                   )}
@@ -679,12 +747,17 @@ export default function EmployeeMealPortal({ onExitPortal }) {
         <section style={styles.summarySection}>
           <div style={styles.summaryGrid}>
             <div style={styles.summaryCard}>
-              <span style={styles.summaryLabel}>Marmitas no Mês</span>
-              <strong style={styles.summaryValue}>{currentMonthOrders.length}</strong>
-              <span style={styles.summarySub}>almoços solicitados</span>
+              <span style={styles.summaryLabel}>Saldo</span>
+              <strong style={{ ...styles.summaryValue, color: '#059669' }}>{remainingMeals}</strong>
+              <span style={styles.summarySub}>refeições no pacote</span>
             </div>
             <div style={styles.summaryCard}>
-              <span style={styles.summaryLabel}>Previsão de Desconto</span>
+              <span style={styles.summaryLabel}>Consumo</span>
+              <strong style={styles.summaryValue}>{currentMonthOrders.length}</strong>
+              <span style={styles.summarySub}>almoços no mês</span>
+            </div>
+            <div style={styles.summaryCard}>
+              <span style={styles.summaryLabel}>Desconto</span>
               <strong style={{ ...styles.summaryValue, color: '#dc2626' }}>
                 {formatCurrency(totalMonthDiscount)}
               </strong>
@@ -724,8 +797,8 @@ export default function EmployeeMealPortal({ onExitPortal }) {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-                      {formatCurrency(o.discountValue)}
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: o.paymentSource === 'pacote' ? '#059669' : '#334155' }}>
+                      {o.paymentSource === 'pacote' ? 'Pacote' : formatCurrency(o.discountValue)}
                     </span>
                     <span style={{
                       ...styles.badge,

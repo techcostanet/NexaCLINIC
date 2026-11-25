@@ -1,3 +1,14 @@
+## [v5.0.58] - 25 de Novembro, 2026
+### Nex-Ai CLINIC (.HR & .MULTI) — Pacotes de Vale Refeição (15, 22 e 26), Termo Contábil, Saldo no Portal e Lista de Assinaturas na Nutrição
+- **Liberação de Pacotes no RH (`MealDeductionsTab.jsx`, `HRPanel.jsx` & `mealService.js`):**
+  - **Pacotes de 15, 22 e 26 Refeições:** Nova rotina na aba `Marmitas` do módulo `.HR` para o RH selecionar o colaborador, liberar o pacote desejado e registrar o desconto em folha.
+  - **Valor Unitário Configurável:** Valor padrão definido em **R$ 2,00** por refeição (`packageMealPrice`), editável em `Configuração` para reajustes futuros sem alteração de código.
+  - **Termo de Autorização Impresso (Contabilidade):** Geração automática e reimpressão em A4 do Termo de Liberação e Autorização de Desconto em Folha com campos de assinatura do colaborador e do RH.
+- **Portal do Colaborador (`EmployeeMealPortal.jsx`):**
+  - Exibição em tempo real do **Saldo de Refeições** disponíveis nos pacotes ativos, consumo automático de 1 crédito ao pedir almoço e estorno automático em caso de cancelamento dentro do prazo.
+- **Lista de Retirada com Assinatura na Nutrição (`FoodMealsTab.jsx`):**
+  - Novo botão `Imprimir` na aba `.MULTI > Nutrição > Marmitas` gerando relatório diário em A4 com todos os colaboradores que pediram almoço e coluna dedicada para assinatura na retirada.
+
 ## [v5.0.56] - 25 de Novembro, 2026
 ### Nex-Ai CLINIC (.SESMT) — Correção Definitiva do Carregamento do Histórico (Eliminação de QuotaExceededError) e Verificação Real da Fila de E-mail
 - **Correção Definitiva da Exibição no Histórico (`sesmtService.js`, `mockFirebase.js` & `SesmtDashboard.jsx`):**
