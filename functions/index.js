@@ -70,12 +70,33 @@ exports.processMailQueue = functions.firestore
       const senderAddress = settings.senderEmail || settings.smtpUser;
       const senderName = settings.senderName || 'Nex-Ai CLINIC';
 
+      let htmlBody = msg.html || data.html || '';
+      const attachments = Array.isArray(msg.attachments) ? [...msg.attachments] : [];
+
+      // Converte imagens inline Base64 (data:image/...;base64,...) em anexos CID
+      // para garantir exibição em Gmail, Outlook, Titan Webmail e dispositivos móveis
+      if (htmlBody && htmlBody.includes('data:image/')) {
+        let imgIndex = 0;
+        htmlBody = htmlBody.replace(/src=["'](data:image\/(jpeg|jpg|png|webp|gif);base64,([^"']+))["']/gi, (_match, _fullUri, ext, b64) => {
+          const cid = `evidencia_${imgIndex++}@nexai.clinic`;
+          const safeExt = ext.toLowerCase() === 'jpeg' ? 'jpg' : ext.toLowerCase();
+          attachments.push({
+            filename: `evidencia_${imgIndex}.${safeExt}`,
+            content: Buffer.from(b64, 'base64'),
+            contentType: `image/${ext.toLowerCase()}`,
+            cid
+          });
+          return `src="cid:${cid}"`;
+        });
+      }
+
       const mailOptions = {
         from: `"${senderName}" <${senderAddress}>`,
         to: recipients,
         subject: msg.subject || data.subject || 'Notificação Nex-Ai CLINIC',
         text: msg.text || data.text || '',
-        html: msg.html || data.html || ''
+        html: htmlBody,
+        ...(attachments.length > 0 ? { attachments } : {})
       };
 
       if (settings.replyToEmail) {
