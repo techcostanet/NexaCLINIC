@@ -11,7 +11,8 @@ import {
   AlertCircle,
   LayoutGrid,
   Table,
-  Printer
+  Printer,
+  RefreshCw
 } from 'lucide-react';
 
 export default function SesmtHistory({ epiData = [], copaData = [], wasteData = [], extinguisherData = [], hydrantData = [], onRefresh }) {
@@ -450,6 +451,29 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
             </button>
           </div>
 
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                backgroundColor: '#ffffff',
+                color: '#0f172a',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+              title="Recarregar registros"
+            >
+              <RefreshCw size={14} color="#0891b2" /> Atualizar
+            </button>
+          )}
+
           <div style={styles.recordCounter}>
             <ClipboardList size={18} color="#0891b2" />
             <span>{filteredRecords.length} registro(s)</span>
@@ -572,11 +596,17 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
               let summaryElement = null;
               if (record.recordType === 'EPI' || record.recordType === 'COPA') {
                 const evals = Object.values(record.evaluations || {});
-                const ncCount = evals.filter(e => e.status === 'NC').length;
+                const ncCount = evals.filter(e => e?.status === 'NC').length;
                 summaryElement = ncCount === 0 ? (
                   <span style={styles.conformBadge}><Check size={12} /> 100% Conforme</span>
                 ) : (
                   <span style={styles.ncBadge}><AlertTriangle size={12} /> {ncCount} Não Conforme(s)</span>
+                );
+              } else if (record.recordType === 'WASTE') {
+                summaryElement = record.status === 'CONFORME' ? (
+                  <span style={styles.conformBadge}><Check size={12} /> Conforme</span>
+                ) : (
+                  <span style={styles.ncBadge}><AlertTriangle size={12} /> {(record.deviations || []).length || 1} Desvio(s)</span>
                 );
               } else if (record.recordType === 'EXTINGUISHER') {
                 const items = record.items || [];
@@ -693,11 +723,17 @@ export default function SesmtHistory({ epiData = [], copaData = [], wasteData = 
                   let summaryElement = null;
                   if (record.recordType === 'EPI' || record.recordType === 'COPA') {
                     const evals = Object.values(record.evaluations || {});
-                    const ncCount = evals.filter(e => e.status === 'NC').length;
+                    const ncCount = evals.filter(e => e?.status === 'NC').length;
                     summaryElement = ncCount === 0 ? (
                       <span style={styles.conformBadge}><Check size={12} /> 100% Conforme</span>
                     ) : (
                       <span style={styles.ncBadge}><AlertTriangle size={12} /> {ncCount} Não Conforme(s)</span>
+                    );
+                  } else if (record.recordType === 'WASTE') {
+                    summaryElement = record.status === 'CONFORME' ? (
+                      <span style={styles.conformBadge}><Check size={12} /> Conforme</span>
+                    ) : (
+                      <span style={styles.ncBadge}><AlertTriangle size={12} /> {(record.deviations || []).length || 1} Desvio(s)</span>
                     );
                   } else if (record.recordType === 'EXTINGUISHER') {
                     const items = record.items || [];

@@ -18,7 +18,38 @@ function sanitizeForFirestore(obj) {
   return clean;
 }
 
-// Helpers de cache local no navegador para histórico imediato e resiliência offline
+// Helpers de cache local leve no navegador para histórico imediato sem estourar quota do localStorage
+function stripHeavyPhotosForCache(item, keepPhotos = false) {
+  if (!item || typeof item !== 'object') return item;
+  if (keepPhotos) return item;
+  const copy = { ...item };
+  if (typeof copy.photo === 'string' && copy.photo.length > 2000) {
+    copy.photo = '';
+  }
+  if (copy.evaluations && typeof copy.evaluations === 'object') {
+    const cleanEvals = {};
+    for (const [k, ev] of Object.entries(copy.evaluations)) {
+      if (ev && typeof ev === 'object') {
+        cleanEvals[k] = {
+          ...ev,
+          photo: (typeof ev.photo === 'string' && ev.photo.length > 2000) ? '' : ev.photo
+        };
+      } else {
+        cleanEvals[k] = ev;
+      }
+    }
+    copy.evaluations = cleanEvals;
+  }
+  if (Array.isArray(copy.items)) {
+    copy.items = copy.items.map(it => (
+      it && typeof it === 'object' && typeof it.photo === 'string' && it.photo.length > 2000
+        ? { ...it, photo: '' }
+        : it
+    ));
+  }
+  return copy;
+}
+
 function getLocalCache(key) {
   try {
     const raw = localStorage.getItem(key);
@@ -37,7 +68,8 @@ function updateLocalCache(key, item) {
     } else {
       list.unshift(item);
     }
-    localStorage.setItem(key, JSON.stringify(list));
+    const trimmed = list.slice(0, 60).map((it, i) => stripHeavyPhotosForCache(it, i < 3));
+    localStorage.setItem(key, JSON.stringify(trimmed));
   } catch (err) {
     console.warn('Erro ao atualizar cache local:', err);
   }
@@ -45,7 +77,8 @@ function updateLocalCache(key, item) {
 
 function setLocalCacheList(key, list) {
   try {
-    localStorage.setItem(key, JSON.stringify(list || []));
+    const trimmed = (list || []).slice(0, 60).map((it, i) => stripHeavyPhotosForCache(it, i < 3));
+    localStorage.setItem(key, JSON.stringify(trimmed));
   } catch {}
 }
 
@@ -58,22 +91,27 @@ export const getEpiInspections = async () => {
       try {
         const q = query(collection(db, 'sesmt_epi_inspections'), orderBy('date', 'desc'));
         const snap = await getDocs(q);
-        docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        docs = snap.docs.map(d => ({ ...d.data(), id: d.id }));
       } catch (qErr) {
         console.warn('Fallback query simples sem orderBy em sesmt_epi_inspections:', qErr.message);
         const snap = await getDocs(collection(db, 'sesmt_epi_inspections'));
-        docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        docs = snap.docs.map(d => ({ ...d.data(), id: d.id }));
       }
 
-      docs.sort((a, b) => ((b.date || '') + ' ' + (b.time || '')).localeCompare((a.date || '') + ' ' + (a.time || '')));
+      // Mescla eventuais registros locais ainda não sincronizados
+      const cached = getLocalCache(CACHE_KEY_EPI);
+      const existingIds = new Set(docs.map(d => d.id));
+      const localOnly = cached.filter(c => c && c.id && !existingIds.has(c.id) && String(c.id).startsWith('epi_'));
+      const merged = [...localOnly, ...docs];
+
+      merged.sort((a, b) => ((b.date || '') + ' ' + (b.time || '')).localeCompare((a.date || '') + ' ' + (a.time || '')));
 
       if (docs.length > 0) {
-        setLocalCacheList(CACHE_KEY_EPI, docs);
-        return docs;
+        setLocalCacheList(CACHE_KEY_EPI, merged);
+        return merged;
       }
 
-      const cached = getLocalCache(CACHE_KEY_EPI);
-      return cached.length > 0 ? cached : docs;
+      return cached.length > 0 ? cached : merged;
     } catch (e) {
       console.error('Erro Firestore getEpiInspections, usando cache local:', e);
       return getLocalCache(CACHE_KEY_EPI);
@@ -181,17 +219,25 @@ export const saveEpiInspection = async (item) => {
               </div>
             `;
 
-            await sendSystemEmail({
+            const plainSubject = `🚨 [SESMT Não Conformidade EPI] ${item.sector} — ${item.date || ''} ${item.time || ''}`;
+            const plainBody = `Alerta SESMT Não Conformidade EPI em ${item.sector}\nData: ${item.date} ${item.time}\nTurno: ${item.shift || '-'}\nResponsável: ${item.enfermeiro || item.tecnicoSeguranca || '-'}\nItens reprovados:\n${ncEntries.map(([k, ev]) => `- ${EPI_LABELS[k] || k}${ev.observation ? ': ' + ev.observation : ''}`).join('\n')}`;
+
+            const emailRes = await sendSystemEmail({
                 to: emailRecipients,
-                subject: `🚨 [SESMT Não Conformidade EPI] ${item.sector} — ${item.date || ''} ${item.time || ''}`,
-                body: `Alerta SESMT Não Conformidade EPI em ${item.sector}\nData: ${item.date} ${item.time}\nResponsável: ${item.enfermeiro || item.tecnicoSeguranca}`,
+                subject: plainSubject,
+                body: plainBody,
                 html: htmlContent,
                 moduleSource: 'SESMT'
             });
-            savedResult.emailSent = true;
+            savedResult.emailSent = !!emailRes?.delivered;
+            savedResult.emailQueuedPending = !!emailRes?.queuedPending;
+            savedResult.emailError = emailRes?.error || '';
             savedResult.emailRecipients = emailRecipients;
+            savedResult.emailMailto = { to: emailRecipients, subject: plainSubject, body: plainBody };
         } catch (emailErr) {
             console.warn('Erro ao enviar e-mail de alerta EPI do SESMT:', emailErr);
+            savedResult.emailError = emailErr.message || 'Falha ao enviar e-mail';
+            savedResult.emailRecipients = emailRecipients;
         }
     }
 
@@ -304,9 +350,15 @@ export const saveFireHydrantInspection = async (item) => {
 export const deleteEpiInspection = async (id) => {
     if (USE_MOCK && mockFirestore.deleteEpiInspection) return mockFirestore.deleteEpiInspection(id);
     try {
-        const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
-        const db = getFirestore(app);
-        await deleteDoc(doc(db, 'sesmt_epi_inspections', id));
+        if (!String(id).startsWith('epi_')) {
+            const { getFirestore, doc, deleteDoc } = await import('firebase/firestore');
+            const db = getFirestore(app);
+            await deleteDoc(doc(db, 'sesmt_epi_inspections', id));
+        }
+        try {
+            const list = getLocalCache(CACHE_KEY_EPI);
+            setLocalCacheList(CACHE_KEY_EPI, list.filter(i => i.id !== id));
+        } catch {}
         return true;
     } catch (e) {
         console.error('Erro Firestore deleteEpiInspection =', e);
@@ -665,37 +717,29 @@ export const getWasteInspections = async () => {
         try {
             const q = query(collection(db, 'sesmt_waste_inspections'), orderBy('date', 'desc'));
             const snap = await getDocs(q);
-            docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            docs = snap.docs.map(d => ({ ...d.data(), id: d.id }));
         } catch (qErr) {
             console.warn('Fallback query simples sem orderBy em sesmt_waste_inspections:', qErr.message);
             const snap = await getDocs(collection(db, 'sesmt_waste_inspections'));
-            docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            docs = snap.docs.map(d => ({ ...d.data(), id: d.id }));
         }
 
-        docs.sort((a, b) => ((b.date || '') + ' ' + (b.time || '')).localeCompare((a.date || '') + ' ' + (a.time || '')));
+        const cached = getLocalCache(CACHE_KEY_WASTE);
+        const existingIds = new Set(docs.map(d => d.id));
+        const localOnly = cached.filter(c => c && c.id && !existingIds.has(c.id) && String(c.id).startsWith('waste_'));
+        const merged = [...localOnly, ...docs];
+
+        merged.sort((a, b) => ((b.date || '') + ' ' + (b.time || '')).localeCompare((a.date || '') + ' ' + (a.time || '')));
 
         if (docs.length > 0) {
-            setLocalCacheList(CACHE_KEY_WASTE, docs);
-            return docs;
+            setLocalCacheList(CACHE_KEY_WASTE, merged);
+            return merged;
         }
 
-        const cached = getLocalCache(CACHE_KEY_WASTE);
-        if (cached && cached.length > 0) return cached;
-
-        if (mockFirestore.getWasteInspections) {
-            const seeded = await mockFirestore.getWasteInspections();
-            if (seeded && seeded.length > 0) return seeded;
-        }
-
-        return docs;
+        return cached.length > 0 ? cached : merged;
     } catch (e) {
         console.error('Erro Firestore getWasteInspections, usando cache local:', e);
-        const cached = getLocalCache(CACHE_KEY_WASTE);
-        if (cached && cached.length > 0) return cached;
-        if (mockFirestore.getWasteInspections) {
-            return mockFirestore.getWasteInspections();
-        }
-        return [];
+        return getLocalCache(CACHE_KEY_WASTE);
     }
 };
 
@@ -866,17 +910,25 @@ export const saveWasteInspection = async (item) => {
               </div>
             `;
 
-            await sendSystemEmail({
+            const plainSubject = `🚨 [SESMT Não Conformidade] ${item.sector} — ${item.date || ''} ${item.time || ''}`;
+            const plainBody = `Alerta SESMT Não Conformidade em ${item.sector}\nData: ${item.date} ${item.time}\nAuditor: ${item.auditor}\nDesvios: ${(item.deviations || []).join(', ')}\nAção: ${item.immediateAction || '-'}`;
+
+            const emailRes = await sendSystemEmail({
                 to: emailRecipients,
-                subject: `🚨 [SESMT Não Conformidade] ${item.sector} — ${item.date || ''} ${item.time || ''}`,
-                body: `Alerta SESMT Não Conformidade em ${item.sector}\nData: ${item.date} ${item.time}\nAuditor: ${item.auditor}\nDesvios: ${(item.deviations || []).join(', ')}\nAção: ${item.immediateAction || '-'}`,
+                subject: plainSubject,
+                body: plainBody,
                 html: htmlContent,
                 moduleSource: 'SESMT'
             });
-            savedResult.emailSent = true;
+            savedResult.emailSent = !!emailRes?.delivered;
+            savedResult.emailQueuedPending = !!emailRes?.queuedPending;
+            savedResult.emailError = emailRes?.error || '';
             savedResult.emailRecipients = emailRecipients;
+            savedResult.emailMailto = { to: emailRecipients, subject: plainSubject, body: plainBody };
         } catch (emailErr) {
             console.warn('Erro ao enviar e-mail de alerta do SESMT:', emailErr);
+            savedResult.emailError = emailErr.message || 'Falha ao enviar e-mail';
+            savedResult.emailRecipients = emailRecipients;
         }
     }
 

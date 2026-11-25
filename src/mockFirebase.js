@@ -2026,7 +2026,11 @@ const getDB = () => {
     }
 
     if (updated) {
-      localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(parsed));
+      try {
+        localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(parsed));
+      } catch (err) {
+        console.warn('QuotaExceeded ao atualizar cache mock:', err);
+      }
     }
     return parsed;
   }
@@ -2823,7 +2827,11 @@ const getDB = () => {
       }
     ]
   };
-  localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(initialDB));
+  try {
+    localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(initialDB));
+  } catch (err) {
+    console.warn('QuotaExceeded ao inicializar cache mock:', err);
+  }
   return initialDB;
 };
 

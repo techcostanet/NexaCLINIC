@@ -92,7 +92,7 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [epis, extinguishers, hydrants, equipment, copas, wastes] = await Promise.all([
+      const results = await Promise.allSettled([
         dbService.getEpiInspections(),
         dbService.getFireExtinguisherInspections(),
         dbService.getFireHydrantInspections(),
@@ -100,13 +100,20 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
         dbService.getCopaInspections(),
         dbService.getWasteInspections()
       ]);
-      
-      setEpiData(epis || []);
-      setExtinguisherData(extinguishers || []);
-      setHydrantData(hydrants || []);
-      setEquipmentData(equipment || []);
-      setCopaData(copas || []);
-      setWasteData(wastes || []);
+
+      const val = (idx) => (results[idx].status === 'fulfilled' && Array.isArray(results[idx].value)) ? results[idx].value : [];
+      results.forEach((r, idx) => {
+        if (r.status === 'rejected') {
+          console.error(`Falha parcial ao carregar coleção SESMT [${idx}]:`, r.reason);
+        }
+      });
+
+      setEpiData(val(0));
+      setExtinguisherData(val(1));
+      setHydrantData(val(2));
+      setEquipmentData(val(3));
+      setCopaData(val(4));
+      setWasteData(val(5));
     } catch (err) {
       console.error('Failed to fetch SESMT data', err);
     } finally {
@@ -557,7 +564,7 @@ export default function SesmtDashboard({ currentUser, isReportsOpen, setIsReport
         </button>
         <button 
           style={{ ...styles.tabButton, ...(activeTab === 'historico' ? styles.tabActive : {}) }}
-          onClick={() => setActiveTab('historico')}
+          onClick={() => { setActiveTab('historico'); fetchData(); }}
         >
           <ClipboardList size={16} /> Histórico
         </button>

@@ -1,3 +1,14 @@
+## [v5.0.56] - 25 de Novembro, 2026
+### Nex-Ai CLINIC (.SESMT) — Correção Definitiva do Carregamento do Histórico (Eliminação de QuotaExceededError) e Verificação Real da Fila de E-mail
+- **Correção Definitiva da Exibição no Histórico (`sesmtService.js`, `mockFirebase.js` & `SesmtDashboard.jsx`):**
+  - **Eliminação de Estouro de Cache (`QuotaExceededError`):** Identificado e corrigido o erro que impedia a renderização da aba Histórico: o fallback para dados mock em `getWasteInspections()` e o armazenamento irrestrito de 129+ fotos Base64 no `localStorage` excediam a cota de 5 MB do navegador e interrompiam `Promise.all()` no `SesmtDashboard`, zerando a listagem.
+  - **Cache Leve e Inteligente:** Removido o fallback para `mockFirebase` em produção, aplicadas travas `try/catch` em todas as gravações de cache local e otimizada a persistência em navegador mantendo fotos completas apenas nos registros mais recentes.
+  - **Carregamento Independente (`Promise.allSettled`):** Cada sub-coleção (EPI, Resíduos, Copa, Extintores, Hidrantes, Equipamentos) agora carrega de forma independente para que nenhuma falha isolada oculte registros válidos.
+  - **Botão `Atualizar` & Badge de Resíduos (`SesmtHistory.jsx`):** Adicionado botão de recarregamento rápido no cabeçalho do Histórico e badge visual de status para vistorias de Resíduos.
+- **Verificação Real de Entrega de E-mail & Contingência (`systemService.js`, `DailyEPIChecklist.jsx` & `DailyWasteChecklist.jsx`):**
+  - **Leitura Real de Entrega (`onSnapshot`):** `sendSystemEmail` agora aguarda a confirmação da Cloud Function (`delivery.state`) na coleção `mail` em vez de assumir envio imediato.
+  - **Transparência e Botão de Contingência:** Quando o serviço em nuvem (`processMailQueue` / Plano Blaze) estiver pausado no projeto Firebase, o sistema informa com transparência que o registro foi salvo e colocado na fila, disponibilizando botão direto `E-mail` (`mailto:`) para disparo imediato pelo aplicativo do tablet/PC.
+
 ## [v5.0.55] - 24 de Novembro, 2026
 ### Nex-Ai CLINIC (.SESMT) — Correção Definitiva de Gravação, Histórico Imediato com Cache Local, Despacho Confiável de E-mails Titan e Confirmação Visual ao Operador
 - **Correção da Causa Raiz de Gravação no Firestore (`sesmtService.js` & `imageCompressor.js`):**

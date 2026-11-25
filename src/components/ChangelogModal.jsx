@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.56',
+      date: '25/11/2026',
+      title: 'Nex-Ai CLINIC (.SESMT) — Correção Definitiva do Histórico (QuotaExceededError) e Verificação Real de Entrega de E-mails',
+      description: 'Auditoria em navegador real identificou e corrigiu definitivamente os dois impedimentos reportados: 1) Histórico Zerado: corrigido o estouro de cota do localStorage (QuotaExceededError) causado por fallback indevido de dados mock e acúmulo de fotos em cache, além da troca de Promise.all por Promise.allSettled no painel SESMT; 2) E-mail Transparente: sendSystemEmail agora monitora o status real da fila mail no Firestore e alerta se o servidor em nuvem (Cloud Functions / Plano Blaze) estiver pausado, oferecendo atalho direto de envio.',
+      changes: [
+        { type: 'Histórico 100% Ativo', text: 'Eliminado estouro de cota local e isolado o carregamento via Promise.allSettled.' },
+        { type: 'Cache Otimizado', text: 'Persistência leve no tablet sem duplicar grandes fotos antigas no localStorage.' },
+        { type: 'Status Real de E-mail', text: 'Monitoramento da fila mail com alerta transparente se o Plano Blaze do Firebase estiver pausado.' },
+        { type: 'Ações no Histórico', text: 'Botão Atualizar no cabeçalho e badge de conformidade para Resíduos.' }
+      ]
+    },
+    {
       version: 'v5.0.55',
       date: '24/11/2026',
       title: 'Nex-Ai CLINIC (.SESMT) — Correção Definitiva de Gravação, Histórico Imediato com Cache Local, Despacho Confiável de E-mails Titan e Confirmação Visual ao Operador',

@@ -64,6 +64,7 @@ export default function DailyEPIChecklist({ onSuccess }) {
   const [compressing, setCompressing] = useState(false);
   const [activePhotoItemId, setActivePhotoItemId] = useState(null);
   const [message, setMessage] = useState('');
+  const [emailFallbackUrl, setEmailFallbackUrl] = useState('');
   const [viewMode, setViewMode] = useState('cards');
 
   const cameraInputRef = useRef(null);
@@ -213,6 +214,7 @@ export default function DailyEPIChecklist({ onSuccess }) {
 
     setLoading(true);
     setMessage('');
+    setEmailFallbackUrl('');
     try {
       const firstNcPhoto = Object.values(formData.evaluations || {}).find(ev => ev.status === 'NC' && ev.photo)?.photo || '';
 
@@ -222,8 +224,21 @@ export default function DailyEPIChecklist({ onSuccess }) {
         createdAt: new Date().toISOString()
       });
       
+      let timeoutMs = 6000;
       if (res?.emailSent && res?.emailRecipients?.length > 0) {
         setMessage(`Checklist de EPI salvo com sucesso! Alerta de Não Conformidade enviado por e-mail para: ${res.emailRecipients.join(', ')}.`);
+      } else if (res?.emailQueuedPending || res?.emailError) {
+        const recipientsStr = (res.emailRecipients || []).join(', ');
+        if (res.emailMailto?.to?.length > 0) {
+          const mailto = `mailto:${res.emailMailto.to.join(',')}?subject=${encodeURIComponent(res.emailMailto.subject)}&body=${encodeURIComponent(res.emailMailto.body)}`;
+          setEmailFallbackUrl(mailto);
+        }
+        if (res.emailError) {
+          setMessage(`Checklist salvo com sucesso! Porém houve falha ao enviar e-mail (${res.emailError}). Destinatários: ${recipientsStr}.`);
+        } else {
+          setMessage(`Checklist salvo com sucesso! O alerta entrou na fila (${recipientsStr}), mas o servidor de e-mail em nuvem está pausado (Plano Blaze inativo).`);
+        }
+        timeoutMs = 12000;
       } else {
         setMessage('Checklist de EPI salvo com sucesso!');
       }
@@ -242,7 +257,7 @@ export default function DailyEPIChecklist({ onSuccess }) {
       }));
 
       if (onSuccess) onSuccess();
-      setTimeout(() => setMessage(''), 6000);
+      setTimeout(() => { setMessage(''); setEmailFallbackUrl(''); }, timeoutMs);
     } catch (error) {
       console.error(error);
       setMessage('Erro ao salvar checklist.');
@@ -288,8 +303,37 @@ export default function DailyEPIChecklist({ onSuccess }) {
       </div>
       
       {message && (
-        <div style={{ ...styles.alert, backgroundColor: message.includes('Erro') || message.includes('obrigatório') ? '#fef2f2' : '#f0fdf4', color: message.includes('Erro') || message.includes('obrigatório') ? '#991b1b' : '#166534', border: `1px solid ${message.includes('Erro') || message.includes('obrigatório') ? '#f87171' : '#4ade80'}` }}>
-          {message}
+        <div style={{
+          ...styles.alert,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.75rem',
+          backgroundColor: (message.includes('Erro') || message.includes('obrigatório')) ? '#fef2f2' : (message.includes('pausado') || message.includes('falha')) ? '#fffbeb' : '#f0fdf4',
+          color: (message.includes('Erro') || message.includes('obrigatório')) ? '#991b1b' : (message.includes('pausado') || message.includes('falha')) ? '#92400e' : '#166534',
+          border: `1px solid ${(message.includes('Erro') || message.includes('obrigatório')) ? '#f87171' : (message.includes('pausado') || message.includes('falha')) ? '#fbbf24' : '#4ade80'}`
+        }}>
+          <span>{message}</span>
+          {emailFallbackUrl && (
+            <a
+              href={emailFallbackUrl}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.4rem 0.75rem',
+                borderRadius: '6px',
+                backgroundColor: '#b45309',
+                color: '#ffffff',
+                fontSize: '0.8rem',
+                fontWeight: '700',
+                textDecoration: 'none'
+              }}
+            >
+              <Mail size={14} /> E-mail
+            </a>
+          )}
         </div>
       )}
 

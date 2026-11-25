@@ -61,6 +61,7 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
   const [compressing, setCompressing] = useState(false);
   const [activePhotoItemId, setActivePhotoItemId] = useState(null);
   const [message, setMessage] = useState('');
+  const [emailFallbackUrl, setEmailFallbackUrl] = useState('');
 
   const cameraInputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -246,8 +247,22 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
         unitId: 'betim'
       });
 
+      setEmailFallbackUrl('');
+      let timeoutMs = 6000;
       if (res?.emailSent && res?.emailRecipients?.length > 0) {
         setMessage(`Vistoria gravada com sucesso! Alerta de Não Conformidade enviado por e-mail para: ${res.emailRecipients.join(', ')}.`);
+      } else if (res?.emailQueuedPending || res?.emailError) {
+        const recipientsStr = (res.emailRecipients || []).join(', ');
+        if (res.emailMailto?.to?.length > 0) {
+          const mailto = `mailto:${res.emailMailto.to.join(',')}?subject=${encodeURIComponent(res.emailMailto.subject)}&body=${encodeURIComponent(res.emailMailto.body)}`;
+          setEmailFallbackUrl(mailto);
+        }
+        if (res.emailError) {
+          setMessage(`Vistoria gravada com sucesso! Porém houve falha ao enviar e-mail (${res.emailError}). Destinatários: ${recipientsStr}.`);
+        } else {
+          setMessage(`Vistoria gravada com sucesso! O alerta entrou na fila (${recipientsStr}), mas o servidor de e-mail em nuvem está pausado (Plano Blaze inativo).`);
+        }
+        timeoutMs = 12000;
       } else {
         setMessage('Vistoria de resíduos infectantes gravada com sucesso!');
       }
@@ -266,7 +281,7 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
       }));
 
       if (onSuccess) onSuccess();
-      setTimeout(() => setMessage(''), 6000);
+      setTimeout(() => { setMessage(''); setEmailFallbackUrl(''); }, timeoutMs);
     } catch (error) {
       console.error('Erro ao salvar vistoria de resíduos:', error);
       setMessage('Erro ao gravar vistoria no sistema.');
@@ -312,12 +327,35 @@ export default function DailyWasteChecklist({ onSuccess, existingInspections = [
       {message && (
         <div style={{
           ...styles.messageBox,
-          backgroundColor: message.includes('sucesso') ? '#ecfdf5' : '#fef2f2',
-          borderColor: message.includes('sucesso') ? '#10b981' : '#ef4444',
-          color: message.includes('sucesso') ? '#065f46' : '#991b1b'
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          backgroundColor: (message.includes('pausado') || message.includes('falha')) ? '#fffbeb' : message.includes('sucesso') ? '#ecfdf5' : '#fef2f2',
+          borderColor: (message.includes('pausado') || message.includes('falha')) ? '#f59e0b' : message.includes('sucesso') ? '#10b981' : '#ef4444',
+          color: (message.includes('pausado') || message.includes('falha')) ? '#92400e' : message.includes('sucesso') ? '#065f46' : '#991b1b'
         }}>
-          {message.includes('sucesso') ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
-          <span>{message}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+            {message.includes('sucesso') && !message.includes('pausado') && !message.includes('falha') ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
+            <span>{message}</span>
+          </div>
+          {emailFallbackUrl && (
+            <a
+              href={emailFallbackUrl}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.4rem 0.75rem',
+                borderRadius: '6px',
+                backgroundColor: '#b45309',
+                color: '#ffffff',
+                fontSize: '0.8rem',
+                fontWeight: '700',
+                textDecoration: 'none'
+              }}
+            >
+              <Mail size={14} /> E-mail
+            </a>
+          )}
         </div>
       )}
 

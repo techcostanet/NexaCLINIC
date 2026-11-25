@@ -242,21 +242,21 @@ export const sendSystemEmail = async ({ to, subject, body, html, moduleSource = 
     subject,
     moduleSource,
     sentAt: new Date().toISOString(),
-    status: 'Enviado',
-    preview: body ? body.substring(0, 120) : 'Notificação enviada com sucesso.'
+    status: 'Na Fila',
+    preview: body ? body.substring(0, 120) : 'Notificação registrada na fila.'
   };
 
   if (USE_MOCK) {
-    if (mockFirestore.logEmailDispatch) await mockFirestore.logEmailDispatch(emailLog);
-    return { success: true, emailLog };
+    if (mockFirestore.logEmailDispatch) await mockFirestore.logEmailDispatch({ ...emailLog, status: 'Enviado' });
+    return { success: true, delivered: true, emailLog };
   }
 
   try {
-    const { getFirestore, collection, addDoc } = await import('firebase/firestore');
+    const { getFirestore, collection, addDoc, doc, onSnapshot, updateDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
     const docRef = await addDoc(collection(db, 'email_logs'), emailLog);
 
-    // Enfileira na coleção 'mail' para disparo real via Cloud Function (processMailQueue)
+    let mailDocId = null;
     try {
       const mailDoc = await addDoc(collection(db, 'mail'), {
         to: Array.isArray(to) ? to : [to],
@@ -266,15 +266,72 @@ export const sendSystemEmail = async ({ to, subject, body, html, moduleSource = 
           html: html || (body ? body.replace(/\n/g, '<br>') : '')
         }
       });
-      emailLog.mailId = mailDoc.id;
+      mailDocId = mailDoc.id;
+      emailLog.mailId = mailDocId;
     } catch (mailErr) {
       console.warn('Erro ao enfileirar na coleção mail:', mailErr);
+      await updateDoc(docRef, { status: 'Falha na Fila' }).catch(() => {});
+      return { success: false, delivered: false, error: mailErr.message, id: docRef.id, ...emailLog };
     }
 
-    return { success: true, id: docRef.id, ...emailLog };
+    // Aguarda até 4s pela confirmação real da Cloud Function (processMailQueue)
+    const deliveryOutcome = await new Promise((resolve) => {
+      let unsub = () => {};
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          try { unsub(); } catch {}
+          resolve({ state: 'TIMEOUT' });
+        }
+      }, 4200);
+
+      try {
+        unsub = onSnapshot(doc(db, 'mail', mailDocId), (snap) => {
+          if (settled || !snap.exists()) return;
+          const d = snap.data()?.delivery;
+          if (d?.state === 'SUCCESS' || d?.state === 'ERROR') {
+            settled = true;
+            clearTimeout(timer);
+            try { unsub(); } catch {}
+            resolve({ state: d.state, error: d.error || '' });
+          }
+        }, () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve({ state: 'ERROR', error: 'Falha ao escutar status da fila' });
+          }
+        });
+      } catch {
+        clearTimeout(timer);
+        resolve({ state: 'TIMEOUT' });
+      }
+    });
+
+    if (deliveryOutcome.state === 'SUCCESS') {
+      await updateDoc(docRef, { status: 'Enviado' }).catch(() => {});
+      return { success: true, delivered: true, queuedPending: false, id: docRef.id, ...emailLog, status: 'Enviado' };
+    }
+
+    if (deliveryOutcome.state === 'ERROR') {
+      await updateDoc(docRef, { status: `Erro: ${deliveryOutcome.error}` }).catch(() => {});
+      return { success: false, delivered: false, queuedPending: false, error: deliveryOutcome.error, id: docRef.id, ...emailLog };
+    }
+
+    // Timeout (Cloud Functions desligadas / Plano Blaze inativo ou latência)
+    await updateDoc(docRef, { status: 'Pendente (Cloud Functions pausada)' }).catch(() => {});
+    return {
+      success: true,
+      delivered: false,
+      queuedPending: true,
+      id: docRef.id,
+      ...emailLog,
+      status: 'Pendente (Cloud Functions pausada)'
+    };
   } catch (err) {
     console.warn('Erro ao registrar log de e-mail no Firestore:', err);
-    return { success: true, emailLog };
+    return { success: false, delivered: false, error: err.message, emailLog };
   }
 };
 
