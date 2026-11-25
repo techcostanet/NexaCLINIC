@@ -6,6 +6,18 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.59',
+      date: '25/11/2026',
+      title: 'Nex-Ai CLINIC (.HR & .MULTI) — Correção de Permissões, Impressão Paisagem na Nutrição e Reserva até 16h',
+      description: 'Correção de permissões do Firestore para gravação de pacotes no RH, remoção da seção de cobrança duplicada na Nutrição, impressão em formato paisagem e travamento padrão para reserva até as 16h para o dia seguinte.',
+      changes: [
+        { type: 'Correção Firestore', text: 'Adicionada regra de permissão para meal_packages no firestore.rules, corrigindo erro ao liberar pacotes no RH.' },
+        { type: 'Impressão Paisagem', text: 'Lista de retirada na Nutrição ajustada para A4 paisagem com nome completo, setor, dia e assinatura (sem coluna tipo).' },
+        { type: 'Configuração Limpa', text: 'Removida a seção de cobrança da configuração da Nutrição, mantendo apenas horários de corte.' },
+        { type: 'Regra 16h Véspera', text: 'Pedidos no próprio dia desativados por padrão para garantir envio consolidado às 16:30 pela Nutrição.' }
+      ]
+    },
+    {
       version: 'v5.0.58',
       date: '25/11/2026',
       title: 'Nex-Ai CLINIC (.HR & .MULTI) — Pacotes de Vale Refeição (15, 22 e 26), Termo Contábil, Saldo no Portal e Lista de Assinaturas',

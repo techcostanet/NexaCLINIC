@@ -48,13 +48,11 @@ export default function FoodMealsTab() {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
 
-  // Form de Configuração
+  // Form de Configuração (Horários de corte gerenciados pela Nutrição)
   const [configForm, setConfigForm] = useState({
-    lunchCutoff: '09:30',
     advanceCutoff: '16:00',
-    chargeMode: 'coparticipation',
-    employeeCost: 5.00,
-    supplierCost: 18.00
+    allowSameDay: false,
+    lunchCutoff: '09:30'
   });
   const [savingConfig, setSavingConfig] = useState(false);
 
@@ -72,11 +70,9 @@ export default function FoodMealsTab() {
     getMealSettings().then(res => {
       setSettings(res);
       setConfigForm({
-        lunchCutoff: res.lunchCutoff || '09:30',
         advanceCutoff: res.advanceCutoff || '16:00',
-        chargeMode: res.chargeMode || 'coparticipation',
-        employeeCost: Number(res.employeeCost) || 5.00,
-        supplierCost: Number(res.supplierCost) || 18.00
+        allowSameDay: res.allowSameDay === true,
+        lunchCutoff: res.lunchCutoff || '09:30'
       });
     });
   }, []);
@@ -180,10 +176,10 @@ export default function FoodMealsTab() {
       `_Gerado pelo NexAi CLINIC em ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}._`;
   }, [orders, selectedDate]);
 
-  // Impressão da Lista de Entrega de Marmitas com Campo de Assinatura (Nutrição)
+  // Impressão da Lista de Entrega de Marmitas com Campo de Assinatura (Nutrição - Paisagem)
   const handlePrintSignatureList = () => {
     const activeOrders = orders.filter(o => o.status !== 'cancelado');
-    const win = window.open('', '_blank', 'width=900,height=950');
+    const win = window.open('', '_blank', 'width=1120,height=780');
     if (!win) {
       alert('Permita pop-ups no navegador para imprimir a lista de assinaturas.');
       return;
@@ -194,10 +190,10 @@ export default function FoodMealsTab() {
       : activeOrders.map((o, idx) => `
         <tr>
           <td style="text-align:center; font-weight:700;">${idx + 1}</td>
-          <td style="font-weight:600;">${o.employeeName || '—'}</td>
+          <td style="font-weight:600; white-space:nowrap;">${o.employeeName || '—'}</td>
           <td>${o.sector || 'Geral'}</td>
-          <td style="text-align:center;">${o.paymentSource === 'pacote' ? 'Pacote' : 'Avulso'}</td>
-          <td style="min-width: 240px;"></td>
+          <td style="text-align:center; white-space:nowrap;">${formatDateBR(o.date || selectedDate)}</td>
+          <td></td>
         </tr>
       `).join('');
 
@@ -208,42 +204,42 @@ export default function FoodMealsTab() {
         <meta charset="UTF-8" />
         <title>Lista de Entrega de Marmitas - ${formatDateBR(selectedDate)}</title>
         <style>
-          @page { size: A4; margin: 14mm; }
-          body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; margin: 0; padding: 16px; }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7c3aed; padding-bottom: 10px; margin-bottom: 14px; }
+          @page { size: A4 landscape; margin: 12mm; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; margin: 0; padding: 12px; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7c3aed; padding-bottom: 8px; margin-bottom: 12px; }
           .brand { font-size: 18px; font-weight: 800; }
           .brand span { color: #7c3aed; }
-          .meta { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; }
+          .meta { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 14px; margin-bottom: 12px; font-size: 13px; }
           table { width: 100%; border-collapse: collapse; font-size: 12px; }
           th { background: #f1f5f9; color: #334155; text-align: left; padding: 8px 10px; border: 1px solid #cbd5e1; text-transform: uppercase; font-size: 11px; }
-          td { padding: 10px; border: 1px solid #cbd5e1; height: 28px; vertical-align: middle; }
-          .footer { margin-top: 32px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 12px; color: #475569; }
-          .sig { border-top: 1px solid #334155; width: 260px; text-align: center; padding-top: 5px; }
+          td { padding: 9px 10px; border: 1px solid #cbd5e1; height: 28px; vertical-align: middle; }
+          .footer { margin-top: 26px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 12px; color: #475569; }
+          .sig { border-top: 1px solid #334155; width: 280px; text-align: center; padding-top: 5px; }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="brand">Nex-Ai <span>MULTI • Nutrição</span></div>
           <div style="text-align:right; font-size:12px; color:#475569;">
-            <strong>Controle de Retirada de Marmitas</strong><br/>
-            Almoço de Colaboradores
+            <strong>Relação de Retirada de Marmitas (Almoço)</strong><br/>
+            Assinatura do Colaborador no Recebimento
           </div>
         </div>
 
         <div class="meta">
-          <div><strong>Data:</strong> ${formatDateBR(selectedDate)}</div>
-          <div><strong>Total de Marmitas:</strong> ${activeOrders.length}</div>
+          <div><strong>Dia:</strong> ${formatDateBR(selectedDate)}</div>
+          <div><strong>Total de Refeições:</strong> ${activeOrders.length}</div>
           <div><strong>Impresso em:</strong> ${new Date().toLocaleString('pt-BR')}</div>
         </div>
 
         <table>
           <thead>
             <tr>
-              <th style="width: 36px; text-align:center;">#</th>
-              <th>Colaborador</th>
-              <th>Setor</th>
-              <th style="width: 80px; text-align:center;">Tipo</th>
-              <th style="width: 240px;">Assinatura (Retirada)</th>
+              <th style="width: 38px; text-align:center;">#</th>
+              <th style="width: 34%;">Colaborador</th>
+              <th style="width: 16%;">Setor</th>
+              <th style="width: 11%; text-align:center;">Dia</th>
+              <th style="width: 35%;">Assinatura</th>
             </tr>
           </thead>
           <tbody>
@@ -252,7 +248,7 @@ export default function FoodMealsTab() {
         </table>
 
         <div class="footer">
-          <div>Assinar ao retirar a marmita na copa/nutrição.</div>
+          <div>Conferir o nome completo e assinar ao retirar a marmita.</div>
           <div class="sig">Responsável Nutrição</div>
         </div>
 
@@ -509,9 +505,33 @@ export default function FoodMealsTab() {
             <form onSubmit={handleSaveConfig} style={styles.modalBody}>
               <div style={styles.formSection}>
                 <h4 style={styles.sectionHeading}>Horários</h4>
-                <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.inputLabel}>Véspera</label>
+                  <input
+                    type="time"
+                    value={configForm.advanceCutoff}
+                    onChange={(e) => setConfigForm({ ...configForm, advanceCutoff: e.target.value })}
+                    required
+                    style={styles.modalInput}
+                  />
+                  <span style={styles.subText}>Horário limite na véspera para reservar o almoço do próximo dia (padrão 16:00)</span>
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.inputLabel}>Modalidade</label>
+                  <select
+                    value={configForm.allowSameDay ? 'true' : 'false'}
+                    onChange={(e) => setConfigForm({ ...configForm, allowSameDay: e.target.value === 'true' })}
+                    style={styles.modalInput}
+                  >
+                    <option value="false">Somente reserva antecipada até o corte da véspera</option>
+                    <option value="true">Permitir também pedido no próprio dia</option>
+                  </select>
+                </div>
+
+                {configForm.allowSameDay && (
                   <div style={styles.formGroup}>
-                    <label style={styles.inputLabel}>Corte Hoje</label>
+                    <label style={styles.inputLabel}>Hoje</label>
                     <input
                       type="time"
                       value={configForm.lunchCutoff}
@@ -519,68 +539,9 @@ export default function FoodMealsTab() {
                       required
                       style={styles.modalInput}
                     />
-                    <span style={styles.subText}>Limite para pedir no próprio dia</span>
+                    <span style={styles.subText}>Horário limite para pedir no próprio dia</span>
                   </div>
-
-                  <div style={styles.formGroup}>
-                    <label style={styles.inputLabel}>Corte Véspera</label>
-                    <input
-                      type="time"
-                      value={configForm.advanceCutoff}
-                      onChange={(e) => setConfigForm({ ...configForm, advanceCutoff: e.target.value })}
-                      required
-                      style={styles.modalInput}
-                    />
-                    <span style={styles.subText}>Limite para reservar almoço de amanhã</span>
-                  </div>
-                </div>
-              </div>
-
-              <div style={styles.formSection}>
-                <h4 style={styles.sectionHeading}>Cobrança</h4>
-                <div style={styles.formGroup}>
-                  <label style={styles.inputLabel}>Modalidade</label>
-                  <select
-                    value={configForm.chargeMode}
-                    onChange={(e) => setConfigForm({ ...configForm, chargeMode: e.target.value })}
-                    style={styles.modalInput}
-                  >
-                    <option value="coparticipation">Coparticipação (Valor fixo subsidiado)</option>
-                    <option value="integral">Integral (Desconto de 100% do custo)</option>
-                  </select>
-                </div>
-
-                <div style={styles.formRow}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.inputLabel}>Fornecedor</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={configForm.supplierCost}
-                      onChange={(e) => setConfigForm({ ...configForm, supplierCost: e.target.value })}
-                      required
-                      style={styles.modalInput}
-                    />
-                    <span style={styles.subText}>Custo pago à fornecedora (R$)</span>
-                  </div>
-
-                  {configForm.chargeMode === 'coparticipation' && (
-                    <div style={styles.formGroup}>
-                      <label style={styles.inputLabel}>Colaborador</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={configForm.employeeCost}
-                        onChange={(e) => setConfigForm({ ...configForm, employeeCost: e.target.value })}
-                        required
-                        style={styles.modalInput}
-                      />
-                      <span style={styles.subText}>Valor a descontar em folha (R$)</span>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
 
               <div style={styles.modalFooter}>

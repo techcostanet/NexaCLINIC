@@ -1,3 +1,14 @@
+## [v5.0.59] - 25 de Novembro, 2026
+### Nex-Ai CLINIC (.HR & .MULTI) — Correção de Permissões (`meal_packages`), Impressão Paisagem na Nutrição e Regra Exclusiva de Reserva até 16h
+- **Correção de Permissões no Firestore (`firestore.rules`):**
+  - Liberada a coleção `meal_packages` nas regras de segurança do Firestore, resolvendo o erro `Missing or insufficient permissions.` ao liberar pacotes de vale refeição pelo RH e ao descontar créditos pelo Portal do Colaborador.
+- **Simplificação de Configurações na Nutrição (`FoodMealsTab.jsx`):**
+  - Removida a seção de cobrança do modal de configuração da aba `Nutrição > Marmitas` (centralizando os valores exclusivamente no módulo `.HR > Marmitas`).
+- **Impressão em Formato Paisagem (`FoodMealsTab.jsx`):**
+  - Ajustada a lista de retirada de marmitas (`Imprimir`) para formato **A4 Paisagem**, exibindo nome completo, setor, dia e amplo espaço de assinatura, sem a coluna de tipo.
+- **Regra Exclusiva de Reserva até as 16h (`mealService.js` & `EmployeeMealPortal.jsx`):**
+  - Configurado por padrão o bloqueio de pedidos no próprio dia (`allowSameDay: false`), garantindo que os colaboradores só possam solicitar/cancelar refeições até as **16:00** da véspera para o próximo dia, permitindo à Nutrição consolidar e enviar o pedido às 16:30.
+
 ## [v5.0.58] - 25 de Novembro, 2026
 ### Nex-Ai CLINIC (.HR & .MULTI) — Pacotes de Vale Refeição (15, 22 e 26), Termo Contábil, Saldo no Portal e Lista de Assinaturas na Nutrição
 - **Liberação de Pacotes no RH (`MealDeductionsTab.jsx`, `HRPanel.jsx` & `mealService.js`):**

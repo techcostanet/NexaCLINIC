@@ -62,8 +62,8 @@ export default function EmployeeMealPortal({ onExitPortal }) {
   const [actionLoading, setActionLoading] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState(null);
 
-  // Seleção de data do pedido: 'hoje' | 'amanha'
-  const [targetTab, setTargetTab] = useState('hoje');
+  // Seleção de data do pedido: 'hoje' | 'amanha' (inicia em 'amanha' para reserva antecipada)
+  const [targetTab, setTargetTab] = useState('amanha');
 
   // PWA / Instalação no Celular
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -204,7 +204,8 @@ export default function EmployeeMealPortal({ onExitPortal }) {
   const blockedByNoPackage = requirePackage && remainingMeals <= 0;
 
   // Validação de horário de corte
-  const isTodayCutoff = isTimeCutoffPassed(settings?.lunchCutoff || '09:30');
+  const allowSameDay = settings?.allowSameDay === true;
+  const isTodayCutoff = !allowSameDay || isTimeCutoffPassed(settings?.lunchCutoff || '09:30');
   const isAdvanceCutoff = isTimeCutoffPassed(settings?.advanceCutoff || '16:00');
 
   const handleOrderMeal = async (targetDate) => {
@@ -565,7 +566,9 @@ export default function EmployeeMealPortal({ onExitPortal }) {
                   <h3 style={styles.mealTitle}>Almoço de Hoje</h3>
                   <span style={styles.mealCutoff}>
                     <Clock size={13} style={{ marginRight: '4px' }} />
-                    Limite para hoje: até {settings?.lunchCutoff || '09:30'}
+                    {allowSameDay
+                      ? `Limite para hoje: até ${settings?.lunchCutoff || '09:30'}`
+                      : `Pedidos encerraram ontem às ${settings?.advanceCutoff || '16:00'}`}
                   </span>
                 </div>
               </div>
@@ -602,6 +605,10 @@ export default function EmployeeMealPortal({ onExitPortal }) {
                     </div>
                   </div>
                 </div>
+              ) : !allowSameDay ? (
+                <p style={styles.mealDesc}>
+                  As solicitações para hoje encerraram ontem às <strong>{settings?.advanceCutoff || '16:00'}</strong>. Utilize a aba <strong>Amanhã</strong> para reservar a sua próxima refeição.
+                </p>
               ) : (
                 <p style={styles.mealDesc}>
                   Solicite sua marmita de almoço para hoje. O pedido será encaminhado ao fornecedor terceirizado.
@@ -621,9 +628,25 @@ export default function EmployeeMealPortal({ onExitPortal }) {
                   </button>
                 ) : (
                   <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                    {todayOrder.status === 'entregue' ? 'Refeição entregue' : `Horário limite expirado (${settings?.lunchCutoff || '09:30'})`}
+                    {todayOrder.status === 'entregue'
+                      ? 'Refeição entregue'
+                      : allowSameDay
+                        ? `Horário limite expirado (${settings?.lunchCutoff || '09:30'})`
+                        : `Reserva confirmada ontem até as ${settings?.advanceCutoff || '16:00'}`}
                   </span>
                 )
+              ) : !allowSameDay ? (
+                <button
+                  type="button"
+                  onClick={() => setTargetTab('amanha')}
+                  style={{
+                    ...styles.orderBtn,
+                    backgroundColor: '#0284c7',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Reservar Amanhã
+                </button>
               ) : (
                 <button
                   onClick={() => handleOrderMeal(todayStr)}

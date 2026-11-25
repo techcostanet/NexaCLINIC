@@ -24,8 +24,9 @@ const EMPLOYEES_COL = 'employees';
 export const MEAL_PACKAGE_SIZES = [15, 22, 26];
 
 export const DEFAULT_MEAL_SETTINGS = {
-  lunchCutoff: '09:30',          // Horário limite para pedir para HOJE (padrão 09:30)
+  lunchCutoff: '09:30',          // Horário limite para pedir para HOJE (usado apenas se allowSameDay = true)
   advanceCutoff: '16:00',        // Horário limite na véspera para reservar AMANHÃ (padrão 16:00)
+  allowSameDay: false,           // Padrão false: colaborador só pode pedir até as 16h para o próximo dia
   chargeMode: 'coparticipation', // 'coparticipation' | 'integral'
   employeeCost: 5.00,
   supplierCost: 18.00,
@@ -62,6 +63,9 @@ export async function updateMealSettings(newSettings) {
     ...newSettings,
     lunchCutoff: String(newSettings.lunchCutoff ?? current.lunchCutoff ?? '09:30').trim(),
     advanceCutoff: String(newSettings.advanceCutoff ?? current.advanceCutoff ?? '16:00').trim(),
+    allowSameDay: typeof newSettings.allowSameDay === 'boolean'
+      ? newSettings.allowSameDay
+      : (current.allowSameDay === true),
     chargeMode: (newSettings.chargeMode ?? current.chargeMode) === 'integral' ? 'integral' : 'coparticipation',
     employeeCost: Number(newSettings.employeeCost ?? current.employeeCost ?? 5.00) || 0,
     supplierCost: Number(newSettings.supplierCost ?? current.supplierCost ?? 18.00) || 0,
@@ -182,8 +186,11 @@ export async function createMealOrder({ employee, targetDate }) {
     throw new Error('Não é possível solicitar refeições para datas passadas.');
   }
 
-  // Se o pedido for para hoje, valida o horário de corte do mesmo dia (padrão 09:30)
+  // Se o pedido for para hoje, valida se pedidos no próprio dia estão liberados e o horário de corte
   if (orderDate === todayStr) {
+    if (!settings.allowSameDay) {
+      throw new Error(`Pedidos para o próprio dia estão desativados. A reserva para o dia seguinte deve ser feita até as ${settings.advanceCutoff || '16:00'} da véspera.`);
+    }
     if (isTimeCutoffPassed(settings.lunchCutoff || '09:30')) {
       throw new Error(`Horário limite para solicitar almoço para hoje encerrou às ${settings.lunchCutoff || '09:30'}.`);
     }
@@ -288,6 +295,9 @@ export async function cancelMealOrder(orderId, employeeId) {
   const tomorrowStr = getTomorrowDateStr();
 
   if (order.date === todayStr) {
+    if (!settings.allowSameDay) {
+      throw new Error(`Cancelamentos para hoje encerraram às ${settings.advanceCutoff || '16:00'} de ontem.`);
+    }
     if (isTimeCutoffPassed(settings.lunchCutoff || '09:30')) {
       throw new Error(`Cancelamento encerrado para o almoço de hoje após o horário de corte (${settings.lunchCutoff || '09:30'}).`);
     }

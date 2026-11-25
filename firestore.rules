@@ -206,6 +206,7 @@ service cloud.firestore {
 
     // Nutrição (.MULTI) & RH - Controle e Pedidos de Marmitas
     match /meal_orders/{id} { allow read, write: if true; }
+    match /meal_packages/{id} { allow read, write: if true; }
     match /meal_settings/{id} { allow read: if true; allow write: if isAuthenticated() || true; }
   }
 }

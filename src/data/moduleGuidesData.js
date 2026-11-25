@@ -3756,9 +3756,9 @@ export const MODULE_GUIDES = {
         steps: [
           'No módulo ".MULTI", acesse a aba "Nutrição" e selecione a sub-aba "Marmitas" (localizada antes da aba "Pacientes").',
           'Acompanhe os contadores do dia em tempo real: Total Pedidos, Entregues, Custo Fornecedor e Desconto Projetado (exclusivo para refeições de almoço).',
-          'Clique em "Configuração" para definir os horários limites: Corte Hoje (padrão 09:30 para pedidos no dia) e Corte Véspera (padrão 16:00 para reservas antecipadas do dia seguinte), além do modo de cobrança (Coparticipação ou Integral).',
+          'Clique em "Configuração" para ajustar o horário limite da véspera (padrão 16:00 para reservas do próximo dia) e definir se pedidos no próprio dia ficam bloqueados.',
           'Clique em "Link" para visualizar o endereço público e o QR Code que os funcionários usam para instalar e pedir pelo celular (/marmitas).',
-          'Clique em "Imprimir" para gerar a lista oficial de retirada de marmitas do dia com espaço para assinatura de cada colaborador no momento da entrega.',
+          'Clique em "Imprimir" para gerar a lista oficial de retirada de marmitas do dia em formato paisagem com nome completo, setor, dia e campo de assinatura.',
           'Conforme as marmitas forem retiradas pelos colaboradores na cozinha, clique no botão "Entregar" para dar baixa imediata na tabela.',
           'Clique em "Exportar" para copiar o texto formatado do pedido consolidado e enviar direto no WhatsApp do fornecedor de alimentos.'
         ]
@@ -3818,7 +3818,7 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'Como os funcionários solicitam marmitas e como funciona o desconto em folha?',
-        resposta: 'Primeiro, o colaborador adquire um pacote de vale refeição (15, 22 ou 26 refeições) diretamente no RH e assina o termo de autorização de desconto em folha. Com o saldo ativo, ele acessa o link (/marmitas) no celular, visualiza suas refeições disponíveis e solicita o almoço para hoje (até as 09:30) ou reserva para amanhã (até as 16:00). Os pedidos aparecem na hora na aba Nutrição -> Marmitas, onde a equipe imprime a lista de retirada para assinatura e dá baixa na entrega.'
+        resposta: 'Primeiro, o colaborador adquire um pacote de vale refeição (15, 22 ou 26 refeições) diretamente no RH e assina o termo de autorização de desconto em folha. Com o saldo ativo, ele acessa o link (/marmitas) no celular, visualiza suas refeições disponíveis e reserva o almoço para o dia seguinte até as 16:00 da véspera (permitindo à Nutrição fechar o pedido às 16:30). Os pedidos aparecem na hora na aba Nutrição -> Marmitas, onde a equipe imprime a lista em paisagem para assinatura e dá baixa na entrega.'
       },
       {
         pergunta: 'Como funciona o cálculo de Previsão Preditiva com IA para compras de alimentos?',
