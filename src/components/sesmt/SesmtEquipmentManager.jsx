@@ -44,6 +44,8 @@ const SECTORS_LIST = [
   'Corredor Central',
   'Lavatório',
   'Consultórios',
+  'Osmose',
+  'Manutenção',
   'Farmácia',
   'CPD',
   'Sala de Máquinas',

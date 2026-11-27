@@ -1,3 +1,9 @@
+## [v5.0.61] - 27 de Novembro, 2026
+### Nex-Ai CLINIC (.SESMT) — Cadastro dos Novos Setores Osmose e Manutenção
+- **Novos Setores no Módulo SESMT (`sesmtConstants.js`, `SesmtDashboard.jsx`, `SesmtEquipmentManager.jsx` & `SesmtReportsModal.jsx`):**
+  - **Osmose & Manutenção:** Cadastrados os setores **Osmose** e **Manutenção** em todos os checklists diários (Resíduos e EPI), no Painel Geral, no Gerenciador de Equipamentos de Incêndio (Extintores e Hidrantes) e na Central de Relatórios do SESMT.
+  - **E-mails Automáticos de Alerta:** Configurados os destinatários padrão de notificação (`manutencao@dialize.com.br` e `sesmt@dialize.com.br`) ao selecionar os novos setores nas inspeções.
+
 ## [v5.0.60] - 25 de Novembro, 2026
 ### Nex-Ai CLINIC (.MULTI > Nutrição > Marmitas) — Cards Focados em Operação e Impressão Paisagem Compacta
 - **Remoção de Cards Financeiros (`FoodMealsTab.jsx`):**

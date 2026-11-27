@@ -18,10 +18,15 @@ export const SESMT_SECTORS = [
   'Lavatório',
   'Consultórios',
   'Ambulatório',
-  'Corredor Central'
+  'Corredor Central',
+  'Osmose',
+  'Manutenção'
 ];
 
 export const DEFAULT_SECTOR_EMAILS = {
+  'osmose': { email1: 'manutencao@dialize.com.br', email2: 'sesmt@dialize.com.br' },
+  'manutenção': { email1: 'manutencao@dialize.com.br', email2: 'sesmt@dialize.com.br' },
+  'manutencao': { email1: 'manutencao@dialize.com.br', email2: 'sesmt@dialize.com.br' },
   'lavatório': { email1: 'higienizacao@dialize.com.br', email2: 'sesmt@dialize.com.br' },
   'lavatorio': { email1: 'higienizacao@dialize.com.br', email2: 'sesmt@dialize.com.br' },
   'recepção 2': { email1: 'atendimento@dialize.com.br', email2: 'sesmt@dialize.com.br' },

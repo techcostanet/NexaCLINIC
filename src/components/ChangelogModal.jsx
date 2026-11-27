@@ -6,6 +6,16 @@ export default function ChangelogModal({ isOpen, onClose }) {
 
   const updates = [
     {
+      version: 'v5.0.61',
+      date: '27/11/2026',
+      title: 'Nex-Ai CLINIC (.SESMT) — Inclusão dos Setores Osmose e Manutenção',
+      description: 'Expansão dos setores auditados no módulo SESMT com a inclusão oficial de Osmose e Manutenção em checklists, equipamentos, alertas por e-mail e relatórios.',
+      changes: [
+        { type: 'Novos Setores', text: 'Osmose e Manutenção cadastrados nos formulários de Resíduos e EPI, Painel, Extintores/Hidrantes e Relatórios.' },
+        { type: 'Alertas por E-mail', text: 'Preenchimento automático configurado para manutencao@dialize.com.br e sesmt@dialize.com.br.' }
+      ]
+    },
+    {
       version: 'v5.0.60',
       date: '25/11/2026',
       title: 'Nex-Ai CLINIC (.MULTI > Nutrição > Marmitas) — Cards Operacionais e Impressão Paisagem Compacta',

@@ -57,7 +57,9 @@ const SECTOR_OPTIONS = [
   'Copa',
   'Lavatório',
   'Consultórios',
-  'Corredor Central'
+  'Corredor Central',
+  'Osmose',
+  'Manutenção'
 ];
 
 const SHIFT_OPTIONS = [

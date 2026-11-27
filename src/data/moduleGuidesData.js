@@ -3364,7 +3364,7 @@ export const MODULE_GUIDES = {
       {
         title: 'Como Registrar Não Conformidades com Fotos por Item no Tablet e Disparar Alerta por E-mail',
         steps: [
-          'No formulário de Vistoria de Resíduos ou Checklist de EPI, selecione o Setor auditado (incluindo Lavatório, Recepção 2 ou Consultórios).',
+          'No formulário de Vistoria de Resíduos ou Checklist de EPI, selecione o Setor auditado (incluindo Lavatório, Recepção 2, Consultórios, Osmose ou Manutenção).',
           'Ao identificar desvios sanitários ou irregularidades de EPI, marque o item reprovado como "Não Conforme" (ou selecione os itens de desvio).',
           'O item marcado abrirá imediatamente sua própria seção de Evidência Fotográfica: clique no ícone da Câmera para disparar a lente do tablet ou no Anexo para escolher uma foto da galeria.',
           'Cada item marcado como não conforme deve possuir sua respectiva foto. O sistema bloqueia o salvamento e alerta se algum item reprovado estiver pendente de foto.',
@@ -3417,7 +3417,7 @@ export const MODULE_GUIDES = {
       },
       {
         pergunta: 'Quais novos setores foram incorporados ao módulo SESMT?',
-        resposta: 'Foram incluídos os setores Lavatório, Recepção 2 e Consultórios em todos os checklists diários (Resíduos e EPI), no Gerenciador de Equipamentos de Incêndio (Extintores e Hidrantes), na aba de Histórico e na Central de Relatórios Regulamentares.'
+        resposta: 'Foram incluídos os setores Lavatório, Recepção 2, Consultórios, Osmose e Manutenção em todos os checklists diários (Resíduos e EPI), no Gerenciador de Equipamentos de Incêndio (Extintores e Hidrantes), na aba de Histórico e na Central de Relatórios Regulamentares.'
       }
     ]
   },

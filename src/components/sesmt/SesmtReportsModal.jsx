@@ -1277,7 +1277,7 @@ export default function SesmtReportsModal({
           'Salão Hemodiálise 1', 'Salão Hemodiálise 2', 'Salão Hemodiálise 3',
           'Diálise Peritoneal', 'Hemodiálise Externa', 'Bloco Cirúrgico',
           'Reuso', 'Sala Amarela', 'Copa', 'Corredor Central', 'Recepção',
-          'Lavatório', 'Recepção 2', 'Consultórios'
+          'Lavatório', 'Recepção 2', 'Consultórios', 'Osmose', 'Manutenção'
         ];
 
         data = sectors.map(sec => {
@@ -1433,9 +1433,9 @@ export default function SesmtReportsModal({
           { header: 'Status', key: 'status' }
         ];
 
-        // Mapear por setores padrão conforme documento: D.P, Salão 1, Salão 2, Salão 3, Lavatório, Recepção 2, Consultórios
+        // Mapear por setores padrão conforme documento: D.P, Salão 1, Salão 2, Salão 3, Lavatório, Recepção 2, Consultórios, Osmose, Manutenção
         const sectorsMap = {};
-        const defaultSectors = ['D.P', 'Salão 1', 'Salão 2', 'Salão 3', 'Lavatório', 'Recepção 2', 'Consultórios'];
+        const defaultSectors = ['D.P', 'Salão 1', 'Salão 2', 'Salão 3', 'Lavatório', 'Recepção 2', 'Consultórios', 'Osmose', 'Manutenção'];
         defaultSectors.forEach(s => {
           sectorsMap[s] = { conform: 0, notConform: 0, total: 0 };
         });
@@ -1870,6 +1870,8 @@ export default function SesmtReportsModal({
                     <option value="Consultórios">Consultórios</option>
                     <option value="Recepção">Recepção</option>
                     <option value="Corredor Central">Corredor Central</option>
+                    <option value="Osmose">Osmose</option>
+                    <option value="Manutenção">Manutenção</option>
                   </select>
                 </div>
 
